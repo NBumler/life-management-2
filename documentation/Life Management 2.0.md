@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Váz` |
 | **Szülő** | _Nincs szülő (hub / architektúra / gyökér)._ |
-| **Kapcsolódó** | [[Backend]], [[Frontend]], [[Backend-offline first]], [[SPEC-TEMPLATE]] |
+| **Kapcsolódó** | [[Backend]], [[Frontend]], [[Backend-offline first]], [[Mennyiség mező]], [[Szöveges keresés]], [[SPEC-TEMPLATE]] |
 
 ### Célállapot
 

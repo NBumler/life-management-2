@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Váz` |
 | **Szülő** | [[GearCheck]] |
-| **Kapcsolódó** | [[Sablonok]], [[Eszközök]] |
+| **Kapcsolódó** | [[Sablonok]], [[Eszközök]], [[Szöveges keresés]] |
 
 ### Célállapot
 
@@ -45,7 +45,7 @@ Ha egy eszköz `PACKED` vagy `NOT_NEEDED` állapotba került, külön szekcióba
 
 ### UI/UX elvárások
 
-- UI tetején: keresés
+- UI tetején: keresés ([[Szöveges keresés]])
 - Keresés alatt: sorba rendezés gomb státusz szerint (`NOT_PACKED` → `KNOWN_LOCATION` → `PREPARED` → `WEAR_ON_DEPARTURE` → `BUY_ON_THE_WAY`); a `PACKED` / `NOT_NEEDED` szekciót nem rendezi
 - Manuális újrarendezés: weben drag-and-drop; telefonon felfelé / lefelé nyilak az eszköz előtt
 - Lezárás gomb a rendezés alatt; confirmation a hard delete előtt

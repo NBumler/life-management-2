@@ -14,10 +14,11 @@ A megvásárolt / tárolt élelmiszerek készletének vezetése lejárati dátum
 
 ### Funkcionális leírás
 
-Ha végeztünk a [[Bevásárlás]]-sal, az [[Élelmiszerek]] automatikusan hozzáadódnak az élelmiszer tároláshoz.
+Ha végeztünk a [[Bevásárlás]]-sal ([[Bevásárlás teljesítve]]), a **pipált** élelmiszer tételek hozzáadódnak az élelmiszer tároláshoz.
 
 - Ha a felhasználó nem ad meg lejárati dátumot, akkor az [[Élelmiszerek]] résznél megadott lejárati idő alapján számolunk.
 - Ha a felhasználó megad lejárati dátumot, akkor azzal számolunk. A megjelenő dátum input mezőt előtöltjük az [[Élelmiszerek]] résznél megadott lejárati idő alapján.
+- Tárolási hely: ha a katalógusban több engedélyezett mód van, a teljesítés flow megkérdezi; ha csak egy, azzal megy — részletek: [[Bevásárlás teljesítve]].
 
 Lejárati dátum alapján tudható, hogy az élelmiszer megromlott-e. Ha igen, küldjünk [[Értesítések]]-et.
 
