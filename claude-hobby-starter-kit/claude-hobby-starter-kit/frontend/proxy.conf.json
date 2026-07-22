@@ -1,0 +1,9 @@
+{
+  "//": "Dev-only proxy: forwards frontend /api calls to the Spring Boot backend, avoiding CORS. Used by `ng serve` / `ionic serve`. Adjust the target port to match your backend (default 8080).",
+  "/api": {
+    "target": "http://localhost:8080",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  }
+}

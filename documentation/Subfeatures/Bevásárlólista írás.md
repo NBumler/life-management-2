@@ -1,0 +1,1 @@
+Lehet bevásárló listát írni. Egy bevásárló listának az elemei lehetnek [[Élelmiszerek]] vagy nem élelmiszerek. Az elemeknek vannak mennyiségük, és nevük (ha nem élelmiszer)

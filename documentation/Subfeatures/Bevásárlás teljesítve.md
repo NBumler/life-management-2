@@ -1,0 +1,1 @@
+Ha végeztünk egy bevásárlással, akkor végig leszünk vezetve egy flow-n, ahol végigkérdezi az alkalmazás, hogy az [[Élelmiszerek]]nek, amiket [[Élelmiszer tárolás]] funkcióba kell tenni, mi a lejárati ideje. Valamint a bevásárlólistát archiváljuk.

@@ -1,0 +1,2 @@
+Business:
+Csinálni kell egy dark mode-ot és egy light mode-ot. Figyelni kell arra, hogy mindkét esetben a kontraszt meglegyen, ne legyen az, hogy dark mode-ban sötét a háttér, és fekete színű egy betű vagy egy gomb.

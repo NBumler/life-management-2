@@ -1,0 +1,1 @@
+Meg lehet nézni az archivált bevásárlólistákat.

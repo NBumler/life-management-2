@@ -1,0 +1,44 @@
+# ==== OS / IDE ====
+.DS_Store
+Thumbs.db
+.idea/
+*.iml
+.vscode/*
+!.vscode/extensions.json
+*.swp
+
+# ==== Secrets / local config (NEVER commit) ====
+.env
+.env.local
+*-local.yml
+*-local.yaml
+*-local.properties
+application-local.yml
+secrets.*
+
+# ==== Backend: Java / Gradle ====
+backend/.gradle/
+backend/build/
+backend/out/
+backend/bin/
+!backend/gradle/wrapper/gradle-wrapper.jar
+backend/*.log
+
+# ==== Frontend: Node / Angular / Ionic ====
+frontend/node_modules/
+frontend/dist/
+frontend/www/
+frontend/.angular/
+frontend/coverage/
+frontend/.ionic/
+frontend/*.log
+npm-debug.log*
+
+# ==== Capacitor / native (Ionic) ====
+frontend/android/
+frontend/ios/
+frontend/.capacitor/
+
+# ==== Generated OpenAPI client is committed by default; ignore only if you
+#      regenerate on every build. Uncomment if so: ====
+# frontend/src/app/api/

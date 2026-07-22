@@ -1,0 +1,1 @@
+A Naptár funkció mutatja az [[Események]]et és [[Tennivalók]]at.
