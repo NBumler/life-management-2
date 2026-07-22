@@ -27,7 +27,10 @@ Személyes life-management alkalmazás (hibrid mobil + web). Több felhasználó
 | `Architektúra/` | Kidolgozott architektúra jegyzetek |
 | `Architektúra - TODO/` | Architektúra jegyzetek stub / bővítendő |
 
-A `> **Státusz:** TODO` jelölés a fájl tetején azt jelenti, hogy a tartalom még nincs véglegesítve.
+Minden specifikáció egységes szerkezetet követ: **Business** + **Architektúra** (Frontend / Backend). Sablon: [[SPEC-TEMPLATE]]. Státusz: `TODO` / `Váz` / `Ideiglenes` / `Kész`.
+Agent skill (formázás létrehozáskor / szerkesztéskor): `.cursor/skills/documentation-spec/`.
+
+A `> **Státusz:** TODO` jelölés a fájl tetején elavult; a státusz a Business táblázatban él.
 
 ---
 
