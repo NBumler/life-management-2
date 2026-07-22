@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Váz` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Bevásárlás]], [[Kalóriakalkulátor]], [[Mennyiség mező]] |
+| **Kapcsolódó** | [[Bevásárlás]], [[Élelmiszerek]], [[Kalóriakalkulátor]], [[Mennyiség mező]] |
 
 ### Célállapot
 
@@ -43,8 +43,8 @@ Kaja tab belépő; a subfeature-ök külön képernyők / flow-k.
 
 ### Backend
 
-_Nincs backend érintettség._ (a közös domain / OpenAPI végpontok a gyerek specifikációkban vagy később itt kerülnek össze)
+Közös Kaja OpenAPI scope később összevonható itt. Az [[Élelmiszerek]] katalógus entitás / CRUD a gyerek spechen (`Food`); a többi subfeature (tárolás, recept, étkezés) oda hivatkozik.
 
 ### Nyitott kérdések
 
-- Közös Kaja backend / OpenAPI scope a szülőben vs csak a gyerekekben
+- Közös Kaja backend / OpenAPI scope a szülőben vs csak a gyerekekben (Élelmiszerek már a gyerekben)

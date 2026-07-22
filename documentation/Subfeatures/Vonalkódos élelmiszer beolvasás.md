@@ -4,29 +4,38 @@
 
 | | |
 |---|---|
-| **Státusz** | `Váz` |
+| **Státusz** | `Kész` |
 | **Szülő** | [[Élelmiszer hozzáadása]] |
 | **Kapcsolódó** | [[Élelmiszerek]], [[Élelmiszer manuális bevitele]], [[Backend-offline first]], [[Szinkronizációs központ]] |
 
 ### Célállapot
 
-Az Open Food Facts külső szolgáltató segítségével vonalkód alapján lehet az [[Élelmiszerek]]et beolvasni az [[Élelmiszer hozzáadása]] funkcióhoz, megkönnyítve és gyorsítva, hogy ne kelljen kézzel begépelni az értékeket.
+Open Food Facts alapján vonalkóddal előtöltött új [[Élelmiszerek]] tétel az [[Élelmiszer manuális bevitele]] űrlapon — kevesebb kézi gépelés.
 
 ### Funkcionális leírás
 
-Felhasználói folyamat (Scan & Pre-fill):
+#### Scan & Pre-fill
 
-1. A felhasználó az Élelmiszerek oldalon rákattint a lebegő vonalkód gombra.
+1. A felhasználó az Élelmiszerek felületen elindítja a vonalkód olvasást (pl. lebegő gomb).
 2. Megnyílik a kamera (`@capacitor-mlkit/barcode-scanning`).
-3. Sikeres beolvasás után az alkalmazás meghívja az **Open Food Facts** API-t:
+3. Sikeres beolvasás után: Open Food Facts API  
    `https://world.openfoodfacts.org/api/v2/product/{barcode}.json`
-4. **Találat esetén:** átnavigálás az „Új élelmiszer” formra ([[Élelmiszer manuális bevitele]]), ahol a név, márka és a 100 g/100 ml-re vetített makrók automatikusan ki vannak töltve.
-5. **Ha nincs találat:** üres form nyílik meg, a vonalkód mező előre ki van töltve, sárga toast: *"A termék nem található az online adatbázisban. Kérjük, töltsd ki manuálisan."*
+4. **Találat:** navigáció az [[Élelmiszer manuális bevitele]] formra; vonalkód + mappelhető mezők (név, márka, tápanyagok, stb.) előtöltve. Üres / új form → nincs felülírás-dialógus.
+5. **Nincs találat:** üres form, vonalkód mező kitöltve; sárga toast: *"A termék nem található az online adatbázisban. Kérjük, töltsd ki manuálisan."*
+
+#### Kézi EAN javítás + újra-sync
+
+Ha a kamera hibás számsort adott (vagy a user kézzel ír EAN-t), az [[Élelmiszer manuális bevitele]] vonalkód mezőjén lévő **sync gomb** ugyanazt az OFF hívást futtatja.
+
+- Ha meglévő, **eltérő** űrlapértékeket írna felül → megerősítő dialógus (mezőnként régi → új; azonos értékek kihagyva).
+- Megerősítés után az OFF mezők felülírják az űrlapot.
+- Részletek: [[Élelmiszer manuális bevitele]].
 
 ### UI/UX elvárások
 
-- Lebegő vonalkód gomb az Élelmiszerek oldalon
-- Sárga toast, ha nincs Open Food Facts találat
+- Lebegő / egyértelmű vonalkód belépő az Élelmiszerek oldalon.
+- Sárga toast, ha nincs OFF találat.
+- Sync gomb + felülírás dialógus az űrlapon.
 
 ### Megjegyzések
 
@@ -40,14 +49,14 @@ Nincs nyitott kérdés.
 
 ### Frontend
 
-* Kamera: `@capacitor-mlkit/barcode-scanning`
-* Open Food Facts **közvetlenül a kliensről** (nincs backend proxy — [[Backend]], [[Backend-offline first]])
-* **Full-offline** (nincs net): a beolvasott vonalkód elmenthető, az API hívás későbbre marad; vagy manuális kitöltés
-* **Backend-offline** (van net, nincs saját backend): Open Food Facts hívás futhat; saját backendre mentés outboxba ([[Szinkronizációs központ]])
+- Kamera: `@capacitor-mlkit/barcode-scanning`
+- Open Food Facts **közvetlenül a kliensről** (nincs backend proxy — [[Backend]], [[Backend-offline first]])
+- **Full-offline** (nincs net): beolvasott vonalkód elmenthető / formra vihető; OFF hívás később (sync gomb), vagy manuális kitöltés
+- **Backend-offline** (van net, nincs saját backend): OFF hívás futhat; saját backendre mentés outboxba ([[Szinkronizációs központ]])
 
 ### Backend
 
-_Nincs backend érintettség._ (külső API nem proxyzva; csak az élelmiszer mentés a saját API-n, lásd [[Élelmiszer manuális bevitele]])
+_Nincs backend érintettség._ (külső API nem proxyzva; mentés: [[Élelmiszerek]] / [[Élelmiszer manuális bevitele]])
 
 ### Nyitott kérdések
 
