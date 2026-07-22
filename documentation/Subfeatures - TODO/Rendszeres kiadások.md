@@ -1,22 +1,53 @@
-# Rendszeres Kiadások (Subscriptions & Fixed Costs)
+# Rendszeres kiadások
 
-## 1. Célállapot
-Minden rendszeres, fix időközönként ismétlődő kiadás (streaming szolgáltatások, edzőtermi bérletek, biztosítások) központi adminisztrációja, amely a [[Pénzügyek]] modul és az [[AYCM tracker]] közös Single Source of Truth (SSOT) alapját képezi.
+## Business
 
-## 2. Adatstruktúra
-Minden előfizetés az alábbi kötelező adatokkal rendelkezik:
-* `id`: UUID (v4) - Kliensoldalon generált
+| | |
+|---|---|
+| **Státusz** | `Váz` |
+| **Szülő** | [[Pénzügyek]] |
+| **Kapcsolódó** | [[AYCM tracker]], [[Értesítések]], [[Backend-offline first]] |
+
+### Célállapot
+
+Minden rendszeres, fix időközönként ismétlődő kiadás (streaming, edzőtermi bérletek, biztosítások) központi adminisztrációja; a [[Pénzügyek]] és az [[AYCM tracker]] közös Single Source of Truth (SSOT) alapja.
+
+### Funkcionális leírás
+
+Adatstruktúra (kötelező mezők):
+
+* `id`: UUID (v4) — kliensoldalon generált
 * `name`: String (pl. "AYCM XXL bérlet", "Netflix")
-* `amountHuf`: Integer (Fix összeg forintban)
+* `amountHuf`: Integer (fixint)
 * `frequency`: Enum (`MONTHLY`, `QUARTERLY`, `YEARLY`)
 * `category`: Enum (`ENTERTAINMENT`, `SPORT`, `UTILITIES`, `INSURANCE`)
 * `nextBillingDate`: Date
 
-## 3. Építészeti Összeköttetés (Az AYCM Kapocs)
-* Az itt rögzített előfizetések listáját használja fel az `AYCM tracker` setup képernyője.
-* Ha az AYCM egy éves bérlet, az itteni `amountHuf` és `frequency` alapján számolja ki a rendszer dinamikusan a havi leosztott költséget, elkerülve az adatok duplázását.
-* A [[AYCM tracker]] feature specifikációjába is be van vezetve ez az SSOT kapcsolat.
+AYCM kapocs: az itt rögzített előfizetéseket használja az AYCM setup. Éves bérlet esetén az `amountHuf` + `frequency` alapján számolódik a havi leosztott költség (nincs adatduplikáció). Lásd [[AYCM tracker]].
 
-## 4. UI/UX és Offline működés
-* A listában szereplő tételek csúsztatással (`ion-item-sliding`) törölhetőek vagy inaktiválhatóak.
-* Offline rögzítés esetén a kérés bekerül az `OfflineQueueService` sorába.
+### UI/UX elvárások
+
+* Listatételek csúsztatással (`ion-item-sliding`) törölhetőek vagy inaktiválhatóak.
+* Offline rögzítés → `OfflineQueueService` ([[Szinkronizációs központ]]).
+
+### Megjegyzések
+
+_Nincs megjegyzés._
+
+### Nyitott kérdések
+
+Nincs nyitott kérdés.
+
+## Architektúra
+
+### Frontend
+
+CRUD lista; offline queue; SSOT olvasás az [[AYCM tracker]] felé.
+
+### Backend
+
+Előfizetés / rendszeres kiadás entitás (OpenAPI, UUID).
+
+### Nyitott kérdések
+
+Nincs nyitott kérdés.

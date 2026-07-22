@@ -1,22 +1,27 @@
 # Life Management 2.0
 
+## Business
+
+| | |
+|---|---|
+| **Státusz** | `Váz` |
+| **Szülő** | _Nincs szülő (hub / architektúra / gyökér)._ |
+| **Kapcsolódó** | [[Backend]], [[Frontend]], [[Backend-offline first]], [[SPEC-TEMPLATE]] |
+
+### Célállapot
+
 Személyes life-management alkalmazás (hibrid mobil + web). Több felhasználóra is felkészülünk, de az elsődleges cél a személyes használat.
 
-## Architektúra
+### Funkcionális leírás
 
-- [[Backend]]: Java — Spring Boot
-- [[Frontend]] + mobil (hibrid): Ionic — Angular
-- **API szerződés:** OpenAPI (Swagger) — ebből generálódik a Spring Boot interface és az Ionic Angular kliens kód is
-- [[Backend-offline first]] megközelítés (kötelező)
-
-## Általános elvek
+#### Általános elvek
 
 - Minden feature **feature flag**-hez kötve a hibridben, hogy az alkalmazás egyes feature-ök nélkül is kiadható legyen.
 - Input mezők egységesítve; web vs mobil esetén a platformnak megfelelő, legkényelmesebb kontroll.
 - Ha egy felületen egyértelmű, hogy melyik inputot fogja használni a user, az mező legyen automatikusan fókuszban.
 - Offline / backend-offline állapot kezelése: [[Backend-offline first]] + [[Szinkronizációs központ]].
 
-## Dokumentációs konvenciók
+#### Dokumentációs konvenciók
 
 | Mappa | Jelentés |
 |---|---|
@@ -28,15 +33,9 @@ Személyes life-management alkalmazás (hibrid mobil + web). Több felhasználó
 | `Architektúra - TODO/` | Architektúra jegyzetek stub / bővítendő |
 
 Minden specifikáció egységes szerkezetet követ: **Business** + **Architektúra** (Frontend / Backend). Sablon: [[SPEC-TEMPLATE]]. Státusz: `TODO` / `Váz` / `Ideiglenes` / `Kész`.
-Agent skill (formázás létrehozáskor / szerkesztéskor): `.cursor/skills/documentation-spec/`.
+Agent skill: `.cursor/skills/documentation-spec/`.
 
-A `> **Státusz:** TODO` jelölés a fájl tetején elavult; a státusz a Business táblázatban él.
-
----
-
-## Feature lista
-
-### Kidolgozott / részben kidolgozott (`Features/`)
+#### Feature lista — kidolgozott / részben (`Features/`)
 
 - [[Kaja]]
 - [[Edzés]]
@@ -54,10 +53,41 @@ A `> **Státusz:** TODO` jelölés a fájl tetején elavult; a státusz a Busine
 - [[Szinkronizációs központ]]
 - [[Bevásárlás]]
 
-### Hiányos / stub (`Feature - TODO/`)
+#### Feature lista — hiányos / stub (`Feature - TODO/`)
 
 - [[Pénzügyek]]
 - [[Események]]
 - [[Mászónapló]]
 - [[Biciklizés napló]]
 - [[Bejelentkezés]]
+
+### UI/UX elvárások
+
+Alsó tab bar: lásd [[Frontend]] (Kaja, Edzés, Feladatok, Menü).
+
+### Megjegyzések
+
+_Nincs megjegyzés._
+
+### Nyitott kérdések
+
+Nincs nyitott kérdés.
+
+## Architektúra
+
+### Frontend
+
+- Ionic — Angular (hibrid)
+- OpenAPI-ból generált kliens
+- Részletek: [[Frontend]]
+
+### Backend
+
+- Java — Spring Boot
+- API szerződés: OpenAPI (Swagger) — Spring Boot interface + Ionic Angular kliens generálás
+- [[Backend-offline first]] (kötelező)
+- Részletek: [[Backend]]
+
+### Nyitott kérdések
+
+Nincs nyitott kérdés.

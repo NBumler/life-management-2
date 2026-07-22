@@ -1,15 +1,45 @@
 # Outdoor boulder admin
 
-> **Státusz:** TODO — a specifikáció még nincs kidolgozva. Mintaként lásd: [[Indoor boulder admin]].
+## Business
 
-**Szülő:** [[Outdoor - boulder]]
+| | |
+|---|---|
+| **Státusz** | `TODO` |
+| **Szülő** | [[Outdoor - boulder]] |
+| **Kapcsolódó** | [[Outdoor boulder napló]], [[Indoor boulder admin]], [[Giga feature napló specifikáció (Ideiglenes specifikáció)]] |
 
-## Célállapot
+### Célállapot
 
-Kültéri boulder helyszínek / szektorok adminisztrációja (master data a naplóhoz).
+Kültéri boulder helyszínek / szektorok adminisztrációja (master data a naplóhoz). Mintaként: [[Indoor boulder admin]].
 
-## Nyitott kérdések
+### Funkcionális leírás
+
+_Nincs business érintettség._
+
+### UI/UX elvárások
+
+_Nincs UI/UX érintettség._
+
+### Megjegyzések
+
+_Nincs megjegyzés._
+
+### Nyitott kérdések
 
 - Helyszín vs szektor hierarchia
 - Kőzet típus (`RockType`), fekvés (`aspect`) — lásd giga specifikáció `Route` entitás
 - Guidebook grade vs helyi skála
+
+## Architektúra
+
+### Frontend
+
+Helyszín / szektor admin UI.
+
+### Backend
+
+_Nincs backend érintettség._
+
+### Nyitott kérdések
+
+Nincs nyitott kérdés.

@@ -1,14 +1,44 @@
 # Indoor köteles admin
 
-> **Státusz:** TODO — a specifikáció még nincs kidolgozva. Mintaként lásd: [[Indoor boulder admin]].
+## Business
 
-**Szülő:** [[Indoor - köteles]]
+| | |
+|---|---|
+| **Státusz** | `TODO` |
+| **Szülő** | [[Indoor - köteles]] |
+| **Kapcsolódó** | [[Indoor köteles napló]], [[Indoor boulder admin]], [[Nehézségi szint skálája]] |
 
-## Célállapot
+### Célállapot
 
-Beltéri köteles mászótermek CRUD adminisztrációja (útvonal-szín sávok, nehézségi tartományok a [[Nehézségi szint skálája]] komponenssel).
+Beltéri köteles mászótermek CRUD adminisztrációja (útvonal-szín sávok, nehézségi tartományok a [[Nehézségi szint skálája]] komponenssel). Mintaként: [[Indoor boulder admin]].
 
-## Nyitott kérdések
+### Funkcionális leírás
+
+_Nincs business érintettség._
+
+### UI/UX elvárások
+
+_Nincs UI/UX érintettség._
+
+### Megjegyzések
+
+_Nincs megjegyzés._
+
+### Nyitott kérdések
 
 - Köteles-specifikus mezők (pl. max útmagasság, lead / toprope lehetőségek a teremben)
 - Szín-sáv modell azonos-e a boulderrel
+
+## Architektúra
+
+### Frontend
+
+Terem admin UI (köteles).
+
+### Backend
+
+_Nincs backend érintettség._
+
+### Nyitott kérdések
+
+Nincs nyitott kérdés.

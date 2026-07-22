@@ -1,14 +1,22 @@
 # Indoor köteles napló
 
-> **Státusz:** TODO — részletes specifikáció a [[Giga feature napló specifikáció (Ideiglenes specifikáció)]] fájlban van; ide kell majd szétválasztani.
+## Business
 
-**Szülő:** [[Indoor - köteles]] · **Admin:** [[Indoor köteles admin]] · **Skála:** [[Nehézségi szint skálája]]
+| | |
+|---|---|
+| **Státusz** | `TODO` |
+| **Szülő** | [[Indoor - köteles]] |
+| **Kapcsolódó** | [[Indoor köteles admin]], [[Nehézségi szint skálája]], [[Kalóriakalkulátor]], [[Giga feature napló specifikáció (Ideiglenes specifikáció)]] |
 
-## Kontextus
+### Célállapot
 
-Dashboard kontextus: **Indoor Kötél** (beltéri köteles).
+Beltéri köteles kísérletek naplózása. Részletek a giga-specben; ide kell majd szétválasztani.
 
-## Várható mezők (váz a giga specifikációból)
+### Funkcionális leírás
+
+Dashboard kontextus: **Indoor Kötél**.
+
+Várható mezők (váz):
 
 - Dátum, helyszín (terem)
 - Nehézség ([[Nehézségi szint skálája]])
@@ -17,3 +25,29 @@ Dashboard kontextus: **Indoor Kötél** (beltéri köteles).
 - Út hossza (m) — aktív mászóidő / kalória becsléshez
 - `pumpRating`, megjegyzés, partnerek
 - Számított kalória → [[Kalóriakalkulátor]]
+
+### UI/UX elvárások
+
+_Nincs UI/UX érintettség._
+
+### Megjegyzések
+
+_Nincs megjegyzés._
+
+### Nyitott kérdések
+
+- Mezőlista véglegesítése a giga-specből
+
+## Architektúra
+
+### Frontend
+
+Napló UI; [[Nehézségi szint skálája]].
+
+### Backend
+
+_Nincs backend érintettség._
+
+### Nyitott kérdések
+
+Nincs nyitott kérdés.

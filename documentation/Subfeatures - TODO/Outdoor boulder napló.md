@@ -1,14 +1,22 @@
 # Outdoor boulder napló
 
-> **Státusz:** TODO — részletes specifikáció a [[Giga feature napló specifikáció (Ideiglenes specifikáció)]] fájlban van; ide kell majd szétválasztani.
+## Business
 
-**Szülő:** [[Outdoor - boulder]] · **Admin:** [[Outdoor boulder admin]] · **Skála:** [[Nehézségi szint skálája]]
+| | |
+|---|---|
+| **Státusz** | `TODO` |
+| **Szülő** | [[Outdoor - boulder]] |
+| **Kapcsolódó** | [[Outdoor boulder admin]], [[Nehézségi szint skálája]], [[Kalóriakalkulátor]], [[Giga feature napló specifikáció (Ideiglenes specifikáció)]] |
 
-## Kontextus
+### Célállapot
+
+Kültéri boulder kísérletek naplózása. Részletek a giga-specben; ide kell majd szétválasztani.
+
+### Funkcionális leírás
 
 Dashboard kontextus: **Outdoor Boulder**.
 
-## Várható mezők (váz a giga specifikációból)
+Várható mezők (váz):
 
 - Dátum, helyszín / szektor
 - Nehézség (Font / V-skála — [[Nehézségi szint skálája]])
@@ -16,3 +24,29 @@ Dashboard kontextus: **Outdoor Boulder**.
 - Sikeres / sikertelen kísérlet, `ascentStyle`
 - `pumpRating`, `headspaceRating`, megjegyzés, partnerek
 - Számított kalória → [[Kalóriakalkulátor]]
+
+### UI/UX elvárások
+
+_Nincs UI/UX érintettség._
+
+### Megjegyzések
+
+_Nincs megjegyzés._
+
+### Nyitott kérdések
+
+- Mezőlista véglegesítése a giga-specből
+
+## Architektúra
+
+### Frontend
+
+Napló UI; [[Nehézségi szint skálája]].
+
+### Backend
+
+_Nincs backend érintettség._
+
+### Nyitott kérdések
+
+Nincs nyitott kérdés.

@@ -1,14 +1,22 @@
 # Indoor boulder napló
 
-> **Státusz:** TODO — részletes specifikáció a [[Giga feature napló specifikáció (Ideiglenes specifikáció)]] fájlban van; ide kell majd szétválasztani.
+## Business
 
-**Szülő:** [[Indoor - boulder]] · **Admin:** [[Indoor boulder admin]] · **Skála:** [[Nehézségi szint skálája]]
+| | |
+|---|---|
+| **Státusz** | `TODO` |
+| **Szülő** | [[Indoor - boulder]] |
+| **Kapcsolódó** | [[Indoor boulder admin]], [[Nehézségi szint skálája]], [[Kalóriakalkulátor]], [[Giga feature napló specifikáció (Ideiglenes specifikáció)]] |
 
-## Kontextus
+### Célállapot
 
-Dashboard kontextus: **Indoor Boulder** (beltéri boulder).
+Beltéri boulder kísérletek naplózása. Részletes specifikáció a giga-specben; ide kell majd szétválasztani.
 
-## Várható mezők (váz a giga specifikációból)
+### Funkcionális leírás
+
+Dashboard kontextus: **Indoor Boulder**.
+
+Várható mezők (váz a giga specifikációból):
 
 - Dátum, helyszín (terem — [[Indoor boulder admin]])
 - Nehézség ([[Nehézségi szint skálája]] / szín-sáv a teremből)
@@ -17,3 +25,29 @@ Dashboard kontextus: **Indoor Boulder** (beltéri boulder).
 - `pumpRating` (1–5) — kalóriaszámításhoz
 - Megjegyzés, partnerek
 - Számított kalória → [[Kalóriakalkulátor]]
+
+### UI/UX elvárások
+
+_Nincs UI/UX érintettség._
+
+### Megjegyzések
+
+_Nincs megjegyzés._
+
+### Nyitott kérdések
+
+- Mezőlista véglegesítése a giga-specből
+
+## Architektúra
+
+### Frontend
+
+Napló UI; nehézség input a [[Nehézségi szint skálája]] komponenssel.
+
+### Backend
+
+_Nincs backend érintettség._ (közös ascent API: [[Mászónapló]] / giga-spec)
+
+### Nyitott kérdések
+
+Nincs nyitott kérdés.
