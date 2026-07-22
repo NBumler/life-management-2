@@ -22,6 +22,8 @@ Elfogyasztott étkezések rögzítése három forrástípus szerint; kalória / 
 
 A recept- és élelmiszer-forrású étkezés csökkenti / eltávolítja a megfelelő tételeket az [[Élelmiszer tárolás]]ból. Az ismeretlen forrású nem.
 
+Készletlevonás szabályai (SSOT: [[Élelmiszer tárolás]]): először felbontott tételek; majd zártak automatikus felbontással; ≤ 0 → tétel törlése; hiányzó készletnél nincs hiba.
+
 ### UI/UX elvárások
 
 _Nincs UI/UX érintettség._

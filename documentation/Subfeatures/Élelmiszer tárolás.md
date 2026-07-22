@@ -4,69 +4,128 @@
 
 | | |
 |---|---|
-| **Státusz** | `Váz` |
+| **Státusz** | `Kész` |
 | **Szülő** | [[Kaja]] |
-| **Kapcsolódó** | [[Bevásárlás]], [[Bevásárlás teljesítve]], [[Élelmiszerek]], [[Étkezés]], [[Értesítések]], [[Recept forrású étkezés]], [[Élelmiszer forrású étkezés]], [[Mennyiség mező]] |
+| **Kapcsolódó** | [[Bevásárlás]], [[Bevásárlás teljesítve]], [[Élelmiszerek]], [[Étkezés]], [[Élelmiszer forrású étkezés]], [[Recept forrású étkezés]], [[Ismeretlen forrású étkezés]], [[Értesítések]], [[Mennyiség mező]], [[Szöveges keresés]], [[Backend-offline first]] |
 
 ### Célállapot
 
-A megvásárolt / tárolt élelmiszerek készletének vezetése lejárati dátummal és tárolási hellyel; romlás esetén értesítés; étkezéskor levonás a készletből.
+Otthon tárolt élelmiszer-készlet vezetése: tételenkénti mennyiség, tárolási hely, lejárat, felbontás; romlás jelzése és értesítés; étkezéskor készletcsökkentés; manuális felvétel bevásárlás nélkül is.
 
 ### Funkcionális leírás
 
-Ha végeztünk a [[Bevásárlás]]-sal ([[Bevásárlás teljesítve]]), a **pipált** élelmiszer tételek hozzáadódnak az élelmiszer tároláshoz.
+#### Készletegység
 
-#### Lejárat
+- Minden tárolási sor **külön tétel** (saját lejárat, hely, felbontás-állapot). **Nincs** összevonás azonos `Food` + hely + lejárat alapján — pl. két hús külön romolhat.
+- Backend-offline: teljes CRUD támogatott ([[Backend-offline first]]).
 
-- Ha a felhasználó nem ad meg lejárati dátumot, akkor az [[Élelmiszerek]] katalógusban az **adott tárolási helyhez** tartozó romlási idő alapján számolunk (kamra / hűtő / fagyasztó — [[Mennyiség mező]] `duration`).
-- Ha megad lejárati dátumot, azzal számolunk. A dátum input előtöltése: a választott (vagy egyetlen) tárolási hely katalógusbeli ideje alapján.
+#### Létrehozás — bevásárlásból
+
+[[Bevásárlás teljesítve]]: pipált élelmiszer → tárolási tétel(ek).
+
+- Lejárat és tárolási hely szabályai: lásd lentebb + [[Bevásárlás teljesítve]].
+- **Darabolás:** ha a lista tétel mennyisége `db` egységű és `amount = N` → **N külön** tárolási tétel jön létre (felbontás külön követhető). Egyéb egységnél (pl. `1kg`): **egy** tárolási tétel a megadott mennyiséggel. Csomagszám szerinti vásárláshoz a listán `db` használandó.
+
+Minden új tétel mennyisége: `db` szétválasztáskor egy tétel = a katalógus **1 csomag nettó tartalma** (ha van); ha nincs nettó a katalógusban → `1 db`.
+
+#### Létrehozás — manuális
+
+Bevásárlás nélkül is felvehető:
+
+- [[Élelmiszerek]] választó ([[Szöveges keresés]])
+- Mennyiség ([[Mennyiség mező]] `quantity`)
+- Tárolási hely (engedélyezett módok a katalógusból; ha nincs kitöltve egyik sem → mindhárom választható)
+- Lejárati dátum (előtöltés a helyhez tartozó katalógus-romlási idővel; üresen hagyva abból számolódik; felülírható)
+- Opcionálisan rögtön „felbontva” (akkor a felbontás szabályai érvényesülnek mentéskor)
+
+#### Lejárat (általános)
+
+- User megadott dátum > üresen hagyott számítás: a választott hely katalógusbeli romlási ideje (`duration`) a felvétel / teljesítés napjától.
+- Előtöltés a dátum mezőben ugyanezzel.
 
 #### Tárolási hely
 
-- Engedélyezett módok = a katalógusban **kitöltött** kamra / hűtő / fagyasztó romlási idők; üres = nem engedélyezett.
-- Ha több mód engedélyezett → a teljesítés flow megkérdezi; ha csak egy → azzal megy. Részletek: [[Bevásárlás teljesítve]].
-- Ha **egyik sem** van kitöltve a katalógusban → a teljesítéskor a felhasználónak kell választania helyet **és** lejáratot (nincs katalógus-alapértelmezés a helyre).
+- Engedélyezett = katalógusban kitöltött kamra / hűtő / fagyasztó idő; üres = nem engedélyezett.
+- Bevásárlás flow: [[Bevásárlás teljesítve]].
+- Manuális felvétel: ugyanaz az engedélyezett-készlet; null engedélyezett → user szabadon választ a három közül.
 
-#### Felbontás után
+#### Felbontás
 
-A katalógus **felbontás után** időtartama ([[Élelmiszer manuális bevitele]]): felbontáskor / részleges fogyasztáskor a készlet lejáratának újraszámolásához (részletes UI flow TBD ebben a spechen).
+- Művelet: „Felbontva” (még nem felbontott tételen).
+- Új lejárat = **min(** ma + katalógus *felbontás után* időtartam **,** eredeti lejárat **)** — a korábbi lejáratnál nem lehet későbbi.
+- Ha a *felbontás után* mező a katalógusban **üres** → a lejárat **változatlan** marad; a tétel ettől még felbontottnak jelölődik.
+- Felbontott állapot megmarad (nem „zárható vissza”).
 
-#### Romlás / értesítés / étkezés
+#### Készletcsökkenés étkezéskor
 
-Lejárati dátum alapján tudható, hogy az élelmiszer megromlott-e. Ha igen: [[Értesítések]].
+Forrás: [[Élelmiszer forrású étkezés]], [[Recept forrású étkezés]] (nem: [[Ismeretlen forrású étkezés]]).
 
-[[Étkezés]]-kor az elfogyasztott mennyiség csökken a készletből, ha forrása:
+Egy adott `Food`-ra fogyasztott mennyiség levonása:
 
-- [[Recept forrású étkezés]]
-- [[Élelmiszer forrású étkezés]]
+1. Először a **már felbontott** tételekből (pl. lejárat szerint növekvő — FIFO a felbontottak között).
+2. Ha még kell: **zárt** tételből — a fogyasztás előtt / közben **felbontás** (fenti lejárat-szabály), majd levonás.
+3. Több tétel érinthető, amíg a kért mennyiség le nem vonódik.
+4. Ha a készlet **nem elég** (0 alá menne a számítás): **nincs hiba** — a hiányzó részt nem adminisztrált bevásárlásnak / tárolásnak tekintjük; a létező tételeket nulláig / alá fogyasztjuk.
+5. Ha egy tétel mennyisége **≤ 0** → **törlődik** a tárolásból (pl. 1 l tej teljes elhasználása receptben → nincs többé a listán).
 
-([[Ismeretlen forrású étkezés]] nem módosítja a tárolást.)
+#### Romlott állapot
 
-Katalógustétel törlésekor a rá hivatkozó tárolási tételek is törlődnek ([[Élelmiszerek]] cascade).
+- Lejárati dátum **napja után** (vagy a nap végén — UI: naptári nap alapján) a tétel **romlott** jelzéssel **megmarad** a listán; nem auto-törlődik.
+- Manuális törlés / elfogyasztás továbbra is lehetséges.
+
+#### Értesítések
+
+Lead time a tétel **katalógusbeli tárolhatósági ideje** alapján (a tétel tárolási helyéhez tartozó `duration`, napokra vetítve):
+
+| Katalógus tárolhatóság (adott hely) | Értesítés |
+|---|---|
+| **> 5 nap** | lejárat előtt **3 nappal** |
+| **≤ 5 nap** (és kitöltött) | lejárat előtt **2 nappal** |
+
+Ha a helyhez nincs katalógus-idő (manuális lejárat / null engedélyezett hely): a felvétel napja és a lejárat közötti napok száma ugyanígy küszöböl (>5 → 3 nap, egyébként 2 nap). Részletek / küldés: [[Értesítések]].
+
+#### Törlés
+
+- Tétel hard delete (megerősítéssel).
+- [[Élelmiszerek]] katalógus törlésekor cascade: az összes rá hivatkozó tárolási tétel törlődik.
 
 ### UI/UX elvárások
 
-- Készlet lista; lejárat jelzés.
-- Lejárati dátum előtöltése bevásárlás teljesítéskor: fentebb + [[Bevásárlás teljesítve]].
+- Kaja tab: készlet lista.
+- **Csoportosítás / szűrés** tárolási hely szerint (kamra / hűtő / fagyasztó / mind).
+- **Rendezés** lejárat szerint (közeli / romlott elöl).
+- Romlott és felbontott vizuális jelzés.
+- Keresés: [[Szöveges keresés]] (terméknév / márka).
+- Belépők: manuális hozzáadás; felbontás művelet; szerkesztés (mennyiség, hely, lejárat — ahol értelmes); törlés.
+- Bevásárlás teljesítés wizard: [[Bevásárlás teljesítve]].
 
 ### Megjegyzések
 
-_Nincs megjegyzés._
+Az étkezés UI / kalória a [[Étkezés]] spechéz tartozik; itt a készletlevonás szabályai az SSOT.
 
 ### Nyitott kérdések
 
-- Felbontás utáni lejárat-újraszámolás pontos UI / szabályai
-- Részleges mennyiség fogyasztása (készlet csökkenés)
+Nincs nyitott kérdés.
 
 ## Architektúra
 
 ### Frontend
 
-Készlet lista; lejárat jelzés; kapcsolat az [[Értesítések]] triggerével; teljesítés wizard a [[Bevásárlás teljesítve]] felől.
+- Készlet lista: szűrő (hely), rendezés (lejárat), badge-ek (romlott, felbontott).
+- Manuális create / edit form; felbontás action.
+- Értesítés ütemezés: lokális ([[Értesítések]]) a lead time táblázat szerint.
+- Étkezés flow hívja a készletlevonás szolgáltatást (opened-first, auto-open, ≤0 delete).
+- Offline: helyi store + outbox.
 
 ### Backend
 
-Tárolt tétel entitás (OpenAPI) — várható mezők: hivatkozás `Food` id-re, mennyiség, tárolási hely enum (`ROOM` \| `FRIDGE` \| `FREEZER`), lejárati dátum, felbontva flag / felbontás dátuma (TBD a felbontás flow-val). Cascade delete a `Food` törlésekor.
+| Entitás | Fő mezők |
+|---|---|
+| `StoredFood` | `id` (UUID, kliens); `foodId`; `quantityAmount` + `quantityUnit`; `storageLocation` (`ROOM` \| `FRIDGE` \| `FREEZER`); `expiresOn` (date); `opened` (bool); `openedAt` (opcionális); `createdAt`, `updatedAt` |
+
+Műveletek: CRUD; felbontás (lejárat újraszámolás); fogyasztás / batch levonás (étkezés orchestrálhatja); cascade delete `Food` törlésekor.
+
+Mennyiség egységek: [[Mennyiség mező]]. Lejárat számítás: katalógus `duration` → dátum.
 
 ### Nyitott kérdések
 

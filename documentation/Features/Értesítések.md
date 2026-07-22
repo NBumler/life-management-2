@@ -16,7 +16,10 @@ Telefonos (push / lokális) értesítések küldése fontos eseményekről / kü
 
 Értesítés, ha:
 
-- [[Élelmiszer tárolás]] alapján egy élelmiszer meg fog romlani
+- [[Élelmiszer tárolás]] alapján egy élelmiszer meg fog romlani — lead time:
+  - a tétel helyéhez tartozó katalógus tárolhatóság **> 5 nap** → lejárat előtt **3 nappal**
+  - **≤ 5 nap** (vagy nincs katalógus-idő: felvétel→lejárat napköz ≤ 5) → lejárat előtt **2 nappal**
+  - Részletek: [[Élelmiszer tárolás]]
 - [[Rendszeres kiadások]] következő fizetése közeledik
 - [[Tennivalók]] időpontja közeledik
 - [[Események]] időpontja közeledik
@@ -29,12 +32,12 @@ _Nincs UI/UX érintettség._
 
 ### Megjegyzések
 
-_Nincs megjegyzés._
+Az élelmiszer-romlás lead time az [[Élelmiszer tárolás]] spechen SSOT; itt csak hivatkozás.
 
 ### Nyitott kérdések
 
 - Értesítés beállítások / kikapcsolás feature-önként
-- Lead time (hány órával / nappal előtte)
+- Lead time a többi (nem élelmiszer) értesítéstípusnál
 
 ## Architektúra
 

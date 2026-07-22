@@ -23,7 +23,9 @@ A folyamat **csak** a „Bevásárlás vége” megnyomásakor indul (a pipálá
        - Több engedélyezett → a flow megkérdezi, hol tárolja.
        - Pontosan egy → nem kérdez, azzal megy.
        - Null engedélyezett → a user választ helyet és ad lejáratot (nincs katalógus-alapértelmezés).
-     - Létrejön a megfelelő [[Élelmiszer tárolás]] bejegyzés.
+     - Létrejön a megfelelő [[Élelmiszer tárolás]] bejegyzés / bejegyzések:
+       - Lista mennyiség `db` és `amount = N` → **N külön** tárolási tétel (egyenként a katalógus 1 csomag nettó tartalmával; ha nincs nettó → `1 db`). Indoklás / szabályok: [[Élelmiszer tárolás]].
+       - Egyéb egység → **egy** tárolási tétel a lista mennyiségével.
    - **Nem-élelmiszer:** nem kerül tárolásba; csak az archív lista része lesz.
 2. **Pipálatlan tételek = meg nem vett**
    - Új **aktív** lista jön létre ugyanezekkel a tételekkel és mennyiségekkel, **üres pipákkal**.
