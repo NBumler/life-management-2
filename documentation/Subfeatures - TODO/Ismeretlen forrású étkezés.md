@@ -1,19 +1,45 @@
 # Ismeretlen forrású étkezés
 
-> **Státusz:** TODO — a specifikáció még nincs kidolgozva.
+## Business
 
-**Szülő:** [[Étkezés]]
+| | |
+|---|---|
+| **Státusz** | `TODO` |
+| **Szülő** | [[Étkezés]] |
+| **Kapcsolódó** | [[Energiaegyenleg napló]], [[Kalóriakalkulátor]], [[Élelmiszer tárolás]] |
 
-## Célállapot
+### Célállapot
 
 Étkezés rögzítése, amikor nincs ismert [[Recept]] vagy [[Élelmiszerek]] tétel (pl. éttermi étel, vendégség). A felhasználó manuálisan adja meg legalább a kalóriát (és opcionálisan a makrókat).
 
-## Megjegyzés
+### Funkcionális leírás
 
-Ismeretlen forrású étkezés **nem** módosítja az [[Élelmiszer tárolás]] készletet (lásd [[Élelmiszer tárolás]]).
+Ismeretlen forrású étkezés **nem** módosítja az [[Élelmiszer tárolás]] készletet.
 
-## Nyitott kérdések
+### UI/UX elvárások
+
+_Nincs UI/UX érintettség._
+
+### Megjegyzések
+
+_Nincs megjegyzés._
+
+### Nyitott kérdések
 
 - Kötelező / opcionális mezők listája
 - Becsült vs pontos érték jelölése a UI-on
 - Kapcsolat az [[Energiaegyenleg napló]] / [[Kalóriakalkulátor]] megjelenítésével
+
+## Architektúra
+
+### Frontend
+
+Manuális kalória / makro űrlap; nincs készlet-művelet.
+
+### Backend
+
+_Nincs backend érintettség._
+
+### Nyitott kérdések
+
+Nincs nyitott kérdés.
