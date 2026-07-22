@@ -1,9 +1,9 @@
-# Life Management 2.0
+﻿# Life Management 2.0
 
 Személyes life-management alkalmazás (hibrid mobil + web). Stack terv:
 
-- **Backend:** Java — Spring Boot
-- **Frontend / mobil:** Ionic — Angular
+- **Backend:** Java – Spring Boot
+- **Frontend / mobil:** Ionic – Angular
 - **Offline:** backend-offline first + SQLite outbox queue
 
 ## Dokumentáció
