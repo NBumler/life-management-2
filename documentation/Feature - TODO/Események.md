@@ -1,9 +1,46 @@
 # Események
 
-> **Státusz:** TODO — a specifikáció még nincs kidolgozva.
+## Business
+
+| | |
+|---|---|
+| **Státusz** | `TODO` |
+| **Szülő** | [[Life Management 2.0]] |
+| **Kapcsolódó** | [[Naptár]], [[Értesítések]], [[Tennivalók]] |
+
+### Célállapot
+
+Események kezelése; megjelenés a [[Naptár]]ban; közeledő eseményekhez [[Értesítések]].
+
+### Funkcionális leírás
 
 Subfeature lista:
+
 - [[Új esemény hozzáadása]]
 - [[Google Calendar szinkronizálása]]
 
-Megjelenik a [[Naptár]]ban; közeledő eseményekhez [[Értesítések]].
+### UI/UX elvárások
+
+_Nincs UI/UX érintettség._
+
+### Megjegyzések
+
+_Nincs megjegyzés._
+
+### Nyitott kérdések
+
+Nincs nyitott kérdés.
+
+## Architektúra
+
+### Frontend
+
+Feladatok / Naptár környéki UI; Google sync a gyerekben.
+
+### Backend
+
+_Nincs backend érintettség._ (esemény entitás — [[Új esemény hozzáadása]] / itt később)
+
+### Nyitott kérdések
+
+Nincs nyitott kérdés.

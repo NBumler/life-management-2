@@ -1,38 +1,73 @@
-Egy pakolás megkezdését az alábbival tudjuk:
+# Pakolás
+
+## Business
+
+| | |
+|---|---|
+| **Státusz** | `Váz` |
+| **Szülő** | [[GearCheck]] |
+| **Kapcsolódó** | [[Sablonok]], [[Eszközök]] |
+
+### Célállapot
+
+Aktív pakolás indítása sablon(ok)ból, eszközök állapotának végigvezetése, lezárás.
+
+### Funkcionális leírás
+
+Pakolás megkezdése:
+
 - egy vagy több [[Sablonok]] kiválasztása (kötelező)
 - úticél megadása (opcionális)
 
-Ha egy pakolás elkezdődik, akkor a kiválasztott [[Sablonok]]hoz tartozó [[Eszközök]] fel lesznek sorolva.
+Ha egy pakolás elkezdődik, a kiválasztott [[Sablonok]]hoz tartozó [[Eszközök]] fel lesznek sorolva.
 
-Ha több sablont is kiválasztottunk a pakoláshoz és ugyanazt az eszközt több sablon is tartalmazza, akkor az összesített pakolásban a duplikációt ki kell szűrni, és egyszer jelenhet meg az eszköz.
+Ha több sablont is kiválasztottunk és ugyanaz az eszköz több sablonban is szerepel, az összesített pakolásban a duplikációt ki kell szűrni (egyszer jelenhet meg).
 
-Ha valamelyik kiválasztott sablon pakolás közben módosul, attól még a pakolás eszközei nem módosulnak.
+Ha valamelyik kiválasztott sablon pakolás közben módosul, a futó pakolás eszközei **nem** módosulnak.
 
-Folyamatban lévő pakolás közben lehetőség van csak arra a pakolásra hozzáadni egy új [[Eszközök]] elemet. Mivel nincs lehetőség egy elem duplikált hozzáadására, ezért a megjelenő select element disabled-ként mutassa a már kiválasztott elemeket, és rendezze a lista legvégére.
+Folyamatban lévő pakolás közben csak arra a pakolásra lehet új [[Eszközök]] elemet hozzáadni. Duplikáció tilos: a selectben a már kiválasztott elemek disabled-ek, és a lista végére rendezve.
 
-Pakolás indítása után tehát létrejönnek a pakolás eszközei; mindegyik eszközhöz az alábbi állapotok léteznek:
-Állapotok és Színkódok (Tailwind példák):
-NOT_PACKED (Nincs bepakolva) -> Halvány piros háttér.
-KNOWN_LOCATION (Tudom hol van) -> Sárgás/Narancs.
-PREPARED (Táska mellé készítve) -> Világoskék.
-WEAR_ON_DEPARTURE (Induláskor veszem fel) -> Lila.
-BUY_ON_THE_WAY (Út közben kell venni, pl. magnézia/energiaital) -> Barna/Narancs.
-PACKED (Bepakolva) -> Zöld háttér.
-NOT_NEEDED -> Szürke háttér
+Pakolás eszközeinek állapotai és színkódok (Tailwind példák):
 
-Ha egy eszköz PACKED vagy NOT_NEEDED állapotba került, akkor egy új szekcióba kerülnek ahol a kész vagy nem szükséges eszközök vannak tárolva.
+| Állapot | Jelentés | Szín |
+|---|---|---|
+| `NOT_PACKED` | Nincs bepakolva | Halvány piros |
+| `KNOWN_LOCATION` | Tudom hol van | Sárgás / narancs |
+| `PREPARED` | Táska mellé készítve | Világoskék |
+| `WEAR_ON_DEPARTURE` | Induláskor veszem fel | Lila |
+| `BUY_ON_THE_WAY` | Út közben kell venni | Barna / narancs |
+| `PACKED` | Bepakolva | Zöld |
+| `NOT_NEEDED` | Nem kell | Szürke |
 
-A UI tetején van keresés felület is.
-Keresés alatt van sorba rendezés, ami egy gomb, és akkor az lábi státusz alapján rendez:
-Felülről lefelé:
-NOT_PACKED
-KNOWN_LOCATION
-PREPARED
-WEAR_ON_DEPARTURE
-BUY_ON_THE_WAY
+Ha egy eszköz `PACKED` vagy `NOT_NEEDED` állapotba került, külön szekcióba kerül (kész / nem szükséges).
 
-(A PACKED és NOT_NEEDED eszközök mivel külön vannak, azokat nem rendezzük)
+**Lezárás:** a pakolás hard delete az adatbázisból; confirmation dialog kötelező. Alatta: új egyéni eszköz hozzáadása ehhez a pakoláshoz.
 
-Emellett meg minden eszközt újra lehet rendezni manuálisan is. Ez weben drag-and-drop módon működik, telefonon pedig az eszközök előtt megjelenik felfele és lefele nyíl, hogy merre mozogjon az eszköz.
+### UI/UX elvárások
 
-A UI tetején lévő keresés alatt lévő sorba rendezés alatt lesz a pakolás lezárása gomb, ami törli az adatbázisból a pakolást (hard delete), erre kell majd egy confirmation a user-től, alatta pedig az új egyéni eszköz hozzáadása ehhez a pakoláshoz
+- UI tetején: keresés
+- Keresés alatt: sorba rendezés gomb státusz szerint (`NOT_PACKED` → `KNOWN_LOCATION` → `PREPARED` → `WEAR_ON_DEPARTURE` → `BUY_ON_THE_WAY`); a `PACKED` / `NOT_NEEDED` szekciót nem rendezi
+- Manuális újrarendezés: weben drag-and-drop; telefonon felfelé / lefelé nyilak az eszköz előtt
+- Lezárás gomb a rendezés alatt; confirmation a hard delete előtt
+
+### Megjegyzések
+
+_Nincs megjegyzés._
+
+### Nyitott kérdések
+
+Nincs nyitott kérdés.
+
+## Architektúra
+
+### Frontend
+
+Pakolás képernyő állapotgéppel; platformfüggő reorder (web vs mobil).
+
+### Backend
+
+Pakolás + pakolás-eszköz entitások; hard delete lezáráskor; [[Backend-offline first]].
+
+### Nyitott kérdések
+
+Nincs nyitott kérdés.

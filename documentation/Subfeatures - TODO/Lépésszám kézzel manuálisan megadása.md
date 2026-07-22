@@ -1,14 +1,44 @@
 # Lépésszám kézzel manuálisan megadása
 
-> **Státusz:** TODO — a specifikáció még nincs kidolgozva.
+## Business
 
-**Szülő:** [[Lépésszám követés]] · **Kapcsolódó:** [[Kalóriakalkulátor]]
+| | |
+|---|---|
+| **Státusz** | `TODO` |
+| **Szülő** | [[Lépésszám követés]] |
+| **Kapcsolódó** | [[Kalóriakalkulátor]], [[Lépésszám átszinkronizálása a Samsung Health-ből]] |
 
-## Célállapot
+### Célállapot
 
-Napi lépésszám kézi rögzítése / felülírása, ha nincs Samsung Health szinkron ([[Lépésszám átszinkronizálása a Samsung Health-ből]]).
+Napi lépésszám kézi rögzítése / felülírása, ha nincs Samsung Health szinkron.
 
-## Nyitott kérdések
+### Funkcionális leírás
+
+_Nincs business érintettség._
+
+### UI/UX elvárások
+
+_Nincs UI/UX érintettség._
+
+### Megjegyzések
+
+_Nincs megjegyzés._
+
+### Nyitott kérdések
 
 - Napi egy érték vs többszöri frissítés
 - Manuális vs szinkronizált érték prioritása konfliktusnál
+
+## Architektúra
+
+### Frontend
+
+Manuális lépésszám űrlap; kalória újraszámolás ([[Kalóriakalkulátor]] / Samsung Health gyerek képlete).
+
+### Backend
+
+_Nincs backend érintettség._
+
+### Nyitott kérdések
+
+Nincs nyitott kérdés.
