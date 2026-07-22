@@ -1,5 +1,21 @@
-Business:
-A felhasználó a profile felületen megadhatja a következő adatait:
+# Profile
+
+## Business
+
+| | |
+|---|---|
+| **Státusz** | `Váz` |
+| **Szülő** | [[Life Management 2.0]] |
+| **Kapcsolódó** | [[Kalóriakalkulátor]], [[Nettó fizetés kalkulátor]], [[Backend-offline first]] |
+
+### Célállapot
+
+A felhasználó a profile felületen megadja a személyes / cél adatait, amikből más feature-ök (kalória, nettó bér, stb.) számolnak.
+
+### Funkcionális leírás
+
+Megadható adatok:
+
 - Születési dátum
 - Nem (férfi / nő)
 - Magasság (cm)
@@ -17,5 +33,30 @@ A felhasználó a profile felületen megadhatja a következő adatait:
 - Cél súlyváltozás (kg / hét)
 - Bruttó havi bér (Ft)
 
-Technikai:
-CRUD művelet kell! [[Backend-offline first]] megközelítés kell!
+CRUD műveletek kellenek a profiladatokhoz.
+
+### UI/UX elvárások
+
+_Nincs UI/UX érintettség._
+
+### Megjegyzések
+
+_Nincs megjegyzés._
+
+### Nyitott kérdések
+
+Nincs nyitott kérdés.
+
+## Architektúra
+
+### Frontend
+
+Profil űrlap; Menü tab alá kerül (lásd [[Frontend]] navigáció). Offline-képes mentés.
+
+### Backend
+
+CRUD API a profil entitásra; [[Backend-offline first]] (kliens UUID). OpenAPI szerződés része.
+
+### Nyitott kérdések
+
+Nincs nyitott kérdés.

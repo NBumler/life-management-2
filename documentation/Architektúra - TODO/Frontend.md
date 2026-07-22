@@ -1,8 +1,38 @@
 # Frontend
 
-> **Státusz:** TODO — váz; részletes app-struktúra / state management specifikáció még hiányzik.
+## Business
 
-## Stack
+| | |
+|---|---|
+| **Státusz** | `Váz` |
+| **Szülő** | [[Life Management 2.0]] |
+| **Kapcsolódó** | [[Backend]], [[Backend-offline first]], [[Szinkronizációs központ]], [[Nyelv választás]], [[Dark&Light mode]] |
+
+### Célállapot
+
+_Nincs business érintettség._
+
+### Funkcionális leírás
+
+_Nincs business érintettség._
+
+### UI/UX elvárások
+
+_Nincs UI/UX érintettség._
+
+### Megjegyzések
+
+Architektúra jegyzet: a tartalom az `## Architektúra` alatt van. A navigációs tabok product-döntések, de itt rögzítjük őket.
+
+### Nyitott kérdések
+
+Nincs nyitott kérdés.
+
+## Architektúra
+
+### Frontend
+
+#### Stack
 
 - **Framework:** Ionic + Angular (hibrid: web + mobil)
 - **API kliens:** OpenAPI (Swagger) specifikációból generált TypeScript / Angular kód (modellek + service-ek) — ugyanaz a szerződés, mint a [[Backend]] Spring Boot interface-einél
@@ -10,14 +40,14 @@
 - **Téma:** [[Dark&Light mode]]
 - **Lokális tárolás / offline:** SQLite + `OfflineQueueService` — [[Backend-offline first]], [[Szinkronizációs központ]]
 
-## OpenAPI / kódgenerálás
+#### OpenAPI / kódgenerálás
 
 - A backend felé menő HTTP hívások és DTO-k **nem** kézzel íródnak: az OpenAPI spec-ből generálódnak.
 - A generált kliens a [[Szinkronizációs központ]] / `OfflineQueueService` alá kerül (online közvetlen hívás; offline esetén a queue a generált endpoint URL + payload alapján dolgozik).
 - A generált fájlok ne legyenek kézzel szerkesztve; változás → OpenAPI frissítés → újragenerálás.
 - Külső API-k (pl. Open Food Facts) **közvetlenül a kliensről** hívódnak, nem a [[Backend]] proxyján át — [[Backend-offline first]].
 
-## Navigáció (alsó tab bar)
+#### Navigáció (alsó tab bar)
 
 Alul **4 gomb** (Ionic tabs):
 
@@ -28,14 +58,18 @@ Alul **4 gomb** (Ionic tabs):
 
 A tab lista **konfigurációból** (pl. tömb / feature-flagelt tab registry) jöjjön, ne legyen beégetve a template-be: a jövőben könnyen bővíthető legyen **5 gombosra** tab hozzáadásával / átrendezésével, layout-újraírással.
 
-## Kötelező elvek
+#### Kötelező elvek
 
 - Minden feature **feature flag**-hez kötve (lásd [[Life Management 2.0]]).
 - Platformfüggő input kontrollok (web vs mobil kényelem).
 - Egyértelmű fókuszmező: ha a user egyértelműen gépelni fog, az input legyen auto-focus.
 - Kritikus számítási konstansok (pl. MET értékek) pure TypeScript utility-ként a frontenden is — optimista UI (lásd [[Backend-offline first]], [[Kalóriakalkulátor]]).
 
-## Nyitott kérdések
+### Backend
+
+_Nincs backend érintettség._ (szerveroldali szerződés: [[Backend]])
+
+### Nyitott kérdések
 
 - State management megoldás (Signals / NgRx / egyéb)
 - Capacitor plugin lista (barcode, health sync, push notifications, stb.)
