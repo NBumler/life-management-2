@@ -16,17 +16,17 @@
 
 Csatornák:
 
-- [[Élelmiszer manuális bevitele]] — üres űrlap
-- [[Vonalkódos élelmiszer beolvasás]] — scan → OFF előtöltés → űrlap
-- [[Élelmiszer importálása clipboard-ról]] — clipboard → parse → űrlap (spec részben külön)
+- [[Élelmiszer manuális bevitele]] — üres űrlap (egy tétel)
+- [[Vonalkódos élelmiszer beolvasás]] — scan → OFF előtöltés → [[Élelmiszer manuális bevitele]]
+- [[Élelmiszer importálása clipboard-ról]] — TSV beillesztés → előnézet → tömeges create (saját képernyő, nem az egyedi űrlap)
 
-Mindhárom (ahol van adat) ugyanarra az űrlapra vezet. Mentési szabályok, kötelező mezők, duplikáció: [[Élelmiszer manuális bevitele]] / [[Élelmiszerek]].
+Kötelező mezők / duplikáció: [[Élelmiszerek]] (és manuális űrlapnál: [[Élelmiszer manuális bevitele]]).
 
-Backend-offline: a csatornák és a mentés is támogatott (OFF híváshoz net kell; teljes offline: manuális / késleltetett OFF — lásd [[Vonalkódos élelmiszer beolvasás]]).
+Backend-offline: a csatornák és a mentés is támogatott (OFF híváshoz net kell; teljes offline: manuális / clipboard / késleltetett OFF — lásd [[Vonalkódos élelmiszer beolvasás]]).
 
 ### UI/UX elvárások
 
-Belépő / választó a három módhoz (vagy közvetlen FAB a vonalkódra + „új” a manuálishoz); közös célűrlap: [[Élelmiszer manuális bevitele]].
+Belépő / választó a három módhoz (vagy közvetlen FAB a vonalkódra + „új” a manuálishoz + clipboard import belépő).
 
 ### Megjegyzések
 
