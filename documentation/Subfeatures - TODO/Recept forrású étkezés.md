@@ -26,9 +26,9 @@ _Nincs megjegyzés._
 
 ### Nyitott kérdések
 
-- Részadag / adagszám kezelése
-- Hiányzó alapanyag a tárolóban — mi a UX?
-- Kalória / makro számítás receptből vs manuális felülírás
+- Részadag / hányad kezelése az étkezésnél (a [[Recept]]-en nincs adagszám; pl. „fél recept”)
+- Hiányzó alapanyag a tárolóban — UX (készletlevonás szabály: [[Élelmiszer tárolás]], nincs error)
+- Kalória: receptösszeg × hányad vs manuális felülírás
 
 ## Architektúra
 
