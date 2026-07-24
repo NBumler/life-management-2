@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `TODO` |
 | **Szülő** | [[Edzés]] |
-| **Kapcsolódó** | [[Gyakorlat]], [[Heti terv]], [[Kalóriakalkulátor]] |
+| **Kapcsolódó** | [[Gyakorlat]], [[Heti terv]], [[Kalóriakalkulátor]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -35,6 +35,10 @@ _Nincs megjegyzés._
 ### Frontend
 
 Edzésnapló űrlap; offline queue; kalória utility.
+
+#### Backend-offline
+
+Offline rögzítés: helyi store + outbox; kalória utility a kliensen. Lásd [[Backend-offline first]].
 
 ### Backend
 

@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `TODO` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Kalóriakalkulátor]], [[Profile]], [[Edzés]] |
+| **Kapcsolódó** | [[Kalóriakalkulátor]], [[Profile]], [[Edzés]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -35,6 +35,10 @@ _Nincs megjegyzés._
 ### Frontend
 
 Napló űrlap; offline MET utility; Edzés tab környékén.
+
+#### Backend-offline
+
+Napló + offline MET utility; mentés helyi store + outbox. Lásd [[Backend-offline first]].
 
 ### Backend
 

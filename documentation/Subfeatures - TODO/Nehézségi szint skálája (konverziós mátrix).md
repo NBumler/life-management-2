@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Váz` |
 | **Szülő** | [[Mászónapló]] |
-| **Kapcsolódó** | [[Nehézségi szint skálája]], [[Giga feature napló specifikáció (Ideiglenes specifikáció)]], [[Kalóriakalkulátor]] |
+| **Kapcsolódó** | [[Nehézségi szint skálája]], [[Giga feature napló specifikáció (Ideiglenes specifikáció)]], [[Kalóriakalkulátor]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -45,6 +45,10 @@ A tábla részleges példa; a teljes mátrix a JSON erőforrásban él.
 ### Frontend
 
 Skálák statikus JSON erőforrásként; offline illesztés és volumen számítás.
+
+#### Backend-offline
+
+Skálák statikus JSON; illesztés / volumen számítás Full-offline is. Nincs outbox. Lásd [[Backend-offline first]].
 
 ### Backend
 

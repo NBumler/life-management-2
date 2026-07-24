@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `TODO` |
 | **Szülő** | [[Események]] |
-| **Kapcsolódó** | [[Naptár]], [[Értesítések]] |
+| **Kapcsolódó** | [[Naptár]], [[Értesítések]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -35,6 +35,10 @@ _Nincs megjegyzés._
 ### Frontend
 
 Esemény create űrlap; offline queue.
+
+#### Backend-offline
+
+Esemény create offline queue-ba; kliens UUID. Lásd [[Backend-offline first]].
 
 ### Backend
 

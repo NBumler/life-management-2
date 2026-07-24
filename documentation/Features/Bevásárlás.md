@@ -52,7 +52,12 @@ Nincs nyitott kérdés.
 
 - Menü alatti Bevásárlás belépő; feature flag a [[Life Management 2.0]] szerint.
 - Közös UI: [[Mennyiség mező]], [[Szöveges keresés]].
-- Offline: [[Backend-offline first]] (kliens UUID, outbox).
+
+#### Backend-offline
+
+- Aktív lista / tétel CRUD, pipa, hard delete, teljesítés, újralistázás: helyi store + outbox; kliens UUID.
+- Backend-offline és Full-offline támogatott; sync: [[Szinkronizációs központ]].
+- Lásd [[Backend-offline first]].
 
 ### Backend
 

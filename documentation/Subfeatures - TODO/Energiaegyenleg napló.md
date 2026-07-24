@@ -36,6 +36,10 @@ _Nincs megjegyzés._
 
 Napló / diagram nézet; offline bizonytalanság jelölés.
 
+#### Backend-offline
+
+Olvasás/aggregáció helyi store-ból; becsült értékek jelölése (~ / homokóra). Lásd [[Backend-offline first]].
+
 ### Backend
 
 _Nincs backend érintettség._ (aggregáció lehet szerveroldali később; számítási SSOT: [[Kalóriakalkulátor]])

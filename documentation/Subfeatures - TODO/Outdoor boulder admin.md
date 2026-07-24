@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `TODO` |
 | **Szülő** | [[Outdoor - boulder]] |
-| **Kapcsolódó** | [[Outdoor boulder napló]], [[Indoor boulder admin]], [[Giga feature napló specifikáció (Ideiglenes specifikáció)]] |
+| **Kapcsolódó** | [[Outdoor boulder napló]], [[Indoor boulder admin]], [[Giga feature napló specifikáció (Ideiglenes specifikáció)]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -35,6 +35,10 @@ _Nincs megjegyzés._
 ### Frontend
 
 Helyszín / szektor admin UI.
+
+#### Backend-offline
+
+Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító kérések outboxba (`OfflineQueueService`), kliens UUID. Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
 
 ### Backend
 

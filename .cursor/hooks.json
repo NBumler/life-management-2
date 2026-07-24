@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "hooks": {
+    "afterFileEdit": [
+      {
+        "command": "python .cursor/hooks/check-backend-offline-spec.py",
+        "matcher": "Write|TabWrite"
+      }
+    ],
+    "postToolUse": [
+      {
+        "command": "python .cursor/hooks/check-backend-offline-spec.py",
+        "matcher": "Write|StrReplace"
+      }
+    ]
+  }
+}

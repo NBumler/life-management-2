@@ -115,7 +115,12 @@ Nincs nyitott kérdés.
 - Manuális create / edit form; felbontás action.
 - Értesítés ütemezés: lokális ([[Értesítések]]) a lead time táblázat szerint.
 - Étkezés flow hívja a készletlevonás szolgáltatást (opened-first, auto-open, ≤0 delete).
+
+#### Backend-offline
+
 - Offline: helyi store + outbox.
+
+Lásd [[Backend-offline first]].
 
 ### Backend
 

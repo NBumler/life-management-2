@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Kész` |
 | **Szülő** | [[Bevásárlás]] |
-| **Kapcsolódó** | [[Bevásárlás teljesítve]], [[Bevásárlólista írás]], [[Szöveges keresés]] |
+| **Kapcsolódó** | [[Bevásárlás teljesítve]], [[Bevásárlólista írás]], [[Szöveges keresés]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -43,6 +43,10 @@ Nincs nyitott kérdés.
 ### Frontend
 
 Archivált listák UI; keresés a [[Szöveges keresés]] szabályaival; újralistázás → create active list API.
+
+#### Backend-offline
+
+Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító kérések outboxba (`OfflineQueueService`), kliens UUID. Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
 
 ### Backend
 

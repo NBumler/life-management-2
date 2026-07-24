@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `TODO` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Naptár]], [[Értesítések]], [[Tennivalók]] |
+| **Kapcsolódó** | [[Naptár]], [[Értesítések]], [[Tennivalók]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -36,6 +36,10 @@ Nincs nyitott kérdés.
 ### Frontend
 
 Feladatok / Naptár környéki UI; Google sync a gyerekben.
+
+#### Backend-offline
+
+Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító kérések outboxba (`OfflineQueueService`), kliens UUID. Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
 
 ### Backend
 

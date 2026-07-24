@@ -50,6 +50,9 @@ Nincs nyitott kérdés.
 ### Frontend
 
 - Kamera: `@capacitor-mlkit/barcode-scanning`
+
+#### Backend-offline
+
 - Open Food Facts **közvetlenül a kliensről** (nincs backend proxy — [[Backend]], [[Backend-offline first]])
 - **Full-offline** (nincs net): beolvasott vonalkód elmenthető / formra vihető; OFF hívás később (sync gomb), vagy manuális kitöltés
 - **Backend-offline** (van net, nincs saját backend): OFF hívás futhat; saját backendre mentés outboxba ([[Szinkronizációs központ]])

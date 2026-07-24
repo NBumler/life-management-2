@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `TODO` |
 | **Szülő** | [[GearCheck]] |
-| **Kapcsolódó** | [[Eszközök]], [[Pakolás]] |
+| **Kapcsolódó** | [[Eszközök]], [[Pakolás]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -34,6 +34,10 @@ _Nincs megjegyzés._
 ### Frontend
 
 Sablon CRUD UI.
+
+#### Backend-offline
+
+Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító kérések outboxba (`OfflineQueueService`), kliens UUID. Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
 
 ### Backend
 

@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Váz` |
 | **Szülő** | [[Mászónapló]] |
-| **Kapcsolódó** | [[Nehézségi szint skálája (konverziós mátrix)]], [[Giga feature napló specifikáció (Ideiglenes specifikáció)]] |
+| **Kapcsolódó** | [[Nehézségi szint skálája (konverziós mátrix)]], [[Giga feature napló specifikáció (Ideiglenes specifikáció)]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -64,6 +64,10 @@ Regex pattern matching a mászás típusa + string alapján:
 - `^5\.\d+[a-d]?$` → YDS
 - `^\d[a-c]\+?$` → Francia
 - `^[IVXLCDM]+[-+]?$` → UIAA
+
+#### Backend-offline
+
+Számítás / illesztés pure TypeScript utility-ként a kliensen — Backend-offline és Full-offline is. Ha van becsült / csak-online adat, jelöld (`~` / homokóra). Lásd [[Backend-offline first]].
 
 ### Backend
 

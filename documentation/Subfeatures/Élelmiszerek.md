@@ -75,7 +75,12 @@ Nincs nyitott kérdés.
 ### Frontend
 
 - Kaja tab: katalógus lista, keresés ([[Szöveges keresés]]), részletek, szerkesztő / létrehozó ([[Élelmiszer manuális bevitele]]).
-- Helyi store + outbox ([[Backend-offline first]]); duplikáció és cascade törlés előnézet helyi adatokból is.
+
+#### Backend-offline
+
+- Katalógus CRUD, keresés, duplikáció-ellenőrzés, cascade törlés előnézet: helyi adatokból (Backend-offline / Full-offline).
+- Mutációk outboxba; kliens UUID. OFF sync a gyerek specekben.
+- Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
 
 ### Backend
 

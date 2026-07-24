@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Váz` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Bevásárlás]], [[Élelmiszerek]], [[Kalóriakalkulátor]], [[Mennyiség mező]] |
+| **Kapcsolódó** | [[Bevásárlás]], [[Élelmiszerek]], [[Kalóriakalkulátor]], [[Mennyiség mező]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -40,6 +40,10 @@ Nincs nyitott kérdés.
 ### Frontend
 
 Kaja tab belépő; a subfeature-ök külön képernyők / flow-k.
+
+#### Backend-offline
+
+Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító kérések outboxba (`OfflineQueueService`), kliens UUID. Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
 
 ### Backend
 

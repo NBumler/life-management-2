@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Váz` |
 | **Szülő** | [[Mászónapló]] |
-| **Kapcsolódó** | [[Outdoor mászónapló]], [[Giga feature napló specifikáció (Ideiglenes specifikáció)]] |
+| **Kapcsolódó** | [[Outdoor mászónapló]], [[Giga feature napló specifikáció (Ideiglenes specifikáció)]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -36,6 +36,10 @@ Nincs nyitott kérdés.
 ### Frontend
 
 Indoor kontextus választó / navigáció.
+
+#### Backend-offline
+
+Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító kérések outboxba (`OfflineQueueService`), kliens UUID. Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
 
 ### Backend
 

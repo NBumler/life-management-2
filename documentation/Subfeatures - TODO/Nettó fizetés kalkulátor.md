@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Váz` |
 | **Szülő** | [[Pénzügyek]] |
-| **Kapcsolódó** | [[Profile]] |
+| **Kapcsolódó** | [[Profile]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -37,6 +37,10 @@ _Nincs megjegyzés._
 ### Frontend
 
 Kalkulátor UI; bemenet a [[Profile]]-ból; pure TypeScript utility (offline is).
+
+#### Backend-offline
+
+Pure TypeScript utility; Backend-offline / Full-offline. Nincs saját outbox. Lásd [[Backend-offline first]].
 
 ### Backend
 

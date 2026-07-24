@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Váz` |
 | **Szülő** | [[Indoor - boulder]] |
-| **Kapcsolódó** | [[Indoor boulder napló]], [[Nehézségi szint skálája]] |
+| **Kapcsolódó** | [[Indoor boulder napló]], [[Nehézségi szint skálája]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -40,6 +40,10 @@ Nincs nyitott kérdés.
 ### Frontend
 
 Terem / szín-sáv CRUD UI.
+
+#### Backend-offline
+
+Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító kérések outboxba (`OfflineQueueService`), kliens UUID. Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
 
 ### Backend
 

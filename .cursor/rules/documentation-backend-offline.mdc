@@ -1,0 +1,17 @@
+---
+description: Kötelező Backend-offline szekció minden documentation/**/*.md spechen
+globs: documentation/**/*.md
+alwaysApply: false
+---
+
+# Backend-offline a specifikációkban
+
+Minden `documentation/**/*.md` spechez (kivéve `SPEC-TEMPLATE.md` és `Architektúra/Backend-offline first.md`):
+
+1. Az `## Architektúra` → `### Frontend` alatt **kötelező** a `#### Backend-offline` alfejezet.
+2. Írd le, hogyan viselkedik a feature **Backend-offline** (van net, nincs saját backend) és **Full-offline** esetén.
+3. Mutációknál: helyi store + outbox + kliens UUID; hivatkozz `[[Backend-offline first]]`-re (és szükség esetén `[[Szinkronizációs központ]]`-ra).
+4. A Business **Kapcsolódó** cellába tedd a `[[Backend-offline first]]` linket, ha van frontend / adat érintettség.
+5. Formátum / sablon: skill `documentation-spec`; emberi sablon: `documentation/SPEC-TEMPLATE.md`.
+
+Ha szerkesztesz egy spechet és hiányzik a `#### Backend-offline`, pótolni kell — ne hagyd ki.

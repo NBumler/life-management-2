@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `TODO` |
 | **Szülő** | [[Outdoor - köteles]] |
-| **Kapcsolódó** | [[Outdoor köteles admin]], [[Nehézségi szint skálája]], [[Kalóriakalkulátor]], [[Giga feature napló specifikáció (Ideiglenes specifikáció)]] |
+| **Kapcsolódó** | [[Outdoor köteles admin]], [[Nehézségi szint skálája]], [[Kalóriakalkulátor]], [[Giga feature napló specifikáció (Ideiglenes specifikáció)]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -43,6 +43,10 @@ _Nincs megjegyzés._
 ### Frontend
 
 Napló UI; több pitch; [[Nehézségi szint skálája]].
+
+#### Backend-offline
+
+Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító kérések outboxba (`OfflineQueueService`), kliens UUID. Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
 
 ### Backend
 

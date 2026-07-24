@@ -50,6 +50,10 @@ A külső Health Connect hívás közvetlenül a kliensről megy (nincs backend 
 
 Background runner + Health Connect; `ActivityStepService`; outbox upsert; kalória utility.
 
+#### Backend-offline
+
+Samsung synchez net kell (Backend-offline OK ha van internet; Full-offline vár). Saját backend írás outbox + napi upsert szabály. Lásd [[Backend-offline first]], [[Szinkronizációs központ]].
+
 ### Backend
 
 Napi lépésszám upsert végpont (OpenAPI); kliens UUID / napi kulcs deduplikáció szerveren is TBD.

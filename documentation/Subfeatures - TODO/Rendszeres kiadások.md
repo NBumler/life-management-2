@@ -44,6 +44,10 @@ Nincs nyitott kérdés.
 
 CRUD lista; offline queue; SSOT olvasás az [[AYCM tracker]] felé.
 
+#### Backend-offline
+
+CRUD helyi store + OfflineQueueService; SSOT olvasás AYCM felé. Lásd [[Backend-offline first]], [[Szinkronizációs központ]].
+
 ### Backend
 
 Előfizetés / rendszeres kiadás entitás (OpenAPI, UUID).

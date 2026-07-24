@@ -94,8 +94,11 @@ Nincs nyitott kérdés.
 
 - Parser utility: TSV split → sor DTO; fejléc detektálás; validáció; duplikáció-ellenőrzés a helyi katalógus + batch ellen.
 - UI: textbox + collapsible preview + Import.
-- Mentés: sorozatos vagy batch create az [[Élelmiszerek]] API / helyi store felé; outbox ([[Backend-offline first]]).
 - Nettó: meglévő quantity parser; romlás: szám → `{ amount, unit: 'nap' }`.
+
+#### Backend-offline
+
+- Mentés: sorozatos vagy batch create az [[Élelmiszerek]] API / helyi store felé; outbox ([[Backend-offline first]]).
 
 ### Backend
 

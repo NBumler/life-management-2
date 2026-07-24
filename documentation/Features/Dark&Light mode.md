@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Váz` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Frontend]] |
+| **Kapcsolódó** | [[Frontend]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -34,6 +34,10 @@ Nincs nyitott kérdés.
 ### Frontend
 
 Téma váltás a hibrid appban (Ionic / CSS változók — részletek TBD). Kapcsolódik a [[Frontend]] stack leíráshoz.
+
+#### Backend-offline
+
+Preferencia elsődlegesen helyi tárolás (Backend-offline / Full-offline is azonnal érvényes). Ha később profilba szinkronizálódik, a mentés outboxolható. Lásd [[Backend-offline first]].
 
 ### Backend
 

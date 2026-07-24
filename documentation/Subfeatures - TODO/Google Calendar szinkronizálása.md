@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `TODO` |
 | **Szülő** | [[Események]] |
-| **Kapcsolódó** | [[Naptár]], [[Új esemény hozzáadása]] |
+| **Kapcsolódó** | [[Naptár]], [[Új esemény hozzáadása]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -36,6 +36,10 @@ _Nincs megjegyzés._
 ### Frontend
 
 Google OAuth a kliensről (külső API, nincs backend proxy — [[Backend]]); sync worker.
+
+#### Backend-offline
+
+Külső synchez net kell (Backend-offline: külső API a kliensről hívható, ha van internet; Full-offline: sync vár). A saját backendre írás outboxba kerülhet. Lásd [[Backend-offline first]], [[Szinkronizációs központ]].
 
 ### Backend
 

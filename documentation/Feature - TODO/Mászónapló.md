@@ -43,6 +43,10 @@ A giga-spec összevont; a közös backend (Route / AscentLog) várhatóan ebben 
 
 Dashboard 4 kontextus (Indoor/Outdoor × Boulder/Kötél); nehézség input: [[Nehézségi szint skálája]]. Részletek a gyerekekben / giga-specben.
 
+#### Backend-offline
+
+Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító kérések outboxba (`OfflineQueueService`), kliens UUID. Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
+
 ### Backend
 
 Közös ascent / route domain — lásd [[Giga feature napló specifikáció (Ideiglenes specifikáció)]]; UUID egységesítés a [[Backend-offline first]] szerint.

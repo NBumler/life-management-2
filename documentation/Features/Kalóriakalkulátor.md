@@ -52,6 +52,10 @@ Jelenleg csak az úszás MET tábla van kidolgozva; más aktivitások képletei 
 
 Pure TypeScript utility a MET / keret számításhoz (pragmatikus duplikáció — [[Backend-offline first]]); Store frissítés mentéskor.
 
+#### Backend-offline
+
+Számítás Backend-offline és Full-offline is (pure TS utility). Becsült / csak-online értékeknél ~ / homokóra. Store frissítés helyi; szerver érvényesítés outboxolható. Lásd [[Backend-offline first]].
+
 ### Backend
 
 Ugyanazok a konstansok / képletek a szerveroldali szervizben; OpenAPI-n keresztül visszaadott / érvényesített értékek TBD.

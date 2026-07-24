@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Váz` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Frontend]] |
+| **Kapcsolódó** | [[Frontend]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -33,6 +33,10 @@ Nincs nyitott kérdés.
 ### Frontend
 
 ngx-translate; `hu.json` és `en.json` fordítófájlok. Belépés: Menü (lásd [[Frontend]]).
+
+#### Backend-offline
+
+Preferencia elsődlegesen helyi tárolás (Backend-offline / Full-offline is azonnal érvényes). Ha később profilba szinkronizálódik, a mentés outboxolható. Lásd [[Backend-offline first]].
 
 ### Backend
 

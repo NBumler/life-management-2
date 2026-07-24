@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `TODO` |
 | **Szülő** | [[AYCM tracker]] |
-| **Kapcsolódó** | [[AYCM Check-In]], [[Rendszeres kiadások]] |
+| **Kapcsolódó** | [[AYCM Check-In]], [[Rendszeres kiadások]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -34,6 +34,10 @@ _Nincs megjegyzés._
 ### Frontend
 
 Statisztika / diagram nézet; SSOT olvasás a [[Rendszeres kiadások]]ból.
+
+#### Backend-offline
+
+Olvasás a helyi store-ból (Backend-offline / Full-offline). Nincs saját módosító API → nincs outbox ebben a spechen. Lásd [[Backend-offline first]].
 
 ### Backend
 

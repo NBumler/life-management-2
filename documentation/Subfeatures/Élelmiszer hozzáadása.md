@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Kész` |
 | **Szülő** | [[Élelmiszerek]] |
-| **Kapcsolódó** | [[Vonalkódos élelmiszer beolvasás]], [[Élelmiszer manuális bevitele]], [[Élelmiszer importálása clipboard-ról]] |
+| **Kapcsolódó** | [[Vonalkódos élelmiszer beolvasás]], [[Élelmiszer manuális bevitele]], [[Élelmiszer importálása clipboard-ról]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -41,6 +41,10 @@ Nincs nyitott kérdés.
 ### Frontend
 
 Router / action sheet / FAB a csatornákhoz; navigáció az [[Élelmiszer manuális bevitele]] formra query/state előtöltéssel.
+
+#### Backend-offline
+
+Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító kérések outboxba (`OfflineQueueService`), kliens UUID. Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
 
 ### Backend
 

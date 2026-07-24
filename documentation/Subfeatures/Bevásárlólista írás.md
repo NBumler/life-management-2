@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Kész` |
 | **Szülő** | [[Bevásárlás]] |
-| **Kapcsolódó** | [[Élelmiszerek]], [[Bevásárlás teljesítve]], [[Mennyiség mező]] |
+| **Kapcsolódó** | [[Élelmiszerek]], [[Bevásárlás teljesítve]], [[Mennyiség mező]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -45,6 +45,10 @@ Nincs nyitott kérdés.
 ### Frontend
 
 Aktív lista képernyő(k); tétel szerkesztő; pipa state; navigáció a teljesítés flow-ra. Mennyiség: [[Mennyiség mező]].
+
+#### Backend-offline
+
+Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító kérések outboxba (`OfflineQueueService`), kliens UUID. Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
 
 ### Backend
 

@@ -53,6 +53,10 @@ Nincs nyitott kérdés.
 
 Profil űrlap; Menü tab alá kerül (lásd [[Frontend]] navigáció). Offline-képes mentés.
 
+#### Backend-offline
+
+Profil olvasás/írás helyi store + outbox; kliens UUID. Backend-offline / Full-offline mentés támogatott. Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
+
 ### Backend
 
 CRUD API a profil entitásra; [[Backend-offline first]] (kliens UUID). OpenAPI szerződés része.

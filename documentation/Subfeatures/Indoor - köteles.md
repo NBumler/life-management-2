@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Váz` |
 | **Szülő** | [[Indoor mászónapló]] |
-| **Kapcsolódó** | [[Indoor köteles admin]], [[Indoor köteles napló]], [[Nehézségi szint skálája]] |
+| **Kapcsolódó** | [[Indoor köteles admin]], [[Indoor köteles napló]], [[Nehézségi szint skálája]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -36,6 +36,10 @@ Nincs nyitott kérdés.
 ### Frontend
 
 Dashboard kontextus: Indoor Kötél.
+
+#### Backend-offline
+
+Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító kérések outboxba (`OfflineQueueService`), kliens UUID. Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
 
 ### Backend
 

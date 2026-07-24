@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `TODO` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Backend]], [[Profile]], [[Frontend]] |
+| **Kapcsolódó** | [[Backend]], [[Profile]], [[Frontend]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -36,6 +36,10 @@ _Nincs megjegyzés._
 ### Frontend
 
 Login / session tárolás; generált OpenAPI kliens auth headerjei.
+
+#### Backend-offline
+
+Backend-offline / Full-offline: korábban bejelentkezett session helyi adatai — token lejárat / offline auth szabály TBD. Új loginhoz backend kell. Lásd [[Backend-offline first]].
 
 ### Backend
 

@@ -70,6 +70,10 @@ UI komponensek és állapotgép: lásd részletesen [[Nehézségi szint skáláj
 
 Dashboard 4 kontextus; nehézség parser (fent); kalória / aktív idő becslés pure TypeScript utility-ként is (offline) — a képletek a Backend szekcióban.
 
+#### Backend-offline
+
+Dashboard / napló UI offline-képes; nehézség / kalória pure TS. UUID: kliens UUID v4 ([[Backend-offline first]]), ne IDENTITY. Sync: [[Szinkronizációs központ]].
+
 ### Backend
 
 #### Adatbázis és konfiguráció

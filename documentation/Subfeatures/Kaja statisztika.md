@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Váz` |
 | **Szülő** | [[Kaja]] |
-| **Kapcsolódó** | [[Élelmiszerek]], [[Recept]] |
+| **Kapcsolódó** | [[Élelmiszerek]], [[Recept]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -37,6 +37,10 @@ _Nincs megjegyzés._
 ### Frontend
 
 Statisztika nézet / lista a [[Kaja]] alatt; számítás lehet kliensoldali a katalógus adatokból.
+
+#### Backend-offline
+
+Olvasás a helyi store-ból (Backend-offline / Full-offline). Nincs saját módosító API → nincs outbox ebben a spechen. Lásd [[Backend-offline first]].
 
 ### Backend
 

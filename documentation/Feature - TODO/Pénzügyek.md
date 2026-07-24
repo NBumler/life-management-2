@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `TODO` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[AYCM tracker]], [[Profile]], [[Nettó fizetés kalkulátor]], [[Rendszeres kiadások]] |
+| **Kapcsolódó** | [[AYCM tracker]], [[Profile]], [[Nettó fizetés kalkulátor]], [[Rendszeres kiadások]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -38,6 +38,10 @@ Nincs nyitott kérdés.
 ### Frontend
 
 Menü alatti Pénzügyek belépő.
+
+#### Backend-offline
+
+Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító kérések outboxba (`OfflineQueueService`), kliens UUID. Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
 
 ### Backend
 

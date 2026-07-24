@@ -34,6 +34,10 @@ Nincs nyitott kérdés.
 
 _Nincs frontend érintettség._ (a kliens generálás ugyanabból az OpenAPI-ból történik — részletek: [[Frontend]])
 
+#### Backend-offline
+
+A kliensoldali offline elvárások SSOT-ja: [[Backend-offline first]]. A szerver kliens UUID-t fogad; a queue visszajátszása a normál OpenAPI végpontokra megy. Külső API-k nincsenek backend-proxyzva.
+
 ### Backend
 
 #### Stack

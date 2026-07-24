@@ -116,7 +116,12 @@ Nincs nyitott kérdés.
 
 - Recept lista / részletek / szerkesztő; quantity parser; multi-select food picker; platformos reorder ([[Pakolás]] mintára).
 - Összegzés pure utility (ár + tápanyagok) a katalógus snapshotja alapján; hiányos flag.
-- Helyi store + outbox ([[Backend-offline first]]).
+
+#### Backend-offline
+
+- Lista, részletek, create / update / hard delete: helyi store + outbox; kliens UUID.
+- Duplikáció-ellenőrzés és tápanyag / ár összegzés a helyi katalógus snapshotján (Backend-offline és Full-offline).
+- Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
 
 ### Backend
 

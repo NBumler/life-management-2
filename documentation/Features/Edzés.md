@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Váz` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Kalóriakalkulátor]], [[Mászónapló]], [[Úszás napló]], [[Lépésszám követés]] |
+| **Kapcsolódó** | [[Kalóriakalkulátor]], [[Mászónapló]], [[Úszás napló]], [[Lépésszám követés]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -37,6 +37,10 @@ Nincs nyitott kérdés.
 ### Frontend
 
 Edzés tab belépő; subfeature képernyők.
+
+#### Backend-offline
+
+Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító kérések outboxba (`OfflineQueueService`), kliens UUID. Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
 
 ### Backend
 

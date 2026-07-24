@@ -2,6 +2,7 @@
 
 Minden `documentation/**/*.md` jegyzet ezt a szerkezetet követi.
 Agent skill: `.cursor/skills/documentation-spec/SKILL.md`
+Kötelező offline elv: [[Backend-offline first]] (`#### Backend-offline` minden spechen).
 
 ## Státusz értékek
 
@@ -23,7 +24,7 @@ Agent skill: `.cursor/skills/documentation-spec/SKILL.md`
 |---|---|
 | **Státusz** | `TODO` / `Váz` / `Ideiglenes` / `Kész` |
 | **Szülő** | [[...]] vagy _Nincs szülő (hub / architektúra / gyökér)._ |
-| **Kapcsolódó** | [[...]], [[...]] vagy _Nincs kapcsolódó spec._ |
+| **Kapcsolódó** | [[...]], [[Backend-offline first]] vagy _Nincs kapcsolódó spec._ |
 
 ### Célállapot
 
@@ -52,6 +53,10 @@ Agent skill: `.cursor/skills/documentation-spec/SKILL.md`
 
 …
 
+#### Backend-offline
+
+…  (kötelező — hogyan működik Backend-offline / Full-offline; lásd [[Backend-offline first]])
+
 ### Backend
 
 …
@@ -71,7 +76,10 @@ Agent skill: `.cursor/skills/documentation-spec/SKILL.md`
 | Megjegyzések | `_Nincs megjegyzés._` |
 | Nyitott kérdések | `Nincs nyitott kérdés.` |
 | Frontend | `_Nincs frontend érintettség._` |
+| Backend-offline | `_Nincs frontend érintettség; offline elvárások: [[Backend-offline first]]._` (címsor akkor is kell) |
 | Backend | `_Nincs backend érintettség._` |
 
 Architektúra jegyzeteknél a Business tartalmi részek placeholderrel mennek; a lényeg az `## Architektúra` alatt van.
 Hub / lista fájloknál a közös Backend gyakran a szülőben él, a gyerekekre szétválasztott UI mellett.
+
+**Exempt:** ez a fájl (`SPEC-TEMPLATE.md`) és a [[Backend-offline first]] SSOT jegyzet.

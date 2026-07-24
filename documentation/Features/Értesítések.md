@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Váz` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Élelmiszer tárolás]], [[Rendszeres kiadások]], [[Tennivalók]], [[Események]], [[Lépésszám követés]], [[Kalóriakalkulátor]] |
+| **Kapcsolódó** | [[Élelmiszer tárolás]], [[Rendszeres kiadások]], [[Tennivalók]], [[Események]], [[Lépésszám követés]], [[Kalóriakalkulátor]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -44,6 +44,10 @@ Az élelmiszer-romlás lead time az [[Élelmiszer tárolás]] spechen SSOT; itt 
 ### Frontend
 
 Lokális / push értesítések (Capacitor) — plugin TBD ([[Frontend]] nyitott kérdések).
+
+#### Backend-offline
+
+Lokális értesítések a helyi store / eszköz órája alapján — Backend-offline és Full-offline is működhet (nincs szerver-trigger a jelenlegi feltételezés szerint). Remote push TBD. Lásd [[Backend-offline first]].
 
 ### Backend
 

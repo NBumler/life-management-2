@@ -111,6 +111,9 @@ Nincs nyitott kérdés.
 
 - Új / szerkesztő űrlap; nátrium/klorid auto vs user-touched állapot a komponensben.
 - OFF hívás a sync gombra: közvetlenül a kliensről ([[Vonalkódos élelmiszer beolvasás]] szerint); megerősítő dialógus a diff alapján.
+
+#### Backend-offline
+
 - Offline / backend-offline: mentés outboxba (`PENDING`), helyi katalógus azonnal frissül ([[Backend-offline first]], [[Szinkronizációs központ]]).
 - Duplikáció ellenőrzés: helyi adatállományon is (backend-offline esetén is).
 

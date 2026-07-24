@@ -58,6 +58,10 @@ Nincs nyitott kérdés.
 
 Completion wizard; navigáció / hívások az [[Élelmiszer tárolás]] create felé; új aktív lista létrehozása a pipálatlanokból; eredeti lista archiválása.
 
+#### Backend-offline
+
+Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító kérések outboxba (`OfflineQueueService`), kliens UUID. Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
+
 ### Backend
 
 _Nincs backend érintettség._ (teljesítés művelet a [[Bevásárlás]] szülő API-jában; tárolás create az [[Élelmiszer tárolás]] / [[Kaja]] API-jában — a teljesítés orchestrálhatja mindkettőt, vagy egy dedikált „complete shopping list” végpont végzi el szerveroldalon)

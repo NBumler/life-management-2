@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `TODO` |
 | **Szülő** | [[Étkezés]] |
-| **Kapcsolódó** | [[Energiaegyenleg napló]], [[Kalóriakalkulátor]], [[Élelmiszer tárolás]] |
+| **Kapcsolódó** | [[Energiaegyenleg napló]], [[Kalóriakalkulátor]], [[Élelmiszer tárolás]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -35,6 +35,10 @@ _Nincs megjegyzés._
 ### Frontend
 
 Manuális kalória / makro űrlap; nincs készlet-művelet.
+
+#### Backend-offline
+
+Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító kérések outboxba (`OfflineQueueService`), kliens UUID. Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
 
 ### Backend
 

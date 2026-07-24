@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Kész` |
 | **Szülő** | [[Frontend]] |
-| **Kapcsolódó** | [[Bevásárlás előzmény]], [[Pakolás]], [[Élelmiszerek]] |
+| **Kapcsolódó** | [[Bevásárlás előzmény]], [[Pakolás]], [[Élelmiszerek]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -54,6 +54,10 @@ Nincs nyitott kérdés.
 - Pure TypeScript utility: ékezet-fold (pl. NFD + combining mark strip vagy magyar karaktertábla), case-fold, `matches(query, candidate)`, `compareRank(query, a, b)`.
 - A listákat renderelő feature-ök ezt a utility-t hívják kliensoldali szűréshez / rendezéshez.
 - Nagy adathalmaznál később szerveroldali keresés is jöhet; akkor is ugyanez a **viselkedési** szerződés marad (ékezet / case / ranking).
+
+#### Backend-offline
+
+Pure client komponens / utility; Backend-offline és Full-offline állapotban is ugyanúgy működik (helyi adat / form state). Nincs saját outbox. Lásd [[Backend-offline first]].
 
 ### Backend
 

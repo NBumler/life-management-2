@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Váz` |
 | **Szülő** | [[Tennivalók]] |
-| **Kapcsolódó** | [[Értesítések]], [[Naptár]] |
+| **Kapcsolódó** | [[Értesítések]], [[Naptár]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -46,6 +46,10 @@ _Nincs megjegyzés._
 ### Frontend
 
 Helyiség + feladat CRUD UI a Feladatok tab alatt.
+
+#### Backend-offline
+
+Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító kérések outboxba (`OfflineQueueService`), kliens UUID. Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
 
 ### Backend
 

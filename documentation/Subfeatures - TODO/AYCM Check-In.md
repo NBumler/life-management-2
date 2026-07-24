@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Váz` |
 | **Szülő** | [[AYCM tracker]] |
-| **Kapcsolódó** | [[AYCM elfogadóhely hozzáadása]], [[AYCM Statisztikák]], [[Rendszeres kiadások]] |
+| **Kapcsolódó** | [[AYCM elfogadóhely hozzáadása]], [[AYCM Statisztikák]], [[Rendszeres kiadások]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -47,6 +47,10 @@ Ez a specifikáció még nem végleges — átnézendő.
 ### Frontend
 
 Check-in űrlap; computed idősáv / ár megjelenítés.
+
+#### Backend-offline
+
+Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító kérések outboxba (`OfflineQueueService`), kliens UUID. Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
 
 ### Backend
 

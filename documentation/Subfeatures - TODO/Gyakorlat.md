@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `TODO` |
 | **Szülő** | [[Edzés]] |
-| **Kapcsolódó** | [[Heti terv]], [[Edzésnapló]] |
+| **Kapcsolódó** | [[Heti terv]], [[Edzésnapló]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -34,6 +34,10 @@ _Nincs megjegyzés._
 ### Frontend
 
 Gyakorlat katalógus UI.
+
+#### Backend-offline
+
+Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító kérések outboxba (`OfflineQueueService`), kliens UUID. Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
 
 ### Backend
 

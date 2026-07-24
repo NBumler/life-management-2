@@ -32,8 +32,8 @@ Személyes life-management alkalmazás (hibrid mobil + web). Több felhasználó
 | `Architektúra/` | Kidolgozott architektúra jegyzetek |
 | `Architektúra - TODO/` | Architektúra jegyzetek stub / bővítendő |
 
-Minden specifikáció egységes szerkezetet követ: **Business** + **Architektúra** (Frontend / Backend). Sablon: [[SPEC-TEMPLATE]]. Státusz: `TODO` / `Váz` / `Ideiglenes` / `Kész`.
-Agent skill: `.cursor/skills/documentation-spec/`.
+Minden specifikáció egységes szerkezetet követ: **Business** + **Architektúra** (Frontend → **Backend-offline** → Backend). A `#### Backend-offline` alfejezet kötelező. Sablon: [[SPEC-TEMPLATE]]. Státusz: `TODO` / `Váz` / `Ideiglenes` / `Kész`.
+Agent skill: `.cursor/skills/documentation-spec/`. Offline SSOT: [[Backend-offline first]].
 
 #### Feature lista — kidolgozott / részben (`Features/`)
 
@@ -80,6 +80,10 @@ Nincs nyitott kérdés.
 - Ionic — Angular (hibrid)
 - OpenAPI-ból generált kliens
 - Részletek: [[Frontend]]
+
+#### Backend-offline
+
+Minden feature kötelezően Backend-offline first. Közös mechanizmus: helyi store, kliens UUID, outbox, sync UI. Részletek: [[Backend-offline first]], [[Szinkronizációs központ]], [[Frontend]].
 
 ### Backend
 

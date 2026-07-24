@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Kész` |
 | **Szülő** | [[Frontend]] |
-| **Kapcsolódó** | [[Bevásárlás]], [[Bevásárlólista írás]], [[Élelmiszerek]], [[Élelmiszer manuális bevitele]], [[Recept]], [[Élelmiszer tárolás]] |
+| **Kapcsolódó** | [[Bevásárlás]], [[Bevásárlólista írás]], [[Élelmiszerek]], [[Élelmiszer manuális bevitele]], [[Recept]], [[Élelmiszer tárolás]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -100,6 +100,10 @@ Nincs nyitott kérdés.
   - `valueChange` / form control (`ControlValueAccessor`) ajánlott
 - Egység enum / union típusok a támogatott listákkal; OpenAPI / backend DTO-k ugyanazt az egységkészletet használják, ahol mennyiség vagy időtartam utazik.
 - A parser a frontenden él; a backend a már szétbontott `amount` + `unit` párost fogadja (ne a nyers stringet — kivéve ha később explicit másképp döntünk).
+
+#### Backend-offline
+
+Pure client komponens / utility; Backend-offline és Full-offline állapotban is ugyanúgy működik (helyi adat / form state). Nincs saját outbox. Lásd [[Backend-offline first]].
 
 ### Backend
 

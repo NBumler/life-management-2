@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `TODO` |
 | **Szülő** | [[AYCM tracker]] |
-| **Kapcsolódó** | [[AYCM Check-In]], [[AYCM Statisztikák]] |
+| **Kapcsolódó** | [[AYCM Check-In]], [[AYCM Statisztikák]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -41,6 +41,10 @@ _Nincs megjegyzés._
 ### Frontend
 
 Partner create / edit űrlap.
+
+#### Backend-offline
+
+Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító kérések outboxba (`OfflineQueueService`), kliens UUID. Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
 
 ### Backend
 

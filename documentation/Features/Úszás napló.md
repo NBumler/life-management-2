@@ -44,6 +44,10 @@ _Nincs megjegyzés._
 
 Napló űrlap; offline kalóriaszámítás utility; Edzés tab környékén.
 
+#### Backend-offline
+
+Napló űrlap + offline kalóriaszámítás utility Backend-offline / Full-offline. Mentés outboxba, kliens UUID. Lásd [[Backend-offline first]].
+
 ### Backend
 
 Úszásnapló CRUD (OpenAPI, kliens UUID); szerveroldali kalória ellenőrzés / tárolás.

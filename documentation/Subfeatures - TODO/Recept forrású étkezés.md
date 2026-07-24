@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `TODO` |
 | **Szülő** | [[Étkezés]] |
-| **Kapcsolódó** | [[Recept]], [[Élelmiszer tárolás]], [[Kalóriakalkulátor]] |
+| **Kapcsolódó** | [[Recept]], [[Élelmiszer tárolás]], [[Kalóriakalkulátor]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -35,6 +35,10 @@ _Nincs megjegyzés._
 ### Frontend
 
 Étkezés flow recept választással; készlet-levonás visszajelzés.
+
+#### Backend-offline
+
+Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító kérések outboxba (`OfflineQueueService`), kliens UUID. Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
 
 ### Backend
 

@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Váz` |
 | **Szülő** | [[Kaja]] |
-| **Kapcsolódó** | [[Élelmiszer tárolás]], [[Kalóriakalkulátor]], [[Energiaegyenleg napló]], [[Recept forrású étkezés]], [[Élelmiszer forrású étkezés]], [[Ismeretlen forrású étkezés]] |
+| **Kapcsolódó** | [[Élelmiszer tárolás]], [[Kalóriakalkulátor]], [[Energiaegyenleg napló]], [[Recept forrású étkezés]], [[Élelmiszer forrású étkezés]], [[Ismeretlen forrású étkezés]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -41,6 +41,10 @@ Nincs nyitott kérdés.
 ### Frontend
 
 Étkezés rögzítő flow; forrástípus választó a három gyerekhez.
+
+#### Backend-offline
+
+Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító kérések outboxba (`OfflineQueueService`), kliens UUID. Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
 
 ### Backend
 

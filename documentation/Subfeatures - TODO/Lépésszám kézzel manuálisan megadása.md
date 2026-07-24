@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `TODO` |
 | **Szülő** | [[Lépésszám követés]] |
-| **Kapcsolódó** | [[Kalóriakalkulátor]], [[Lépésszám átszinkronizálása a Samsung Health-ből]] |
+| **Kapcsolódó** | [[Kalóriakalkulátor]], [[Lépésszám átszinkronizálása a Samsung Health-ből]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -34,6 +34,10 @@ _Nincs megjegyzés._
 ### Frontend
 
 Manuális lépésszám űrlap; kalória újraszámolás ([[Kalóriakalkulátor]] / Samsung Health gyerek képlete).
+
+#### Backend-offline
+
+Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító kérések outboxba (`OfflineQueueService`), kliens UUID. Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
 
 ### Backend
 

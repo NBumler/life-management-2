@@ -43,6 +43,10 @@ Nincs nyitott kérdés.
 
 `OfflineQueueService` + SQLite outbox megjelenítése és manuális vezérlése. Illeszkedik a generált OpenAPI klienshez ([[Frontend]]).
 
+#### Backend-offline
+
+Ez a felület az outbox vezérlése Backend-offline / Full-offline után. Maga a mechanizmus: [[Backend-offline first]].
+
 ### Backend
 
 A queue elemei a saját backend REST végpontjaira mennek (POST/PUT/DELETE); a szerver a meglévő API-t szolgálja — külön „sync API” nincs a jelenlegi leírásban. Függőségi / FIFO logika: [[Backend-offline first]].
