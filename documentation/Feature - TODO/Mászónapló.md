@@ -33,6 +33,17 @@ _Nincs UI/UX érintettség._
 
 A giga-spec összevont; a közös backend (Route / AscentLog) várhatóan ebben a szülőben vagy a giga-spec szétválasztása után itt él majd.
 
+#### Kalória (első kör — [[Tápérték kalkulátor]])
+
+Session időtartam × MET (nincs aktív/passzív bontás):
+
+| Típus | MET |
+|---|---|
+| Indoor / outdoor boulder | 8.0 |
+| Indoor / outdoor köteles (lead) | 7.0 |
+
+\[\text{kcal} = \text{MET} \times \text{testsúly} \times \frac{\text{durationMinutes}}{60}\]
+
 ### Nyitott kérdések
 
 - Giga-spec szétválasztásának sorrendje / cél fájlok

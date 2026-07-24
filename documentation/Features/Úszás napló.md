@@ -10,21 +10,25 @@
 
 ### Célállapot
 
-Az úszóedzések részletes rögzítése; a távolság és az úszásnem alapú kalóriaégetés automatikus, offline is működő kiszámítása.
+Úszóedzések rögzítése; kalóriaégetés MET alapján, offline is ([[Tápérték kalkulátor]]).
 
 ### Funkcionális leírás
 
-Bemeneti paraméterek:
+Bemenet (elvárás): `id` (UUID), dátum, `durationMinutes` (kötelező), opcionális táv / medence; intenzitás / úszásnem a MET-hez.
 
-* `id`: UUID (v4)
-* `date`: Date (alapértelmezetten a mai nap)
-* `durationMinutes`: Integer (kötelező)
-* `distanceMeters`: Integer (távolság méterben, pl. 1500)
-* `poolLength`: Enum (`SHORT_25M`, `LONG_50M`, `OPEN_WATER`)
-* `strokeType`: Enum (`BREASTSTROKE`, `CRAWL_FREESTYLE`, `BACKSTROKE`, `BUTTERFLY`, `MIXED`)
-* `swimmingIntensity`: Enum (`CASUAL`, `VIGOROUS`)
+#### MET (kanonikus — [[Tápérték kalkulátor]])
 
-Kalória MET tábla és képlet: [[Tápérték kalkulátor]].
+\[\text{kcal} = \text{MET} \times \text{testsúly} \times \frac{\text{durationMinutes}}{60}\]
+
+| Kategória | MET |
+|---|---|
+| `CASUAL` / `BREASTSTROKE` | 5.5 |
+| `BACKSTROKE` | 7.0 |
+| `CRAWL_FREESTYLE` | 8.0 |
+| `OPEN_WATER` | 9.5 |
+| `BUTTERFLY` / `VIGOROUS` | 11.0 |
+
+Mapping: ha `swimmingIntensity = CASUAL` → 5.5; `VIGOROUS` → 11.0; egyébként a `strokeType` szerinti sor. `MIXED` → default `CASUAL` 5.5 (vagy user választ intenzitást).
 
 ### UI/UX elvárások
 
@@ -36,21 +40,21 @@ _Nincs megjegyzés._
 
 ### Nyitott kérdések
 
-- `strokeType` vs `swimmingIntensity` és MET mapping egyértelműsítése (lásd [[Tápérték kalkulátor]] konstansok)
+Nincs nyitott kérdés.
 
 ## Architektúra
 
 ### Frontend
 
-Napló űrlap; offline kalóriaszámítás utility; Edzés tab környékén.
+Napló űrlap; shared MET utility; Edzés környékén.
 
 #### Backend-offline
 
-Napló űrlap + offline kalóriaszámítás utility Backend-offline / Full-offline. Mentés outboxba, kliens UUID. Lásd [[Backend-offline first]].
+Offline számítás + outbox. Lásd [[Backend-offline first]].
 
 ### Backend
 
-Úszásnapló CRUD (OpenAPI, kliens UUID); szerveroldali kalória ellenőrzés / tárolás.
+CRUD OpenAPI; szerveroldali kalória ellenőrzés.
 
 ### Nyitott kérdések
 

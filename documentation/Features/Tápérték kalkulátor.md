@@ -4,83 +4,130 @@
 
 | | |
 |---|---|
-| **Státusz** | `Váz` |
+| **Státusz** | `Kész` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Profile]], [[Edzés]], [[Mászónapló]], [[Biciklizés napló]], [[Lépésszám követés]], [[Úszás napló]], [[Étkezés]], [[Értesítések]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Profile]], [[Edzés]], [[Edzésnapló]], [[Mászónapló]], [[Biciklizés napló]], [[Lépésszám követés]], [[Úszás napló]], [[Étkezés]], [[Értesítések]], [[Backend-offline first]] |
 
 ### Célállapot
 
-Korábbi név: **Kalóriakalkulátor** (átnevezve — a scope kalória + makró célok).
+Korábbi név: **Kalóriakalkulátor**. A [[Profile]] és a napi aktivitás alapján kiszámítja a szintentartást, az aznapi kalória-/makrócélokat és az `activityExtraKcal` értéket. Az [[Étkezés]] dashboard progress barjai és az [[Értesítések]] kalória-túllépés szabálya ebből az SSOT-ból olvas. Nincs külön energiaegyenleg-feature.
 
-1. Az aznapi **aktivitás extra kalória** kiszámítása a naplókból ([[Edzés]], [[Mászónapló]], [[Biciklizés napló]], [[Lépésszám követés]], [[Úszás napló]], stb.).
-2. A [[Profile]] (cél, súly, kor, nem, aktivitási szint, …) alapján:
-   - **kalória cél mozgás nélkül** (`baseDailyCalorieGoal`);
-   - **szintentartás** kalória (`maintenanceKcal`);
-   - **fehérje / szénhidrát / zsír cél** (egyenként egy szám, g/nap — `proteinGoalG`, `carbsGoalG`, `fatGoalG`);
-   - később: szintentartás makrók (`maintenanceProteinG`, …) ha kell a progress bar piros sávjához.
-3. **Napi kalória keret** = `baseDailyCalorieGoal + activityExtraKcal` (`dailyAllowanceKcal`) — ezt használja az [[Étkezés]] dashboard kcal progress barja.
-4. Nincs külön energiaegyenleg-feature; nincs kötelező diagram ebben a spechen. Az [[Étkezés]] dashboard jeleníti a napi progress barokat.
-
-**Jövőbeli:** a célok szám helyett **intervallumra** váltanak — az Étkezés zöld sáv logikája ehhez igazodik majd; most fix szám + ±5% zöld.
+**Jövőbeli:** célok intervallumra váltása (zöld sáv = intervallum); most: egy szám + ±5%.
 
 ### Funkcionális leírás
 
-#### Napi modell (SSOT az [[Étkezés]] dashboard / [[Értesítések]] felé)
+#### Bemenetek ([[Profile]] + naplók)
 
-| Érték | Jelentés |
+- Testsúly `m` (kg), magasság `h` (cm), nem, születési dátum → életkor
+- Cél enum: `FAT_LOSS` \| `MAINTENANCE` \| `WEIGHT_GAIN`
+- `kgPerWeek` > 0 (csak fogyás/tömegnél; megtartásnál figyelmen kívül)
+- Aktivitási szint (fallback PAL, ha lépéskövetés ki van kapcsolva)
+- Aznapi lépésszám ([[Lépésszám követés]]), edzésnaplók MET szerint
+
+Életkor: teljes évek, **kliens TZ** szerinti mai dátum vs születési dátum (`floor` period).
+
+#### BMR — Mifflin–St Jeor
+
+- Férfi: \(BMR = 10m + 6.25h - 5a + 5\)
+- Nő: \(BMR = 10m + 6.25h - 5a - 161\)
+
+#### PAL módok
+
+| Mód | Mikor | `PAL` | `activityExtraKcal` |
+|---|---|---|---|
+| **Normal** | Lépésszám-követés **bekapcsolva** | fix **1.2** | lépés (küszöb felett) + összes edzés MET |
+| **Fallback** | Lépésszám-követés **kikapcsolva** | Profile szint: 1.2 / 1.375 / 1.55 / 1.725 / 1.9 | **csak** edzés MET (lépés nincs) |
+
+Profile aktivitási szint → PAL: Ülő 1.2, Enyhe 1.375, Mérsékelt 1.55, Aktív 1.725, Nagyon aktív 1.9.
+
+#### Kanonikus napi mezők
+
+| Mező | Képlet |
 |---|---|
-| `baseDailyCalorieGoal` | Kalória cél edzés / aktivitás-napló nélkül (Profile képlet — TBD). |
-| `activityExtraKcal` | Az adott nap kalóriát égető naplóinak összege. |
-| `dailyAllowanceKcal` | `baseDailyCalorieGoal + activityExtraKcal` — dashboard kcal **cél** (nevező). |
-| `maintenanceKcal` | Szintentartás (TDEE / tartás) — dashboard kcal szín: narancs vs piros határa. |
-| `proteinGoalG` / `carbsGoalG` / `fatGoalG` | Makró célok (egy szám / nap). |
-| `maintenanceProteinG` / `maintenanceCarbsG` / `maintenanceFatG` | Makró szintentartás (TBD; amíg nincs, lásd [[Étkezés]] szín fallback). |
+| `maintenanceKcal` | \(BMR \times PAL\) — edzés és \(\Delta\) nélkül |
+| \(\Delta_{\text{cél}}\) | `FAT_LOSS`: \(-\lvert kgPerWeek\rvert \times 1100\); `MAINTENANCE`: \(0\); `WEIGHT_GAIN`: \(+\lvert kgPerWeek\rvert \times 1100\) (1 kg ≈ 7700 kcal → /7 = 1100) |
+| `baseDailyCalorieGoal` (nyers) | `maintenanceKcal + Δ` |
+| `baseDailyCalorieGoal` (érvényes) | \(\max(\text{nyers},\;\text{floor})\); floor: férfi **1500**, nő **1200** kcal |
+| `activityExtraKcal` | lásd lent |
+| `dailyAllowanceKcal` | `baseDailyCalorieGoal` (clampelt) `+ activityExtraKcal` |
 
-Az Étkezés dashboard ezeket **megjeleníti / színezi**; a képletek itt élnek.
+A clampelt `base` / `dailyAllowance` hajtja a makrókat, az [[Étkezés]] progress barokat és az [[Értesítések]] túllépés-szabályát.
 
-#### [[Úszás napló]] — offline kalóriaszámítás
+\(M_{\text{day}} = maintenanceKcal + activityExtraKcal\) — az aznapi súlytartó TDEE (edzéssel); kcal szín narancs/piros határához (lásd [[Étkezés]]).
 
-A frontend Store és a backend szerviz az alábbi MET konstansokat használja:
+#### Lépéskalória (normal mód)
 
-* `CASUAL` / `BREASTSTROKE`: 5.5 MET
-* `BACKSTROKE`: 7.0 MET
-* `CRAWL_FREESTYLE`: 8.0 MET
-* `OPEN_WATER`: 9.5 MET
-* `VIGOROUS` / `BUTTERFLY`: 11.0 MET
+Konstans: `STEP_BASELINE = 3000` (nem konfigurálható).
 
-$$\text{Égetett Kalória} = \text{MET} \times \text{Testsúly (kg)} \times \left( \frac{\text{durationMinutes}}{60} \right)$$
+\[\text{Kalória}_{\text{lépés}} = \max(0,\;\text{lépésszám} - 3000) \times m \times 0.00045\]
 
-Mentéskor az érték az aznapi `activityExtraKcal` / `dailyAllowanceKcal` részeként azonnal megjelenik (optimista UI).
+#### Edzéskalória — univerzális MET
+
+\[\text{kcal} = \text{MET} \times m \times \frac{\text{durationMinutes}}{60}\]
+
+MET táblák (részletek a napló specekben is):
+
+**Úszás** ([[Úszás napló]]): `CASUAL`/`BREASTSTROKE` 5.5; `BACKSTROKE` 7.0; `CRAWL_FREESTYLE` 8.0; `OPEN_WATER` 9.5; `BUTTERFLY`/`VIGOROUS` 11.0.
+
+**Bicikli** ([[Biciklizés napló]]): `CITY` 4.0; `STATIONARY` 6.0; `ROAD_LEISURE` 6.8; `MOUNTAIN_TRAIL` 8.5; `ROAD_VIGOROUS` 10.0.
+
+**Mászás** ([[Mászónapló]]): boulder indoor/outdoor **8.0**; köteles indoor/outdoor **7.0** (session időtartam × MET; aktív/passzív zóna nincs az első körben).
+
+**Erőedzés** ([[Edzésnapló]]): `GENERAL_WEIGHTS` 5.0; `HIIT_CIRCUIT` 8.0.
+
+`activityExtraKcal` = (normal: lépéskalória) + Σ edzéskalóriák az napra.
+
+#### Makrók (g/nap)
+
+1. Fehérje cél (nyers): \(2.0 \times m\) g (4 kcal/g)
+2. Zsír cél (nyers): \(0.9 \times m\) g (9 kcal/g)
+3. Szénhidrát: \(\dfrac{dailyAllowanceKcal - (P\times4 + F\times9)}{4}\)
+
+**Carb cycling:** az `activityExtraKcal` növeli a keretet → a többlet a szénhidrátba megy; P/F g/kg fix (amíg a negatív-szénhidrát mentés nem nyúl hozzájuk).
+
+**Ha \(P\times4 + F\times9 > dailyAllowanceKcal\):**
+
+1. Szénhidrát = **20 g** minimum
+2. Zsír csökkent **0.6 g/kg**-ig
+3. Ha még mindig nem fér: fehérje csökkent **1.5 g/kg**-ig
+4. Szénhidrát újraszámol / 20 g floor
+
+Kimenet: `proteinGoalG`, `fatGoalG`, `carbsGoalG` (clampelt allowance alapján).
+
+#### Reaktivitás
+
+Profilsúly / cél / edzés / lépés változás → pure TS utility azonnal újraszámol (Signal / store); offline is ([[Backend-offline first]]).
 
 ### UI/UX elvárások
 
-- Saját UI később (beállítások / magyarázat); a napi progress barok elsődleges helye: [[Étkezés]] dashboard.
-- Offline becsült érték jelölés (~ / homokóra — [[Backend-offline first]]).
+- Napi progress barok: [[Étkezés]] dashboard (elsődleges).
+- Saját magyarázó / debug UI később opcionális.
+- Offline: becsült jelölés csak ha adat hiányzik (~ / homokóra).
 
 ### Megjegyzések
 
-Csak az úszás MET tábla kidolgozott; más aktivitások képletei hiányoznak. BMR / TDEE / makró képletek: Profile mezőkből — TBD.
+Makró progress barnál **nincs piros** (lásd [[Étkezés]]). Kcal barnál a Q11 prioritás érvényes.
 
 ### Nyitott kérdések
 
-- Edzés / mászás / bicikli / lépés MET vagy egyéb képletek
-- BMR / TDEE / makró cél képletek a [[Profile]] mezőkből
-- Makró szintentartás értékek pontos definíciója
+Nincs nyitott kérdés.
 
 ## Architektúra
 
 ### Frontend
 
-Pure TypeScript utility a MET / cél / maintenance számításhoz (pragmatikus duplikáció — [[Backend-offline first]]); Store frissítés mentéskor.
+- `TdeeCalculatorUtil` (vagy ekvivalens) pure TypeScript: BMR, PAL mód, Δ, floor, lépés, MET, makró + mentés-sorrend.
+- MET konstansok egy shared modulban; napló feature-ök hivatkoznak.
+- Store: aznapi `maintenanceKcal`, `baseDailyCalorieGoal`, `activityExtraKcal`, `dailyAllowanceKcal`, makró célok.
 
 #### Backend-offline
 
-Számítás Backend-offline és Full-offline is (pure TS utility). Becsült értékeknél ~ / homokóra. Store frissítés helyi; szerver érvényesítés outboxolható. Lásd [[Backend-offline first]].
+Számítás kliensen Backend-offline / Full-offline. Mentett napló/profil outbox; keret újraszámolás helyi. Lásd [[Backend-offline first]].
 
 ### Backend
 
-Ugyanazok a konstansok / képletek a szerveroldali szervizben; OpenAPI-n keresztül visszaadott / érvényesített értékek TBD.
+Ugyanazok a képletek szerveroldali validációhoz / read-modelhez (OpenAPI); kanonikus konstanslista szinkronban a frontendel.
 
 ### Nyitott kérdések
 
-- Hol él a kanonikus számítás (mindig mindkét oldalon szinkronban tartva)?
+Nincs nyitott kérdés.

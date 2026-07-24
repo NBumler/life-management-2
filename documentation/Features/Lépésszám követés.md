@@ -6,11 +6,11 @@
 |---|---|
 | **Státusz** | `Váz` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Tápérték kalkulátor]], [[Értesítések]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Tápérték kalkulátor]], [[Értesítések]], [[Profile]], [[Backend-offline first]] |
 
 ### Célállapot
 
-Napi lépésszám követése manuális megadással és/vagy Samsung Health (Health Connect) szinkronnal; kalóriakeret frissítése.
+Napi lépésszám manuálisan és/vagy Samsung Health szinkronnal; hozzájárulás az `activityExtraKcal`-hoz ([[Tápérték kalkulátor]]).
 
 ### Funkcionális leírás
 
@@ -18,6 +18,18 @@ Subfeature lista:
 
 - [[Lépésszám kézzel manuálisan megadása]]
 - [[Lépésszám átszinkronizálása a Samsung Health-ből]]
+
+#### Kapcsolat a Tápérték kalkulátorral
+
+- Ha a követés **be van kapcsolva** (normal mód): PAL=1.2; lépéskalória:
+
+\[\max(0,\;\text{lépésszám} - 3000) \times \text{testsúly} \times 0.00045\]
+
+`STEP_BASELINE = 3000` fix ([[Tápérték kalkulátor]]).
+
+- Ha a követés **ki van kapcsolva** (fallback): nincs lépéskalória; a Profile aktivitási szint adja a PAL-t; `activityExtra` csak edzésekből.
+
+Bekapcsolt követés + aznapi 0 lépés: lépéskalória = 0 (a baseline az 1.2 PAL-ban van).
 
 ### UI/UX elvárások
 
@@ -29,21 +41,21 @@ _Nincs megjegyzés._
 
 ### Nyitott kérdések
 
-Nincs nyitott kérdés.
+- Követés ki/be kapcsoló UI helye (Profile vs Lépésszám képernyő)
 
 ## Architektúra
 
 ### Frontend
 
-Edzés / Menü alatti belépő; részletek a gyerek specifikációkban.
+Edzés / Menü belépő; gyerek specek; TDEE újraszámolás lépésváltozáskor.
 
 #### Backend-offline
 
-Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító kérések outboxba (`OfflineQueueService`), kliens UUID. Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
+Helyi store + outbox. Lásd [[Backend-offline first]].
 
 ### Backend
 
-_Nincs backend érintettség._ (napi lépés entitás / upsert — a Samsung Health gyerekben vázolva)
+Napi lépés entitás / upsert — Samsung Health gyerekben vázolva.
 
 ### Nyitott kérdések
 

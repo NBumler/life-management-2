@@ -4,17 +4,29 @@
 
 | | |
 |---|---|
-| **Státusz** | `TODO` |
+| **Státusz** | `Váz` |
 | **Szülő** | [[Life Management 2.0]] |
 | **Kapcsolódó** | [[Tápérték kalkulátor]], [[Profile]], [[Edzés]], [[Backend-offline first]] |
 
 ### Célállapot
 
-Kerékpáros edzések / utak naplózása (időtartam, táv, intenzitás), elégetett kalória számítása a [[Tápérték kalkulátor]] felé.
+Kerékpáros edzések / utak naplózása; elégetett kalória a [[Tápérték kalkulátor]] MET képletével → `activityExtraKcal`.
 
 ### Funkcionális leírás
 
-_Nincs business érintettség._
+Kötelező: időtartam (`durationMinutes`) + intenzitás / típus enum. Opcionális: táv, emelkedő (nem kell a MET-hez az első körben).
+
+#### MET
+
+\[\text{kcal} = \text{MET} \times \text{testsúly} \times \frac{\text{durationMinutes}}{60}\]
+
+| Típus | MET |
+|---|---|
+| `CITY` (&lt;16 km/h, kényelmes) | 4.0 |
+| `STATIONARY` (szobabicikli / görgő) | 6.0 |
+| `ROAD_LEISURE` (16–22 km/h) | 6.8 |
+| `MOUNTAIN_TRAIL` | 8.5 |
+| `ROAD_VIGOROUS` (&gt;22 km/h) | 10.0 |
 
 ### UI/UX elvárások
 
@@ -22,27 +34,25 @@ _Nincs UI/UX érintettség._
 
 ### Megjegyzések
 
-_Nincs megjegyzés._
+GPS / külső sync: későbbi scope.
 
 ### Nyitott kérdések
 
-- Bemeneti mezők (sebesség, emelkedő, beltéri / kültéri)
-- MET konstansok (offline utility a frontenden is)
-- GPS / külső sync (későbbi scope?)
+Nincs nyitott kérdés.
 
 ## Architektúra
 
 ### Frontend
 
-Napló űrlap; offline MET utility; Edzés tab környékén.
+Napló űrlap; shared MET utility.
 
 #### Backend-offline
 
-Napló + offline MET utility; mentés helyi store + outbox. Lásd [[Backend-offline first]].
+Helyi store + outbox. Lásd [[Backend-offline first]].
 
 ### Backend
 
-Bicikli napló CRUD (OpenAPI) — TBD.
+CRUD OpenAPI — TBD részletek.
 
 ### Nyitott kérdések
 

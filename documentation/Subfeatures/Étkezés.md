@@ -37,20 +37,30 @@ Napi étkezés-dashboard (egy nap, nincs többnapos történet / diagram) és é
 
 Nincs: külön makró összesítő sor; külön „cél + aktivitás” kártya; diagram; többnapos történet; Energiaegyenleg.
 
-##### Progress bar színek
+##### Progress bar színek — kalória
 
-Cél jelenleg **egy szám**; zöld sáv = cél ± **5%**. Jövőben a [[Tápérték kalkulátor]] intervallum-célokra válthat — akkor a zöld = az intervallum.
+\(A = dailyAllowanceKcal\), \(M = maintenanceKcal + activityExtraKcal\) ([[Tápérték kalkulátor]]).  
+`lo = 0.95 × A`, `hi = 1.05 × A`.
 
-`lo = cél × 0.95`, `hi = cél × 1.05`. Szintentartás: `maintenance*` a kalkulátorból (kcal: `maintenanceKcal`; makró: ha van `maintenanceProteinG` stb.).
+Kiértékelési sorrend:
+
+1. **Sárga:** `bevitt < lo`
+2. **Zöld:** `lo ≤ bevitt ≤ hi`
+3. Ha `bevitt > hi`:
+   - **Fogyás** (\(A < M\)): **narancs** ha `bevitt ≤ M`; **piros** ha `bevitt > M`
+   - **Megtartás / tömegelés** (\(A ≥ M\)): **nincs narancs** → **piros** (azonnal, ha `bevitt > hi`)
+
+##### Progress bar színek — fehérje / szénhidrát / zsír
+
+Ugyanaz a ±5% zöld a saját célra; **piros nincs**:
 
 | Szín | Feltétel |
 |---|---|
-| **Sárga** | `bevitt < lo` (még be kell vinni) |
-| **Zöld** | `lo ≤ bevitt ≤ hi` **és** `bevitt < maintenance` (ha maintenance ismert; ha `hi ≥ maintenance`, a zöld felső határa `maintenance`) |
-| **Narancs** | `bevitt > hi` **és** `bevitt < maintenance` (cél felett, szintentartás alatt) |
-| **Piros** | `bevitt ≥ maintenance` |
+| **Sárga** | `bevitt < 0.95 × cél` |
+| **Zöld** | `0.95 × cél ≤ bevitt ≤ 1.05 × cél` |
+| **Narancs** | `bevitt > 1.05 × cél` |
 
-Ha makróra még nincs `maintenance*`: piros nem alkalmazható; `bevitt > hi` → narancs.
+Állapot szöveg (minden bar): cél alatt → „hátra”; cél felett → „túllépés”.
 
 #### Étkezés entitás
 

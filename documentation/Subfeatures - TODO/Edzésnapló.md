@@ -14,7 +14,16 @@ Elvégzett edzések rögzítése (gyakorlatok, súlyok, ismétlések, időtartam
 
 ### Funkcionális leírás
 
-_Nincs business érintettség._
+Elvégzett edzések rögzítése (gyakorlatok, súlyok, ismétlések, **időtartam**), kalóriaégetés a [[Tápérték kalkulátor]] felé.
+
+#### MET (erőedzés)
+
+\[\text{kcal} = \text{MET} \times \text{testsúly} \times \frac{\text{durationMinutes}}{60}\]
+
+| Típus | MET |
+|---|---|
+| `GENERAL_WEIGHTS` (súlyzós, pihenőkkel) | 5.0 |
+| `HIIT_CIRCUIT` | 8.0 |
 
 ### UI/UX elvárások
 
@@ -27,8 +36,7 @@ _Nincs megjegyzés._
 ### Nyitott kérdések
 
 - Heti tervből indított vs ad-hoc edzés
-- Offline rögzítés
-- MET / kalória képlet edzéshez
+- Edzés típus választó UI (`GENERAL_WEIGHTS` / `HIIT_CIRCUIT`)
 
 ## Architektúra
 
