@@ -19,7 +19,7 @@ Subfeature lista:
 - [[Élelmiszerek]] (`Kész`)
 - [[Élelmiszer tárolás]] (`Kész`)
 - [[Recept]] (`Kész`)
-- [[Étkezés]]
+- [[Étkezés]] (`Kész`)
 - [[Kaja statisztika]]
 - [[Energiaegyenleg napló]]
 

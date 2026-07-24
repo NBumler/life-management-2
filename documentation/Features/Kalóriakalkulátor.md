@@ -10,11 +10,24 @@
 
 ### Célállapot
 
-1. Az aznapi **elégetett** kalória kiszámítása a [[Profile]] és az aktivitás-naplók ([[Edzés]], [[Mászónapló]], [[Biciklizés napló]], [[Lépésszám követés]], [[Úszás napló]]) alapján.
-2. A [[Profile]] alapján a **még bevihető** napi kalóriakeret kiszámítása.
-3. Diagramok az egyenlegről / idősorokról.
+1. Az aznapi **elégetett** / aktivitás kalória kiszámítása a [[Profile]] és az aktivitás-naplók ([[Edzés]], [[Mászónapló]], [[Biciklizés napló]], [[Lépésszám követés]], [[Úszás napló]], stb.) alapján.
+2. A [[Profile]] / életmód alapján a **napi kalória cél mozgás nélkül** (`baseDailyCalorieGoal`) — **nem** tartalmazza az edzésből származó égetést.
+3. **Aktivitás extra** (`activityExtraKcal`) — a naplók összege külön.
+4. **Összes bevihető keret aznap** = `baseDailyCalorieGoal + activityExtraKcal` (ezt olvassa pl. az [[Étkezés]] dashboard „cél + aktivitás” sora).
+5. Opcionálisan: **még bevihető** = keret − aznapi bevitt ([[Étkezés]]) — megjelenhet más UI-n; az Étkezés dashboardon **nem** kötelező.
+6. Diagramok az egyenlegről / idősorokról ([[Energiaegyenleg napló]]).
 
 ### Funkcionális leírás
+
+#### Napi cél modell (SSOT az [[Étkezés]] dashboard felé)
+
+| Érték | Jelentés |
+|---|---|
+| `baseDailyCalorieGoal` | Kalória cél, ha aznap nem lenne külön edzés / aktivitás-napló (Profile + életmód képlet — TBD). |
+| `activityExtraKcal` | Az adott naptári nap összes kalóriát égető naplójának összege. |
+| `dailyAllowanceKcal` | `baseDailyCalorieGoal + activityExtraKcal` |
+
+Az Étkezés dashboard ezeket **csak megjeleníti**; a képlet és a naplóösszegzés itt él.
 
 #### [[Úszás napló]] — offline kalóriaszámítás
 
@@ -30,7 +43,7 @@ Számítási képlet:
 
 $$\text{Égetett Kalória} = \text{MET} \times \text{Testsúly (kg)} \times \left( \frac{\text{durationMinutes}}{60} \right)$$
 
-Mentéskor a kiszámított értékkel az optimista UI azonnal megemeli a mai bevihető keretet.
+Mentéskor az érték az aznapi `activityExtraKcal` / bevihető keret részeként azonnal megjelenik (optimista UI).
 
 ### UI/UX elvárások
 

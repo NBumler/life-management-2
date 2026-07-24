@@ -10,11 +10,11 @@
 
 ### Célállapot
 
-Napi / idősoros napló az energiaegyenlegről: bevitt kalória ([[Étkezés]]) vs elégetett / megengedett keret ([[Kalóriakalkulátor]], [[Profile]]).
+Hosszabb időtávú / trend nézet az energiaegyenlegről: bevitt kalória ([[Étkezés]]) vs keret ([[Kalóriakalkulátor]]: `baseDailyCalorieGoal + activityExtraKcal`). **Nem** étkezés-CRUD — az az [[Étkezés]] dashboard feladata.
 
 ### Funkcionális leírás
 
-_Nincs business érintettség._
+_Nincs business érintettség._ (részletes UI / időablakok később)
 
 ### UI/UX elvárások
 
@@ -22,7 +22,7 @@ _Nincs UI/UX érintettség._
 
 ### Megjegyzések
 
-_Nincs megjegyzés._
+Az [[Étkezés]] dashboard a napi operatív felület; ez a napló aggregátum / történet. Számítási SSOT: [[Kalóriakalkulátor]] + [[Étkezés]] bevitt összegek.
 
 ### Nyitott kérdések
 
@@ -34,7 +34,7 @@ _Nincs megjegyzés._
 
 ### Frontend
 
-Napló / diagram nézet; offline bizonytalanság jelölés.
+Napló / diagram nézet; offline bizonytalanság jelölés; read-only az Étkezés / Kalóriakalkulátor store-ból.
 
 #### Backend-offline
 

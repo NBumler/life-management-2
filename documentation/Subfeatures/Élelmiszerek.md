@@ -44,8 +44,8 @@ Későbbi modellbontás (külön bolt entitás) nincs scope-ban.
 #### Törlés (hard delete)
 
 - Hard delete; megerősítéssel.
-- Ha vannak hivatkozások (tárolás, recept összetevő, bevásárlólista tétel, stb.), a megerősítő UI **felsorolja**, mi törlődik együtt.
-- Törléskor a hivatkozó elemek is törlődnek (cascade).
+- Ha vannak hivatkozások ([[Élelmiszer tárolás]], [[Recept]] hozzávaló, bevásárlólista tétel, [[Étkezés]] / [[Élelmiszer forrású étkezés]] tétel, stb.), a megerősítő UI **felsorolja**, mi törlődik együtt.
+- Törléskor a hivatkozó elemek is törlődnek (cascade) — étkezés-tételek cascade után üres étkezés is törlődik ([[Étkezés]]).
 - Backend-offline állapotban is elérhető (helyi törlés + outbox).
 
 #### Fogyasztók

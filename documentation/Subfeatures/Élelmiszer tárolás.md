@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Kész` |
 | **Szülő** | [[Kaja]] |
-| **Kapcsolódó** | [[Bevásárlás]], [[Bevásárlás teljesítve]], [[Élelmiszerek]], [[Étkezés]], [[Élelmiszer forrású étkezés]], [[Recept forrású étkezés]], [[Ismeretlen forrású étkezés]], [[Értesítések]], [[Mennyiség mező]], [[Szöveges keresés]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Bevásárlás]], [[Bevásárlás teljesítve]], [[Élelmiszerek]], [[Étkezés]], [[Élelmiszer forrású étkezés]], [[Recept forrású étkezés]], [[Egyéni forrású étkezés]], [[Értesítések]], [[Mennyiség mező]], [[Szöveges keresés]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -58,7 +58,9 @@ Bevásárlás nélkül is felvehető:
 
 #### Készletcsökkenés étkezéskor
 
-Forrás: [[Élelmiszer forrású étkezés]], [[Recept forrású étkezés]] (nem: [[Ismeretlen forrású étkezés]]).
+Forrás: [[Élelmiszer forrású étkezés]], [[Recept forrású étkezés]] (nem: [[Egyéni forrású étkezés]]).
+
+Étkezés **létrehozásakor** levonás; szerkesztés / törlés esetén **nincs** visszapótlás ([[Étkezés]]).
 
 Egy adott `Food`-ra fogyasztott mennyiség levonása:
 
