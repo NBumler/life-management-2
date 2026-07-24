@@ -6,19 +6,21 @@
 |---|---|
 | **Státusz** | `Váz` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Tápérték kalkulátor]], [[Mászónapló]], [[Úszás napló]], [[Lépésszám követés]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Tápérték kalkulátor]], [[Mászónapló]], [[Úszás napló]], [[Biciklizés napló]], [[Lépésszám követés]], [[Backend-offline first]] |
 
 ### Célállapot
 
-Erőnléti / termi edzés: gyakorlatok, heti terv, edzésnapló. Alsó tab: **Edzés** (lásd [[Frontend]]).
+Edzés tab (lásd [[Frontend]]): erőnléti / termi edzés (gyakorlatok, heti terv, edzésnapló) + aktivitás-naplók (úszás, bicikli, …). A naplók MET-kalóriája a [[Tápérték kalkulátor]] `activityExtraKcal` összegébe megy.
 
 ### Funkcionális leírás
 
-Subfeature lista:
+Subfeature / kapcsolódó napló lista:
 
 - [[Gyakorlat]]
 - [[Heti terv]]
 - [[Edzésnapló]]
+- [[Úszás napló]]
+- [[Biciklizés napló]]
 
 ### UI/UX elvárások
 
@@ -36,7 +38,7 @@ Nincs nyitott kérdés.
 
 ### Frontend
 
-Edzés tab belépő; subfeature képernyők.
+Edzés tab belépő; subfeature / napló képernyők.
 
 #### Backend-offline
 

@@ -49,6 +49,7 @@ Agent skill: `.cursor/skills/documentation-spec/`. Offline SSOT: [[Backend-offli
 - [[Profile]]
 - [[Lépésszám követés]]
 - [[Úszás napló]]
+- [[Biciklizés napló]]
 - [[Értesítések]]
 - [[Szinkronizációs központ]]
 - [[Bevásárlás]]
@@ -58,7 +59,6 @@ Agent skill: `.cursor/skills/documentation-spec/`. Offline SSOT: [[Backend-offli
 - [[Pénzügyek]]
 - [[Események]]
 - [[Mászónapló]]
-- [[Biciklizés napló]]
 - [[Bejelentkezés]]
 
 ### UI/UX elvárások
