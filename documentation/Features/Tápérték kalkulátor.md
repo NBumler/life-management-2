@@ -67,7 +67,7 @@ Konstans: `STEP_BASELINE = 3000` (nem konfigurálható).
 
 MET táblák (részletek a napló specekben is):
 
-**Úszás** ([[Úszás napló]]): `CASUAL`/`BREASTSTROKE` 5.5; `BACKSTROKE` 7.0; `CRAWL_FREESTYLE` 8.0; `OPEN_WATER` 9.5; `BUTTERFLY`/`VIGOROUS` 11.0.
+**Úszás** ([[Úszás napló]]): egy `intensity` enum — `CASUAL`/`BREASTSTROKE`/`MIXED` 5.5; `BACKSTROKE` 7.0; `CRAWL_FREESTYLE` 8.0; `OPEN_WATER` 9.5; `BUTTERFLY`/`VIGOROUS` 11.0.
 
 **Bicikli** ([[Biciklizés napló]]): `CITY` 4.0; `STATIONARY` 6.0; `ROAD_LEISURE` 6.8; `MOUNTAIN_TRAIL` 8.5; `ROAD_VIGOROUS` 10.0.
 
