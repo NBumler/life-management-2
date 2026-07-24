@@ -20,7 +20,7 @@ Subfeature lista:
 - [[Élelmiszer tárolás]] (`Kész`)
 - [[Recept]] (`Kész`)
 - [[Étkezés]] (`Kész`)
-- [[Kaja statisztika]]
+- [[Kaja statisztika]] (`Kész`)
 - [[Energiaegyenleg napló]]
 
 ### UI/UX elvárások
