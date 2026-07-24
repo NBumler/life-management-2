@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `TODO` |
 | **Szülő** | [[Lépésszám követés]] |
-| **Kapcsolódó** | [[Kalóriakalkulátor]], [[Lépésszám átszinkronizálása a Samsung Health-ből]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Tápérték kalkulátor]], [[Lépésszám átszinkronizálása a Samsung Health-ből]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -33,7 +33,7 @@ _Nincs megjegyzés._
 
 ### Frontend
 
-Manuális lépésszám űrlap; kalória újraszámolás ([[Kalóriakalkulátor]] / Samsung Health gyerek képlete).
+Manuális lépésszám űrlap; kalória újraszámolás ([[Tápérték kalkulátor]] / Samsung Health gyerek képlete).
 
 #### Backend-offline
 

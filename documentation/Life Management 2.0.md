@@ -45,7 +45,7 @@ Agent skill: `.cursor/skills/documentation-spec/`. Offline SSOT: [[Backend-offli
 - [[Nyelv választás]]
 - [[Dark&Light mode]]
 - [[AYCM tracker]]
-- [[Kalóriakalkulátor]]
+- [[Tápérték kalkulátor]]
 - [[Profile]]
 - [[Lépésszám követés]]
 - [[Úszás napló]]

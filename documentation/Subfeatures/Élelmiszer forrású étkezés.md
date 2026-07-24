@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Kész` |
 | **Szülő** | [[Étkezés]] |
-| **Kapcsolódó** | [[Élelmiszerek]], [[Élelmiszer tárolás]], [[Mennyiség mező]], [[Szöveges keresés]], [[Kalóriakalkulátor]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Élelmiszerek]], [[Élelmiszer tárolás]], [[Mennyiség mező]], [[Szöveges keresés]], [[Tápérték kalkulátor]], [[Backend-offline first]] |
 
 ### Célállapot
 

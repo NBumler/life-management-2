@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Váz` |
 | **Szülő** | [[Mászónapló]] |
-| **Kapcsolódó** | [[Nehézségi szint skálája]], [[Giga feature napló specifikáció (Ideiglenes specifikáció)]], [[Kalóriakalkulátor]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Nehézségi szint skálája]], [[Giga feature napló specifikáció (Ideiglenes specifikáció)]], [[Tápérték kalkulátor]], [[Backend-offline first]] |
 
 ### Célállapot
 

@@ -6,11 +6,11 @@
 |---|---|
 | **Státusz** | `TODO` |
 | **Szülő** | [[Edzés]] |
-| **Kapcsolódó** | [[Gyakorlat]], [[Heti terv]], [[Kalóriakalkulátor]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Gyakorlat]], [[Heti terv]], [[Tápérték kalkulátor]], [[Backend-offline first]] |
 
 ### Célállapot
 
-Elvégzett edzések rögzítése (gyakorlatok, súlyok, ismétlések, időtartam), kalóriaégetés becslése a [[Kalóriakalkulátor]] felé.
+Elvégzett edzések rögzítése (gyakorlatok, súlyok, ismétlések, időtartam), kalóriaégetés becslése a [[Tápérték kalkulátor]] felé.
 
 ### Funkcionális leírás
 

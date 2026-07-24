@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Ideiglenes` |
 | **Szülő** | [[Mászónapló]] |
-| **Kapcsolódó** | [[Nehézségi szint skálája]], [[Nehézségi szint skálája (konverziós mátrix)]], [[Kalóriakalkulátor]], [[Backend-offline first]], [[Backend]] |
+| **Kapcsolódó** | [[Nehézségi szint skálája]], [[Nehézségi szint skálája (konverziós mátrix)]], [[Tápérték kalkulátor]], [[Backend-offline first]], [[Backend]] |
 
 ### Célállapot
 
@@ -207,7 +207,7 @@ MET és korrekciók:
  * Rest Time: fix 2.0 MET (NEAT / biztosítás / tisztítás)
  * Trad: testsúly +6 kg hardver a [[Profile]] testsúlyához
 
-Kapcsolat: [[Kalóriakalkulátor]].
+Kapcsolat: [[Tápérték kalkulátor]].
 
 ### Nyitott kérdések
 

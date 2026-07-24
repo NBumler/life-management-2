@@ -6,11 +6,11 @@
 |---|---|
 | **Státusz** | `TODO` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Kalóriakalkulátor]], [[Profile]], [[Edzés]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Tápérték kalkulátor]], [[Profile]], [[Edzés]], [[Backend-offline first]] |
 
 ### Célállapot
 
-Kerékpáros edzések / utak naplózása (időtartam, táv, intenzitás), elégetett kalória számítása a [[Kalóriakalkulátor]] felé.
+Kerékpáros edzések / utak naplózása (időtartam, táv, intenzitás), elégetett kalória számítása a [[Tápérték kalkulátor]] felé.
 
 ### Funkcionális leírás
 

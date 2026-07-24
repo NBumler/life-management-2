@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `TODO` |
 | **Szülő** | [[Indoor - boulder]] |
-| **Kapcsolódó** | [[Indoor boulder admin]], [[Nehézségi szint skálája]], [[Kalóriakalkulátor]], [[Giga feature napló specifikáció (Ideiglenes specifikáció)]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Indoor boulder admin]], [[Nehézségi szint skálája]], [[Tápérték kalkulátor]], [[Giga feature napló specifikáció (Ideiglenes specifikáció)]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -24,7 +24,7 @@ Várható mezők (váz a giga specifikációból):
 - `ascentStyle` (ha sikeres): ONSIGHT / FLASH / REDPOINT
 - `pumpRating` (1–5) — kalóriaszámításhoz
 - Megjegyzés, partnerek
-- Számított kalória → [[Kalóriakalkulátor]]
+- Számított kalória → [[Tápérték kalkulátor]]
 
 ### UI/UX elvárások
 

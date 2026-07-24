@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Váz` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Élelmiszer tárolás]], [[Rendszeres kiadások]], [[Tennivalók]], [[Események]], [[Lépésszám követés]], [[Kalóriakalkulátor]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Élelmiszer tárolás]], [[Rendszeres kiadások]], [[Tennivalók]], [[Események]], [[Lépésszám követés]], [[Tápérték kalkulátor]], [[Étkezés]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -24,7 +24,7 @@ Telefonos (push / lokális) értesítések küldése fontos eseményekről / kü
 - [[Tennivalók]] időpontja közeledik
 - [[Események]] időpontja közeledik
 - Az adott napon a [[Lépésszám követés]] alapján 20 órakor kevesebb mint 2000 lépés történt
-- Egymást követő 5 napon át minden nap a kalória céltól több mint 750 kcal-lal eltérés van
+- **Kalória túllépés (sorozat):** egymást követő **5 napon** át minden nap a bevitt kalória ([[Étkezés]]) **több mint 750 kcal-lal meghaladja** az aznapi célt (`dailyAllowanceKcal` a [[Tápérték kalkulátor]]ból). Csak **túllépés** számít (alulmaradás nem). Nincs szükség külön energiaegyenleg-feature-re.
 
 ### UI/UX elvárások
 
@@ -32,7 +32,7 @@ _Nincs UI/UX érintettség._
 
 ### Megjegyzések
 
-Az élelmiszer-romlás lead time az [[Élelmiszer tárolás]] spechen SSOT; itt csak hivatkozás.
+Élelmiszer-romlás lead time: [[Élelmiszer tárolás]]. Kalória túllépés: [[Étkezés]] + [[Tápérték kalkulátor]] SSOT.
 
 ### Nyitott kérdések
 
@@ -43,11 +43,11 @@ Az élelmiszer-romlás lead time az [[Élelmiszer tárolás]] spechen SSOT; itt 
 
 ### Frontend
 
-Lokális / push értesítések (Capacitor) — plugin TBD ([[Frontend]] nyitott kérdések).
+Lokális / push értesítések (Capacitor) — plugin TBD ([[Frontend]] nyitott kérdések). Kalória-sorozat: helyi Étkezés + Tápérték kalkulátor store alapján értékelhető.
 
 #### Backend-offline
 
-Lokális értesítések a helyi store / eszköz órája alapján — Backend-offline és Full-offline is működhet (nincs szerver-trigger a jelenlegi feltételezés szerint). Remote push TBD. Lásd [[Backend-offline first]].
+Lokális értesítések a helyi store / eszköz órája alapján — Backend-offline és Full-offline is működhet. Remote push TBD. Lásd [[Backend-offline first]].
 
 ### Backend
 

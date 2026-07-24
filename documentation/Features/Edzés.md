@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Váz` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Kalóriakalkulátor]], [[Mászónapló]], [[Úszás napló]], [[Lépésszám követés]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Tápérték kalkulátor]], [[Mászónapló]], [[Úszás napló]], [[Lépésszám követés]], [[Backend-offline first]] |
 
 ### Célállapot
 

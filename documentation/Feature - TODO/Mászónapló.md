@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Ideiglenes` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Kalóriakalkulátor]], [[Nehézségi szint skálája]], [[Nehézségi szint skálája (konverziós mátrix)]], [[Giga feature napló specifikáció (Ideiglenes specifikáció)]] |
+| **Kapcsolódó** | [[Tápérték kalkulátor]], [[Nehézségi szint skálája]], [[Nehézségi szint skálája (konverziós mátrix)]], [[Giga feature napló specifikáció (Ideiglenes specifikáció)]] |
 
 ### Célállapot
 

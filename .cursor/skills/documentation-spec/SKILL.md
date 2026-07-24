@@ -160,7 +160,7 @@ All of the following sections are **required**. If there is nothing to write, us
 |---|---|
 | **Státusz** | `TODO` |
 | **Szülő** | [[Indoor - boulder]] |
-| **Kapcsolódó** | [[Indoor boulder admin]], [[Nehézségi szint skálája]], [[Kalóriakalkulátor]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Indoor boulder admin]], [[Nehézségi szint skálája]], [[Tápérték kalkulátor]], [[Backend-offline first]] |
 
 ### Célállapot
 

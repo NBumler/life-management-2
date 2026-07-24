@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `TODO` |
 | **Szülő** | [[Outdoor - köteles]] |
-| **Kapcsolódó** | [[Outdoor köteles admin]], [[Nehézségi szint skálája]], [[Kalóriakalkulátor]], [[Giga feature napló specifikáció (Ideiglenes specifikáció)]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Outdoor köteles admin]], [[Nehézségi szint skálája]], [[Tápérték kalkulátor]], [[Giga feature napló specifikáció (Ideiglenes specifikáció)]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -24,7 +24,7 @@ Várható mezők (váz):
 - Több kötélhossz: `PitchLog` lista
 - Időjárás, `pumpRating`, `headspaceRating`
 - Trad esetén +6 kg hardver-súly a kalóriaszámításban (giga specifikáció)
-- Számított kalória → [[Kalóriakalkulátor]]
+- Számított kalória → [[Tápérték kalkulátor]]
 
 ### UI/UX elvárások
 

@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Váz` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Kalóriakalkulátor]], [[Profile]], [[Edzés]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Tápérték kalkulátor]], [[Profile]], [[Edzés]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -24,7 +24,7 @@ Bemeneti paraméterek:
 * `strokeType`: Enum (`BREASTSTROKE`, `CRAWL_FREESTYLE`, `BACKSTROKE`, `BUTTERFLY`, `MIXED`)
 * `swimmingIntensity`: Enum (`CASUAL`, `VIGOROUS`)
 
-Kalória MET tábla és képlet: [[Kalóriakalkulátor]].
+Kalória MET tábla és képlet: [[Tápérték kalkulátor]].
 
 ### UI/UX elvárások
 
@@ -36,7 +36,7 @@ _Nincs megjegyzés._
 
 ### Nyitott kérdések
 
-- `strokeType` vs `swimmingIntensity` és MET mapping egyértelműsítése (lásd [[Kalóriakalkulátor]] konstansok)
+- `strokeType` vs `swimmingIntensity` és MET mapping egyértelműsítése (lásd [[Tápérték kalkulátor]] konstansok)
 
 ## Architektúra
 

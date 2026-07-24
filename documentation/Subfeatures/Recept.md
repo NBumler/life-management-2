@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Kész` |
 | **Szülő** | [[Kaja]] |
-| **Kapcsolódó** | [[Élelmiszerek]], [[Mennyiség mező]], [[Szöveges keresés]], [[Recept forrású étkezés]], [[Étkezés]], [[Kaja statisztika]], [[Kalóriakalkulátor]], [[Élelmiszer tárolás]], [[Pakolás]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Élelmiszerek]], [[Mennyiség mező]], [[Szöveges keresés]], [[Recept forrású étkezés]], [[Étkezés]], [[Kaja statisztika]], [[Tápérték kalkulátor]], [[Élelmiszer tárolás]], [[Pakolás]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -55,7 +55,7 @@ A hozzávalók és az [[Élelmiszerek]] tápanyag / ár mezőiből **számított
 - összes **szénhidrát** (g)
 - összes **zsír** (g)
 
-Egyéb tápanyagok (só, rost, stb.) ugyanezzel a modellel számolhatók a kliensen / API-n — étkezés, fogyás, [[Kalóriakalkulátor]], [[Kaja statisztika]] számára; a részletek elsődleges sorában a fenti öt + hiányjelzés elég.
+Egyéb tápanyagok (só, rost, stb.) ugyanezzel a modellel számolhatók a kliensen / API-n — étkezés, fogyás, [[Tápérték kalkulátor]], [[Kaja statisztika]] számára; a részletek elsődleges sorában a fenti öt + hiányjelzés elég.
 
 ##### Mennyiség → tápanyag
 

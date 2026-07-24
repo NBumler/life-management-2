@@ -6,11 +6,11 @@
 |---|---|
 | **Státusz** | `Váz` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Bevásárlás]], [[Élelmiszerek]], [[Kalóriakalkulátor]], [[Mennyiség mező]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Bevásárlás]], [[Élelmiszerek]], [[Tápérték kalkulátor]], [[Mennyiség mező]], [[Backend-offline first]] |
 
 ### Célállapot
 
-Élelmiszer, tárolás, recept, étkezés és kapcsolódó statisztikák / energiaegyenleg kezelése egy feature alatt. Alsó tab: **Kaja** (lásd [[Frontend]]). A [[Bevásárlás]] domainben kapcsolódik (katalógus / tárolás), de navigációja a **Menü** tabon van.
+Élelmiszer, tárolás, recept, étkezés és kapcsolódó statisztikák kezelése egy feature alatt. Alsó tab: **Kaja** (lásd [[Frontend]]). A [[Bevásárlás]] domainben kapcsolódik (katalógus / tárolás), de navigációja a **Menü** tabon van.
 
 ### Funkcionális leírás
 
@@ -21,7 +21,6 @@ Subfeature lista:
 - [[Recept]] (`Kész`)
 - [[Étkezés]] (`Kész`)
 - [[Kaja statisztika]] (`Kész`)
-- [[Energiaegyenleg napló]]
 
 ### UI/UX elvárások
 

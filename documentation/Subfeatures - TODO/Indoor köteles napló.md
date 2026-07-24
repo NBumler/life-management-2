@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `TODO` |
 | **Szülő** | [[Indoor - köteles]] |
-| **Kapcsolódó** | [[Indoor köteles admin]], [[Nehézségi szint skálája]], [[Kalóriakalkulátor]], [[Giga feature napló specifikáció (Ideiglenes specifikáció)]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Indoor köteles admin]], [[Nehézségi szint skálája]], [[Tápérték kalkulátor]], [[Giga feature napló specifikáció (Ideiglenes specifikáció)]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -24,7 +24,7 @@ Várható mezők (váz):
 - Sikeres / sikertelen; `ascentStyle` vagy `failurePoint`
 - Út hossza (m) — aktív mászóidő / kalória becsléshez
 - `pumpRating`, megjegyzés, partnerek
-- Számított kalória → [[Kalóriakalkulátor]]
+- Számított kalória → [[Tápérték kalkulátor]]
 
 ### UI/UX elvárások
 

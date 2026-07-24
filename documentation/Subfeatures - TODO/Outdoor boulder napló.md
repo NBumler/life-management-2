@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `TODO` |
 | **Szülő** | [[Outdoor - boulder]] |
-| **Kapcsolódó** | [[Outdoor boulder admin]], [[Nehézségi szint skálája]], [[Kalóriakalkulátor]], [[Giga feature napló specifikáció (Ideiglenes specifikáció)]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Outdoor boulder admin]], [[Nehézségi szint skálája]], [[Tápérték kalkulátor]], [[Giga feature napló specifikáció (Ideiglenes specifikáció)]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -23,7 +23,7 @@ Várható mezők (váz):
 - Időjárás (`WeatherCondition`)
 - Sikeres / sikertelen kísérlet, `ascentStyle`
 - `pumpRating`, `headspaceRating`, megjegyzés, partnerek
-- Számított kalória → [[Kalóriakalkulátor]]
+- Számított kalória → [[Tápérték kalkulátor]]
 
 ### UI/UX elvárások
 

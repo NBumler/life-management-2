@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Váz` |
 | **Szülő** | [[Lépésszám követés]] |
-| **Kapcsolódó** | [[Kalóriakalkulátor]], [[Backend-offline first]], [[Szinkronizációs központ]], [[Lépésszám kézzel manuálisan megadása]] |
+| **Kapcsolódó** | [[Tápérték kalkulátor]], [[Backend-offline first]], [[Szinkronizációs központ]], [[Lépésszám kézzel manuálisan megadása]] |
 
 ### Célállapot
 
@@ -29,7 +29,7 @@ A telefon napi lépésszámának teljesen automatikus háttér-szinkronizálása
 
 $$\text{Égetett kalória} = \text{Lépések száma} \times \text{Testsúly (kg)} \times 0.00045$$
 
-Az értékkel az app azonnal frissíti a mai nap bevihető kalóriakeretét ([[Kalóriakalkulátor]]), online / offline függetlenül.
+Az értékkel az app azonnal frissíti a mai nap bevihető kalóriakeretét ([[Tápérték kalkulátor]]), online / offline függetlenül.
 
 ### UI/UX elvárások
 
