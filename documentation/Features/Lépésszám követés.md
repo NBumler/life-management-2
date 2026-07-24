@@ -33,7 +33,8 @@ Bekapcsolt követés + aznapi 0 lépés: lépéskalória = 0 (a baseline az 1.2 
 
 ### UI/UX elvárások
 
-_Nincs UI/UX érintettség._
+- Belépés: **Menü** tab (nem az Edzés tab) — lásd [[Frontend]].
+- A követés ki/be kapcsoló a Lépésszám képernyőn van (nem a Profile-on).
 
 ### Megjegyzések
 
@@ -41,13 +42,13 @@ _Nincs megjegyzés._
 
 ### Nyitott kérdések
 
-- Követés ki/be kapcsoló UI helye (Profile vs Lépésszám képernyő)
+Nincs nyitott kérdés.
 
 ## Architektúra
 
 ### Frontend
 
-Edzés / Menü belépő; gyerek specek; TDEE újraszámolás lépésváltozáskor.
+Menü alatti belépő; gyerek specek; TDEE újraszámolás lépésváltozáskor / követés ki-be kapcsoláskor.
 
 #### Backend-offline
 
