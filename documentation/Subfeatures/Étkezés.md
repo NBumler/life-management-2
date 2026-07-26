@@ -70,7 +70,7 @@ Ugyanaz a ±5% zöld a saját célra; **piros nincs**:
 | **Megjegyzés** | Opcionális. |
 | **Tételek** | ≥1 kötelező; vegyes forrástípusok megengedettek. |
 
-- Szerkeszthető, hard delete, megerősítéssel; backend-offline.
+- Szerkeszthető, soft delete (`deleted`), megerősítéssel; backend-offline. Szinkronizálatlan helyi only → hard remove. Lásd [[Backend-offline first]].
 
 #### Tétel — közös
 
@@ -124,10 +124,10 @@ Dashboard és CRUD helyi store; mutációk outboxba, kliens UUID. Sync: [[Szinkr
 
 | Entitás | Fő mezők |
 |---|---|
-| `Meal` | `id` (UUID); `eatenAt` (timestamptz); `timeZoneId`; `note`; timestamps |
+| `Meal` | `id` (UUID); `eatenAt` (timestamptz); `timeZoneId`; `note`; `deleted`; timestamps |
 | `MealItem` | `id`; `mealId`; `type`; `servings`; típusmezők; `sortOrder` |
 
-Cascade: `Food` / `Recipe` delete → itemek, majd üres meal törlése.
+Cascade: `Food` / `Recipe` delete → itemek, majd üres meal soft delete.
 
 ### Nyitott kérdések
 

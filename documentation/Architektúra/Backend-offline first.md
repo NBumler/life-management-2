@@ -42,6 +42,7 @@ Nincs nyitott kérdés.
 * **Kliensoldali UUID:** Minden adatbázis entitás ID-ját a kliens generálja a létrehozás pillanatában (UUID v4), így az offline műveletek láncolhatóak (Létrehozás → Módosítás → Használat).
 * **Pragmatikus duplikáció:** A kritikus alapértékeket (pl. kalóriabevitel, lépés-szorzók) pure TypeScript utility osztályként leduplikáljuk a frontenden is az azonnali optimista UI frissítéshez.
 * **Vizuális bizonytalanság:** A csak online kiszámolható adatok mellett offline állapotban egy homokóra ikon (~) jelzi, hogy az adat csak becsült.
+* **Soft delete (naplózható / user entitások):** A szinkronizált napló- és katalógus-entitások törlése szerveroldalon soft delete (`deleted` / `deleted_at`), hogy a törlés multi-device synchelhető legyen (ne 404). Kivétel: soha szinkronizálatlan helyi draft / outbox tétel elvetése → helyi hard remove + outbox tisztítás ([[Szinkronizációs központ]]).
 
 #### SQLite Outbox Queue
 

@@ -4,9 +4,9 @@
 
 | | |
 |---|---|
-| **Státusz** | `Váz` |
+| **Státusz** | `Kész` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Tápérték kalkulátor]], [[Mászónapló]], [[Úszás napló]], [[Biciklizés napló]], [[Lépésszám követés]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Tápérték kalkulátor]], [[Gyakorlat]], [[Heti terv]], [[Edzésnapló]], [[Mászónapló]], [[Úszás napló]], [[Biciklizés napló]], [[Lépésszám követés]], [[Profile]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -16,19 +16,23 @@ Edzés tab (lásd [[Frontend]]): erőnléti / termi edzés (gyakorlatok, heti te
 
 Subfeature / kapcsolódó napló lista:
 
-- [[Gyakorlat]]
-- [[Heti terv]]
-- [[Edzésnapló]]
+- [[Gyakorlat]] — törzsadat (`Kész`); `ExerciseCategory` + `ExerciseKind`
+- [[Edzésnapló]] — elvégzett sessionök + élő követés (`Kész`); Heti terv nélkül is önálló
+- [[Heti terv]] — `WorkoutPlan` sablonok + heti kiosztás (`Kész`); `planId` = sablon ID
 - [[Úszás napló]]
 - [[Biciklizés napló]]
 
+Erőedzés MET ([[Edzésnapló]]): `GENERAL_WEIGHTS` 5.0; `HIIT_CIRCUIT` 8.0 — kanonikus: [[Tápérték kalkulátor]].
+
+Fejlesztési sorrend: Gyakorlat → Edzésnapló → Heti terv.
+
 ### UI/UX elvárások
 
-_Nincs UI/UX érintettség._
+_Nincs UI/UX érintettség._ (gyerek specek)
 
 ### Megjegyzések
 
-_Nincs megjegyzés._
+Naplózható entitások: egységes soft delete — [[Backend-offline first]].
 
 ### Nyitott kérdések
 

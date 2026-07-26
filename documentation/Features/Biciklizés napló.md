@@ -24,11 +24,12 @@ Kerékpáros utak naplózása az [[Edzés]] tab alatt. Egy naplóbejegyzés = eg
 | `intensity` | Kötelező enum — lásd MET tábla |
 | `distanceKm` | Opcionális; `≥ 0`; tisztán napló / statisztika + átlagsebesség-hint |
 | `elevationGainMeters` | Opcionális; `≥ 0`; tisztán napló / statisztika |
+| `deleted` | Soft delete (`false` default) |
 | `createdAt` / `updatedAt` | Audit (kliens + szerver) |
 
 **Egy napló = egy út.** Nincs szakaszokra bontás.
 
-CRUD: lista, létrehozás, szerkesztés, törlés (hard delete).
+CRUD: lista (`deleted = false`), létrehozás, szerkesztés, törlés (soft delete).
 
 #### Kalória (kanonikus — [[Tápérték kalkulátor]])
 
@@ -67,7 +68,7 @@ Soft javaslat (nem írja felül a user `intensity` választását):
 - Belépés: [[Edzés]] tab → Biciklizés napló.
 - **Lista:** időrend (újabb elöl); soron: dátum, időtartam, `intensity`, opcionális táv / emelkedés; megjelenített kcal = utility számítás (Profile `m` + MET).
 - **Új / szerkesztés űrlap:** dátum, `durationMinutes`, `intensity` (kötelező); `distanceKm`, `elevationGainMeters` (opcionális); élő kcal előnézet; ha van táv+idő → `avgSpeedKmH` + soft MET-hint.
-- **Törlés:** megerősítő dialógus, majd hard delete.
+- **Törlés:** megerősítő dialógus, soft delete (`deleted`); szinkronizálatlan helyi only → hard remove + outbox tisztítás. Lásd [[Backend-offline first]].
 - Első fókusz: `durationMinutes` (vagy a platformon legkényelmesebb kötelező mező).
 
 ### Megjegyzések
@@ -97,7 +98,8 @@ Nincs nyitott kérdés.
 
 ### Backend
 
-- OpenAPI CRUD: `BikeRideLog` (`id` UUID, `date`, `durationMinutes`, `intensity` enum, opcionális `distanceKm`, `elevationGainMeters`).
+- OpenAPI CRUD: `BikeRideLog` (`id` UUID, `date`, `durationMinutes`, `intensity` enum, opcionális `distanceKm`, `elevationGainMeters`, `deleted`).
+- Soft delete; listák `deleted = false`.
 - Nincs szerveroldali kcal mező az entitáson; opcionális szerveroldali ellenőrzés / újraszámolás ugyanazzal a MET táblával (paritás a [[Tápérték kalkulátor]]ssal), ha a backend TDEE-t is számol.
 - Auth / user scope: a bejelentkezett user saját naplói.
 

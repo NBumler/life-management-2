@@ -25,11 +25,12 @@
 | `poolLengthMeters` | Opcionális; `> 0` (tipikus: 25 / 50). Medenceedzéshez. |
 | `lapCount` | Opcionális; egész, `> 0`. **Egy kör = egy egyirányú hossz** (nem oda-vissza). |
 | `distanceMeters` | Opcionális; `≥ 0`. Ha `poolLengthMeters` és `lapCount` megvan → **számított**: `poolLengthMeters × lapCount` (nem külön begépelt, felülírható manuálisan nem kell). Nyílt víz (`OPEN_WATER`): medence mezők rejtve / üresek; a táv kézzel opcionálisan megadható. |
+| `deleted` | Soft delete (`false` default) |
 | `createdAt` / `updatedAt` | Audit |
 
 **Egy napló = egy edzés.** Nincs szakaszokra / váltott úszásnemekre bontás (ehhez `MIXED` vagy a domináns `intensity`).
 
-CRUD: lista, létrehozás, szerkesztés, törlés (hard delete).
+CRUD: lista (`deleted = false`), létrehozás, szerkesztés, törlés (soft delete).
 
 **Medence mezők együtt:** ha az egyik (`poolLengthMeters` / `lapCount`) ki van töltve, mentéskor a másik is kötelező. `OPEN_WATER` esetén mindkettő üres / nem validált.
 
@@ -61,7 +62,7 @@ Egyetlen kötelező választó — nincs külön `swimmingIntensity` + `strokeTy
 - **Lista:** időrend (újabb elöl); soron: dátum, időtartam, `intensity`, opcionális táv (számított vagy kézi); megjelenített kcal = utility (Profile `m` + MET).
 - **Új / szerkesztés:** dátum, `durationMinutes`, `intensity` kötelező; medencehossz + körök (együtt); `OPEN_WATER`-nél medence mezők rejtve, opcionális `distanceMeters`; élő kcal előnézet.
 - Számított táv megjelenítése, ha van medence + kör.
-- **Törlés:** megerősítés, hard delete.
+- **Törlés:** megerősítés, soft delete (`deleted`); szinkronizálatlan helyi only → hard remove + outbox tisztítás. Lásd [[Backend-offline first]].
 - Első fókusz: `durationMinutes` (vagy platform szerint a legkényelmesebb kötelező mező).
 
 ### Megjegyzések
@@ -91,8 +92,9 @@ Nincs nyitott kérdés.
 
 ### Backend
 
-- OpenAPI CRUD: `SwimLog` (`id` UUID, `date`, `durationMinutes`, `intensity` enum, opcionális `poolLengthMeters`, `lapCount`, `distanceMeters`).
+- OpenAPI CRUD: `SwimLog` (`id` UUID, `date`, `durationMinutes`, `intensity` enum, opcionális `poolLengthMeters`, `lapCount`, `distanceMeters`, `deleted`).
 - Validáció: medence mezők együttese; `OPEN_WATER`-nél medence mezők null.
+- Soft delete; listák `deleted = false`.
 - Nincs szerveroldali kcal mező; opcionális MET-paritás ellenőrzés a [[Tápérték kalkulátor]]ssal.
 - Auth / user scope: a bejelentkezett user saját naplói.
 
