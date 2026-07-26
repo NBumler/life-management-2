@@ -4,41 +4,61 @@
 
 | | |
 |---|---|
-| **Státusz** | `Váz` |
+| **Státusz** | `Kész` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Tápérték kalkulátor]], [[Értesítések]], [[Profile]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Tápérték kalkulátor]], [[Profile]], [[Értesítések]], [[Lépésszám kézzel manuálisan megadása]], [[Lépésszám átszinkronizálása a Samsung Health-ből]], [[Szinkronizációs központ]], [[Backend-offline first]] |
 
 ### Célállapot
 
-Napi lépésszám manuálisan és/vagy Samsung Health szinkronnal; hozzájárulás az `activityExtraKcal`-hoz ([[Tápérték kalkulátor]]).
+Napi lépésszám rögzítése (manuális és/vagy Android Health Connect / Samsung Health). A lépésszám a [[Tápérték kalkulátor]] `activityExtraKcal` lépéságát hajtja. Nincs ki/be kapcsoló: ha a feature flag engedi a feature-t, a modell **mindig** aktív (PAL fix 1.2 + lépéskalória).
 
 ### Funkcionális leírás
 
-Subfeature lista:
+#### Subfeature-ök
 
 - [[Lépésszám kézzel manuálisan megadása]]
 - [[Lépésszám átszinkronizálása a Samsung Health-ből]]
 
-#### Kapcsolat a Tápérték kalkulátorral
+#### Entitás — `DailyStepLog` (1 nap = 1 rekord / user)
 
-- Ha a követés **be van kapcsolva** (normal mód): PAL=1.2; lépéskalória:
+| Mező | Szabály |
+|---|---|
+| `id` | UUID, kliens |
+| `date` | Naptári dátum (kliens TZ); egyedi kulcs user+date |
+| `stepCount` | Egész, `≥ 0` |
+| `updatedAt` | Utolsó módosítás |
 
-\[\max(0,\;\text{lépésszám} - 3000) \times \text{testsúly} \times 0.00045\]
+Hiányzó nap = **0** lépés a Tápérték és az összehasonlítások szempontjából.
 
-`STEP_BASELINE = 3000` fix ([[Tápérték kalkulátor]]).
+#### Kapcsolat a [[Tápérték kalkulátor]]ral (SSOT)
 
-- Ha a követés **ki van kapcsolva** (fallback): nincs lépéskalória; a Profile aktivitási szint adja a PAL-t; `activityExtra` csak edzésekből.
+- `PAL` **mindig 1.2** (nincs Profile aktivitási szint, nincs fallback mód).
+- Lépéskalória:
 
-Bekapcsolt követés + aznapi 0 lépés: lépéskalória = 0 (a baseline az 1.2 PAL-ban van).
+\[\max(0,\;\text{stepCount} - 3000) \times m \times 0.00045\]
+
+`STEP_BASELINE = 3000` fix. Aznapi 0 lépés → lépéskalória 0 (a baseline a 1.2 PAL-ban van).
+
+#### Felülírási szabály (közös)
+
+- **Manuális mentés:** mindig felülírja az aznapi (vagy szerkesztett nap) `stepCount`-ot — kisebb és nagyobb értékkel is.
+- **Samsung / Health Connect sync:** csak akkor írja felül a mentett értéket, ha a syncelt szám **nagyobb**, mint a jelenlegi (hiányzó = 0). Részletek: [[Lépésszám átszinkronizálása a Samsung Health-ből]].
+
+#### Értesítés
+
+20:00-kor, ha a **mai** `stepCount` &lt; 2000 → [[Értesítések]].
 
 ### UI/UX elvárások
 
-- Belépés: **Menü** tab (nem az Edzés tab) — lásd [[Frontend]].
-- A követés ki/be kapcsoló a Lépésszám képernyőn van (nem a Profile-on).
+- Belépés: **Menü** tab (nem Edzés) — lásd [[Frontend]].
+- Nincs követés ki/be kapcsoló.
+- Mai érték kiemelése; múltbeli napok listája / szerkesztése (manuális gyerek).
+- Samsung engedély / sync státusz a Samsung gyerek szerint.
 
 ### Megjegyzések
 
-_Nincs megjegyzés._
+- iOS Health: későbbi scope.
+- Feature flag off: nincs lépés UI; TDEE továbbra is PAL=1.2, lépéság = 0 (edzés MET marad).
 
 ### Nyitott kérdések
 
@@ -48,15 +68,21 @@ Nincs nyitott kérdés.
 
 ### Frontend
 
-Menü alatti belépő; gyerek specek; TDEE újraszámolás lépésváltozáskor / követés ki-be kapcsoláskor.
+- Shell képernyő + gyerek flow-k; `DailyStepLog` helyi store.
+- Lépésváltozás → TDEE utility újrafuttatás ([[Tápérték kalkulátor]]).
+- OpenAPI generált kliens; mutációk offline rétegen.
 
 #### Backend-offline
 
-Helyi store + outbox. Lásd [[Backend-offline first]].
+- Manuális mentés: helyi store + outbox Backend-offline és Full-offline esetén is.
+- Health Connect olvasás: eszközön helyi (net / saját backend nem kell); saját backendre írás outboxba.
+- Napi upsert outbox: ugyanarra a `date`-re meglévő `PENDING` payload frissítése (ne duplikáljon sort) — max-wins sync és manuális után is.
+- Sync UI: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
 
 ### Backend
 
-Napi lépés entitás / upsert — Samsung Health gyerekben vázolva.
+- OpenAPI: `DailyStepLog` upsert user+`date` szerint (`stepCount`, UUID).
+- Auth / user scope.
 
 ### Nyitott kérdések
 

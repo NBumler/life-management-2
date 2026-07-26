@@ -21,30 +21,26 @@ Korábbi név: **Kalóriakalkulátor**. A [[Profile]] és a napi aktivitás alap
 - Testsúly `m` (kg), magasság `h` (cm), nem, születési dátum → életkor
 - Cél enum: `FAT_LOSS` \| `MAINTENANCE` \| `WEIGHT_GAIN`
 - `kgPerWeek` > 0 (csak fogyás/tömegnél; megtartásnál figyelmen kívül)
-- Aktivitási szint (fallback PAL, ha lépéskövetés ki van kapcsolva)
-- Aznapi lépésszám ([[Lépésszám követés]]), edzésnaplók MET szerint
+- Aznapi lépésszám ([[Lépésszám követés]]; hiányzó nap = 0), edzésnaplók MET szerint
 
 Életkor: teljes évek, **kliens TZ** szerinti mai dátum vs születési dátum (`floor` period).
+
+Nincs Profile aktivitási szint / lépéskövetés ki-be: a PAL **mindig 1.2**.
 
 #### BMR — Mifflin–St Jeor
 
 - Férfi: \(BMR = 10m + 6.25h - 5a + 5\)
 - Nő: \(BMR = 10m + 6.25h - 5a - 161\)
 
-#### PAL módok
+#### PAL
 
-| Mód | Mikor | `PAL` | `activityExtraKcal` |
-|---|---|---|---|
-| **Normal** | Lépésszám-követés **bekapcsolva** | fix **1.2** | lépés (küszöb felett) + összes edzés MET |
-| **Fallback** | Lépésszám-követés **kikapcsolva** | Profile szint: 1.2 / 1.375 / 1.55 / 1.725 / 1.9 | **csak** edzés MET (lépés nincs) |
-
-Profile aktivitási szint → PAL: Ülő 1.2, Enyhe 1.375, Mérsékelt 1.55, Aktív 1.725, Nagyon aktív 1.9.
+`PAL = 1.2` (fix). A könnyű napi mozgás ebben van; a lépéskalória csak a baseline felett ad `activityExtraKcal`-t. Feature flag off a [[Lépésszám követés]]nél: lépéság = 0, PAL továbbra is 1.2.
 
 #### Kanonikus napi mezők
 
 | Mező | Képlet |
 |---|---|
-| `maintenanceKcal` | \(BMR \times PAL\) — edzés és \(\Delta\) nélkül |
+| `maintenanceKcal` | \(BMR \times 1.2\) — edzés és \(\Delta\) nélkül |
 | \(\Delta_{\text{cél}}\) | `FAT_LOSS`: \(-\lvert kgPerWeek\rvert \times 1100\); `MAINTENANCE`: \(0\); `WEIGHT_GAIN`: \(+\lvert kgPerWeek\rvert \times 1100\) (1 kg ≈ 7700 kcal → /7 = 1100) |
 | `baseDailyCalorieGoal` (nyers) | `maintenanceKcal + Δ` |
 | `baseDailyCalorieGoal` (érvényes) | \(\max(\text{nyers},\;\text{floor})\); floor: férfi **1500**, nő **1200** kcal |
@@ -55,9 +51,9 @@ A clampelt `base` / `dailyAllowance` hajtja a makrókat, az [[Étkezés]] progre
 
 \(M_{\text{day}} = maintenanceKcal + activityExtraKcal\) — az aznapi súlytartó TDEE (edzéssel); kcal szín narancs/piros határához (lásd [[Étkezés]]).
 
-#### Lépéskalória (normal mód)
+#### Lépéskalória
 
-Konstans: `STEP_BASELINE = 3000` (nem konfigurálható).
+Konstans: `STEP_BASELINE = 3000` (nem konfigurálható). Szabályok: [[Lépésszám követés]].
 
 \[\text{Kalória}_{\text{lépés}} = \max(0,\;\text{lépésszám} - 3000) \times m \times 0.00045\]
 
@@ -75,7 +71,7 @@ MET táblák (részletek a napló specekben is):
 
 **Erőedzés** ([[Edzésnapló]]): `GENERAL_WEIGHTS` 5.0; `HIIT_CIRCUIT` 8.0.
 
-`activityExtraKcal` = (normal: lépéskalória) + Σ edzéskalóriák az napra.
+`activityExtraKcal` = lépéskalória + Σ edzéskalóriák az napra.
 
 #### Makrók (g/nap)
 
@@ -116,7 +112,7 @@ Nincs nyitott kérdés.
 
 ### Frontend
 
-- `TdeeCalculatorUtil` (vagy ekvivalens) pure TypeScript: BMR, PAL mód, Δ, floor, lépés, MET, makró + mentés-sorrend.
+- `TdeeCalculatorUtil` (vagy ekvivalens) pure TypeScript: BMR, PAL=1.2, Δ, floor, lépés, MET, makró + mentés-sorrend.
 - MET konstansok egy shared modulban; napló feature-ök hivatkoznak.
 - Store: aznapi `maintenanceKcal`, `baseDailyCalorieGoal`, `activityExtraKcal`, `dailyAllowanceKcal`, makró célok.
 

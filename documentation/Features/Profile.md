@@ -25,11 +25,12 @@ Nincs profil-kitöltöttségi gate: hiányos / üres profil mellett is szabad a 
 | `sex` | ha kitöltve | `MALE` / `FEMALE` — BMR + safety floor |
 | `heightCm` | ha kitöltve | 100–250 |
 | `currentWeightKg` | ha kitöltve | 30–300; max 1 tizedes |
-| `activityLevel` | **opcionális** | `SEDENTARY` / `LIGHT` / `MODERATE` / `ACTIVE` / `VERY_ACTIVE` → UI: Ülő / Enyhe / Mérsékelt / Aktív / Nagyon aktív. PAL **csak** fallback módban ([[Lépésszám követés]] kikapcsolva): 1.2 / 1.375 / 1.55 / 1.725 / 1.9. Normal módban TDEE PAL=1.2, ez a mező nem számít. |
 | `goal` | ha kitöltve | `FAT_LOSS` / `MAINTENANCE` / `WEIGHT_GAIN` — UI: Fogyás / Megtartás / Tömegnövelés |
 | `kgPerWeek` | feltételes | Pozitív szám, 0.1–1.5. **`FAT_LOSS` / `WEIGHT_GAIN`:** mentéskor kötelező, ha a `goal` ki van töltve. **`MAINTENANCE`:** mező **rejtett**, érték ignorált (Δ = 0 a [[Tápérték kalkulátor]]ban). |
 | `grossMonthlySalaryHuf` | **opcionális** | Egész, `≥ 0`; [[Nettó fizetés kalkulátor]] |
 | `createdAt` / `updatedAt` | rendszer | Audit |
+
+**Nincs** `activityLevel` / aktivitási szint — a PAL fix 1.2 a [[Tápérték kalkulátor]]ban; a napi aktivitás a [[Lépésszám követés]] + edzésnaplókból jön.
 
 Nincs display name / avatar / email az első körben (auth: [[Bejelentkezés]]).
 
@@ -45,8 +46,6 @@ Nincs display name / avatar / email az első körben (auth: [[Bejelentkezés]]).
 #### Tápérték fogyasztók (hiányos profil)
 
 A [[Tápérték kalkulátor]] (és az [[Étkezés]] progress barok) **nem crashelnek**. Ha hiányzik a számításhoz kellő bemenet (`birthDate`, `sex`, `heightCm`, `currentWeightKg`, `goal`, illetve nem-megtartásnál `kgPerWeek`), a keret / makró **nem számolható** → `~` / homokóra ([[Backend-offline first]] vizuális bizonytalanság).
-
-Fallback PAL: ha a lépéskövetés ki van kapcsolva és `activityLevel` üres → PAL default **1.2** (Ülő), amíg a súly / BMR bemenetek megvannak; ha a súly / BMR bemenet hiányzik, továbbra is `~`.
 
 #### Súlytörténet — `WeightHistoryEntry`
 
@@ -76,7 +75,6 @@ A [[Tápérték kalkulátor]] **csak** `currentWeightKg`-t használ; a history k
 
 - Bruttó bér pénzügy-jellegű, de user-szintű → Profile-on marad.
 - Δ, floor, PAL, makró: [[Tápérték kalkulátor]].
-- Lépéskövetés ki/be: [[Lépésszám követés]] (nem Profile mező).
 
 ### Nyitott kérdések
 
@@ -102,7 +100,7 @@ Nincs nyitott kérdés.
 ### Backend
 
 - OpenAPI: `UserProfile` (1:1 user) + `WeightHistoryEntry` CRUD (user scope).
-- `UserProfile`: fenti mezők (opcionálisak nullable-ként, kivéve `id`); `kgPerWeek` validáció goal függvényében.
+- `UserProfile`: fenti mezők (opcionálisak nullable-ként, kivéve `id`); `kgPerWeek` validáció goal függvényében. Nincs `activityLevel`.
 - Nincs szerveroldali „profile complete” gate.
 - Auth / user scope: [[Bejelentkezés]] (később).
 
