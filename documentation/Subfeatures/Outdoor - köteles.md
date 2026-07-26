@@ -4,24 +4,22 @@
 
 | | |
 |---|---|
-| **Státusz** | `Váz` |
+| **Státusz** | `Kész` |
 | **Szülő** | [[Outdoor mászónapló]] |
-| **Kapcsolódó** | [[Outdoor köteles admin]], [[Outdoor köteles napló]], [[Nehézségi szint skálája]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Outdoor köteles admin]], [[Outdoor köteles napló]], [[Indoor - köteles]], [[Mászónapló]], [[Backend-offline first]] |
 
 ### Célállapot
 
-Kültéri köteles admin + napló.
+Kültéri köteles: Route master + napló (TRAD, opcionális multi-pitch, másodmászó MET).
 
 ### Funkcionális leírás
-
-Subfeature lista:
 
 - [[Outdoor köteles admin]]
 - [[Outdoor köteles napló]]
 
 ### UI/UX elvárások
 
-_Nincs UI/UX érintettség._
+_Nincs UI/UX érintettség._ (gyerek specek)
 
 ### Megjegyzések
 
@@ -35,11 +33,11 @@ Nincs nyitott kérdés.
 
 ### Frontend
 
-Dashboard kontextus: Outdoor Kötél.
+Kontextus: `OUTDOOR` + `ROPE`.
 
 #### Backend-offline
 
-Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító kérések outboxba (`OfflineQueueService`), kliens UUID. Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
+Lásd [[Mászónapló]] / [[Backend-offline first]].
 
 ### Backend
 

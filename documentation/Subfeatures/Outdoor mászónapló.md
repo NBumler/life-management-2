@@ -1,4 +1,4 @@
-# Indoor mászónapló
+# Outdoor mászónapló
 
 ## Business
 
@@ -6,16 +6,16 @@
 |---|---|
 | **Státusz** | `Kész` |
 | **Szülő** | [[Mászónapló]] |
-| **Kapcsolódó** | [[Outdoor mászónapló]], [[Indoor - boulder]], [[Indoor - köteles]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Indoor mászónapló]], [[Outdoor - boulder]], [[Outdoor - köteles]], [[Backend-offline first]] |
 
 ### Célállapot
 
-Beltéri mászás belépő: boulder + köteles. A hub [[Mászónapló]] dashboard **közvetlenül** a 4 csempével nyit; ez a jegyzet a beltéri ág csoportosítója.
+Kültéri mászás belépő: boulder + köteles. A hub dashboard csempéi közvetlenül nyitnak; ez a jegyzet a kültéri ág csoportosítója.
 
 ### Funkcionális leírás
 
-- [[Indoor - boulder]] — reference (admin + napló)
-- [[Indoor - köteles]]
+- [[Outdoor - boulder]]
+- [[Outdoor - köteles]]
 
 ### UI/UX elvárások
 
@@ -33,7 +33,7 @@ Nincs nyitott kérdés.
 
 ### Frontend
 
-Indoor ág navigáció / csoportosítás.
+Outdoor ág navigáció / csoportosítás.
 
 #### Backend-offline
 

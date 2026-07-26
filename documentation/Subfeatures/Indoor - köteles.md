@@ -4,24 +4,22 @@
 
 | | |
 |---|---|
-| **Státusz** | `Váz` |
+| **Státusz** | `Kész` |
 | **Szülő** | [[Indoor mászónapló]] |
-| **Kapcsolódó** | [[Indoor köteles admin]], [[Indoor köteles napló]], [[Nehézségi szint skálája]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Indoor köteles admin]], [[Indoor köteles napló]], [[Indoor - boulder]], [[Mászónapló]], [[Backend-offline first]] |
 
 ### Célállapot
 
-Beltéri köteles admin + napló.
+Beltéri köteles admin + napló. Eltérések az [[Indoor - boulder]] reference-hez: falmagasság, safety TOPROPE/LEAD, opcionális IndoorRoute, nincs szín-sáv / multi-pitch.
 
 ### Funkcionális leírás
-
-Subfeature lista:
 
 - [[Indoor köteles admin]]
 - [[Indoor köteles napló]]
 
 ### UI/UX elvárások
 
-_Nincs UI/UX érintettség._
+_Nincs UI/UX érintettség._ (gyerek specek)
 
 ### Megjegyzések
 
@@ -35,11 +33,11 @@ Nincs nyitott kérdés.
 
 ### Frontend
 
-Dashboard kontextus: Indoor Kötél.
+Kontextus: `INDOOR` + `ROPE`.
 
 #### Backend-offline
 
-Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító kérések outboxba (`OfflineQueueService`), kliens UUID. Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
+Lásd [[Mászónapló]] / [[Backend-offline first]].
 
 ### Backend
 

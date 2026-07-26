@@ -4,24 +4,22 @@
 
 | | |
 |---|---|
-| **Státusz** | `Váz` |
+| **Státusz** | `Kész` |
 | **Szülő** | [[Outdoor mászónapló]] |
-| **Kapcsolódó** | [[Outdoor boulder admin]], [[Outdoor boulder napló]], [[Nehézségi szint skálája]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Outdoor boulder admin]], [[Outdoor boulder napló]], [[Indoor - boulder]], [[Mászónapló]], [[Backend-offline first]] |
 
 ### Célállapot
 
-Kültéri boulder admin + napló.
+Kültéri boulder: Crag → Sector → (opcionális) BoulderProblem + napló. Reference UI-logika: [[Indoor boulder napló]]; master: crag hierarchia.
 
 ### Funkcionális leírás
-
-Subfeature lista:
 
 - [[Outdoor boulder admin]]
 - [[Outdoor boulder napló]]
 
 ### UI/UX elvárások
 
-_Nincs UI/UX érintettség._
+_Nincs UI/UX érintettség._ (gyerek specek)
 
 ### Megjegyzések
 
@@ -35,11 +33,11 @@ Nincs nyitott kérdés.
 
 ### Frontend
 
-Dashboard kontextus: Outdoor Boulder.
+Kontextus: `OUTDOOR` + `BOULDER`.
 
 #### Backend-offline
 
-Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító kérések outboxba (`OfflineQueueService`), kliens UUID. Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
+Lásd [[Mászónapló]] / [[Backend-offline first]].
 
 ### Backend
 

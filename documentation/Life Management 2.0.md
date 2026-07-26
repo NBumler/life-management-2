@@ -53,12 +53,12 @@ Agent skill: `.cursor/skills/documentation-spec/`. Offline SSOT: [[Backend-offli
 - [[Értesítések]]
 - [[Szinkronizációs központ]]
 - [[Bevásárlás]]
+- [[Mászónapló]]
 
 #### Feature lista — hiányos / stub (`Feature - TODO/`)
 
 - [[Pénzügyek]]
 - [[Események]]
-- [[Mászónapló]]
 - [[Bejelentkezés]]
 
 ### UI/UX elvárások
