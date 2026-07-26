@@ -51,7 +51,7 @@ Alul **4 gomb** (Ionic tabs):
 1. **Kaja** — [[Kaja]] (és kapcsolódó: kalória, stb.)
 2. **Edzés** — [[Edzés]] (és kapcsolódó: [[Mászónapló]], [[Úszás napló]], [[Biciklizés napló]], stb.)
 3. **Feladatok** — [[Tennivalók]] (és kapcsolódó: [[Naptár]], [[Események]])
-4. **Menü** — a többi feature / beállítás belépője ([[Bevásárlás]], [[Profile]], [[Lépésszám követés]], [[Pénzügyek]], [[GearCheck]], [[AYCM tracker]], [[Nyelv választás]], [[Dark&Light mode]], [[Szinkronizációs központ]], stb.)
+4. **Menü** — a többi feature / beállítás belépője ([[Bevásárlás]], [[Profile]], [[Lépésszám követés]], [[Értesítések]], [[Pénzügyek]], [[GearCheck]], [[AYCM tracker]], [[Nyelv választás]], [[Dark&Light mode]], [[Szinkronizációs központ]], stb.)
 
 A tab lista **konfigurációból** (pl. tömb / feature-flagelt tab registry) jöjjön, ne legyen beégetve a template-be: a jövőben könnyen bővíthető legyen **5 gombosra** tab hozzáadásával / átrendezésével, layout-újraírással.
 

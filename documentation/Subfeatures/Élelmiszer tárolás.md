@@ -79,13 +79,14 @@ Egy adott `Food`-ra fogyasztott mennyiség levonása:
 
 Lead time a tétel **katalógusbeli tárolhatósági ideje** alapján (a tétel tárolási helyéhez tartozó `duration`, napokra vetítve):
 
-| Katalógus tárolhatóság (adott hely) | Értesítés |
+| Katalógus tárolhatóság (adott hely) | Figyelmeztetési ablak kezdete |
 |---|---|
 | **> 5 nap** | lejárat előtt **3 nappal** |
 | **≤ 5 nap** (és kitöltött) | lejárat előtt **2 nappal** |
 
-Ha a helyhez nincs katalógus-idő (manuális lejárat / null engedélyezett hely): a felvétel napja és a lejárat közötti napok száma ugyanígy küszöböl (>5 → 3 nap, egyébként 2 nap). Részletek / küldés: [[Értesítések]].
+Ha a helyhez nincs katalógus-idő (manuális lejárat / null engedélyezett hely): a felvétel napja és a lejárat közötti napok száma ugyanígy küszöböl (>5 → 3 nap, egyébként 2 nap).
 
+**Küldés (SSOT ritmus: [[Értesítések]]):** lead-time napjától amíg a tétel a tárolóban van → napi **09:00** emlékeztető; romlottá váláskor **egyszer** „megromlott” értesítés.
 #### Törlés
 
 - Tétel hard delete (megerősítéssel).
