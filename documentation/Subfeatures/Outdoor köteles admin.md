@@ -6,11 +6,13 @@
 |---|---|
 | **Státusz** | `Kész` |
 | **Szülő** | [[Outdoor - köteles]] |
-| **Kapcsolódó** | [[Outdoor köteles napló]], [[Outdoor boulder admin]], [[Nehézségi szint skálája]], [[Mászónapló]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Outdoor köteles napló]], [[Outdoor boulder admin]], [[Nehézségi szint skálája]], [[Mászónapló]], [[Bejelentkezés]], [[Backend-offline first]] |
 
 ### Célállapot
 
 Kültéri köteles törzsadat: **Crag → Sector → Route**.
+
+**Ownership:** **user-owned** ([[Bejelentkezés]]; közös helyszínfa a boulder adminnal ugyanazon useren belül).
 
 ### Funkcionális leírás
 
@@ -45,7 +47,7 @@ Outbox + UUID + soft delete. Lásd [[Backend-offline first]].
 
 ### Backend
 
-`route` tábla (+ közös `crag`/`sector`). API: [[Mászónapló]].
+`route` tábla (+ közös `crag`/`sector`). API: [[Mászónapló]]. Auth / user scope ([[Bejelentkezés]]).
 
 ### Nyitott kérdések
 

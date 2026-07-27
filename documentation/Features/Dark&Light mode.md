@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Váz` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Frontend]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Frontend]], [[Bejelentkezés]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -15,6 +15,8 @@ Az alkalmazás támogat dark mode-ot és light mode-ot.
 ### Funkcionális leírás
 
 Mindkét témában megfelelő kontraszt kell: ne legyen sötét háttéren fekete szöveg vagy gomb (olvashatatlanság / láthatatlanság tilos).
+
+**Tárolás:** **device-local** (nem syncel más eszközre az első körben) — [[Bejelentkezés]].
 
 ### UI/UX elvárások
 
@@ -37,7 +39,7 @@ Téma váltás a hibrid appban (Ionic / CSS változók — részletek TBD). Kapc
 
 #### Backend-offline
 
-Preferencia elsődlegesen helyi tárolás (Backend-offline / Full-offline is azonnal érvényes). Ha később profilba szinkronizálódik, a mentés outboxolható. Lásd [[Backend-offline first]].
+Preferencia **csak** helyi tárolás (Backend-offline / Full-offline is azonnal érvényes). Nincs profil-sync az első körben ([[Bejelentkezés]]). Lásd [[Backend-offline first]].
 
 ### Backend
 
@@ -46,4 +48,3 @@ _Nincs backend érintettség._
 ### Nyitott kérdések
 
 - Rendszer téma követése vs manuális választás
-- Preferencia tárolása (lokális / szinkronizált profil)

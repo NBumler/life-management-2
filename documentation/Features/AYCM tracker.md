@@ -6,11 +6,13 @@
 |---|---|
 | **Státusz** | `Váz` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Rendszeres kiadások]], [[Pénzügyek]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Rendszeres kiadások]], [[Pénzügyek]], [[Bejelentkezés]], [[Backend-offline first]] |
 
 ### Célállapot
 
 AYCM elfogadóhelyek, check-in-ek és megtakarítás / használat statisztikák követése. Belépés: Menü.
+
+**Ownership:** **user-owned** (partnerek, check-in-ek, szabályok) — [[Bejelentkezés]].
 
 ### Funkcionális leírás
 
@@ -46,7 +48,7 @@ Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító 
 
 ### Backend
 
-_Nincs backend érintettség._ (partner / check-in / szabály API — gyerekekben vagy itt később)
+_Nincs backend érintettség._ (partner / check-in / szabály API — gyerekekben vagy itt később; Auth / user scope: [[Bejelentkezés]])
 
 ### Nyitott kérdések
 

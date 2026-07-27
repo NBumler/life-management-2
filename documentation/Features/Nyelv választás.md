@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Váz` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Frontend]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Frontend]], [[Bejelentkezés]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -15,6 +15,8 @@ Az alkalmazás többnyelvű (i18n). Egyelőre magyar és angol; alapértelmezés
 ### Funkcionális leírás
 
 A felhasználó választhat nyelvet. Alapértelmezetten magyar van használatban.
+
+**Tárolás:** **device-local** (nem syncel a profilba / más eszközre az első körben) — [[Bejelentkezés]].
 
 ### UI/UX elvárások
 
@@ -36,7 +38,7 @@ ngx-translate; `hu.json` és `en.json` fordítófájlok. Belépés: Menü (lásd
 
 #### Backend-offline
 
-Preferencia elsődlegesen helyi tárolás (Backend-offline / Full-offline is azonnal érvényes). Ha később profilba szinkronizálódik, a mentés outboxolható. Lásd [[Backend-offline first]].
+Preferencia **csak** helyi tárolás (Backend-offline / Full-offline is azonnal érvényes). Nincs profil-sync az első körben ([[Bejelentkezés]]). Lásd [[Backend-offline first]].
 
 ### Backend
 
@@ -44,4 +46,4 @@ _Nincs backend érintettség._ (UI szövegek kliensoldalon)
 
 ### Nyitott kérdések
 
-- Nyelvpreferencia tárolása (lokális / szinkronizált)
+Nincs nyitott kérdés.

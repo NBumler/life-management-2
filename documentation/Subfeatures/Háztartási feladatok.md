@@ -6,11 +6,13 @@
 |---|---|
 | **Státusz** | `Váz` |
 | **Szülő** | [[Tennivalók]] |
-| **Kapcsolódó** | [[Értesítések]], [[Naptár]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Értesítések]], [[Naptár]], [[Bejelentkezés]], [[Backend-offline first]] |
 
 ### Célállapot
 
 Lakás körüli teendők irányítása helyiségekhez kötve, ismétlődő esedékességgel.
+
+**Ownership:** **user-owned** — [[Bejelentkezés]].
 
 ### Funkcionális leírás
 
@@ -53,7 +55,7 @@ Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító 
 
 ### Backend
 
-Helyiség / háztartási feladat entitások (OpenAPI) — TBD.
+Helyiség / háztartási feladat entitások (OpenAPI) — TBD. Auth / user scope: [[Bejelentkezés]].
 
 ### Nyitott kérdések
 

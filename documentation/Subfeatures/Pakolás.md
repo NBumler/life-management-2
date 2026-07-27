@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Váz` |
 | **Szülő** | [[GearCheck]] |
-| **Kapcsolódó** | [[Sablonok]], [[Eszközök]], [[Szöveges keresés]] |
+| **Kapcsolódó** | [[Sablonok]], [[Eszközök]], [[Szöveges keresés]], [[Bejelentkezés]] |
 
 ### Célállapot
 
@@ -70,7 +70,7 @@ Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító 
 
 ### Backend
 
-Pakolás + pakolás-eszköz entitások; hard delete lezáráskor; [[Backend-offline first]].
+Pakolás + pakolás-eszköz entitások; hard delete lezáráskor; Auth / user scope ([[Bejelentkezés]]); [[Backend-offline first]].
 
 ### Nyitott kérdések
 

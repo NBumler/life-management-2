@@ -6,11 +6,13 @@
 |---|---|
 | **Státusz** | `TODO` |
 | **Szülő** | [[Tennivalók]] |
-| **Kapcsolódó** | [[Naptár]], [[Értesítések]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Naptár]], [[Értesítések]], [[Bejelentkezés]], [[Backend-offline first]] |
 
 ### Célállapot
 
 Hosszabb távú életcélok / tervek kezelése (pl. jogosítvány szerzés, rope-solo tanulás).
+
+**Ownership:** **user-owned** — [[Bejelentkezés]].
 
 ### Funkcionális leírás
 
@@ -41,7 +43,7 @@ Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító 
 
 ### Backend
 
-_Nincs backend érintettség._
+_Nincs backend érintettség._ (Auth / user scope a kidolgozáskor: [[Bejelentkezés]])
 
 ### Nyitott kérdések
 

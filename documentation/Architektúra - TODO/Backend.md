@@ -59,12 +59,13 @@ A kliensoldali offline elvárások SSOT-ja: [[Backend-offline first]]. A szerver
 - Az entitás ID stratégia **nem** lehet szerveroldali `IDENTITY` auto-increment, ha az offline-first láncolhatóságot meg akarjuk tartani. (Lásd konfliktus: [[Giga feature napló specifikáció (Ideiglenes specifikáció)]] jelenleg `GenerationType.IDENTITY`-t mutat — ezt egységesíteni kell.)
 - Az OpenAPI sémákban az entitás ID-k UUID típusúak legyenek, összhangban az offline-first elvvel.
 - **Külső integrációk nincsenek proxyzva** a backend-en keresztül: a [[Frontend]] közvetlenül hívja a külső API-kat (pl. Open Food Facts). Így Backend-offline állapotban is elérhetők, amíg van internet — lásd [[Backend-offline first]]. A saját backendre mentés továbbra is outbox / [[Szinkronizációs központ]] útján történik.
+- **Auth / authorizáció:** JWT access + refresh; `@PreAuthorize`; user-owned vs shared ownership — SSOT: [[Bejelentkezés]]. OpenAPI `securitySchemes`: HTTP Bearer.
 
 ### Nyitott kérdések
 
-- Auth mechanizmus (összekötve: [[Bejelentkezés]]) — OpenAPI `securitySchemes`
-- Multi-tenant / user izoláció részletei
 - Migráció / sémakezelés eszköze
 - OpenAPI fájl(ok) elhelyezése a monorepóban / külön API csomagban
 - openapi-generator profilok (Java interface vs TypeScript Angular client)
 - Adatbázis technológia
+
+Auth / JWT / admin curl / ownership mátrix: [[Bejelentkezés]] (lezárva).

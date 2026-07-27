@@ -6,11 +6,13 @@
 |---|---|
 | **Státusz** | `TODO` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[AYCM tracker]], [[Profile]], [[Nettó fizetés kalkulátor]], [[Rendszeres kiadások]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[AYCM tracker]], [[Profile]], [[Nettó fizetés kalkulátor]], [[Rendszeres kiadások]], [[Bejelentkezés]], [[Backend-offline first]] |
 
 ### Célállapot
 
 Pénzügyi segédfunkciók: nettó bér kalkuláció és rendszeres kiadások. Belépés: Menü.
+
+**Ownership:** **user-owned** (minden pénzügyi entitás) — a részletes specek kidolgozásakor követni: [[Bejelentkezés]] ownership mátrix. A Bejelentkezés spechet ez **nem** blokkolja.
 
 ### Funkcionális leírás
 
@@ -27,7 +29,7 @@ _Nincs UI/UX érintettség._
 
 ### Megjegyzések
 
-_Nincs megjegyzés._
+Specifikáláskor: Auth / `userId` szűrés kötelező ([[Bejelentkezés]]). A bruttó bér a [[Profile]]-on marad.
 
 ### Nyitott kérdések
 
@@ -45,7 +47,7 @@ Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító 
 
 ### Backend
 
-_Nincs backend érintettség._ (előfizetés / kalkuláció — gyerekekben)
+_Nincs backend érintettség._ (előfizetés / kalkuláció — gyerekekben; user scope: [[Bejelentkezés]])
 
 ### Nyitott kérdések
 

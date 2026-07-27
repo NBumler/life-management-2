@@ -6,11 +6,13 @@
 |---|---|
 | **Státusz** | `TODO` |
 | **Szülő** | [[GearCheck]] |
-| **Kapcsolódó** | [[Eszközök]], [[Pakolás]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Eszközök]], [[Pakolás]], [[Bejelentkezés]], [[Backend-offline first]] |
 
 ### Célállapot
 
 Pakolási sablonok: elnevezett [[Eszközök]] listák (pl. „Hétvégi mászás”, „Tél”). A [[Pakolás]] egy vagy több sablonból indul.
+
+**Ownership:** **user-owned** — [[Bejelentkezés]].
 
 ### Funkcionális leírás
 

@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Váz` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Bevásárlás]], [[Élelmiszerek]], [[Tápérték kalkulátor]], [[Mennyiség mező]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Bevásárlás]], [[Élelmiszerek]], [[Recept]], [[Tápérték kalkulátor]], [[Mennyiség mező]], [[Bejelentkezés]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -28,7 +28,7 @@ _Nincs UI/UX érintettség._
 
 ### Megjegyzések
 
-_Nincs megjegyzés._
+Ownership: `Food` / `Recipe` **shared**; tárolás / étkezés / bevásárlás **user-owned** — [[Bejelentkezés]].
 
 ### Nyitott kérdések
 
@@ -46,7 +46,7 @@ Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító 
 
 ### Backend
 
-Közös Kaja OpenAPI scope később összevonható itt. Az [[Élelmiszerek]] katalógus entitás / CRUD a gyerek spechen (`Food`); a többi subfeature (tárolás, recept, étkezés) oda hivatkozik.
+Közös Kaja OpenAPI scope később összevonható itt. Az [[Élelmiszerek]] katalógus entitás / CRUD a gyerek spechen (`Food`, **shared**); [[Recept]] shared; tárolás / étkezés user-owned — [[Bejelentkezés]].
 
 ### Nyitott kérdések
 

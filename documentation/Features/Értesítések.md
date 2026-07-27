@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Kész` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Élelmiszer tárolás]], [[Lépésszám követés]], [[Tápérték kalkulátor]], [[Étkezés]], [[Rendszeres kiadások]], [[Tennivalók]], [[Események]], [[Frontend]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Élelmiszer tárolás]], [[Lépésszám követés]], [[Tápérték kalkulátor]], [[Étkezés]], [[Rendszeres kiadások]], [[Tennivalók]], [[Események]], [[Frontend]], [[Bejelentkezés]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -104,7 +104,7 @@ Nincs nyitott kérdés.
 - `LocalNotificationService` (vagy ekvivalens): ütemezés, engedély, dedupe store, típus-flag-ek olvasása.
 - Trigger források: készlet store, `DailyStepLog`, Étkezés napi összeg + TDEE allowance.
 - 09:00 / 20:00: OS scheduled local notifications és/vagy napi background check + immediate local notification.
-- Beállítások page a Menü alatt; flag-ek helyi store (+ opcionális sync később).
+- Beállítások page a Menü alatt; flag-ek **device-local** store ([[Bejelentkezés]] — nincs profil-sync az első körben).
 
 #### Backend-offline
 

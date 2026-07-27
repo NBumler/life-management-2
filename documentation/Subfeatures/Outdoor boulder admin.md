@@ -6,11 +6,13 @@
 |---|---|
 | **Státusz** | `Kész` |
 | **Szülő** | [[Outdoor - boulder]] |
-| **Kapcsolódó** | [[Outdoor boulder napló]], [[Indoor boulder admin]], [[Mászónapló]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Outdoor boulder napló]], [[Indoor boulder admin]], [[Mászónapló]], [[Bejelentkezés]], [[Backend-offline first]] |
 
 ### Célállapot
 
 Kültéri boulder törzsadat: **Crag → Sector → (opcionális) BoulderProblem**.
+
+**Ownership:** **user-owned** — a bejelentkezett user saját helyszínfája ([[Bejelentkezés]]).
 
 ### Funkcionális leírás
 
@@ -46,7 +48,7 @@ Outbox + UUID + soft delete. Lásd [[Backend-offline first]].
 
 ### Backend
 
-Táblák: `crag`, `sector`, `boulder_problem`. API: [[Mászónapló]] master.
+Táblák: `crag`, `sector`, `boulder_problem`. API: [[Mászónapló]] master. Auth / user scope ([[Bejelentkezés]]).
 
 ### Nyitott kérdések
 

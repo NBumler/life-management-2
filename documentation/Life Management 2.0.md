@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Váz` |
 | **Szülő** | _Nincs szülő (hub / architektúra / gyökér)._ |
-| **Kapcsolódó** | [[Backend]], [[Frontend]], [[Backend-offline first]], [[Mennyiség mező]], [[Szöveges keresés]], [[SPEC-TEMPLATE]] |
+| **Kapcsolódó** | [[Backend]], [[Frontend]], [[Backend-offline first]], [[Mennyiség mező]], [[Szöveges keresés]], [[Bejelentkezés]], [[SPEC-TEMPLATE]] |
 
 ### Célállapot
 
@@ -54,12 +54,12 @@ Agent skill: `.cursor/skills/documentation-spec/`. Offline SSOT: [[Backend-offli
 - [[Szinkronizációs központ]]
 - [[Bevásárlás]]
 - [[Mászónapló]]
+- [[Bejelentkezés]]
 
 #### Feature lista — hiányos / stub (`Feature - TODO/`)
 
 - [[Pénzügyek]]
 - [[Események]]
-- [[Bejelentkezés]]
 
 ### UI/UX elvárások
 

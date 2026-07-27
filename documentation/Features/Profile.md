@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Kész` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Tápérték kalkulátor]], [[Nettó fizetés kalkulátor]], [[Étkezés]], [[Lépésszám követés]], [[Biciklizés napló]], [[Szinkronizációs központ]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Tápérték kalkulátor]], [[Nettó fizetés kalkulátor]], [[Étkezés]], [[Lépésszám követés]], [[Biciklizés napló]], [[Szinkronizációs központ]], [[Bejelentkezés]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -102,7 +102,7 @@ Nincs nyitott kérdés.
 - OpenAPI: `UserProfile` (1:1 user) + `WeightHistoryEntry` CRUD (user scope).
 - `UserProfile`: fenti mezők (opcionálisak nullable-ként, kivéve `id`); `kgPerWeek` validáció goal függvényében. Nincs `activityLevel`.
 - Nincs szerveroldali „profile complete” gate.
-- Auth / user scope: [[Bejelentkezés]] (később).
+- Auth / user scope: [[Bejelentkezés]].
 
 ### Nyitott kérdések
 

@@ -6,11 +6,13 @@
 |---|---|
 | **Státusz** | `Kész` |
 | **Szülő** | [[Kaja]] |
-| **Kapcsolódó** | [[Élelmiszerek]], [[Mennyiség mező]], [[Szöveges keresés]], [[Recept forrású étkezés]], [[Étkezés]], [[Kaja statisztika]], [[Tápérték kalkulátor]], [[Élelmiszer tárolás]], [[Pakolás]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Élelmiszerek]], [[Mennyiség mező]], [[Szöveges keresés]], [[Recept forrású étkezés]], [[Étkezés]], [[Kaja statisztika]], [[Tápérték kalkulátor]], [[Élelmiszer tárolás]], [[Pakolás]], [[Bejelentkezés]], [[Backend-offline first]] |
 
 ### Célállapot
 
 Receptek katalógusa: név, megjegyzés, hozzávalók ([[Élelmiszerek]] + mennyiség), automatikus összegzett tápanyag / ár a részleteken. Étkezéskor a recept forrásként használható ([[Recept forrású étkezés]]); adag / részfogyasztás **nem** receptmező — az étkezés spechéhez tartozik.
+
+**Ownership:** **shared** (globális) — minden bejelentkezett user ugyanazt a receptkatalógust látja / szerkeszti. Részletek: [[Bejelentkezés]] ownership mátrix.
 
 Az egész feature (lista, create, szerkesztés, törlés, kalkuláció, keresés) **backend-offline** állapotban is működik.
 
@@ -89,7 +91,7 @@ Backend-offline: helyi ellenőrzés is.
 #### CRUD / törlés
 
 - Lista, részletek, létrehozás, szerkesztés, hard delete — mind offline-képes.
-- Törléskor ha vannak hivatkozó [[Étkezés]] / [[Recept forrású étkezés]] rekordok: megerősítő dialógus **felsorolja** őket, majd **cascade** törlés (mint [[Élelmiszerek]]).
+- Törléskor ha vannak hivatkozó [[Étkezés]] / [[Recept forrású étkezés]] rekordok: megerősítő dialógus **felsorolja** őket, majd **cascade** törlés (mint [[Élelmiszerek]]). Shared katalógus: a cascade **minden user** érintett étkezéseire vonatkozik; a UI jelezze.
 
 #### Kapcsolat étkezéssel
 
@@ -130,8 +132,9 @@ Nincs nyitott kérdés.
 | `Recipe` | `id` (UUID, kliens); `name` (unique, case-insensitive trim); `note`; `createdAt`, `updatedAt` |
 | `RecipeIngredient` | `id`; `recipeId`; `foodId`; `quantityAmount`; `quantityUnit`; `sortOrder` |
 
-- Unique: `name`; alkalmazás-szintű / query ellenőrzés a hozzávaló-halmaz duplikációra.
-- CRUD + hard delete cascade az étkezés-hivatkozásokra (vagy az Étkezés spechel egyeztetett cascade).
+- Unique: `name`; alkalmazás-szintű / query ellenőrzés a hozzávaló-halmaz duplikációra — **globális** (shared).
+- **Ownership:** shared — nincs `userId`; Auth: bármely autentikált `USER` CRUD ([[Bejelentkezés]]).
+- CRUD + hard delete cascade az étkezés-hivatkozásokra **minden usernél** (vagy az Étkezés spechel egyeztetett cascade).
 - Összegzett tápanyag / ár: **számított** (kliens és/vagy read-model); nem kötelező denormalizált oszlop — ha cache kell, később.
 
 ### Nyitott kérdések

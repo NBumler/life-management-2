@@ -6,11 +6,13 @@
 |---|---|
 | **Státusz** | `TODO` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Naptár]], [[Értesítések]], [[Tennivalók]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Naptár]], [[Értesítések]], [[Tennivalók]], [[Bejelentkezés]], [[Backend-offline first]] |
 
 ### Célállapot
 
 Események kezelése; megjelenés a [[Naptár]]ban; közeledő eseményekhez [[Értesítések]].
+
+**Ownership:** **user-owned** — [[Bejelentkezés]].
 
 ### Funkcionális leírás
 

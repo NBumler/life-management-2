@@ -6,11 +6,13 @@
 |---|---|
 | **Státusz** | `TODO` |
 | **Szülő** | [[GearCheck]] |
-| **Kapcsolódó** | [[Sablonok]], [[Pakolás]], [[Értesítések]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Sablonok]], [[Pakolás]], [[Értesítések]], [[Bejelentkezés]], [[Backend-offline first]] |
 
 ### Célállapot
 
 Felszerelés-elemek CRUD-ja (pl. kötél, bundászsák, fejlámpa): név, kategória, megjegyzés, esetleg súly / állapot.
+
+**Ownership:** **user-owned** — [[Bejelentkezés]].
 
 ### Funkcionális leírás
 

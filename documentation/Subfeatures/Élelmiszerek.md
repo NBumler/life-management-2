@@ -6,11 +6,13 @@
 |---|---|
 | **Státusz** | `Kész` |
 | **Szülő** | [[Kaja]] |
-| **Kapcsolódó** | [[Élelmiszer hozzáadása]], [[Élelmiszer manuális bevitele]], [[Élelmiszer tárolás]], [[Bevásárlólista írás]], [[Bevásárlás teljesítve]], [[Kaja statisztika]], [[Recept]], [[Mennyiség mező]], [[Szöveges keresés]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Élelmiszer hozzáadása]], [[Élelmiszer manuális bevitele]], [[Élelmiszer tárolás]], [[Bevásárlólista írás]], [[Bevásárlás teljesítve]], [[Kaja statisztika]], [[Recept]], [[Mennyiség mező]], [[Szöveges keresés]], [[Bejelentkezés]], [[Backend-offline first]] |
 
 ### Célállapot
 
 Élelmiszer **katalógus** (master data) a Kaja modulban: listázás, keresés, részletek, létrehozás, szerkesztés, törlés. A bevásárlás, tárolás, recept és étkezés ebből választ / erre hivatkozik.
+
+**Ownership:** **shared** (globális) — minden bejelentkezett user ugyanazt a katalógust látja / szerkeszti. Nem user-scoped. Részletek: [[Bejelentkezés]] ownership mátrix.
 
 ### Funkcionális leírás
 
@@ -46,6 +48,7 @@ Későbbi modellbontás (külön bolt entitás) nincs scope-ban.
 - Hard delete; megerősítéssel.
 - Ha vannak hivatkozások ([[Élelmiszer tárolás]], [[Recept]] hozzávaló, bevásárlólista tétel, [[Étkezés]] / [[Élelmiszer forrású étkezés]] tétel, stb.), a megerősítő UI **felsorolja**, mi törlődik együtt.
 - Törléskor a hivatkozó elemek is törlődnek (cascade) — étkezés-tételek cascade után üres étkezés is törlődik ([[Étkezés]]).
+- **Shared katalógus:** a cascade **minden user** hivatkozó adataira vonatkozik; a megerősítő szöveg jelezze, hogy közös katalóguselem törlése más felhasználók adatait is érintheti.
 - Backend-offline állapotban is elérhető (helyi törlés + outbox).
 
 #### Fogyasztók
@@ -90,11 +93,13 @@ OpenAPI scope — élelmiszer katalógus (közös a subfeature-ökkel):
 |---|---|
 | `Food` | `id` (UUID, kliens); `name` (kötelező); `store`; `brand`; `barcode`; `note`; `priceHuf` (Ft/csomag); `netAmount` + `netUnit` (`quantity` egységek, `cl` is); tápanyag mezők (kcal + g értékek a spece szerinti listával); `shelfRoomAmount`/`Unit`, `shelfFridgeAmount`/`Unit`, `shelfFreezerAmount`/`Unit`, `shelfAfterOpeningAmount`/`Unit` (`duration`); `createdAt`, `updatedAt` |
 
+**Ownership:** shared — nincs `userId`; Auth: bármely autentikált `USER` CRUD ([[Bejelentkezés]]).
+
 Műveletek:
 
 - CRUD; lista + szöveges keresés.
-- Create/update: duplikáció ellenőrzés (összes mező egyezése).
-- Delete: hard delete + cascade a hivatkozó tárolás / recept / bevásárlás tételekre (vagy ekvivalens szerveroldali törlés); a kliens a megerősítéshez előtte lekérdezheti / helyben tudja a hivatkozásokat.
+- Create/update: duplikáció ellenőrzés (összes mező egyezése) — **globális** a shared katalóguson.
+- Delete: hard delete + cascade a hivatkozó tárolás / recept / bevásárlás / étkezés tételekre **minden usernél**; a kliens a megerősítéshez előtte lekérdezheti / helyben tudja a hivatkozásokat.
 
 Mennyiség / időtartam egységek SSOT: [[Mennyiség mező]].
 
