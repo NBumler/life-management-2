@@ -24,7 +24,8 @@ _Nincs UI/UX érintettség._
 
 ### Megjegyzések
 
-_Nincs megjegyzés._
+- **Sablon törlés (elvárás, részletezendő a spechez):** hard delete a sablonra + sablon-tételekre; futó [[Pakolás]] érintetlen; [[Eszközök]] katalógus nem törlődik.
+- **Eszköz törlés:** a sablon-tételekből hard cascade — [[Eszközök]].
 
 ### Nyitott kérdések
 

@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Váz` |
 | **Szülő** | [[GearCheck]] |
-| **Kapcsolódó** | [[Sablonok]], [[Eszközök]], [[Szöveges keresés]], [[Bejelentkezés]] |
+| **Kapcsolódó** | [[Sablonok]], [[Eszközök]], [[Szöveges keresés]], [[Bejelentkezés]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -41,7 +41,9 @@ Pakolás eszközeinek állapotai és színkódok (Tailwind példák):
 
 Ha egy eszköz `PACKED` vagy `NOT_NEEDED` állapotba került, külön szekcióba kerül (kész / nem szükséges).
 
-**Lezárás:** a pakolás hard delete az adatbázisból; confirmation dialog kötelező. Alatta: új egyéni eszköz hozzáadása ehhez a pakoláshoz.
+**Lezárás:** a pakolás hard delete az adatbázisból; confirmation dialog kötelező. Alatta: új egyéni eszköz hozzáadása ehhez a pakoláshoz — új [[Eszközök]] `GearItem` a katalógusba **és** azonnal a futó listára (lásd [[Eszközök]]).
+
+**Katalógus-eszköz törlés:** ha egy `GearItem` törlődik, hard cascade — kiesik ebből a futó pakolásból is ([[Eszközök]]). Sablon törlés a futó pakolást **nem** érinti ([[Sablonok]]).
 
 ### UI/UX elvárások
 

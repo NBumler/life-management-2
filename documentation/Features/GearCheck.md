@@ -44,7 +44,7 @@ Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító 
 
 ### Backend
 
-_Nincs backend érintettség._ (eszköz / sablon / pakolás API scope később itt vagy a gyerekekben)
+Közös GearCheck API scope a gyerekekben: [[Eszközök]] (`GearItem` CRUD + cascade), [[Sablonok]], [[Pakolás]]. Auth / user-owned: [[Bejelentkezés]].
 
 ### Nyitott kérdések
 
