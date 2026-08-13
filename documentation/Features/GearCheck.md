@@ -4,13 +4,15 @@
 
 | | |
 |---|---|
-| **Státusz** | `Váz` |
+| **Státusz** | `Kész` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Eszközök]], [[Sablonok]], [[Pakolás]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Eszközök]], [[Sablonok]], [[Pakolás]], [[Bejelentkezés]], [[Backend-offline first]], [[Szinkronizációs központ]] |
 
 ### Célállapot
 
-Felszerelés nyilvántartás, pakolási sablonok és aktív pakolások kezelése. Belépés: Menü (lásd [[Frontend]]).
+Felszerelés nyilvántartás, pakolási sablonok és aktív pakolások kezelése. Belépés: Menü (lásd [[Frontend]]). Három belépő: [[Eszközök]] | [[Sablonok]] | [[Pakolás]] (aktív sessionök; korlátlan párhuzamos futás).
+
+**Ownership:** **user-owned** — [[Bejelentkezés]].
 
 ### Funkcionális leírás
 
@@ -36,15 +38,15 @@ Nincs nyitott kérdés.
 
 ### Frontend
 
-Menü alatti GearCheck belépő; subfeature képernyők.
+Menü alatti GearCheck belépő; három subfeature képernyő ([[Eszközök]], [[Sablonok]], [[Pakolás]]).
 
 #### Backend-offline
 
-Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító kérések outboxba (`OfflineQueueService`), kliens UUID. Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
+Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító kérések outboxba (`OfflineQueueService`), kliens UUID. Sync: [[Szinkronizációs központ]]. Részletek a gyerekekben. Lásd [[Backend-offline first]].
 
 ### Backend
 
-Közös GearCheck API scope a gyerekekben: [[Eszközök]] (`GearItem` CRUD + cascade), [[Sablonok]], [[Pakolás]]. Auth / user-owned: [[Bejelentkezés]].
+Közös GearCheck API a gyerekekben: [[Eszközök]] (`GearItem`), [[Sablonok]] (`PackingTemplate` + items), [[Pakolás]] (`PackingSession` + items). Auth / user-owned: [[Bejelentkezés]].
 
 ### Nyitott kérdések
 
