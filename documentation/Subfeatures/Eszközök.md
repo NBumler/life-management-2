@@ -44,7 +44,7 @@ Nincs `quantity`, `category`, `isFavorite`, soft-delete flag az MVP-ben.
 
 - Sablon és pakolás **`gearItemId`**-re hivatkozik (nem név-másolat a katalógus élő linkjéhez — kivéve UI megjelenés).
 - **Sablon törlés** (részletek: [[Sablonok]]): hard delete a sablonra + sablon-tételekre; a **futó pakolás érintetlen**; az eszköz-katalógus **nem** törlődik.
-- **Pakolás közbeni „új eszköz”:** új `GearItem` a katalógusba (`name` kötelező, `notes` opcionális) **és** azonnal hozzáadás a futó pakoláshoz. Duplikált név (case-insensitive) → hiba / meglévő elem választása — ugyanaz az egyediségi szabály.
+- **Új `GearItem`:** csak ezen a képernyőn (MVP). [[Sablonok]] / [[Pakolás]] csak meglévő elemet ad hozzá pickerrel (extra tétel a futó pakoláshoz / sablonhoz) — nem hoz létre katalógus-elemet.
 
 ### UI/UX elvárások
 
@@ -57,7 +57,7 @@ Nincs `quantity`, `category`, `isFavorite`, soft-delete flag az MVP-ben.
 ### Megjegyzések
 
 - Mennyiség / kategória későbbi scope, ha a GearCheck-en belül máshol is megjelenik az igény.
-- A [[Sablonok]] és [[Pakolás]] specek a cascade és a pakolás-közbeni create szabályait követik / hivatkozzák.
+- A [[Sablonok]] és [[Pakolás]] specek a cascade és a „csak picker, nincs create” szabályait követik / hivatkozzák.
 
 ### Nyitott kérdések
 

@@ -25,7 +25,7 @@ Ha több sablont is kiválasztottunk és ugyanaz az eszköz több sablonban is s
 
 Ha valamelyik kiválasztott sablon pakolás közben módosul, a futó pakolás eszközei **nem** módosulnak.
 
-Folyamatban lévő pakolás közben csak arra a pakolásra lehet új [[Eszközök]] elemet hozzáadni. Duplikáció tilos: a selectben a már kiválasztott elemek disabled-ek, és a lista végére rendezve.
+Folyamatban lévő pakolás közben csak arra a pakolásra lehet **meglévő** [[Eszközök]] elemet hozzáadni (picker; új `GearItem` create nincs — az csak az [[Eszközök]] képernyőn). Duplikáció tilos: a selectben a már kiválasztott elemek disabled-ek, és a lista végére rendezve.
 
 Pakolás eszközeinek állapotai és színkódok (Tailwind példák):
 
@@ -41,7 +41,7 @@ Pakolás eszközeinek állapotai és színkódok (Tailwind példák):
 
 Ha egy eszköz `PACKED` vagy `NOT_NEEDED` állapotba került, külön szekcióba kerül (kész / nem szükséges).
 
-**Lezárás:** a pakolás hard delete az adatbázisból; confirmation dialog kötelező. Alatta: új egyéni eszköz hozzáadása ehhez a pakoláshoz — új [[Eszközök]] `GearItem` a katalógusba **és** azonnal a futó listára (lásd [[Eszközök]]).
+**Lezárás:** a pakolás hard delete az adatbázisból; confirmation dialog kötelező. Extra eszköz a futó listára: meglévő `GearItem` pickerrel (lásd fent; [[Eszközök]]).
 
 **Katalógus-eszköz törlés:** ha egy `GearItem` törlődik, hard cascade — kiesik ebből a futó pakolásból is ([[Eszközök]]). Sablon törlés a futó pakolást **nem** érinti ([[Sablonok]]).
 
