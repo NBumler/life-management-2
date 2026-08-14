@@ -19,14 +19,16 @@ Subfeature / belépők:
 - [[Háztartási feladatok]] (`Kész`)
 - [[Élet tervek]] (`TODO` — tartalom a gyerek specben)
 - [[Naptár]] (`Kész` — aggregátor; nem tennivaló-CRUD)
+- [[Események]] (`Kész` — saját flag; lista + CRUD a gyerek/feature spechen)
 
-A háztartási CRUD, naptár-előfordulás és `HOUSEHOLD_TASK_DUE` digest a [[Háztartási feladatok]] spechen. Ez a szülő a Feladatok tab **hubja**.
+A háztartási CRUD, naptár-előfordulás és `HOUSEHOLD_TASK_DUE` digest a [[Háztartási feladatok]] spechen. Esemény CRUD / `EVENT` vetítés / `EVENT_OCCURRENCE`: [[Események]]. Ez a szülő a Feladatok tab **hubja**.
 
 ### UI/UX elvárások
 
 - Alsó tab: **Feladatok** ([[Frontend]]).
-- Hub **három csempe:** Háztartási feladatok | Élet tervek | Naptár.
+- Hub **négy csempe:** Háztartási feladatok | Élet tervek | Naptár | Események.
 - Élet tervek: a gyerek spec `Kész` előtt a csempe a [[Life Management 2.0]] feature flag mögött lehet; nincs háztartási kapocs (MVP).
+- Naptár / Események: saját flag; ki → a csempe rejtve. A [[Tennivalók]] flagje a tabot / háztartási csempét fedi.
 
 ### Megjegyzések
 
@@ -40,7 +42,7 @@ Nincs nyitott kérdés.
 
 ### Frontend
 
-Feladatok tab → hub (három csempe) → gyerek képernyők. Naptár aggregáció: [[Naptár]]. Háztartási API a gyerekben.
+Feladatok tab → hub (négy csempe) → gyerek képernyők. Naptár aggregáció: [[Naptár]]. Háztartási API: [[Háztartási feladatok]]. Esemény API: [[Események]].
 
 #### Backend-offline
 
@@ -48,7 +50,7 @@ Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító 
 
 ### Backend
 
-_Nincs backend érintettség._ (háztartási OpenAPI: [[Háztartási feladatok]]; élet tervek a gyerekben)
+_Nincs backend érintettség._ (háztartási OpenAPI: [[Háztartási feladatok]]; esemény: [[Események]]; élet tervek a gyerekben)
 
 ### Nyitott kérdések
 

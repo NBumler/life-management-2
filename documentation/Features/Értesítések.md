@@ -10,7 +10,7 @@
 
 ### Célállapot
 
-Lokális (készüléken ütemezett) értesítések a fontos küszöbökről. Az első körben **öt** aktív típus; a többi típus később, amíg a forrás-feature specek `Kész` nem lesznek. Remote (szerveroldali) push **nincs** az első körben.
+Lokális (készüléken ütemezett) értesítések a fontos küszöbökről. Az első körben **hat** aktív típus; a többi típus később, amíg a forrás-feature specek `Kész` nem lesznek. Remote (szerveroldali) push **nincs** az első körben.
 
 ### Funkcionális leírás
 
@@ -70,12 +70,21 @@ Lokális (készüléken ütemezett) értesítések a fontos küszöbökről. Az 
 - Pipálás / törlés után a tétel kiesik a **következő** 09:00-ás készletből. A már kiment mai banner **nem** vonódik vissza.
 - 09:00 után ma esedékessé tett feladat: nincs második fire aznap (1 / nap); holnap 09:00, ha még `nextDue ≤ ma`.
 
+##### 6. Esemény előfordulás (`EVENT_OCCURRENCE`)
+
+- Forrás: [[Események]].
+- Élő (`deleted = false`) sorozat horizonbeli előfordulásaira (vetítés SSOT: [[Események]]).
+- **Időzített:** az előfordulás napján a `startTime` (kliens TZ falóra). **Egész napos:** aznap **09:00**.
+- **1 értesítés / (`eventId` + előfordulás `date`)**. Cím: az esemény `title` (helyszín ha van, a szövegben).
+- Múltbeli előfordulásra **nincs** utólagos fire (app nyitáskor a már elmúlt start/09:00 kihagyva).
+- Törlés / sorozat-szerkesztés után a jövőbeli ütemezés újraszámolódik. A már kiment banner **nem** vonódik vissza.
+- Nincs eseményenkénti lead time (15 perc / 1 óra előtte nincs).
+
 #### Későbbi típusok (nem implementálandó az első körben)
 
 Hook / placeholder — lead time és szöveg a forrás-spec készültekor:
 
 - [[Rendszeres kiadások]] — közelgő fizetés
-- [[Események]] — közelgő esemény
 
 #### Ismétlés-védelem (deduplikáció) — magyarázat
 
@@ -88,18 +97,19 @@ Az OS / app újraindulás vagy többszöri scheduler-futás ne küldjön ugyanar
 | `STEPS_LOW` | 1 / naptári nap |
 | `CALORIE_STREAK` | 1 / naptári nap (és ugyanarra az ablakra nem újra) |
 | `HOUSEHOLD_TASK_DUE` | 1 digest / naptári nap |
+| `EVENT_OCCURRENCE` | 1 / esemény / előfordulás-nap |
 
 Ehhez helyi „már elküldve” napló (pl. `notificationDedupe`: típus + kulcs + nap).
 
 ### UI/UX elvárások
 
 - Menü → Értesítések: típus kapcsolók + rövid magyarázat (mikor szól).
-- Értesítés tap → releváns képernyő (készlet / lépésszám / étkezés / háztartási lista Lejárt+Ma), ha az app megnyílik.
+- Értesítés tap → releváns képernyő (készlet / lépésszám / étkezés / háztartási lista Lejárt+Ma / esemény szerkesztő), ha az app megnyílik.
 - Nincs külön „értesítés előzmények” lista az első körben.
 
 ### Megjegyzések
 
-**Remote push mire jó (később):** a szerver küldi az üzenetet (FCM/APNs), akkor is, ha az app hetek óta nem fut, vagy másik eszközön kell ugyanaz. Pl. multi-device, szerveroldali esemény. Az első körben a lokális ütemező elég (élelmiszer / lépés / kalória / háztartási feladat a helyi store-ból).
+**Remote push mire jó (később):** a szerver küldi az üzenetet (FCM/APNs), akkor is, ha az app hetek óta nem fut, vagy másik eszközön kell ugyanaz. Pl. multi-device, szerveroldali esemény. Az első körben a lokális ütemező elég (élelmiszer / lépés / kalória / háztartási feladat / esemény a helyi store-ból).
 
 Élelmiszer lead time SSOT táblázat: [[Élelmiszer tárolás]] (küldési ritmus: ez a spec).
 
@@ -112,8 +122,8 @@ Nincs nyitott kérdés.
 ### Frontend
 
 - `LocalNotificationService` (vagy ekvivalens): ütemezés, engedély, dedupe store, típus-flag-ek olvasása.
-- Trigger források: készlet store, `DailyStepLog`, Étkezés napi összeg + TDEE allowance, háztartási feladat store (`nextDue`).
-- 09:00 / 20:00: OS scheduled local notifications és/vagy napi background check + immediate local notification.
+- Trigger források: készlet store, `DailyStepLog`, Étkezés napi összeg + TDEE allowance, háztartási feladat store (`nextDue`), esemény store + vetítés ([[Események]]).
+- 09:00 / 20:00 / esemény `startTime`: OS scheduled local notifications és/vagy napi background check + immediate local notification.
 - Beállítások page a Menü alatt; flag-ek **device-local** store ([[Bejelentkezés]] — nincs profil-sync az első körben).
 
 #### Backend-offline

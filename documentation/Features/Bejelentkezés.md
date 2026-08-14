@@ -182,7 +182,7 @@ A DB / API réteg ownership döntései. Új feature specifikálásakor ezt a tá
 | `StoredFood`, `Meal` / tételek, bevásárlólisták | [[Élelmiszer tárolás]], [[Étkezés]], [[Bevásárlás]] |
 | AYCM partnerek, check-in, szabályok | [[AYCM tracker]] |
 | GearCheck: eszközök, sablonok, pakolás futás | [[Eszközök]], [[Sablonok]], [[Pakolás]] |
-| Háztartási feladatok, élet tervek, események, tennivalók | [[Háztartási feladatok]], [[Élet tervek]], [[Események]], [[Tennivalók]] |
+| Háztartási feladatok, élet tervek, események (`CalendarEvent`), tennivalók | [[Háztartási feladatok]], [[Élet tervek]], [[Események]], [[Tennivalók]] |
 | Rendszeres kiadások (és a majdani [[Pénzügyek]] entitásai) | [[Rendszeres kiadások]], [[Pénzügyek]] |
 | Outbox queue | eszköz + user kontextus — [[Szinkronizációs központ]] |
 

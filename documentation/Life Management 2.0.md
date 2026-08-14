@@ -55,11 +55,11 @@ Agent skill: `.cursor/skills/documentation-spec/`. Offline SSOT: [[Backend-offli
 - [[Bevásárlás]]
 - [[Mászónapló]]
 - [[Bejelentkezés]]
+- [[Események]]
 
 #### Feature lista — hiányos / stub (`Feature - TODO/`)
 
 - [[Pénzügyek]]
-- [[Események]]
 
 ### UI/UX elvárások
 

@@ -14,13 +14,13 @@ Aggregált naptár: a producer-feature-ök előfordulásait mutatja. Belépés: 
 
 **Ownership:** nincs saját adat; a producer entitások **user-owned** — [[Bejelentkezés]].
 
-**Nem scope (MVP):** nap / hét rács; év nézet; hét számok; húzással átütemezés; kereső; naptárból create (háztartási feladat vagy esemény); időzített sávok (timed events — [[Események]] spec `Kész` után); Google Calendar; utolsó nézett hónap / szűrő megjegyzése eszközön; lead-time értesítés a naptár előfordulásairól (háztartási digest: [[Értesítések]]).
+**Nem scope (MVP):** nap / hét rács; év nézet; hét számok; húzással átütemezés; kereső; naptárból create; hónap-rácson időzített sáv (az idő a napi listán); Google Calendar; utolsó nézett hónap / szűrő megjegyzése eszközön; lead-time értesítés a naptár előfordulásairól (háztartási digest / esemény: [[Értesítések]]).
 
 ### Funkcionális leírás
 
 #### Szerep
 
-A naptár **fogyasztó**. Az előfordulásokat a producer specek számolják (háztartási vetítés: [[Háztartási feladatok]]). Itt nincs occurrence-tábla, nincs saját OpenAPI.
+A naptár **fogyasztó**. Az előfordulásokat a producer specek számolják (háztartás: [[Háztartási feladatok]]; esemény: [[Események]]). Itt nincs occurrence-tábla, nincs saját OpenAPI.
 
 #### Producer registry
 
@@ -29,7 +29,7 @@ Chip és előfordulás csak **élő** producerből: a forrás-spec `Kész`, és 
 | `source` | Spec | MVP |
 |---|---|---|
 | `HOUSEHOLD_TASK` | [[Háztartási feladatok]] | Igen |
-| `EVENT` | [[Események]] | Nem (spec `TODO`) |
+| `EVENT` | [[Események]] | Igen (saját Események flag is kell) |
 | `LIFE_PLAN` | [[Élet tervek]] | Nem (spec `TODO`) |
 
 Új producer: a saját specje leírja a vetítést; a naptár chipje automatikusan belép. A naptár specet csak akkor kell bántani, ha a fogyasztói szerződés (DTO / nézet) változik.
@@ -41,16 +41,17 @@ Kliensoldali, nem persistált. Egyedi kulcs: `source` + `sourceEntityId` + `date
 | Mező | Típus / szabály |
 |---|---|
 | `source` | Enum (fenti registry) |
-| `sourceEntityId` | UUID a producer entitásra (háztartás: `taskId`) |
+| `sourceEntityId` | UUID a producer entitásra (háztartás: `taskId`; esemény: `CalendarEvent.id`) |
 | `date` | `YYYY-MM-DD`, kliens naptári nap |
-| `allDay` | MVP: mindig `true` |
-| `title` | Kötelező (háztartás: feladat `name`) |
-| `subtitle` | Opcionális (háztartás: helyiség `name`) |
-| `completable` | Háztartás: `true`; pipálás a producer mutációja |
-| `overdue` | `date < ma` (kliens naptári nap) |
+| `allDay` | Háztartás: mindig `true`. Esemény: a sorozat `allDay` mezője. |
+| `startTime` / `endTime` | `HH:mm`; csak `allDay = false` (esemény). Háztartás: nincs. |
+| `title` | Kötelező (háztartás: feladat `name`; esemény: `title`) |
+| `subtitle` | Opcionális (háztartás: helyiség `name`; esemény: `location`) |
+| `completable` | Háztartás: `true`; esemény: `false` |
+| `overdue` | Háztartás: `date < ma`. Esemény: mindig `false` (nem pipálható, a napján marad). |
 | `energyLevel` / `estimatedMinutes` | Háztartás: a lista-sorhoz; más producer elhagyhatja |
 
-Háztartási emit + sapkák (10 előfordulás, 1 év, lejárt csak az élő `nextDue` napján): **SSOT** [[Háztartási feladatok]]. A naptár nem vetít újra.
+Háztartási emit + sapkák: **SSOT** [[Háztartási feladatok]]. Esemény-vetítés (ma±1 év, ritmus, nincs darabszám-sapka): **SSOT** [[Események]]. A naptár nem vetít újra.
 
 #### Nézet: csak hónap + napi drill-down
 
@@ -69,24 +70,25 @@ Nincs nap / hét rács az MVP-ben.
 - **Ma** gomb: aktuális hónap + mai nap kiemelve. Ha már ott vagyunk, no-op a rácson (a mai napra tap továbbra is nyitja a napi listát).
 - Szomszédos hónap napjai a rács szélein **szürkén** látszanak; tap → az a napi lista (a rács hónapja visszaérkezéskor **marad**, nem ugrik át).
 - Cellában: dátumszám + **szám-badge** = aznapi előfordulások száma a **aktuális szűrő után**. 0 → nincs badge. ≥ 100 → `99+`.
-- Múltbeli nap, ahol van előfordulás: a dátumszám **figyelmeztető szín** (háztartásnál ez lejárt, pipálatlan `nextDue`). Ma: külön kiemelés (keret / fill). Jövő: neutrális + badge.
+- Múltbeli nap **figyelmeztető szín** csak ha a szűrt előfordulások között van `overdue = true` (háztartási lejárt `nextDue`). Csak múltbeli esemény → **nem** figyelmeztető (neutrális + badge). Ma: külön kiemelés. Jövő: neutrális + badge.
 - Napra tap (üres is) → napi lista. Nincs kijelölés-állapot a rácson tap előtt; visszaérkezéskor az a nap, ahonnan jöttünk, legyen kiemelve (ne resetelődjön mára, kivéve Ma gomb).
 
 #### Napi lista
 
 - Cím: a nap dátuma (i18n). Előző / következő nap chevron; **Ma** → mai napi lista.
 - Vissza → a hónap rács, ahonnan nyitottuk, azzal a nappal kiemelve.
-- Sor: **pipa** (ha `completable`) + tap a sorra → producer szerkesztő. Háztartás: ugyanaz a feladat create/edit képernyő, mint a [[Háztartási feladatok]] listáról; pipálás **ugyanaz** a mutáció (`PUT` `nextDue` + `lastCompletedAt`). Nincs undo, nincs külön confirm a pipára.
-- Háztartási sor: cím, alcím (helyiség), energia, perc; `overdue` → figyelmeztető szín + lemaradás (`ma − date` nap), mint a háztartási listán.
-- Sorrend: `source` (MVP egy van), majd helyiség `sortOrder`, majd `title`.
-- Pipálás / producer store változás után a **badge és a lista azonnal** újraszámolódik. Háztartás: a tétel lekerül erről a napról, az új `nextDue` a jövőben jelenik meg (korai pipálás is: `ma + intervalDays` — [[Háztartási feladatok]]).
+- Sor: **pipa** csak ha `completable`; tap a sorra → producer szerkesztő. Háztartás: feladat create/edit + pipálás = `PUT` (`nextDue`, `lastCompletedAt`) — [[Háztartási feladatok]]. Esemény: **nincs pipa**; tap → sorozat szerkesztő ([[Események]] / [[Új esemény hozzáadása]]). Nincs undo; pipára nincs külön confirm.
+- Háztartási sor: cím, alcím (helyiség), energia, perc; `overdue` → figyelmeztető szín + lemaradás (`ma − date` nap).
+- Esemény sor: cím; időzítettnél `startTime–endTime`; egész naposnál i18n „egész nap”; alcím = helyszín.
+- Sorrend a napon: **egész napos** (`allDay`) elöl — háztartás, majd esemény, azon belül helyiség `sortOrder` / `title` — utána időzítettek `startTime`, majd `title`.
+- Producer store változás után a **badge és a lista azonnal** újraszámolódik. Háztartás pipálás: lekerül erről a napról, új `nextDue` a jövőben ([[Háztartási feladatok]]). Esemény marad a napján.
 - Üres nap: szöveg („nincs tétel”), **nincs CTA** (nincs create).
 - Szűrt üres (chip ki) ≠ „nincs naptárad”: „nincs találat” / forrás kikapcsolva, nincs create CTA.
 
 #### Forrás-szűrő (chipek)
 
 - Multi-select, **VAGY** (unió). Alap: minden **élő** chip be.
-- MVP: egy chip — Háztartási. [[Események]] / [[Élet tervek]] chip **nincs**, amíg a specjük nem `Kész`.
+- Élő chipek: Háztartási; **Események** ha a spec `Kész` és az Események flag be. [[Élet tervek]] chip **nincs**, amíg a specje nem `Kész`.
 - Minden chip ki → üres rács és üres napi listák (a chipek maradnak, vissza lehet kapcsolni).
 - A szűrő a hónap és a napi listán **ugyanaz**; a napi képernyőn is látszanak / állíthatók.
 - Nyitáskor a chipek újra mind be (nincs device-local szűrő-memória).
@@ -94,11 +96,11 @@ Nincs nap / hét rács az MVP-ben.
 
 #### Create / üres tap
 
-Nincs `+` gomb, nincs long-press create. Üres nap = napi lista üres állapottal. Új háztartási feladat: [[Háztartási feladatok]] feature. Esemény: későbbi spec.
+Nincs `+` gomb, nincs long-press create. Üres nap = napi lista üres állapottal. Új háztartási feladat: [[Háztartási feladatok]]. Új esemény: [[Események]] lista / űrlap (nem a naptárból).
 
 #### Értesítések
 
-A naptár **nem** ütemez értesítést. Háztartási digest: [[Értesítések]] `HOUSEHOLD_TASK_DUE` (09:00, élő `nextDue`, nem a 10 előfordulás). Értesítés tap → háztartási lista Lejárt+Ma, **nem** a naptár.
+A naptár **nem** ütemez értesítést. Háztartási digest: [[Értesítések]] `HOUSEHOLD_TASK_DUE`. Esemény: `EVENT_OCCURRENCE` ([[Események]]). Háztartási tap → lista Lejárt+Ma; esemény tap → esemény szerkesztő — **nem** a naptár.
 
 ### UI/UX elvárások
 
@@ -111,7 +113,7 @@ A naptár **nem** ütemez értesítést. Háztartási digest: [[Értesítések]]
 
 ### Megjegyzések
 
-A Feladatok tab IA (három csempe) a [[Tennivalók]] speché. Timed esemény-sáv és naptárból create az [[Események]] készültekor nyitható újra.
+A Feladatok tab IA (négy csempe) a [[Tennivalók]] speché. Timed sáv a hónap rácson és naptárból create továbbra sincs.
 
 ### Nyitott kérdések
 
@@ -123,8 +125,8 @@ Nincs nyitott kérdés.
 
 - Képernyők: `CalendarMonthPage`, `CalendarDayPage`. Route pl. `/tabs/tasks/calendar`, `/tabs/tasks/calendar/:date` (`YYYY-MM-DD`).
 - `CalendarOccurrence` mapper: élő producerek → DTO tömb; szűrő; naponkénti groupBy a badge-hez.
-- Háztartási vetítés **nem** másolódik ide — import a [[Háztartási feladatok]] utility-jéből.
-- Pipálás / open: háztartási store + ugyanaz a `PUT` / szerkesztő route, mint a feladatlistán.
+- Producer vetítés **nem** másolódik ide — import: [[Háztartási feladatok]], [[Események]].
+- Pipálás / open: a producer store + route (háztartás `PUT`; esemény szerkesztő, nincs complete).
 - Dátumok: kliens TZ naptári nap; `ma` íráskor / renderkor a készülék napja.
 - i18n hónap / nap / Ma / chipek / üres szövegek: [[Nyelv választás]].
 
@@ -132,12 +134,12 @@ Nincs nyitott kérdés.
 
 - Olvasás a producer helyi store-jából Backend-offline és Full-offline esetén is.
 - A naptárnak **nincs** saját mutációja → **nincs** outbox ebben a spechen.
-- Pipálás / szerkesztés: a producer outboxa (`OfflineQueueService`) — [[Háztartási feladatok]], [[Szinkronizációs központ]].
+- Pipálás / szerkesztés: a producer outboxa (`OfflineQueueService`) — [[Háztartási feladatok]], [[Események]], [[Szinkronizációs központ]].
 - Nincs homokóra: a vetítés pure TS. Lásd [[Backend-offline first]].
 
 ### Backend
 
-_Nincs backend érintettség._ (producer API: [[Háztartási feladatok]]; később [[Események]] / [[Élet tervek]])
+_Nincs backend érintettség._ (producer API: [[Háztartási feladatok]], [[Események]]; később [[Élet tervek]])
 
 ### Nyitott kérdések
 

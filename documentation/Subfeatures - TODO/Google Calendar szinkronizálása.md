@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `TODO` |
 | **Szülő** | [[Események]] |
-| **Kapcsolódó** | [[Naptár]], [[Új esemény hozzáadása]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Események]], [[Új esemény hozzáadása]], [[Naptár]], [[Backend-offline first]], [[Szinkronizációs központ]] |
 
 ### Célállapot
 
