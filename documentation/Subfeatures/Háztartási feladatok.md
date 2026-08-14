@@ -105,7 +105,7 @@ Algoritmus élő (`deleted = false`) feladaton. A „következő 10” **jövőb
 
 Emit mezők: all-day; **cím** = feladat `name`; **alcím** = helyiség `name`; `taskId`; `date`. Fél éves ritmusnál jellemzően 2 db a horizonon belül.
 
-Tap az előfordulásra → feladat részletek / szerkesztő. Pipálás a naptárból megengedett. Forrás szerinti naptár-szűrő: [[Naptár]] spec (később).
+Tap az előfordulásra → feladat részletek / szerkesztő. Pipálás a naptárból megengedett. Forrás szerinti naptár-szűrő, hónap rács, napi lista: [[Naptár]].
 
 #### Értesítések
 

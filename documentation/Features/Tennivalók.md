@@ -18,7 +18,7 @@ Subfeature / belépők:
 
 - [[Háztartási feladatok]] (`Kész`)
 - [[Élet tervek]] (`TODO` — tartalom a gyerek specben)
-- [[Naptár]] (aggregátor; nem tennivaló-CRUD)
+- [[Naptár]] (`Kész` — aggregátor; nem tennivaló-CRUD)
 
 A háztartási CRUD, naptár-előfordulás és `HOUSEHOLD_TASK_DUE` digest a [[Háztartási feladatok]] spechen. Ez a szülő a Feladatok tab **hubja**.
 
