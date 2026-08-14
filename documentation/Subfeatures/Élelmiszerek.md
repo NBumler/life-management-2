@@ -39,17 +39,18 @@ Részletes UI / szabályok: [[Élelmiszer manuális bevitele]].
 
 #### Duplikáció
 
-Új tétel mentése **tiltott**, ha **minden** mezője megegyezik egy már létező katalóguselemével. Részleges egyezés megengedett (pl. ugyanaz a termék más üzletben = külön tétel). A szabály **backend-offline** állapotban is él (helyi adat).
+Új tétel mentése **tiltott**, ha **minden** mezője megegyezik egy már létező **élő** katalóguselemével. Részleges egyezés megengedett (pl. ugyanaz a termék más üzletben = külön tétel). A szabály **backend-offline** állapotban is él (helyi adat).
 
 Későbbi modellbontás (külön bolt entitás) nincs scope-ban.
 
-#### Törlés (hard delete)
+#### Törlés (soft delete)
 
-- Hard delete; megerősítéssel.
+- Soft delete + megerősítés — [[Backend-offline first]] (tombstone, ne 404). Soha nem szinkronizált helyi draft → helyi hard remove + outbox tisztítás.
 - Ha vannak hivatkozások ([[Élelmiszer tárolás]], [[Recept]] hozzávaló, bevásárlólista tétel, [[Étkezés]] / [[Élelmiszer forrású étkezés]] tétel, stb.), a megerősítő UI **felsorolja**, mi törlődik együtt.
-- Törléskor a hivatkozó elemek is törlődnek (cascade) — étkezés-tételek cascade után üres étkezés is törlődik ([[Étkezés]]).
+- Törléskor a hivatkozó elemek is soft delete (cascade) — étkezés-tételek cascade után üres étkezés is soft delete ([[Étkezés]]).
 - **Shared katalógus:** a cascade **minden user** hivatkozó adataira vonatkozik; a megerősítő szöveg jelezze, hogy közös katalóguselem törlése más felhasználók adatait is érintheti.
-- Backend-offline állapotban is elérhető (helyi törlés + outbox).
+- Duplikáció-ellenőrzés csak **élő** (`deleted = false`) sorokra. Nincs undelete UI.
+- Backend-offline állapotban is elérhető (helyi `deleted` + outbox `DELETE`).
 
 #### Fogyasztók
 
@@ -81,7 +82,7 @@ Nincs nyitott kérdés.
 
 #### Backend-offline
 
-- Katalógus CRUD, keresés, duplikáció-ellenőrzés, cascade törlés előnézet: helyi adatokból (Backend-offline / Full-offline).
+- Katalógus CRUD, keresés, duplikáció-ellenőrzés, cascade törlés előnézet: helyi adatokból (Backend-offline / Full-offline). Listák `deleted = false`.
 - Mutációk outboxba; kliens UUID. OFF sync a gyerek specekben.
 - Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
 
@@ -91,15 +92,15 @@ OpenAPI scope — élelmiszer katalógus (közös a subfeature-ökkel):
 
 | Entitás | Fő mezők (elvárás) |
 |---|---|
-| `Food` | `id` (UUID, kliens); `name` (kötelező); `store`; `brand`; `barcode`; `note`; `priceHuf` (Ft/csomag); `netAmount` + `netUnit` (`quantity` egységek, `cl` is); tápanyag mezők (kcal + g értékek a spece szerinti listával); `shelfRoomAmount`/`Unit`, `shelfFridgeAmount`/`Unit`, `shelfFreezerAmount`/`Unit`, `shelfAfterOpeningAmount`/`Unit` (`duration`); `createdAt`, `updatedAt` |
+| `Food` | `id` (UUID, kliens); `name` (kötelező); `store`; `brand`; `barcode`; `note`; `priceHuf` (Ft/csomag); `netAmount` + `netUnit` (`quantity` egységek, `cl` is); tápanyag mezők (kcal + g értékek a spece szerinti listával); `shelfRoomAmount`/`Unit`, `shelfFridgeAmount`/`Unit`, `shelfFreezerAmount`/`Unit`, `shelfAfterOpeningAmount`/`Unit` (`duration`); `deleted` / `deleted_at`; `createdAt`, `updatedAt` |
 
 **Ownership:** shared — nincs `userId`; Auth: bármely autentikált `USER` CRUD ([[Bejelentkezés]]).
 
 Műveletek:
 
 - CRUD; lista + szöveges keresés.
-- Create/update: duplikáció ellenőrzés (összes mező egyezése) — **globális** a shared katalóguson.
-- Delete: hard delete + cascade a hivatkozó tárolás / recept / bevásárlás / étkezés tételekre **minden usernél**; a kliens a megerősítéshez előtte lekérdezheti / helyben tudja a hivatkozásokat.
+- Create/update: duplikáció ellenőrzés (összes mező egyezése) — **globális** a shared katalógus **élő** sorain.
+- Delete: soft delete + cascade soft delete a hivatkozó tárolás / recept / bevásárlás / étkezés tételekre **minden usernél**; a kliens a megerősítéshez előtte lekérdezheti / helyben tudja a hivatkozásokat. `DELETE` idempotens; saját törölt `GET` by id → 200 + `deleted` (ne 404).
 
 Mennyiség / időtartam egységek SSOT: [[Mennyiség mező]].
 

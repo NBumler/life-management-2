@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Váz` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Események]], [[Tennivalók]], [[Értesítések]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Események]], [[Tennivalók]], [[Háztartási feladatok]], [[Értesítések]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -15,6 +15,8 @@ Naptár nézet, ami megmutatja az [[Események]]et és [[Tennivalók]]at. Felada
 ### Funkcionális leírás
 
 Aggregált megjelenítés az eseményekből és tennivalókból.
+
+[[Háztartási feladatok]] producer-szerződés (ez a naptár fogyasztja; a vetítés a háztartási spechen): all-day előfordulások, cím = feladatnév, alcím = helyiség; lejárt a `nextDue` eredeti napján; **max 10** előfordulás / feladat, **max 1 év** előre; naptárból pipálás megengedett. Forrás szerinti szűrő: lásd Nyitott kérdések.
 
 ### UI/UX elvárások
 

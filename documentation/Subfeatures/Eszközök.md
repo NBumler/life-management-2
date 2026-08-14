@@ -23,27 +23,28 @@ User-owned felszerelés-katalógus (típus / tétel szint, nem fizikai példány
 | Mező | Típus / szabály |
 |---|---|
 | `id` | UUID, kliens generálja |
-| `name` | Kötelező; **egyedi a user katalógusán belül** (case-insensitive) |
+| `name` | Kötelező; **egyedi a user élő katalógusán belül** (case-insensitive) |
 | `notes` | Opcionális szabad szöveg |
+| `deleted` | Soft delete (`false` default); listák szűrik |
 | `createdAt` / `updatedAt` | Audit |
 
-Nincs `quantity`, `category`, `isFavorite`, soft-delete flag az MVP-ben.
+Nincs `quantity`, `category`, `isFavorite` az MVP-ben. Törölt név **újra felvehető** (egyediség csak élő sorokra).
 
 **Üres start:** első indításkor a katalógus üres — nincs seed.
 
 #### CRUD
 
 - Lista (a user összes `GearItem`-je), létrehozás, szerkesztés, törlés.
-- **Törlés: hard delete + cascade** (megerősítő dialógus kötelező).
-  - Kiesik **minden** [[Sablonok]] tételből, ahol ez az `id` szerepel.
-  - Kiesik **minden futó** [[Pakolás]] tételből, ahol ez az `id` szerepel.
+- **Törlés: soft delete + cascade** (megerősítő dialógus kötelező) — [[Backend-offline first]] (ne 404 multi-device-on). Soha nem szinkronizált helyi draft → helyi hard remove + outbox tisztítás.
+  - Soft delete minden [[Sablonok]] tételen, ahol ez az `id` szerepel.
+  - Soft delete minden futó [[Pakolás]] tételen, ahol ez az `id` szerepel.
   - A megerősítő szöveg jelezze, ha ismert: hány sablonból / hány aktív pakolásból törlődik.
-- **Nem** cascade-eli más userek adatait (user-owned szűrés).
+- **Nem** cascade-eli más userek adatait (user-owned szűrés). Nincs undelete UI.
 
 #### Kapcsolat a [[Sablonok]] / [[Pakolás]] specekkel
 
 - Sablon és pakolás **`gearItemId`**-re hivatkozik (nem név-másolat a katalógus élő linkjéhez — kivéve UI megjelenés).
-- **Sablon törlés** (részletek: [[Sablonok]]): hard delete a sablonra + sablon-tételekre; a **futó pakolás érintetlen**; az eszköz-katalógus **nem** törlődik.
+- **Sablon törlés** (részletek: [[Sablonok]]): soft delete a sablonra + sablon-tételekre; a **futó pakolás érintetlen**; az eszköz-katalógus **nem** törlődik.
 - **Új `GearItem`:** csak ezen a képernyőn (MVP). [[Sablonok]] / [[Pakolás]] csak meglévő elemet ad hozzá pickerrel (extra tétel a futó pakoláshoz / sablonhoz) — nem hoz létre katalógus-elemet.
 
 ### UI/UX elvárások
@@ -52,7 +53,7 @@ Nincs `quantity`, `category`, `isFavorite`, soft-delete flag az MVP-ben.
 - Lista: kereső ([[Szöveges keresés]]); soron: `name`, opcionális `notes` előnézet.
 - Create / edit: `name` (kötelező), `notes` (opcionális); `name` mező auto-focus create-nél.
 - Törlés: confirmation dialog a cascade hatással.
-- Megosztott picker a [[Sablonok]] / [[Pakolás]] felé (kereső + lista); soft-delete / „törölt” állapot nincs.
+- Megosztott picker a [[Sablonok]] / [[Pakolás]] felé (kereső + lista); picker csak `deleted = false`.
 
 ### Megjegyzések
 
@@ -77,15 +78,15 @@ Nincs nyitott kérdés.
 
 - Olvasás / írás helyi store-ból Backend-offline és Full-offline esetén is.
 - Create / update / delete → outbox (`OfflineQueueService`) + kliens UUID; sync: [[Szinkronizációs központ]].
-- Cascade törlés: a kliens a helyi sablon- és pakolás-tételeket is eltávolítja ugyanabban a felhasználói műveletben; az outbox a szerver `DELETE` (és ha kell, kapcsolódó cleanup) hívását viszi — a szerver is cascade-el, hogy sync után konzisztens legyen.
+- Cascade törlés: a kliens a helyi sablon- és pakolás-tételeket is `deleted = true`-ra állítja ugyanabban a felhasználói műveletben; az outbox a szerver `DELETE`-jét viszi (szerver soft delete + cascade). Soha nem syncelt draft: helyi hard remove + outbox purge. Pull: `deleted = true` → kiesik az élő listákból.
 - Lásd [[Backend-offline first]].
 
 ### Backend
 
-- Tábla: `gear_item` (`id` UUID, `user_id`, `name`, `notes` nullable, `created_at`, `updated_at`).
-- Egyediség: `(user_id, lower(name))` unique.
-- OpenAPI CRUD; minden művelet `SecurityContext` `userId`-ra szűr; idegen `id` → 404.
-- `DELETE /api/gear-items/{id}`: hard delete + DB cascade (vagy tranzakcióban) a userhez tartozó sablon-tételekre és futó pakolás-tételekre, amelyek `gear_item_id`-re mutatnak. Auth / ownership: [[Bejelentkezés]].
+- Tábla: `gear_item` (`id` UUID, `user_id`, `name`, `notes` nullable, `deleted` / `deleted_at`, `created_at`, `updated_at`).
+- Egyediség: `(user_id, lower(name))` unique **élő** sorokra (`WHERE deleted = false`).
+- OpenAPI CRUD; minden művelet `SecurityContext` `userId`-ra szűr; idegen `id` → 404; saját törölt `GET` by id → 200 + `deleted`.
+- `DELETE /api/gear-items/{id}`: soft delete + cascade soft delete a userhez tartozó sablon-tételekre és futó pakolás-tételekre, amelyek `gear_item_id`-re mutatnak. Idempotens (már törölt → 200). Auth / ownership: [[Bejelentkezés]].
 
 ### Nyitott kérdések
 

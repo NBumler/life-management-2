@@ -14,7 +14,7 @@ Aktív pakolás(ok) indítása sablon(ok)ból, eszközök státuszának végigve
 
 **Ownership:** **user-owned** — [[Bejelentkezés]].
 
-**Nem scope (MVP):** pakolás-előzmény / archívum; sablon hozzáadása futás közben; tétel hard remove a futó listáról; új `GearItem` create pakolásból (csak [[Eszközök]]).
+**Nem scope (MVP):** pakolás-előzmény / archívum; sablon hozzáadása futás közben; tétel eltávolítása a futó listáról (csak státuszváltás); új `GearItem` create pakolásból (csak [[Eszközök]]).
 
 ### Funkcionális leírás
 
@@ -26,8 +26,9 @@ Aktív pakolás(ok) indítása sablon(ok)ból, eszközök státuszának végigve
 | `destination` | Opcionális szabad szöveg (úticél); **szerkeszthető** futás közben |
 | `sourceTemplateIds` | UUID lista — az induláskor választott [[Sablonok]] `id`-jai (sorrend = kiválasztási sorrend); UI forrás-jelöléshez |
 | `createdAt` / `updatedAt` | Audit |
+| `deleted` | Soft delete (`false` default); a futó lista szűri |
 
-Nincs „kész vs megszakítva” megkülönböztetés: a lezárás mindig hard delete.
+Nincs „kész vs megszakítva” megkülönböztetés: a lezárás mindig törlés (soft delete tombstone; **nincs** előzmény-UI).
 
 #### Entitás — `PackingSessionItem`
 
@@ -38,6 +39,7 @@ Nincs „kész vs megszakítva” megkülönböztetés: a lezárás mindig hard 
 | `gearItemId` | UUID → [[Eszközök]] `GearItem` |
 | `status` | `PackingItemStatus` (lásd lent); induláskor / extra felvételkor: `NOT_PACKED` |
 | `sortOrder` | Egész; manuális sorrend a **aktív** (nem kész) szekcióban |
+| `deleted` | Soft delete (`false` default) |
 | `createdAt` / `updatedAt` | Audit |
 
 Egy sessionön belül ugyanaz a `gearItemId` **legfeljebb egyszer**. Név: **élő join** a `GearItem.name`-re (átnevezés azonnal látszik). Tétel **nem** törölhető a listáról státuszváltáson kívül — nincs remove / swipe-delete.
@@ -96,11 +98,11 @@ Egy tétel kártya:
 #### Lezárás
 
 - Egyetlen **„Pakolás lezárása”** gomb (jelentheti a „kész” és a „megszakítom” szándékot is — üzletileg nem különböztetjük).
-- Confirmation dialog kötelező → **hard delete** a `PackingSession` + összes `PackingSessionItem` (nincs history).
+- Confirmation dialog kötelező → **soft delete** a `PackingSession` + összes `PackingSessionItem` (nincs előzmény-képernyő; tombstone a multi-device synchez — [[Backend-offline first]]). Soha nem szinkronizált helyi session → helyi hard remove + outbox tisztítás.
 
 #### Cascade más specekből
 
-- `GearItem` törlés → hard cascade: kiesik minden futó session tételéből — [[Eszközök]].
+- `GearItem` törlés → cascade soft delete: kiesik minden futó session élő tételéből — [[Eszközök]].
 - Sablon törlés → session **érintetlen** — [[Sablonok]].
 
 ### UI/UX elvárások
@@ -129,17 +131,17 @@ Nincs nyitott kérdés.
 
 - Olvasás / írás helyi store-ból Backend-offline és Full-offline esetén is.
 - Create session / update destination / item status / sortOrder / add item / delete session → outbox (`OfflineQueueService`) + kliens UUID; sync: [[Szinkronizációs központ]].
-- Lezárás: helyi hard delete session + items; outbox `DELETE`.
-- Eszköz-cascade: [[Eszközök]] — helyi session itemek eltávolítása.
+- Lezárás: helyi `deleted = true` session + items; outbox `DELETE` (szerver soft delete). Soha nem syncelt draft: helyi hard remove + outbox purge.
+- Eszköz-cascade: [[Eszközök]] — helyi session itemek soft delete.
 - Lásd [[Backend-offline first]].
 
 ### Backend
 
 - Táblák:
-  - `packing_session` (`id` UUID, `user_id`, `destination` nullable, `source_template_ids` JSON/array, audit)
-  - `packing_session_item` (`id` UUID, `session_id`, `gear_item_id`, `status`, `sort_order`, audit); unique `(session_id, gear_item_id)`; FK cascade session törlésre; `gear_item` törléskor item cascade ([[Eszközök]])
-- Nincs soft delete / archive tábla az MVP-ben.
-- OpenAPI CRUD; user scope: [[Bejelentkezés]]. Korlátlan session / user (nincs unique „egy aktív” constraint).
+  - `packing_session` (`id` UUID, `user_id`, `destination` nullable, `source_template_ids` JSON/array, `deleted` / `deleted_at`, audit)
+  - `packing_session_item` (`id` UUID, `session_id`, `gear_item_id`, `status`, `sort_order`, `deleted` / `deleted_at`, audit); unique `(session_id, gear_item_id)` élő sorokra; session `DELETE` → cascade soft delete; `gear_item` törléskor item cascade soft delete ([[Eszközök]])
+- Lezárás / user törlés: soft delete (listák `deleted = false`). Nincs archive UI az MVP-ben.
+- OpenAPI CRUD; user scope: [[Bejelentkezés]]. Korlátlan élő session / user (nincs unique „egy aktív” constraint). `DELETE` idempotens.
 
 ### Nyitott kérdések
 

@@ -23,8 +23,9 @@ Pakolási sablonok: elnevezett [[Eszközök]] listák (pl. „Hétvégi mászás
 | Mező | Típus / szabály |
 |---|---|
 | `id` | UUID, kliens generálja |
-| `name` | Kötelező; **egyedi a user sablonjai között** (case-insensitive) |
+| `name` | Kötelező; **egyedi a user élő sablonjai között** (case-insensitive) |
 | `notes` | Opcionális szabad szöveg |
+| `deleted` | Soft delete (`false` default); listák szűrik |
 | `createdAt` / `updatedAt` | Audit |
 
 #### Entitás — `PackingTemplateItem`
@@ -35,6 +36,7 @@ Pakolási sablonok: elnevezett [[Eszközök]] listák (pl. „Hétvégi mászás
 | `templateId` | UUID → `PackingTemplate` |
 | `gearItemId` | UUID → [[Eszközök]] `GearItem` |
 | `sortOrder` | Egész; manuális sorrend a sablonon belül |
+| `deleted` | Soft delete (`false` default) |
 | `createdAt` / `updatedAt` | Audit |
 
 Egy sablonon belül ugyanaz a `gearItemId` **legfeljebb egyszer** szerepelhet.
@@ -54,13 +56,13 @@ Egy sablonon belül ugyanaz a `gearItemId` **legfeljebb egyszer** szerepelhet.
 
 #### Törlés
 
-- **Hard delete** a sablonra + összes `PackingTemplateItem`-re; confirmation dialog kötelező.
+- **Soft delete** a sablonra + összes `PackingTemplateItem`-re; confirmation dialog kötelező. Soha nem szinkronizált helyi draft → helyi hard remove + outbox tisztítás — [[Backend-offline first]].
 - Futó [[Pakolás]] **érintetlen** (snapshot); a dialógus jelezze: „aktív pakolást nem törli”.
-- [[Eszközök]] katalógus **nem** törlődik.
+- [[Eszközök]] katalógus **nem** törlődik. Nincs undelete UI. Törölt sablon neve újra felvehető (egyediség élő sorokra).
 
 #### Kapcsolat más specekkel
 
-- **Eszköz törlés:** a sablon-tételekből hard cascade — [[Eszközök]].
+- **Eszköz törlés:** a sablon-tételekből cascade soft delete — [[Eszközök]].
 - **Sablon szerkesztés futó pakolás mellett:** szabadon engedélyezett; a futó lista **nem** követi a változást — [[Pakolás]].
 - **Új `GearItem`:** csak az [[Eszközök]] képernyőn (MVP). Sablon / pakolás csak meglévő elemet vesz fel pickerrel.
 
@@ -92,18 +94,18 @@ Nincs nyitott kérdés.
 
 - Olvasás / írás helyi store-ból Backend-offline és Full-offline esetén is.
 - Create / update / delete / duplicate → outbox (`OfflineQueueService`) + kliens UUID; sync: [[Szinkronizációs központ]].
-- Sablon törlés: helyi sablon + tételek hard remove; futó pakolás sorai érintetlenek.
+- Sablon törlés: helyi sablon + tételek `deleted = true`; futó pakolás sorai érintetlenek. Soha nem syncelt draft: helyi hard remove + outbox purge.
 - Eszköz-cascade: [[Eszközök]] — helyi sablon-tételek eltávolítása az eszköz delete műveletben.
 - Lásd [[Backend-offline first]].
 
 ### Backend
 
 - Táblák:
-  - `packing_template` (`id` UUID, `user_id`, `name`, `notes` nullable, audit)
-  - `packing_template_item` (`id` UUID, `template_id`, `gear_item_id`, `sort_order`, audit); unique `(template_id, gear_item_id)`; FK cascade a sablon törlésére; `gear_item` törléskor item sorok cascade / törlés ([[Eszközök]])
-- Egyediség: `(user_id, lower(name))` unique a sablonon.
+  - `packing_template` (`id` UUID, `user_id`, `name`, `notes` nullable, `deleted` / `deleted_at`, audit)
+  - `packing_template_item` (`id` UUID, `template_id`, `gear_item_id`, `sort_order`, `deleted` / `deleted_at`, audit); unique `(template_id, gear_item_id)` élő sorokra; sablon `DELETE` → cascade soft delete a tételekre; `gear_item` törlésekor item sorok cascade soft delete ([[Eszközök]])
+- Egyediség: `(user_id, lower(name))` unique a sablonon, **élő** sorokra (`WHERE deleted = false`).
 - OpenAPI CRUD + `POST .../duplicate` (vagy kliens oldali create+copy ugyanazzal a szerződéssel); user scope: [[Bejelentkezés]].
-- `DELETE` sablon: hard delete + tételek; **nem** érinti a futó pakolás táblákat és a `gear_item` sort.
+- `DELETE` sablon: soft delete + tételek; **nem** érinti a futó pakolás táblákat és a `gear_item` sort. Idempotens (már törölt → 200).
 
 ### Nyitott kérdések
 

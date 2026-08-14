@@ -83,15 +83,15 @@ Katalógus ár = **Ft / csomag** (1 csomag = nettó tartalom).
 
 Új / mentett recept **tiltott**, ha:
 
-1. a **neve** megegyezik egy meglévő recept nevével (trim / case-szabály: implementációban egységes, ajánlott: trim + case-insensitive), **vagy**
+1. a **neve** megegyezik egy meglévő **élő** recept nevével (trim / case-szabály: implementációban egységes, ajánlott: trim + case-insensitive), **vagy**
 2. a hozzávaló-halmaz megegyezik: ugyanazok az `foodId` + `amount` + `unit` párok, **sorrendtől függetlenül** (üres hozzávalós receptek: csak a név dönt; két üres-hozzávalós különböző nevű OK).
 
 Backend-offline: helyi ellenőrzés is.
 
 #### CRUD / törlés
 
-- Lista, részletek, létrehozás, szerkesztés, hard delete — mind offline-képes.
-- Törléskor ha vannak hivatkozó [[Étkezés]] / [[Recept forrású étkezés]] rekordok: megerősítő dialógus **felsorolja** őket, majd **cascade** törlés (mint [[Élelmiszerek]]). Shared katalógus: a cascade **minden user** érintett étkezéseire vonatkozik; a UI jelezze.
+- Lista, részletek, létrehozás, szerkesztés, soft delete — mind offline-képes. Soha nem szinkronizált helyi draft → helyi hard remove + outbox tisztítás — [[Backend-offline first]].
+- Törléskor ha vannak hivatkozó [[Étkezés]] / [[Recept forrású étkezés]] rekordok: megerősítő dialógus **felsorolja** őket, majd **cascade** soft delete (mint [[Élelmiszerek]]). Shared katalógus: a cascade **minden user** érintett étkezéseire vonatkozik; a UI jelezze. Nincs undelete UI. Név-egyediség csak élő sorokra.
 
 #### Kapcsolat étkezéssel
 
@@ -121,7 +121,7 @@ Nincs nyitott kérdés.
 
 #### Backend-offline
 
-- Lista, részletek, create / update / hard delete: helyi store + outbox; kliens UUID.
+- Lista, részletek, create / update / soft delete: helyi store + outbox; kliens UUID.
 - Duplikáció-ellenőrzés és tápanyag / ár összegzés a helyi katalógus snapshotján (Backend-offline és Full-offline).
 - Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
 
@@ -129,12 +129,12 @@ Nincs nyitott kérdés.
 
 | Entitás | Fő mezők |
 |---|---|
-| `Recipe` | `id` (UUID, kliens); `name` (unique, case-insensitive trim); `note`; `createdAt`, `updatedAt` |
+| `Recipe` | `id` (UUID, kliens); `name` (unique élő sorokra, case-insensitive trim); `note`; `deleted` / `deleted_at`; `createdAt`, `updatedAt` |
 | `RecipeIngredient` | `id`; `recipeId`; `foodId`; `quantityAmount`; `quantityUnit`; `sortOrder` |
 
-- Unique: `name`; alkalmazás-szintű / query ellenőrzés a hozzávaló-halmaz duplikációra — **globális** (shared).
+- Unique: `name` **élő** sorokra; alkalmazás-szintű / query ellenőrzés a hozzávaló-halmaz duplikációra — **globális** (shared, `deleted = false`).
 - **Ownership:** shared — nincs `userId`; Auth: bármely autentikált `USER` CRUD ([[Bejelentkezés]]).
-- CRUD + hard delete cascade az étkezés-hivatkozásokra **minden usernél** (vagy az Étkezés spechel egyeztetett cascade).
+- CRUD + soft delete cascade az étkezés-hivatkozásokra **minden usernél** (vagy az Étkezés spechel egyeztetett cascade). `DELETE` idempotens; törölt `GET` by id → 200 + `deleted`.
 - Összegzett tápanyag / ár: **számított** (kliens és/vagy read-model); nem kötelező denormalizált oszlop — ha cache kell, később.
 
 ### Nyitott kérdések

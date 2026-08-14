@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Kész` |
 | **Szülő** | [[Bevásárlás]] |
-| **Kapcsolódó** | [[Élelmiszerek]], [[Élelmiszer tárolás]], [[Bevásárlás előzmény]], [[Bevásárlólista írás]] |
+| **Kapcsolódó** | [[Élelmiszerek]], [[Élelmiszer tárolás]], [[Bevásárlás előzmény]], [[Bevásárlólista írás]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -40,7 +40,7 @@ Részleges teljesítés = a fenti szabályok együtt (pipált → archívum + t�
 - „Bevásárlás vége” gomb az aktív lista nézetén ([[Bevásárlólista írás]]).
 - Wizard / lépésenkénti flow a pipált élelmiszerekre: lejárat, majd (ha kell) tárolási hely.
 - Dátum mező előtöltése: [[Élelmiszer tárolás]].
-- Üres aktív lista: a „Bevásárlás vége” **nem** elérhető / nem indítható; az üres listát hard delete-tel kell törölni ([[Bevásárlólista írás]]).
+- Üres aktív lista: a „Bevásárlás vége” **nem** elérhető / nem indítható; az üres listát törölni kell ([[Bevásárlólista írás]] — soft delete).
 - Ha van legalább egy tétel, de mind pipálatlan: teljesítéskor nincs tárolás-lépés; az eredeti lista archiválódik, és új aktív lista jön létre a pipálatlan tételekkel (üres pipákkal).
 - Ha van pipált élelmiszer: lejárat (+ szükség szerint tárolási hely) wizard.
 

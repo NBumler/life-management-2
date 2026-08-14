@@ -21,7 +21,7 @@ Aktív bevásárlólista(ák) összeállítása és szerkesztése vásárlás el
   - **Nem-élelmiszer:** név (kötelező) + mennyiség ([[Mennyiség mező]]) + egy szabad szöveges mező (bolt, megjegyzés, egyéb — egy mezőben).
 - Lista és tételek **szerkeszthetők** vásárlás közben is (hozzáadás, módosítás, törlés, átnevezés).
 - Tételek **pipálhatók** („megvettem” jelzés). A pipa csak UI / állapot a listán; semmi sem történik a [[Bevásárlás teljesítve]] megnyomásáig.
-- Aktív lista **hard delete** megerősítő dialógussal (archívum nélkül törlődik).
+- Aktív lista **törlés** megerősítő dialógussal: soft delete (nem kerül az [[Bevásárlás előzmény]]be). Soha nem szinkronizált helyi draft → helyi hard remove + outbox tisztítás — [[Backend-offline first]]. Nincs undelete UI.
 
 ### UI/UX elvárások
 
@@ -30,7 +30,7 @@ Aktív bevásárlólista(ák) összeállítása és szerkesztése vásárlás el
 - Mennyiség mezők: [[Mennyiség mező]] (összeragasztott input, pl. `120dkg`, `3db`, `2l`).
 - Nem-élelmiszer: név + mennyiség + szabad szöveg mező.
 - Egyértelmű „Bevásárlás vége” belépő a [[Bevásárlás teljesítve]] flow-ra.
-- Hard delete megerősítés kötelező.
+- Törlés: megerősítés kötelező (soft delete; lásd fent).
 
 ### Megjegyzések
 

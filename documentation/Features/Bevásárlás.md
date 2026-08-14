@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Kész` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Kaja]], [[Élelmiszerek]], [[Élelmiszer tárolás]], [[Mennyiség mező]], [[Szöveges keresés]], [[Frontend]] |
+| **Kapcsolódó** | [[Kaja]], [[Élelmiszerek]], [[Élelmiszer tárolás]], [[Mennyiség mező]], [[Szöveges keresés]], [[Frontend]], [[Backend-offline first]], [[Szinkronizációs központ]] |
 
 ### Célállapot
 
@@ -29,7 +29,7 @@ Közös szabályok (szülő szint):
   - **Élelmiszer:** csak az [[Élelmiszerek]] katalógusból választható; mennyiség a [[Mennyiség mező]] komponenssel.
   - **Nem-élelmiszer:** név + mennyiség ([[Mennyiség mező]]) + egy szabad szöveges mező (bolt / megjegyzés / egyéb).
 - Vásárlás közben a tételek **pipálhatók**; a pipa önmagában nem indít archiválást, tárolást vagy új listát. Ezek a [[Bevásárlás teljesítve]] gomb megnyomásakor futnak.
-- Aktív lista **hard delete** (megerősítéssel).
+- Aktív lista **törlés** (megerősítéssel): soft delete, nem archiválódik. Soha nem szinkronizált helyi draft → helyi hard remove + outbox tisztítás — [[Backend-offline first]].
 - Mennyiség mindenütt: [[Mennyiség mező]]. Előzmény keresés: [[Szöveges keresés]].
 
 ### UI/UX elvárások
@@ -55,7 +55,7 @@ Nincs nyitott kérdés.
 
 #### Backend-offline
 
-- Aktív lista / tétel CRUD, pipa, hard delete, teljesítés, újralistázás: helyi store + outbox; kliens UUID.
+- Aktív lista / tétel CRUD, pipa, soft delete, teljesítés, újralistázás: helyi store + outbox; kliens UUID. Listák `deleted = false`.
 - Backend-offline és Full-offline támogatott; sync: [[Szinkronizációs központ]].
 - Lásd [[Backend-offline first]].
 
@@ -65,13 +65,13 @@ OpenAPI scope a Bevásárlás feature alatt (közös a subfeature-ökkel):
 
 | Entitás | Fő mezők |
 |---|---|
-| `ShoppingList` | `id` (UUID, kliens), `name` (opcionális), `status` (`ACTIVE` \| `ARCHIVED`), `createdAt`, `completedAt` (archívumnál), tételek |
+| `ShoppingList` | `id` (UUID, kliens), `name` (opcionális), `status` (`ACTIVE` \| `ARCHIVED`), `deleted` / `deleted_at`, `createdAt`, `completedAt` (archívumnál), tételek |
 | `ShoppingListItem` | `id` (UUID), `type` (`FOOD` \| `NON_FOOD`), `foodId` (FOOD), `name` (NON_FOOD), `note` (NON_FOOD, szabad szöveg), `quantityAmount`, `quantityUnit`, `checked`, sorrend |
 
 Műveletek (elvárás):
 
 - Aktív lista CRUD; tétel CRUD; pipa frissítés.
-- Aktív lista hard delete.
+- Aktív lista soft delete (`DELETE` tombstone; nem `ARCHIVED`). Idempotens. Előzmény csak `ARCHIVED` + `deleted = false`.
 - Teljesítés: atomi / tranzakcionális flow — lásd [[Bevásárlás teljesítve]] (archívum + tárolás create + opcionális új aktív lista a pipálatlanokból).
 - Előzmény: archivált listák olvasása; újralistázás új `ACTIVE` listát hoz létre.
 

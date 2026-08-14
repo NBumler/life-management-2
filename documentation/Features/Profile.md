@@ -56,10 +56,11 @@ Diagram feature **későbbi** scope; az adatmodell és a CRUD **most** kell.
 | `id` | UUID, kliens |
 | `recordedAt` | Dátum-idő (kliens TZ); alapértelmezés: mentés / rögzítés pillanata |
 | `weightKg` | 30–300; max 1 tizedes |
+| `deleted` | Soft delete (`false` default); a history lista szűri |
 
 **Írás Profile mentéskor:** ha `currentWeightKg` **változott** az előző mentett jelenlegi súlyhoz képest (és az új érték ki van töltve) → új history sor az új súllyal. Más mező változása **nem** nyit sort. Első súlymegadás (üres → érték) → egy history sor.
 
-**CRUD:** a history sorok **szerkeszthetők** és **törölhetők** (hard delete + megerősítés). History szerkesztés / törlés **nem** írja át automatikusan a `currentWeightKg`-t (a jelenlegi súly csak a Profile űrlap mezője / mentése).
+**CRUD:** a history sorok **szerkeszthetők** és **törölhetők** (soft delete + megerősítés) — [[Backend-offline first]]. Soha nem szinkronizált helyi draft → helyi hard remove + outbox tisztítás. History szerkesztés / törlés **nem** írja át automatikusan a `currentWeightKg`-t (a jelenlegi súly csak a Profile űrlap mezője / mentése). Listák `deleted = false`. Nincs undelete UI.
 
 A [[Tápérték kalkulátor]] **csak** `currentWeightKg`-t használ; a history kizárólag napló / későbbi diagram.
 
@@ -99,7 +100,7 @@ Nincs nyitott kérdés.
 
 ### Backend
 
-- OpenAPI: `UserProfile` (1:1 user) + `WeightHistoryEntry` CRUD (user scope).
+- OpenAPI: `UserProfile` (1:1 user) + `WeightHistoryEntry` CRUD (user scope; history `deleted` / `deleted_at`; `DELETE` = soft delete, idempotens).
 - `UserProfile`: fenti mezők (opcionálisak nullable-ként, kivéve `id`); `kgPerWeek` validáció goal függvényében. Nincs `activityLevel`.
 - Nincs szerveroldali „profile complete” gate.
 - Auth / user scope: [[Bejelentkezés]].

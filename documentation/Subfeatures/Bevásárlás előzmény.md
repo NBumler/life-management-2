@@ -22,7 +22,7 @@ Archivált bevásárlólisták megtekintése, szöveges keresése, és újralist
   - **üres pipák**,
   - lista neve: másolható az eredetiből (ha volt), vagy üresen hagyható — a másolat legyen szerkeszthető létrehozás után ([[Bevásárlólista írás]]).
 
-Az előzmény listák read-only-k (nincs szerkesztés / hard delete az első verzióban; az aktív másolat már szerkeszthető).
+Az előzmény listák read-only-k (nincs szerkesztés / törlés az első verzióban; az aktív másolat már szerkeszthető).
 
 ### UI/UX elvárások
 

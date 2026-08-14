@@ -89,8 +89,8 @@ Ha a helyhez nincs katalógus-idő (manuális lejárat / null engedélyezett hel
 **Küldés (SSOT ritmus: [[Értesítések]]):** lead-time napjától amíg a tétel a tárolóban van → napi **09:00** emlékeztető; romlottá váláskor **egyszer** „megromlott” értesítés.
 #### Törlés
 
-- Tétel hard delete (megerősítéssel).
-- [[Élelmiszerek]] katalógus törlésekor cascade: az összes rá hivatkozó tárolási tétel törlődik.
+- Tétel soft delete (megerősítéssel) — [[Backend-offline first]]. Soha nem szinkronizált helyi draft → helyi hard remove + outbox tisztítás.
+- [[Élelmiszerek]] katalógus törlésekor cascade: az összes rá hivatkozó tárolási tétel soft delete.
 
 ### UI/UX elvárások
 
@@ -117,7 +117,7 @@ Nincs nyitott kérdés.
 - Készlet lista: szűrő (hely), rendezés (lejárat), badge-ek (romlott, felbontott).
 - Manuális create / edit form; felbontás action.
 - Értesítés ütemezés: lokális ([[Értesítések]]) a lead time táblázat szerint.
-- Étkezés flow hívja a készletlevonás szolgáltatást (opened-first, auto-open, ≤0 delete).
+- Étkezés flow hívja a készletlevonás szolgáltatást (opened-first, auto-open, ≤0 → soft delete a tárolási tételen).
 
 #### Backend-offline
 
@@ -129,9 +129,9 @@ Lásd [[Backend-offline first]].
 
 | Entitás | Fő mezők |
 |---|---|
-| `StoredFood` | `id` (UUID, kliens); `foodId`; `quantityAmount` + `quantityUnit`; `storageLocation` (`ROOM` \| `FRIDGE` \| `FREEZER`); `expiresOn` (date); `opened` (bool); `openedAt` (opcionális); `createdAt`, `updatedAt` |
+| `StoredFood` | `id` (UUID, kliens); `foodId`; `quantityAmount` + `quantityUnit`; `storageLocation` (`ROOM` \| `FRIDGE` \| `FREEZER`); `expiresOn` (date); `opened` (bool); `openedAt` (opcionális); `deleted` / `deleted_at`; `createdAt`, `updatedAt` |
 
-Műveletek: CRUD; felbontás (lejárat újraszámolás); fogyasztás / batch levonás (étkezés orchestrálhatja); cascade delete `Food` törlésekor.
+Műveletek: CRUD; felbontás (lejárat újraszámolás); fogyasztás / batch levonás (étkezés orchestrálhatja); cascade soft delete `Food` törlésekor. Listák `deleted = false`. `DELETE` idempotens.
 
 Mennyiség egységek: [[Mennyiség mező]]. Lejárat számítás: katalógus `duration` → dátum.
 

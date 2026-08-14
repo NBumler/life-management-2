@@ -6,11 +6,11 @@
 |---|---|
 | **Státusz** | `Kész` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Élelmiszer tárolás]], [[Lépésszám követés]], [[Tápérték kalkulátor]], [[Étkezés]], [[Rendszeres kiadások]], [[Tennivalók]], [[Események]], [[Frontend]], [[Bejelentkezés]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Élelmiszer tárolás]], [[Lépésszám követés]], [[Tápérték kalkulátor]], [[Étkezés]], [[Háztartási feladatok]], [[Rendszeres kiadások]], [[Tennivalók]], [[Események]], [[Frontend]], [[Bejelentkezés]], [[Backend-offline first]] |
 
 ### Célállapot
 
-Lokális (készüléken ütemezett) értesítések a fontos küszöbökről. Az első körben **három** aktív típus; a többi típus később, amíg a forrás-feature specek `Kész` nem lesznek. Remote (szerveroldali) push **nincs** az első körben.
+Lokális (készüléken ütemezett) értesítések a fontos küszöbökről. Az első körben **öt** aktív típus; a többi típus később, amíg a forrás-feature specek `Kész` nem lesznek. Remote (szerveroldali) push **nincs** az első körben.
 
 ### Funkcionális leírás
 
@@ -60,12 +60,21 @@ Lokális (készüléken ütemezett) értesítések a fontos küszöbökről. Az 
 - **Értékelés / küldés: 09:00** (kliens TZ). Az ablak a **tegnappal záródó** 5 teljes nap (`D-5` … `D-1`), mert a mai nap 09:00-kor még nem lezárt.
 - Ha a feltétel igaz → **1 értesítés** aznap; ugyanarra az 5 napos ablakra ne ismételjen (következő nap újraértékelés új ablakkal).
 
+##### 5. Háztartási feladatok (`HOUSEHOLD_TASK_DUE`)
+
+- Forrás: [[Háztartási feladatok]].
+- **09:00** (kliens TZ): élő (`deleted = false`) feladatok, ahol `nextDue ≤ ma` (ma + lejárt).
+- **Forma:** **1 digest / naptári nap** (nem feladatonként). 1 találat → a feladat neve; 2+ → pl. „3 háztartási feladat esedékes”.
+- A naptár 10 előfordulása **nem** értesítés; csak az élő `nextDue` számít.
+- Nincs lead time (nem szól előző este / N nappal korábban).
+- Pipálás / törlés után a tétel kiesik a **következő** 09:00-ás készletből. A már kiment mai banner **nem** vonódik vissza.
+- 09:00 után ma esedékessé tett feladat: nincs második fire aznap (1 / nap); holnap 09:00, ha még `nextDue ≤ ma`.
+
 #### Későbbi típusok (nem implementálandó az első körben)
 
 Hook / placeholder — lead time és szöveg a forrás-spec készültekor:
 
 - [[Rendszeres kiadások]] — közelgő fizetés
-- [[Tennivalók]] / [[Háztartási feladatok]] — közelgő feladat
 - [[Események]] — közelgő esemény
 
 #### Ismétlés-védelem (deduplikáció) — magyarázat
@@ -78,18 +87,19 @@ Az OS / app újraindulás vagy többszöri scheduler-futás ne küldjön ugyanar
 | `FOOD_SPOILED_ONCE` | 1 / tétel / élettartam |
 | `STEPS_LOW` | 1 / naptári nap |
 | `CALORIE_STREAK` | 1 / naptári nap (és ugyanarra az ablakra nem újra) |
+| `HOUSEHOLD_TASK_DUE` | 1 digest / naptári nap |
 
 Ehhez helyi „már elküldve” napló (pl. `notificationDedupe`: típus + kulcs + nap).
 
 ### UI/UX elvárások
 
 - Menü → Értesítések: típus kapcsolók + rövid magyarázat (mikor szól).
-- Értesítés tap → releváns képernyő (készlet / lépésszám / étkezés), ha az app megnyílik.
+- Értesítés tap → releváns képernyő (készlet / lépésszám / étkezés / háztartási lista Lejárt+Ma), ha az app megnyílik.
 - Nincs külön „értesítés előzmények” lista az első körben.
 
 ### Megjegyzések
 
-**Remote push mire jó (később):** a szerver küldi az üzenetet (FCM/APNs), akkor is, ha az app hetek óta nem fut, vagy másik eszközön kell ugyanaz. Pl. multi-device, szerveroldali esemény. Az első körben a lokális ütemező elég (élelmiszer / lépés / kalória a helyi store-ból).
+**Remote push mire jó (később):** a szerver küldi az üzenetet (FCM/APNs), akkor is, ha az app hetek óta nem fut, vagy másik eszközön kell ugyanaz. Pl. multi-device, szerveroldali esemény. Az első körben a lokális ütemező elég (élelmiszer / lépés / kalória / háztartási feladat a helyi store-ból).
 
 Élelmiszer lead time SSOT táblázat: [[Élelmiszer tárolás]] (küldési ritmus: ez a spec).
 
@@ -102,7 +112,7 @@ Nincs nyitott kérdés.
 ### Frontend
 
 - `LocalNotificationService` (vagy ekvivalens): ütemezés, engedély, dedupe store, típus-flag-ek olvasása.
-- Trigger források: készlet store, `DailyStepLog`, Étkezés napi összeg + TDEE allowance.
+- Trigger források: készlet store, `DailyStepLog`, Étkezés napi összeg + TDEE allowance, háztartási feladat store (`nextDue`).
 - 09:00 / 20:00: OS scheduled local notifications és/vagy napi background check + immediate local notification.
 - Beállítások page a Menü alatt; flag-ek **device-local** store ([[Bejelentkezés]] — nincs profil-sync az első körben).
 
