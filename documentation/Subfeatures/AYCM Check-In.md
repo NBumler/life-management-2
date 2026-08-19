@@ -57,7 +57,7 @@ Későbbi ársáv- vagy partnernév-szerkesztés a **már mentett** sort nem bá
 
 Második **élő** Check-In ugyanarra a `checkInDate`-re → validációs hiba. A UI a meglévő sort tölti (edit), nem második create.
 
-Dátum átírása foglalt napra → hiba (a cél nap élő sora marad).
+Dátum átírása foglalt napra → hiba, **409** `UNIQUE_VIOLATION` (ugyanaz a hibakód, mint create-nél — lásd a Backend OpenAPI táblát; a cél nap élő sora marad).
 
 #### CRUD
 
@@ -116,7 +116,7 @@ Nincs nyitott kérdés.
 | Metódus | Útvonal | Leírás |
 |---|---|---|
 | `GET` `POST` | `/api/aycm-check-ins` | Lista (stat / hub szűrhet dátumra); create. Unique sértés → **409** |
-| `GET` `PUT` `DELETE` | `/api/aycm-check-ins/{id}` | Edit = `PUT` (új snapshot a kliensből); `DELETE` = soft delete |
+| `GET` `PUT` `DELETE` | `/api/aycm-check-ins/{id}` | Edit = `PUT` (új snapshot a kliensből). Unique sértés (dátum átírása foglalt napra) → **409** `UNIQUE_VIOLATION`, ugyanúgy mint create-nél. `DELETE` = soft delete |
 
 - Query pl. `?from=&to=` a hub/stat számára megengedett; a Check-In UI nem lista.
 - Idegen `id` → 404. Saját törölt `GET` → 200 + `deleted`. `DELETE` idempotens. Auth: [[Bejelentkezés]].

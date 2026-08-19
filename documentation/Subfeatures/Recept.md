@@ -86,6 +86,8 @@ Katalógus ár = **Ft / csomag** (1 csomag = nettó tartalom).
 1. a **neve** megegyezik egy meglévő **élő** recept nevével — összehasonlítási szabály: [[Névegyediség]], **vagy**
 2. a hozzávaló-halmaz megegyezik: ugyanazok az `foodId` + `amount` + `unit` párok, **sorrendtől függetlenül** (üres hozzávalós receptek: csak a név dönt; két üres-hozzávalós különböző nevű OK).
 
+   Szándékos szabály: a cél a szó szerinti véletlen kétszer-bevitel elkerülése — ha két recept hozzávaló-halmaza (mennyiségre pontosan) megegyezik, az a gyakorlatban tipikusan elgépelt duplikátum, nem két legitim, eltérő recept. Ha a userben mégis szándékosan két, azonos hozzávalójú de eltérő elkészítésű recept van, egy tetszőleges hozzávaló mennyiségének 1 egységgel eltérő megadásával a szabály megkerülhető — ez tudatosan elfogadott korlát, nem hiba.
+
 Backend-offline: helyi ellenőrzés is.
 
 #### CRUD / törlés

@@ -48,7 +48,7 @@ Sikeres egyértelmű parse → `absoluteDifficultyIndex` a [[Nehézségi szint s
 2. Állapotgép (**250 ms** debounce):
    - **Üres:** nincs postfix; INVALID
    - **Egyértelmű** (pontosan egy regex): postfix = FRA / YDS / UIAA / V / FONT; popover; VALID
-   - **Kétértelmű** (tiszta szám, pl. `4`/`6`): chipek + fallback modal; köteles `6` → VI és 6a; `4` → IV és 4. Fallback: `6` INVALID amíg nincs chip; `4`/`5` VALID Francia default
+   - **Kétértelmű** (tiszta szám, pl. `4`/`6`): chipek + fallback modal; köteles `6` → VI és 6a; `4` → IV és 4. Fallback: `4`/`5` VALID Francia default (ezeken a fokokon francia betű nélkül is érvényes grade); **`6`-tól felfelé minden csupasz szám** (`6`, `7`, `8`, `9`, …) INVALID amíg nincs chip-választás — francia/Font jelölésben 6-tól kötelező a betű (`6a`/`6A` stb.), tehát a betű nélküli forma önmagában hiányos, ugyanúgy, mint a `6` esetén
    - **Ismeretlen:** kérdőjel; súgó modal példákkal; INVALID
 3. **Mobil pre-parsing:** Boulder → NAGYBETŰ; Köteles → kisbetű (kivéve I,V,X UIAA karakterek); `trim()`
 

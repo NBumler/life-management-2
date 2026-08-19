@@ -21,7 +21,7 @@ Közös session modell: [[Mászónapló]] (`locationType=INDOOR`, `discipline=BO
 | Mező | Szabály |
 |---|---|
 | `date`, `totalSessionDurationMinutes` | [[Mászónapló]]; fallback: kísérletek × 5 perc |
-| `gymId` | Kötelező választás [[Indoor boulder admin]] teremből (legutóbbi terem előtöltés) |
+| `gymId` | Kötelező választás [[Indoor boulder admin]] teremből (legutóbbi terem előtöltés). A picker csak azokat a termeket listázza, amelyek `Gym.disciplines`-e tartalmazza a boulder jelölést. |
 | `gymName` | Snapshot |
 | `pumpRating` / `headspaceRating` / `notes` / `climbingPartners` | [[Mászónapló]] — pump ajánlott, többi opcionális |
 | `attempts` | ≥0; élő pipálás vagy utólag |

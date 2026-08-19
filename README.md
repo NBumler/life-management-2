@@ -32,4 +32,4 @@ Jelenleg **csak dokumentáció** van a repóban; az implementáció még nem ind
 
 A specifikáció **lezárva**: minden feature és architektúra jegyzet `Kész`. Az implementáció négy SSOT jegyzetből indul: [`Frontend`](documentation/Architekt%C3%BAra/Frontend.md) (app-shell, feature flag registry), [`Backend`](documentation/Architekt%C3%BAra/Backend.md) (stack, OpenAPI, séma), [`Backend-offline first`](documentation/Architekt%C3%BAra/Backend-offline%20first.md) (offline szerződés) és [`Fejlesztői környezet`](documentation/Architekt%C3%BAra/Fejleszt%C5%91i%20k%C3%B6rnyezet.md) (monorepo, futtatás, Android telepítés).
 
-Nyitva szándékosan: prod hosting / TLS és az iOS build — egyik sem blokkolja a fejlesztést.
+Nyitva szándékosan (egyik sem blokkolja a fejlesztést): prod hosting / TLS, az iOS build, az openapi-generator Spring Boot 4 kimenetének verzió-pineléskori ellenőrzése, és két Capacitor csomagválasztás (Health Connect bridge, secure storage) — részletek: [`Life Management 2.0`](documentation/Life%20Management%202.0.md) Megjegyzések.

@@ -18,7 +18,7 @@ Beltéri köteles session + kísérletek. Dashboard: **Indoor Kötél**. Közös
 
 | Szempont | Indoor kötél (vs indoor boulder) |
 |---|---|
-| Helyszín | `gymId` + snapshot; legutóbbi terem előtöltés |
+| Helyszín | `gymId` + snapshot; legutóbbi terem előtöltés. A picker csak azokat a termeket listázza, amelyek `Gym.disciplines`-e tartalmazza a kötél jelölést ([[Indoor köteles admin]]). |
 | Út | Kézi grade + magasság **vagy** opcionális `IndoorRoute` választás / ad-hoc név |
 | `safetyStyle` | `TOPROPE` \| `LEAD` (TRAD **rejtve**; default `LEAD`) |
 | `lengthInMeters` | Opcionális; default = terem `defaultWallHeightMeters` |
@@ -26,6 +26,7 @@ Beltéri köteles session + kísérletek. Dashboard: **Indoor Kötél**. Közös
 | Szín-sáv | Nincs (boulder-only) |
 | `ascentStyle` | Siker esetén: ONSIGHT / FLASH / REDPOINT |
 | Sikertelen | `failurePoint` opcionális |
+| `attemptCount` | [[Mászónapló]] közös mező, kontextusfüggetlen — itt is használható (pl. redpoint próbák száma) |
 | Duration fallback | utak/kísérletek × 15 perc |
 | Kalória | kötél aktív s/m + rest — [[Mászónapló]] |
 

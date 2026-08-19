@@ -86,7 +86,7 @@ backend/
 ```
 
 - Gradle `group`: **`hu.bumler.lm2`** — ez egyben a Java base package.
-- **Feature-alapú csomagszervezés** (starter kit), nem réteg-alapú: `hu.bumler.lm2.<feature>` (`food`, `workout`, `climbing`, `tasks`, `finance`, `aycm`, `gear`, `steps`, `shopping`, `auth`, `sync`) + `hu.bumler.lm2.common` (config, hibakezelés, normalizálás, idempotencia).
+- **Feature-alapú csomagszervezés** (starter kit), nem réteg-alapú: `hu.bumler.lm2.<feature>` (`food`, `workout`, `climbing`, `tasks`, `finance`, `aycm`, `gear`, `steps`, `shopping`, `auth`, `sync`, `profile`) + `hu.bumler.lm2.common` (config, hibakezelés, normalizálás, idempotencia). A `profile` csomag tartja a [[Profile]] `UserProfile` + `WeightHistoryEntry` entitásokat és API-t.
 - Rétegzés a feature-ön belül: **Controller → Service → Repository**; a controller vékony (a generált interface implementációja + delegálás), az üzleti logika a service-ben, `@Transactional` a service-en.
 - DTO a határon: a **generált** OpenAPI modellek mennek ki és be, JPA entitás soha. Mapping kézi mapperrel a feature csomagban (MapStruct csak akkor, ha érdemben megéri).
 
@@ -125,7 +125,9 @@ backend/
 - A `name_normalized` oszlop értékét **az alkalmazás írja**, nem DB generated column, ugyanazokkal a lépésekkel, mint a kliens `normalizeName`-je ([[Névegyediség]]): NFC → trim (`U+00A0`-val együtt) → belső whitespace összevonás egyetlen szóközre → **locale-független** kisbetűsítés (`toLowerCase(Locale.ROOT)`); az ékezet **marad**.
 - Miért nem generated column: a Postgres `lower()` collation-függő, és nem azonos a kliens Unicode-kisbetűsítésével. A legkisebb eltérés is azt jelenti, hogy a user offline mentése hibátlannak látszik, majd syncnél `409`-cel elhasal — pontosan az, amit a [[Névegyediség]] el akar kerülni.
 - A paritást **közös fixture** biztosítja: `shared/fixtures/name-normalization.json`, amit a Java és a TypeScript teszt is beolvas. Új edge case → új fixture-sor, nem külön teszt az egyik oldalon.
-- Ugyanez érvényes a `normalizeBarcode` és `normalizeHexColor` szabályokra. A `Food` mezőhalmaz-duplikáció **alkalmazás-szintű** ellenőrzés, nem index.
+- Ugyanez érvényes a `normalizeBarcode` és `normalizeHexColor` szabályokra, **saját fixture-fájllal mindegyiknek** (ugyanaz a paritás-elv, mint a névnél): `shared/fixtures/barcode-normalization.json` (kötelező esetek: trim, kötőjel / szóköz tartalmú EAN, vezető nullák megőrzése, üres = üres) és `shared/fixtures/hex-color-normalization.json` (kötelező esetek: `#` prefixszel / nélkül, 3 jegyű rövid forma kifejtése, kis/nagybetű keverék, csupa nagybetű).
+- A mennyiség/időtartam mezők **kanonikus egységre váltása** ([[Mennyiség mező]]) is ugyanígy közös fixture-ön él: `shared/fixtures/quantity-conversion.json` (a [[Mennyiség mező]] bázisegység-táblájának minden szorzópárja, pl. `1l = 1000ml`, `1kg = 1000g`).
+- A `Food` mezőhalmaz-duplikáció **alkalmazás-szintű** ellenőrzés, nem index.
 
 #### Sync végpontok megvalósítása
 
@@ -175,7 +177,7 @@ HTTP szemantika: `POST` létező `id`-val = idempotens upsert (`200`); `PUT` = t
 - **Slice:** `@WebMvcTest` controllerre, `@DataJpaTest` lekérdezésekre.
 - **Integráció:** `@SpringBootTest` + **Testcontainers Postgres** — kötelező, és nem opcionális kényelem: a partial unique index, az `updated_at` trigger, a `sync_changes` view és a `timestamptz` viselkedés H2-n nem reprodukálható. A Testcontainers image tag **ugyanaz**, mint a `docker-compose.yml`-ben ([[Fejlesztői környezet]]).
 - **Kötelező integrációs esetek** a [[Backend-offline first]] §18 szerverre eső pontjaiból: idempotens `POST` ismételve, `409 ENTITY_DELETED`, `UNIQUE_VIOLATION` `field`-del, cascade utáni `updated_at` bump megjelenik a deltában, cursor-lapozás kihagyás és duplikátum nélkül, `410 CURSOR_TOO_OLD` → full re-pull, `DailyStepLog` upsert `(user_id, date)`-re, `POST /complete` replay egyetlen hatással.
-- **Névnormalizálás:** a közös fixture-listán futó paritás-teszt (fent).
+- **Normalizálás:** a közös fixture-listákon futó paritás-teszt mind a három normalizálóra (`normalizeName`, `normalizeBarcode`, `normalizeHexColor`) és a mennyiség-konverzióra (fent).
 
 #### Kaja OpenAPI scope (döntés)
 

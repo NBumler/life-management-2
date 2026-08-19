@@ -64,16 +64,50 @@ Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító 
 
 ### Backend
 
-_Nincs backend érintettség._ (teljesítés művelet a [[Bevásárlás]] szülő API-jában; tárolás create az [[Élelmiszer tárolás]] / [[Kaja]] API-jában — a teljesítés orchestrálhatja mindkettőt, vagy egy dedikált „complete shopping list” végpont végzi el szerveroldalon)
+**Van backend érintettség** — ez a legösszetettebb write-path a Bevásárlás klaszterben (egy user-akció 3 aggregátumot módosít elválaszthatatlanul); [[Backend-offline first]] §11 ezt kötelező atomi végpontként listázza.
 
-Ajánlott: egy `POST .../shopping-lists/{id}/complete` (vagy azzal egyenértékű) végpont, ami:
+**Kötelező** (nem csak ajánlott) végpont: `POST /api/shopping-lists/{id}/complete`, **egy** szerver-tranzakcióban, **egy** outbox tételként a kliensen — [[Backend-offline first]] §11.
 
-- fogadja a pipált élelmiszerekhez a lejáratot (+ tárolási helyet, ha kell),
-- létrehozza a storage tételeket,
-- archiválja a listát,
-- létrehozza az új aktív listát a pipálatlan tételekből (ha van).
+**Request body:**
 
-Offline: [[Backend-offline first]] — a complete egy outbox-olható művelet legyen.
+```json
+{
+  "checkedFoodEntries": [
+    {
+      "shoppingListItemId": "uuid",
+      "expirationDate": "YYYY-MM-DD",
+      "storageLocation": "PANTRY | FRIDGE | FREEZER"
+    }
+  ]
+}
+```
+
+`checkedFoodEntries` csak a pipált **élelmiszer** tételekhez tartalmaz sort (nem-élelmiszer és pipálatlan tételek nem szerepelnek benne — azok állapotát a lista már tárolt `checked` mezői adják, a kliens ezt nem duplikálja a body-ban). `storageLocation` csak akkor kötelező mezőnként, ha a Business §-ban leírt "Null engedélyezett" ág futott (a user választott helyet); egyébként a szerver a katalógus szerinti egyetlen engedélyezett módot használja.
+
+**Válasz (200):**
+
+```json
+{
+  "archivedListId": "uuid",
+  "createdStorageEntryIds": ["uuid", "..."],
+  "newActiveListId": "uuid | null"
+}
+```
+
+**Szerveroldali lépések (egy DB tranzakcióban):**
+
+1. A `checkedFoodEntries` alapján létrehozza a storage sorokat (mennyiség szerinti bontás: [[Élelmiszer tárolás]] szabálya — `db`/`amount = N` → N külön tétel, egyéb egység → egy tétel).
+2. Az eredeti listát `ARCHIVED`-re állítja, `completedAt` időbélyeggel; a tételek és pipaállapotok megmaradnak.
+3. Ha van pipálatlan tétel, létrehozza az új aktív listát **a kliens által küldött UUID-kal** (lásd lent) — ha nincs, `newActiveListId = null`.
+4. Bármely lépés hibája → teljes rollback, semmi nem íródik félig.
+
+**Hibakódok:** `404` ismeretlen `listId` vagy idegen user listája; `409` `ENTITY_DELETED` ha a lista már nem `ACTIVE` (pl. duplikált complete egy másik eszközről — lásd az idempotencia-pontot); `400` `VALIDATION_ERROR` ha egy pipált élelmiszer tételhez sem a `checkedFoodEntries`, sem a katalógus nem ad egyértelmű `storageLocation`-t / `expirationDate`-et.
+
+**Kliens UUID-k:** a `newActiveListId`-t és a benne lévő új `ShoppingListItem` sorok UUID-jait **a kliens generálja** és küldi a requestben — [[Backend-offline first]] §2 (kliensoldali ID minden szinkronizált entitáson). A válasz `newActiveListId` mezője visszaigazolás, nem újonnan kiosztott azonosító; így a kliens a helyi store-ba már a mentés pillanatában beírhatja az új aktív listát, mielőtt a szerver válasza megérkezne.
+
+**Idempotencia:** a `complete` egy **atomi** végpont — [[Backend]] „Idempotencia” pontja szerint `Idempotency-Key` headerrel (az outbox tétel `id`-ja) és szerveroldali `idempotency_key` táblás replay-vel védett, ugyanúgy, mint `POST /api/shopping-lists/{id}/complete`-ra ott is hivatkozva van. Ha a queue drain közben a kérés megismétlődik (pl. app-kill a válasz előtt), a szerver a **tárolt válasz**t adja vissza újra, nem `409`-et és nem duplikált storage/lista létrehozást.
+
+Offline: [[Backend-offline first]] §11 (atomi, többentitásos művelet — egy outbox tétel).
 
 ### Nyitott kérdések
 

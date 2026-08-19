@@ -21,7 +21,7 @@ Kültéri köteles törzsadat: **Crag → Sector → Route**.
 | `Crag` / `Sector` | Mint [[Outdoor boulder admin]] (közös helyszín fa) |
 | `Route` | `name`, `guidebookGrade`, `lengthInMeters`, `totalPitches`, `rockType`, `aspect`, soft delete |
 
-Naplózáskor a Route kiválasztása előtölti hossz / pitch / grade értékeket. Soft delete: [[Mászónapló]].
+Naplózáskor a Route kiválasztása előtölti hossz / pitch / grade **és** (ha a Route-on ki van töltve) `rockType` / `aspect` értékeket; ha a Route-on üres, a napló a Sector/Crag defaultra esik vissza — [[Outdoor köteles napló]]. Soft delete: [[Mászónapló]].
 
 ### UI/UX elvárások
 

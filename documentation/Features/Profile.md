@@ -60,7 +60,9 @@ Diagram feature **későbbi** scope; az adatmodell és a CRUD **most** kell.
 
 **Írás Profile mentéskor:** ha `currentWeightKg` **változott** az előző mentett jelenlegi súlyhoz képest (és az új érték ki van töltve) → új history sor az új súllyal. Más mező változása **nem** nyit sort. Első súlymegadás (üres → érték) → egy history sor.
 
-**CRUD:** a history sorok **szerkeszthetők** és **törölhetők** (soft delete + megerősítés) — [[Backend-offline first]]. Soha nem szinkronizált helyi draft → helyi hard remove + outbox tisztítás. History szerkesztés / törlés **nem** írja át automatikusan a `currentWeightKg`-t (a jelenlegi súly csak a Profile űrlap mezője / mentése). Listák `deleted = false`. Nincs undelete UI.
+**Manuális hozzáadás:** a súlytörténet listán **„+ Új bejegyzés”** CTA is elérhető, ami közvetlenül (a Profile form kitöltése nélkül) hoz létre egy history sort tetszőleges `recordedAt` + `weightKg` párral — ez teszi lehetővé a retroaktív (múltbeli dátumú, pl. utólag felírt) súlyrögzítést. Ez a create út **nem** módosítja a `currentWeightKg`-t (csak a Profile form mentése teszi azt, lásd fent).
+
+**CRUD:** a history sorok **létrehozhatók** (manuálisan, fent), **szerkeszthetők** és **törölhetők** (soft delete + megerősítés) — [[Backend-offline first]]. Soha nem szinkronizált helyi draft → helyi hard remove + outbox tisztítás. History create / szerkesztés / törlés **nem** írja át automatikusan a `currentWeightKg`-t (a jelenlegi súly csak a Profile űrlap mezője / mentése). Listák `deleted = false`. Nincs undelete UI.
 
 A [[Tápérték kalkulátor]] **csak** `currentWeightKg`-t használ; a history kizárólag napló / későbbi diagram.
 
@@ -70,7 +72,7 @@ A [[Tápérték kalkulátor]] **csak** `currentWeightKg`-t használ; a history k
 - Egy űrlap: fenti mezők; **Mentés** gomb (nincs élő TDEE előnézet ezen a képernyőn).
 - `goal = MAINTENANCE` → `kgPerWeek` rejtve.
 - Mentés után rövid siker-feedback; store frissül → más képernyők TDEE-je újraszámol (ha számolható).
-- Súlytörténet: lista a Profile képernyőn (vagy ugyaninnen megnyíló részletező); szerkesztés / törlés; **diagram nincs** az első körben.
+- Súlytörténet: lista a Profile képernyőn (vagy ugyaninnen megnyíló részletező); **„+ Új bejegyzés”** manuális / retroaktív hozzáadás; szerkesztés / törlés; **diagram nincs** az első körben.
 
 ### Megjegyzések
 

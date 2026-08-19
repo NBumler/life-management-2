@@ -21,7 +21,7 @@ Kültéri boulder session + kísérletek. Dashboard: **Outdoor Boulder**.
 | Helyszín | `cragId` + `sectorId` (+ snapshot nevek) |
 | Probléma | Master `BoulderProblem` **vagy** ad-hoc név (+ opcionális `saveToCatalog`) |
 | Grade | `guidebookGrade` / `userRawInput` + `absoluteDifficultyIndex` |
-| `rockType` | Crag default, session/attempt szinten **felülírható** |
+| `rockType` | Crag default, **session szinten** felülírható (nincs attempt-szintű mező — egy sessionben egy sziklatípus) |
 | `aspect` | Sector default, öröklődik |
 | `weatherConditions` | Session szint, aznapi |
 | `ascentStyle` | ONSIGHT / FLASH / REDPOINT |

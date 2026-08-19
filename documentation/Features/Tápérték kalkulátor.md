@@ -81,12 +81,16 @@ MET táblák (részletek a napló specekben is):
 
 **Carb cycling:** az `activityExtraKcal` növeli a keretet → a többlet a szénhidrátba megy; P/F g/kg fix (amíg a negatív-szénhidrát mentés nem nyúl hozzájuk).
 
-**Ha \(P\times4 + F\times9 > dailyAllowanceKcal\):**
+**Ha \(P\times4 + F\times9 > dailyAllowanceKcal\)** (a nyers fehérje- és zsírcél önmagában meghaladja a napi keretet), a redukció **szekvenciális, korai kilépéssel** — minden lépés után újra ellenőrizni kell, hogy a maradék keret elfér-e legalább 20 g szénhidrátban:
 
-1. Szénhidrát = **20 g** minimum
-2. Zsír csökkent **0.6 g/kg**-ig
-3. Ha még mindig nem fér: fehérje csökkent **1.5 g/kg**-ig
-4. Szénhidrát újraszámol / 20 g floor
+1. `carbsGoalG` ideiglenesen **20 g**-ra rögzül (ez a padló, ez alá sosem megy).
+2. **Ellenőrzés:** ha \(P\times4 + F\times9 + 20\times4 \le dailyAllowanceKcal\) → kilépés a láncból, ugrás a "Végső szénhidrát" lépésre (a nyers `P`/`F` marad).
+3. **Zsír csökkentése:** `fatGoalG`-t csökkentjük, amíg \(P\times4 + fatGoalG\times9 + 20\times4 \le dailyAllowanceKcal\) nem teljesül, de legfeljebb **0.6 g/kg**-ig (\(F_{\min} = 0.6m\)).
+4. **Ellenőrzés:** ha a 3. lépés után (a csökkentett `fatGoalG`-vel) a keret elfér → kilépés, ugrás a "Végső szénhidrát" lépésre. Ha \(fatGoalG = F_{\min}\) mellett is túllép → tovább az 5. lépésre.
+5. **Fehérje csökkentése:** `fatGoalG` marad \(F_{\min}\); `proteinGoalG`-t csökkentjük, amíg a keret el nem fér, de legfeljebb **1.5 g/kg**-ig (\(P_{\min} = 1.5m\)). Ha ekkor elfér → kilépés, ugrás a "Végső szénhidrát" lépésre.
+6. Ha \(proteinGoalG = P_{\min}\) és \(fatGoalG = F_{\min}\) mellett is túllépi a napi keretet a 20 g szénhidráttal együtt (a felhasználó napi kerete kisebb, mint a két minimum + 20 g összkalóriája): `proteinGoalG = P_{\min}`, `fatGoalG = F_{\min}`, `carbsGoalG = 0` (nem megy negatívba; a keret ekkor ténylegesen alulmarad — ez UI-szinten jelezhető, de nem hibaállapot, a mentés nem blokkolt).
+
+**Végső szénhidrát** (ha a lánc a 2., 4. vagy 5. lépésben kilépett): \(carbsGoalG = \dfrac{dailyAllowanceKcal - P\times4 - F\times9}{4}\), a ténylegesen érvényben lévő (esetleg csökkentett) `P`/`F` mellett — sosem kevesebb, mint 20 g.
 
 Kimenet: `proteinGoalG`, `fatGoalG`, `carbsGoalG` (clampelt allowance alapján).
 
@@ -102,7 +106,7 @@ Profilsúly / cél / edzés / lépés változás → pure TS utility azonnal új
 
 ### Megjegyzések
 
-Makró progress barnál **nincs piros** (lásd [[Étkezés]]). Kcal barnál a Q11 prioritás érvényes.
+Makró progress barnál **nincs piros** (lásd [[Étkezés]]). Kcal barnál az [[Étkezés]] "Progress bar színek — kalória" alfejezetének **kiértékelési sorrendje** érvényes (sárga → zöld → fogyás esetén narancs/piros, egyébként azonnal piros).
 
 ### Nyitott kérdések
 

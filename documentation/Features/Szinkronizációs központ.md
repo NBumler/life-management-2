@@ -43,7 +43,7 @@ Melyik művelet melyik státusznál érhető el:
 - **Generikus, payload-vezérelt űrlap** — nem entitásonként külön képernyő. A tétel payloadjának **egyszerű mezőit** (szöveg, szám, logikai, dátum, felsorolás) sorolja fel beviteli mezőként.
 - A szerver által megjelölt hibás mező (`field`) **kiemelve és fókuszban** nyílik, felette a szerver hibaüzenetével — így az `UNIQUE_VIOLATION` javítása egy átnevezés, nem keresgélés.
 - Névmező javításánál ugyanaz az ütközés-ellenőrzés fut, mint a rendes űrlapokon ([[Névegyediség]]): a user már mentés előtt lássa, ha a beírt új név szintén foglalt.
-- **Összetett (beágyazott) payload** — pl. nested edzés-fa ([[Edzésnapló]]) — nem szerkeszthető ezen az űrlapon: ilyenkor a Fix nem elérhető, a tétel csak átugorható vagy eldobható, a payload pedig megtekinthető. Ez tudatos MVP-határ: a valós hibák túlnyomó része felső szintű skalár mezőn keletkezik.
+- **Összetett (beágyazott) payload** — minden nested aggregate entitás, amit a [[Backend-offline first]] §11 egy body-ban ment: [[Edzésnapló]] (`WorkoutSession` + entries + sets), [[Mászónapló]] (`ClimbingSession` + `AscentAttempt`), [[Recept]] (hozzávalókkal), [[Sablonok]] (`PackingTemplate` + tételek) — **egyikük sem** szerkeszthető ezen az űrlapon: ilyenkor a Fix nem elérhető, a tétel csak átugorható vagy eldobható, a payload pedig megtekinthető. Ez tudatos MVP-határ, és **egységesen** vonatkozik minden nested aggregate típusra, nem csak az edzésnaplóra: a valós hibák túlnyomó része felső szintű skalár mezőn keletkezik.
 
 ### UI/UX elvárások
 

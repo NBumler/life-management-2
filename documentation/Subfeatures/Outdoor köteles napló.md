@@ -24,7 +24,7 @@ Kültéri köteles session + kísérletek / multi-pitch. Dashboard: **Outdoor K�
 | `PitchLog` | **Opcionális** lista: `pitchNumber`, `isLead`, `rawGrade`, index, `lengthInMeters` — ha nincs kitöltve, elég session + teljes úthossz |
 | Másodmászó | `isLead=false` → aktív MET ×0.8 |
 | `weatherConditions` | Session |
-| `rockType` / `aspect` | Öröklés + felülírás |
+| `rockType` / `aspect` | Öröklési sorrend: **1.** ha van kiválasztott `Route` és annak van saját `rockType`/`aspect`-je → onnan; **2.** különben `Sector.aspect` / `Crag.rockType` default ([[Outdoor boulder admin]] mintájára); **3.** session szinten mindig felülírható |
 | Multi-pitch indoor | N/A (csak itt) |
 
 ### UI/UX elvárások

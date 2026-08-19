@@ -61,7 +61,7 @@ A négy felső szintű mappa (`pages/`, `shared/`, `core/`, `api/`) a repóban l
 | `src/app/api/` | Generált OpenAPI kliens (modellek + service-ek) | **Soha nem kézzel szerkesztett.** Csak a `SyncEngine` és a `HttpStorageBackend` hívja — page / komponens kód **nem** hívhatja közvetlenül. |
 | `core/storage/` | `StorageBackend` absztrakció | Két implementáció: `SqliteStorageBackend` (natív: helyi store + outbox) és `HttpStorageBackend` (web: közvetlen hívás a generált kliensen). A választás az `offlineCapable` képesség alapján történik, egyszer, DI-ban. |
 | `core/data/<entitás>.repository.ts` | `<Entity>Repository` | Tipizált homlokzat a `StorageBackend` felett; olvasás **signal**-ként; mutáció natívon egyetlen helyi tranzakcióban store + outbox — [[Backend-offline first]] §5. |
-| `core/sync/` | `SyncEngine`, `OfflineQueueService`, `OutboxMigrator` | Drain / pull / állapotfelismerés; a generált kliens egyetlen üzleti fogyasztója. |
+| `core/sync/` | `SyncEngine`, `OfflineQueueService`, `OutboxMigrator` | Drain / pull / állapotfelismerés; a generált kliens egyetlen üzleti fogyasztója. Felelősség-határ (SSOT: [[Backend-offline first]] §6): `SyncEngine` = orchestráció (drain-loop, pull-loop, kapcsolat-állapot), `OfflineQueueService` = az outbox tábla CRUD-ja (ezen keresztül éri el mind a `SyncEngine`, mind a [[Szinkronizációs központ]] UI), `OutboxMigrator` = payload-verzió migráció. |
 | `core/session/` | `AuthSession`, auth guard, token interceptor | Token életciklus, secure storage — [[Bejelentkezés]]. |
 | `core/config/` | `FeatureFlags`, `NetworkStatus`, `AppConfig`, `LanguageService`, `ThemeService` | Build / futásidejű asset + platform képességek + device-local preferenciák ([[Nyelv választás]], [[Dark&Light mode]]). |
 | `pages/<oldal>/` | Képernyők; a gyerek komponensek a szülő mappájában | Lazy route; csak repositoryt és shared komponenst használ. Névkonvenció: `{név}.page.ts`, `{név}.component.ts`, `{név}.service.ts`, `{név}.guard.ts`, `{név}.repository.ts`. |
@@ -216,7 +216,7 @@ Szándékosan **független** párok: `menu.aycm` ↔ `menu.penzugyek` (Pénzügy
 
 ##### Tab-flag kikapcsolva
 
-A tab **eltűnik** a bar-ról, és a bar annyi gombos, ahány engedélyezett tab van (Ionic 2–5 gombot elbír) — nincs üres tab, és nincs „letiltott" szürke gomb. A Menü mindig ott van, tehát a bar sosem üres. A letiltott tab route-jai guardolva vannak: deep link → default tab.
+A tab **eltűnik** a bar-ról, és a bar annyi gombos, ahány engedélyezett tab van (Ionic **1–5** gombot elbír; a Menü nem kapcsolható ki, tehát a gyakorlati minimum 1, ha mindhárom másik tab flag ki van kapcsolva) — nincs üres tab, és nincs „letiltott" szürke gomb. A Menü mindig ott van, tehát a bar sosem üres. A letiltott tab route-jai guardolva vannak: deep link → default tab.
 
 #### Indulási sorrend (cold start)
 

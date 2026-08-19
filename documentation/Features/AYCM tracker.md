@@ -40,6 +40,8 @@ Nincs saját `amountHuf`. Üres start: nincs belinkelt kiadás.
 
 **Deep-link:** ha a **Pénzügyek** flag be van kapcsolva → új `RecurringExpense` create ([[Rendszeres kiadások]]), visszatéréskor a létrehozott `id` belinkelhető. Pénzügyek flag ki → nincs create; a picker üres lehet.
 
+**Visszatérés mechanizmusa:** a picker az `AycmSettings` képernyőről Angular Router `navigate`-tel nyit a Rendszeres kiadások create route-jára, egy `returnTo=/tabs/menu/aycm` query paraméterrel. A create form mentés után erre a `returnTo` route-ra navigál vissza, a frissen létrehozott `RecurringExpense.id`-t egy `createdExpenseId` query paraméterben átadva. Az `AycmSettings` picker megnyitáskor ellenőrzi ezt a paramétert: ha jelen van, automatikusan kiválasztja / linkeli a hivatkozott kiadást, majd a paramétert eltávolítja az URL-ből (`replaceUrl`). Megszakítás (vissza gomb create közben) esetén nincs `createdExpenseId`, a picker a normál (üres) állapotban nyílik.
+
 #### Bérletköltség / megéri-e (fogyasztói szerződés)
 
 Havi bérlet: a belinkelt sor `monthlyEquivalentHuf` — SSOT [[Rendszeres kiadások]]. Ez a hub **nem** másolja a képletet.
@@ -72,7 +74,7 @@ Hosszabb ablak / helyszín: [[AYCM Statisztikák]].
 
 #### Feature flag
 
-**Egy** `AYCM tracker` flag: Menü-pont + hub + három gyerek. Ki → menü rejtve.
+**Egy** flag (registry kulcs: `menu.aycm` — [[Frontend]]): Menü-pont + hub + három gyerek. Ki → menü rejtve.
 
 A [[Pénzügyek]] flag **független** (fent: `passCostComputable`).
 

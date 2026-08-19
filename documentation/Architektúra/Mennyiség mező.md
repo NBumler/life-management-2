@@ -48,6 +48,21 @@ A megjelenítés / újraszerkesztés az `amount` + `unit` összeragasztott form�
 
 Más egység (`csomag`, `szelet`, stb.) az első verzióban **nincs**.
 
+#### Kanonikus egység és konverzió (egyenlőség-összehasonlításhoz)
+
+A [[Névegyediség]] mezőhalmaz-egyediség ellenőrzése (`Food` duplikáció) `amount` + `unit` párokat hasonlít össze **eltérő egységben is** (pl. `1l` = `100cl`) — ehhez minden egységcsalád egy **kanonikus bázisegységre** vált, egész számként, kerekítési hiba nélkül:
+
+| Mód | Egységcsalád | Bázisegység | Szorzók a bázisra |
+|---|---|---|---|
+| `quantity` | tömeg | `g` | `dkg` × 10, `kg` × 1000 |
+| `quantity` | térfogat | `ml` | `cl` × 10, `dl` × 100, `l` × 1000 |
+| `quantity` | darab | `db` | (nincs konverzió; csak `db` ↔ `db` hasonlítható) |
+| `duration` | idő | `perc` | `óra` × 60, `nap` × 1440, `hét` × 10080, `hó` × 43200 (30 nap), `év` × 525600 (365 nap) |
+
+**Egységcsaládok közt nincs konverzió és nincs egyenlőség:** egy `3db` és egy `3g` érték **soha nem** tekinthető egyenlőnek, még numerikusan egyező `amount` esetén sem — az összehasonlítás első lépése mindig a család (tömeg / térfogat / darab) egyezésének ellenőrzése, csak utána jön a bázisegységre váltott `amount` összevetése.
+
+**`hó` / `év` kizárólag egyenlőség-összehasonlításhoz** rögzített, fix napszámú közelítés (30, ill. 365 nap) — ez **nem** használható tényleges dátumszámításra (pl. lejárati dátum = rögzítés dátuma + `duration`). Dátumhoz a fogyasztó feature (pl. [[Élelmiszer tárolás]]) **naptári** hónap/év-hozzáadást használ (a használt DateTime modul `addMonths` / `addYears` jellegű függvénye), hogy a hónapok eltérő hossza ne okozzon csúszást; a fix percérték csak a Mennyiség mező komponens saját egyenlőség-logikájának belső részlete.
+
 #### Támogatott egységek — `duration`
 
 | Egység (kanonikus) | Elfogadott aliasok (példa) |
@@ -93,7 +108,7 @@ Nincs nyitott kérdés.
 
 ### Frontend
 
-- Megosztott Angular / Ionic komponens (pl. `QuantityInputComponent`) + pure TypeScript parser utility (egységlista mode szerint + parse / format).
+- Megosztott Angular / Ionic komponens (pl. `QuantityInputComponent`) + pure TypeScript parser utility (egységlista mode szerint + parse / format) + kanonikus egységre váltó utility (fent, a [[Névegyediség]] egyenlőség-összehasonlításhoz).
 - Public API:
   - `@Input() mode: 'quantity' | 'duration'` (default: `quantity`)
   - `amount: number | null`, `unit: QuantityUnit | DurationUnit | null` (vagy együttes value object)
@@ -107,7 +122,9 @@ Pure client komponens / utility; Backend-offline és Full-offline állapotban is
 
 ### Backend
 
-_Nincs backend érintettség._ (a mennyiség / időtartam mezők a fogyasztó entitások DTO-iban jelennek meg; egység enum egyeztetés OpenAPI-ban)
+A mennyiség / időtartam mezők a fogyasztó entitások DTO-iban jelennek meg; egység enum egyeztetés OpenAPI-ban.
+
+**Kivétel — kanonikus konverzió paritás:** a `Food` mezőhalmaz-duplikáció ([[Névegyediség]]) **alkalmazás-szintű** ellenőrzése ([[Backend]]) a fenti bázisegység-táblát a szerveren (Java) is futtatja, ugyanazokkal a szorzókkal, mint a kliens TS parser — így a kliensoldali előzetes ellenőrzés és a szerveroldali `409` döntés bitre ugyanazt az eredményt adja. Paritás-teszt fixture: [[Backend]] névnormalizálási fixture-mintájára, a mennyiség-konverzió is egy közös, mindkét oldalon futtatott táblán él (nem külön Java + TS konstans-lista).
 
 ### Nyitott kérdések
 

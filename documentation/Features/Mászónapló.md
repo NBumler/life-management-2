@@ -25,6 +25,8 @@ Egy naplóegység = egy `ClimbingSession` + alatta `AscentAttempt` lista. A kal�
 
 Kontextus váltás **aktív session közben tilos** — lezárás / mentés, majd új session másik belépőből.
 
+„Aktív session" = **kliens-lokális draft állapot** (a Frontend `pages/` szintjén tartott UI-state / draft storage — [[Backend-offline first]] §15 „draft"), **nem** perzisztált `ClimbingSession` mező; a `ClimbingSession` entitásnak nincs saját `isActive` / státusz mezője.
+
 #### Subfeature fa
 
 - [[Indoor mászónapló]] → [[Indoor - boulder]] (admin + napló reference), [[Indoor - köteles]]
@@ -65,12 +67,14 @@ Egy napon **több** session megengedett (akár ugyanarra a kontextusra is). Egy 
 | `ascentStyle` | Opcionális, ha `isSuccess`: `ONSIGHT` \| `FLASH` \| `REDPOINT` (kontextus szerinti whitelist) |
 | `safetyStyle` | Csak kötél: `TOPROPE` \| `LEAD` \| `TRAD` (indoor: TRAD rejtve) |
 | `failurePoint` | Opcionális; sikertelennél |
-| `attemptCount` | Opcionális egész `≥ 1` (pl. indoor boulder próbálkozások) |
+| `attemptCount` | Opcionális egész `≥ 1` — próbák száma az adott mászáson / úton, **kontextustól függetlenül** (indoor/outdoor, boulder/kötél egyaránt; pl. redpoint próbák száma egy köteles úton) |
 | `colorBandId` / `routeId` / `boulderProblemId` | Opcionális FK + **snapshot** mezők (gyerek specek) |
 | `lengthInMeters` | Kötél; opcionális (default: terem / route) |
 | `pitches` | `PitchLog[]` — csak outdoor multi-pitch |
 | `orderIndex` | Sorrend |
-| `deleted` | Soft delete (vagy parent cascade soft) |
+| `deleted` | Soft delete (parent cascade soft) |
+
+`AscentAttempt.deleted` **kizárólag** a szülő `ClimbingSession` cascade soft delete-jéhez kell (ha a teljes sessiont törlik, az attempt-jei is tombstone-osak lesznek — [[Backend-offline first]] §9 cascade). A **nested PUT** (teljes fa cseréje egy body-ban — lásd „Soft delete / offline" lent) miatt egy session szerkesztésekor egy-egy kísérlet **eltávolítása** nem külön `deleted = true` írás, hanem egyszerűen kimarad a mentett `attempts` tömbből; a szerver a hiányzó gyerekeket állítja `deleted = true`-ra a nested-write feldolgozásakor (nem a kliens jelöli meg egyenként).
 
 #### Kalória (kanonikus — [[Tápérték kalkulátor]])
 
@@ -84,7 +88,7 @@ Egy napon **több** session megengedett (akár ugyanarra a kontextusra is). Egy 
 | Kötél TOPROPE | `lengthInMeters × 25` s |
 | Kötél LEAD | `lengthInMeters × 45` s |
 | Kötél TRAD | `lengthInMeters × 60` s |
-| Másodmászó (`isLead = false` pitch / attempt) | az elölmászó aktív idejének **80%-a** (MET hatás: lásd lent) |
+| Másodmászó (`isLead = false` a `PitchLog`-on — **csak** outdoor multi-pitch, [[Outdoor köteles napló]]) | az elölmászó aktív idejének **80%-a** (MET hatás: lásd lent) |
 
 \(t_{\text{activeMin}} = \sum \text{aktív s} / 60\);  
 \(t_{\text{restMin}} = \max(0,\; \text{totalSessionDurationMinutes} - t_{\text{activeMin}})\).
@@ -97,6 +101,8 @@ Egy napon **több** session megengedett (akár ugyanarra a kontextusra is). Egy 
 | Aktív kötél (elöl) | 7.0 |
 | Aktív kötél másod | \(7.0 \times 0.8\) |
 | Rest / üresjárat / biztosítás a földön | **2.0** |
+
+**Szándékos kettős szorzás másodmászónál:** a 80%-os aktív idő **és** a 80%-os MET **egyszerre** érvényesül (≈0.64× a vezető energiaköltségéhez képest). Ez **nem** hiba: a két tényező két különböző hatást fejez ki — az aktív idő csökkenése azt modellezi, hogy a másodmászó nem rak/tisztít biztosítást (gyorsabban halad), a MET csökkenése pedig azt, hogy a mozgás per-másodperc kevésbé megterhelő (nincs anyag cipelése / helyezése közben). A két tényező összeszorzása szándékos modellezési döntés, nem ugyanannak a jelenségnek a duplikált leszámítolása.
 
 `pumpRating` szorzó az **aktív** MET-re (lineáris a megadott pontok között):
 
@@ -115,15 +121,17 @@ Testsúly \(m\): [[Profile]] aktuális kg — **nem** fagyasztódik. TRAD: \(m_{
 - A session **nem tárol** SSOT `calculatedCalories` mezőt (mint [[Úszás napló]] / [[Edzésnapló]]); a [[Tápérték kalkulátor]] utility számol.
 - UI élő előnézet ugyanazzal a pure TS képlettel; szerver opcionális paritás.
 
-**Duration fallback** (ha hiányzik / érvénytelen `totalSessionDurationMinutes`):
+**Duration fallback** (ha hiányzik / érvénytelen `totalSessionDurationMinutes`). A „kísérletek száma" itt a **naplózott `AscentAttempt` sorok darabszáma** a sessionben (**nem** a `Σ attemptCount`, ami az egyes problémákon/utakon belüli próbákat számolja — az `attemptCount` csak a volumen- és sikerarány-statisztikába megy, a duration fallbackba nem):
 
-- Boulder: \(\text{kísérletek száma} \times 5\) perc  
-- Kötél: \(\text{utak / kísérletek száma} \times 15\) perc  
+- Boulder: \(\text{naplózott attempt sorok száma} \times 5\) perc  
+- Kötél: \(\text{naplózott attempt sorok száma} \times 15\) perc  
 
 #### Volumen (statisztika)
 
-- Kötél: \(\text{Volume} = \text{mászott méter} \times I_{\text{grade}}\)
-- Boulder: 1 sikeres kísérlet ≡ **4 m**; \(\text{Volume} = (\text{sikeres kísérletek} \times 4) \times I_{\text{grade}}\)
+\(I_{\text{grade}}\) itt **kísérletenkénti** érték (minden `AscentAttempt` a saját `absoluteDifficultyIndex`-ét viszi), tehát a session-szintű Volume a kísérletek feletti **összeg**, nem egyetlen session-szintű grade-del szorzás:
+
+- Kötél: \(\text{Volume} = \sum_{\text{sikeres kísérletek}} \text{mászott méter}_i \times I_{\text{grade},i}\) (a „mászott méter” kísérletenként: `lengthInMeters`, vagy a pitch-ek összege multi-pitchnél)
+- Boulder: 1 sikeres kísérlet ≡ **4 m**; \(\text{Volume} = \sum_{\text{sikeres kísérletek}} 4 \times I_{\text{grade},i}\)
 
 #### Statisztikák (2.0 scope)
 

@@ -53,7 +53,7 @@ A kötés az [[AYCM tracker]] spechen él: `AycmSettings.linkedRecurringExpenseI
 
 #### Feature flag
 
-**Egy** `Pénzügyek` flag ([[Life Management 2.0]]): Menü-pont + mindkét gyerek. Ki → a menüpont rejtve, a gyerek route-ok nem elérhetők.
+**Egy** flag (registry kulcs: `menu.penzugyek` — [[Frontend]]): Menü-pont + mindkét gyerek. Ki → a menüpont rejtve, a gyerek route-ok nem elérhetők.
 
 Az [[AYCM tracker]] flag **független**. Pénzügyek ki + AYCM be: nincs kiadás-CRUD; megtérülés `~`; AYCM **nem** tárol saját `amountHuf`-ot.
 

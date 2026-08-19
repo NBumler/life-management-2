@@ -107,7 +107,7 @@ HTTP `DELETE` marad; a szerver tombstone-t ír. Már törölt ID-re `DELETE` →
 - `title` auto-focus create-nél.
 - `allDay` kapcsoló. **Create default: ki** (időzített).
 - `date` default: **ma**.
-- Időzített default: `startTime` = most **felfelé** a következő 15 percre (pontos 15-perc-határ marad); `endTime` = `startTime + 1 óra`. Ha ez **átlépné** a naptári napot: `endTime = 23:59`; ha akkor `endTime ≤ startTime`: `startTime = 22:59`, `endTime = 23:59`.
+- Időzített default: `startTime` = most **felfelé** a következő 15 percre (pontos 15-perc-határ marad). **Ha maga ez a kerekítés lépné át éjfélt** (jelenlegi idő `23:46`–`23:59` között, a felfelé kerekítés `00:00`-t adna a következő napra): `startTime = 22:59`, `endTime = 23:59` (ugyanaz a fallback pár, mint lent), és a további lépések kimaradnak. **Egyébként:** `endTime` = `startTime + 1 óra`. Ha ez **átlépné** a naptári napot: `endTime = 23:59`; ha akkor `endTime ≤ startTime`: `startTime = 22:59`, `endTime = 23:59`.
 - Ritmus: nincs (egyszeri) / `DAILY` / `WEEKLY` / `YEARLY` + `interval` (default 1, `≥ 1`). WEEKLY/YEARLY magyarázat: a `date` napja / hó.napja.
 - Opcionális helyszín, megjegyzés.
 - Validáció: cím nem üres; időzítettnél mindkét idő, `endTime > startTime`; `interval ≥ 1` ha van `frequency`.

@@ -86,13 +86,23 @@ Alsó tab bar: Kaja, Edzés, Feladatok, Menü. Tab-térkép, tabon belüli navig
 
 ### Megjegyzések
 
-**A specifikáció lezárva:** minden feature, alfeature és architektúra jegyzet `Kész`, nyitott kérdés csak a fenti MVP-vágásoknál marad (prod hosting, iOS). A négy architektúra-SSOT, amiből az implementáció indul: [[Frontend]] (app-shell, flag registry), [[Backend]] (stack, OpenAPI, séma), [[Backend-offline first]] (offline szerződés) és [[Fejlesztői környezet]] (monorepo, futtatás, Android telepítés).
+**A specifikáció lezárva:** minden feature, alfeature és architektúra jegyzet `Kész`. A négy architektúra-SSOT, amiből az implementáció indul: [[Frontend]] (app-shell, flag registry), [[Backend]] (stack, OpenAPI, séma), [[Backend-offline first]] (offline szerződés) és [[Fejlesztői környezet]] (monorepo, futtatás, Android telepítés).
+
+Nyitott kérdés **5** helyen maradt, mindegyik explicit módon **nem blokkolja a fejlesztés indítását** (implementációkori döntés, nem tervezési hiány):
+
+| Hol | Mi |
+|---|---|
+| [[Backend]] | Prod üzemeltetés / hosting és TLS (a dev környezet specifikált, az `apiBaseUrl` konfiguráció) |
+| [[Backend]] | Az openapi-generator `spring` profiljának Spring Boot 4 / Framework 7 kimenete verzió-pineléskor ellenőrizendő (tartalék: kézzel írt API interface) |
+| [[Fejlesztői környezet]] | iOS build és eszközre telepítés (a natív Android célra megy először) |
+| [[Frontend]] | Health Connect bridge csomagválasztása (közösségi Capacitor csomag vs saját plugin) |
+| [[Frontend]] | Secure storage konkrét csomagja (a követelmény kötött, a csomag nem) |
 
 Ha egy feature spec és egy architektúra jegyzet ütközik, az architektúra jegyzet nyer (az app-shell és az offline szerződés SSOT); a feature spec javítandó, nem az architektúra megkerülendő.
 
 ### Nyitott kérdések
 
-Nincs nyitott kérdés.
+Nincs nyitott kérdés. (A rendszerszintű 5 tétel fentebb, Megjegyzések alatt van összesítve — mindegyik a saját architektúra jegyzetében rögzített, ez csak pointer.)
 
 ## Architektúra
 

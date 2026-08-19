@@ -18,7 +18,7 @@ Subfeature / belépők:
 
 - [[Háztartási feladatok]] (`Kész`)
 - [[Élet tervek]] (`Kész` — saját flag; lista + státusz a gyerek spechen; nincs naptár-producer)
-- [[Naptár]] (`Kész` — aggregátor; nem tennivaló-CRUD)
+- [[Naptár]] (`Kész` — saját flag; aggregátor; nem tennivaló-CRUD)
 - [[Események]] (`Kész` — saját flag; lista + CRUD a gyerek/feature spechen)
 
 A háztartási CRUD, naptár-előfordulás és `HOUSEHOLD_TASK_DUE` digest a [[Háztartási feladatok]] spechen. Esemény CRUD / `EVENT` vetítés / `EVENT_OCCURRENCE`: [[Események]]. Élet terv CRUD / állapotgép: [[Élet tervek]]. Ez a szülő a Feladatok tab **hubja**.

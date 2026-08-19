@@ -177,6 +177,8 @@ Ahol a törlés a helyi adatokon is végigfut (pl. [[Eszközök]] `GearItem` tö
 
 #### 6. Drain (szinkronizációs motor)
 
+**Komponens-határ** ([[Frontend]] `core/sync/`): a **`SyncEngine`** az orchestrátor (drain-loop, pull-loop, kapcsolat-állapot signal, trigger-figyelés — ez a §6/§8 mechanikája). Az **`OfflineQueueService`** az `outbox_item` tábla CRUD-ja (beszúrás + coalescing, státuszváltás, a Fix / Skip / Unskip / Drop implementációja) — ezen keresztül éri el a queue-t **mind** a `SyncEngine` (drain), **mind** a [[Szinkronizációs központ]] UI (kézi beavatkozás). A `SyncEngine` sosem ír közvetlenül az `outbox_item` táblába, mindig az `OfflineQueueService`-en át.
+
 **Trigger:** app start (a helyi store készen áll után), `BACKEND_OFFLINE` → `ONLINE` átmenet, app resume, sikeres login / token refresh, minden user-mutáció után (debounce ~1 s), és a manuális „Szinkronizálás most” a [[Szinkronizációs központ]]ból.
 
 **Algoritmus:**
@@ -195,7 +197,7 @@ Ahol a törlés a helyi adatokon is végigfut (pl. [[Eszközök]] `GearItem` tö
 
 - Internet: Capacitor `Network` plugin (jelzés, nem garancia).
 - Backend: `GET /api/health` (publikus, olcsó), timeout **3 s**. Passzív jelzés: bármely kérés `status 0` / timeout válasza is „backend nem elérhető”-re állít.
-- Próba időpontjai: app start, resume, `Network` állapotváltozás, drain előtt, és offline állapotban növekvő backoff-fal (15 s → 30 s → 60 s → max 5 min).
+- Próba időpontjai: app start, resume, `Network` állapotváltozás, drain előtt, és offline állapotban növekvő **kapcsolat-próba backoff**-fal (15 s → 30 s → 60 s → max 5 min) — ez **nem** azonos a lenti, tétel-szintű újrapróbálkozási backoff-fal.
 - Az állapot egy globális signal / store; a UI **soha nem várakozik** a próbára.
 
 ##### Hibaosztályozás (kötelező tábla)
@@ -213,7 +215,7 @@ Ahol a törlés a helyi adatokon is végigfut (pl. [[Eszközök]] `GearItem` tö
 | `410` `CURSOR_TOO_OLD` | (csak pullnál) | Full re-pull (§8). |
 | `2xx` | siker | Lásd a 8. lépést. |
 
-Backoff lépcső (jitterrel): 2 s → 8 s → 30 s → 2 min → 10 min.
+**Tétel-újrapróbálkozási backoff** (jitterrel; a fenti kapcsolat-próba backoff-tól független mechanizmus): 2 s → 8 s → 30 s → 2 min → 10 min.
 
 ##### Kézi beavatkozás (Fix / Skip / Unskip / Drop)
 
@@ -243,7 +245,7 @@ Backoff lépcső (jitterrel): 2 s → 8 s → 30 s → 2 min → 10 min.
 Az outbox tételek **túlélik az alkalmazás frissítését** ([[Bejelentkezés]]: a session is megmarad), ezért egy tétel payloadja egy **korábbi** DTO séma szerint készülhetett.
 
 - Minden tétel `payloadVersion`-t kap az app `SCHEMA_VERSION`-jából.
-- A drain előtt: ha `payloadVersion < SCHEMA_VERSION`, egy `OutboxMigrator` lépésenként (v1→v2→…) átalakítja a payloadot és az `url`-t.
+- A drain előtt: ha `payloadVersion < SCHEMA_VERSION`, egy `OutboxMigrator` lépésenként (v1→v2→…) átalakítja a payloadot és az `url`-t. **Mechanizmus:** egy registry, `Map<string, MigrationStep>`, ahol a kulcs `"<entityType>:<fromVersion>"` (pl. `"HouseholdTask:1"`), az érték egy pure függvény `(payload: unknown, url: string) => { payload: unknown; url: string }` szignatúrával. A migráció egy tételre lépésenként fut (`fromVersion → fromVersion+1 → … → SCHEMA_VERSION`); minden sikeres lépés után a tétel helyi `payloadVersion`-je eggyel nő, mielőtt a következő lépés kulcsát keresné a registry.
 - Ha az adott lépéshez **nincs** regisztrált migráció, a tétel `ERROR` lesz, egyértelmű üzenettel („az alkalmazás frissült, a tételt kézzel kell újraküldeni”). A begépelt adat nem veszik el: a [[Szinkronizációs központ]] payload-nézete megmutatja a raw JSON-t.
 - **Fejlesztői szabály:** minden breaking DTO- vagy útvonal-változáshoz vagy outbox migrációt írunk, vagy tudatosan vállaljuk az `ERROR`-t. Ez a döntés a PR-ban explicit.
 
@@ -265,7 +267,7 @@ Egy hívás **legfeljebb `limit`** darab változást ad vissza, tehát a pull mi
 - Ez a **delta** pullra is vonatkozik, nem csak az elsőre: ha sokáig offline volt az eszköz, több lapnyi változás gyűlhet össze.
 - Mivel a `cursor` laponként lép, a **megszakadt pull folytatható**: hálózatvesztésnél vagy app-bezárásnál a következő futás onnan megy tovább, nem kezdi elölről.
 - A ciklus lapok között enged a UI szálnak (nincs fagyott képernyő nagy első pullnál).
-- **Trigger:** app start, resume (ha `last_pull_at` régebbi, mint 5 perc), manuális sync, és **minden sikeres drain után**.
+- **Trigger:** app start, resume (ha `last_pull_at` régebbi, mint 5 perc), manuális sync, **minden sikeres drain után**, és a `BACKEND_OFFLINE` / `FULL_OFFLINE` → `ONLINE` állapotváltás **közvetlenül** (nem csak a drain sikerén keresztül) — így egy üres outboxú eszköz is pull-t kap kapcsolat-visszatéréskor, nem csak akkor, ha volt mit drainelnie.
 - **Sorrend: először drain, aztán pull.** Így a helyi írásaink már a szerveren vannak, és a pull azokat is visszaigazolja; fordított sorrendben a pull felülírná a `_dirty` sorokat.
 
 ##### Apply-szabályok (soronként)
@@ -291,7 +293,11 @@ Egy hívás **legfeljebb `limit`** darab változást ad vissza, tehát a pull mi
 
 ##### Update vs update
 
-**Sor-szintű last-write-wins:** a szerver a **beérkezés** sorrendjében fogadja az írásokat, a `PUT` teljes body, tehát a később megérkező írás nyer. Nincs mezőszintű merge, nincs ETag / verziószám / optimistic locking az első körben — az adat egyetlen user sajátja, a valós ütközés ritka és a veszteség köre egy sor.
+**Sor-szintű last-write-wins:** a szerver a **beérkezés** sorrendjében fogadja az írásokat, a `PUT` teljes body, tehát a később megérkező írás nyer. Nincs mezőszintű merge, nincs ETag / verziószám / optimistic locking az első körben.
+
+**User-owned** entitásoknál (a specek túlnyomó többsége) ez triviálisan biztonságos: a sort csak a tulajdonos user szerkeszti, a valós ütközés ritka (jellemzően ugyanaz a user két saját eszközén), és a veszteség köre egy sor, amit ő maga okozott.
+
+**Megosztott katalógus** (`Food`, `Recipe`, `RecipeIngredient` — `user_id = NULL`, bármely user szerkesztheti) esetén ugyanez a sor-szintű LWW fut, de itt **több különböző user** írhatja **ugyanazt** a sort egyszerre: ha A és B egyszerre javítja ugyanannak a `Food`-nak a tápértékét, a később beérkező `PUT` csendben felülírja a másikét, figyelmeztetés nélkül. Ez **tudatosan elfogadott**: a megosztott katalógus szerkesztési gyakorisága alacsony (ritka metaadat-javítás, nem a fő create/consume flow), és mező-szintű merge / lock / verziószám bevezetése ezen a körön kívül esik (§17) — ugyanaz a döntés, mint a user-owned entitásoknál, csak explicit kimondva a megosztott esetre is.
 
 ##### Delete vs update
 
@@ -406,7 +412,7 @@ Elv: a külső integrációk **soha nincsenek** a saját backenden proxyzva ([[B
 | Lokális értesítések ütemezése | megy | megy | **megy** (OS ütemező — [[Értesítések]]) |
 | Clipboard import parse | megy | megy | **megy** (helyi parser — [[Élelmiszer importálása clipboard-ról]]) |
 
-- Minden külső hívásra timeout (javaslat: 8 s); a fő flow nem blokkolhat rajta.
+- Minden külső hívásra timeout **8 s** (kötelező érték, nem csak ajánlás — ugyanolyan szerződés-elem, mint a health check 3 s-a); a fő flow nem blokkolhat rajta.
 - A külső hívás eredményéből született saját entitás a **normál** outbox úton megy fel.
 
 #### 14. Számítás, `~` és bizonytalanság
@@ -504,7 +510,7 @@ Kiegészíti a [[Backend]] jegyzetet; a szerződés forrása az OpenAPI spec.
 | Egyediség | **Partial unique index élő sorokra** (`WHERE deleted = false`), a normalizált oszlopon (`name_normalized` — [[Névegyediség]]); sértés → `409` + `{ "code": "UNIQUE_VIOLATION", "field": "…" }`. |
 | Validáció | `400` / `422` + `{ "code": "VALIDATION_ERROR", "field": "…" }`. |
 
-Egységes hibaformátum: `{ "code": "...", "message": "...", "field": "...?", "conflictingId": "...?" }`. A `code` gépi feldolgozásra, a `message` a [[Szinkronizációs központ]] hibasorába.
+Egységes hibaformátum: `{ "code": "...", "message": "...", "field": "...?", "conflictingId": "...?" }`. A `code` gépi feldolgozásra, a `message` a [[Szinkronizációs központ]] hibasorába. **`conflictingId`:** kizárólag `409 UNIQUE_VIOLATION`-nél töltött — a már létező, ütköző **élő** sor `id`-ja, hogy a kliens UI közvetlenül fel tudja ajánlani „ez már létezik, megnyitod?” akcióként. Minden más hibakódnál `null` / hiányzik.
 
 #### Cascade
 

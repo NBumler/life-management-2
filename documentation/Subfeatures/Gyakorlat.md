@@ -63,7 +63,7 @@ Nincs kötelező „alapértelmezett szett / súly sablon” a masteren — a c�
 
 **Ad-hoc az [[Edzésnapló]]ból:** új név → opcionálisan új `Exercise` a katalógusba (`category` / `kind` kitöltendő a mentéskor).
 
-**Törlés:** soft delete (`deleted`). Az [[Edzésnapló]] múltbeli snapshotok érintetlenek. A [[Heti terv]] sablonok hivatkozásainál: törölt gyakorlat ne jelenjen meg pickerben; meglévő terv-tételek snapshot / név megmarad, vagy UI figyelmeztet (újraválasztás).
+**Törlés:** soft delete (`deleted`). Az [[Edzésnapló]] múltbeli snapshotok érintetlenek. A [[Heti terv]] sablonok hivatkozásainál: törölt gyakorlat ne jelenjen meg pickerben; **meglévő terv-tételek snapshotja (`exerciseName`/`exerciseCategory`/`exerciseKind`) megmarad, nincs külön UI figyelmeztetés** — a sablon a törléskori snapshottal továbbra is használható (edzés indítható belőle), csak a picker nem ajánlja fel újraválasztásra a törölt gyakorlatot.
 
 CRUD: lista (nem töröltek), létrehozás, szerkesztés, soft delete (megerősítéssel).
 

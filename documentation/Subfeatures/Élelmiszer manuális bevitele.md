@@ -29,7 +29,7 @@ Az űrlap **új létrehozásra** és **szerkesztésre** is szolgál ([[Élelmisz
 | **Üzlet** | Hol árulják (pl. Aldi). Szabad szöveg. |
 | **Márka** | Termék márkája (pl. Nestlé). |
 | **Vonalkód (EAN)** | Termék vonalkódja. [[Vonalkódos élelmiszer beolvasás]] automatikusan töltheti. Kézi javítás után az input végén lévő **sync gomb** újra lekéri az Open Food Facts adatokat (lásd lent). |
-| **Egyéb** | Tetszőleges megjegyzés (pl. ízesített termék). **Nem** azonos a bevásárlás nem-élelmiszer `note` mezőjével. |
+| **Egyéb** | Tetszőleges megjegyzés (pl. ízesített termék); backend mező: `Food.note`. **Fogalmilag nem** azonos a bevásárlás nem-élelmiszer `ShoppingListItem.note` mezőjével (más tábla, más felület, más életciklus) — a `note` oszlopnév szándékosan több entitáson is ismétlődik a sémában (pl. `Recipe.note`, `Meal.note`), ez a séma konvenciója, nem összetévesztendő azonosság. |
 | **Ár** | Egy szám; jelentése **Ft / csomag** (egység a UI-n jelölve, nem külön input). |
 | **1 csomag nettó tartalma** | [[Mennyiség mező]] `quantity` módban. **Egy darabra** vonatkozik (pl. 1 tojás → `1db`; tej → `1l`). |
 

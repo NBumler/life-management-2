@@ -48,7 +48,7 @@ Nincs custom, nincs YTD, nincs all-time.
 
 Csoport: `partnerId`.
 
-Megjelenő név: ha a partner élő (`deleted = false`) → aktuális `AycmPartner.name`; különben a csoportban a snapshot `partnerName` (törölt partner). Több különböző snapshot-név ugyanazon `partnerId`-n (átnevezés után nem szerkesztett múlt): a **élő név** (vagy ha törölt: a leggyakoribb / bármelyik snapshot-név — implementáció: élő név, töröltnél a lexikálisan első `partnerName`).
+Megjelenő név: ha a partner élő (`deleted = false`) → aktuális `AycmPartner.name`. Ha törölt, és a csoportban több eltérő snapshot `partnerName` is előfordul (mert a partnert menet közben átnevezték, és a régebbi Check-Injek a régi nevet snapshotolták): a megjelenő név a snapshot `partnerName`-ek **lexikálisan első** értéke (determinisztikus, stabil tie-break — nem a leggyakoribb, nem tetszőleges).
 
 Sorok: név, `visitCount`, `visitValueSumHuf`. Rendezés: Σ **csökkenő**, majd név. Üres ablak: üres lista, nincs CTA.
 
