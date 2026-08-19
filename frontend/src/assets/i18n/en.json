@@ -1,5 +1,92 @@
 {
   "APP": {
     "NAME": "Life Management 2.0"
+  },
+  "COMMON": {
+    "SAVE": "Save",
+    "CANCEL": "Cancel",
+    "DELETE": "Delete",
+    "CLOSE": "Close"
+  },
+  "LOGIN": {
+    "TITLE": "Log in",
+    "USERNAME": "Username",
+    "PASSWORD": "Password",
+    "SUBMIT": "Log in",
+    "ERROR": "Incorrect username or password."
+  },
+  "TABS": {
+    "KAJA": "Food",
+    "EDZES": "Workout",
+    "FELADATOK": "Tasks",
+    "MENU": "Menu"
+  },
+  "MENU": {
+    "TITLE": "Menu",
+    "PROFILE": "Profile",
+    "THEME": "Theme",
+    "LANGUAGE": "Language",
+    "SYNC": "Sync center",
+    "LOGOUT": "Log out",
+    "LOGOUT_CONFIRM_TITLE": "Log out",
+    "LOGOUT_CONFIRM_MESSAGE": "Are you sure you want to log out?",
+    "LOGOUT_CONFIRM_PENDING": "You have {{count}} unsynced change(s). They will stay on this device and go up on your next login. Log out anyway?"
+  },
+  "THEME": {
+    "TITLE": "Theme",
+    "SYSTEM": "System",
+    "LIGHT": "Light",
+    "DARK": "Dark"
+  },
+  "LANGUAGE": {
+    "TITLE": "Language",
+    "SYSTEM": "System"
+  },
+  "PROFILE": {
+    "TITLE": "Profile",
+    "BIRTH_DATE": "Date of birth",
+    "SEX": "Sex",
+    "SEX_MALE": "Male",
+    "SEX_FEMALE": "Female",
+    "HEIGHT_CM": "Height (cm)",
+    "CURRENT_WEIGHT_KG": "Current weight (kg)",
+    "GOAL": "Goal",
+    "GOAL_FAT_LOSS": "Fat loss",
+    "GOAL_MAINTENANCE": "Maintenance",
+    "GOAL_WEIGHT_GAIN": "Weight gain",
+    "KG_PER_WEEK": "Target rate (kg/week)",
+    "VALIDATION_KG_PER_WEEK_REQUIRED": "Required when the goal is fat loss or weight gain.",
+    "GROSS_MONTHLY_SALARY_HUF": "Gross monthly salary (HUF)",
+    "SAVE_SUCCESS": "Saved.",
+    "WEIGHT_HISTORY_TITLE": "Weight history",
+    "WEIGHT_HISTORY_ADD": "New entry",
+    "WEIGHT_HISTORY_EMPTY": "No weight history entries yet.",
+    "RECORDED_AT": "Date",
+    "WEIGHT_KG": "Weight (kg)",
+    "DELETE_CONFIRM_TITLE": "Delete entry",
+    "DELETE_CONFIRM_MESSAGE": "Are you sure you want to delete this weight history entry?"
+  },
+  "SYNC": {
+    "TITLE": "Sync center",
+    "STATE_ONLINE": "Online",
+    "STATE_BACKEND_OFFLINE": "Server unreachable",
+    "STATE_FULL_OFFLINE": "No internet connection",
+    "STATE_UNKNOWN": "Checking connection…",
+    "PENDING_COUNT": "{{count}} pending",
+    "ERROR_COUNT": "{{count}} failed",
+    "SYNC_NOW": "Sync now",
+    "EMPTY_TITLE": "Everything is synced",
+    "STATUS_PENDING": "Pending",
+    "STATUS_SENDING": "Sending",
+    "STATUS_BLOCKED": "Blocked",
+    "STATUS_ERROR": "Error",
+    "STATUS_SKIPPED": "Skipped",
+    "BLOCKED_EXPLANATION": "Waiting on an earlier failed item.",
+    "ATTEMPT_COUNT": "{{count}} attempt(s)",
+    "PAYLOAD_TITLE": "Data to send",
+    "FIX_TITLE": "Fix and resend",
+    "DROP_CONFIRM_TITLE": "Drop item",
+    "DROP_CONFIRM_MESSAGE": "The change will be lost and the row will revert to the server's stored state. This cannot be undone.",
+    "DROP_CONFIRM_CASCADE": "The change will be lost, and {{count}} more item(s) that depend on it will be dropped too. This cannot be undone."
   }
 }

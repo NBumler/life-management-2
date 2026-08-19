@@ -1,13 +1,32 @@
 import { Routes } from '@angular/router';
 
+import { authGuard } from './core/session/auth.guard';
+
 export const routes: Routes = [
   {
-    path: 'home',
-    loadComponent: () => import('./home/home.page').then((m) => m.HomePage),
+    path: 'login',
+    loadComponent: () => import('./pages/login/login.page').then((m) => m.LoginPage),
   },
   {
-    path: '',
-    redirectTo: 'home',
-    pathMatch: 'full',
+    path: 'tabs',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/tabs/tabs.page').then((m) => m.TabsPage),
+    children: [
+      {
+        path: 'menu',
+        children: [
+          { path: '', loadComponent: () => import('./pages/menu/menu.page').then((m) => m.MenuPage) },
+          { path: 'profile', loadComponent: () => import('./pages/menu/profile/profile.page').then((m) => m.ProfilePage) },
+          { path: 'theme', loadComponent: () => import('./pages/menu/theme/theme.page').then((m) => m.ThemePage) },
+          { path: 'language', loadComponent: () => import('./pages/menu/language/language.page').then((m) => m.LanguagePage) },
+          { path: 'sync', loadComponent: () => import('./pages/menu/sync/sync.page').then((m) => m.SyncPage) },
+        ],
+      },
+      // documentation/Architektúra/Frontend.md "Login utáni default tab": Menü is the only enabled
+      // tab until a feature flag turns Kaja/Edzés/Feladatok on.
+      { path: '', redirectTo: 'menu', pathMatch: 'full' },
+    ],
   },
+  { path: '', redirectTo: 'tabs', pathMatch: 'full' },
+  { path: '**', redirectTo: 'tabs' },
 ];

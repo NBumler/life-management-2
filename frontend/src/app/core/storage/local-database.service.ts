@@ -53,7 +53,8 @@ CREATE TABLE IF NOT EXISTS outbox_item (
   last_attempt_at TEXT,
   http_status INTEGER,
   error_code TEXT,
-  error_message TEXT
+  error_message TEXT,
+  error_field TEXT
 );
 
 CREATE TABLE IF NOT EXISTS sync_state (

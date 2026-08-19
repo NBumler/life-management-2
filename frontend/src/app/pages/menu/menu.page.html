@@ -1,0 +1,33 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>{{ 'MENU.TITLE' | translate }}</ion-title>
+    <app-sync-status-button slot="end"></app-sync-status-button>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-list>
+    <ion-item button routerLink="profile">
+      <ion-icon name="person-outline" slot="start" aria-hidden="true"></ion-icon>
+      <ion-label>{{ 'MENU.PROFILE' | translate }}</ion-label>
+    </ion-item>
+    <ion-item button routerLink="theme">
+      <ion-icon name="contrast-outline" slot="start" aria-hidden="true"></ion-icon>
+      <ion-label>{{ 'MENU.THEME' | translate }}</ion-label>
+    </ion-item>
+    <ion-item button routerLink="language">
+      <ion-icon name="language-outline" slot="start" aria-hidden="true"></ion-icon>
+      <ion-label>{{ 'MENU.LANGUAGE' | translate }}</ion-label>
+    </ion-item>
+    @if (offlineCapable) {
+      <ion-item button routerLink="sync">
+        <ion-icon name="sync-outline" slot="start" aria-hidden="true"></ion-icon>
+        <ion-label>{{ 'MENU.SYNC' | translate }}</ion-label>
+      </ion-item>
+    }
+    <ion-item button (click)="logout()">
+      <ion-icon name="log-out-outline" slot="start" color="danger" aria-hidden="true"></ion-icon>
+      <ion-label color="danger">{{ 'MENU.LOGOUT' | translate }}</ion-label>
+    </ion-item>
+  </ion-list>
+</ion-content>

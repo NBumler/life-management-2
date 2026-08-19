@@ -140,11 +140,18 @@ export class OfflineQueueService {
     await this.db.run(`UPDATE outbox_item SET status = 'PENDING', attempt_count = ? WHERE id = ?`, [attemptCount, id]);
   }
 
-  async markError(id: string, httpStatus: number | null, errorCode: string | null, errorMessage: string | null): Promise<void> {
-    await this.db.run(`UPDATE outbox_item SET status = 'ERROR', http_status = ?, error_code = ?, error_message = ? WHERE id = ?`, [
+  async markError(
+    id: string,
+    httpStatus: number | null,
+    errorCode: string | null,
+    errorMessage: string | null,
+    errorField: string | null = null,
+  ): Promise<void> {
+    await this.db.run(`UPDATE outbox_item SET status = 'ERROR', http_status = ?, error_code = ?, error_message = ?, error_field = ? WHERE id = ?`, [
       httpStatus,
       errorCode,
       errorMessage,
+      errorField,
       id,
     ]);
   }
@@ -157,7 +164,7 @@ export class OfflineQueueService {
       entityTask,
       {
         statement: `UPDATE outbox_item SET payload = ?, status = 'PENDING', attempt_count = 0, last_attempt_at = NULL,
-          http_status = NULL, error_code = NULL, error_message = NULL WHERE id = ?`,
+          http_status = NULL, error_code = NULL, error_message = NULL, error_field = NULL WHERE id = ?`,
         values: [JSON.stringify(newPayload), item.id],
       },
     ]);

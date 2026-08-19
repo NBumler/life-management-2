@@ -1,0 +1,12 @@
+:host {
+  position: relative;
+  display: inline-block;
+}
+
+ion-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-size: 0.6rem;
+  pointer-events: none;
+}

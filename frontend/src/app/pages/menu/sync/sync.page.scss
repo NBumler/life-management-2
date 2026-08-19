@@ -1,0 +1,30 @@
+.empty-state {
+  margin-top: 20vh;
+
+  ion-icon {
+    font-size: 48px;
+  }
+}
+
+.blocked-item {
+  opacity: 0.6;
+}
+
+.skipped-item {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+
+.error-text {
+  color: var(--ion-color-danger);
+}
+
+.highlighted-field {
+  --background: var(--ion-color-warning-tint);
+}
+
+pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 0.8rem;
+}

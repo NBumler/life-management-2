@@ -1,0 +1,43 @@
+<ion-content class="ion-padding">
+  <div class="login-container">
+    <h1>{{ 'LOGIN.TITLE' | translate }}</h1>
+
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <ion-list>
+        <ion-item>
+          <ion-input
+            formControlName="username"
+            type="text"
+            autocomplete="username"
+            [autofocus]="true"
+            [label]="'LOGIN.USERNAME' | translate"
+            labelPlacement="stacked"
+          ></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-input
+            formControlName="password"
+            type="password"
+            autocomplete="current-password"
+            [label]="'LOGIN.PASSWORD' | translate"
+            labelPlacement="stacked"
+          ></ion-input>
+        </ion-item>
+      </ion-list>
+
+      @if (failed()) {
+        <ion-text color="danger">
+          <p class="ion-padding-start">{{ 'LOGIN.ERROR' | translate }}</p>
+        </ion-text>
+      }
+
+      <ion-button expand="block" type="submit" class="ion-margin-top" [disabled]="submitting()">
+        @if (submitting()) {
+          <ion-spinner name="dots"></ion-spinner>
+        } @else {
+          {{ 'LOGIN.SUBMIT' | translate }}
+        }
+      </ion-button>
+    </form>
+  </div>
+</ion-content>

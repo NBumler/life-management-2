@@ -1,0 +1,9 @@
+.entry-form {
+  width: 100%;
+
+  .entry-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+}

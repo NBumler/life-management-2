@@ -1,0 +1,25 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/menu"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ 'LANGUAGE.TITLE' | translate }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-list>
+    <ion-radio-group [value]="mode()" (ionChange)="setMode($event.detail.value)">
+      <ion-item>
+        <ion-radio value="system">{{ 'LANGUAGE.SYSTEM' | translate }}</ion-radio>
+      </ion-item>
+      <!-- documentation/Features/Nyelv választás.md: language names shown in their own language, not translated. -->
+      <ion-item>
+        <ion-radio value="hu">Magyar</ion-radio>
+      </ion-item>
+      <ion-item>
+        <ion-radio value="en">English</ion-radio>
+      </ion-item>
+    </ion-radio-group>
+  </ion-list>
+</ion-content>

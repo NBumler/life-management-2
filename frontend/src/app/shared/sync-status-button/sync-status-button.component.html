@@ -1,0 +1,17 @@
+<ion-button fill="clear" (click)="open()" [disabled]="!nativeCapable">
+  @if (draining()) {
+    <ion-spinner name="crescent" slot="icon-only" aria-hidden="true"></ion-spinner>
+  } @else if (errorCount() > 0) {
+    <ion-icon name="alert-circle" color="danger" slot="icon-only" aria-hidden="true"></ion-icon>
+    <ion-badge color="danger">{{ errorCount() }}</ion-badge>
+  } @else if (pendingCount() > 0) {
+    <ion-icon name="time-outline" color="medium" slot="icon-only" aria-hidden="true"></ion-icon>
+    <ion-badge color="medium">{{ pendingCount() }}</ion-badge>
+  } @else if (connectionState() === 'FULL_OFFLINE') {
+    <ion-icon name="airplane-outline" color="medium" slot="icon-only" aria-hidden="true"></ion-icon>
+  } @else if (connectionState() === 'BACKEND_OFFLINE') {
+    <ion-icon name="cloud-offline-outline" color="medium" slot="icon-only" aria-hidden="true"></ion-icon>
+  } @else if (connectionState() === 'ONLINE') {
+    <ion-icon name="checkmark-circle-outline" color="medium" slot="icon-only" aria-hidden="true"></ion-icon>
+  }
+</ion-button>

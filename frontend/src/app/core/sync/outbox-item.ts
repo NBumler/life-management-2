@@ -20,6 +20,7 @@ export interface OutboxItem {
   httpStatus: number | null;
   errorCode: string | null;
   errorMessage: string | null;
+  errorField: string | null;
 }
 
 export interface EnqueueRequest {
@@ -50,6 +51,7 @@ interface OutboxRow {
   http_status: number | null;
   error_code: string | null;
   error_message: string | null;
+  error_field: string | null;
 }
 
 export function rowToOutboxItem(row: OutboxRow): OutboxItem {
@@ -71,6 +73,7 @@ export function rowToOutboxItem(row: OutboxRow): OutboxItem {
     httpStatus: row.http_status,
     errorCode: row.error_code,
     errorMessage: row.error_message,
+    errorField: row.error_field,
   };
 }
 

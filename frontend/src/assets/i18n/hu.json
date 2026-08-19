@@ -1,5 +1,92 @@
 {
   "APP": {
     "NAME": "Life Management 2.0"
+  },
+  "COMMON": {
+    "SAVE": "Mentés",
+    "CANCEL": "Mégse",
+    "DELETE": "Törlés",
+    "CLOSE": "Bezárás"
+  },
+  "LOGIN": {
+    "TITLE": "Bejelentkezés",
+    "USERNAME": "Felhasználónév",
+    "PASSWORD": "Jelszó",
+    "SUBMIT": "Bejelentkezés",
+    "ERROR": "Hibás felhasználónév vagy jelszó."
+  },
+  "TABS": {
+    "KAJA": "Kaja",
+    "EDZES": "Edzés",
+    "FELADATOK": "Feladatok",
+    "MENU": "Menü"
+  },
+  "MENU": {
+    "TITLE": "Menü",
+    "PROFILE": "Profile",
+    "THEME": "Téma",
+    "LANGUAGE": "Nyelv",
+    "SYNC": "Szinkronizációs központ",
+    "LOGOUT": "Kijelentkezés",
+    "LOGOUT_CONFIRM_TITLE": "Kijelentkezés",
+    "LOGOUT_CONFIRM_MESSAGE": "Biztosan kijelentkezel?",
+    "LOGOUT_CONFIRM_PENDING": "{{count}} szinkronizálatlan változás van. A kijelentkezés után is megmaradnak, és a következő bejelentkezéskor felmennek. Biztosan kijelentkezel?"
+  },
+  "THEME": {
+    "TITLE": "Téma",
+    "SYSTEM": "Rendszer",
+    "LIGHT": "Világos",
+    "DARK": "Sötét"
+  },
+  "LANGUAGE": {
+    "TITLE": "Nyelv",
+    "SYSTEM": "Rendszer"
+  },
+  "PROFILE": {
+    "TITLE": "Profile",
+    "BIRTH_DATE": "Születési dátum",
+    "SEX": "Nem",
+    "SEX_MALE": "Férfi",
+    "SEX_FEMALE": "Nő",
+    "HEIGHT_CM": "Magasság (cm)",
+    "CURRENT_WEIGHT_KG": "Jelenlegi testsúly (kg)",
+    "GOAL": "Cél",
+    "GOAL_FAT_LOSS": "Fogyás",
+    "GOAL_MAINTENANCE": "Megtartás",
+    "GOAL_WEIGHT_GAIN": "Tömegnövelés",
+    "KG_PER_WEEK": "Cél ütem (kg/hét)",
+    "VALIDATION_KG_PER_WEEK_REQUIRED": "Fogyás vagy tömegnövelés célnál kötelező megadni a heti ütemet.",
+    "GROSS_MONTHLY_SALARY_HUF": "Bruttó havi fizetés (Ft)",
+    "SAVE_SUCCESS": "Mentve.",
+    "WEIGHT_HISTORY_TITLE": "Súlytörténet",
+    "WEIGHT_HISTORY_ADD": "Új bejegyzés",
+    "WEIGHT_HISTORY_EMPTY": "Még nincs súlytörténet bejegyzés.",
+    "RECORDED_AT": "Dátum",
+    "WEIGHT_KG": "Testsúly (kg)",
+    "DELETE_CONFIRM_TITLE": "Bejegyzés törlése",
+    "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd ezt a súlytörténet bejegyzést?"
+  },
+  "SYNC": {
+    "TITLE": "Szinkronizációs központ",
+    "STATE_ONLINE": "Online",
+    "STATE_BACKEND_OFFLINE": "A szerver nem elérhető",
+    "STATE_FULL_OFFLINE": "Nincs internetkapcsolat",
+    "STATE_UNKNOWN": "Kapcsolat ellenőrzése…",
+    "PENDING_COUNT": "{{count}} várakozó",
+    "ERROR_COUNT": "{{count}} hibás",
+    "SYNC_NOW": "Szinkronizálás most",
+    "EMPTY_TITLE": "Minden szinkronizálva",
+    "STATUS_PENDING": "Várakozik",
+    "STATUS_SENDING": "Küldés folyamatban",
+    "STATUS_BLOCKED": "Blokkolva",
+    "STATUS_ERROR": "Hiba",
+    "STATUS_SKIPPED": "Átugorva",
+    "BLOCKED_EXPLANATION": "Egy korábbi hibás tételre vár.",
+    "ATTEMPT_COUNT": "{{count}} próbálkozás",
+    "PAYLOAD_TITLE": "Küldendő adat",
+    "FIX_TITLE": "Javítás és újraküldés",
+    "DROP_CONFIRM_TITLE": "Tétel eldobása",
+    "DROP_CONFIRM_MESSAGE": "A módosítás elvész, a tétel visszaáll a szerveren tárolt állapotra. Ez nem visszavonható.",
+    "DROP_CONFIRM_CASCADE": "A módosítás elvész, és ezzel együtt {{count}} további, erre épülő tétel is eldobódik. Ez nem visszavonható."
   }
 }

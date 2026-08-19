@@ -6,6 +6,7 @@ import { AuthSessionService } from '../session/auth-session.service';
 import { STORAGE_BACKEND } from '../storage/storage-backend';
 import { SyncEngineService } from '../sync/sync-engine.service';
 import { uuidV5 } from '../sync/uuid';
+import { WeightHistoryRepository } from './weight-history.repository';
 
 export type ProfileDraft = Omit<UserProfile, 'id' | 'createdAt' | 'updatedAt'>;
 
@@ -18,6 +19,7 @@ export class ProfileRepository {
   private readonly storage = inject(STORAGE_BACKEND);
   private readonly authSession = inject(AuthSessionService);
   private readonly syncEngine = inject(SyncEngineService);
+  private readonly weightHistory = inject(WeightHistoryRepository);
 
   readonly profile = signal<UserProfile | null>(null);
   readonly loaded = signal(false);
@@ -33,9 +35,17 @@ export class ProfileRepository {
     if (userId === null) {
       throw new Error('ProfileRepository: no authenticated user');
     }
+    const previousWeight = this.profile()?.currentWeightKg ?? null;
     const id = this.profile()?.id ?? (await uuidV5(`UserProfile:${userId}`));
     const saved = await this.storage.upsertProfile({ ...draft, id });
     this.profile.set(saved);
+
+    // documentation/Features/Profile.md "Súlytörténet": a changed (and filled-in) currentWeightKg opens a history row.
+    const nextWeight = saved.currentWeightKg ?? null;
+    if (nextWeight !== null && nextWeight !== previousWeight) {
+      await this.weightHistory.add(new Date().toISOString(), nextWeight);
+    }
+
     if (Capacitor.isNativePlatform()) {
       this.syncEngine.requestDrain();
     }

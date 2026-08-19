@@ -1,10 +1,12 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { App } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
 import { Network } from '@capacitor/network';
 import { firstValueFrom, timeout } from 'rxjs';
 
 import { HealthService } from '../../api/api/health.service';
+import { ProfileService } from '../../api/api/profile.service';
 import { SyncService } from '../../api/api/sync.service';
 import { ApiError } from '../../api/model/apiError';
 import { SyncChangeItem } from '../../api/model/syncChangeItem';
@@ -36,14 +38,15 @@ type DrainOutcome = 'success' | 'continue' | 'stop-network' | 'stop-auth';
 export class SyncEngineService {
   private readonly http = inject(HttpClient);
   private readonly healthApi = inject(HealthService);
+  private readonly profileApi = inject(ProfileService);
   private readonly syncApi = inject(SyncService);
   private readonly authSession = inject(AuthSessionService);
   private readonly offlineQueue = inject(OfflineQueueService);
   private readonly db = inject(LocalDatabaseService);
 
   readonly connectionState = signal<ConnectionState>('UNKNOWN');
-
-  private draining = false;
+  /** For SyncStatusButton's "forgó ikon" state (documentation/Architektúra/Backend-offline first.md §16). */
+  readonly draining = signal(false);
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private reconnectAttempt = 0;
   private startedForUserId: string | null = null;
@@ -72,7 +75,12 @@ export class SyncEngineService {
     if (userId === null) {
       return;
     }
-    if (this.startedForUserId !== userId) {
+    // documentation/Architektúra/Frontend.md: web is online-only — no outbox, no local store, so
+    // there is nothing for drain()/pull() to touch. The connection-state probe below still runs
+    // on web too (SyncStatusButton shows it there, minus the pending/error counts).
+    const nativeSyncEnabled = Capacitor.isNativePlatform();
+
+    if (nativeSyncEnabled && this.startedForUserId !== userId) {
       this.startedForUserId = userId;
       await this.offlineQueue.resetSendingToPending(userId);
     }
@@ -88,9 +96,36 @@ export class SyncEngineService {
     this.clearReconnectTimer();
     this.connectionState.set('ONLINE');
 
+    if (!nativeSyncEnabled) {
+      return;
+    }
     const didDrain = await this.drain(userId);
     if (didDrain || !wasOnline) {
       await this.pull(userId);
+    }
+    await this.refetchNeeded();
+  }
+
+  /** §6 "Kézi beavatkozás" Drop table: `_needs_refetch = 1` rows need a targeted GET, delta pull is not enough. */
+  private async refetchNeeded(): Promise<void> {
+    const staleProfiles = await this.db.query<{ id: string }>('SELECT id FROM user_profile WHERE _needs_refetch = 1');
+    if (staleProfiles.length > 0) {
+      try {
+        const dto = await firstValueFrom(this.profileApi.getProfile());
+        await this.db.executeTransaction([profileServerApplyTask(dto)]);
+      } catch {
+        // 404 (never saved server-side) or transient failure: leave the flag set, retried next cycle.
+      }
+    }
+
+    const staleEntries = await this.db.query<{ id: string }>('SELECT id FROM weight_history_entry WHERE _needs_refetch = 1');
+    for (const row of staleEntries) {
+      try {
+        const dto = await firstValueFrom(this.profileApi.getWeightHistoryEntry(row.id));
+        await this.db.executeTransaction([weightHistoryServerApplyTask(dto)]);
+      } catch {
+        // same as above
+      }
     }
   }
 
@@ -125,10 +160,10 @@ export class SyncEngineService {
 
   /** @returns whether at least one item was successfully sent (callers use this to decide whether a pull is owed). */
   private async drain(userId: string): Promise<boolean> {
-    if (this.draining) {
+    if (this.draining()) {
       return false;
     }
-    this.draining = true;
+    this.draining.set(true);
     let ranAny = false;
     try {
       await this.offlineQueue.recomputeBlocked(userId);
@@ -143,7 +178,7 @@ export class SyncEngineService {
         }
       }
     } finally {
-      this.draining = false;
+      this.draining.set(false);
     }
     await this.offlineQueue.refreshCounts(userId);
     return ranAny;
@@ -195,7 +230,7 @@ export class SyncEngineService {
       }
     }
 
-    await this.offlineQueue.markError(item.id, error.status, apiError?.code ?? null, apiError?.message ?? error.message);
+    await this.offlineQueue.markError(item.id, error.status, apiError?.code ?? null, apiError?.message ?? error.message, apiError?.field ?? null);
     return 'continue';
   }
 
@@ -236,7 +271,10 @@ export class SyncEngineService {
         continue;
       }
 
-      const tasks: SqlTask[] = response.changes.flatMap((change) => this.buildApplyTasks(change));
+      const tasks: SqlTask[] = [];
+      for (const change of response.changes) {
+        tasks.push(...this.buildApplyTasks(change));
+      }
       tasks.push({
         statement: 'UPDATE sync_state SET cursor = ?, last_pull_at = ?, last_pull_status = ?, first_pull_completed = 1 WHERE id = 1',
         values: [response.nextCursor, response.serverTime, 'OK'],

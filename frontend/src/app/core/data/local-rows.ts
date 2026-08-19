@@ -76,7 +76,7 @@ export function profileServerApplyTask(dto: UserProfile): SqlTask {
         birth_date = excluded.birth_date, sex = excluded.sex, height_cm = excluded.height_cm,
         current_weight_kg = excluded.current_weight_kg, goal = excluded.goal, kg_per_week = excluded.kg_per_week,
         gross_monthly_salary_huf = excluded.gross_monthly_salary_huf, created_at = excluded.created_at,
-        updated_at = excluded.updated_at, deleted = 0, deleted_at = NULL, _dirty = 0, _local_only = 0
+        updated_at = excluded.updated_at, deleted = 0, deleted_at = NULL, _dirty = 0, _local_only = 0, _needs_refetch = 0
       WHERE user_profile._dirty = 0`,
     values: [
       dto.id,
@@ -136,7 +136,7 @@ export function weightHistoryServerApplyTask(dto: WeightHistoryEntry): SqlTask {
       VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET
         recorded_at = excluded.recorded_at, weight_kg = excluded.weight_kg, created_at = excluded.created_at,
-        updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0
+        updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0, _needs_refetch = 0
       WHERE weight_history_entry._dirty = 0`,
     values: [dto.id, dto.recordedAt, dto.weightKg, dto.createdAt ?? null, dto.updatedAt ?? null, dto.deleted ? 1 : 0, dto.deletedAt ?? null],
   };

@@ -1,0 +1,24 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/menu"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ 'THEME.TITLE' | translate }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-list>
+    <ion-radio-group [value]="mode()" (ionChange)="setMode($event.detail.value)">
+      <ion-item>
+        <ion-radio value="system">{{ 'THEME.SYSTEM' | translate }}</ion-radio>
+      </ion-item>
+      <ion-item>
+        <ion-radio value="light">{{ 'THEME.LIGHT' | translate }}</ion-radio>
+      </ion-item>
+      <ion-item>
+        <ion-radio value="dark">{{ 'THEME.DARK' | translate }}</ion-radio>
+      </ion-item>
+    </ion-radio-group>
+  </ion-list>
+</ion-content>

@@ -1,0 +1,148 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/menu"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ 'SYNC.TITLE' | translate }}</ion-title>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-note class="ion-padding-start">
+      {{ 'SYNC.STATE_' + connectionState() | translate }}
+      @if (pendingCount() > 0) {
+        · {{ 'SYNC.PENDING_COUNT' | translate: { count: pendingCount() } }}
+      }
+      @if (errorCount() > 0) {
+        · {{ 'SYNC.ERROR_COUNT' | translate: { count: errorCount() } }}
+      }
+    </ion-note>
+    <ion-buttons slot="end">
+      <ion-button (click)="syncNow()" [disabled]="draining() || connectionState() !== 'ONLINE'">
+        @if (draining()) {
+          <ion-spinner name="dots"></ion-spinner>
+        } @else {
+          {{ 'SYNC.SYNC_NOW' | translate }}
+        }
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  @if (items().length === 0) {
+    <div class="empty-state ion-padding ion-text-center">
+      <ion-icon name="checkmark-done-outline" size="large" color="success" aria-hidden="true"></ion-icon>
+      <p>{{ 'SYNC.EMPTY_TITLE' | translate }}</p>
+    </div>
+  }
+
+  <ion-list>
+    @for (item of items(); track item.id) {
+      <ion-item [class.blocked-item]="item.status === 'BLOCKED'" [class.skipped-item]="item.status === 'SKIPPED'">
+        <ion-label>
+          <h3>
+            {{ item.entityType }} · {{ item.method }}
+            @switch (item.status) {
+              @case ('PENDING') {
+                <ion-icon name="time-outline" color="medium" aria-hidden="true"></ion-icon>
+              }
+              @case ('SENDING') {
+                <ion-spinner name="dots"></ion-spinner>
+              }
+              @case ('BLOCKED') {
+                <ion-icon name="lock-closed-outline" color="medium" aria-hidden="true"></ion-icon>
+              }
+              @case ('ERROR') {
+                <ion-icon name="alert-circle" color="danger" aria-hidden="true"></ion-icon>
+              }
+              @case ('SKIPPED') {
+                <ion-icon name="play-skip-forward-outline" color="medium" aria-hidden="true"></ion-icon>
+              }
+            }
+          </h3>
+          <p>{{ item.createdAt | date: 'short' }} · {{ 'SYNC.STATUS_' + item.status | translate }}</p>
+          @if (item.status === 'BLOCKED') {
+            <p class="ion-text-wrap">{{ 'SYNC.BLOCKED_EXPLANATION' | translate }}</p>
+          }
+          @if (item.status === 'ERROR') {
+            <p class="ion-text-wrap error-text">{{ item.errorCode }} — {{ item.errorMessage }}</p>
+          }
+          @if (item.attemptCount > 0) {
+            <p>{{ 'SYNC.ATTEMPT_COUNT' | translate: { count: item.attemptCount } }}</p>
+          }
+        </ion-label>
+
+        <ion-buttons slot="end">
+          <ion-button fill="clear" (click)="viewPayload(item)">
+            <ion-icon name="document-text-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+          </ion-button>
+          @if (item.status === 'ERROR') {
+            <ion-button fill="clear" (click)="startFix(item)">
+              <ion-icon name="create-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+            </ion-button>
+            <ion-button fill="clear" (click)="skip(item)">
+              <ion-icon name="play-skip-forward-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+            </ion-button>
+            <ion-button fill="clear" color="danger" (click)="drop(item)">
+              <ion-icon name="trash-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+            </ion-button>
+          }
+          @if (item.status === 'SKIPPED') {
+            <ion-button fill="clear" (click)="unskip(item)">
+              <ion-icon name="play-back-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+            </ion-button>
+            <ion-button fill="clear" color="danger" (click)="drop(item)">
+              <ion-icon name="trash-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+            </ion-button>
+          }
+        </ion-buttons>
+      </ion-item>
+    }
+  </ion-list>
+</ion-content>
+
+<ion-modal [isOpen]="payloadViewItem() !== null" (didDismiss)="payloadViewItem.set(null)">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>{{ 'SYNC.PAYLOAD_TITLE' | translate }}</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="payloadViewItem.set(null)">{{ 'COMMON.CLOSE' | translate }}</ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content class="ion-padding">
+      <pre>{{ payloadViewItem()?.payload | json }}</pre>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<ion-modal [isOpen]="fixItem() !== null" (didDismiss)="fixItem.set(null)">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>{{ 'SYNC.FIX_TITLE' | translate }}</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="fixItem.set(null)">{{ 'COMMON.CANCEL' | translate }}</ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content class="ion-padding">
+      @if (fixItem(); as item) {
+        @if (item.errorMessage) {
+          <ion-note color="danger" class="ion-text-wrap">{{ item.errorCode }} — {{ item.errorMessage }}</ion-note>
+        }
+        <form [formGroup]="fixForm" (ngSubmit)="submitFix()">
+          <ion-list>
+            @for (key of fixFieldKeys; track key) {
+              <ion-item [class.highlighted-field]="key === item.errorField">
+                <ion-label position="stacked">{{ key }}</ion-label>
+                <input [formControlName]="key" [autofocus]="key === item.errorField" />
+              </ion-item>
+            }
+          </ion-list>
+          <ion-button expand="block" type="submit" class="ion-margin-top">{{ 'COMMON.SAVE' | translate }}</ion-button>
+        </form>
+      }
+    </ion-content>
+  </ng-template>
+</ion-modal>

@@ -1,0 +1,147 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/menu"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ 'PROFILE.TITLE' | translate }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <form [formGroup]="form" (ngSubmit)="save()">
+    <ion-list>
+      <ion-item>
+        <ion-input
+          formControlName="birthDate"
+          type="date"
+          [label]="'PROFILE.BIRTH_DATE' | translate"
+          labelPlacement="stacked"
+        ></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-select formControlName="sex" [label]="'PROFILE.SEX' | translate" labelPlacement="stacked">
+          <ion-select-option [value]="SexEnum.Male">{{ 'PROFILE.SEX_MALE' | translate }}</ion-select-option>
+          <ion-select-option [value]="SexEnum.Female">{{ 'PROFILE.SEX_FEMALE' | translate }}</ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item>
+        <ion-input
+          formControlName="heightCm"
+          type="number"
+          [label]="'PROFILE.HEIGHT_CM' | translate"
+          labelPlacement="stacked"
+        ></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-input
+          formControlName="currentWeightKg"
+          type="number"
+          step="0.1"
+          [label]="'PROFILE.CURRENT_WEIGHT_KG' | translate"
+          labelPlacement="stacked"
+        ></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-select formControlName="goal" [label]="'PROFILE.GOAL' | translate" labelPlacement="stacked">
+          <ion-select-option [value]="GoalEnum.FatLoss">{{ 'PROFILE.GOAL_FAT_LOSS' | translate }}</ion-select-option>
+          <ion-select-option [value]="GoalEnum.Maintenance">{{ 'PROFILE.GOAL_MAINTENANCE' | translate }}</ion-select-option>
+          <ion-select-option [value]="GoalEnum.WeightGain">{{ 'PROFILE.GOAL_WEIGHT_GAIN' | translate }}</ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      @if (showKgPerWeek()) {
+        <ion-item>
+          <ion-input
+            formControlName="kgPerWeek"
+            type="number"
+            step="0.1"
+            [label]="'PROFILE.KG_PER_WEEK' | translate"
+            labelPlacement="stacked"
+          ></ion-input>
+        </ion-item>
+        @if (form.errors?.['kgPerWeekRequired'] && form.controls.kgPerWeek.touched) {
+          <ion-text color="danger">
+            <p class="ion-padding-start">{{ 'PROFILE.VALIDATION_KG_PER_WEEK_REQUIRED' | translate }}</p>
+          </ion-text>
+        }
+      }
+
+      <ion-item>
+        <ion-input
+          formControlName="grossMonthlySalaryHuf"
+          type="number"
+          [label]="'PROFILE.GROSS_MONTHLY_SALARY_HUF' | translate"
+          labelPlacement="stacked"
+        ></ion-input>
+      </ion-item>
+    </ion-list>
+
+    <ion-button expand="block" type="submit" class="ion-margin-top">
+      {{ 'COMMON.SAVE' | translate }}
+    </ion-button>
+    @if (savedRecently()) {
+      <ion-text color="success">
+        <p class="ion-text-center">{{ 'PROFILE.SAVE_SUCCESS' | translate }}</p>
+      </ion-text>
+    }
+  </form>
+
+  <ion-list>
+    <ion-list-header>
+      <ion-label>{{ 'PROFILE.WEIGHT_HISTORY_TITLE' | translate }}</ion-label>
+      <ion-button fill="clear" (click)="startAddEntry()">
+        <ion-icon name="add-outline" slot="start" aria-hidden="true"></ion-icon>
+        {{ 'PROFILE.WEIGHT_HISTORY_ADD' | translate }}
+      </ion-button>
+    </ion-list-header>
+
+    @if (entryEditingId(); as editingId) {
+      <ion-item>
+        <form [formGroup]="entryForm" (ngSubmit)="saveEntry()" class="entry-form">
+          <ion-input
+            formControlName="recordedAt"
+            type="datetime-local"
+            [label]="'PROFILE.RECORDED_AT' | translate"
+            labelPlacement="stacked"
+          ></ion-input>
+          <ion-input
+            formControlName="weightKg"
+            type="number"
+            step="0.1"
+            [label]="'PROFILE.WEIGHT_KG' | translate"
+            labelPlacement="stacked"
+          ></ion-input>
+          <div class="entry-form-actions">
+            <ion-button fill="clear" type="button" (click)="cancelEntryEdit()">{{ 'COMMON.CANCEL' | translate }}</ion-button>
+            <ion-button type="submit">{{ 'COMMON.SAVE' | translate }}</ion-button>
+          </div>
+        </form>
+      </ion-item>
+    }
+
+    @if (entries().length === 0 && entryEditingId() === null) {
+      <ion-item>
+        <ion-label color="medium">{{ 'PROFILE.WEIGHT_HISTORY_EMPTY' | translate }}</ion-label>
+      </ion-item>
+    }
+
+    @for (entry of entries(); track entry.id) {
+      <ion-item>
+        <ion-label>
+          <h3>{{ entry.weightKg }} kg</h3>
+          <p>{{ entry.recordedAt | date: 'short' }}</p>
+        </ion-label>
+        <ion-button fill="clear" (click)="startEditEntry(entry)">
+          <ion-icon name="create-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+        </ion-button>
+        <ion-button fill="clear" color="danger" (click)="deleteEntry(entry)">
+          <ion-icon name="trash-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+        </ion-button>
+      </ion-item>
+    }
+  </ion-list>
+</ion-content>
