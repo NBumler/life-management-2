@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Kész` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Frontend]], [[Backend-offline first]], [[Fejlesztői környezet]], [[Bejelentkezés]], [[Névegyediség]], [[Szinkronizációs központ]] |
+| **Kapcsolódó** | [[Frontend]], [[Backend-offline first]], [[Fejlesztői környezet]], [[Bejelentkezés]], [[Névegyediség]], [[Szinkronizációs központ]], [[Nyelv választás]] |
 
 ### Célállapot
 
@@ -76,16 +76,17 @@ A monorepo elrendezés (`backend/` + `frontend/`) és a futtatás: [[Fejlesztői
 ```
 backend/
 ├─ build.gradle.kts
-├─ src/main/java/hu/lm2/…            # feature-alapú csomagok
+├─ src/main/java/hu/bumler/lm2/…     # feature-alapú csomagok
 ├─ src/main/resources/
 │  ├─ application.yml
 │  ├─ openapi.yaml                   # OpenAPI SSOT (kézzel írt gyökérfájl)
 │  ├─ openapi/                       # $ref-elt paths/ és components/ darabok
 │  └─ db/migration/V<n>__<leírás>.sql
-└─ src/test/java/hu/lm2/…
+└─ src/test/java/hu/bumler/lm2/…
 ```
 
-- **Feature-alapú csomagszervezés** (starter kit), nem réteg-alapú: `hu.lm2.<feature>` (`food`, `workout`, `climbing`, `tasks`, `finance`, `aycm`, `gear`, `steps`, `shopping`, `auth`, `sync`) + `hu.lm2.common` (config, hibakezelés, normalizálás, idempotencia).
+- Gradle `group`: **`hu.bumler.lm2`** — ez egyben a Java base package.
+- **Feature-alapú csomagszervezés** (starter kit), nem réteg-alapú: `hu.bumler.lm2.<feature>` (`food`, `workout`, `climbing`, `tasks`, `finance`, `aycm`, `gear`, `steps`, `shopping`, `auth`, `sync`) + `hu.bumler.lm2.common` (config, hibakezelés, normalizálás, idempotencia).
 - Rétegzés a feature-ön belül: **Controller → Service → Repository**; a controller vékony (a generált interface implementációja + delegálás), az üzleti logika a service-ben, `@Transactional` a service-en.
 - DTO a határon: a **generált** OpenAPI modellek mennek ki és be, JPA entitás soha. Mapping kézi mapperrel a feature csomagban (MapStruct csak akkor, ha érdemben megéri).
 
@@ -144,7 +145,8 @@ Szerződés és szemantika: [[Backend-offline first]] (SSOT) — itt csak az imp
 #### Hibakezelés
 
 - **Egy** globális `@RestControllerAdvice`, nincs szétszórt `try/catch` (starter kit).
-- A válasz alakja a starter kit `ApiError`-jának **bővítése** a sync szerződés szerint: `{ code, message, field?, conflictingId? }` ([[Backend-offline first]]). A `code` a gépi ág, a `message` a [[Szinkronizációs központ]] hibasorába megy.
+- A válasz alakja a starter kit `ApiError`-jának **bővítése** a sync szerződés szerint: `{ code, message, field?, conflictingId? }` ([[Backend-offline first]]).
+- **A szerver hibaüzenete nincs lokalizálva:** a felhasználói szöveget a kliens a `code`-ból fordítja ([[Nyelv választás]]), a `message` csak fallback és diagnosztika a [[Szinkronizációs központ]] hibasorában. Ezért minden hibaosztálynak **stabil `code`-ja** kell legyen — új hibakód bevezetése egyben i18n kulcs bevezetése is.
 - Domain kivételek a service-ből (`EntityNotFoundException`, `EntityDeletedException`, `UniqueViolationException`), a handler képezi HTTP-re. `500`-nál nincs stack trace vagy belső üzenet a kliensnek.
 - Postgres `23505` (unique violation) elkapva → `409` + `UNIQUE_VIOLATION` + a `field`; az index-név → mező leképezés a `common` csomagban egy helyen él.
 - `PUT` törölt entitáson → `409` + `ENTITY_DELETED`; idegen user sora → `404` (nem `403`, enumeration ellen) — [[Bejelentkezés]].
@@ -152,7 +154,7 @@ Szerződés és szemantika: [[Backend-offline first]] (SSOT) — itt csak az imp
 #### Kötelező elvek
 
 - [[Backend-offline first]]: kliens UUID (v4, természetes kulcsnál v5), idempotens írás, soft delete, cascade `updated_at` bump.
-- Az entitás ID stratégia **nem** lehet szerveroldali `IDENTITY` auto-increment. (A [[Giga feature napló specifikáció (Ideiglenes specifikáció)]] jelenleg `GenerationType.IDENTITY`-t mutat — az az ideiglenes szöveg elavult, a moduláris specek a kliens UUID-t írják.)
+- Az entitás ID stratégia **nem** lehet szerveroldali `IDENTITY` auto-increment. (A [[Giga feature napló specifikáció (Ideiglenes specifikáció)]] régi `IDENTITY` / `Long` példái elavultak — ott is jelölve; a moduláris specek a kliens UUID-t írják.)
 - Az OpenAPI sémákban az entitás ID-k UUID típusúak.
 - **Külső integrációk nincsenek proxyzva** a backenden: a [[Frontend]] közvetlenül hívja őket (Open Food Facts, Health Connect, Google), így `BACKEND_OFFLINE` állapotban is működnek.
 - **Auth / authorizáció:** JWT access + refresh, `@PreAuthorize`, user-owned vs shared ownership — SSOT: [[Bejelentkezés]]. Admin API a `/api/admin/**` alatt `X-Admin-Api-Key` filterrel, nem JWT role-lal.
@@ -183,4 +185,3 @@ Nincs aggregált „Kaja API" a szülőben. A szerződés **erőforrás / tag al
 
 - **Prod üzemeltetés / hosting** (saját VPS + docker-compose vs managed platform + managed Postgres, TLS, backup): az első kör a fejlesztői környezetre szól — [[Fejlesztői környezet]]. A natív app `apiBaseUrl`-je konfiguráció, tehát a döntés nem blokkolja a fejlesztést.
 - Az openapi-generator `spring` profiljának **Spring Boot 4 / Framework 7 kimenetét** verzió-pineléskor ellenőrizni kell. Ha az adott generátor-verzió még nem kompatibilis, a tartalék: csak model / DTO generálás, és az API interface kézzel íródik a spec alapján (a szerződés forrása változatlanul az OpenAPI).
-- Végleges Gradle `group` / base package: a javaslat `hu.lm2`, a repo inicializálásakor véglegesítendő.

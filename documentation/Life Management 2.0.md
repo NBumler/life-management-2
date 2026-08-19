@@ -4,9 +4,9 @@
 
 | | |
 |---|---|
-| **Státusz** | `Váz` |
+| **Státusz** | `Kész` |
 | **Szülő** | _Nincs szülő (hub / architektúra / gyökér)._ |
-| **Kapcsolódó** | [[Backend]], [[Frontend]], [[Fejlesztői környezet]], [[Backend-offline first]], [[Mennyiség mező]], [[Szöveges keresés]], [[Névegyediség]], [[Bejelentkezés]], [[SPEC-TEMPLATE]] |
+| **Kapcsolódó** | [[Backend]], [[Frontend]], [[Fejlesztői környezet]], [[Backend-offline first]], [[Mennyiség mező]], [[Szöveges keresés]], [[Névegyediség]], [[Bejelentkezés]], [[Nyelv választás]], [[Dark&Light mode]], [[SPEC-TEMPLATE]] |
 
 ### Célállapot
 
@@ -20,17 +20,19 @@ Személyes life-management alkalmazás (hibrid mobil + web). Több felhasználó
 - Input mezők egységesítve; web vs mobil esetén a platformnak megfelelő, legkényelmesebb kontroll.
 - Ha egy felületen egyértelmű, hogy melyik inputot fogja használni a user, az mező legyen automatikusan fókuszban.
 - Offline / backend-offline állapot kezelése: [[Backend-offline first]] + [[Szinkronizációs központ]]. Az offline működés a **natív** builden teljes; a **web build online-only**.
+- **Nyelv és téma:** mindkettő a készülék beállítását követi alapértelmezésben (fallback: magyar, illetve light / dark a rendszertől), a user felülírhatja, és a választás **device-local** — [[Nyelv választás]], [[Dark&Light mode]].
+- Minden felhasználói szöveg i18n kulcson megy át, és minden szín téma-tokenből jön; a szerver hibaválasza `code`-ot ad, a szöveget a kliens fordítja — [[Nyelv választás]], [[Backend]].
 
 #### Dokumentációs konvenciók
 
 | Mappa | Jelentés |
 |---|---|
 | `Features/` | Feature szintű specifikáció (részben vagy teljesen kidolgozva) |
-| `Feature - TODO/` | Feature szintű specifikáció, ami még hiányos / stub |
 | `Subfeatures/` | Kidolgozott (vagy legalább vázolt) alfeature |
 | `Subfeatures - TODO/` | Alfeature specifikáció még hiányzik vagy részleges |
 | `Architektúra/` | Kidolgozott architektúra jegyzetek |
-| `Architektúra - TODO/` | Architektúra jegyzetek stub / bővítendő |
+
+A `- TODO` mappák **csak addig léteznek, amíg van bennük tartalom**: a `Feature - TODO/` és az `Architektúra - TODO/` kiürült, ezért törölve. A `Subfeatures - TODO/` ma egyetlen fájlt tart, az archív pointert ([[Giga feature napló specifikáció (Ideiglenes specifikáció)]]), aminek a tartalma szét van osztva a kanonikus specek közé.
 
 Minden specifikáció egységes szerkezetet követ: **Business** + **Architektúra** (Frontend → **Backend-offline** → Backend). A `#### Backend-offline` alfejezet kötelező. Sablon: [[SPEC-TEMPLATE]]. Státusz: `TODO` / `Váz` / `Ideiglenes` / `Kész`.
 Agent skill: `.cursor/skills/documentation-spec/`. Offline SSOT: [[Backend-offline first]].
@@ -58,9 +60,25 @@ Agent skill: `.cursor/skills/documentation-spec/`. Offline SSOT: [[Backend-offli
 - [[Események]]
 - [[Pénzügyek]]
 
-#### Feature lista — hiányos / stub (`Feature - TODO/`)
+#### Feature lista — hiányos / stub
 
-_Nincs._
+_Nincs:_ minden feature és architektúra jegyzet `Kész`.
+
+#### Első kör (MVP) hatókör
+
+A specifikáció teljes, de nem minden része az **első kiadás** része. Ami tudatosan kimarad:
+
+| Kimarad | Hol van rögzítve |
+|---|---|
+| **Web mint kiadott platform** — a web build fordul és fejlesztésre használható, de nem QA-zott, és offline nem támogatott | [[Frontend]] (web hatókör), [[Backend-offline first]] §17 |
+| **iOS build és telepítés** (az iOS Health lépés-sync is) | [[Fejlesztői környezet]], [[Lépésszám követés]] |
+| **Google Calendar export** — a spec `Kész`, de a flag `false` | [[Google Calendar szinkronizálása]] |
+| **Remote push** (FCM / APNs); az első kör lokális ütemezés | [[Értesítések]] |
+| **Prod hosting / TLS** — a dev környezet van specifikálva; a natív app `apiBaseUrl`-je konfiguráció | [[Backend]], [[Fejlesztői környezet]] |
+| **Profil-szintű beállítás-sync** (nyelv, téma, értesítés-kapcsolók device-localak) | [[Bejelentkezés]], [[Nyelv választás]], [[Dark&Light mode]] |
+| Realtime sync, mezőszintű merge, CRDT | [[Backend-offline first]] §17 |
+
+Az egyes feature specek `Nem scope (MVP)` szakaszai ennél részletesebbek; ez a tábla csak a rendszerszintű vágásokat sorolja.
 
 ### UI/UX elvárások
 
@@ -68,7 +86,9 @@ Alsó tab bar: Kaja, Edzés, Feladatok, Menü. Tab-térkép, tabon belüli navig
 
 ### Megjegyzések
 
-_Nincs megjegyzés._
+**A specifikáció lezárva:** minden feature, alfeature és architektúra jegyzet `Kész`, nyitott kérdés csak a fenti MVP-vágásoknál marad (prod hosting, iOS). A négy architektúra-SSOT, amiből az implementáció indul: [[Frontend]] (app-shell, flag registry), [[Backend]] (stack, OpenAPI, séma), [[Backend-offline first]] (offline szerződés) és [[Fejlesztői környezet]] (monorepo, futtatás, Android telepítés).
+
+Ha egy feature spec és egy architektúra jegyzet ütközik, az architektúra jegyzet nyer (az app-shell és az offline szerződés SSOT); a feature spec javítandó, nem az architektúra megkerülendő.
 
 ### Nyitott kérdések
 

@@ -63,7 +63,7 @@ A négy felső szintű mappa (`pages/`, `shared/`, `core/`, `api/`) a repóban l
 | `core/data/<entitás>.repository.ts` | `<Entity>Repository` | Tipizált homlokzat a `StorageBackend` felett; olvasás **signal**-ként; mutáció natívon egyetlen helyi tranzakcióban store + outbox — [[Backend-offline first]] §5. |
 | `core/sync/` | `SyncEngine`, `OfflineQueueService`, `OutboxMigrator` | Drain / pull / állapotfelismerés; a generált kliens egyetlen üzleti fogyasztója. |
 | `core/session/` | `AuthSession`, auth guard, token interceptor | Token életciklus, secure storage — [[Bejelentkezés]]. |
-| `core/config/` | `FeatureFlags`, `NetworkStatus`, `AppConfig` | Build / futásidejű asset + platform képességek. |
+| `core/config/` | `FeatureFlags`, `NetworkStatus`, `AppConfig`, `LanguageService`, `ThemeService` | Build / futásidejű asset + platform képességek + device-local preferenciák ([[Nyelv választás]], [[Dark&Light mode]]). |
 | `pages/<oldal>/` | Képernyők; a gyerek komponensek a szülő mappájában | Lazy route; csak repositoryt és shared komponenst használ. Névkonvenció: `{név}.page.ts`, `{név}.component.ts`, `{név}.service.ts`, `{név}.guard.ts`, `{név}.repository.ts`. |
 | `shared/` | Közös komponensek és pure TS utility-k | [[Mennyiség mező]], [[Szöveges keresés]], [[Névegyediség]], nehézségi skála, DateTime modul, `SyncStatusButton`. |
 
@@ -121,6 +121,7 @@ A gyerek route-ok pontos alakja a feature specekben marad; itt a gyökerek köte
 | `/tabs/workout/cycling` | Biciklizés napló | [[Biciklizés napló]] |
 | `/tabs/workout/exercises` | Gyakorlat törzsadat (fejléc belépő) | [[Gyakorlat]] |
 | `/tabs/tasks/household` · `/life-plans` · `/calendar` · `/events` | Feladatok hub gyerekei | [[Háztartási feladatok]], [[Élet tervek]], [[Naptár]], [[Események]] |
+| `/tabs/tasks/events/google` | Google export beállítás (Események fejléc belépő) | [[Google Calendar szinkronizálása]] |
 | `/tabs/menu/shopping` | Bevásárlás | [[Bevásárlás]] |
 | `/tabs/menu/profile` | Profile | [[Profile]] |
 | `/tabs/menu/steps` | Lépésszám | [[Lépésszám követés]] |
@@ -189,6 +190,7 @@ Az `offlineCapable` **nem** feature flag, hanem platform-képesség (natív = `t
 | `feladatok.eletTervek` | Élet tervek csempe | [[Élet tervek]] |
 | `feladatok.naptar` | Naptár csempe | [[Naptár]] |
 | `feladatok.esemenyek` | Események csempe + naptár `EVENT` chip | [[Események]] |
+| `feladatok.googleExport` | Események fejléc → Google export + egyeztető kör (**első körben `false`**) | [[Google Calendar szinkronizálása]] |
 | `menu.bevasarlas` | Menü → Bevásárlás | [[Bevásárlás]] |
 | `menu.lepesszam` | Menü → Lépésszám (+ TDEE lépéság) | [[Lépésszám követés]] |
 | `menu.ertesitesek` | Menü → Értesítések + ütemező | [[Értesítések]] |
@@ -208,6 +210,7 @@ A config **build-time validált**; szabálysértés fordítási hiba, nem futás
 | `edzes.*` | `tab.edzes` | Ugyanaz |
 | `feladatok.*` | `tab.feladatok` | [[Tennivalók]]: tab ki → egyik csempe sem látszik |
 | `menu.bevasarlas` | `tab.kaja` | A teljesítés `StoredFood`-ot ír a készletbe — [[Bevásárlás teljesítve]], [[Élelmiszer tárolás]] |
+| `feladatok.googleExport` | `feladatok.esemenyek` | Csak eseményeket exportál; forrás nélkül nincs mit feltölteni — [[Google Calendar szinkronizálása]] |
 
 Szándékosan **független** párok: `menu.aycm` ↔ `menu.penzugyek` (Pénzügyek ki → az AYCM megtérülés `~`, nincs saját összeg — [[AYCM tracker]]); `edzes.hetiTerv` ↔ Edzésnapló (a napló ad-hoc módban is teljes).
 
@@ -262,6 +265,7 @@ Platform-kényelmi pluginok (splash screen, status bar, keyboard) szükség szer
 | Vonalkód kamera | ✔ | ✘ |
 | Health Connect lépés-sync + 08:00 háttérfeladat | ✔ (Android) | ✘ |
 | Lokális értesítések | ✔ | ✘ |
+| Google Calendar export (OAuth + egyeztető kör) | ✔ | ✘ — [[Google Calendar szinkronizálása]] |
 | Online CRUD, keresés, i18n, téma, minden pure TS számítás | ✔ | ✔ |
 | Token tárolás | Platform secure storage | Secure web storage / httpOnly cookie — [[Bejelentkezés]] |
 

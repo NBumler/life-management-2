@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Kész` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Élelmiszer tárolás]], [[Lépésszám követés]], [[Tápérték kalkulátor]], [[Étkezés]], [[Háztartási feladatok]], [[Rendszeres kiadások]], [[Tennivalók]], [[Események]], [[Élet tervek]], [[Frontend]], [[Bejelentkezés]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Élelmiszer tárolás]], [[Lépésszám követés]], [[Tápérték kalkulátor]], [[Étkezés]], [[Háztartási feladatok]], [[Rendszeres kiadások]], [[Tennivalók]], [[Események]], [[Élet tervek]], [[Nyelv választás]], [[Google Calendar szinkronizálása]], [[Frontend]], [[Bejelentkezés]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -102,6 +102,10 @@ Az OS / app újraindulás vagy többszöri scheduler-futás ne küldjön ugyanar
 
 Ehhez helyi „már elküldve” napló (pl. `notificationDedupe`: típus + kulcs + nap).
 
+#### Nyelvváltás → újraütemezés
+
+Az ütemezett értesítés szövege az **ütemezés pillanatában** dől el, tehát nyelvváltás után a régi nyelven szólalna meg. Ezért **nyelvváltáskor a scheduler újraértékel és újraütemez** ([[Nyelv választás]]) — ugyanaz a művelet, mint egy típus-kapcsoló átállításakor. A dedupe napló ettől **nem** ürül: ami ma már kiment, ne menjen ki újra más nyelven.
+
 ### UI/UX elvárások
 
 - Menü → Értesítések: típus kapcsolók + rövid magyarázat (mikor szól).
@@ -113,6 +117,8 @@ Ehhez helyi „már elküldve” napló (pl. `notificationDedupe`: típus + kulc
 **Remote push mire jó (később):** a szerver küldi az üzenetet (FCM/APNs), akkor is, ha az app hetek óta nem fut, vagy másik eszközön kell ugyanaz. Pl. multi-device, szerveroldali esemény. Az első körben a lokális ütemező elég (élelmiszer / lépés / kalória / háztartási feladat / esemény a helyi store-ból).
 
 Élelmiszer lead time SSOT táblázat: [[Élelmiszer tárolás]] (küldési ritmus: ez a spec).
+
+Az app az értesítések **egyetlen** forrása: a [[Google Calendar szinkronizálása]] által exportált Google események emlékeztető **nélkül** jönnek létre, különben a user duplán kapná ugyanazt az eseményt.
 
 ### Nyitott kérdések
 
@@ -126,6 +132,7 @@ Nincs nyitott kérdés.
 - Trigger források: készlet store, `DailyStepLog`, Étkezés napi összeg + TDEE allowance, háztartási feladat store (`nextDue`), esemény store + vetítés ([[Események]]).
 - 09:00 / 20:00 / esemény `startTime`: OS scheduled local notifications és/vagy napi background check + immediate local notification.
 - Beállítások page a Menü alatt; flag-ek **device-local** store ([[Bejelentkezés]] — nincs profil-sync az első körben).
+- Újraértékelés kiváltói: app indulás / előtérbe jövés, forrás-entitás mutáció, típus-kapcsoló váltás és **nyelvváltás** ([[Nyelv választás]]). A szövegek i18n kulcsokból készülnek, nem hardcode stringből.
 
 #### Backend-offline
 

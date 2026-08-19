@@ -14,7 +14,7 @@ Saját, user-owned naptári események: egyszeri vagy egyszerűen ismétlődő, 
 
 **Ownership:** **user-owned** — [[Bejelentkezés]].
 
-**Nem scope (MVP):** [[Google Calendar szinkronizálása]]; naptárból create; hónap-rácson timed sáv; „csak ez az előfordulás” / kivételek; többnapos / éjfélen átnyúló esemény; RRULE (havi, heti napok mix, COUNT); skip / snooze / undo; duplikálás; vendégek; eseményenkénti lead time; seed.
+**Nem scope (MVP):** [[Google Calendar szinkronizálása]] (a spec `Kész` — egyirányú export —, de a flag az első körben ki); naptárból create; hónap-rácson timed sáv; „csak ez az előfordulás” / kivételek; többnapos / éjfélen átnyúló esemény; RRULE (havi, heti napok mix, COUNT); skip / snooze / undo; duplikálás; vendégek; eseményenkénti lead time; seed.
 
 A create/edit űrlap mezői itt élnek; a [[Új esemény hozzáadása]] erre a specre mutat.
 
@@ -100,6 +100,7 @@ HTTP `DELETE` marad; a szerver tombstone-t ír. Már törölt ID-re `DELETE` →
 - Üres állapot (nincs élő esemény): CTA új eseményre.
 - Create / edit: lásd [[Új esemény hozzáadása]] + alább.
 - Törlés: confirmation; ismétlődőnél sorozat-figyelmeztetés.
+- Fejléc belépő: **Google export** beállítás, ha a `feladatok.googleExport` flag be van kapcsolva ([[Google Calendar szinkronizálása]], [[Frontend]]).
 
 #### Create / edit űrlap
 
@@ -113,7 +114,7 @@ HTTP `DELETE` marad; a szerver tombstone-t ír. Már törölt ID-re `DELETE` →
 
 ### Megjegyzések
 
-A Feladatok tab csempéi: [[Tennivalók]]. A naptár fogyasztói szerződés: [[Naptár]]. Google: [[Google Calendar szinkronizálása]] (`TODO`).
+A Feladatok tab csempéi: [[Tennivalók]]. A naptár fogyasztói szerződés: [[Naptár]]. Google: [[Google Calendar szinkronizálása]] — **egyirányú export** (LM2 → Google), az itteni sor a forrás; a Google-oldali szerkesztés felülíródik. Az entitást és a végpontokat az export **nem** érinti (device-local export-állapot).
 
 ### Nyitott kérdések
 
