@@ -132,7 +132,7 @@
     @for (entry of entries(); track entry.id) {
       <ion-item>
         <ion-label>
-          <h3>{{ entry.weightKg }} kg</h3>
+          <h3>{{ 'PROFILE.WEIGHT_HISTORY_ITEM_VALUE' | translate: { weight: entry.weightKg } }}</h3>
           <p>{{ entry.recordedAt | date: 'short' }}</p>
         </ion-label>
         <ion-button fill="clear" (click)="startEditEntry(entry)">

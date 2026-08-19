@@ -66,6 +66,7 @@
     "WEIGHT_HISTORY_EMPTY": "Még nincs súlytörténet bejegyzés.",
     "RECORDED_AT": "Dátum",
     "WEIGHT_KG": "Testsúly (kg)",
+    "WEIGHT_HISTORY_ITEM_VALUE": "{{weight}} kg",
     "DELETE_CONFIRM_TITLE": "Bejegyzés törlése",
     "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd ezt a súlytörténet bejegyzést?"
   },

@@ -66,6 +66,7 @@
     "WEIGHT_HISTORY_EMPTY": "No weight history entries yet.",
     "RECORDED_AT": "Date",
     "WEIGHT_KG": "Weight (kg)",
+    "WEIGHT_HISTORY_ITEM_VALUE": "{{weight}} kg",
     "DELETE_CONFIRM_TITLE": "Delete entry",
     "DELETE_CONFIRM_MESSAGE": "Are you sure you want to delete this weight history entry?"
   },
