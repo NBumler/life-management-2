@@ -66,6 +66,12 @@ openApiGenerate {
 			"interfaceOnly" to "true",
 			"useTags" to "true",
 			"documentationProvider" to "none",
+			// documentation/Architektúra/Backend.md "OpenAPI — spec-first": generated DTOs must
+			// carry jakarta.validation annotations from the schema (required/maxLength/pattern/…).
+			// Pinned explicitly rather than relying on the generator version's default so a future
+			// generator bump can't silently drop bean validation.
+			"useBeanValidation" to "true",
+			"useJakartaEe" to "true",
 		)
 	)
 }
