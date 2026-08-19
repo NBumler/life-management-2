@@ -1,0 +1,13 @@
+{
+  "quantity": {
+    "weight": { "baseUnit": "g", "multipliers": { "g": 1, "dkg": 10, "kg": 1000 } },
+    "volume": { "baseUnit": "ml", "multipliers": { "ml": 1, "cl": 10, "dl": 100, "l": 1000 } },
+    "piece": { "baseUnit": "db", "multipliers": { "db": 1 } }
+  },
+  "duration": {
+    "time": {
+      "baseUnit": "perc",
+      "multipliers": { "perc": 1, "óra": 60, "nap": 1440, "hét": 10080, "hó": 43200, "év": 525600 }
+    }
+  }
+}

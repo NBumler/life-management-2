@@ -1,0 +1,8 @@
+[
+  { "description": "leading and trailing whitespace trimmed", "input": "  5901234123457  ", "expected": "5901234123457" },
+  { "description": "hyphen-separated EAN, hyphens removed", "input": "590-1234-123457", "expected": "5901234123457" },
+  { "description": "space-separated EAN, internal spaces removed", "input": "5 901234 123457", "expected": "5901234123457" },
+  { "description": "leading zeros preserved", "input": "0012345678905", "expected": "0012345678905" },
+  { "description": "empty input stays empty", "input": "", "expected": "" },
+  { "description": "whitespace-only input normalizes to empty", "input": "   ", "expected": "" }
+]

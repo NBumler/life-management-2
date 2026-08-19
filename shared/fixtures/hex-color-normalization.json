@@ -1,0 +1,9 @@
+[
+  { "description": "already canonical 6-digit lowercase with # prefix", "input": "#ff00aa", "expected": "#ff00aa" },
+  { "description": "6-digit without # prefix gets one added", "input": "ff00aa", "expected": "#ff00aa" },
+  { "description": "3-digit short form expanded to 6-digit", "input": "f0a", "expected": "#ff00aa" },
+  { "description": "3-digit short form with # prefix expanded", "input": "#f0a", "expected": "#ff00aa" },
+  { "description": "mixed case folds to lowercase", "input": "Ff00Aa", "expected": "#ff00aa" },
+  { "description": "all caps folds to lowercase", "input": "FF00AA", "expected": "#ff00aa" },
+  { "description": "all caps 3-digit short form expanded and folded", "input": "#F0A", "expected": "#ff00aa" }
+]

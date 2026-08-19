@@ -1,0 +1,12 @@
+[
+  { "description": "already normalized, unchanged", "input": "kamra", "expected": "kamra" },
+  { "description": "NFC precomposed accent", "input": "Kávé", "expected": "kávé" },
+  { "description": "NFD decomposed accent normalizes to the same result as NFC", "input": "Kávé", "expected": "kávé" },
+  { "description": "double internal whitespace collapses to one space", "input": "Kamra  polc", "expected": "kamra polc" },
+  { "description": "internal non-breaking space collapses like a normal space", "input": "Kamra polc", "expected": "kamra polc" },
+  { "description": "leading and trailing regular whitespace trimmed", "input": "  Kamra polc  ", "expected": "kamra polc" },
+  { "description": "leading and trailing non-breaking space trimmed", "input": " Kamra polc ", "expected": "kamra polc" },
+  { "description": "all caps folds to lowercase", "input": "KAMRA POLC", "expected": "kamra polc" },
+  { "description": "accented name normalizes with the accent kept", "input": "Sör", "expected": "sör" },
+  { "description": "unaccented counterpart stays a distinct value (accent is NOT folded here, unlike search)", "input": "Sor", "expected": "sor" }
+]
