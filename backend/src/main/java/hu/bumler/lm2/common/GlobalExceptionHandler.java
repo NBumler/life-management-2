@@ -9,6 +9,8 @@ import hu.bumler.lm2.common.exception.EntityNotFoundException;
 import hu.bumler.lm2.common.exception.UnauthorizedException;
 import hu.bumler.lm2.common.exception.UniqueViolationException;
 import hu.bumler.lm2.common.exception.ValidationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,18 +26,31 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+	private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
 	// documentation/Architektúra/Backend.md "Postgres 23505 (unique violation) elkapva → 409 +
 	// UNIQUE_VIOLATION + a field; az index-név → mező leképezés a common csomagban egy helyen él."
 	// Single source of truth for every DB-level unique index added across features; extend as
 	// new named-uniqueness constraints (Névegyediség scopes) are introduced.
+	//
+	// idx_user_profile_user_id (V3 migration) is not a Névegyediség scope, but it is a real
+	// DB-enforced invariant (1 profile row per user) that ProfileService.upsert's findByUserId
+	// pre-check cannot fully guard against: two overlapping upsert() calls for the same user that
+	// both read "no row yet" before either commits will both attempt an INSERT, and Postgres lets
+	// at most one of them win. Without this mapping that race would fall through to the generic
+	// 500 fallback below instead of the client-actionable 409 the rest of the contract promises.
+	// See ProfileUniqueConstraintRaceTest for the reasoning on why a real two-thread race isn't
+	// simulated here (the DB-level outcome is deterministic regardless of interleaving).
 	private static final Map<String, String> UNIQUE_INDEX_TO_FIELD = Map.of(
-			"idx_users_username", "username");
+			"idx_users_username", "username",
+			"idx_user_profile_user_id", "userId");
 
 	@ExceptionHandler(DataIntegrityViolationException.class)
 	ResponseEntity<ApiError> handleUniqueConstraint(DataIntegrityViolationException ex) {
 		String constraintName = extractConstraintName(ex);
 		String field = UNIQUE_INDEX_TO_FIELD.get(constraintName);
 		if (field == null) {
+			log.error("Unmapped unique constraint violation: constraint=\"{}\"", constraintName, ex);
 			return ResponseEntity.internalServerError().body(new ApiError("INTERNAL_ERROR", "Unexpected error"));
 		}
 		return ResponseEntity.status(HttpStatus.CONFLICT)
@@ -104,6 +119,7 @@ public class GlobalExceptionHandler {
 
 	@ExceptionHandler(Exception.class)
 	ResponseEntity<ApiError> handleUnexpected(Exception ex) {
+		log.error("Unhandled exception", ex);
 		return ResponseEntity.internalServerError().body(new ApiError("INTERNAL_ERROR", "Unexpected error"));
 	}
 }
