@@ -47,7 +47,7 @@ export class WeightHistoryRepository {
 
   private requestDrainIfNative(): void {
     if (Capacitor.isNativePlatform()) {
-      this.syncEngine.requestDrain();
+      this.syncEngine.requestDrainDebounced();
     }
   }
 }

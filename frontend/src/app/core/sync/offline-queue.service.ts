@@ -127,6 +127,16 @@ export class OfflineQueueService {
     await this.db.run(`UPDATE outbox_item SET status = 'PENDING' WHERE user_id = ? AND status = 'SENDING'`, [userId]);
   }
 
+  /** Persists an `OutboxMigrator` step-chain result (§7) before the item is drained. */
+  async applyMigration(id: string, payload: unknown, url: string, payloadVersion: number): Promise<void> {
+    await this.db.run(`UPDATE outbox_item SET payload = ?, url = ?, payload_version = ? WHERE id = ?`, [
+      JSON.stringify(payload),
+      url,
+      payloadVersion,
+      id,
+    ]);
+  }
+
   async markSending(id: string): Promise<void> {
     await this.db.run(`UPDATE outbox_item SET status = 'SENDING', last_attempt_at = ? WHERE id = ?`, [new Date().toISOString(), id]);
   }
@@ -230,8 +240,13 @@ export class OfflineQueueService {
   }
 }
 
-function backoffFor(attemptCount: number): number {
-  return RETRY_BACKOFF_MS[Math.min(attemptCount, RETRY_BACKOFF_MS.length - 1)];
+/** Exported for direct unit testing of the documented backoff sequence — not used outside this file otherwise. */
+export function backoffFor(attemptCount: number): number {
+  // Backend-offline first.md §6: "Tétel-újrapróbálkozási backoff: 2s → 8s → 30s → 2min → 10min".
+  // attemptCount is the number of attempts already made (1 after the first failure), so the wait
+  // before the next attempt is indexed by attemptCount - 1, not attemptCount — otherwise the
+  // first retry waits 8s (the second entry) instead of the specified 2s.
+  return RETRY_BACKOFF_MS[Math.min(Math.max(attemptCount - 1, 0), RETRY_BACKOFF_MS.length - 1)];
 }
 
 function deleteOutboxRowTask(id: string): SqlTask {

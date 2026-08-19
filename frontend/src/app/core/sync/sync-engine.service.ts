@@ -23,9 +23,11 @@ import { LocalDatabaseService, SqlTask } from '../storage/local-database.service
 import { ConnectionState } from './connection-state';
 import { OfflineQueueService } from './offline-queue.service';
 import { OutboxItem } from './outbox-item';
+import { migrateOutboxItem } from './outbox-migrator';
 
 const HEALTH_PROBE_TIMEOUT_MS = 3000;
 const RECONNECT_BACKOFF_MS = [15000, 30000, 60000, 300000];
+const MUTATION_DRAIN_DEBOUNCE_MS = 1000;
 
 type DrainOutcome = 'success' | 'continue' | 'stop-network' | 'stop-auth';
 
@@ -50,6 +52,7 @@ export class SyncEngineService {
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private reconnectAttempt = 0;
   private startedForUserId: string | null = null;
+  private drainDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
   /** Cold start step 6 — never awaited by the caller; nothing here may block first render. */
   async init(): Promise<void> {
@@ -65,9 +68,25 @@ export class SyncEngineService {
     void this.probeAndSync();
   }
 
-  /** Non-blocking kick — e.g. after a local mutation (debounce is the caller's responsibility). */
+  /** Non-blocking, immediate kick — login, manual "Sync now", reconnect, app resume/start. */
   requestDrain(): void {
     void this.probeAndSync();
+  }
+
+  /**
+   * documentation/Architektúra/Backend-offline first.md §6 trigger list: "minden user-mutáció
+   * után (debounce ~1 s)". Repositories call this (not requestDrain()) after writes, so several
+   * saves in quick succession — e.g. a profile save that also opens a weight-history row —
+   * collapse into a single probe+drain instead of one health-check per write.
+   */
+  requestDrainDebounced(): void {
+    if (this.drainDebounceTimer !== null) {
+      clearTimeout(this.drainDebounceTimer);
+    }
+    this.drainDebounceTimer = setTimeout(() => {
+      this.drainDebounceTimer = null;
+      void this.probeAndSync();
+    }, MUTATION_DRAIN_DEBOUNCE_MS);
   }
 
   private async probeAndSync(): Promise<void> {
@@ -169,7 +188,7 @@ export class SyncEngineService {
       await this.offlineQueue.recomputeBlocked(userId);
       const runnable = await this.offlineQueue.listRunnable(userId);
       for (const item of runnable) {
-        const outcome = await this.executeOutboxItem(item);
+        const outcome = await this.migrateThenExecute(item);
         if (outcome === 'success') {
           ranAny = true;
         }
@@ -182,6 +201,24 @@ export class SyncEngineService {
     }
     await this.offlineQueue.refreshCounts(userId);
     return ranAny;
+  }
+
+  /**
+   * documentation/Architektúra/Backend-offline first.md §7: before an item is drained, walk any
+   * outdated `payloadVersion` through the `OutboxMigrator` step chain. A missing step is not a
+   * network/auth condition, so it does not stop the drain loop — it only fails this one item.
+   */
+  private async migrateThenExecute(item: OutboxItem): Promise<DrainOutcome> {
+    const migration = migrateOutboxItem(item);
+    if (migration.errorMessage !== null) {
+      await this.offlineQueue.markError(item.id, null, 'PAYLOAD_MIGRATION_FAILED', migration.errorMessage);
+      return 'continue';
+    }
+    if (!migration.migrated) {
+      return this.executeOutboxItem(item);
+    }
+    await this.offlineQueue.applyMigration(item.id, migration.payload, migration.url, migration.payloadVersion);
+    return this.executeOutboxItem({ ...item, payload: migration.payload, url: migration.url, payloadVersion: migration.payloadVersion });
   }
 
   private async executeOutboxItem(item: OutboxItem): Promise<DrainOutcome> {
@@ -287,20 +324,30 @@ export class SyncEngineService {
 
   private buildApplyTasks(change: SyncChangeItem): SqlTask[] {
     if (change.entityType === 'UserProfile') {
-      return [change.deleted ? profileTombstoneTask(change.id, change.updatedAt) : profileServerApplyTask(change.data as UserProfile)];
+      if (!change.deleted) {
+        return [profileServerApplyTask(change.data as UserProfile)];
+      }
+      return [profileTombstoneTask(change.id, change.updatedAt), discardPendingWritesTask(change.id)];
     }
     if (change.entityType === 'WeightHistoryEntry') {
       if (!change.deleted) {
         return [weightHistoryServerApplyTask(change.data as WeightHistoryEntry)];
       }
-      return [
-        weightHistoryTombstoneTask(change.id, null, change.updatedAt),
-        {
-          statement: "DELETE FROM outbox_item WHERE target_entity_id = ? AND method != 'DELETE' AND status IN ('PENDING','BLOCKED')",
-          values: [change.id],
-        },
-      ];
+      return [weightHistoryTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
     }
     return [];
   }
+}
+
+/**
+ * Backend-offline first.md §8 apply rule "`_dirty = 1` + `deleted = true` → a tombstone győz…
+ * a `PENDING` `PUT`-ok eldobandók (nincs resurrect)": drops any not-yet-sent write for an entity
+ * that the server reports as deleted, for every synced entity type — not just the ones that
+ * happen to expose a delete UI today.
+ */
+function discardPendingWritesTask(targetEntityId: string): SqlTask {
+  return {
+    statement: "DELETE FROM outbox_item WHERE target_entity_id = ? AND method != 'DELETE' AND status IN ('PENDING','BLOCKED')",
+    values: [targetEntityId],
+  };
 }

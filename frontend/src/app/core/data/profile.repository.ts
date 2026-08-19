@@ -47,7 +47,7 @@ export class ProfileRepository {
     }
 
     if (Capacitor.isNativePlatform()) {
-      this.syncEngine.requestDrain();
+      this.syncEngine.requestDrainDebounced();
     }
   }
 }
