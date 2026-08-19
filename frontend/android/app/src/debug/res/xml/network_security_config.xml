@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Debug-only: allows cleartext HTTP so the debug APK can reach the developer's
+  machine over the home Wi-Fi / adb reverse (documentation/Architektúra/Fejlesztői környezet.md).
+  Never merged into release builds — see src/debug/AndroidManifest.xml.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>
