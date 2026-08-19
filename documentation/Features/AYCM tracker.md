@@ -20,7 +20,7 @@ AYCM használat követése: elfogadóhelyek + árszabályok, napi Check-In, megt
 
 #### Gyerekek
 
-- [[AYCM elfogadóhely hozzáadása]] (`TODO`) — partner + árszabály (idősáv).
+- [[AYCM elfogadóhely hozzáadása]] (`Kész`) — partner + árszabály (idősáv).
 - [[AYCM Check-In]] (`Váz`) — napi egy belépés, snapshot.
 - [[AYCM Statisztikák]] (`TODO`) — hosszabb ablak / helyszín; a hub csak az **aktuális naptári hónapot** mutatja.
 
@@ -100,7 +100,7 @@ Nincs nyitott kérdés.
 
 ### Frontend
 
-- Képernyő: `AycmDashboardPage`. Route pl. `/tabs/menu/aycm`. Gyerekek: `/…/partners`, `/…/check-in`, `/…/stats` (pontos path a gyerek specekben).
+- Képernyő: `AycmDashboardPage`. Route pl. `/tabs/menu/aycm`. Gyerekek: `/tabs/menu/aycm/partners`, `/tabs/menu/aycm/check-in`, `/tabs/menu/aycm/stats` (pontos path a gyerek specekben).
 - Store: `AycmSettings` + Check-In lista (havi szűrés) + `monthlyEquivalentHuf` import a [[Rendszeres kiadások]]ból.
 - Picker: beszámított kiadások; Pénzügyek flag ki → üres + magyarázat.
 - Feature flag: menü registry + child guard.

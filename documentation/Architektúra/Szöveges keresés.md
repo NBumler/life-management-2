@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Kész` |
 | **Szülő** | [[Frontend]] |
-| **Kapcsolódó** | [[Bevásárlás előzmény]], [[Pakolás]], [[Élelmiszerek]], [[Háztartási feladatok]], [[Rendszeres kiadások]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Bevásárlás előzmény]], [[Pakolás]], [[Élelmiszerek]], [[Háztartási feladatok]], [[Rendszeres kiadások]], [[AYCM elfogadóhely hozzáadása]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -32,7 +32,7 @@ A konkrét „pontos ékezet egyezés” értelmezése: a találat mezőjének (
 
 #### Alkalmazás
 
-Első fogyasztók többek között: [[Bevásárlás előzmény]], [[Élelmiszerek]] katalógus kereső, [[Pakolás]] kereső, [[Háztartási feladatok]], [[Rendszeres kiadások]].
+Első fogyasztók többek között: [[Bevásárlás előzmény]], [[Élelmiszerek]] katalógus kereső, [[Pakolás]] kereső, [[Háztartási feladatok]], [[Rendszeres kiadások]], [[AYCM elfogadóhely hozzáadása]].
 
 ### UI/UX elvárások
 

@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Váz` |
 | **Szülő** | [[AYCM tracker]] |
-| **Kapcsolódó** | [[AYCM elfogadóhely hozzáadása]], [[AYCM Statisztikák]], [[Rendszeres kiadások]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[AYCM elfogadóhely hozzáadása]], [[AYCM Statisztikák]], [[AYCM tracker]], [[Rendszeres kiadások]], [[Backend-offline first]], [[Szinkronizációs központ]] |
 
 ### Célállapot
 
@@ -16,24 +16,16 @@ A felhasználó a pontos belépési időpontja alapján kapja meg a bérletével
 
 Automatikus idősáv-illesztés: a rendszer a dátum és a belépési időpont alapján határozza meg az árat.
 
-Szűrési szabály:
+Szűrési szabály: **`matchPriceRule`** — SSOT [[AYCM elfogadóhely hozzáadása]] (hét napja, `[start, end)`, legfeljebb egy találat). Ez a spec nem másolja a képletet.
 
-1. Az alkalmazás lekéri a megadott `checkInDate` napját (pl. Hétfő).
-2. Megkeresi a kiválasztott partnerhez tartozó olyan árszabályokat, ahol a nap flag-je aktív (pl. `applies_mon == true`).
-3. A találatok közül kiválasztja azt az egyet, ahol a megadott belépési időpont (`checkInTime`) a szabály határai közé esik:
-
-$$\text{startTime} \le \text{checkInTime} < \text{endTime}$$
-
-4. A látogatás értéke a megtalált szabály `listPriceHuf` (nem + copay). Copay snapshot metaadat.
-
-Hub-szabályok: **max 1 Check-In / naptári nap**; rögzítéskor snapshot; nincs sáv → 0 Ft, sárga, mentés mégis. Lásd [[AYCM tracker]].
+Hub-szabályok: **max 1 Check-In / naptári nap**; rögzítéskor snapshot (`ruleLabel` = `displayLabel`); nincs sáv → 0 Ft, sárga, mentés mégis. Nincs inline partner-create; üres picker → CTA az elfogadóhelyekre. Lásd [[AYCM tracker]].
 
 ### UI/UX elvárások
 
 * **Dátum mező:** Alapértelmezetten a mai nap.
 * **Időpont mező:** Alapértelmezetten a jelenlegi pontos idő.
 * **„[Most]” gomb:** Egy kattintással frissíti az időpontot az aktuális óra/percre.
-* **Reaktív visszajelzés (Signal computed):** Amint a dátum, időpont és partner ki van választva, zöld színnel megjelenik a felismert idősáv és értéke (pl. *Csúcs időszak - 4200 Ft*).
+* **Reaktív visszajelzés:** partner + dátum + idő megvan → zöld: `displayLabel` + `listPriceHuf` Ft ([[AYCM elfogadóhely hozzáadása]] `matchPriceRule`). Üres címke → idősáv-fallback.
 * Ha az adott időpontra nincs konfigurált szabály, sárga figyelmeztetés, belépés 0 Ft-tal rögzül.
 
 ### Megjegyzések
@@ -42,7 +34,7 @@ Ez a specifikáció még nem végleges — átnézendő.
 
 ### Nyitott kérdések
 
-- Árszabály modell véglegesítése ([[AYCM elfogadóhely hozzáadása]]); a hub-szerződés zárt: [[AYCM tracker]]
+Nincs nyitott kérdés. (Árszabály SSOT: [[AYCM elfogadóhely hozzáadása]].)
 
 ## Architektúra
 
