@@ -84,7 +84,7 @@ Lokális (készüléken ütemezett) értesítések a fontos küszöbökről. Az 
 
 Hook / placeholder — lead time és szöveg a forrás-spec készültekor:
 
-- [[Rendszeres kiadások]] — közelgő fizetés
+- [[Rendszeres kiadások]] — közelgő fizetés (a forrás-spec MVP-je **kint hagyta**; lead time / ütemezés akkor, ha a típus aktívvá válik)
 
 #### Ismétlés-védelem (deduplikáció) — magyarázat
 

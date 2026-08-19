@@ -28,7 +28,7 @@ A bérlet / előfizetés költségét **nem** itt kell külön tárolni, és a [
 
 Az AYCM setup és a [[AYCM Statisztikák]] „megéri-e” kalkulációja a belinkelt sor `amountHuf` + `frequency` értékét olvassa, a havi leosztás a [[Rendszeres kiadások]] `monthlyEquivalentHuf` utility-je (nincs adatduplikáció).
 
-**`~` / homokóra** a megtérülésnél, ha: nincs `linkedRecurringExpenseId`; a belinkelt sor nincs / nem számít a havi ekvivalensbe; vagy a **Pénzügyek** feature flag ki van kapcsolva. Az AYCM flag ettől **független**. Saját `amountHuf` mező tilos.
+**`~` / homokóra** a megtérülésnél, ha: nincs `linkedRecurringExpenseId`; a belinkelt sor nincs / **nem beszámított** (`deleted` vagy `active = false` — [[Rendszeres kiadások]]); vagy a **Pénzügyek** feature flag ki van kapcsolva. Az AYCM flag ettől **független**. Saját `amountHuf` mező tilos.
 
 ### UI/UX elvárások
 
@@ -52,7 +52,7 @@ Menü alatti AYCM belépő; subfeature képernyők; `linkedRecurringExpenseId` +
 
 Partner / check-in mutáció: helyi store + outbox; kliens UUID. Sync: [[Szinkronizációs központ]].
 
-„Megéri-e”: a belinkelt [[Rendszeres kiadások]] sor helyi olvasása + `monthlyEquivalentHuf` (pure TS). Hiányzó link / Pénzügyek flag ki → `~` / homokóra, nincs saját összeg-fallback. Lásd [[Backend-offline first]].
+„Megéri-e”: a belinkelt [[Rendszeres kiadások]] sor helyi olvasása + `monthlyEquivalentHuf` (pure TS), csak ha a sor **beszámított**. Hiányzó / nem beszámított link / Pénzügyek flag ki → `~` / homokóra, nincs saját összeg-fallback. Lásd [[Backend-offline first]].
 
 ### Backend
 

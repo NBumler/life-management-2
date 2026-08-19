@@ -14,14 +14,14 @@ Pénzügyi **hub**: belépéskor három szám (nettó, havi fix kiadás, maradé
 
 **Ownership:** **user-owned** — [[Bejelentkezés]]. A hubnak nincs saját entitása.
 
-**Nem scope (MVP):** egyszeri tranzakció; banki szinkron; envelope / keret; más pénznem; bér melletti bevétel; lakásrezsi mint külön gyerek; befektetés; számla. Közelgő fizetés-értesítés: a [[Rendszeres kiadások]] / [[Értesítések]] későbbi döntése (az Értesítésekben még „későbbi típus”).
+**Nem scope (MVP):** egyszeri tranzakció; banki szinkron; envelope / keret; más pénznem; bér melletti bevétel; lakásrezsi mint külön gyerek; befektetés; számla. Közelgő fizetés-értesítés: kint az MVP-ből ([[Értesítések]] későbbi típus; forrás: [[Rendszeres kiadások]]).
 
 ### Funkcionális leírás
 
 #### Gyerekek
 
 - [[Nettó fizetés kalkulátor]] (`Váz`) — bruttó a [[Profile]]-on; képlet / bontás a gyerekben.
-- [[Rendszeres kiadások]] (`Váz`) — CRUD + **havi ekvivalens** utility (SSOT a gyerekben).
+- [[Rendszeres kiadások]] (`Kész`) — CRUD + havi ekvivalens + beszámított-halmaz (`deleted = false` ∧ `active = true`).
 
 Nincs harmadik gyerek.
 
@@ -30,7 +30,7 @@ Nincs harmadik gyerek.
 A hub **fogyasztó**. Nem ír kiadást, nem tárol nettót, nincs saját OpenAPI.
 
 - Nettó: [[Nettó fizetés kalkulátor]] utility a [[Profile]] `grossMonthlySalaryHuf` (+ születési dátum, ha a képlet kéri) alapján.
-- Havi kiadás: [[Rendszeres kiadások]] `monthlyEquivalentHuf` az oda számító sorokra, majd **összeg**.
+- Havi kiadás: [[Rendszeres kiadások]] `monthlyEquivalentHuf` a **beszámított** sorokra (`deleted = false` ∧ `active = true`), majd **összeg**.
 - Maradék: `nettó − havi kiadás összeg` (egész Ft, előjeles; nincs 0-ra clamp).
 
 #### Hiányjelzés (`~` / homokóra)
@@ -49,7 +49,7 @@ Nincs profil-kitöltöttségi gate: a hub és a gyerekek üres bruttó mellett i
 
 A Pénzügyek **generikus SSOT**. Nincs AYCM mező, jelölő, UI a hubon vagy a kiadás soron.
 
-A kötés az [[AYCM tracker]] spechen él: `linkedRecurringExpenseId` → egy rendszeres kiadás. A „megéri-e” az AYCM-ben a kiadás `amountHuf` + `frequency` / havi ekvivalens utility-jét olvassa. Ha nincs link, a kiadás kiesett, vagy a Pénzügyek flag ki van kapcsolva → AYCM oldalon `~`. Részletek: [[AYCM tracker]] (setup UI később).
+A kötés az [[AYCM tracker]] spechen él: `linkedRecurringExpenseId` → egy rendszeres kiadás. A „megéri-e” az AYCM-ben a [[Rendszeres kiadások]] `monthlyEquivalentHuf` utility-jét olvassa a **beszámított** soron. Ha nincs link, a sor nem beszámított (törölt / szünet / hiányzik), vagy a Pénzügyek flag ki van kapcsolva → AYCM oldalon `~`. Részletek: [[AYCM tracker]] (setup UI később).
 
 #### Feature flag
 
@@ -70,7 +70,7 @@ Az [[AYCM tracker]] flag **független**. Pénzügyek ki + AYCM be: nincs kiadás
 
 ### Megjegyzések
 
-`Kész` akkor, ha mindkét gyerek `Kész`. A dashboard szerződés innentől zárt; a képlet és a „melyik sor számít a havi összegbe” a gyerekekben.
+`Kész` akkor, ha a [[Nettó fizetés kalkulátor]] is `Kész`. A dashboard szerződés és a kiadás-CRUD zárt.
 
 ### Nyitott kérdések
 
