@@ -52,6 +52,7 @@ A kliensoldali offline elvárások SSOT-ja: [[Backend-offline first]]. A szerver
 - A Spring Boot oldalon az interface-ek (controller / API contract) az OpenAPI-ból generálódnak; az implementáció kézzel íródik rájuk.
 - Ugyanabból a specifikációból készül az Ionic Angular HTTP kliens / modellek is — lásd [[Frontend]].
 - Swagger UI a fejlesztői dokumentációhoz / kipróbáláshoz (végleges toolingat választani: pl. `springdoc-openapi` + openapi-generator).
+- **A `GET /api/sync/changes` és a `GET /api/health` nem CRUD végpont** — nem jönnek ki az entitásonkénti sablonból, ezért az OpenAPI fájlba **kézzel kell felvenni** őket, a delta válasz sémáival együtt (`serverTime` / `nextCursor` / `hasMore` / `changes[]` — a pontos alak a SSOT-ban). Ha kimaradnak, a generált kliensből is hiányoznak, és a `SyncEngine` nem fordul le. Szerződés: lentebb a *Sync szerződés* szakasz, SSOT: [[Backend-offline first]].
 
 #### Kötelező elvek
 
