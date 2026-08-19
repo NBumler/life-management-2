@@ -10,10 +10,10 @@ export const SKIP_AUTH_INTERCEPTOR = new HttpContextToken<boolean>(() => false);
 
 /**
  * documentation/Architektúra/Frontend.md `core/session/`: Bearer header + 401 → refresh → retry.
- * Only touches /api requests; the SyncEngine's outbox replay sets its own Authorization header
- * per documentation/Architektúra/Backend-offline first.md §6 and is unaffected by this interceptor
- * only insofar as it also goes through HttpClient — the header it sets is simply overwritten with
- * the same current token, which is harmless.
+ * Only touches /api requests. The SyncEngine's outbox replay (Backend-offline first.md §6) also
+ * goes through HttpClient and therefore through this interceptor, which sets the same Bearer
+ * header the SyncEngine would otherwise have to set itself — it does not set its own
+ * Authorization header (only Idempotency-Key), relying entirely on this interceptor for auth.
  */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   if (!req.url.startsWith('/api') || req.context.get(SKIP_AUTH_INTERCEPTOR)) {

@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
 import {
@@ -14,7 +14,6 @@ import {
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
-import { AuthService } from '../../api/api/auth.service';
 import { AuthSessionService } from '../../core/session/auth-session.service';
 import { OfflineQueueService } from '../../core/sync/offline-queue.service';
 import { SyncStatusButtonComponent } from '../../shared/sync-status-button/sync-status-button.component';
@@ -24,9 +23,9 @@ import { SyncStatusButtonComponent } from '../../shared/sync-status-button/sync-
   selector: 'app-menu',
   templateUrl: 'menu.page.html',
   imports: [IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonLabel, IonIcon, RouterLink, TranslatePipe, SyncStatusButtonComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MenuPage {
-  private readonly authApi = inject(AuthService);
   private readonly authSession = inject(AuthSessionService);
   private readonly offlineQueue = inject(OfflineQueueService);
   private readonly alertController = inject(AlertController);
@@ -53,12 +52,7 @@ export class MenuPage {
   }
 
   private async doLogout(): Promise<void> {
-    const refreshToken = this.authSession.getRefreshToken();
-    await this.authSession.clear();
+    await this.authSession.logout();
     await this.router.navigateByUrl('/login');
-    if (refreshToken !== null) {
-      // documentation/Features/Bejelentkezés.md: best-effort server-side revoke, local logout succeeds regardless.
-      this.authApi.logout({ refreshToken }).subscribe({ error: () => undefined });
-    }
   }
 }

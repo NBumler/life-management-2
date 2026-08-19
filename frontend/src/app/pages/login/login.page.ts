@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
@@ -14,9 +14,7 @@ import {
   IonText,
 } from '@ionic/angular/standalone';
 import { TranslatePipe } from '@ngx-translate/core';
-import { firstValueFrom } from 'rxjs';
 
-import { AuthService } from '../../api/api/auth.service';
 import { AuthSessionService } from '../../core/session/auth-session.service';
 import { LocalDatabaseService } from '../../core/storage/local-database.service';
 import { SyncEngineService } from '../../core/sync/sync-engine.service';
@@ -27,10 +25,10 @@ import { SyncEngineService } from '../../core/sync/sync-engine.service';
   templateUrl: 'login.page.html',
   styleUrls: ['login.page.scss'],
   imports: [ReactiveFormsModule, IonContent, IonList, IonItem, IonInput, IonButton, IonIcon, IonSpinner, IonText, TranslatePipe],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LoginPage {
   private readonly fb = inject(FormBuilder);
-  private readonly authApi = inject(AuthService);
   private readonly authSession = inject(AuthSessionService);
   private readonly localDb = inject(LocalDatabaseService);
   private readonly syncEngine = inject(SyncEngineService);
@@ -65,8 +63,8 @@ export class LoginPage {
     this.submitting.set(true);
     this.errorKey.set(null);
     try {
-      const tokens = await firstValueFrom(this.authApi.login(this.form.getRawValue()));
-      await this.authSession.setTokens(tokens);
+      const { username, password } = this.form.getRawValue();
+      await this.authSession.login(username, password);
       const userId = this.authSession.userId();
       if (userId !== null && Capacitor.isNativePlatform()) {
         await this.localDb.open(userId);
