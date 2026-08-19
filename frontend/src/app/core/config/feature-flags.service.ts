@@ -25,6 +25,23 @@ export type FeatureFlagKey =
   | 'menu.aycm'
   | 'menu.gearcheck';
 
+// documentation/Architektúra/Frontend.md "Függőségek": "Ha be van kapcsolva → Akkor kötelező".
+// Validated at load time (dev: hard error; the spec's "build-time validált, szabálysértés
+// fordítási hiba" intent, approximated here since the config is a runtime asset — see class doc).
+const FEATURE_FLAG_DEPENDENCIES: ReadonlyMap<FeatureFlagKey, FeatureFlagKey> = new Map([
+  ['kaja.recept', 'tab.kaja'],
+  ['kaja.statisztika', 'tab.kaja'],
+  ['edzes.hetiTerv', 'tab.edzes'],
+  ['edzes.maszonaplo', 'tab.edzes'],
+  ['edzes.uszas', 'tab.edzes'],
+  ['edzes.bicikli', 'tab.edzes'],
+  ['feladatok.eletTervek', 'tab.feladatok'],
+  ['feladatok.naptar', 'tab.feladatok'],
+  ['feladatok.esemenyek', 'tab.feladatok'],
+  ['menu.bevasarlas', 'tab.kaja'],
+  ['feladatok.googleExport', 'feladatok.esemenyek'],
+]);
+
 const FEATURE_FLAG_KEYS: readonly FeatureFlagKey[] = [
   'tab.kaja',
   'kaja.recept',
@@ -55,37 +72,46 @@ const FEATURE_FLAG_KEYS: readonly FeatureFlagKey[] = [
  */
 @Injectable({ providedIn: 'root' })
 export class FeatureFlagsService {
-  private readonly flags = FeatureFlagsService.loadAndValidate();
+  private readonly flags = validateFeatureFlags(featuresConfig as Record<string, unknown>, environment.production);
 
   isEnabled(key: FeatureFlagKey): boolean {
     return this.flags.get(key) ?? false;
   }
+}
 
-  private static loadAndValidate(): ReadonlyMap<FeatureFlagKey, boolean> {
-    const raw = featuresConfig as Record<string, unknown>;
-    const flags = new Map<FeatureFlagKey, boolean>();
+/**
+ * Pure validation, extracted so it can be unit-tested against synthetic config objects — the real
+ * config is a build-time JSON asset imported statically, so the class itself can only ever be
+ * exercised against whatever `features.json` currently contains.
+ */
+export function validateFeatureFlags(raw: Record<string, unknown>, production: boolean): ReadonlyMap<FeatureFlagKey, boolean> {
+  const flags = new Map<FeatureFlagKey, boolean>();
 
-    for (const key of FEATURE_FLAG_KEYS) {
-      const value = raw[key];
-      if (typeof value !== 'boolean') {
-        if (!environment.production) {
-          throw new Error(`features.json is missing required key "${key}"`);
-        }
-        flags.set(key, false);
-        continue;
+  for (const key of FEATURE_FLAG_KEYS) {
+    const value = raw[key];
+    if (typeof value !== 'boolean') {
+      if (!production) {
+        throw new Error(`features.json is missing required key "${key}"`);
       }
-      flags.set(key, value);
+      flags.set(key, false);
+      continue;
     }
-
-    if (!environment.production) {
-      const known = new Set<string>(FEATURE_FLAG_KEYS);
-      for (const key of Object.keys(raw)) {
-        if (!known.has(key)) {
-          throw new Error(`features.json has an unknown key "${key}"`);
-        }
-      }
-    }
-
-    return flags;
+    flags.set(key, value);
   }
+
+  if (!production) {
+    const known = new Set<string>(FEATURE_FLAG_KEYS);
+    for (const key of Object.keys(raw)) {
+      if (!known.has(key)) {
+        throw new Error(`features.json has an unknown key "${key}"`);
+      }
+    }
+    for (const [dependent, required] of FEATURE_FLAG_DEPENDENCIES) {
+      if (flags.get(dependent) === true && flags.get(required) !== true) {
+        throw new Error(`features.json: "${dependent}" is enabled but requires "${required}" to also be enabled`);
+      }
+    }
+  }
+
+  return flags;
 }
