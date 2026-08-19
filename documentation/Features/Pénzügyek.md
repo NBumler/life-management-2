@@ -4,9 +4,9 @@
 
 | | |
 |---|---|
-| **Státusz** | `Váz` |
+| **Státusz** | `Kész` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Nettó fizetés kalkulátor]], [[Rendszeres kiadások]], [[Profile]], [[AYCM tracker]], [[Nyelv választás]], [[Bejelentkezés]], [[Backend-offline first]], [[Szinkronizációs központ]] |
+| **Kapcsolódó** | [[Nettó fizetés kalkulátor]], [[Rendszeres kiadások]], [[Profile]], [[AYCM tracker]], [[Nyelv választás]], [[Dark&Light mode]], [[Bejelentkezés]], [[Backend-offline first]], [[Szinkronizációs központ]] |
 
 ### Célállapot
 
@@ -20,7 +20,7 @@ Pénzügyi **hub**: belépéskor három szám (nettó, havi fix kiadás, maradé
 
 #### Gyerekek
 
-- [[Nettó fizetés kalkulátor]] (`Váz`) — bruttó a [[Profile]]-on; képlet / bontás a gyerekben.
+- [[Nettó fizetés kalkulátor]] (`Kész`) — alkalmazotti nettó utility; bontás a gyerek képernyőn.
 - [[Rendszeres kiadások]] (`Kész`) — CRUD + havi ekvivalens + beszámított-halmaz (`deleted = false` ∧ `active = true`).
 
 Nincs harmadik gyerek.
@@ -29,7 +29,7 @@ Nincs harmadik gyerek.
 
 A hub **fogyasztó**. Nem ír kiadást, nem tárol nettót, nincs saját OpenAPI.
 
-- Nettó: [[Nettó fizetés kalkulátor]] utility a [[Profile]] `grossMonthlySalaryHuf` (+ születési dátum, ha a képlet kéri) alapján.
+- Nettó: [[Nettó fizetés kalkulátor]] `net` (bruttó kitöltve; 25 év: `birthDate` + `age < 25` + plafon — részletek a gyerekben). Hiányzó születési dátum **nem** `~`.
 - Havi kiadás: [[Rendszeres kiadások]] `monthlyEquivalentHuf` a **beszámított** sorokra (`deleted = false` ∧ `active = true`), majd **összeg**.
 - Maradék: `nettó − havi kiadás összeg` (egész Ft, előjeles; nincs 0-ra clamp).
 
@@ -70,7 +70,7 @@ Az [[AYCM tracker]] flag **független**. Pénzügyek ki + AYCM be: nincs kiadás
 
 ### Megjegyzések
 
-`Kész` akkor, ha a [[Nettó fizetés kalkulátor]] is `Kész`. A dashboard szerződés és a kiadás-CRUD zárt.
+A dashboard, a kiadás-CRUD és a nettó képlet zárt. Mindkét gyerek `Kész`.
 
 ### Nyitott kérdések
 
@@ -80,7 +80,7 @@ Nincs nyitott kérdés.
 
 ### Frontend
 
-- Képernyő: `FinanceDashboardPage`. Route pl. `/tabs/menu/finance`. Gyerekek: `/…/net-pay`, `/…/recurring-expenses` (pontos path a gyerek specekben).
+- Képernyő: `FinanceDashboardPage`. Route pl. `/tabs/menu/finance`. Gyerekek: `/tabs/menu/finance/net-pay`, `/tabs/menu/finance/recurring-expenses` (pontos path a gyerek specekben is).
 - Mapper: Profile store → nettó utility; kiadás store → havi ekvivalens összeg; maradék csak ha a nettó nem `~`.
 - Képletek **nem** másolódnak ide: import a [[Nettó fizetés kalkulátor]] és [[Rendszeres kiadások]] utility-kből.
 - Feature flag: menü registry + child guard.

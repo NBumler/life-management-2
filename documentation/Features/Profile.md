@@ -74,7 +74,7 @@ A [[Tápérték kalkulátor]] **csak** `currentWeightKg`-t használ; a history k
 
 ### Megjegyzések
 
-- Bruttó bér pénzügy-jellegű, de user-szintű → Profile-on marad.
+- Bruttó bér pénzügy-jellegű, de user-szintű → Profile-on marad. Nettó képlet / `~`: [[Nettó fizetés kalkulátor]] (hiányzó `birthDate` nem blokkolja a nettót).
 - Δ, floor, PAL, makró: [[Tápérték kalkulátor]].
 
 ### Nyitott kérdések
