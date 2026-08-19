@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Váz` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Rendszeres kiadások]], [[Pénzügyek]], [[Bejelentkezés]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Rendszeres kiadások]], [[Pénzügyek]], [[AYCM Statisztikák]], [[Bejelentkezés]], [[Backend-offline first]], [[Szinkronizációs központ]] |
 
 ### Célállapot
 
@@ -22,7 +22,13 @@ Subfeature lista:
 - [[AYCM Check-In]]
 - [[AYCM Statisztikák]]
 
-A bérlet / előfizetés költségét **nem** itt kell külön tárolni: a [[Rendszeres kiadások]] a közös Single Source of Truth (SSOT). Az AYCM setup és a [[AYCM Statisztikák]] „megéri-e” kalkulációja innen olvassa az `amountHuf` + `frequency` értékeket.
+A bérlet / előfizetés költségét **nem** itt kell külön tárolni, és a [[Pénzügyek]] / [[Rendszeres kiadások]] **nem** tud az AYCM-ről.
+
+**Kötés (AYCM-oldali FK):** `linkedRecurringExpenseId` → egy `RecurringExpense` `id`. Setup UI (választás / create deep-link) később, az AYCM specek kidolgozásakor.
+
+Az AYCM setup és a [[AYCM Statisztikák]] „megéri-e” kalkulációja a belinkelt sor `amountHuf` + `frequency` értékét olvassa, a havi leosztás a [[Rendszeres kiadások]] `monthlyEquivalentHuf` utility-je (nincs adatduplikáció).
+
+**`~` / homokóra** a megtérülésnél, ha: nincs `linkedRecurringExpenseId`; a belinkelt sor nincs / nem számít a havi ekvivalensbe; vagy a **Pénzügyek** feature flag ki van kapcsolva. Az AYCM flag ettől **független**. Saját `amountHuf` mező tilos.
 
 ### UI/UX elvárások
 
@@ -40,11 +46,13 @@ Nincs nyitott kérdés.
 
 ### Frontend
 
-Menü alatti AYCM belépő; subfeature képernyők; SSOT olvasás a [[Rendszeres kiadások]]ból.
+Menü alatti AYCM belépő; subfeature képernyők; `linkedRecurringExpenseId` + SSOT olvasás a [[Rendszeres kiadások]] store-ból / `monthlyEquivalentHuf`-ból.
 
 #### Backend-offline
 
-Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító kérések outboxba (`OfflineQueueService`), kliens UUID. Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
+Partner / check-in mutáció: helyi store + outbox; kliens UUID. Sync: [[Szinkronizációs központ]].
+
+„Megéri-e”: a belinkelt [[Rendszeres kiadások]] sor helyi olvasása + `monthlyEquivalentHuf` (pure TS). Hiányzó link / Pénzügyek flag ki → `~` / homokóra, nincs saját összeg-fallback. Lásd [[Backend-offline first]].
 
 ### Backend
 

@@ -6,11 +6,13 @@
 |---|---|
 | **Státusz** | `Váz` |
 | **Szülő** | [[Pénzügyek]] |
-| **Kapcsolódó** | [[Profile]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Pénzügyek]], [[Profile]], [[Backend-offline first]] |
 
 ### Célállapot
 
-A [[Profile]]-ban megadott bruttó fizetés és születési dátum alapján kiszámolja a nettó fizetést.
+A [[Profile]]-ban megadott bruttó fizetés és születési dátum alapján kiszámolja a nettó fizetést. A [[Pénzügyek]] dashboard a **nettó számot** (vagy `~`) innen olvassa; a TB / SZJA bontás ezen a gyerek képernyőn van.
+
+`grossMonthlySalaryHuf` **üres** → nettó nem számolható → `~` / homokóra (hub + ez a képernyő). Kitöltött **0** érvényes bemenet. Nincs saját outbox.
 
 ### Funkcionális leírás
 

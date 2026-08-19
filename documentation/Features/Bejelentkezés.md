@@ -71,7 +71,7 @@ Felhasználói autentikáció és authorizáció: a személyes (user-owned) adat
 ### Megjegyzések
 
 - Google (és egyéb OAuth) login: későbbi scope; ugyanaz a `User` + JWT access/refresh kibocsátás a sikeres OAuth után. Username+password megmaradhat párhuzamosan.
-- [[Pénzügyek]] még nincs kidolgozva; a feature **egyértelműen user-owned** lesz — specifikáláskor a [[Bejelentkezés]] ownership mátrixát és a `userId` szűrést kell követni (ez a Bejelentkezés spechet **nem** blokkolja).
+- [[Pénzügyek]] **user-owned** (hubnak nincs saját entitása; `RecurringExpense` a [[Rendszeres kiadások]]ban). A mátrix és a `userId` szűrés kötelező.
 
 ### Nyitott kérdések
 
@@ -180,10 +180,10 @@ A DB / API réteg ownership döntései. Új feature specifikálásakor ezt a tá
 | Outdoor `Crag` / `Sector` / `Route` / `BoulderProblem` | [[Outdoor boulder admin]], [[Outdoor köteles admin]] |
 | Mászó / úszás / bicikli naplók | [[Mászónapló]], [[Úszás napló]], [[Biciklizés napló]] |
 | `StoredFood`, `Meal` / tételek, bevásárlólisták | [[Élelmiszer tárolás]], [[Étkezés]], [[Bevásárlás]] |
-| AYCM partnerek, check-in, szabályok | [[AYCM tracker]] |
+| AYCM partnerek, check-in, szabályok, `linkedRecurringExpenseId` | [[AYCM tracker]] |
 | GearCheck: eszközök, sablonok, pakolás futás | [[Eszközök]], [[Sablonok]], [[Pakolás]] |
 | Háztartási feladatok, élet tervek, események (`CalendarEvent`), tennivalók | [[Háztartási feladatok]], [[Élet tervek]], [[Események]], [[Tennivalók]] |
-| Rendszeres kiadások (és a majdani [[Pénzügyek]] entitásai) | [[Rendszeres kiadások]], [[Pénzügyek]] |
+| Rendszeres kiadások (`RecurringExpense`) | [[Rendszeres kiadások]], [[Pénzügyek]] |
 | Outbox queue | eszköz + user kontextus — [[Szinkronizációs központ]] |
 
 ##### Device-local (nem sync a saját profilba az első körben)

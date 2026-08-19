@@ -6,11 +6,11 @@
 |---|---|
 | **Státusz** | `Váz` |
 | **Szülő** | [[Pénzügyek]] |
-| **Kapcsolódó** | [[AYCM tracker]], [[Értesítések]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Pénzügyek]], [[AYCM tracker]], [[Értesítések]], [[Bejelentkezés]], [[Backend-offline first]], [[Szinkronizációs központ]] |
 
 ### Célállapot
 
-Minden rendszeres, fix időközönként ismétlődő kiadás (streaming, edzőtermi bérletek, biztosítások) központi adminisztrációja; a [[Pénzügyek]] és az [[AYCM tracker]] közös Single Source of Truth (SSOT) alapja.
+Minden rendszeres, fix időközönként ismétlődő kiadás (streaming, edzőtermi bérletek, biztosítások) központi adminisztrációja. Generikus SSOT: a [[Pénzügyek]] dashboard a havi ekvivalens **összegét** olvassa. Az [[AYCM tracker]] opcionálisan **egy** sort belinkel (`linkedRecurringExpenseId` az AYCM oldalon) — ezen a spechen nincs AYCM mező.
 
 ### Funkcionális leírás
 
@@ -23,7 +23,23 @@ Adatstruktúra (kötelező mezők):
 * `category`: Enum (`ENTERTAINMENT`, `SPORT`, `UTILITIES`, `INSURANCE`)
 * `nextBillingDate`: Date
 
-AYCM kapocs: az itt rögzített előfizetéseket használja az AYCM setup. Éves bérlet esetén az `amountHuf` + `frequency` alapján számolódik a havi leosztott költség (nincs adatduplikáció). Lásd [[AYCM tracker]].
+#### Havi ekvivalens (fogyasztói szerződés)
+
+SSOT **itt**; a [[Pénzügyek]] dashboard és az [[AYCM tracker]] „megéri-e” ezt a utility-t hívja (nem másol képletet).
+
+`monthlyEquivalentHuf(row)` — egész Ft, `Math.round` (0.5 fel):
+
+| `frequency` | Képlet |
+|---|---|
+| `MONTHLY` | `amountHuf` |
+| `QUARTERLY` | `round(amountHuf / 3)` |
+| `YEARLY` | `round(amountHuf / 12)` |
+
+Dashboard-összeg: a **beszámított** sorok `monthlyEquivalentHuf` értékeinek összege (soronként kerekítve, aztán összeg). Üres halmaz → 0.
+
+Melyik sor számít: a CRUD / inaktív vs törlés kidolgozásakor zárjuk (MVP-irány: nem törölt, és ha lesz inaktív állapot, az kiesik).
+
+Nincs AYCM-specifikus mező (`isAycm` tilos). Példanév lehet „AYCM XXL bérlet” — ez csak `name`.
 
 ### UI/UX elvárások
 
@@ -42,11 +58,11 @@ Nincs nyitott kérdés.
 
 ### Frontend
 
-CRUD lista; offline queue; SSOT olvasás az [[AYCM tracker]] felé.
+CRUD lista; offline queue. Havi ekvivalens: pure TS utility. Az [[AYCM tracker]] ide olvashat (FK az AYCM-en).
 
 #### Backend-offline
 
-CRUD helyi store + OfflineQueueService; SSOT olvasás AYCM felé. Lásd [[Backend-offline first]], [[Szinkronizációs központ]].
+CRUD helyi store + OfflineQueueService. Havi ekvivalens always kliens TS. Lásd [[Backend-offline first]], [[Szinkronizációs központ]].
 
 ### Backend
 
