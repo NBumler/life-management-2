@@ -87,7 +87,7 @@ Az EAN mező végén gomb (jelszó-reveal mintára). Megnyomásra: OFF API hív�
 
 #### Duplikáció
 
-Létrehozáskor / mentéskor: új tétel **tiltott**, ha **minden** mezője megegyezik egy már létező élelmiszerével (lásd [[Élelmiszerek]]). Részleges egyezés (pl. ugyanaz a név, más üzlet) **megengedett**.
+Létrehozáskor / mentéskor: új tétel **tiltott**, ha **minden** mezője megegyezik egy már létező élelmiszerével (lásd [[Élelmiszerek]]). Részleges egyezés (pl. ugyanaz a név, más üzlet) **megengedett**. A mezők összehasonlításának szabálya: [[Névegyediség]].
 
 ### UI/UX elvárások
 
@@ -119,7 +119,7 @@ Nincs nyitott kérdés.
 
 ### Backend
 
-Élelmiszer create / update (OpenAPI); kliens UUID. Mezők a [[Élelmiszerek]] entitásban. Duplikáció: szerveroldali ellenőrzés is (online); a kliens offline is ugyanazt a szabályt alkalmazza.
+Élelmiszer create / update (OpenAPI); kliens UUID. Mezők a [[Élelmiszerek]] entitásban. Duplikáció: szerveroldali ellenőrzés is (online); a kliens offline **bitre ugyanazt** a szabályt alkalmazza — a normalizálás SSOT-ja és a kliens–szerver paritás követelménye: [[Névegyediség]].
 
 ### Nyitott kérdések
 

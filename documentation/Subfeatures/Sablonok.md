@@ -23,7 +23,7 @@ Pakolási sablonok: elnevezett [[Eszközök]] listák (pl. „Hétvégi mászás
 | Mező | Típus / szabály |
 |---|---|
 | `id` | UUID, kliens generálja |
-| `name` | Kötelező; **egyedi a user élő sablonjai között** (case-insensitive) |
+| `name` | Kötelező; **egyedi a user élő sablonjai között** — összehasonlítási szabály: [[Névegyediség]] |
 | `notes` | Opcionális szabad szöveg |
 | `deleted` | Soft delete (`false` default); listák szűrik |
 | `createdAt` / `updatedAt` | Audit |
@@ -58,7 +58,7 @@ Egy sablonon belül ugyanaz a `gearItemId` **legfeljebb egyszer** szerepelhet.
 
 - **Soft delete** a sablonra + összes `PackingTemplateItem`-re; confirmation dialog kötelező. Soha nem szinkronizált helyi draft → helyi hard remove + outbox tisztítás — [[Backend-offline first]].
 - Futó [[Pakolás]] **érintetlen** (snapshot); a dialógus jelezze: „aktív pakolást nem törli”.
-- [[Eszközök]] katalógus **nem** törlődik. Nincs undelete UI. Törölt sablon neve újra felvehető (egyediség élő sorokra).
+- [[Eszközök]] katalógus **nem** törlődik. Nincs undelete UI. Törölt sablon neve újra felvehető (egyediség élő sorokra — [[Névegyediség]]).
 
 #### Kapcsolat más specekkel
 
@@ -103,7 +103,7 @@ Nincs nyitott kérdés.
 - Táblák:
   - `packing_template` (`id` UUID, `user_id`, `name`, `notes` nullable, `deleted` / `deleted_at`, audit)
   - `packing_template_item` (`id` UUID, `template_id`, `gear_item_id`, `sort_order`, `deleted` / `deleted_at`, audit); unique `(template_id, gear_item_id)` élő sorokra; sablon `DELETE` → cascade soft delete a tételekre; `gear_item` törlésekor item sorok cascade soft delete ([[Eszközök]])
-- Egyediség: `(user_id, lower(name))` unique a sablonon, **élő** sorokra (`WHERE deleted = false`).
+- Egyediség: `(user_id, name_normalized)` unique a sablonon, **élő** sorokra (`WHERE deleted = false`) — [[Névegyediség]].
 - OpenAPI CRUD + `POST .../duplicate` (vagy kliens oldali create+copy ugyanazzal a szerződéssel); user scope: [[Bejelentkezés]].
 - `DELETE` sablon: soft delete + tételek; **nem** érinti a futó pakolás táblákat és a `gear_item` sort. Idempotens (már törölt → 200).
 

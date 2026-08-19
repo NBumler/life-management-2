@@ -48,7 +48,7 @@ Meghatározza az [[Edzésnapló]] szett beviteli mezőit:
 | Mező | Típus / szabály |
 |---|---|
 | `id` | UUID, kliens generálja |
-| `name` | Kötelező; egyedi a user katalógusán belül (case-insensitive ajánlott) |
+| `name` | Kötelező; **egyedi a user élő katalógusán belül** — összehasonlítási szabály: [[Névegyediség]]. Törölt név újra felvehető. |
 | `category` | Kötelező `ExerciseCategory` |
 | `kind` | Kötelező `ExerciseKind` |
 | `defaultRestTimeSeconds` | Opcionális egész `> 0`; élő Rest Timer alapértelmezés az [[Edzésnapló]]ban |

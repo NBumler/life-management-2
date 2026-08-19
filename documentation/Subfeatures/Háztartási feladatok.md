@@ -29,14 +29,14 @@ Szerkesztés: egy példány, egy helyiség (a helyiség áttehető; élő helyis
 | Mező | Típus / szabály |
 |---|---|
 | `id` | UUID, kliens generálja |
-| `name` | Kötelező; **egyedi a user élő helyiségei között** (case-insensitive, trim) |
+| `name` | Kötelező; **egyedi a user élő helyiségei között** — összehasonlítási szabály: [[Névegyediség]] |
 | `sortOrder` | Egész; manuális sorrend a helyiséglistában |
 | `deleted` | Soft delete (`false` default); listák szűrik |
 | `createdAt` / `updatedAt` | Audit |
 
 Csak név + sorrend. **Üres start:** nincs seed (konyha / WC nem előre töltve).
 
-Törölt helyiség neve **újra felvehető** (egyediség csak `deleted = false` sorokra).
+Törölt helyiség neve **újra felvehető** (egyediség csak `deleted = false` sorokra — [[Névegyediség]]).
 
 #### Entitás — `HouseholdTask`
 
@@ -44,7 +44,7 @@ Törölt helyiség neve **újra felvehető** (egyediség csak `deleted = false` 
 |---|---|
 | `id` | UUID, kliens generálja |
 | `roomId` | UUID → `HouseholdRoom`; kötelező |
-| `name` | Kötelező; **egyedi az adott helyiség élő feladatai között** (case-insensitive, trim). Más helyiségben ugyanaz a név OK. |
+| `name` | Kötelező; **egyedi az adott helyiség élő feladatai között** — összehasonlítási szabály: [[Névegyediség]]. Más helyiségben ugyanaz a név OK. |
 | `energyLevel` | Kötelező enum: `LOW` \| `MEDIUM` \| `HIGH` (Alacsony / Közepes / Magas) |
 | `estimatedMinutes` | Kötelező egész `≥ 1` |
 | `intervalDays` | Kötelező egész `≥ 1` (hány naponta). Nincs felső korlát; a naptár 1 éves sapkája vágja a vetítést. |
@@ -165,7 +165,7 @@ Nincs nyitott kérdés.
 - Táblák:
   - `household_room` (`id` UUID, `user_id`, `name`, `sort_order`, `deleted` / `deleted_at`, audit)
   - `household_task` (`id` UUID, `user_id`, `room_id`, `name`, `energy_level`, `estimated_minutes`, `interval_days`, `next_due` date, `last_completed_at` timestamptz nullable, `notes` nullable, `deleted` / `deleted_at`, audit)
-- Egyediség (élő sorok): `(user_id, lower(name))` a helyiségen; `(room_id, lower(name))` a feladaton — partial unique `WHERE deleted = false`.
+- Egyediség (élő sorok): `(user_id, name_normalized)` a helyiségen; `(room_id, name_normalized)` a feladaton — partial unique `WHERE deleted = false`. A normalizálás SSOT-ja (és miért nem elég a `lower(name)`): [[Névegyediség]].
 - `DELETE /api/household-rooms/{id}`: soft delete a szobára + cascade soft delete a userhez tartozó feladataira. Confirmation listát a kliens a helyi store-ból állítja.
 - `DELETE /api/household-tasks/{id}`: soft delete a feladaton.
 - OpenAPI (elvárás; lista implicit `deleted = false`):

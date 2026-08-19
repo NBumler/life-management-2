@@ -83,7 +83,7 @@ Katalógus ár = **Ft / csomag** (1 csomag = nettó tartalom).
 
 Új / mentett recept **tiltott**, ha:
 
-1. a **neve** megegyezik egy meglévő **élő** recept nevével (trim / case-szabály: implementációban egységes, ajánlott: trim + case-insensitive), **vagy**
+1. a **neve** megegyezik egy meglévő **élő** recept nevével — összehasonlítási szabály: [[Névegyediség]], **vagy**
 2. a hozzávaló-halmaz megegyezik: ugyanazok az `foodId` + `amount` + `unit` párok, **sorrendtől függetlenül** (üres hozzávalós receptek: csak a név dönt; két üres-hozzávalós különböző nevű OK).
 
 Backend-offline: helyi ellenőrzés is.
@@ -129,10 +129,10 @@ Nincs nyitott kérdés.
 
 | Entitás | Fő mezők |
 |---|---|
-| `Recipe` | `id` (UUID, kliens); `name` (unique élő sorokra, case-insensitive trim); `note`; `deleted` / `deleted_at`; `createdAt`, `updatedAt` |
+| `Recipe` | `id` (UUID, kliens); `name` (unique élő sorokra `name_normalized` szerint — [[Névegyediség]]); `note`; `deleted` / `deleted_at`; `createdAt`, `updatedAt` |
 | `RecipeIngredient` | `id`; `recipeId`; `foodId`; `quantityAmount`; `quantityUnit`; `sortOrder` |
 
-- Unique: `name` **élő** sorokra; alkalmazás-szintű / query ellenőrzés a hozzávaló-halmaz duplikációra — **globális** (shared, `deleted = false`).
+- Unique: `name_normalized` **élő** sorokra ([[Névegyediség]]); alkalmazás-szintű / query ellenőrzés a hozzávaló-halmaz duplikációra — **globális** (shared, `deleted = false`).
 - **Ownership:** shared — nincs `userId`; Auth: bármely autentikált `USER` CRUD ([[Bejelentkezés]]).
 - CRUD + soft delete cascade az étkezés-hivatkozásokra **minden usernél** (vagy az Étkezés spechel egyeztetett cascade). `DELETE` idempotens; törölt `GET` by id → 200 + `deleted`.
 - Összegzett tápanyag / ár: **számított** (kliens és/vagy read-model); nem kötelező denormalizált oszlop — ha cache kell, később.

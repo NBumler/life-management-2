@@ -41,6 +41,8 @@ Részletes UI / szabályok: [[Élelmiszer manuális bevitele]].
 
 Új tétel mentése **tiltott**, ha **minden** mezője megegyezik egy már létező **élő** katalóguselemével. Részleges egyezés megengedett (pl. ugyanaz a termék más üzletben = külön tétel). A szabály **backend-offline** állapotban is él (helyi adat).
 
+A mezők összehasonlításának kanonikus szabálya (szöveg-normalizálás, vonalkód, `null` ≠ `0`, mennyiség-egység): [[Névegyediség]] → mezőhalmaz-egyediség.
+
 Későbbi modellbontás (külön bolt entitás) nincs scope-ban.
 
 #### Törlés (soft delete)
@@ -99,7 +101,7 @@ OpenAPI scope — élelmiszer katalógus (közös a subfeature-ökkel):
 Műveletek:
 
 - CRUD; lista + szöveges keresés.
-- Create/update: duplikáció ellenőrzés (összes mező egyezése) — **globális** a shared katalógus **élő** sorain.
+- Create/update: duplikáció ellenőrzés (összes mező egyezése, [[Névegyediség]] szerint normalizálva) — **globális** a shared katalógus **élő** sorain. Alkalmazás-szintű ellenőrzés, nem egyetlen unique index.
 - Delete: soft delete + cascade soft delete a hivatkozó tárolás / recept / bevásárlás / étkezés tételekre **minden usernél**; a kliens a megerősítéshez előtte lekérdezheti / helyben tudja a hivatkozásokat. `DELETE` idempotens; saját törölt `GET` by id → 200 + `deleted` (ne 404).
 
 Mennyiség / időtartam egységek SSOT: [[Mennyiség mező]].

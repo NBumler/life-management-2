@@ -200,7 +200,7 @@ Nincs nyitott kérdés.
 - Update: **teljes nested fa cseréje** egy PUT body-ban (nincs részleges PATCH az első körben).
 - Nincs szerveroldali kcal tárolás; opcionális MET-paritás a [[Tápérték kalkulátor]]ssal.
 - Auth / user scope: a bejelentkezett user saját sessionjei.
-- Konfliktus: kliens UUID; idempotencia TBD ([[Backend-offline first]]).
+- Konfliktus: kliens UUID; idempotens upsert + sor-szintű last-write-wins ([[Backend-offline first]]).
 
 ### Nyitott kérdések
 

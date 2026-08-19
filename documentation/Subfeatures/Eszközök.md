@@ -23,7 +23,7 @@ User-owned felszerelés-katalógus (típus / tétel szint, nem fizikai példány
 | Mező | Típus / szabály |
 |---|---|
 | `id` | UUID, kliens generálja |
-| `name` | Kötelező; **egyedi a user élő katalógusán belül** (case-insensitive) |
+| `name` | Kötelező; **egyedi a user élő katalógusán belül** — összehasonlítási szabály: [[Névegyediség]] |
 | `notes` | Opcionális szabad szöveg |
 | `deleted` | Soft delete (`false` default); listák szűrik |
 | `createdAt` / `updatedAt` | Audit |
@@ -84,7 +84,7 @@ Nincs nyitott kérdés.
 ### Backend
 
 - Tábla: `gear_item` (`id` UUID, `user_id`, `name`, `notes` nullable, `deleted` / `deleted_at`, `created_at`, `updated_at`).
-- Egyediség: `(user_id, lower(name))` unique **élő** sorokra (`WHERE deleted = false`).
+- Egyediség: `(user_id, name_normalized)` unique **élő** sorokra (`WHERE deleted = false`) — [[Névegyediség]].
 - OpenAPI CRUD; minden művelet `SecurityContext` `userId`-ra szűr; idegen `id` → 404; saját törölt `GET` by id → 200 + `deleted`.
 - `DELETE /api/gear-items/{id}`: soft delete + cascade soft delete a userhez tartozó sablon-tételekre és futó pakolás-tételekre, amelyek `gear_item_id`-re mutatnak. Idempotens (már törölt → 200). Auth / ownership: [[Bejelentkezés]].
 

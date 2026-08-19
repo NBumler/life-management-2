@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Kész` |
 | **Szülő** | [[Indoor - boulder]] |
-| **Kapcsolódó** | [[Indoor boulder napló]], [[Nehézségi szint skálája]], [[Mászónapló]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Indoor boulder napló]], [[Nehézségi szint skálája]], [[Mászónapló]], [[Névegyediség]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -32,7 +32,7 @@ Beltéri boulder **terem + szín-sáv** törzsadat. Egyedi boulder problémák *
 | `id` | UUID |
 | `gymId` | FK → `Gym` |
 | `name` | Kötelező (pl. „Piros”) |
-| `hexColor` | Kötelező; **egyedi a teremen belül** (nem lehet két azonos hex) |
+| `hexColor` | Kötelező; **egyedi a terem élő szín-sávjai között** (nem lehet két azonos hex). Kanonikus alak (`#rrggbb`, rövid forma kifejtve, kisbetűs) és összehasonlítás: [[Névegyediség]] |
 | `variant` | Enum: `PLUS` \| `MINUS` \| `NEUTRAL` (`+` / `−` / semleges) |
 | `gradeLower` | [[Nehézségi szint skálája]] — alsó bound (boulder skála) |
 | `gradeUpper` | Felső bound |
@@ -45,7 +45,7 @@ CRUD: terem lista, szín-sávok nested vagy külön; soft delete; megerősítés
 
 - Belépés: [[Mászónapló]] hub Admin, vagy Indoor Boulder napló jobb felső admin.
 - Terem szerkesztő + színlista; színválasztó + grade alsó/felső a shared nehézség komponenssel.
-- Egyedi hex validáció mentéskor.
+- Egyedi hex validáció mentéskor (a kanonikus alakon — [[Névegyediség]]).
 
 ### Megjegyzések
 

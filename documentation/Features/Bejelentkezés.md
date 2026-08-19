@@ -19,7 +19,7 @@ Felhasználói autentikáció és authorizáció: a személyes (user-owned) adat
 | Mező | Szabály |
 |---|---|
 | `id` | UUID (szerver generálhatja user létrehozáskor — ez **nem** offline entitás) |
-| `username` | Kötelező; **case-sensitive**; egyedi; hossz **3–32**; engedélyezett karakterek: `a-z`, `A-Z`, `0-9`, `.`, `_`, `-` (regex: `^[a-zA-Z0-9._-]{3,32}$`) |
+| `username` | Kötelező; **case-sensitive** (szándékos kivétel a [[Névegyediség]] szabálya alól: `alice` ≠ `Alice`); egyedi; hossz **3–32**; engedélyezett karakterek: `a-z`, `A-Z`, `0-9`, `.`, `_`, `-` (regex: `^[a-zA-Z0-9._-]{3,32}$`) |
 | `passwordHash` | Csak szerveren; soha nem kerül API válaszba / OpenAPI kliens modellbe |
 | `role` | Mindig `USER` (egyetlen alkalmazás-szerep az első körben) |
 | `createdAt` / `updatedAt` | Audit |

@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Kész` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Frontend]], [[Backend]], [[Szinkronizációs központ]], [[Bejelentkezés]], [[Tápérték kalkulátor]], [[Vonalkódos élelmiszer beolvasás]], [[Lépésszám átszinkronizálása a Samsung Health-ből]], [[Gyakorlat]] |
+| **Kapcsolódó** | [[Frontend]], [[Backend]], [[Szinkronizációs központ]], [[Bejelentkezés]], [[Névegyediség]], [[Tápérték kalkulátor]], [[Vonalkódos élelmiszer beolvasás]], [[Lépésszám átszinkronizálása a Samsung Health-ből]], [[Gyakorlat]] |
 
 ### Célállapot
 
@@ -83,7 +83,8 @@ Nincs nyitott kérdés.
 
 #### 3. Helyi tároló
 
-- **Technológia:** SQLite (Capacitor plugin — a végleges választás: [[Frontend]]).
+- **Technológia:** SQLite a `@capacitor-community/sqlite` pluginnal (ingyenes, aktívan karbantartott, Capacitor 8 támogatással). A verziót a `package.json` rögzíti, nem ez a spec.
+- **Séma-migráció:** a plugin **beépített, verziózott upgrade-mechanizmusa** (`setUpgradeStatement` — DB verzió + a hiányzó lépések automatikus lefuttatása nyitáskor). Nincs külön ORM / migrációs eszköz az első körben: a típusbiztonság a repository rétegben él ([[Frontend]]).
 - **User-izoláció:** **külön adatbázisfájl userenként** (`lm2_<userId>.db`). Más user bejelentkezésekor a korábbi user adatai érintetlenül maradnak a saját fájljában, de nem keverednek — [[Bejelentkezés]].
 - **Táblák:** entitástípusonként egy tábla, a generált OpenAPI DTO mezőivel, plusz sync-metaadat oszlopok:
 
@@ -95,9 +96,10 @@ Nincs nyitott kérdés.
 | `_local_only` | `1`, ha a sor még **soha** nem került fel a szerverre. |
 | `_sync_error` | `1`, ha a sorhoz tartozó outbox tétel `ERROR` státuszban van (listajelöléshez). |
 
-- **Séma-migráció:** verziózott migrációk (`schema_version` tábla). A migráció **soha nem dobhatja el az outboxot** és a `_dirty` sorokat.
+- A migráció **soha nem dobhatja el az outboxot** és a `_dirty` sorokat. (A DB séma-migrációja és az outbox **payload**-migrációja két külön dolog — utóbbi a §7.)
 - **Shared katalógus** (`Food`, `Recipe`, `RecipeIngredient` — [[Bejelentkezés]] ownership mátrix) ugyanebben a user-DB-ben él. Ugyanazon eszközön több user esetén a shared katalógus fizikailag duplikálódik — az elsődleges (személyes) használat mellett ez elfogadott.
 - **Nincs bináris tartalom** a helyi store-ban az első körben (nincs kép / fájl feltöltés).
+- **A helyi DB nem titkosított** az első körben (nincs SQLCipher): a készülék OS-szintű lemeztitkosítására és app-sandboxára támaszkodunk. Az auth tokenek ettől függetlenül platform secure store-ban vannak ([[Bejelentkezés]]).
 - `sync_state` tábla: `cursor`, `last_pull_at`, `last_pull_status`, `first_pull_completed`.
 - `seed_state` tábla: melyik seed-verzió futott már le ([[Gyakorlat]], §15).
 
@@ -226,7 +228,19 @@ Az outbox tételek **túlélik az alkalmazás frissítését** ([[Bejelentkezés
 A helyi store feltöltése és frissítése egy **dedikált delta-sync végponton** történik: `GET /api/sync/changes?since=<cursor>` (szerződés: [[Backend]]). Egy hívás minden entitástípus változásait adja, **tombstone-okkal együtt**.
 
 - **Cursor:** opaque string (szerveroldali `updated_at` + `id` tiebreaker). **Nem** nyers timestamp — így az azonos milliszekundumban módosult sorok és az óracsúszás nem tüntet el változásokat.
-- **Első pull** (friss telepítés vagy első login): `since` nélkül → teljes snapshot lapozva (`hasMore` / `nextCursor`). A UI „első szinkronizálás” progresszt mutat, a részlegesen letöltött adat közben olvasható.
+- **Első pull** (friss telepítés vagy első login): `since` nélkül → teljes snapshot lapozva. A UI „első szinkronizálás” progresszt mutat, a részlegesen letöltött adat közben olvasható.
+
+##### Lapozás
+
+Egy hívás **legfeljebb `limit`** darab változást ad vissza, tehát a pull mindig **ciklus**, nem egyetlen kérés:
+
+1. Hívás `since = sync_state.cursor` értékkel (az első pullnál `since` nélkül).
+2. A lap alkalmazása és a `cursor = nextCursor` mentése **egy tranzakcióban**.
+3. Ha `hasMore = true`, ugrás az 1. lépésre az új cursorral; ha `false`, a pull kész.
+
+- Ez a **delta** pullra is vonatkozik, nem csak az elsőre: ha sokáig offline volt az eszköz, több lapnyi változás gyűlhet össze.
+- Mivel a `cursor` laponként lép, a **megszakadt pull folytatható**: hálózatvesztésnél vagy app-bezárásnál a következő futás onnan megy tovább, nem kezdi elölről.
+- A ciklus lapok között enged a UI szálnak (nincs fagyott képernyő nagy első pullnál).
 - **Trigger:** app start, resume (ha `last_pull_at` régebbi, mint 5 perc), manuális sync, és **minden sikeres drain után**.
 - **Sorrend: először drain, aztán pull.** Így a helyi írásaink már a szerveren vannak, és a pull azokat is visszaigazolja; fordított sorrendben a pull felülírná a `_dirty` sorokat.
 
@@ -277,7 +291,7 @@ A vault sok helyen definiál **élő sorokra** vonatkozó egyediséget, amit ké
 
 - A szerver hibaválasza megadja a `field`-et és a `code`-ot, hogy a UI érdemi üzenetet mutasson.
 - A kliens az érintett helyi soron `_sync_error = 1`-et állít; a lista pirosan jelzi és tap-re a [[Szinkronizációs központ]]ba visz.
-- Fontos: ezeket az egyediségeket a kliens **beírás előtt is** ellenőrzi a helyi adaton (a feature specek ezt megkövetelik) — így csak a valódi multi-device verseny okoz `409`-et.
+- Fontos: ezeket az egyediségeket a kliens **beírás előtt is** ellenőrzi a helyi adaton, így csak a valódi multi-device verseny okoz `409`-et. Ehhez a kliens és a szerver **bitre ugyanazt** az összehasonlítási szabályt alkalmazza — kanonikus normalizálás: [[Névegyediség]]. Ha a két oldal eltér, a user offline mentése hibátlannak látszik, majd syncnél elhasal.
 
 ##### Determinisztikus UUID a természetes kulcsú entitásokra
 
@@ -414,6 +428,7 @@ Elv: a külső integrációk **soha nincsenek** a saját backenden proxyzva ([[B
 - Bináris tartalom (kép, fájl) offline queue-ban.
 - Remote push értesítés — [[Értesítések]].
 - Konfliktus-előzmény / audit napló a kliensen (a `~`-on és az `ERROR` tételeken túl).
+- Helyi DB titkosítás (SQLCipher) — az OS lemeztitkosítás + app sandbox elég.
 
 #### 18. Elfogadási kritériumok
 
@@ -458,7 +473,7 @@ Kiegészíti a [[Backend]] jegyzetet; a szerződés forrása az OpenAPI spec.
 | `GET` by id, saját törölt sor | `200` + `deleted = true` (**ne** `404`). |
 | `GET` by id, idegen user sora | `404` (ne `403` — enumeration ellen). |
 | Listák | Implicit `deleted = false`. |
-| Egyediség | **Partial unique index élő sorokra** (`WHERE deleted = false`); sértés → `409` + `{ "code": "UNIQUE_VIOLATION", "field": "…" }`. |
+| Egyediség | **Partial unique index élő sorokra** (`WHERE deleted = false`), a normalizált oszlopon (`name_normalized` — [[Névegyediség]]); sértés → `409` + `{ "code": "UNIQUE_VIOLATION", "field": "…" }`. |
 | Validáció | `400` / `422` + `{ "code": "VALIDATION_ERROR", "field": "…" }`. |
 
 Egységes hibaformátum: `{ "code": "...", "message": "...", "field": "...?", "conflictingId": "...?" }`. A `code` gépi feldolgozásra, a `message` a [[Szinkronizációs központ]] hibasorába.
@@ -472,7 +487,7 @@ Egységes hibaformátum: `{ "code": "...", "message": "...", "field": "...?", "c
 
 | Metódus | Útvonal | Auth | Leírás |
 |---|---|---|---|
-| `GET` | `/api/sync/changes` | Bearer | Query: `since` (opaque cursor, opcionális), `limit` (default `500`, max `2000`), `types` (opcionális szűrő). |
+| `GET` | `/api/sync/changes` | Bearer | Query: `since` (opaque cursor, opcionális), `limit` (default `500`, max `2000`), `types` (opcionális szűrő). Egy hívás max `limit` változást ad; a kliens `hasMore = false`-ig lapoz. |
 | `GET` | `/api/health` | publikus | Elérhetőség-próba. Olcsó, DB-kör nélkül; a kliens ebből dönt `BACKEND_OFFLINE`-ról. |
 
 Válasz:
@@ -491,6 +506,7 @@ Válasz:
 
 - **Tartalom:** a hívó user **user-owned** sorai + a **shared** katalógus (`Food`, `Recipe`, `RecipeIngredient`) változásai. Device-local adat (nyelv, téma, értesítés-kapcsolók) **nem** syncelődik ([[Bejelentkezés]]).
 - **Rendezés:** `(updated_at, id)` növekvő; a `nextCursor` az utolsó kiadott sor kulcsa. Tombstone-nál a `data` lehet `null`.
+- A rendezés **stabil és teljes** kell legyen: az `(updated_at, id)` páros egyedi, így lapozásnál egyetlen sor sem maradhat ki és nem jöhet kétszer. A `hasMore` akkor `true`, ha a `limit`-en túl van még sor.
 - **Elavult cursor:** `410` + `{ "code": "CURSOR_TOO_OLD" }`.
 - **Tombstone-retenció:** legalább **180 nap** a `deleted_at`-tól; ennél régebbi tombstone fizikailag is törölhető.
 - A queue által visszajátszott `POST` / `PUT` / `DELETE` továbbra is a **normál** üzleti végpontokra megy — külön „write sync API” nincs, csak ez az olvasási delta végpont.
@@ -510,6 +526,6 @@ Válasz:
 
 ### Nyitott kérdések
 
-- Helyi SQLite **titkosítás** (SQLCipher vagy ekvivalens): kell-e az első körben? A napló adatok személyesek, de az auth tokenek már platform secure store-ban vannak ([[Bejelentkezés]]).
-- A Capacitor SQLite plugin és a séma-migrációs tooling végleges választása — [[Frontend]].
-- A `/api/sync/changes` `limit` finomhangolása és az első pull adatmennyisége (mérés után; ha nagy, típusonkénti prioritált első pull kell).
+Nincs nyitott kérdés.
+
+A `limit` alapértékei (`500` / max `2000`) mérés után finomhangolhatók; ha az első pull így is lassú lenne, a `types` szűrővel típusonként prioritált első pull építhető — a szerződés ezt már ma megengedi, nem igényel spec-változást.

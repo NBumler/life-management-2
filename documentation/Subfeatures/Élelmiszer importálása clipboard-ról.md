@@ -67,7 +67,7 @@ Ha a só ki van töltve, és a nátrium / klorid a sorban **üres** → ugyanaz 
 | Kategória | Szabály |
 |---|---|
 | **Új (importálható)** | Érvényes sor, és **nem** duplikátuma egy már létező (vagy ugyanebben a batchben már elfogadott) élelmiszernek. |
-| **Duplikátum** | Minden mező megegyezik egy meglévő katalóguselemmel (szabály: [[Élelmiszerek]]), vagy a batchen belüli korábbi érvényes sorral. |
+| **Duplikátum** | Minden mező megegyezik egy meglévő katalóguselemmel (szabály: [[Élelmiszerek]], mezőnormalizálás: [[Névegyediség]]), vagy a batchen belüli korábbi érvényes sorral. |
 | **Invalid** | Pl. hiányzó **Termék**; nettó tartalom nem parse-olható ([[Mennyiség mező]]); számmező nem értelmezhető szám; oszlopszám eltérés (túl kevés / egyértelműen törött sor). A lenyitható szekcióban **ok** megjelenik. |
 
 Az Import gomb csak az **Új** kategóriát menti. Sikeres import után: toast / visszajelzés a létrehozott darabszámmal; a textbox és az előnézet állapota frissíthető (üresre vagy az importáltak kikerülésével — ajánlott: textbox törlése + számlálók nullázása, lista frissül).
@@ -92,7 +92,7 @@ Nincs nyitott kérdés.
 
 ### Frontend
 
-- Parser utility: TSV split → sor DTO; fejléc detektálás; validáció; duplikáció-ellenőrzés a helyi katalógus + batch ellen.
+- Parser utility: TSV split → sor DTO; fejléc detektálás; validáció; duplikáció-ellenőrzés a helyi katalógus + batch ellen a [[Névegyediség]] normalizálásával (a beillesztett táblázat gyakran hoz vezető / záró és dupla szóközt, nem törhető szóközt).
 - UI: textbox + collapsible preview + Import.
 - Nettó: meglévő quantity parser; romlás: szám → `{ amount, unit: 'nap' }`.
 

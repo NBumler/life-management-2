@@ -25,7 +25,7 @@ Belépés: [[AYCM tracker]] hub → elfogadóhelyek. A [[AYCM Check-In]] csak **
 | Mező | Típus / szabály |
 |---|---|
 | `id` | UUID, kliens generálja |
-| `name` | Kötelező; trim után nem üres; **egyedi a user élő partnerei között** (case-insensitive). Törölt név újra felvehető. |
+| `name` | Kötelező; trim után nem üres; **egyedi a user élő partnerei között** — összehasonlítási szabály: [[Névegyediség]]. Törölt név újra felvehető. |
 | `notes` | Opcionális szabad szöveg |
 | `deleted` | Soft delete (`false` default); listák / picker szűrik |
 | `createdAt` / `updatedAt` | Audit |
@@ -134,7 +134,7 @@ Nincs nyitott kérdés.
 - Táblák:
   - `aycm_partner` (`id` UUID, `user_id`, `name`, `notes` nullable, `deleted` / `deleted_at`, audit)
   - `aycm_price_rule` (`id` UUID, `user_id`, `partner_id`, `label` nullable, `applies_mon` … `applies_sun`, `start_time`, `end_time` (string `HH:mm` vagy perc; `24:00` / 1440 engedélyezett end-en), `list_price_huf`, `co_payment_huf`, `deleted` / `deleted_at`, audit)
-- Egyediség: `(user_id, lower(name))` partial unique a partneren `WHERE deleted = false`.
+- Egyediség: `(user_id, name_normalized)` partial unique a partneren `WHERE deleted = false` — [[Névegyediség]].
 - Overlap: szerver is ellenőrzi élő szabályokon (ugyanaz a partner, közös nap, intervallum-metszet).
 - Check: `list_price_huf ≥ 0`, `co_payment_huf ≥ 0`, ≥1 nap flag, `end > start`.
 - OpenAPI (listák implicit `deleted = false`):
