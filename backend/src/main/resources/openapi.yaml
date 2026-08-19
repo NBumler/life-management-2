@@ -2,17 +2,39 @@ openapi: 3.0.3
 info:
   title: Life Management 2.0 API
   version: 0.0.1
+security:
+  - bearerAuth: []
 paths:
   /api/health:
     $ref: 'openapi/paths/health.yaml'
   /api/sync/changes:
     $ref: 'openapi/paths/sync-changes.yaml'
+  /api/auth/login:
+    $ref: 'openapi/paths/auth-login.yaml'
+  /api/auth/refresh:
+    $ref: 'openapi/paths/auth-refresh.yaml'
+  /api/auth/logout:
+    $ref: 'openapi/paths/auth-logout.yaml'
+  /api/admin/users:
+    $ref: 'openapi/paths/admin-users.yaml'
+  /api/admin/users/{username}/password:
+    $ref: 'openapi/paths/admin-user-password.yaml'
+  /api/profile:
+    $ref: 'openapi/paths/profile.yaml'
+  /api/profile/weight-history:
+    $ref: 'openapi/paths/weight-history.yaml'
+  /api/profile/weight-history/{id}:
+    $ref: 'openapi/paths/weight-history-item.yaml'
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+    adminApiKey:
+      type: apiKey
+      in: header
+      name: X-Admin-Api-Key
   schemas:
     ApiError:
       $ref: 'openapi/components/schemas/ApiError.yaml'
@@ -22,3 +44,21 @@ components:
       $ref: 'openapi/components/schemas/SyncChangesResponse.yaml'
     SyncChangeItem:
       $ref: 'openapi/components/schemas/SyncChangeItem.yaml'
+    LoginRequest:
+      $ref: 'openapi/components/schemas/LoginRequest.yaml'
+    AuthTokens:
+      $ref: 'openapi/components/schemas/AuthTokens.yaml'
+    RefreshRequest:
+      $ref: 'openapi/components/schemas/RefreshRequest.yaml'
+    AdminCreateUserRequest:
+      $ref: 'openapi/components/schemas/AdminCreateUserRequest.yaml'
+    AdminSetPasswordRequest:
+      $ref: 'openapi/components/schemas/AdminSetPasswordRequest.yaml'
+    AdminUser:
+      $ref: 'openapi/components/schemas/AdminUser.yaml'
+    UserProfile:
+      $ref: 'openapi/components/schemas/UserProfile.yaml'
+    WeightHistoryEntry:
+      $ref: 'openapi/components/schemas/WeightHistoryEntry.yaml'
+    WeightHistoryEntryList:
+      $ref: 'openapi/components/schemas/WeightHistoryEntryList.yaml'

@@ -1,0 +1,30 @@
+get:
+  operationId: listWeightHistory
+  tags:
+    - profile
+  summary: The caller's weight history, live rows only (deleted = false), newest first.
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/WeightHistoryEntryList.yaml'
+post:
+  operationId: createWeightHistoryEntry
+  tags:
+    - profile
+  summary: Create a history entry directly (manual/retroactive add) — idempotent upsert on client id.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/WeightHistoryEntry.yaml'
+  responses:
+    '200':
+      description: Created or, on retry with the same id, the existing row.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/WeightHistoryEntry.yaml'

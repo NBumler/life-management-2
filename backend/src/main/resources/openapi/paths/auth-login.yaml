@@ -1,0 +1,25 @@
+post:
+  operationId: login
+  tags:
+    - auth
+  summary: Username + password login. Generic error on failure (doesn't reveal which was wrong).
+  security: []
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/LoginRequest.yaml'
+  responses:
+    '200':
+      description: Access + refresh token pair.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/AuthTokens.yaml'
+    '401':
+      description: Invalid credentials.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'

@@ -1,0 +1,25 @@
+post:
+  operationId: refresh
+  tags:
+    - auth
+  summary: Exchange a valid refresh token for a new access token (with refresh rotation).
+  security: []
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/RefreshRequest.yaml'
+  responses:
+    '200':
+      description: New access + refresh token pair.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/AuthTokens.yaml'
+    '401':
+      description: Refresh token invalid, expired, or revoked.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'

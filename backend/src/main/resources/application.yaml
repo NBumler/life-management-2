@@ -11,3 +11,9 @@ spring:
     open-in-view: false
   flyway:
     enabled: true
+
+lm2:
+  jwt:
+    secret: ${LM2_JWT_SECRET}
+  admin:
+    api-key: ${LM2_ADMIN_API_KEY}

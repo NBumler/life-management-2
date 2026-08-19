@@ -1,0 +1,5 @@
+lm2:
+  jwt:
+    secret: test-only-secret-do-not-use-in-prod-0123456789
+  admin:
+    api-key: test-admin-api-key

@@ -1,0 +1,42 @@
+get:
+  operationId: getProfile
+  tags:
+    - profile
+  summary: The caller's profile. 404 until the first PUT (no profile row exists yet).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/UserProfile.yaml'
+    '404':
+      description: No profile saved yet.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+put:
+  operationId: putProfile
+  tags:
+    - profile
+  summary: Upsert the caller's profile (id is a deterministic UUID v5 from the userId).
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/UserProfile.yaml'
+  responses:
+    '200':
+      description: Saved.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/UserProfile.yaml'
+    '400':
+      description: kgPerWeek missing while goal is FAT_LOSS/WEIGHT_GAIN, or a field out of range.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'

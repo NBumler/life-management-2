@@ -1,0 +1,23 @@
+type: object
+required:
+  - id
+  - username
+  - role
+  - createdAt
+  - updatedAt
+properties:
+  id:
+    type: string
+    format: uuid
+  username:
+    type: string
+  role:
+    type: string
+    enum:
+      - USER
+  createdAt:
+    type: string
+    format: date-time
+  updatedAt:
+    type: string
+    format: date-time

@@ -1,0 +1,32 @@
+type: object
+required:
+  - id
+  - recordedAt
+  - weightKg
+  - deleted
+properties:
+  id:
+    type: string
+    format: uuid
+  recordedAt:
+    type: string
+    format: date-time
+  weightKg:
+    type: number
+    minimum: 30
+    maximum: 300
+  deleted:
+    type: boolean
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

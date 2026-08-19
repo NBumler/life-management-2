@@ -1,0 +1,26 @@
+post:
+  operationId: createUser
+  tags:
+    - admin
+  summary: Create a new user. Admin API — X-Admin-Api-Key, not JWT.
+  security:
+    - adminApiKey: []
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/AdminCreateUserRequest.yaml'
+  responses:
+    '201':
+      description: Created (password never included in the response).
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/AdminUser.yaml'
+    '409':
+      description: Username already taken.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'

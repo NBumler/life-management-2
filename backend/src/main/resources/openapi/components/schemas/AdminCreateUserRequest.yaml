@@ -1,0 +1,11 @@
+type: object
+required:
+  - username
+  - password
+properties:
+  username:
+    type: string
+    pattern: '^[a-zA-Z0-9._-]{3,32}$'
+  password:
+    type: string
+    minLength: 8

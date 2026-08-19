@@ -1,0 +1,14 @@
+type: object
+required:
+  - accessToken
+  - refreshToken
+  - expiresIn
+properties:
+  accessToken:
+    type: string
+  refreshToken:
+    type: string
+  expiresIn:
+    type: integer
+    format: int64
+    description: Access token lifetime in seconds.

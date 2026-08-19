@@ -26,10 +26,17 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-webmvc")
 	implementation("org.flywaydb:flyway-database-postgresql")
 	implementation("org.openapitools:jackson-databind-nullable:0.2.11")
+	implementation("org.springframework.boot:spring-boot-starter-jackson")
+	// Jackson 2 (com.fasterxml.jackson.*), not Boot 4's default Jackson 3 (tools.jackson.*) —
+	// see JacksonConfig for why. Version pinned to what jackson-databind-nullable resolves to.
+	implementation("com.fasterxml.jackson.core:jackson-databind:2.21.4")
+	implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.21.4")
 	implementation("io.jsonwebtoken:jjwt-api:0.13.0")
 	runtimeOnly("io.jsonwebtoken:jjwt-impl:0.13.0")
 	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.13.0")
 	runtimeOnly("org.postgresql:postgresql")
+	testImplementation("org.springframework.boot:spring-boot-starter-test")
+	testImplementation("org.springframework.boot:spring-boot-starter-jackson-test")
 	testImplementation("org.springframework.boot:spring-boot-starter-data-jpa-test")
 	testImplementation("org.springframework.boot:spring-boot-starter-flyway-test")
 	testImplementation("org.springframework.boot:spring-boot-starter-security-test")

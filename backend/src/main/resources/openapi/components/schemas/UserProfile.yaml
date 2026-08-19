@@ -1,0 +1,54 @@
+type: object
+description: 1:1 per user. Every field except id is optional — an incomplete profile is a valid, saveable state.
+required:
+  - id
+properties:
+  id:
+    type: string
+    format: uuid
+  birthDate:
+    type: string
+    format: date
+    nullable: true
+  sex:
+    type: string
+    enum:
+      - MALE
+      - FEMALE
+    nullable: true
+  heightCm:
+    type: number
+    minimum: 100
+    maximum: 250
+    nullable: true
+  currentWeightKg:
+    type: number
+    minimum: 30
+    maximum: 300
+    nullable: true
+  goal:
+    type: string
+    enum:
+      - FAT_LOSS
+      - MAINTENANCE
+      - WEIGHT_GAIN
+    nullable: true
+  kgPerWeek:
+    type: number
+    minimum: 0.1
+    maximum: 1.5
+    nullable: true
+    description: Required on save when goal is FAT_LOSS or WEIGHT_GAIN; ignored when goal is MAINTENANCE.
+  grossMonthlySalaryHuf:
+    type: integer
+    format: int64
+    minimum: 0
+    nullable: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

@@ -1,0 +1,16 @@
+post:
+  operationId: logout
+  tags:
+    - auth
+  summary: Revoke the given refresh token for the current device.
+  security:
+    - bearerAuth: []
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/RefreshRequest.yaml'
+  responses:
+    '204':
+      description: Revoked (or already invalid — logout is idempotent from the client's point of view).
