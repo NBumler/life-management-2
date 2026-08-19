@@ -9,7 +9,8 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "lint": "ng lint"
+    "lint": "ng lint",
+    "gen:api": "openapi-generator-cli generate -i ../backend/src/main/resources/openapi.yaml -g typescript-angular -o src/app/api --additional-properties=ngVersion=20.3.25,providedInRoot=true,withInterfaces=true,supportsES6=true --global-property=skipFormModel=false"
   },
   "private": true,
   "dependencies": {
@@ -48,6 +49,7 @@
     "@angular-eslint/template-parser": "20.7.0",
     "@angular/cli": "20.3.28",
     "@angular/compiler-cli": "20.3.25",
+    "@openapitools/openapi-generator-cli": "^2.19.1",
     "@angular/language-service": "20.3.25",
     "@capacitor/cli": "8.5.0",
     "@ionic/angular-toolkit": "^12.0.0",
