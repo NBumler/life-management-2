@@ -21,7 +21,7 @@ AYCM használat követése: elfogadóhelyek + árszabályok, napi Check-In, megt
 #### Gyerekek
 
 - [[AYCM elfogadóhely hozzáadása]] (`Kész`) — partner + árszabály (idősáv).
-- [[AYCM Check-In]] (`Váz`) — napi egy belépés, snapshot.
+- [[AYCM Check-In]] (`Kész`) — napi egy belépés, snapshot; múlt/jövő dátum szabad.
 - [[AYCM Statisztikák]] (`TODO`) — hosszabb ablak / helyszín; a hub csak az **aktuális naptári hónapot** mutatja.
 
 Nincs 4. gyerek. A `linkedRecurringExpenseId` **itt** él, nem a [[Pénzügyek]]ben.
@@ -62,8 +62,8 @@ Hosszabb ablak / helyszín: [[AYCM Statisztikák]].
 
 #### Check-In — hub-szabályok (részletek a gyerekben)
 
-- **Max 1 Check-In / user / naptári nap** (kliens TZ). Az AYCM naponta egyszer használható. Második create ugyanarra a napra → validációs hiba; a meglévő szerkeszthető.
-- Rögzítéskor **snapshot** (partnernév, sáv címke, `listPriceHuf`, `coPaymentHuf`, `visitValueHuf`). Későbbi árszerkesztés / partner soft delete a múltat nem írja felül.
+- **Max 1 Check-In / user / naptári nap** (kliens TZ), élő sorokra. Múlt **és jövő** dátum szabad. Második create ugyanarra a napra → validációs hiba; a meglévő szerkeszthető.
+- Rögzítéskor / szerkesztéskor **snapshot** (partnernév, sáv címke, `listPriceHuf`, `coPaymentHuf`, `visitValueHuf`); szerkesztés = újraillesztés a jelenlegi sávokkal.
 - Nincs illeszkedő ársáv: `visitValueHuf = 0`, sárga jelzés, a sor **mégis** mentődik.
 
 #### Árszabály — hub-szabályok (részletek a gyerekben)
@@ -84,7 +84,7 @@ A [[Pénzügyek]] flag **független** (fent: `passCostComputable`).
   2. **E havi érték** — Σ `visitValueHuf` (mindig szám, 0 OK).
   3. **Megéri-e** — előjeles Ft vagy `~`. Tap → [[AYCM Statisztikák]].
   4. **Bérlet** — belinkelt kiadás neve + havi ekvivalens, vagy CTA a pickerre / deep-link. `~` ha nem `passCostComputable`.
-- **FAB / elsődleges CTA:** [[AYCM Check-In]] (ha ma már van Check-In → a mai szerkesztő, ne második create).
+- **FAB / elsődleges CTA:** [[AYCM Check-In]] (ha ma már van Check-In → a mai szerkesztő, ne második create). **Most** a Check-In űrlapon: ma + jelenlegi idő.
 - További belépők: elfogadóhelyek listája; statisztika.
 - Kontraszt: `~` / szám — [[Dark&Light mode]].
 
