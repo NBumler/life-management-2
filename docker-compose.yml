@@ -9,7 +9,9 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - lm2_postgres_data:/var/lib/postgresql/data
+      # postgres:18's image switched to pg_ctlcluster-style versioned data dirs and now refuses to
+      # start against a volume mounted at the old .../postgresql/data path — mount the parent instead.
+      - lm2_postgres_data:/var/lib/postgresql
 
 volumes:
   lm2_postgres_data:

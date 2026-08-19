@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -5,6 +6,7 @@ import { Capacitor } from '@capacitor/core';
 import {
   IonButton,
   IonContent,
+  IonIcon,
   IonInput,
   IonItem,
   IonList,
@@ -24,7 +26,7 @@ import { SyncEngineService } from '../../core/sync/sync-engine.service';
   selector: 'app-login',
   templateUrl: 'login.page.html',
   styleUrls: ['login.page.scss'],
-  imports: [ReactiveFormsModule, IonContent, IonList, IonItem, IonInput, IonButton, IonSpinner, IonText, TranslatePipe],
+  imports: [ReactiveFormsModule, IonContent, IonList, IonItem, IonInput, IonButton, IonIcon, IonSpinner, IonText, TranslatePipe],
 })
 export class LoginPage {
   private readonly fb = inject(FormBuilder);
@@ -40,12 +42,19 @@ export class LoginPage {
   });
 
   readonly submitting = signal(false);
-  readonly failed = signal(false);
+  readonly passwordVisible = signal(false);
+  /** documentation/Architektúra/Backend-offline first.md §12 "Első login": no connection is a distinct
+   * case from wrong credentials, not the same generic message. */
+  readonly errorKey = signal<'CREDENTIALS' | 'NETWORK' | null>(null);
 
   constructor() {
     if (this.authSession.isAuthenticated()) {
       void this.router.navigateByUrl('/tabs');
     }
+  }
+
+  togglePasswordVisibility(): void {
+    this.passwordVisible.update((visible) => !visible);
   }
 
   async submit(): Promise<void> {
@@ -54,7 +63,7 @@ export class LoginPage {
       return;
     }
     this.submitting.set(true);
-    this.failed.set(false);
+    this.errorKey.set(null);
     try {
       const tokens = await firstValueFrom(this.authApi.login(this.form.getRawValue()));
       await this.authSession.setTokens(tokens);
@@ -64,8 +73,9 @@ export class LoginPage {
       }
       this.syncEngine.requestDrain();
       await this.router.navigateByUrl('/tabs');
-    } catch {
-      this.failed.set(true);
+    } catch (error) {
+      const isNetworkError = error instanceof HttpErrorResponse && error.status === 0;
+      this.errorKey.set(isNetworkError ? 'NETWORK' : 'CREDENTIALS');
     } finally {
       this.submitting.set(false);
     }

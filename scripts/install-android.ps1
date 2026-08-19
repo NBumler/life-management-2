@@ -22,6 +22,55 @@ $configPath = Join-Path $frontendDir "src/assets/config/app-config.json"
 $androidDir = Join-Path $frontendDir "android"
 $backendPort = 8080
 
+# 0. Android SDK feloldása (adb ehhez kell) — ne kelljen kézzel ANDROID_HOME-ot beállítani előtte.
+# local.properties (amit gradlew is használ) a legmegbízhatóbb forrás, utána env var, utána az
+# Android Studio alapértelmezett telepítési helye.
+$localPropsPath = Join-Path $androidDir "local.properties"
+$sdkDir = $null
+if (Test-Path $localPropsPath) {
+    $sdkLine = Get-Content $localPropsPath | Where-Object { $_ -match "^sdk\.dir=" } | Select-Object -First 1
+    if ($sdkLine) {
+        $sdkDir = ($sdkLine -split "=", 2)[1].Trim() -replace "\\:", ":" -replace "/", "\"
+    }
+}
+if (-not $sdkDir -and $env:ANDROID_HOME) {
+    $sdkDir = $env:ANDROID_HOME
+}
+if (-not $sdkDir) {
+    $defaultSdk = Join-Path $env:LOCALAPPDATA "Android\Sdk"
+    if (Test-Path $defaultSdk) {
+        $sdkDir = $defaultSdk
+    }
+}
+if ($sdkDir -and (Test-Path $sdkDir)) {
+    $env:ANDROID_HOME = $sdkDir
+    $platformTools = Join-Path $sdkDir "platform-tools"
+    if ($env:Path -notlike "*$platformTools*") {
+        $env:Path = "$platformTools;$env:Path"
+    }
+} else {
+    throw "Nem talalhato Android SDK (nezd meg: frontend/android/local.properties 'sdk.dir', vagy allitsd be az ANDROID_HOME-ot)."
+}
+
+# npm/node feloldasa, ha a PATH-on nincs (pl. nvs-szel telepitve, de nincs `nvs link`-elve az
+# aktualis shellben) — a legujabb nvs-sel telepitett verziot hasznaljuk fallbackkent.
+if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
+    $nvsNodeDir = Join-Path $env:LOCALAPPDATA "nvs\node"
+    $latest = if (Test-Path $nvsNodeDir) {
+        Get-ChildItem $nvsNodeDir -Directory -ErrorAction SilentlyContinue |
+            Sort-Object { [version]$_.Name } -Descending |
+            Select-Object -First 1
+    } else { $null }
+    if ($latest) {
+        $nodeBin = Join-Path $latest.FullName "x64"
+        if (-not (Test-Path $nodeBin)) { $nodeBin = $latest.FullName }
+        $env:Path = "$nodeBin;$env:Path"
+    }
+}
+if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
+    throw "npm nem talalhato a PATH-on (nvs-sel sem sikerult feloldani). Telepits Node.js-t vagy allitsd be a PATH-ot."
+}
+
 # 1. Cél hoszt meghatározása
 if ($Usb) {
     $resolvedHost = "localhost"
@@ -63,6 +112,9 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "npm run build sikertelen (exit code $LASTEXITCODE)" }
 
     Write-Host "npx cap sync android..."
+    # Debug installs point at a plain-http backend; androidScheme must be http too or the WebView
+    # blocks the API calls as Mixed Content (see capacitor.config.ts).
+    $env:LM2_CAP_HTTP_SCHEME = "1"
     npx cap sync android
     if ($LASTEXITCODE -ne 0) { throw "npx cap sync android sikertelen (exit code $LASTEXITCODE)" }
 } finally {
@@ -89,18 +141,31 @@ if (-not (Test-Path $apkPath)) {
     throw "Nem talalhato APK: $apkPath"
 }
 
-$devices = adb devices | Select-String -Pattern "\tdevice$"
-if (-not $devices) {
+$deviceLines = adb devices | Select-String -Pattern "\tdevice$"
+if (-not $deviceLines) {
     throw "Nincs csatlakoztatott/eszkozon engedelyezett Android eszkoz (ellenorizd: adb devices)."
 }
+$serials = @($deviceLines | ForEach-Object { ($_.Line -split "\s+")[0] })
+# A vezetek nelkuli hibakereses mDNS-sel gyakran letrehoz egy plusz, "..._adb-tls-connect._tcp"
+# vegu bejegyzest ugyanahhoz a fizikai eszkozhoz az explicit ip:port mellett — ezt kiszurjuk,
+# kulonben "more than one device/emulator" hibaval elszall az adb install.
+# @(...): egyetlen talalat eseten PowerShell scalar stringge csomagolna ki a listat, es a kesobbi
+# [0] indexeles akkor a string ELSO KARAKTERET adna vissza, nem a teljes szerialt.
+$targetSerials = @($serials | Where-Object { $_ -notmatch "\._tcp$" })
+if ($targetSerials.Count -eq 0) { $targetSerials = $serials }
+if ($targetSerials.Count -gt 1) {
+    throw "Tobb csatlakoztatott eszkoz van ($($targetSerials -join ', ')). Csatlakoztass csak egyet."
+}
+$targetSerial = $targetSerials[0]
+Write-Host "Cel eszkoz: $targetSerial"
 
 if ($Usb) {
     Write-Host "adb reverse tcp:$backendPort tcp:$backendPort ..."
-    adb reverse tcp:$backendPort tcp:$backendPort
+    adb -s $targetSerial reverse tcp:$backendPort tcp:$backendPort
 }
 
 Write-Host "adb install -r $apkPath ..."
-adb install -r $apkPath
+adb -s $targetSerial install -r $apkPath
 if ($LASTEXITCODE -ne 0) { throw "adb install sikertelen (exit code $LASTEXITCODE)" }
 
 # 6. Visszajelzés

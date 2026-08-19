@@ -17,17 +17,31 @@
         <ion-item>
           <ion-input
             formControlName="password"
-            type="password"
+            [type]="passwordVisible() ? 'text' : 'password'"
             autocomplete="current-password"
             [label]="'LOGIN.PASSWORD' | translate"
             labelPlacement="stacked"
-          ></ion-input>
+          >
+            <ion-button
+              fill="clear"
+              slot="end"
+              type="button"
+              [attr.aria-label]="(passwordVisible() ? 'LOGIN.HIDE_PASSWORD' : 'LOGIN.SHOW_PASSWORD') | translate"
+              (click)="togglePasswordVisibility()"
+            >
+              <ion-icon slot="icon-only" [name]="passwordVisible() ? 'eye-off-outline' : 'eye-outline'" aria-hidden="true"></ion-icon>
+            </ion-button>
+          </ion-input>
         </ion-item>
       </ion-list>
 
-      @if (failed()) {
+      @if (errorKey() === 'CREDENTIALS') {
         <ion-text color="danger">
           <p class="ion-padding-start">{{ 'LOGIN.ERROR' | translate }}</p>
+        </ion-text>
+      } @else if (errorKey() === 'NETWORK') {
+        <ion-text color="danger">
+          <p class="ion-padding-start">{{ 'LOGIN.ERROR_NETWORK' | translate }}</p>
         </ion-text>
       }
 

@@ -81,3 +81,22 @@ sourceSets {
 tasks.named("compileJava") {
 	dependsOn("openApiGenerate")
 }
+
+// Local dev convenience: `./gradlew bootRun` picks up secrets from the repo-root .env (same file
+// docker-compose reads) instead of requiring them to be exported by hand every time. Real
+// environment variables still win — .env only fills in what's not already set. Not wired into
+// `test`: Testcontainers provisions its own Postgres, and secrets there come from test config.
+tasks.named<org.springframework.boot.gradle.tasks.run.BootRun>("bootRun") {
+	val envFile = rootDir.resolveSibling(".env")
+	if (envFile.exists()) {
+		envFile.readLines()
+			.map { it.trim() }
+			.filter { it.isNotEmpty() && !it.startsWith("#") && it.contains("=") }
+			.forEach { line ->
+				val (key, value) = line.split("=", limit = 2)
+				if (System.getenv(key) == null) {
+					environment(key, value)
+				}
+			}
+	}
+}

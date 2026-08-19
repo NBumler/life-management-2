@@ -57,9 +57,10 @@ class SecurityConfig {
 
 	private CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration config = new CorsConfiguration();
-		// Native Capacitor WebView origin + the web dev server (proxy.conf.json covers /api in dev,
-		// this is for direct cross-origin access e.g. from `ng serve` without the proxy).
-		config.setAllowedOrigins(List.of("https://localhost", "http://localhost:8100"));
+		// Native Capacitor WebView origin (https in production; http for debug LAN installs, see
+		// capacitor.config.ts's LM2_CAP_HTTP_SCHEME) + the web dev server (proxy.conf.json covers
+		// /api in dev, this is for direct cross-origin access e.g. from `ng serve` without the proxy).
+		config.setAllowedOrigins(List.of("https://localhost", "http://localhost", "http://localhost:8100"));
 		config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 		config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Idempotency-Key", "X-Admin-Api-Key"));
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

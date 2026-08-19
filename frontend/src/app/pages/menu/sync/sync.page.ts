@@ -1,5 +1,5 @@
 import { DatePipe, JsonPipe } from '@angular/common';
-import { Component, OnDestroy, OnInit, effect, inject, signal } from '@angular/core';
+import { Component, OnDestroy, effect, inject, signal } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import {
   AlertController,
@@ -17,6 +17,7 @@ import {
   IonSpinner,
   IonTitle,
   IonToolbar,
+  ViewWillEnter,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
@@ -68,7 +69,7 @@ const DRAIN_POLL_MS = 1000;
     DatePipe,
   ],
 })
-export class SyncPage implements OnInit, OnDestroy {
+export class SyncPage implements ViewWillEnter, OnDestroy {
   private readonly fb = inject(FormBuilder);
   private readonly offlineQueue = inject(OfflineQueueService);
   private readonly syncEngine = inject(SyncEngineService);
@@ -105,7 +106,13 @@ export class SyncPage implements OnInit, OnDestroy {
     });
   }
 
-  async ngOnInit(): Promise<void> {
+  /**
+   * documentation/Features/Szinkronizációs központ.md: the list must reflect the outbox every time
+   * this page is entered. `ngOnInit` alone isn't enough — Ionic reuses the cached page instance when
+   * navigating back into an already-visited tab route, so it only fires once per instance, not per
+   * visit; `ionViewWillEnter` fires on every entry, cached instance or not.
+   */
+  async ionViewWillEnter(): Promise<void> {
     await this.refresh();
   }
 

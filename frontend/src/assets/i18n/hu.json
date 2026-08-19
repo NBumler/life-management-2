@@ -13,7 +13,10 @@
     "USERNAME": "Felhasználónév",
     "PASSWORD": "Jelszó",
     "SUBMIT": "Bejelentkezés",
-    "ERROR": "Hibás felhasználónév vagy jelszó."
+    "ERROR": "Hibás felhasználónév vagy jelszó.",
+    "ERROR_NETWORK": "Nem sikerült elérni a szervert. Ellenőrizd a hálózati kapcsolatot.",
+    "SHOW_PASSWORD": "Jelszó megjelenítése",
+    "HIDE_PASSWORD": "Jelszó elrejtése"
   },
   "TABS": {
     "KAJA": "Kaja",

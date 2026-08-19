@@ -64,7 +64,7 @@ Felhasználói autentikáció és authorizáció: a személyes (user-owned) adat
 
 ### UI/UX elvárások
 
-- Login: egyszerű űrlap; username mező auto-focus; jelszó maszkolt.
+- Login: egyszerű űrlap; username mező auto-focus; jelszó alapból maszkolt, de a mezőben lévő szem-ikon togglelehetővé teszi a megjelenítést (elgépelés kizárása) — nincs külön állapot-mentés, minden képernyő-belépéskor újra maszkolt.
 - Menü: **Kijelentkezés** tétel (auth feature flag / mindig, ha a Bejelentkezés feature be van kapcsolva).
 - Nincs regisztráció link a login képernyőn.
 

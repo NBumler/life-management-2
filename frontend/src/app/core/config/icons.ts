@@ -1,0 +1,63 @@
+import { addIcons } from 'ionicons';
+import {
+  addOutline,
+  airplaneOutline,
+  alertCircle,
+  barbellOutline,
+  checkboxOutline,
+  checkmarkCircleOutline,
+  checkmarkDoneOutline,
+  cloudOfflineOutline,
+  contrastOutline,
+  createOutline,
+  documentTextOutline,
+  eyeOffOutline,
+  eyeOutline,
+  languageOutline,
+  lockClosedOutline,
+  logOutOutline,
+  menuOutline,
+  personOutline,
+  playBackOutline,
+  playSkipForwardOutline,
+  restaurantOutline,
+  syncOutline,
+  timeOutline,
+  trashOutline,
+} from 'ionicons/icons';
+
+/**
+ * ion-icon's default behaviour resolves icon SVGs over the network (relative to location.href),
+ * which fails inside the native WebView's custom scheme ("Failed to construct 'URL': Invalid base
+ * URL") — every icon in the app silently renders blank on-device. Registering the SVG data
+ * up front via addIcons() avoids the network fetch entirely. Call once at bootstrap, before any
+ * component renders.
+ */
+export function registerIcons(): void {
+  addIcons({
+    'add-outline': addOutline,
+    'airplane-outline': airplaneOutline,
+    'alert-circle': alertCircle,
+    'barbell-outline': barbellOutline,
+    'checkbox-outline': checkboxOutline,
+    'checkmark-circle-outline': checkmarkCircleOutline,
+    'checkmark-done-outline': checkmarkDoneOutline,
+    'cloud-offline-outline': cloudOfflineOutline,
+    'contrast-outline': contrastOutline,
+    'create-outline': createOutline,
+    'document-text-outline': documentTextOutline,
+    'eye-off-outline': eyeOffOutline,
+    'eye-outline': eyeOutline,
+    'language-outline': languageOutline,
+    'lock-closed-outline': lockClosedOutline,
+    'log-out-outline': logOutOutline,
+    'menu-outline': menuOutline,
+    'person-outline': personOutline,
+    'play-back-outline': playBackOutline,
+    'play-skip-forward-outline': playSkipForwardOutline,
+    'restaurant-outline': restaurantOutline,
+    'sync-outline': syncOutline,
+    'time-outline': timeOutline,
+    'trash-outline': trashOutline,
+  });
+}

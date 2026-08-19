@@ -11,6 +11,7 @@ import { routes } from './app/app.routes';
 import { AppComponent } from './app/app.component';
 import { provideApi } from './app/api/provide-api';
 import { AppConfigService } from './app/core/config/app-config.service';
+import { registerIcons } from './app/core/config/icons';
 import { LanguageService } from './app/core/config/language.service';
 import { ThemeService } from './app/core/config/theme.service';
 import { apiBaseUrlInterceptor } from './app/core/api/api-base-url.interceptor';
@@ -20,12 +21,18 @@ import { LocalDatabaseService } from './app/core/storage/local-database.service'
 import { provideStorageBackend } from './app/core/storage/storage-backend.provider';
 import { SyncEngineService } from './app/core/sync/sync-engine.service';
 
+registerIcons();
+
 bootstrapApplication(AppComponent, {
   providers: [
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
     provideIonicAngular(),
     provideRouter(routes, withPreloading(PreloadAllModules)),
-    provideHttpClient(withInterceptors([apiBaseUrlInterceptor, authInterceptor])),
+    // authInterceptor must run before apiBaseUrlInterceptor: it matches on the request URL still
+    // starting with "/api" to decide whether to attach the Bearer header. apiBaseUrlInterceptor
+    // rewrites that relative URL to an absolute one on native, so if it ran first, authInterceptor's
+    // check would never match there and every native request would go out unauthenticated.
+    provideHttpClient(withInterceptors([authInterceptor, apiBaseUrlInterceptor])),
     // Empty basePath: the generated client's own paths already start with /api (relative on web,
     // rewritten to the native apiBaseUrl by apiBaseUrlInterceptor) — see that interceptor's comment.
     provideApi({ basePath: '' }),
