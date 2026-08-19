@@ -28,16 +28,30 @@ class ProfileService {
 		return mapper.toDto(entity);
 	}
 
-	/** Upsert on the client-supplied id (documentation/Architektúra/Backend.md "Upsert"). */
+	/**
+	 * Upsert on the client-supplied id (documentation/Architektúra/Backend.md "Upsert"). The
+	 * profile is 1:1 per user (UserProfile is a deterministic-UUID entity, see
+	 * Backend-offline-first.md §9), so the lookup is scoped by {@code userId}, never by the raw
+	 * {@code dto.getId()} alone — otherwise a client-supplied id colliding with another user's
+	 * row would silently overwrite that user's profile.
+	 */
 	@Transactional
 	UserProfile upsert(UUID userId, UserProfile dto) {
 		validate(dto);
-		ProfileEntity entity = repository.findById(dto.getId())
-				.orElseGet(() -> new ProfileEntity(dto.getId(), userId));
+		ProfileEntity entity = repository.findByUserId(userId).orElseGet(() -> newEntity(dto.getId(), userId));
 		mapper.applyTo(entity, dto);
 		// flush, not save: the DB trigger sets updated_at, and Hibernate only reads @Generated
 		// values back once the statement has actually been sent.
 		return mapper.toDto(repository.saveAndFlush(entity));
+	}
+
+	private ProfileEntity newEntity(UUID id, UUID userId) {
+		// The id is not yet known to belong to this user (no row via findByUserId above). If it
+		// already exists as someone else's row, refuse rather than silently adopting it.
+		if (repository.existsById(id)) {
+			throw new EntityNotFoundException("No profile saved yet");
+		}
+		return new ProfileEntity(id, userId);
 	}
 
 	private void validate(UserProfile dto) {

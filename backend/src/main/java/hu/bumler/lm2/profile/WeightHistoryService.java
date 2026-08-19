@@ -26,15 +26,27 @@ class WeightHistoryService {
 		return repository.findByUserIdAndDeletedFalseOrderByRecordedAtDesc(userId).stream().map(mapper::toDto).toList();
 	}
 
-	/** Idempotent upsert on the client-supplied id (documentation/Architektúra/Backend.md "Upsert"). */
+	/**
+	 * Idempotent upsert on the client-supplied id (documentation/Architektúra/Backend.md
+	 * "Upsert"). A row found by id but owned by a different user is refused (404, not silently
+	 * overwritten) — see {@link #requireOwner}.
+	 */
 	@Transactional
 	WeightHistoryEntry create(UUID userId, WeightHistoryEntry dto) {
 		WeightHistoryEntryEntity entity = repository.findById(dto.getId())
+				.map(existing -> requireOwner(existing, userId))
 				.orElseGet(() -> new WeightHistoryEntryEntity(dto.getId(), userId, dto.getRecordedAt(), dto.getWeightKg()));
 		entity.setRecordedAt(dto.getRecordedAt());
 		entity.setWeightKg(dto.getWeightKg());
 		// flush, not save: see ProfileService for why.
 		return mapper.toDto(repository.saveAndFlush(entity));
+	}
+
+	private static WeightHistoryEntryEntity requireOwner(WeightHistoryEntryEntity entity, UUID userId) {
+		if (!entity.getUserId().equals(userId)) {
+			throw new EntityNotFoundException("No such entry");
+		}
+		return entity;
 	}
 
 	@Transactional(readOnly = true)
