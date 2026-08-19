@@ -27,14 +27,17 @@ class GearItemServiceTest {
 
 	private GearItemRepository repository;
 	private PackingTemplateItemRepository templateItemRepository;
+	private PackingSessionItemRepository sessionItemRepository;
 	private GearItemService service;
 
 	@BeforeEach
 	void setUp() {
 		repository = mock(GearItemRepository.class);
 		templateItemRepository = mock(PackingTemplateItemRepository.class);
+		sessionItemRepository = mock(PackingSessionItemRepository.class);
 		when(templateItemRepository.findByGearItemIdAndUserIdAndDeletedFalse(any(), any())).thenReturn(List.of());
-		service = new GearItemService(repository, new GearItemMapper(), templateItemRepository);
+		when(sessionItemRepository.findByGearItemIdAndUserIdAndDeletedFalse(any(), any())).thenReturn(List.of());
+		service = new GearItemService(repository, new GearItemMapper(), templateItemRepository, sessionItemRepository);
 	}
 
 	private static GearItemEntity entity(UUID id, UUID userId) {
@@ -183,6 +186,22 @@ class GearItemServiceTest {
 
 		assertThat(templateItem.isDeleted()).isTrue();
 		verify(templateItemRepository).save(templateItem);
+	}
+
+	@Test
+	void delete_cascadesToLiveSessionItemsReferencingIt() {
+		UUID userId = UUID.randomUUID();
+		GearItemEntity existing = entity(UUID.randomUUID(), userId);
+		when(repository.findByIdAndUserId(existing.getId(), userId)).thenReturn(Optional.of(existing));
+		when(repository.saveAndFlush(any())).thenAnswer(inv -> inv.getArgument(0));
+		PackingSessionItemEntity sessionItem = new PackingSessionItemEntity(UUID.randomUUID(), userId, UUID.randomUUID(), existing.getId(),
+				"NOT_PACKED", 0);
+		when(sessionItemRepository.findByGearItemIdAndUserIdAndDeletedFalse(existing.getId(), userId)).thenReturn(List.of(sessionItem));
+
+		service.delete(userId, existing.getId());
+
+		assertThat(sessionItem.isDeleted()).isTrue();
+		verify(sessionItemRepository).save(sessionItem);
 	}
 
 	@Test

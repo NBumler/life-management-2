@@ -1,0 +1,26 @@
+post:
+  operationId: createPackingSessionItem
+  tags:
+    - packing-session-items
+  summary: >-
+    Add an extra item to an already-running session (documentation/Subfeatures/Pakolás.md "Extra
+    eszköz") — idempotent upsert on the client-supplied id. Not part of the session's nested create.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/PackingSessionItem.yaml'
+  responses:
+    '200':
+      description: Created or, on retry with the same id, the existing row.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/PackingSessionItem.yaml'
+    '409':
+      description: This gear item is already live on the session.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'

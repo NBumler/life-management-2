@@ -1,0 +1,98 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/menu/gear/sessions"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ 'GEAR.PACKING.TITLE' | translate }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button color="danger" (click)="close()">{{ 'GEAR.PACKING.CLOSE_BUTTON' | translate }}</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+  <ion-toolbar>
+    <form [formGroup]="destinationForm" (ngSubmit)="saveDestination()">
+      <ion-item lines="none">
+        <ion-input
+          formControlName="destination"
+          [label]="'GEAR.PACKING.DESTINATION' | translate"
+          labelPlacement="stacked"
+          (ionBlur)="saveDestination()"
+        ></ion-input>
+      </ion-item>
+    </form>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-searchbar
+      [value]="query()"
+      (ionInput)="query.set($any($event.target).value ?? '')"
+      [placeholder]="'GEAR.PACKING.SEARCH_PLACEHOLDER' | translate"
+      [debounce]="200"
+    ></ion-searchbar>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-list>
+    <ion-item lines="none">
+      <ion-button fill="clear" (click)="togglePicker()">
+        {{ (pickerOpen() ? 'GEAR.PACKING.ITEM_PICKER_CLOSE' : 'GEAR.PACKING.ITEM_PICKER_ADD') | translate }}
+      </ion-button>
+      @if (!pickerOpen()) {
+        <ion-button fill="clear" slot="end" (click)="sortActiveByStatus()">
+          {{ 'GEAR.PACKING.SORT_BY_STATUS' | translate }}
+        </ion-button>
+      }
+    </ion-item>
+  </ion-list>
+
+  @if (pickerOpen()) {
+    <app-gear-item-picker [excludedIds]="excludedGearItemIds()" (picked)="onItemPicked($event)"></app-gear-item-picker>
+  } @else {
+    <ion-list>
+      <ion-item-divider>{{ 'GEAR.PACKING.ACTIVE_SECTION_TITLE' | translate }}</ion-item-divider>
+    </ion-list>
+
+    @if (isNative) {
+      @for (item of activeItems(); track item.id; let i = $index) {
+        <div class="session-item-row">
+          <app-status-cycle-card
+            class="session-item-card"
+            [item]="toStatusCycleItem(item)"
+            (statusChange)="onStatusChange(item, $event)"
+          ></app-status-cycle-card>
+          <div class="session-item-arrows">
+            <ion-button fill="clear" [disabled]="i === 0" (click)="moveActiveItem(i, i - 1)">
+              <ion-icon name="chevron-up-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+            </ion-button>
+            <ion-button fill="clear" [disabled]="i === activeItems().length - 1" (click)="moveActiveItem(i, i + 1)">
+              <ion-icon name="chevron-down-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+            </ion-button>
+          </div>
+        </div>
+      }
+    } @else {
+      <ion-list>
+        <ion-reorder-group [disabled]="false" (ionItemReorder)="onWebReorder($event)">
+          @for (item of activeItems(); track item.id) {
+            <ion-item lines="none">
+              <app-status-cycle-card
+                class="session-item-card"
+                [item]="toStatusCycleItem(item)"
+                (statusChange)="onStatusChange(item, $event)"
+              ></app-status-cycle-card>
+              <ion-reorder slot="end"></ion-reorder>
+            </ion-item>
+          }
+        </ion-reorder-group>
+      </ion-list>
+    }
+
+    @if (doneItems().length > 0) {
+      <ion-list>
+        <ion-item-divider>{{ 'GEAR.PACKING.DONE_SECTION_TITLE' | translate }}</ion-item-divider>
+      </ion-list>
+      @for (item of doneItems(); track item.id) {
+        <app-status-cycle-card class="session-item-card" [item]="toStatusCycleItem(item)" (statusChange)="onStatusChange(item, $event)"></app-status-cycle-card>
+      }
+    }
+  }
+</ion-content>

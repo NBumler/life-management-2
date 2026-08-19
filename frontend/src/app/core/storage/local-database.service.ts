@@ -129,13 +129,48 @@ const SCHEMA_V3_STATEMENTS: string[] = [
   `CREATE INDEX IF NOT EXISTS idx_packing_template_item_gear_item_id ON packing_template_item (gear_item_id)`,
 ];
 
-const SCHEMA_VERSION = 3;
+/** documentation/Subfeatures/Pakolás.md — active packing sessions started from one or more templates. */
+const SCHEMA_V4_STATEMENTS: string[] = [
+  `CREATE TABLE IF NOT EXISTS packing_session (
+    id TEXT PRIMARY KEY,
+    destination TEXT,
+    source_template_ids TEXT NOT NULL DEFAULT '[]',
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE TABLE IF NOT EXISTS packing_session_item (
+    id TEXT PRIMARY KEY,
+    session_id TEXT NOT NULL,
+    gear_item_id TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'NOT_PACKED',
+    sort_order INTEGER NOT NULL,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_packing_session_item_session_id ON packing_session_item (session_id, sort_order)`,
+  `CREATE INDEX IF NOT EXISTS idx_packing_session_item_gear_item_id ON packing_session_item (gear_item_id)`,
+];
+
+const SCHEMA_VERSION = 4;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 1, statements: SCHEMA_V1_STATEMENTS },
   { toVersion: 2, statements: SCHEMA_V2_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V3_STATEMENTS },
+  { toVersion: 3, statements: SCHEMA_V3_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V4_STATEMENTS },
 ];
 
 export interface SqlTask {

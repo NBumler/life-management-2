@@ -33,6 +33,14 @@ paths:
     $ref: 'openapi/paths/packing-templates.yaml'
   /api/packing-templates/{id}:
     $ref: 'openapi/paths/packing-templates-item.yaml'
+  /api/packing-sessions:
+    $ref: 'openapi/paths/packing-sessions.yaml'
+  /api/packing-sessions/{id}:
+    $ref: 'openapi/paths/packing-sessions-item.yaml'
+  /api/packing-session-items:
+    $ref: 'openapi/paths/packing-session-items.yaml'
+  /api/packing-session-items/{id}:
+    $ref: 'openapi/paths/packing-session-items-item.yaml'
 components:
   securitySchemes:
     bearerAuth:
@@ -82,3 +90,11 @@ components:
       $ref: 'openapi/components/schemas/PackingTemplateItem.yaml'
     PackingTemplateDetail:
       $ref: 'openapi/components/schemas/PackingTemplateDetail.yaml'
+    PackingSession:
+      $ref: 'openapi/components/schemas/PackingSession.yaml'
+    PackingSessionList:
+      $ref: 'openapi/components/schemas/PackingSessionList.yaml'
+    PackingSessionItem:
+      $ref: 'openapi/components/schemas/PackingSessionItem.yaml'
+    PackingSessionDetail:
+      $ref: 'openapi/components/schemas/PackingSessionDetail.yaml'

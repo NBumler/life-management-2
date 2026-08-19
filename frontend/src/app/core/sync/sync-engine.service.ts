@@ -7,11 +7,16 @@ import { firstValueFrom, timeout } from 'rxjs';
 
 import { GearItemsService } from '../../api/api/gearItems.service';
 import { HealthService } from '../../api/api/health.service';
+import { PackingSessionItemsService } from '../../api/api/packingSessionItems.service';
+import { PackingSessionsService } from '../../api/api/packingSessions.service';
 import { PackingTemplatesService } from '../../api/api/packingTemplates.service';
 import { ProfileService } from '../../api/api/profile.service';
 import { SyncService } from '../../api/api/sync.service';
 import { ApiError } from '../../api/model/apiError';
 import { GearItem } from '../../api/model/gearItem';
+import { PackingSession } from '../../api/model/packingSession';
+import { PackingSessionDetail } from '../../api/model/packingSessionDetail';
+import { PackingSessionItem } from '../../api/model/packingSessionItem';
 import { PackingTemplate } from '../../api/model/packingTemplate';
 import { PackingTemplateDetail } from '../../api/model/packingTemplateDetail';
 import { PackingTemplateItem } from '../../api/model/packingTemplateItem';
@@ -21,6 +26,10 @@ import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 import {
   gearItemServerApplyTask,
   gearItemTombstoneTask,
+  packingSessionItemServerApplyTask,
+  packingSessionItemTombstoneTask,
+  packingSessionServerApplyTask,
+  packingSessionTombstoneTask,
   packingTemplateItemServerApplyTask,
   packingTemplateItemTombstoneTask,
   packingTemplateServerApplyTask,
@@ -55,6 +64,8 @@ export class SyncEngineService {
   private readonly profileApi = inject(ProfileService);
   private readonly gearApi = inject(GearItemsService);
   private readonly packingTemplatesApi = inject(PackingTemplatesService);
+  private readonly packingSessionsApi = inject(PackingSessionsService);
+  private readonly packingSessionItemsApi = inject(PackingSessionItemsService);
   private readonly syncApi = inject(SyncService);
   private readonly authSession = inject(AuthSessionService);
   private readonly offlineQueue = inject(OfflineQueueService);
@@ -176,6 +187,26 @@ export class SyncEngineService {
       try {
         const dto = await firstValueFrom(this.packingTemplatesApi.getPackingTemplate(row.id));
         await this.db.executeTransaction(this.packingTemplateApplyTasks(dto));
+      } catch {
+        // same as above
+      }
+    }
+
+    const staleSessions = await this.db.query<{ id: string }>('SELECT id FROM packing_session WHERE _needs_refetch = 1');
+    for (const row of staleSessions) {
+      try {
+        const dto = await firstValueFrom(this.packingSessionsApi.getPackingSession(row.id));
+        await this.db.executeTransaction(this.packingSessionApplyTasks(dto));
+      } catch {
+        // same as above
+      }
+    }
+
+    const staleSessionItems = await this.db.query<{ id: string }>('SELECT id FROM packing_session_item WHERE _needs_refetch = 1');
+    for (const row of staleSessionItems) {
+      try {
+        const dto = await firstValueFrom(this.packingSessionItemsApi.getPackingSessionItem(row.id));
+        await this.db.executeTransaction([packingSessionItemServerApplyTask(dto)]);
       } catch {
         // same as above
       }
@@ -318,6 +349,12 @@ export class SyncEngineService {
     if (item.entityType === 'PackingTemplate') {
       return this.packingTemplateApplyTasks(body as PackingTemplateDetail);
     }
+    if (item.entityType === 'PackingSession') {
+      return this.packingSessionApplyTasks(body as PackingSession | PackingSessionDetail);
+    }
+    if (item.entityType === 'PackingSessionItem') {
+      return [packingSessionItemServerApplyTask(body as PackingSessionItem)];
+    }
     throw new Error(`SyncEngine: no local writer for entityType "${item.entityType}"`);
   }
 
@@ -331,6 +368,20 @@ export class SyncEngineService {
    */
   private packingTemplateApplyTasks(dto: PackingTemplateDetail): SqlTask[] {
     return [packingTemplateServerApplyTask(dto), ...dto.items.map((item: PackingTemplateItem) => packingTemplateItemServerApplyTask(item))];
+  }
+
+  /**
+   * documentation/Subfeatures/Pakolás.md: unlike PackingTemplate, `PackingSession` covers two
+   * different outbox response shapes under the same entityType — the nested "Indítás" create
+   * (`PackingSessionDetail`, with `items`) and the plain destination-only update (`PackingSession`,
+   * no `items`) — so the item rows are only applied when the response actually carries them.
+   */
+  private packingSessionApplyTasks(dto: PackingSession | PackingSessionDetail): SqlTask[] {
+    const tasks: SqlTask[] = [packingSessionServerApplyTask(dto)];
+    if ('items' in dto) {
+      tasks.push(...dto.items.map((item: PackingSessionItem) => packingSessionItemServerApplyTask(item)));
+    }
+    return tasks;
   }
 
   private async applyTombstone(item: OutboxItem): Promise<void> {
@@ -348,6 +399,15 @@ export class SyncEngineService {
         packingTemplateTombstoneTask(item.targetEntityId, null, now),
         ...itemRows.map((row) => packingTemplateItemTombstoneTask(row.id, null, now)),
       ]);
+    } else if (item.entityType === 'PackingSession') {
+      // documentation/Subfeatures/Pakolás.md: "Lezárás" cascades to the session's own items locally too.
+      const itemRows = await this.db.query<{ id: string }>('SELECT id FROM packing_session_item WHERE session_id = ?', [item.targetEntityId]);
+      await this.db.executeTransaction([
+        packingSessionTombstoneTask(item.targetEntityId, null, now),
+        ...itemRows.map((row) => packingSessionItemTombstoneTask(row.id, null, now)),
+      ]);
+    } else if (item.entityType === 'PackingSessionItem') {
+      await this.db.executeTransaction([packingSessionItemTombstoneTask(item.targetEntityId, null, now)]);
     }
   }
 
@@ -413,6 +473,18 @@ export class SyncEngineService {
         return [packingTemplateItemServerApplyTask(change.data as PackingTemplateItem)];
       }
       return [packingTemplateItemTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
+    }
+    if (change.entityType === 'PackingSession') {
+      if (!change.deleted) {
+        return [packingSessionServerApplyTask(change.data as PackingSession)];
+      }
+      return [packingSessionTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
+    }
+    if (change.entityType === 'PackingSessionItem') {
+      if (!change.deleted) {
+        return [packingSessionItemServerApplyTask(change.data as PackingSessionItem)];
+      }
+      return [packingSessionItemTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
     }
     return [];
   }

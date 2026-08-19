@@ -1,0 +1,52 @@
+parameters:
+  - name: id
+    in: path
+    required: true
+    schema:
+      type: string
+      format: uuid
+get:
+  operationId: getPackingSessionItem
+  tags:
+    - packing-session-items
+  summary: A single session item. Own deleted row returns 200 with deleted=true (not 404).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/PackingSessionItem.yaml'
+    '404':
+      description: No such item (or it belongs to another user).
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+put:
+  operationId: updatePackingSessionItem
+  tags:
+    - packing-session-items
+  summary: >-
+    Full update (last-write-wins) — status change or manual reorder
+    (documentation/Subfeatures/Pakolás.md). No DELETE: items are never removed from the list by the
+    user, only status-changed (and cascade-deleted via the GearItem or the session itself).
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/PackingSessionItem.yaml'
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/PackingSessionItem.yaml'
+    '409':
+      description: Entity already deleted.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'

@@ -1,0 +1,30 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/menu/gear"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ 'GEAR.PACKING.TITLE' | translate }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-list>
+    <ion-item button routerLink="start">
+      <ion-icon name="add-outline" slot="start" aria-hidden="true"></ion-icon>
+      <ion-label>{{ 'GEAR.PACKING.ADD' | translate }}</ion-label>
+    </ion-item>
+
+    @if (sessions().length === 0) {
+      <ion-item>
+        <ion-label color="medium">{{ 'GEAR.PACKING.EMPTY' | translate }}</ion-label>
+      </ion-item>
+    }
+
+    @for (session of sessions(); track session.id) {
+      <ion-item button [routerLink]="[session.id]">
+        <ion-icon name="bag-handle-outline" slot="start" aria-hidden="true"></ion-icon>
+        <ion-label>{{ displayName(session) }}</ion-label>
+      </ion-item>
+    }
+  </ion-list>
+</ion-content>

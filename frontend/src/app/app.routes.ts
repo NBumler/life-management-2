@@ -44,6 +44,25 @@ export const routes: Routes = [
                   },
                 ],
               },
+              {
+                path: 'sessions',
+                children: [
+                  {
+                    path: '',
+                    loadComponent: () => import('./pages/menu/gear/sessions/packing-sessions.page').then((m) => m.PackingSessionsPage),
+                  },
+                  {
+                    path: 'start',
+                    loadComponent: () =>
+                      import('./pages/menu/gear/sessions/packing-session-start.page').then((m) => m.PackingSessionStartPage),
+                  },
+                  {
+                    path: ':id',
+                    loadComponent: () =>
+                      import('./pages/menu/gear/sessions/packing-session-detail.page').then((m) => m.PackingSessionDetailPage),
+                  },
+                ],
+              },
             ],
           },
         ],

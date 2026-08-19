@@ -98,6 +98,7 @@
     "TITLE": "GearCheck",
     "HUB_ITEMS": "Eszközök",
     "HUB_TEMPLATES": "Sablonok",
+    "HUB_SESSIONS": "Pakolás",
     "ITEMS": {
       "TITLE": "Eszközök",
       "SEARCH_PLACEHOLDER": "Keresés",
@@ -127,6 +128,34 @@
       "NAME_CONFLICT": "„{{name}}” már szerepel a sablonok között.",
       "DELETE_CONFIRM_TITLE": "Sablon törlése",
       "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd a(z) „{{name}}” sablont? Az aktív pakolást nem törli."
+    },
+    "PACKING": {
+      "TITLE": "Pakolás",
+      "ADD": "Új pakolás indítása",
+      "EMPTY": "Nincs aktív pakolás.",
+      "UNNAMED_DESTINATION": "Névtelen pakolás",
+      "START_TITLE": "Pakolás indítása",
+      "START_TEMPLATES_LABEL": "Sablonok",
+      "START_TEMPLATES_REQUIRED": "Válassz legalább egy sablont.",
+      "START_DESTINATION": "Úticél",
+      "START_SUBMIT": "Indítás",
+      "DESTINATION": "Úticél",
+      "SEARCH_PLACEHOLDER": "Keresés",
+      "SORT_BY_STATUS": "Rendezés státusz szerint",
+      "ACTIVE_SECTION_TITLE": "Aktív",
+      "DONE_SECTION_TITLE": "Kész / nem kell",
+      "ITEM_PICKER_ADD": "Eszköz hozzáadása",
+      "ITEM_PICKER_CLOSE": "Bezárás",
+      "CLOSE_BUTTON": "Pakolás lezárása",
+      "CLOSE_CONFIRM_TITLE": "Pakolás lezárása",
+      "CLOSE_CONFIRM_MESSAGE": "Biztosan lezárod a pakolást? Ez nem vonható vissza.",
+      "STATUS_NOT_PACKED": "Nincs bepakolva",
+      "STATUS_KNOWN_LOCATION": "Tudom hol van",
+      "STATUS_PREPARED": "Táska mellé készítve",
+      "STATUS_WEAR_ON_DEPARTURE": "Induláskor veszem fel",
+      "STATUS_BUY_ON_THE_WAY": "Út közben kell venni",
+      "STATUS_PACKED": "Bepakolva",
+      "STATUS_NOT_NEEDED": "Nem kell"
     }
   }
 }

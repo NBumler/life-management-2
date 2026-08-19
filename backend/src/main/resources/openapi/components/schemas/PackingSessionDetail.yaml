@@ -1,0 +1,41 @@
+type: object
+description: >-
+  documentation/Subfeatures/Pakolás.md "Indítás": used only for session creation and full reads —
+  session + its items in one shape, so the create response lets the client clear each newly-created
+  item's local dirty flag in the same outbox response (documentation/Architektúra/Backend.md
+  "Nested aggregate PUT" applies the same reasoning here, even though this is POST-create only).
+required:
+  - id
+  - deleted
+  - items
+properties:
+  id:
+    type: string
+    format: uuid
+  destination:
+    type: string
+    nullable: true
+  sourceTemplateIds:
+    type: array
+    items:
+      type: string
+      format: uuid
+  deleted:
+    type: boolean
+  items:
+    type: array
+    items:
+      $ref: 'PackingSessionItem.yaml'
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

@@ -1,18 +1,28 @@
 import { Injectable, inject } from '@angular/core';
 
 import { GearItem } from '../../api/model/gearItem';
+import { PackingSession } from '../../api/model/packingSession';
+import { PackingSessionDetail } from '../../api/model/packingSessionDetail';
+import { PackingSessionItem } from '../../api/model/packingSessionItem';
 import { PackingTemplate } from '../../api/model/packingTemplate';
 import { PackingTemplateDetail } from '../../api/model/packingTemplateDetail';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 import {
   GearItemRow,
+  PackingSessionItemRow,
+  PackingSessionRow,
   PackingTemplateItemRow,
   PackingTemplateRow,
   ProfileRow,
   WeightHistoryRow,
   gearItemLocalWriteTask,
   gearItemRowToDto,
+  packingSessionItemLocalRemoveTask,
+  packingSessionItemLocalWriteTask,
+  packingSessionItemRowToDto,
+  packingSessionLocalWriteTask,
+  packingSessionRowToDto,
   packingTemplateItemLocalRemoveTask,
   packingTemplateItemLocalWriteTask,
   packingTemplateItemRowToDto,
@@ -25,8 +35,9 @@ import {
 } from '../data/local-rows';
 import { AuthSessionService } from '../session/auth-session.service';
 import { OfflineQueueService } from '../sync/offline-queue.service';
+import { uuidV4 } from '../sync/uuid';
 import { LocalDatabaseService, SqlTask } from './local-database.service';
-import { PackingTemplateDraft, StorageBackend } from './storage-backend';
+import { PackingSessionStartDraft, PackingTemplateDraft, StorageBackend } from './storage-backend';
 
 /** Native (offlineCapable = true): local-first — every write lands in SQLite + the outbox in one transaction (§5). */
 @Injectable({ providedIn: 'root' })
@@ -147,11 +158,18 @@ export class SqliteStorageBackend implements StorageBackend {
     // documentation/Architektúra/Backend-offline first.md §5 "Kliensoldali cascade": the referencing
     // rows are soft-deleted locally in the same transaction, with no separate outbox entry — the
     // server does its own cascade on the GearItem DELETE, and the post-drain pull confirms it.
-    const cascadeRows = await this.db.query<{ id: string }>(
+    const cascadeTemplateItemRows = await this.db.query<{ id: string }>(
       'SELECT id FROM packing_template_item WHERE gear_item_id = ? AND deleted = 0',
       [id],
     );
-    const cascadeTasks = cascadeRows.map((row) => packingTemplateItemLocalRemoveTask(row.id));
+    const cascadeSessionItemRows = await this.db.query<{ id: string }>(
+      'SELECT id FROM packing_session_item WHERE gear_item_id = ? AND deleted = 0',
+      [id],
+    );
+    const cascadeTasks = [
+      ...cascadeTemplateItemRows.map((row) => packingTemplateItemLocalRemoveTask(row.id)),
+      ...cascadeSessionItemRows.map((row) => packingSessionItemLocalRemoveTask(row.id)),
+    ];
     await this.db.executeTransaction([entityTask, ...cascadeTasks, ...enqueue.outboxTasks]);
     await this.offlineQueue.refreshCounts(userId);
     if (enqueue.hardRemoveLocalEntity) {
@@ -272,6 +290,187 @@ export class SqliteStorageBackend implements StorageBackend {
       candidateIds,
     );
     return rows.map((row) => row.id);
+  }
+
+  async listPackingSessions(): Promise<PackingSession[]> {
+    const rows = await this.db.query<PackingSessionRow>('SELECT * FROM packing_session WHERE deleted = 0 ORDER BY created_at DESC');
+    return rows.map(packingSessionRowToDto);
+  }
+
+  async getPackingSessionDetail(id: string): Promise<PackingSessionDetail> {
+    return this.readPackingSessionDetail(id);
+  }
+
+  /** documentation/Subfeatures/Pakolás.md "Indítás": session + its initial deduped item set in one local transaction and one outbox entry. */
+  async startPackingSession(draft: PackingSessionStartDraft): Promise<PackingSessionDetail> {
+    const userId = this.requireUserId();
+    const localTasks: SqlTask[] = [
+      packingSessionLocalWriteTask({ id: draft.id, destination: draft.destination, sourceTemplateIds: draft.sourceTemplateIds }),
+    ];
+    for (const item of draft.items) {
+      localTasks.push(
+        packingSessionItemLocalWriteTask({
+          id: item.id,
+          sessionId: draft.id,
+          gearItemId: item.gearItemId,
+          status: PackingSessionItem.StatusEnum.NotPacked,
+          sortOrder: item.sortOrder,
+        }),
+      );
+    }
+
+    const dependsOn = await this.findLocalOnlyIds('gear_item', draft.items.map((item) => item.gearItemId));
+    const payload: PackingSessionDetail = {
+      id: draft.id,
+      destination: draft.destination,
+      sourceTemplateIds: draft.sourceTemplateIds,
+      deleted: false,
+      items: draft.items.map((item) => ({
+        id: item.id,
+        sessionId: draft.id,
+        gearItemId: item.gearItemId,
+        status: PackingSessionItem.StatusEnum.NotPacked,
+        sortOrder: item.sortOrder,
+        deleted: false,
+      })),
+    };
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: 'POST',
+      url: '/api/packing-sessions',
+      payload,
+      entityType: 'PackingSession',
+      targetEntityId: draft.id,
+      dependsOn,
+    });
+    await this.db.executeTransaction([...localTasks, ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    return this.readPackingSessionDetail(draft.id);
+  }
+
+  async updatePackingSessionDestination(id: string, destination: string | null): Promise<PackingSession> {
+    const userId = this.requireUserId();
+    const currentRows = await this.db.query<PackingSessionRow>('SELECT * FROM packing_session WHERE id = ?', [id]);
+    const current = packingSessionRowToDto(currentRows[0]);
+    const sourceTemplateIds = current.sourceTemplateIds ?? [];
+    const payload: PackingSession = { id, destination, sourceTemplateIds, deleted: false };
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: 'PUT',
+      url: `/api/packing-sessions/${id}`,
+      payload,
+      entityType: 'PackingSession',
+      targetEntityId: id,
+    });
+    await this.db.executeTransaction([packingSessionLocalWriteTask({ id, destination, sourceTemplateIds }), ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    const updatedRows = await this.db.query<PackingSessionRow>('SELECT * FROM packing_session WHERE id = ?', [id]);
+    return packingSessionRowToDto(updatedRows[0]);
+  }
+
+  /** "Lezárás": soft delete + local cascade to the session's own items, no separate outbox entry for them (mirrors PackingTemplate's delete). */
+  async closePackingSession(id: string): Promise<PackingSession> {
+    const userId = this.requireUserId();
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: 'DELETE',
+      url: `/api/packing-sessions/${id}`,
+      payload: null,
+      entityType: 'PackingSession',
+      targetEntityId: id,
+    });
+    const liveItemRows = await this.db.query<{ id: string }>('SELECT id FROM packing_session_item WHERE session_id = ? AND deleted = 0', [id]);
+    const tasks: SqlTask[] = [];
+    if (enqueue.hardRemoveLocalEntity) {
+      tasks.push({ statement: 'DELETE FROM packing_session WHERE id = ?', values: [id] });
+      for (const row of liveItemRows) {
+        tasks.push({ statement: 'DELETE FROM packing_session_item WHERE id = ?', values: [row.id] });
+      }
+    } else {
+      tasks.push({
+        statement: 'UPDATE packing_session SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?',
+        values: [new Date().toISOString(), id],
+      });
+      for (const row of liveItemRows) {
+        tasks.push(packingSessionItemLocalRemoveTask(row.id));
+      }
+    }
+    await this.db.executeTransaction([...tasks, ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    if (enqueue.hardRemoveLocalEntity) {
+      return { id, deleted: true };
+    }
+    const rows = await this.db.query<PackingSessionRow>('SELECT * FROM packing_session WHERE id = ?', [id]);
+    return packingSessionRowToDto(rows[0]);
+  }
+
+  /** "Extra eszköz": own outbox entry, not part of a nested session save (see PackingSessionItem.yaml). */
+  async addPackingSessionItem(sessionId: string, gearItemId: string, sortOrder: number): Promise<PackingSessionItem> {
+    const userId = this.requireUserId();
+    const id = uuidV4();
+    const dependsOn = await this.findLocalOnlyIds('gear_item', [gearItemId]);
+    const payload: PackingSessionItem = {
+      id,
+      sessionId,
+      gearItemId,
+      status: PackingSessionItem.StatusEnum.NotPacked,
+      sortOrder,
+      deleted: false,
+    };
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: 'POST',
+      url: '/api/packing-session-items',
+      payload,
+      entityType: 'PackingSessionItem',
+      targetEntityId: id,
+      dependsOn,
+    });
+    await this.db.executeTransaction([
+      packingSessionItemLocalWriteTask({ id, sessionId, gearItemId, status: 'NOT_PACKED', sortOrder }),
+      ...enqueue.outboxTasks,
+    ]);
+    await this.offlineQueue.refreshCounts(userId);
+    return this.readPackingSessionItem(id);
+  }
+
+  /** Status tap or manual reorder — own outbox entry per item, deliberately not nested. */
+  async updatePackingSessionItem(item: PackingSessionItem): Promise<PackingSessionItem> {
+    const userId = this.requireUserId();
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: 'PUT',
+      url: `/api/packing-session-items/${item.id}`,
+      payload: item,
+      entityType: 'PackingSessionItem',
+      targetEntityId: item.id,
+    });
+    await this.db.executeTransaction([
+      packingSessionItemLocalWriteTask({
+        id: item.id,
+        sessionId: item.sessionId,
+        gearItemId: item.gearItemId,
+        status: item.status,
+        sortOrder: item.sortOrder,
+      }),
+      ...enqueue.outboxTasks,
+    ]);
+    await this.offlineQueue.refreshCounts(userId);
+    return this.readPackingSessionItem(item.id);
+  }
+
+  private async readPackingSessionDetail(id: string): Promise<PackingSessionDetail> {
+    const sessionRows = await this.db.query<PackingSessionRow>('SELECT * FROM packing_session WHERE id = ?', [id]);
+    const itemRows = await this.db.query<PackingSessionItemRow>(
+      'SELECT * FROM packing_session_item WHERE session_id = ? AND deleted = 0 ORDER BY sort_order',
+      [id],
+    );
+    return { ...packingSessionRowToDto(sessionRows[0]), items: itemRows.map(packingSessionItemRowToDto) };
+  }
+
+  private async readPackingSessionItem(id: string): Promise<PackingSessionItem> {
+    const rows = await this.db.query<PackingSessionItemRow>('SELECT * FROM packing_session_item WHERE id = ?', [id]);
+    return packingSessionItemRowToDto(rows[0]);
   }
 
   private requireUserId(): string {

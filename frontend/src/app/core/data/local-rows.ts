@@ -1,5 +1,7 @@
 import { SqlTask } from '../storage/local-database.service';
 import { GearItem } from '../../api/model/gearItem';
+import { PackingSession } from '../../api/model/packingSession';
+import { PackingSessionItem } from '../../api/model/packingSessionItem';
 import { PackingTemplate } from '../../api/model/packingTemplate';
 import { PackingTemplateItem } from '../../api/model/packingTemplateItem';
 import { UserProfile } from '../../api/model/userProfile';
@@ -367,6 +369,164 @@ export function packingTemplateItemTombstoneTask(id: string, deletedAt: string |
     statement: `
       INSERT INTO packing_template_item (id, template_id, gear_item_id, sort_order, updated_at, deleted, deleted_at, _dirty, _local_only)
       VALUES (?, '', '', 0, ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+export interface PackingSessionRow {
+  id: string;
+  destination: string | null;
+  /** JSON-stringified string[] — SQLite has no native array column, unlike Postgres uuid[] server-side. */
+  source_template_ids: string;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+export function packingSessionRowToDto(row: PackingSessionRow): PackingSession {
+  return {
+    id: row.id,
+    destination: row.destination,
+    sourceTemplateIds: JSON.parse(row.source_template_ids) as string[],
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+export function packingSessionLocalWriteTask(dto: { id: string; destination: string | null; sourceTemplateIds: string[] }): SqlTask {
+  return {
+    statement: `
+      INSERT INTO packing_session (id, destination, source_template_ids, _dirty, _local_only)
+      VALUES (?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET destination = excluded.destination, source_template_ids = excluded.source_template_ids, _dirty = 1`,
+    values: [dto.id, dto.destination, JSON.stringify(dto.sourceTemplateIds)],
+  };
+}
+
+export function packingSessionServerApplyTask(dto: PackingSession): SqlTask {
+  return {
+    statement: `
+      INSERT INTO packing_session (id, destination, source_template_ids, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        destination = excluded.destination, source_template_ids = excluded.source_template_ids, created_at = excluded.created_at,
+        updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE packing_session._dirty = 0`,
+    values: [
+      dto.id,
+      dto.destination ?? null,
+      JSON.stringify(dto.sourceTemplateIds ?? []),
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function packingSessionTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO packing_session (id, source_template_ids, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '[]', ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+export interface PackingSessionItemRow {
+  id: string;
+  session_id: string;
+  gear_item_id: string;
+  status: string;
+  sort_order: number;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+export function packingSessionItemRowToDto(row: PackingSessionItemRow): PackingSessionItem {
+  return {
+    id: row.id,
+    sessionId: row.session_id,
+    gearItemId: row.gear_item_id,
+    status: row.status as PackingSessionItem.StatusEnum,
+    sortOrder: row.sort_order,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+export function packingSessionItemLocalWriteTask(dto: {
+  id: string;
+  sessionId: string;
+  gearItemId: string;
+  status: string;
+  sortOrder: number;
+}): SqlTask {
+  return {
+    statement: `
+      INSERT INTO packing_session_item (id, session_id, gear_item_id, status, sort_order, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET status = excluded.status, sort_order = excluded.sort_order, deleted = 0, deleted_at = NULL, _dirty = 1`,
+    values: [dto.id, dto.sessionId, dto.gearItemId, dto.status, dto.sortOrder],
+  };
+}
+
+/** Local-only removal (GearItem cascade) — not a standalone outbox entry, matching packingTemplateItemLocalRemoveTask's reasoning. */
+export function packingSessionItemLocalRemoveTask(id: string): SqlTask {
+  return {
+    statement: `UPDATE packing_session_item SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?`,
+    values: [new Date().toISOString(), id],
+  };
+}
+
+export function packingSessionItemServerApplyTask(dto: PackingSessionItem): SqlTask {
+  return {
+    statement: `
+      INSERT INTO packing_session_item (id, session_id, gear_item_id, status, sort_order, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        session_id = excluded.session_id, gear_item_id = excluded.gear_item_id, status = excluded.status, sort_order = excluded.sort_order,
+        created_at = excluded.created_at, updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at,
+        _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE packing_session_item._dirty = 0`,
+    values: [
+      dto.id,
+      dto.sessionId,
+      dto.gearItemId,
+      dto.status,
+      dto.sortOrder,
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function packingSessionItemTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO packing_session_item (id, session_id, gear_item_id, status, sort_order, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '', '', 'NOT_PACKED', 0, ?, 1, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
     values: [id, updatedAt, deletedAt],
   };

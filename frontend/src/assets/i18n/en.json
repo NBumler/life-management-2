@@ -98,6 +98,7 @@
     "TITLE": "GearCheck",
     "HUB_ITEMS": "Gear",
     "HUB_TEMPLATES": "Templates",
+    "HUB_SESSIONS": "Packing",
     "ITEMS": {
       "TITLE": "Gear",
       "SEARCH_PLACEHOLDER": "Search",
@@ -127,6 +128,34 @@
       "NAME_CONFLICT": "\"{{name}}\" is already among your templates.",
       "DELETE_CONFIRM_TITLE": "Delete template",
       "DELETE_CONFIRM_MESSAGE": "Are you sure you want to delete \"{{name}}\"? Any active packing session stays untouched."
+    },
+    "PACKING": {
+      "TITLE": "Packing",
+      "ADD": "Start new packing",
+      "EMPTY": "No active packing sessions.",
+      "UNNAMED_DESTINATION": "Untitled packing",
+      "START_TITLE": "Start packing",
+      "START_TEMPLATES_LABEL": "Templates",
+      "START_TEMPLATES_REQUIRED": "Choose at least one template.",
+      "START_DESTINATION": "Destination",
+      "START_SUBMIT": "Start",
+      "DESTINATION": "Destination",
+      "SEARCH_PLACEHOLDER": "Search",
+      "SORT_BY_STATUS": "Sort by status",
+      "ACTIVE_SECTION_TITLE": "Active",
+      "DONE_SECTION_TITLE": "Done / not needed",
+      "ITEM_PICKER_ADD": "Add item",
+      "ITEM_PICKER_CLOSE": "Close",
+      "CLOSE_BUTTON": "Close packing",
+      "CLOSE_CONFIRM_TITLE": "Close packing",
+      "CLOSE_CONFIRM_MESSAGE": "Are you sure you want to close this packing session? This cannot be undone.",
+      "STATUS_NOT_PACKED": "Not packed",
+      "STATUS_KNOWN_LOCATION": "Know where it is",
+      "STATUS_PREPARED": "Set aside",
+      "STATUS_WEAR_ON_DEPARTURE": "Wear on departure",
+      "STATUS_BUY_ON_THE_WAY": "Buy on the way",
+      "STATUS_PACKED": "Packed",
+      "STATUS_NOT_NEEDED": "Not needed"
     }
   }
 }

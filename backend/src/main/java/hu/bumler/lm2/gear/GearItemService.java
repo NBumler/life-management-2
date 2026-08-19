@@ -18,11 +18,14 @@ class GearItemService {
 	private final GearItemRepository repository;
 	private final GearItemMapper mapper;
 	private final PackingTemplateItemRepository templateItemRepository;
+	private final PackingSessionItemRepository sessionItemRepository;
 
-	GearItemService(GearItemRepository repository, GearItemMapper mapper, PackingTemplateItemRepository templateItemRepository) {
+	GearItemService(GearItemRepository repository, GearItemMapper mapper, PackingTemplateItemRepository templateItemRepository,
+			PackingSessionItemRepository sessionItemRepository) {
 		this.repository = repository;
 		this.mapper = mapper;
 		this.templateItemRepository = templateItemRepository;
+		this.sessionItemRepository = sessionItemRepository;
 	}
 
 	@Transactional(readOnly = true)
@@ -64,9 +67,8 @@ class GearItemService {
 	}
 
 	/**
-	 * Soft delete, idempotent, cascading to every live PackingTemplateItem referencing this item
-	 * (documentation/Subfeatures/Eszközök.md). PackingSessionItem cascade is added once that table
-	 * exists.
+	 * Soft delete, idempotent, cascading to every live PackingTemplateItem and PackingSessionItem
+	 * referencing this item (documentation/Subfeatures/Eszközök.md).
 	 */
 	@Transactional
 	GearItem delete(UUID userId, UUID id) {
@@ -80,6 +82,11 @@ class GearItemService {
 				templateItemRepository.save(templateItem);
 			}
 			templateItemRepository.flush();
+			for (PackingSessionItemEntity sessionItem : sessionItemRepository.findByGearItemIdAndUserIdAndDeletedFalse(id, userId)) {
+				sessionItem.softDelete();
+				sessionItemRepository.save(sessionItem);
+			}
+			sessionItemRepository.flush();
 		}
 		return mapper.toDto(entity);
 	}

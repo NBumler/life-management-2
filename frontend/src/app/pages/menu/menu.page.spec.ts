@@ -7,6 +7,8 @@ import { provideTranslateService } from '@ngx-translate/core';
 
 import { GearItemsService } from '../../api/api/gearItems.service';
 import { HealthService } from '../../api/api/health.service';
+import { PackingSessionItemsService } from '../../api/api/packingSessionItems.service';
+import { PackingSessionsService } from '../../api/api/packingSessions.service';
 import { PackingTemplatesService } from '../../api/api/packingTemplates.service';
 import { ProfileService } from '../../api/api/profile.service';
 import { SyncService } from '../../api/api/sync.service';
@@ -32,6 +34,8 @@ describe('MenuPage', () => {
         { provide: ProfileService, useValue: jasmine.createSpyObj('ProfileService', ['getProfile', 'getWeightHistoryEntry']) },
         { provide: GearItemsService, useValue: jasmine.createSpyObj('GearItemsService', ['getGearItem']) },
         { provide: PackingTemplatesService, useValue: jasmine.createSpyObj('PackingTemplatesService', ['getPackingTemplate']) },
+        { provide: PackingSessionsService, useValue: jasmine.createSpyObj('PackingSessionsService', ['getPackingSession']) },
+        { provide: PackingSessionItemsService, useValue: jasmine.createSpyObj('PackingSessionItemsService', ['getPackingSessionItem']) },
         { provide: SyncService, useValue: jasmine.createSpyObj('SyncService', ['getSyncChanges']) },
         { provide: LocalDatabaseService, useValue: jasmine.createSpyObj('LocalDatabaseService', ['query', 'run', 'executeTransaction']) },
         {

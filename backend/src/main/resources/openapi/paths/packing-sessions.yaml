@@ -1,0 +1,32 @@
+get:
+  operationId: listPackingSessions
+  tags:
+    - packing-sessions
+  summary: The caller's active packing sessions, live rows only (deleted = false), without items.
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/PackingSessionList.yaml'
+post:
+  operationId: createPackingSession
+  tags:
+    - packing-sessions
+  summary: >-
+    Start a session with its (already client-deduped) initial item set in one request — idempotent
+    upsert on the client-supplied id (documentation/Subfeatures/Pakolás.md "Indítás").
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/PackingSessionDetail.yaml'
+  responses:
+    '200':
+      description: Created or, on retry with the same id, the existing tree.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/PackingSessionDetail.yaml'

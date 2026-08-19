@@ -14,10 +14,7 @@ import {
 } from '@ionic/angular/standalone';
 import { TranslatePipe } from '@ngx-translate/core';
 
-/**
- * documentation/Features/GearCheck.md hub: three entries (Eszközök | Sablonok | Pakolás).
- * Pakolás lands in a later implementation phase — Eszközök and Sablonok are wired so far.
- */
+/** documentation/Features/GearCheck.md hub: three entries (Eszközök | Sablonok | Pakolás). */
 @Component({
   selector: 'app-gear-check',
   templateUrl: 'gear-check.page.html',

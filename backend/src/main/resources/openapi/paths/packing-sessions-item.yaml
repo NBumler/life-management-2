@@ -1,0 +1,63 @@
+parameters:
+  - name: id
+    in: path
+    required: true
+    schema:
+      type: string
+      format: uuid
+get:
+  operationId: getPackingSession
+  tags:
+    - packing-sessions
+  summary: The full session tree. Own deleted row returns 200 with deleted=true (not 404).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/PackingSessionDetail.yaml'
+    '404':
+      description: No such session (or it belongs to another user).
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+put:
+  operationId: updatePackingSession
+  tags:
+    - packing-sessions
+  summary: Update session-level fields only (destination) — full update, last-write-wins. Items are untouched.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/PackingSession.yaml'
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/PackingSession.yaml'
+    '409':
+      description: Entity already deleted.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+delete:
+  operationId: deletePackingSession
+  tags:
+    - packing-sessions
+  summary: >-
+    documentation/Subfeatures/Pakolás.md "Lezárás": soft delete, idempotent, no "done vs cancelled"
+    distinction. Cascades to soft-deleting every item on this session.
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/PackingSession.yaml'

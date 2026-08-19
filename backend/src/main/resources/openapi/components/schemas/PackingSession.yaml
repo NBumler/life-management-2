@@ -1,0 +1,32 @@
+type: object
+description: documentation/Subfeatures/Pakolás.md — an active packing session, without its items (list view).
+required:
+  - id
+  - deleted
+properties:
+  id:
+    type: string
+    format: uuid
+  destination:
+    type: string
+    nullable: true
+  sourceTemplateIds:
+    type: array
+    items:
+      type: string
+      format: uuid
+  deleted:
+    type: boolean
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

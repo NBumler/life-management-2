@@ -1,0 +1,18 @@
+<div class="status-card" [class]="statusClass(item.status)">
+  <div class="status-chips">
+    @for (status of statuses; track status) {
+      <button
+        type="button"
+        class="status-chip"
+        [class.active]="status === item.status"
+        (click)="selectStatus(status); $event.stopPropagation()"
+      >
+        {{ statusLabelKey(status) | translate }}
+      </button>
+    }
+  </div>
+  <div class="status-body" (click)="cycleNext()">
+    <span class="status-body-name">{{ item.label }}</span>
+    <span class="status-body-current">{{ statusLabelKey(item.status) | translate }}</span>
+  </div>
+</div>

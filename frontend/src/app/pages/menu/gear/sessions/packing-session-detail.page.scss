@@ -1,0 +1,17 @@
+.session-item-row {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  padding: 0 8px;
+}
+
+.session-item-card {
+  flex: 1;
+  min-width: 0;
+}
+
+.session-item-arrows {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}

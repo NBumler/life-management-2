@@ -1,0 +1,50 @@
+type: object
+description: >-
+  documentation/Subfeatures/Pakolás.md — a GearItem reference inside a PackingSession, with a
+  packing status. Own sync entity with standalone CRUD-ish endpoints (status/sortOrder changes are
+  frequent, so they are NOT part of a nested session save — see PackingSession.yaml's neighboring
+  paths file for the reasoning).
+required:
+  - id
+  - sessionId
+  - gearItemId
+  - status
+  - sortOrder
+  - deleted
+properties:
+  id:
+    type: string
+    format: uuid
+  sessionId:
+    type: string
+    format: uuid
+  gearItemId:
+    type: string
+    format: uuid
+  status:
+    type: string
+    enum:
+      - NOT_PACKED
+      - KNOWN_LOCATION
+      - PREPARED
+      - WEAR_ON_DEPARTURE
+      - BUY_ON_THE_WAY
+      - PACKED
+      - NOT_NEEDED
+  sortOrder:
+    type: integer
+  deleted:
+    type: boolean
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

@@ -2,14 +2,20 @@ import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
 import { GearItemsService } from '../../api/api/gearItems.service';
+import { PackingSessionItemsService } from '../../api/api/packingSessionItems.service';
+import { PackingSessionsService } from '../../api/api/packingSessions.service';
 import { PackingTemplatesService } from '../../api/api/packingTemplates.service';
 import { ProfileService } from '../../api/api/profile.service';
 import { GearItem } from '../../api/model/gearItem';
+import { PackingSession } from '../../api/model/packingSession';
+import { PackingSessionDetail } from '../../api/model/packingSessionDetail';
+import { PackingSessionItem } from '../../api/model/packingSessionItem';
 import { PackingTemplate } from '../../api/model/packingTemplate';
 import { PackingTemplateDetail } from '../../api/model/packingTemplateDetail';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
-import { PackingTemplateDraft, StorageBackend } from './storage-backend';
+import { uuidV4 } from '../sync/uuid';
+import { PackingSessionStartDraft, PackingTemplateDraft, StorageBackend } from './storage-backend';
 
 /** Web (offlineCapable = false): every call is a direct HTTP round-trip, no local store, no outbox. */
 @Injectable({ providedIn: 'root' })
@@ -17,6 +23,8 @@ export class HttpStorageBackend implements StorageBackend {
   private readonly profileApi = inject(ProfileService);
   private readonly gearApi = inject(GearItemsService);
   private readonly packingTemplatesApi = inject(PackingTemplatesService);
+  private readonly packingSessionsApi = inject(PackingSessionsService);
+  private readonly packingSessionItemsApi = inject(PackingSessionItemsService);
 
   async getProfile(): Promise<UserProfile | null> {
     try {
@@ -81,6 +89,59 @@ export class HttpStorageBackend implements StorageBackend {
 
   deletePackingTemplate(id: string): Promise<PackingTemplateDetail> {
     return firstValueFrom(this.packingTemplatesApi.deletePackingTemplate(id));
+  }
+
+  listPackingSessions(): Promise<PackingSession[]> {
+    return firstValueFrom(this.packingSessionsApi.listPackingSessions());
+  }
+
+  getPackingSessionDetail(id: string): Promise<PackingSessionDetail> {
+    return firstValueFrom(this.packingSessionsApi.getPackingSession(id));
+  }
+
+  startPackingSession(draft: PackingSessionStartDraft): Promise<PackingSessionDetail> {
+    const dto: PackingSessionDetail = {
+      id: draft.id,
+      destination: draft.destination,
+      sourceTemplateIds: draft.sourceTemplateIds,
+      deleted: false,
+      items: draft.items.map((item) => ({
+        id: item.id,
+        sessionId: draft.id,
+        gearItemId: item.gearItemId,
+        status: PackingSessionItem.StatusEnum.NotPacked,
+        sortOrder: item.sortOrder,
+        deleted: false,
+      })),
+    };
+    return firstValueFrom(this.packingSessionsApi.createPackingSession(dto));
+  }
+
+  updatePackingSessionDestination(id: string, destination: string | null): Promise<PackingSession> {
+    // sourceTemplateIds is immutable after creation; the server ignores it on update (session-level fields only).
+    const dto: PackingSession = { id, destination, sourceTemplateIds: [], deleted: false };
+    return firstValueFrom(this.packingSessionsApi.updatePackingSession(id, dto));
+  }
+
+  closePackingSession(id: string): Promise<PackingSession> {
+    return firstValueFrom(this.packingSessionsApi.deletePackingSession(id));
+  }
+
+  /** POST with an existing id is an idempotent upsert server-side, so this covers both create and update. */
+  addPackingSessionItem(sessionId: string, gearItemId: string, sortOrder: number): Promise<PackingSessionItem> {
+    const dto: PackingSessionItem = {
+      id: uuidV4(),
+      sessionId,
+      gearItemId,
+      status: PackingSessionItem.StatusEnum.NotPacked,
+      sortOrder,
+      deleted: false,
+    };
+    return firstValueFrom(this.packingSessionItemsApi.createPackingSessionItem(dto));
+  }
+
+  updatePackingSessionItem(item: PackingSessionItem): Promise<PackingSessionItem> {
+    return firstValueFrom(this.packingSessionItemsApi.updatePackingSessionItem(item.id, item));
   }
 }
 

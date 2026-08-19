@@ -1,0 +1,123 @@
+// documentation/Subfeatures/Pakolás.md "Enum — PackingItemStatus": example background colors per
+// status. Defined as light-mode values here, with a dark-mode override block selected via
+// `:host-context(.ion-palette-dark)` — this app's ThemeService toggles that class on <html>
+// explicitly (documentation/Features/Dark&Light mode.md), it does not rely on the OS
+// prefers-color-scheme alone, so a plain @media query would miss an explicit in-app Dark choice
+// made while the OS itself is in light mode.
+
+:host {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.status-card {
+  border-radius: 8px;
+  overflow: hidden;
+  --status-bg: var(--ion-color-light);
+  --status-fg: var(--ion-color-dark);
+}
+
+.status-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 8px 8px 0;
+}
+
+.status-chip {
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  background: transparent;
+  color: inherit;
+
+  &.active {
+    border-width: 2px;
+    border-color: currentColor;
+    font-weight: 600;
+  }
+}
+
+.status-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  cursor: pointer;
+}
+
+.status-body-name {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.status-body-current {
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.status-card {
+  background: var(--status-bg);
+  color: var(--status-fg);
+}
+
+.status-not-packed {
+  --status-bg: #f8d7d7;
+  --status-fg: #5c1a1a;
+}
+.status-known-location {
+  --status-bg: #fbe4bd;
+  --status-fg: #5c3d0a;
+}
+.status-prepared {
+  --status-bg: #cfe6fb;
+  --status-fg: #0a3d5c;
+}
+.status-wear-on-departure {
+  --status-bg: #e3d6f5;
+  --status-fg: #341a5c;
+}
+.status-buy-on-the-way {
+  --status-bg: #ead2b8;
+  --status-fg: #4a2e0a;
+}
+.status-packed {
+  --status-bg: #d3f0d3;
+  --status-fg: #14401a;
+}
+.status-not-needed {
+  --status-bg: #e0e0e0;
+  --status-fg: #3a3a3a;
+}
+
+:host-context(.ion-palette-dark) {
+  .status-not-packed {
+    --status-bg: #4a1f1f;
+    --status-fg: #f8d7d7;
+  }
+  .status-known-location {
+    --status-bg: #4a3818;
+    --status-fg: #fbe4bd;
+  }
+  .status-prepared {
+    --status-bg: #17364a;
+    --status-fg: #cfe6fb;
+  }
+  .status-wear-on-departure {
+    --status-bg: #33224a;
+    --status-fg: #e3d6f5;
+  }
+  .status-buy-on-the-way {
+    --status-bg: #40300f;
+    --status-fg: #ead2b8;
+  }
+  .status-packed {
+    --status-bg: #1c3a20;
+    --status-fg: #d3f0d3;
+  }
+  .status-not-needed {
+    --status-bg: #3a3a3a;
+    --status-fg: #e0e0e0;
+  }
+}
