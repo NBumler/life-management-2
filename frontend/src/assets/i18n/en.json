@@ -30,6 +30,7 @@
     "THEME": "Theme",
     "LANGUAGE": "Language",
     "SYNC": "Sync center",
+    "GEARCHECK": "GearCheck",
     "LOGOUT": "Log out",
     "LOGOUT_CONFIRM_TITLE": "Log out",
     "LOGOUT_CONFIRM_MESSAGE": "Are you sure you want to log out?",
@@ -92,5 +93,20 @@
     "DROP_CONFIRM_TITLE": "Drop item",
     "DROP_CONFIRM_MESSAGE": "The change will be lost and the row will revert to the server's stored state. This cannot be undone.",
     "DROP_CONFIRM_CASCADE": "The change will be lost, and {{count}} more item(s) that depend on it will be dropped too. This cannot be undone."
+  },
+  "GEAR": {
+    "TITLE": "GearCheck",
+    "HUB_ITEMS": "Gear",
+    "ITEMS": {
+      "TITLE": "Gear",
+      "SEARCH_PLACEHOLDER": "Search",
+      "ADD": "New item",
+      "NAME": "Name",
+      "NOTES": "Notes",
+      "EMPTY": "No gear items yet.",
+      "NAME_CONFLICT": "\"{{name}}\" is already in your catalog.",
+      "DELETE_CONFIRM_TITLE": "Delete item",
+      "DELETE_CONFIRM_MESSAGE": "Are you sure you want to delete \"{{name}}\"?"
+    }
   }
 }

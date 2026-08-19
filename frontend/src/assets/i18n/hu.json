@@ -30,6 +30,7 @@
     "THEME": "Téma",
     "LANGUAGE": "Nyelv",
     "SYNC": "Szinkronizációs központ",
+    "GEARCHECK": "GearCheck",
     "LOGOUT": "Kijelentkezés",
     "LOGOUT_CONFIRM_TITLE": "Kijelentkezés",
     "LOGOUT_CONFIRM_MESSAGE": "Biztosan kijelentkezel?",
@@ -92,5 +93,20 @@
     "DROP_CONFIRM_TITLE": "Tétel eldobása",
     "DROP_CONFIRM_MESSAGE": "A módosítás elvész, a tétel visszaáll a szerveren tárolt állapotra. Ez nem visszavonható.",
     "DROP_CONFIRM_CASCADE": "A módosítás elvész, és ezzel együtt {{count}} további, erre épülő tétel is eldobódik. Ez nem visszavonható."
+  },
+  "GEAR": {
+    "TITLE": "GearCheck",
+    "HUB_ITEMS": "Eszközök",
+    "ITEMS": {
+      "TITLE": "Eszközök",
+      "SEARCH_PLACEHOLDER": "Keresés",
+      "ADD": "Új eszköz",
+      "NAME": "Név",
+      "NOTES": "Megjegyzés",
+      "EMPTY": "Még nincs felvett eszköz.",
+      "NAME_CONFLICT": "„{{name}}” már szerepel a katalógusban.",
+      "DELETE_CONFIRM_TITLE": "Eszköz törlése",
+      "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd a(z) „{{name}}” eszközt?"
+    }
   }
 }

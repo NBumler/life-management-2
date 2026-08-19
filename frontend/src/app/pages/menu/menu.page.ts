@@ -14,6 +14,7 @@ import {
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
+import { FeatureFlagsService } from '../../core/config/feature-flags.service';
 import { AuthSessionService } from '../../core/session/auth-session.service';
 import { OfflineQueueService } from '../../core/sync/offline-queue.service';
 import { SyncStatusButtonComponent } from '../../shared/sync-status-button/sync-status-button.component';
@@ -31,9 +32,11 @@ export class MenuPage {
   private readonly alertController = inject(AlertController);
   private readonly translate = inject(TranslateService);
   private readonly router = inject(Router);
+  private readonly featureFlags = inject(FeatureFlagsService);
 
   readonly offlineCapable = Capacitor.isNativePlatform();
   readonly pendingCount = this.offlineQueue.pendingCount;
+  readonly gearCheckEnabled = this.featureFlags.isEnabled('menu.gearcheck');
 
   async logout(): Promise<void> {
     const pending = this.pendingCount();

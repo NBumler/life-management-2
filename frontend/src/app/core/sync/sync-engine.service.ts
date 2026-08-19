@@ -5,14 +5,18 @@ import { Capacitor } from '@capacitor/core';
 import { Network } from '@capacitor/network';
 import { firstValueFrom, timeout } from 'rxjs';
 
+import { GearService } from '../../api/api/gear.service';
 import { HealthService } from '../../api/api/health.service';
 import { ProfileService } from '../../api/api/profile.service';
 import { SyncService } from '../../api/api/sync.service';
 import { ApiError } from '../../api/model/apiError';
+import { GearItem } from '../../api/model/gearItem';
 import { SyncChangeItem } from '../../api/model/syncChangeItem';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 import {
+  gearItemServerApplyTask,
+  gearItemTombstoneTask,
   profileServerApplyTask,
   profileTombstoneTask,
   weightHistoryServerApplyTask,
@@ -41,6 +45,7 @@ export class SyncEngineService {
   private readonly http = inject(HttpClient);
   private readonly healthApi = inject(HealthService);
   private readonly profileApi = inject(ProfileService);
+  private readonly gearApi = inject(GearService);
   private readonly syncApi = inject(SyncService);
   private readonly authSession = inject(AuthSessionService);
   private readonly offlineQueue = inject(OfflineQueueService);
@@ -142,6 +147,16 @@ export class SyncEngineService {
       try {
         const dto = await firstValueFrom(this.profileApi.getWeightHistoryEntry(row.id));
         await this.db.executeTransaction([weightHistoryServerApplyTask(dto)]);
+      } catch {
+        // same as above
+      }
+    }
+
+    const staleGearItems = await this.db.query<{ id: string }>('SELECT id FROM gear_item WHERE _needs_refetch = 1');
+    for (const row of staleGearItems) {
+      try {
+        const dto = await firstValueFrom(this.gearApi.getGearItem(row.id));
+        await this.db.executeTransaction([gearItemServerApplyTask(dto)]);
       } catch {
         // same as above
       }
@@ -278,6 +293,9 @@ export class SyncEngineService {
     if (item.entityType === 'WeightHistoryEntry') {
       return weightHistoryServerApplyTask(body as WeightHistoryEntry);
     }
+    if (item.entityType === 'GearItem') {
+      return gearItemServerApplyTask(body as GearItem);
+    }
     throw new Error(`SyncEngine: no local writer for entityType "${item.entityType}"`);
   }
 
@@ -287,6 +305,8 @@ export class SyncEngineService {
       await this.db.executeTransaction([profileTombstoneTask(item.targetEntityId, now)]);
     } else if (item.entityType === 'WeightHistoryEntry') {
       await this.db.executeTransaction([weightHistoryTombstoneTask(item.targetEntityId, null, now)]);
+    } else if (item.entityType === 'GearItem') {
+      await this.db.executeTransaction([gearItemTombstoneTask(item.targetEntityId, null, now)]);
     }
   }
 
@@ -334,6 +354,12 @@ export class SyncEngineService {
         return [weightHistoryServerApplyTask(change.data as WeightHistoryEntry)];
       }
       return [weightHistoryTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
+    }
+    if (change.entityType === 'GearItem') {
+      if (!change.deleted) {
+        return [gearItemServerApplyTask(change.data as GearItem)];
+      }
+      return [gearItemTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
     }
     return [];
   }

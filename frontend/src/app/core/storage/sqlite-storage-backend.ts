@@ -1,10 +1,14 @@
 import { Injectable, inject } from '@angular/core';
 
+import { GearItem } from '../../api/model/gearItem';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 import {
+  GearItemRow,
   ProfileRow,
   WeightHistoryRow,
+  gearItemLocalWriteTask,
+  gearItemRowToDto,
   profileLocalWriteTask,
   profileRowToDto,
   weightHistoryLocalWriteTask,
@@ -91,6 +95,57 @@ export class SqliteStorageBackend implements StorageBackend {
   private async readWeightHistoryEntry(id: string): Promise<WeightHistoryEntry> {
     const rows = await this.db.query<WeightHistoryRow>('SELECT * FROM weight_history_entry WHERE id = ?', [id]);
     return weightHistoryRowToDto(rows[0]);
+  }
+
+  async listGearItems(): Promise<GearItem[]> {
+    const rows = await this.db.query<GearItemRow>('SELECT * FROM gear_item WHERE deleted = 0 ORDER BY name COLLATE NOCASE');
+    return rows.map(gearItemRowToDto);
+  }
+
+  async upsertGearItem(item: GearItem): Promise<GearItem> {
+    const userId = this.requireUserId();
+    const existing = await this.db.query('SELECT 1 FROM gear_item WHERE id = ?', [item.id]);
+    const isNew = existing.length === 0;
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: isNew ? 'POST' : 'PUT',
+      url: isNew ? '/api/gear-items' : `/api/gear-items/${item.id}`,
+      payload: item,
+      entityType: 'GearItem',
+      targetEntityId: item.id,
+    });
+    await this.db.executeTransaction([gearItemLocalWriteTask(item), ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    return this.readGearItem(item.id);
+  }
+
+  async deleteGearItem(id: string): Promise<GearItem> {
+    const userId = this.requireUserId();
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: 'DELETE',
+      url: `/api/gear-items/${id}`,
+      payload: null,
+      entityType: 'GearItem',
+      targetEntityId: id,
+    });
+    const entityTask: SqlTask = enqueue.hardRemoveLocalEntity
+      ? { statement: 'DELETE FROM gear_item WHERE id = ?', values: [id] }
+      : {
+          statement: 'UPDATE gear_item SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?',
+          values: [new Date().toISOString(), id],
+        };
+    await this.db.executeTransaction([entityTask, ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    if (enqueue.hardRemoveLocalEntity) {
+      return { id, name: '', deleted: true };
+    }
+    return this.readGearItem(id);
+  }
+
+  private async readGearItem(id: string): Promise<GearItem> {
+    const rows = await this.db.query<GearItemRow>('SELECT * FROM gear_item WHERE id = ?', [id]);
+    return gearItemRowToDto(rows[0]);
   }
 
   private requireUserId(): string {

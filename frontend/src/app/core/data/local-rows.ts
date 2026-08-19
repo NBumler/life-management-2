@@ -1,4 +1,5 @@
 import { SqlTask } from '../storage/local-database.service';
+import { GearItem } from '../../api/model/gearItem';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 
@@ -148,6 +149,74 @@ export function weightHistoryTombstoneTask(id: string, deletedAt: string | null,
     statement: `
       INSERT INTO weight_history_entry (id, recorded_at, weight_kg, updated_at, deleted, deleted_at, _dirty, _local_only)
       VALUES (?, '', 0, ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+export interface GearItemRow {
+  id: string;
+  name: string;
+  notes: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+export function gearItemRowToDto(row: GearItemRow): GearItem {
+  return {
+    id: row.id,
+    name: row.name,
+    notes: row.notes,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+export function gearItemLocalWriteTask(dto: GearItem): SqlTask {
+  return {
+    statement: `
+      INSERT INTO gear_item (id, name, notes, _dirty, _local_only)
+      VALUES (?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET name = excluded.name, notes = excluded.notes, _dirty = 1`,
+    values: [dto.id, dto.name, dto.notes ?? null],
+  };
+}
+
+export function gearItemServerApplyTask(dto: GearItem): SqlTask {
+  return {
+    statement: `
+      INSERT INTO gear_item (id, name, notes, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        name = excluded.name, notes = excluded.notes, created_at = excluded.created_at,
+        updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE gear_item._dirty = 0`,
+    values: [
+      dto.id,
+      dto.name,
+      dto.notes ?? null,
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function gearItemTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO gear_item (id, name, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '', ?, 1, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
     values: [id, updatedAt, deletedAt],
   };

@@ -41,9 +41,14 @@ public class GlobalExceptionHandler {
 	// 500 fallback below instead of the client-actionable 409 the rest of the contract promises.
 	// See ProfileUniqueConstraintRaceTest for the reasoning on why a real two-thread race isn't
 	// simulated here (the DB-level outcome is deterministic regardless of interleaving).
+	// idx_gear_item_user_id_name_normalized (V6 migration, documentation/Architektúra/Névegyediség.md
+	// scope): a real Névegyediség uniqueness constraint. GearItemService.applyName pre-checks this
+	// same scope before saving, so this mapping is only the safety net for a genuine multi-device
+	// race — see the comment above for why the fallback (rather than 500) matters.
 	private static final Map<String, String> UNIQUE_INDEX_TO_FIELD = Map.of(
 			"idx_users_username", "username",
-			"idx_user_profile_user_id", "userId");
+			"idx_user_profile_user_id", "userId",
+			"idx_gear_item_user_id_name_normalized", "name");
 
 	@ExceptionHandler(DataIntegrityViolationException.class)
 	ResponseEntity<ApiError> handleUniqueConstraint(DataIntegrityViolationException ex) {

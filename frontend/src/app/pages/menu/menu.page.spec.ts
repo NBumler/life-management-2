@@ -5,6 +5,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { provideTranslateService } from '@ngx-translate/core';
 
+import { GearService } from '../../api/api/gear.service';
 import { HealthService } from '../../api/api/health.service';
 import { ProfileService } from '../../api/api/profile.service';
 import { SyncService } from '../../api/api/sync.service';
@@ -28,6 +29,7 @@ describe('MenuPage', () => {
         { provide: AuthSessionService, useValue: jasmine.createSpyObj('AuthSessionService', ['logout'], { userId: () => null }) },
         { provide: HealthService, useValue: jasmine.createSpyObj('HealthService', ['getHealth']) },
         { provide: ProfileService, useValue: jasmine.createSpyObj('ProfileService', ['getProfile', 'getWeightHistoryEntry']) },
+        { provide: GearService, useValue: jasmine.createSpyObj('GearService', ['getGearItem']) },
         { provide: SyncService, useValue: jasmine.createSpyObj('SyncService', ['getSyncChanges']) },
         { provide: LocalDatabaseService, useValue: jasmine.createSpyObj('LocalDatabaseService', ['query', 'run', 'executeTransaction']) },
         {

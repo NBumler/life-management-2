@@ -73,10 +73,35 @@ const SCHEMA_V1_STATEMENTS: string[] = [
   `INSERT OR IGNORE INTO sync_state (id, first_pull_completed) VALUES (1, 0)`,
 ];
 
-const SCHEMA_VERSION = 1;
+/**
+ * documentation/Subfeatures/Eszközök.md, GearCheck's first table. A new version entry (not an edit
+ * of SCHEMA_V1_STATEMENTS) per the class doc above — a device already on v1 only replays the delta
+ * between its current version and this one.
+ */
+const SCHEMA_V2_STATEMENTS: string[] = [
+  `CREATE TABLE IF NOT EXISTS gear_item (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    notes TEXT,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_gear_item_name ON gear_item (name)`,
+];
+
+const SCHEMA_VERSION = 2;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
-const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [{ toVersion: SCHEMA_VERSION, statements: SCHEMA_V1_STATEMENTS }];
+const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
+  { toVersion: 1, statements: SCHEMA_V1_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V2_STATEMENTS },
+];
 
 export interface SqlTask {
   statement: string;

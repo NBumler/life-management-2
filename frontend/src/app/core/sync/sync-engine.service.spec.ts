@@ -3,6 +3,7 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed, discardPeriodicTasks, fakeAsync, tick } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 
+import { GearService } from '../../api/api/gear.service';
 import { HealthService } from '../../api/api/health.service';
 import { ProfileService } from '../../api/api/profile.service';
 import { SyncService } from '../../api/api/sync.service';
@@ -34,6 +35,7 @@ describe('SyncEngineService', () => {
   // auth-session.service.spec.ts for the same issue with AuthService).
   let healthApi: any;
   let profileApi: jasmine.SpyObj<ProfileService>;
+  let gearApi: jasmine.SpyObj<GearService>;
   let syncApi: any;
   let authSession: { userId: () => string | null; clear: jasmine.Spy };
   let offlineQueue: jasmine.SpyObj<OfflineQueueService>;
@@ -66,6 +68,7 @@ describe('SyncEngineService', () => {
   beforeEach(() => {
     healthApi = jasmine.createSpyObj('HealthService', ['getHealth']);
     profileApi = jasmine.createSpyObj('ProfileService', ['getProfile', 'getWeightHistoryEntry']);
+    gearApi = jasmine.createSpyObj('GearService', ['getGearItem']);
     syncApi = jasmine.createSpyObj('SyncService', ['getSyncChanges']);
     authSession = { userId: () => 'user-1', clear: jasmine.createSpy('clear').and.resolveTo(undefined) };
     offlineQueue = jasmine.createSpyObj('OfflineQueueService', [
@@ -87,6 +90,7 @@ describe('SyncEngineService', () => {
         provideHttpClientTesting(),
         { provide: HealthService, useValue: healthApi },
         { provide: ProfileService, useValue: profileApi },
+        { provide: GearService, useValue: gearApi },
         { provide: SyncService, useValue: syncApi },
         { provide: AuthSessionService, useValue: authSession },
         { provide: OfflineQueueService, useValue: offlineQueue },
@@ -231,6 +235,22 @@ describe('SyncEngineService', () => {
       expect(tasks[0].statement).toContain('INSERT INTO weight_history_entry');
       expect(tasks[1].statement).toContain('DELETE FROM outbox_item');
       expect(tasks[1].values).toEqual(['w1']);
+    });
+
+    it('GearItem update: writes the server row as authoritative', () => {
+      const change: SyncChangeItem = { entityType: 'GearItem', id: 'g1', deleted: false, updatedAt: 'now', data: { id: 'g1' } };
+      const tasks = internal.buildApplyTasks(change);
+      expect(tasks.length).toBe(1);
+      expect(tasks[0].statement).toContain('INSERT INTO gear_item');
+    });
+
+    it('GearItem tombstone: writes the tombstone AND discards pending non-DELETE writes — same symmetry as UserProfile', () => {
+      const change: SyncChangeItem = { entityType: 'GearItem', id: 'g1', deleted: true, updatedAt: 'now' };
+      const tasks = internal.buildApplyTasks(change);
+      expect(tasks.length).toBe(2);
+      expect(tasks[0].statement).toContain('INSERT INTO gear_item');
+      expect(tasks[1].statement).toContain('DELETE FROM outbox_item');
+      expect(tasks[1].values).toEqual(['g1']);
     });
 
     it('unknown entity types produce no local tasks', () => {

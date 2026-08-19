@@ -20,6 +20,13 @@ export const routes: Routes = [
           { path: 'theme', loadComponent: () => import('./pages/menu/theme/theme.page').then((m) => m.ThemePage) },
           { path: 'language', loadComponent: () => import('./pages/menu/language/language.page').then((m) => m.LanguagePage) },
           { path: 'sync', loadComponent: () => import('./pages/menu/sync/sync.page').then((m) => m.SyncPage) },
+          {
+            path: 'gear',
+            children: [
+              { path: '', loadComponent: () => import('./pages/menu/gear/gear-check.page').then((m) => m.GearCheckPage) },
+              { path: 'items', loadComponent: () => import('./pages/menu/gear/items/gear-items.page').then((m) => m.GearItemsPage) },
+            ],
+          },
         ],
       },
       // documentation/Architektúra/Frontend.md "Login utáni default tab": Menü is the only enabled

@@ -3,6 +3,7 @@ export * from './adminSetPasswordRequest';
 export * from './adminUser';
 export * from './apiError';
 export * from './authTokens';
+export * from './gearItem';
 export * from './healthResponse';
 export * from './loginRequest';
 export * from './refreshRequest';

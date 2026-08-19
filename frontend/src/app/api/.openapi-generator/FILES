@@ -1,5 +1,4 @@
 .gitignore
-.openapi-generator-ignore
 README.md
 api.base.service.ts
 api.module.ts
@@ -8,6 +7,8 @@ api/admin.serviceInterface.ts
 api/api.ts
 api/auth.service.ts
 api/auth.serviceInterface.ts
+api/gear.service.ts
+api/gear.serviceInterface.ts
 api/health.service.ts
 api/health.serviceInterface.ts
 api/profile.service.ts
@@ -23,6 +24,7 @@ model/adminSetPasswordRequest.ts
 model/adminUser.ts
 model/apiError.ts
 model/authTokens.ts
+model/gearItem.ts
 model/healthResponse.ts
 model/loginRequest.ts
 model/models.ts

@@ -1,0 +1,31 @@
+type: object
+description: documentation/Subfeatures/Eszközök.md — user-owned gear catalog entry (type/item level, not a physical-instance inventory).
+required:
+  - id
+  - name
+  - deleted
+properties:
+  id:
+    type: string
+    format: uuid
+  name:
+    type: string
+    minLength: 1
+  notes:
+    type: string
+    nullable: true
+  deleted:
+    type: boolean
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

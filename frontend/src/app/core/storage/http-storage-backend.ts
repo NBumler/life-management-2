@@ -1,7 +1,9 @@
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
+import { GearService } from '../../api/api/gear.service';
 import { ProfileService } from '../../api/api/profile.service';
+import { GearItem } from '../../api/model/gearItem';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 import { StorageBackend } from './storage-backend';
@@ -10,6 +12,7 @@ import { StorageBackend } from './storage-backend';
 @Injectable({ providedIn: 'root' })
 export class HttpStorageBackend implements StorageBackend {
   private readonly profileApi = inject(ProfileService);
+  private readonly gearApi = inject(GearService);
 
   async getProfile(): Promise<UserProfile | null> {
     try {
@@ -37,6 +40,19 @@ export class HttpStorageBackend implements StorageBackend {
 
   deleteWeightHistoryEntry(id: string): Promise<WeightHistoryEntry> {
     return firstValueFrom(this.profileApi.deleteWeightHistoryEntry(id));
+  }
+
+  listGearItems(): Promise<GearItem[]> {
+    return firstValueFrom(this.gearApi.listGearItems());
+  }
+
+  /** POST with an existing id is an idempotent upsert server-side, so this covers both create and update. */
+  upsertGearItem(item: GearItem): Promise<GearItem> {
+    return firstValueFrom(this.gearApi.createGearItem(item));
+  }
+
+  deleteGearItem(id: string): Promise<GearItem> {
+    return firstValueFrom(this.gearApi.deleteGearItem(id));
   }
 }
 

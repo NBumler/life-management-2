@@ -1,0 +1,63 @@
+parameters:
+  - name: id
+    in: path
+    required: true
+    schema:
+      type: string
+      format: uuid
+get:
+  operationId: getGearItem
+  tags:
+    - gear
+  summary: A single gear item. Own deleted row returns 200 with deleted=true (not 404).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/GearItem.yaml'
+    '404':
+      description: No such item (or it belongs to another user).
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+put:
+  operationId: updateGearItem
+  tags:
+    - gear
+  summary: Full update (last-write-wins).
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/GearItem.yaml'
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/GearItem.yaml'
+    '409':
+      description: Entity already deleted, or another live item already has this name.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+delete:
+  operationId: deleteGearItem
+  tags:
+    - gear
+  summary: >-
+    Soft delete, idempotent. Cascades to soft-deleting this item on every referencing
+    PackingTemplateItem / PackingSessionItem row (documentation/Subfeatures/Eszközök.md).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/GearItem.yaml'

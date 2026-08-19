@@ -1,0 +1,17 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/menu"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ 'GEAR.TITLE' | translate }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-list>
+    <ion-item button routerLink="items">
+      <ion-icon name="bag-handle-outline" slot="start" aria-hidden="true"></ion-icon>
+      <ion-label>{{ 'GEAR.HUB_ITEMS' | translate }}</ion-label>
+    </ion-item>
+  </ion-list>
+</ion-content>

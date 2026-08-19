@@ -1,0 +1,36 @@
+get:
+  operationId: listGearItems
+  tags:
+    - gear
+  summary: The caller's gear catalog, live rows only (deleted = false).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/GearItemList.yaml'
+post:
+  operationId: createGearItem
+  tags:
+    - gear
+  summary: Create a gear item — idempotent upsert on the client-supplied id.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/GearItem.yaml'
+  responses:
+    '200':
+      description: Created or, on retry with the same id, the existing row.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/GearItem.yaml'
+    '409':
+      description: Another live item already has this name (documentation/Architektúra/Névegyediség.md).
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'

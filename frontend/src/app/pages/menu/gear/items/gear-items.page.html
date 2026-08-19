@@ -1,0 +1,75 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/menu/gear"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ 'GEAR.ITEMS.TITLE' | translate }}</ion-title>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-searchbar
+      [value]="query()"
+      (ionInput)="query.set($any($event.target).value ?? '')"
+      [placeholder]="'GEAR.ITEMS.SEARCH_PLACEHOLDER' | translate"
+      [debounce]="200"
+    ></ion-searchbar>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-list>
+    @if (editingId() === null) {
+      <ion-item button (click)="startAdd()">
+        <ion-icon name="add-outline" slot="start" aria-hidden="true"></ion-icon>
+        <ion-label>{{ 'GEAR.ITEMS.ADD' | translate }}</ion-label>
+      </ion-item>
+    } @else {
+      <ion-item>
+        <form [formGroup]="form" (ngSubmit)="save()" class="item-form">
+          <ion-input
+            formControlName="name"
+            [label]="'GEAR.ITEMS.NAME' | translate"
+            labelPlacement="stacked"
+            [autofocus]="true"
+          ></ion-input>
+          @if (nameConflictError(); as conflictMessage) {
+            <ion-text color="danger">
+              <p>{{ conflictMessage }}</p>
+            </ion-text>
+          }
+          <ion-input
+            formControlName="notes"
+            [label]="'GEAR.ITEMS.NOTES' | translate"
+            labelPlacement="stacked"
+          ></ion-input>
+          <div class="item-form-actions">
+            <ion-button fill="clear" type="button" (click)="cancelEdit()">{{ 'COMMON.CANCEL' | translate }}</ion-button>
+            <ion-button type="submit">{{ 'COMMON.SAVE' | translate }}</ion-button>
+          </div>
+        </form>
+      </ion-item>
+    }
+
+    @if (filteredItems().length === 0) {
+      <ion-item>
+        <ion-label color="medium">{{ 'GEAR.ITEMS.EMPTY' | translate }}</ion-label>
+      </ion-item>
+    }
+
+    @for (item of filteredItems(); track item.id) {
+      <ion-item>
+        <ion-label>
+          <h3>{{ item.name }}</h3>
+          @if (item.notes) {
+            <p>{{ item.notes }}</p>
+          }
+        </ion-label>
+        <ion-button fill="clear" (click)="startEdit(item)">
+          <ion-icon name="create-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+        </ion-button>
+        <ion-button fill="clear" color="danger" (click)="delete(item)">
+          <ion-icon name="trash-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+        </ion-button>
+      </ion-item>
+    }
+  </ion-list>
+</ion-content>

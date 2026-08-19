@@ -25,6 +25,10 @@ paths:
     $ref: 'openapi/paths/weight-history.yaml'
   /api/profile/weight-history/{id}:
     $ref: 'openapi/paths/weight-history-item.yaml'
+  /api/gear-items:
+    $ref: 'openapi/paths/gear-items.yaml'
+  /api/gear-items/{id}:
+    $ref: 'openapi/paths/gear-items-item.yaml'
 components:
   securitySchemes:
     bearerAuth:
@@ -62,3 +66,7 @@ components:
       $ref: 'openapi/components/schemas/WeightHistoryEntry.yaml'
     WeightHistoryEntryList:
       $ref: 'openapi/components/schemas/WeightHistoryEntryList.yaml'
+    GearItem:
+      $ref: 'openapi/components/schemas/GearItem.yaml'
+    GearItemList:
+      $ref: 'openapi/components/schemas/GearItemList.yaml'
