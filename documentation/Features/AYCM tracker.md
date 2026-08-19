@@ -6,37 +6,91 @@
 |---|---|
 | **Státusz** | `Váz` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Rendszeres kiadások]], [[Pénzügyek]], [[AYCM Statisztikák]], [[Bejelentkezés]], [[Backend-offline first]], [[Szinkronizációs központ]] |
+| **Kapcsolódó** | [[AYCM elfogadóhely hozzáadása]], [[AYCM Check-In]], [[AYCM Statisztikák]], [[Rendszeres kiadások]], [[Pénzügyek]], [[Szöveges keresés]], [[Nyelv választás]], [[Dark&Light mode]], [[Bejelentkezés]], [[Backend-offline first]], [[Szinkronizációs központ]] |
 
 ### Célállapot
 
-AYCM elfogadóhelyek, check-in-ek és megtakarítás / használat statisztikák követése. Belépés: Menü.
+AYCM használat követése: elfogadóhelyek + árszabályok, napi Check-In, megtérülés. Belépés: **Menü**. Vékony dashboard + drill-down a három gyerekre; bérlet-kötés a hubon (`AycmSettings`).
 
-**Ownership:** **user-owned** (partnerek, check-in-ek, szabályok) — [[Bejelentkezés]].
+**Ownership:** **user-owned** — [[Bejelentkezés]]. Nincs hivatalos AYCM-API / térkép / import.
+
+**Nem scope (MVP):** hivatalos partner-import; térkép; éjfélen átnyúló ársáv; több belinkelt kiadás; több Check-In ugyanazon a naptári napon; naptár-producer; értesítés; 4. gyerek.
 
 ### Funkcionális leírás
 
-Subfeature lista:
+#### Gyerekek
 
-- [[AYCM elfogadóhely hozzáadása]]
-- [[AYCM Check-In]]
-- [[AYCM Statisztikák]]
+- [[AYCM elfogadóhely hozzáadása]] (`TODO`) — partner + árszabály (idősáv).
+- [[AYCM Check-In]] (`Váz`) — napi egy belépés, snapshot.
+- [[AYCM Statisztikák]] (`TODO`) — hosszabb ablak / helyszín; a hub csak az **aktuális naptári hónapot** mutatja.
 
-A bérlet / előfizetés költségét **nem** itt kell külön tárolni, és a [[Pénzügyek]] / [[Rendszeres kiadások]] **nem** tud az AYCM-ről.
+Nincs 4. gyerek. A `linkedRecurringExpenseId` **itt** él, nem a [[Pénzügyek]]ben.
 
-**Kötés (AYCM-oldali FK):** `linkedRecurringExpenseId` → egy `RecurringExpense` `id`. Setup UI (választás / create deep-link) később, az AYCM specek kidolgozásakor.
+#### Entitás — `AycmSettings` (1:1 user)
 
-Az AYCM setup és a [[AYCM Statisztikák]] „megéri-e” kalkulációja a belinkelt sor `amountHuf` + `frequency` értékét olvassa, a havi leosztás a [[Rendszeres kiadások]] `monthlyEquivalentHuf` utility-je (nincs adatduplikáció).
+| Mező | Típus / szabály |
+|---|---|
+| `id` | UUID, kliens generálja az első mentéskor |
+| `linkedRecurringExpenseId` | Opcionális UUID → [[Rendszeres kiadások]] `RecurringExpense`. Nincs DB-FK kényszer a Pénzügyek táblára (laza csatolás); a kliens a helyi store-ból olvassa. |
+| `createdAt` / `updatedAt` | Audit |
 
-**`~` / homokóra** a megtérülésnél, ha: nincs `linkedRecurringExpenseId`; a belinkelt sor nincs / **nem beszámított** (`deleted` vagy `active = false` — [[Rendszeres kiadások]]); vagy a **Pénzügyek** feature flag ki van kapcsolva. Az AYCM flag ettől **független**. Saját `amountHuf` mező tilos.
+Nincs saját `amountHuf`. Üres start: nincs belinkelt kiadás.
+
+**Picker:** csak **beszámított** kiadás (`deleted = false` ∧ `active = true`). Link törlése (null) megengedett.
+
+**Deep-link:** ha a **Pénzügyek** flag be van kapcsolva → új `RecurringExpense` create ([[Rendszeres kiadások]]), visszatéréskor a létrehozott `id` belinkelhető. Pénzügyek flag ki → nincs create; a picker üres lehet.
+
+#### Bérletköltség / megéri-e (fogyasztói szerződés)
+
+Havi bérlet: a belinkelt sor `monthlyEquivalentHuf` — SSOT [[Rendszeres kiadások]]. Ez a hub **nem** másolja a képletet.
+
+`passCostComputable` = Pénzügyek flag **be** ∧ van `linkedRecurringExpenseId` ∧ a sor **beszámított**.
+
+Különben a megéri-e kártya **`~` / homokóra**. Nincs saját összeg-fallback.
+
+#### Látogatás értéke (hub-szintű szerződés)
+
+SSOT a Check-In snapshot `visitValueHuf`. **`visitValueHuf = listPriceHuf`**. A `coPaymentHuf` metaadat, **nem** adódik hozzá. Részletek: [[AYCM Check-In]], [[AYCM elfogadóhely hozzáadása]].
+
+Hub e havi Σ: az aktuális naptári hónap (kliens TZ) **élő** (`deleted = false`) Check-Injeinek `visitValueHuf` összege. Üres → **0 Ft** (nem `~`).
+
+Látogatásszám: ugyanennek a halmaznak a darabszáma (0 OK).
+
+**Megéri-e (hub):** ha `passCostComputable`: `Σ visitValueHuf − monthlyEquivalentHuf` (előjeles egész Ft, nincs 0-ra clamp). Különben `~`. A Σ ettől függetlenül szám.
+
+Hosszabb ablak / helyszín: [[AYCM Statisztikák]].
+
+#### Check-In — hub-szabályok (részletek a gyerekben)
+
+- **Max 1 Check-In / user / naptári nap** (kliens TZ). Az AYCM naponta egyszer használható. Második create ugyanarra a napra → validációs hiba; a meglévő szerkeszthető.
+- Rögzítéskor **snapshot** (partnernév, sáv címke, `listPriceHuf`, `coPaymentHuf`, `visitValueHuf`). Későbbi árszerkesztés / partner soft delete a múltat nem írja felül.
+- Nincs illeszkedő ársáv: `visitValueHuf = 0`, sárga jelzés, a sor **mégis** mentődik.
+
+#### Árszabály — hub-szabályok (részletek a gyerekben)
+
+Árszabály = idősáv + ár, `[startTime, endTime)` félig zárt. Nincs külön nyitvatartás. Ugyanazon a héten napon **nincs átfedés**. Nincs éjfél-átlépés; a nap vége: `endTime = 24:00`.
+
+#### Feature flag
+
+**Egy** `AYCM tracker` flag: Menü-pont + hub + három gyerek. Ki → menü rejtve.
+
+A [[Pénzügyek]] flag **független** (fent: `passCostComputable`).
 
 ### UI/UX elvárások
 
-_Nincs UI/UX érintettség._
+- **Belépés:** Menü → AYCM. Flag ki → a menüsor nincs.
+- **Dashboard** (i18n: [[Nyelv választás]]):
+  1. **E havi látogatások** — darabszám (mindig szám).
+  2. **E havi érték** — Σ `visitValueHuf` (mindig szám, 0 OK).
+  3. **Megéri-e** — előjeles Ft vagy `~`. Tap → [[AYCM Statisztikák]].
+  4. **Bérlet** — belinkelt kiadás neve + havi ekvivalens, vagy CTA a pickerre / deep-link. `~` ha nem `passCostComputable`.
+- **FAB / elsődleges CTA:** [[AYCM Check-In]] (ha ma már van Check-In → a mai szerkesztő, ne második create).
+- További belépők: elfogadóhelyek listája; statisztika.
+- Kontraszt: `~` / szám — [[Dark&Light mode]].
 
 ### Megjegyzések
 
-_Nincs megjegyzés._
+`Kész` akkor, ha a három gyerek `Kész`. A dashboard / settings / napi-egy / `visitValue` / snapshot szerződés innentől zárt.
 
 ### Nyitott kérdések
 
@@ -46,17 +100,28 @@ Nincs nyitott kérdés.
 
 ### Frontend
 
-Menü alatti AYCM belépő; subfeature képernyők; `linkedRecurringExpenseId` + SSOT olvasás a [[Rendszeres kiadások]] store-ból / `monthlyEquivalentHuf`-ból.
+- Képernyő: `AycmDashboardPage`. Route pl. `/tabs/menu/aycm`. Gyerekek: `/…/partners`, `/…/check-in`, `/…/stats` (pontos path a gyerek specekben).
+- Store: `AycmSettings` + Check-In lista (havi szűrés) + `monthlyEquivalentHuf` import a [[Rendszeres kiadások]]ból.
+- Picker: beszámított kiadások; Pénzügyek flag ki → üres + magyarázat.
+- Feature flag: menü registry + child guard.
 
 #### Backend-offline
 
-Partner / check-in mutáció: helyi store + outbox; kliens UUID. Sync: [[Szinkronizációs központ]].
-
-„Megéri-e”: a belinkelt [[Rendszeres kiadások]] sor helyi olvasása + `monthlyEquivalentHuf` (pure TS), csak ha a sor **beszámított**. Hiányzó / nem beszámított link / Pénzügyek flag ki → `~` / homokóra, nincs saját összeg-fallback. Lásd [[Backend-offline first]].
+- Dashboard olvasás helyi store-ból Backend-offline / Full-offline.
+- `AycmSettings` `PUT` → outbox + kliens UUID; sync: [[Szinkronizációs központ]].
+- Megéri-e / havi Σ **pure TS** (nincs homokóra a számítás miatt — `~` csak `passCostComputable = false`).
+- Check-In / partner mutáció: a gyerekek outboxa. Lásd [[Backend-offline first]].
 
 ### Backend
 
-_Nincs backend érintettség._ (partner / check-in / szabály API — gyerekekben vagy itt később; Auth / user scope: [[Bejelentkezés]])
+- Tábla: `aycm_settings` (`id` UUID, `user_id` unique, `linked_recurring_expense_id` UUID nullable, audit). Nincs FK a `recurring_expense` táblára (laza csatolás; a kliens ellenőrzi a beszámítást).
+- OpenAPI (singleton):
+
+| Metódus | Útvonal | Leírás |
+|---|---|---|
+| `GET` `PUT` | `/api/aycm-settings` | User 1:1; `GET` üresen `{ linkedRecurringExpenseId: null }` (létrehozás első `PUT`-kor vagy lazy) |
+
+- Partner / Check-In / szabály API: gyerek specek. User scope: [[Bejelentkezés]].
 
 ### Nyitott kérdések
 

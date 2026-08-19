@@ -110,7 +110,7 @@ Feb. 29. mint szándékolt nap: nem-szökőévben clamp 28-ra; következő szök
 #### Fogyasztók
 
 - [[Pénzügyek]] dashboard: Σ beszámított `monthlyEquivalentHuf`.
-- [[AYCM tracker]]: egy beszámított sor havi ekvivalense; különben `~`. Setup UI később.
+- [[AYCM tracker]]: egy beszámított sor havi ekvivalense; különben `~`. Picker / `AycmSettings`: [[AYCM tracker]] hub.
 - [[Naptár]]: **nem** producer.
 - [[Értesítések]]: közelgő fizetés **nem** az első kör; a típus hook marad a spechen.
 

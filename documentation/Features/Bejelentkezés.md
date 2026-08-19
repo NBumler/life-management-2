@@ -180,7 +180,7 @@ A DB / API réteg ownership döntései. Új feature specifikálásakor ezt a tá
 | Outdoor `Crag` / `Sector` / `Route` / `BoulderProblem` | [[Outdoor boulder admin]], [[Outdoor köteles admin]] |
 | Mászó / úszás / bicikli naplók | [[Mászónapló]], [[Úszás napló]], [[Biciklizés napló]] |
 | `StoredFood`, `Meal` / tételek, bevásárlólisták | [[Élelmiszer tárolás]], [[Étkezés]], [[Bevásárlás]] |
-| AYCM partnerek, check-in, szabályok, `linkedRecurringExpenseId` | [[AYCM tracker]] |
+| AYCM: `AycmSettings`, partnerek, árszabály, check-in | [[AYCM tracker]] |
 | GearCheck: eszközök, sablonok, pakolás futás | [[Eszközök]], [[Sablonok]], [[Pakolás]] |
 | Háztartási feladatok, élet tervek, események (`CalendarEvent`), tennivalók | [[Háztartási feladatok]], [[Élet tervek]], [[Események]], [[Tennivalók]] |
 | Rendszeres kiadások (`RecurringExpense`) | [[Rendszeres kiadások]], [[Pénzügyek]] |

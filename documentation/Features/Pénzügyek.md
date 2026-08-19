@@ -49,7 +49,7 @@ Nincs profil-kitöltöttségi gate: a hub és a gyerekek üres bruttó mellett i
 
 A Pénzügyek **generikus SSOT**. Nincs AYCM mező, jelölő, UI a hubon vagy a kiadás soron.
 
-A kötés az [[AYCM tracker]] spechen él: `linkedRecurringExpenseId` → egy rendszeres kiadás. A „megéri-e” az AYCM-ben a [[Rendszeres kiadások]] `monthlyEquivalentHuf` utility-jét olvassa a **beszámított** soron. Ha nincs link, a sor nem beszámított (törölt / szünet / hiányzik), vagy a Pénzügyek flag ki van kapcsolva → AYCM oldalon `~`. Részletek: [[AYCM tracker]] (setup UI később).
+A kötés az [[AYCM tracker]] spechen él: `AycmSettings.linkedRecurringExpenseId` → egy rendszeres kiadás; picker / deep-link a hubon. A „megéri-e” az AYCM-ben a [[Rendszeres kiadások]] `monthlyEquivalentHuf` utility-jét olvassa a **beszámított** soron. Ha nincs link, a sor nem beszámított, vagy a Pénzügyek flag ki van kapcsolva → AYCM oldalon `~`.
 
 #### Feature flag
 

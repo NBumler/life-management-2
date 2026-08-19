@@ -26,8 +26,8 @@ _Nincs megjegyzés._
 
 ### Nyitott kérdések
 
-- Időablakok és diagramtípusok
-- „Megéri-e a bérlet” kalkuláció képlete
+- Időablakok és diagramtípusok (a hub csak az **aktuális naptári hónapot** mutatja — [[AYCM tracker]])
+- Hosszabb távú megéri-e vs hub `Σ − monthlyEquivalentHuf`
 
 ## Architektúra
 

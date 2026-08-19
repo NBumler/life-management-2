@@ -30,7 +30,7 @@ _Nincs UI/UX érintettség._
 
 ### Megjegyzések
 
-_Nincs megjegyzés._
+Hub-szerződés (zárt, részletek a gyerek kidolgozásakor): árszabály = `[start, end)` idősáv + `listPriceHuf` + `coPaymentHuf` (default 0); nincs külön nyitvatartás; nincs átfedés ugyanazon a héten napon; nincs éjfél-átlépés; nap vége `24:00`. `visitValueHuf = listPriceHuf`. Lásd [[AYCM tracker]].
 
 ### Nyitott kérdések
 

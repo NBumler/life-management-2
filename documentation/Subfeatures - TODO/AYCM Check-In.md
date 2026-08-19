@@ -24,7 +24,9 @@ Szűrési szabály:
 
 $$\text{startTime} \le \text{checkInTime} < \text{endTime}$$
 
-4. A megtakarítás mértéke a megtalált szabály `price_huf` + `extra_co_payment_huf` értéke lesz.
+4. A látogatás értéke a megtalált szabály `listPriceHuf` (nem + copay). Copay snapshot metaadat.
+
+Hub-szabályok: **max 1 Check-In / naptári nap**; rögzítéskor snapshot; nincs sáv → 0 Ft, sárga, mentés mégis. Lásd [[AYCM tracker]].
 
 ### UI/UX elvárások
 
@@ -40,7 +42,7 @@ Ez a specifikáció még nem végleges — átnézendő.
 
 ### Nyitott kérdések
 
-- Árszabály modell véglegesítése ([[AYCM elfogadóhely hozzáadása]])
+- Árszabály modell véglegesítése ([[AYCM elfogadóhely hozzáadása]]); a hub-szerződés zárt: [[AYCM tracker]]
 
 ## Architektúra
 
