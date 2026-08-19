@@ -4,7 +4,7 @@
 
 | | |
 |---|---|
-| **Státusz** | `Váz` |
+| **Státusz** | `Kész` |
 | **Szülő** | [[Life Management 2.0]] |
 | **Kapcsolódó** | [[AYCM elfogadóhely hozzáadása]], [[AYCM Check-In]], [[AYCM Statisztikák]], [[Rendszeres kiadások]], [[Pénzügyek]], [[Szöveges keresés]], [[Nyelv választás]], [[Dark&Light mode]], [[Bejelentkezés]], [[Backend-offline first]], [[Szinkronizációs központ]] |
 
@@ -22,7 +22,7 @@ AYCM használat követése: elfogadóhelyek + árszabályok, napi Check-In, megt
 
 - [[AYCM elfogadóhely hozzáadása]] (`Kész`) — partner + árszabály (idősáv).
 - [[AYCM Check-In]] (`Kész`) — napi egy belépés, snapshot; múlt/jövő dátum szabad.
-- [[AYCM Statisztikák]] (`TODO`) — hosszabb ablak / helyszín; a hub csak az **aktuális naptári hónapot** mutatja.
+- [[AYCM Statisztikák]] (`Kész`) — preset ablakok, helyszín, látogatáslista; a hub csak az **aktuális naptári hónapot** mutatja.
 
 Nincs 4. gyerek. A `linkedRecurringExpenseId` **itt** él, nem a [[Pénzügyek]]ben.
 
@@ -90,7 +90,7 @@ A [[Pénzügyek]] flag **független** (fent: `passCostComputable`).
 
 ### Megjegyzések
 
-`Kész` akkor, ha a három gyerek `Kész`. A dashboard / settings / napi-egy / `visitValue` / snapshot szerződés innentől zárt.
+A három gyerek `Kész`. A dashboard / settings / napi-egy / `visitValue` / snapshot / statisztika-ablak szerződés zárt.
 
 ### Nyitott kérdések
 
