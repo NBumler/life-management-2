@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { IonIcon, IonLabel, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs } from '@ionic/angular/standalone';
 import { TranslatePipe } from '@ngx-translate/core';
 
@@ -10,6 +10,7 @@ import { FeatureFlagsService } from '../../core/config/feature-flags.service';
   selector: 'app-tabs',
   templateUrl: 'tabs.page.html',
   imports: [IonTabs, IonRouterOutlet, IonTabBar, IonTabButton, IonIcon, IonLabel, TranslatePipe],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TabsPage {
   private readonly featureFlags = inject(FeatureFlagsService);

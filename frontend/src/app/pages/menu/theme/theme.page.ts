@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import {
   IonBackButton,
   IonButtons,
@@ -20,6 +20,7 @@ import { ThemeMode, ThemeService } from '../../../core/config/theme.service';
   selector: 'app-theme',
   templateUrl: 'theme.page.html',
   imports: [IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton, IonContent, IonList, IonRadioGroup, IonItem, IonRadio, TranslatePipe],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ThemePage {
   private readonly themeService = inject(ThemeService);

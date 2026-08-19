@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import {
   IonBackButton,
   IonButtons,
@@ -20,6 +20,7 @@ import { LanguageMode, LanguageService } from '../../../core/config/language.ser
   selector: 'app-language',
   templateUrl: 'language.page.html',
   imports: [IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton, IonContent, IonList, IonRadioGroup, IonItem, IonRadio, TranslatePipe],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LanguagePage {
   private readonly languageService = inject(LanguageService);

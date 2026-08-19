@@ -1,5 +1,5 @@
 import { DatePipe, JsonPipe } from '@angular/common';
-import { Component, OnDestroy, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, effect, inject, signal } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import {
   AlertController,
@@ -68,6 +68,7 @@ const DRAIN_POLL_MS = 1000;
     JsonPipe,
     DatePipe,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SyncPage implements ViewWillEnter, OnDestroy {
   private readonly fb = inject(FormBuilder);

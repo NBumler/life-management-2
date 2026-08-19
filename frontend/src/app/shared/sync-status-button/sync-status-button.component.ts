@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
 import { IonBadge, IonButton, IonIcon, IonSpinner } from '@ionic/angular/standalone';
@@ -15,6 +15,7 @@ import { SyncEngineService } from '../../core/sync/sync-engine.service';
   templateUrl: 'sync-status-button.component.html',
   styleUrls: ['sync-status-button.component.scss'],
   imports: [IonButton, IonIcon, IonBadge, IonSpinner],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SyncStatusButtonComponent {
   private readonly router = inject(Router);
