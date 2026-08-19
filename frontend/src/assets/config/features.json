@@ -1,0 +1,21 @@
+{
+  "tab.kaja": true,
+  "kaja.recept": true,
+  "kaja.statisztika": true,
+  "tab.edzes": true,
+  "edzes.hetiTerv": true,
+  "edzes.maszonaplo": true,
+  "edzes.uszas": true,
+  "edzes.bicikli": true,
+  "tab.feladatok": true,
+  "feladatok.eletTervek": true,
+  "feladatok.naptar": true,
+  "feladatok.esemenyek": true,
+  "feladatok.googleExport": false,
+  "menu.bevasarlas": true,
+  "menu.lepesszam": true,
+  "menu.ertesitesek": true,
+  "menu.penzugyek": true,
+  "menu.aycm": true,
+  "menu.gearcheck": true
+}
