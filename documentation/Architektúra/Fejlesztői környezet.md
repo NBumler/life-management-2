@@ -56,9 +56,10 @@ A `frontend/` belső szervezése (`pages/`, `shared/`, `core/`, `api/`) és a r�
 | Backend | `cd backend && ./gradlew bootRun` (`local` profil) — `http://localhost:8080` |
 | Web frontend | `cd frontend && npm start` — a `/api` hívások a `proxy.conf.json`-on át mennek a 8080-ra |
 | API kliens generálás | `cd frontend && npm run gen:api` (a spec: `backend/src/main/resources/openapi.yaml`) |
-| Tesztek | `./gradlew test` · `npm test` |
+| Tesztek | `./gradlew test` · `npm test` (interaktív, `ChromeHeadlessCI` helyett `Chrome`-mal, watch módban) · `npm run test:ci` (nem-interaktív, egyszeri futás — CI és agent-munkamenetek ezt használják) |
 
 - A **web** kliens **relatív** `/api` útvonalat hív (dev: proxy, prod: reverse proxy) — így nincs CORS a böngészős fejlesztésben.
+- `npm run test:ci` (`frontend/`) a `karma.conf.js`-ben definiált `ChromeHeadlessCI` launcher-t használja (`ChromeHeadless` + `--no-sandbox --disable-gpu`), és `--watch=false`-szal egyszer fut le. Ezen a gépen a `karma-chrome-launcher` nem találja meg automatikusan a Chrome-ot: a `CHROME_BIN` env változót explicit be kell állítani a tényleges elérési útra (`C:\Program Files\Google\Chrome\Application\chrome.exe`). Bash toolból: `CHROME_BIN="/c/Program Files/Google/Chrome/Application/chrome.exe" npm run test:ci`.
 - Env változók: `POSTGRES_*`, `LM2_JWT_SECRET`, `LM2_ADMIN_API_KEY`. A `.env.example` verziókövetett, a `.env` és a `backend/src/main/resources/application-local.yml` nem — [[Backend]].
 - Új user létrehozása fejlesztéshez: admin `curl` — [[Bejelentkezés]].
 
