@@ -24,15 +24,15 @@ A naptár **fogyasztó**. Az előfordulásokat a producer specek számolják (h�
 
 #### Producer registry
 
-Chip és előfordulás csak **élő** producerből: a forrás-spec `Kész`, és a feature flagje be van kapcsolva.
+Chip és előfordulás csak **élő** producerből: a forrás-spec `Kész`, a feature flagje be van kapcsolva, **és** a spec producer-szerződést ír (`MVP` = Igen). A spec `Kész` **önmagában nem** elég (lásd [[Élet tervek]]).
 
 | `source` | Spec | MVP |
 |---|---|---|
 | `HOUSEHOLD_TASK` | [[Háztartási feladatok]] | Igen |
 | `EVENT` | [[Események]] | Igen (saját Események flag is kell) |
-| `LIFE_PLAN` | [[Élet tervek]] | Nem (spec `TODO`) |
+| `LIFE_PLAN` | [[Élet tervek]] | Nem (spec `Kész`; lista-only, nincs emit / chip) |
 
-Új producer: a saját specje leírja a vetítést; a naptár chipje automatikusan belép. A naptár specet csak akkor kell bántani, ha a fogyasztói szerződés (DTO / nézet) változik.
+Új producer: a saját specje leírja a vetítést **és** ez a tábla `Igen`-re vált; a naptár chipje akkor lép be. A naptár specet a fogyasztói szerződés (DTO / nézet) változásakor is bántani kell.
 
 #### Előfordulás DTO (fogyasztói szerződés)
 
@@ -88,7 +88,7 @@ Nincs nap / hét rács az MVP-ben.
 #### Forrás-szűrő (chipek)
 
 - Multi-select, **VAGY** (unió). Alap: minden **élő** chip be.
-- Élő chipek: Háztartási; **Események** ha a spec `Kész` és az Események flag be. [[Élet tervek]] chip **nincs**, amíg a specje nem `Kész`.
+- Élő chipek: Háztartási; **Események** ha a spec `Kész` és az Események flag be. [[Élet tervek]] chip **nincs** (nem producer; opcionális `targetDate` csak a terv-listán).
 - Minden chip ki → üres rács és üres napi listák (a chipek maradnak, vissza lehet kapcsolni).
 - A szűrő a hónap és a napi listán **ugyanaz**; a napi képernyőn is látszanak / állíthatók.
 - Nyitáskor a chipek újra mind be (nincs device-local szűrő-memória).
@@ -139,7 +139,7 @@ Nincs nyitott kérdés.
 
 ### Backend
 
-_Nincs backend érintettség._ (producer API: [[Háztartási feladatok]], [[Események]]; később [[Élet tervek]])
+_Nincs backend érintettség._ (producer API: [[Háztartási feladatok]], [[Események]]. [[Élet tervek]] nem producer.)
 
 ### Nyitott kérdések
 

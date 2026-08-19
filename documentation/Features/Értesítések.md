@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Kész` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Élelmiszer tárolás]], [[Lépésszám követés]], [[Tápérték kalkulátor]], [[Étkezés]], [[Háztartási feladatok]], [[Rendszeres kiadások]], [[Tennivalók]], [[Események]], [[Frontend]], [[Bejelentkezés]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Élelmiszer tárolás]], [[Lépésszám követés]], [[Tápérték kalkulátor]], [[Étkezés]], [[Háztartási feladatok]], [[Rendszeres kiadások]], [[Tennivalók]], [[Események]], [[Élet tervek]], [[Frontend]], [[Bejelentkezés]], [[Backend-offline first]] |
 
 ### Célállapot
 
@@ -85,6 +85,7 @@ Lokális (készüléken ütemezett) értesítések a fontos küszöbökről. Az 
 Hook / placeholder — lead time és szöveg a forrás-spec készültekor:
 
 - [[Rendszeres kiadások]] — közelgő fizetés (a forrás-spec MVP-je **kint hagyta**; lead time / ütemezés akkor, ha a típus aktívvá válik)
+- [[Élet tervek]] — céldátum / állapot (a forrás-spec MVP-je **kint hagyta**)
 
 #### Ismétlés-védelem (deduplikáció) — magyarázat
 
