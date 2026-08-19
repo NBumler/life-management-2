@@ -1,0 +1,52 @@
+get:
+  operationId: getSyncChanges
+  tags:
+    - sync
+  summary: Delta pull of the caller's user-owned rows plus the shared catalog, tombstones included.
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: since
+      in: query
+      required: false
+      description: Opaque cursor from a previous response's nextCursor. Omitted on the first pull.
+      schema:
+        type: string
+    - name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int32
+        default: 500
+        minimum: 1
+        maximum: 2000
+    - name: types
+      in: query
+      required: false
+      description: Optional filter to a subset of entity types.
+      style: form
+      explode: false
+      schema:
+        type: array
+        items:
+          type: string
+  responses:
+    '200':
+      description: One page of changes.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/SyncChangesResponse.yaml'
+    '401':
+      description: Missing or invalid bearer token.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+    '410':
+      description: since is older than the tombstone retention horizon; client must do a full re-pull.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'

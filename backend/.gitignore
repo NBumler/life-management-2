@@ -35,3 +35,7 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Local secrets (documentation/Architektúra/Fejlesztői környezet.md) ###
+application-local.yml
+application-local.yaml

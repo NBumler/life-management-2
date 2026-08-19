@@ -1,0 +1,19 @@
+type: object
+description: Uniform error shape. `code` drives client-side i18n; `message` is fallback/diagnostic text only.
+required:
+  - code
+  - message
+properties:
+  code:
+    type: string
+    example: UNIQUE_VIOLATION
+  message:
+    type: string
+  field:
+    type: string
+    nullable: true
+  conflictingId:
+    type: string
+    format: uuid
+    nullable: true
+    description: Set only for 409 UNIQUE_VIOLATION — the id of the existing live row that conflicts.

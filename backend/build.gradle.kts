@@ -2,6 +2,7 @@ plugins {
 	java
 	id("org.springframework.boot") version "4.1.0"
 	id("io.spring.dependency-management") version "1.1.7"
+	id("org.openapi.generator") version "7.24.0"
 }
 
 group = "hu.bumler.lm2"
@@ -24,6 +25,10 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 	implementation("org.springframework.boot:spring-boot-starter-webmvc")
 	implementation("org.flywaydb:flyway-database-postgresql")
+	implementation("org.openapitools:jackson-databind-nullable:0.2.11")
+	implementation("io.jsonwebtoken:jjwt-api:0.13.0")
+	runtimeOnly("io.jsonwebtoken:jjwt-impl:0.13.0")
+	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.13.0")
 	runtimeOnly("org.postgresql:postgresql")
 	testImplementation("org.springframework.boot:spring-boot-starter-data-jpa-test")
 	testImplementation("org.springframework.boot:spring-boot-starter-flyway-test")
@@ -38,4 +43,34 @@ dependencies {
 
 tasks.withType<Test> {
 	useJUnitPlatform()
+}
+
+// OpenAPI spec-first: backend/src/main/resources/openapi.yaml is the hand-written SSOT
+// (see documentation/Architektúra/Backend.md). Only interfaces + DTOs are generated;
+// controllers implement the generated interfaces.
+openApiGenerate {
+	generatorName.set("spring")
+	inputSpec.set(layout.projectDirectory.file("src/main/resources/openapi.yaml").asFile.path)
+	outputDir.set(layout.buildDirectory.dir("generated/openapi").get().asFile.path)
+	apiPackage.set("hu.bumler.lm2.api")
+	modelPackage.set("hu.bumler.lm2.api.model")
+	configOptions.set(
+		mapOf(
+			"interfaceOnly" to "true",
+			"useTags" to "true",
+			"documentationProvider" to "none",
+		)
+	)
+}
+
+sourceSets {
+	main {
+		java {
+			srcDir(layout.buildDirectory.dir("generated/openapi/src/main/java"))
+		}
+	}
+}
+
+tasks.named("compileJava") {
+	dependsOn("openApiGenerate")
 }

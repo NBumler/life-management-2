@@ -1,0 +1,19 @@
+type: object
+required:
+  - serverTime
+  - nextCursor
+  - hasMore
+  - changes
+properties:
+  serverTime:
+    type: string
+    format: date-time
+  nextCursor:
+    type: string
+    description: Opaque cursor; pass back as `since` to continue paging.
+  hasMore:
+    type: boolean
+  changes:
+    type: array
+    items:
+      $ref: 'SyncChangeItem.yaml'

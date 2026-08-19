@@ -1,0 +1,24 @@
+openapi: 3.0.3
+info:
+  title: Life Management 2.0 API
+  version: 0.0.1
+paths:
+  /api/health:
+    $ref: 'openapi/paths/health.yaml'
+  /api/sync/changes:
+    $ref: 'openapi/paths/sync-changes.yaml'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ApiError:
+      $ref: 'openapi/components/schemas/ApiError.yaml'
+    HealthResponse:
+      $ref: 'openapi/components/schemas/HealthResponse.yaml'
+    SyncChangesResponse:
+      $ref: 'openapi/components/schemas/SyncChangesResponse.yaml'
+    SyncChangeItem:
+      $ref: 'openapi/components/schemas/SyncChangeItem.yaml'

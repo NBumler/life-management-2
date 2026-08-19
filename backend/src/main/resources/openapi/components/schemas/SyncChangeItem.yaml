@@ -1,0 +1,22 @@
+type: object
+required:
+  - entityType
+  - id
+  - deleted
+  - updatedAt
+properties:
+  entityType:
+    type: string
+    example: HouseholdTask
+  id:
+    type: string
+    format: uuid
+  deleted:
+    type: boolean
+  updatedAt:
+    type: string
+    format: date-time
+  data:
+    type: object
+    nullable: true
+    description: Same shape as `GET` by id for this entity type. Null for tombstones (deleted = true).

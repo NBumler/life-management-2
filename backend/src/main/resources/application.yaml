@@ -1,3 +1,13 @@
 spring:
   application:
     name: backend
+  datasource:
+    url: jdbc:postgresql://localhost:5432/${POSTGRES_DB:lm2}
+    username: ${POSTGRES_USER:lm2}
+    password: ${POSTGRES_PASSWORD:change-me}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
