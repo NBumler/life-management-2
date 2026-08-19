@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Váz` |
 | **Szülő** | _Nincs szülő (hub / architektúra / gyökér)._ |
-| **Kapcsolódó** | [[Backend]], [[Frontend]], [[Backend-offline first]], [[Mennyiség mező]], [[Szöveges keresés]], [[Névegyediség]], [[Bejelentkezés]], [[SPEC-TEMPLATE]] |
+| **Kapcsolódó** | [[Backend]], [[Frontend]], [[Fejlesztői környezet]], [[Backend-offline first]], [[Mennyiség mező]], [[Szöveges keresés]], [[Névegyediség]], [[Bejelentkezés]], [[SPEC-TEMPLATE]] |
 
 ### Célállapot
 
@@ -90,10 +90,11 @@ Minden feature kötelezően Backend-offline first. Közös mechanizmus: helyi st
 
 ### Backend
 
-- Java — Spring Boot
-- API szerződés: OpenAPI (Swagger) — Spring Boot interface + Ionic Angular kliens generálás
+- Java — Spring Boot, Gradle build
+- **PostgreSQL** + Flyway migráció (a partial unique index és a `timestamptz` követelmény miatt nem opcionális)
+- API szerződés: OpenAPI (Swagger), **spec-first** — ebből generálódik a Spring Boot interface és az Ionic Angular kliens is
 - [[Backend-offline first]] (kötelező)
-- Részletek: [[Backend]]
+- Részletek: [[Backend]]; monorepo elrendezés és fejlesztői futtatás: [[Fejlesztői környezet]]
 
 ### Nyitott kérdések
 

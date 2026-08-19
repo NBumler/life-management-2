@@ -6,7 +6,7 @@
 |---|---|
 | **Státusz** | `Kész` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Backend]], [[Backend-offline first]], [[Szinkronizációs központ]], [[Bejelentkezés]], [[Kaja]], [[Edzés]], [[Tennivalók]], [[Nyelv választás]], [[Dark&Light mode]], [[Mennyiség mező]], [[Szöveges keresés]], [[Névegyediség]] |
+| **Kapcsolódó** | [[Backend]], [[Fejlesztői környezet]], [[Backend-offline first]], [[Szinkronizációs központ]], [[Bejelentkezés]], [[Kaja]], [[Edzés]], [[Tennivalók]], [[Nyelv választás]], [[Dark&Light mode]], [[Mennyiség mező]], [[Szöveges keresés]], [[Névegyediség]] |
 
 ### Célállapot
 
@@ -54,15 +54,17 @@ Tájékoztató pillanatkép (2026-08, nem szerződés): Angular 22, Ionic 8.8.x,
 
 #### Rétegzés
 
+A négy felső szintű mappa (`pages/`, `shared/`, `core/`, `api/`) a repóban lévő `claude-hobby-starter-kit` `ionic-angular-conventions` konvencióját követi; a projekt-specifikus rétegek a `core/` alatt élnek.
+
 | Réteg | Felelősség | Szabály |
 |---|---|---|
-| `core/api/generated/` | Generált OpenAPI kliens (modellek + service-ek) | **Soha nem kézzel szerkesztett.** Csak a `SyncEngine` és a `HttpStorageBackend` hívja — feature kód **nem** hívhatja közvetlenül. |
+| `src/app/api/` | Generált OpenAPI kliens (modellek + service-ek) | **Soha nem kézzel szerkesztett.** Csak a `SyncEngine` és a `HttpStorageBackend` hívja — page / komponens kód **nem** hívhatja közvetlenül. |
 | `core/storage/` | `StorageBackend` absztrakció | Két implementáció: `SqliteStorageBackend` (natív: helyi store + outbox) és `HttpStorageBackend` (web: közvetlen hívás a generált kliensen). A választás az `offlineCapable` képesség alapján történik, egyszer, DI-ban. |
-| `data/<entitás>/` | `<Entity>Repository` | Tipizált homlokzat a `StorageBackend` felett; olvasás **signal**-ként; mutáció natívon egyetlen helyi tranzakcióban store + outbox — [[Backend-offline first]] §5. |
+| `core/data/<entitás>.repository.ts` | `<Entity>Repository` | Tipizált homlokzat a `StorageBackend` felett; olvasás **signal**-ként; mutáció natívon egyetlen helyi tranzakcióban store + outbox — [[Backend-offline first]] §5. |
 | `core/sync/` | `SyncEngine`, `OfflineQueueService`, `OutboxMigrator` | Drain / pull / állapotfelismerés; a generált kliens egyetlen üzleti fogyasztója. |
-| `core/session/` | `AuthSession` | Token életciklus, secure storage, guard — [[Bejelentkezés]]. |
-| `core/config/` | `FeatureFlags`, `NetworkStatus`, `AppConfig` | Build asset + platform képességek. |
-| `features/<feature>/` | Képernyők, feature-specifikus utility | Lazy route; csak repositoryt és shared komponenst használ. |
+| `core/session/` | `AuthSession`, auth guard, token interceptor | Token életciklus, secure storage — [[Bejelentkezés]]. |
+| `core/config/` | `FeatureFlags`, `NetworkStatus`, `AppConfig` | Build / futásidejű asset + platform képességek. |
+| `pages/<oldal>/` | Képernyők; a gyerek komponensek a szülő mappájában | Lazy route; csak repositoryt és shared komponenst használ. Névkonvenció: `{név}.page.ts`, `{név}.component.ts`, `{név}.service.ts`, `{név}.guard.ts`, `{név}.repository.ts`. |
 | `shared/` | Közös komponensek és pure TS utility-k | [[Mennyiség mező]], [[Szöveges keresés]], [[Névegyediség]], nehézségi skála, DateTime modul, `SyncStatusButton`. |
 
 - A **repository homlokzat** miatt a feature kód nem tud a platformról: ugyanaz a hívás natívon local-first outboxot ír, weben HTTP-t hív. A web így nem külön kódág, hanem egy backend-implementáció.
@@ -77,6 +79,7 @@ Tájékoztató pillanatkép (2026-08, nem szerződés): Angular 22, Ionic 8.8.x,
 - Feature-szintű állapot: a `<Entity>Repository` signaljai + komponens-lokális signal. Cross-feature megosztott származtatás `computed()`-tel (pl. `activityExtraKcal`).
 - RxJS csak a határon (HTTP, Capacitor plugin események, debounce); a UI felé signal.
 - Változás-észlelés: OnPush; a repository írás után a signal frissül, nincs kézi `detectChanges`.
+- A `claude-hobby-starter-kit` `ionic-angular-conventions` skillje template-ekben `async` pipe-ot ír: ezt a Signals döntés **felváltja**. A skill többi szabálya érvényben marad (standalone komponensek, OnPush, strict TypeScript `any` nélkül, HTTP kizárólag a generált kliensen / vékony service-en át, nincs hardcode felhasználói szöveg).
 
 #### Navigáció — tab registry
 
@@ -269,9 +272,10 @@ Az **első kiadás kiadott targetje a natív build**; a web nem QA-zott, nem pub
 #### OpenAPI / kódgenerálás
 
 - A backend felé menő HTTP hívások és DTO-k **nem** kézzel íródnak: az OpenAPI spec-ből generálódnak. Változás → OpenAPI frissítés → újragenerálás.
-- **Kimeneti mappa:** `src/app/core/api/generated/` — verziókövetve, de **soha nem kézzel szerkesztve** (a PR review ezt kényszeríti ki).
+- **Spec:** `backend/src/main/resources/openapi.yaml` (kézzel írt SSOT — [[Backend]]). **Kimeneti mappa:** `frontend/src/app/api/` — verziókövetve (hogy `npm ci && ng build` JVM nélkül is fusson), de **soha nem kézzel szerkesztve**.
+- **Generálás:** `npm run gen:api` (openapi-generator `typescript-angular` profil). A CI újragenerál és eltérésnél hibázik, tehát elavult kliens nem maradhat a repóban — [[Backend]].
 - A generált kódot csak a `SyncEngine` (drain visszajátszás + `GET /api/sync/changes` pull) és a `HttpStorageBackend` használja.
-- Az OpenAPI fájl helye a monorepóban és a generátor profil / verzió a [[Backend]] körébe tartozik.
+- **API base URL:** weben relatív `/api` (dev proxy / reverse proxy), natívon a futásidejű `assets/config/app-config.json` `apiBaseUrl` mezője — a telepítő szkript ezt írja át ([[Fejlesztői környezet]]).
 
 #### Backend-offline
 

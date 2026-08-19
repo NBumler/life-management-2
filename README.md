@@ -2,9 +2,12 @@
 
 Személyes life-management alkalmazás (hibrid mobil + web). Stack terv:
 
-- **Backend:** Java – Spring Boot
-- **Frontend / mobil:** Ionic – Angular
-- **Offline:** backend-offline first + SQLite outbox queue
+- **Backend:** Java – Spring Boot (Gradle) + PostgreSQL, Flyway migráció
+- **Frontend / mobil:** Ionic – Angular (Capacitor), Angular Signals
+- **API szerződés:** OpenAPI spec-first – ebből generálódik a Spring interface és az Angular kliens
+- **Offline:** backend-offline first + SQLite outbox queue (natív); a web build online-only
+
+Tervezett monorepo elrendezés (kód még nincs): `backend/`, `frontend/`, `shared/fixtures/`, `scripts/`, `documentation/`. Részletek: [`Fejlesztői környezet`](documentation/Architekt%C3%BAra/Fejleszt%C5%91i%20k%C3%B6rnyezet.md).
 
 ## Dokumentáció
 

@@ -4,7 +4,7 @@
 
 | | |
 |---|---|
-| **Státusz** | `Váz` |
+| **Státusz** | `Kész` |
 | **Szülő** | [[Life Management 2.0]] |
 | **Kapcsolódó** | [[Bevásárlás]], [[Élelmiszerek]], [[Recept]], [[Tápérték kalkulátor]], [[Mennyiség mező]], [[Bejelentkezés]], [[Backend-offline first]] |
 
@@ -49,8 +49,8 @@ Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító 
 
 ### Backend
 
-Közös Kaja OpenAPI scope később összevonható itt. Az [[Élelmiszerek]] katalógus entitás / CRUD a gyerek spechen (`Food`, **shared**); [[Recept]] shared; tárolás / étkezés user-owned — [[Bejelentkezés]].
+**Nincs** aggregált „Kaja API" ebben a szülőben: a szerződés erőforrás / tag alapon szerveződik (`foods`, `stored-foods`, `recipes`, `meals`), és a gyerek specek a birtokosai — a hub navigációs fogalom, nem API-határ ([[Backend]]). Itt csak a közös döntések élnek: az [[Élelmiszerek]] katalógus (`Food`, **shared**) és a [[Recept]] shared; tárolás / étkezés user-owned — [[Bejelentkezés]]. Cascade törlés minden user hivatkozó adatára: [[Backend-offline first]].
 
 ### Nyitott kérdések
 
-- Közös Kaja backend / OpenAPI scope a szülőben vs csak a gyerekekben (Élelmiszerek már a gyerekben)
+Nincs nyitott kérdés.
