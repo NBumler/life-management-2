@@ -65,10 +65,14 @@ A tab lista **konfigurációból** (pl. tömb / feature-flagelt tab registry) j�
 
 #### Backend-offline
 
-- **Lokális tárolás / offline:** SQLite + `OfflineQueueService` — [[Backend-offline first]], [[Szinkronizációs központ]]
-- A generált kliens a [[Szinkronizációs központ]] / `OfflineQueueService` alá kerül (online közvetlen hívás; offline esetén a queue a generált endpoint URL + payload alapján dolgozik).
-- Külső API-k (pl. Open Food Facts) **közvetlenül a kliensről** hívódnak, nem a [[Backend]] proxyján át — [[Backend-offline first]].
-- Kritikus számítási konstansok (pl. MET értékek) pure TypeScript utility-ként a frontenden is — optimista UI (lásd [[Backend-offline first]], [[Tápérték kalkulátor]]).
+SSOT: [[Backend-offline first]]. Az itteni pontok csak a frontend architektúrába illesztést rögzítik.
+
+- **Platform-hatókör:** az offline működés (SQLite + outbox + pull) **natív** platformon van; a **web build online-only**. Képesség-flag: `offlineCapable` — a feature kód erre ágazik, nem platform-stringre.
+- **Lokális tárolás:** SQLite, userenként külön DB fájl; a UI **kizárólag** a helyi store-ból olvas.
+- **Rétegzés (döntés):** a mutációk **repository rétegen** mennek (`<Entity>Repository`), ami egy helyi tranzakcióban ír a store-ba és az outboxba — **nem** HTTP interceptoron, mert local-first írás esetén a user-akció pillanatában nincs HTTP hívás. A generált OpenAPI klienst a `SyncEngine` használja (drain visszajátszás + `GET /api/sync/changes` pull).
+- **Külső API-k** (pl. Open Food Facts, Health Connect) **közvetlenül a kliensről** hívódnak, nem a [[Backend]] proxyján át — [[Backend-offline first]].
+- Kritikus számítási konstansok (pl. MET értékek) pure TypeScript utility-ként a frontenden is; így offline is teljes értékű a számítás (lásd [[Backend-offline first]], [[Tápérték kalkulátor]]).
+- **`~` / homokóra** kizárólag „nem számolható, mert hiányzik bemenet” jelentésben; a hálózati állapotot a globális offline indikátor és a [[Szinkronizációs központ]] jelzi — [[Backend-offline first]].
 
 ### Backend
 
@@ -77,7 +81,8 @@ _Nincs backend érintettség._ (szerveroldali szerződés: [[Backend]])
 ### Nyitott kérdések
 
 - State management megoldás (Signals / NgRx / egyéb)
-- Capacitor plugin lista (barcode, health sync, push notifications, stb.)
+- Capacitor plugin lista (barcode, health sync, SQLite plugin + séma-migrációs tooling, stb.)
 - openapi-generator Angular generator verzió / output mappa konvenció
-- Generált kliens illesztése az `OfflineQueueService`-hez (interceptor vs wrapper)
 - Tab → feature hozzárendelés részletei (mi pontosan melyik tab alá kerül vs csak a Menüből érhető el)
+
+Generált kliens illesztése az offline réteghez: lezárva (repository réteg, nem interceptor) — [[Backend-offline first]].

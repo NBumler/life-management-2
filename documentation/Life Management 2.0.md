@@ -19,7 +19,7 @@ Személyes life-management alkalmazás (hibrid mobil + web). Több felhasználó
 - Minden feature **feature flag**-hez kötve a hibridben, hogy az alkalmazás egyes feature-ök nélkül is kiadható legyen.
 - Input mezők egységesítve; web vs mobil esetén a platformnak megfelelő, legkényelmesebb kontroll.
 - Ha egy felületen egyértelmű, hogy melyik inputot fogja használni a user, az mező legyen automatikusan fókuszban.
-- Offline / backend-offline állapot kezelése: [[Backend-offline first]] + [[Szinkronizációs központ]].
+- Offline / backend-offline állapot kezelése: [[Backend-offline first]] + [[Szinkronizációs központ]]. Az offline működés a **natív** builden teljes; a **web build online-only**.
 
 #### Dokumentációs konvenciók
 
