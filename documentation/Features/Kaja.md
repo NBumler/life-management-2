@@ -24,7 +24,10 @@ Subfeature lista:
 
 ### UI/UX elvárások
 
-_Nincs UI/UX érintettség._
+- Alsó tab: **Kaja** (`/tabs/food`) — app-shell SSOT: [[Frontend]].
+- A tab gyökerén **felső szegmens**: Étkezés | Tárolás | Katalógus | Recept | Stat. Alapértelmezett szegmens: [[Étkezés]] dashboard.
+- Mélyebb képernyők (részletek, szerkesztő) push-sal nyílnak, a szegmens nélkül.
+- Flag: a `tab.kaja` fedi az Étkezés / Tárolás / Katalógus szegmenst; a [[Recept]] és a [[Kaja statisztika]] saját flaget kap ([[Frontend]] registry). Ki → az adott szegmens rejtve.
 
 ### Megjegyzések
 

@@ -16,7 +16,7 @@ Személyes life-management alkalmazás (hibrid mobil + web). Több felhasználó
 
 #### Általános elvek
 
-- Minden feature **feature flag**-hez kötve a hibridben, hogy az alkalmazás egyes feature-ök nélkül is kiadható legyen.
+- Minden feature **feature flag**-hez kötve a hibridben, hogy az alkalmazás egyes feature-ök nélkül is kiadható legyen. A flag-ek **build-time ship configból** jönnek (nincs in-app kapcsoló); a core (nem kapcsolható) kör és a teljes flag registry SSOT-ja: [[Frontend]].
 - Input mezők egységesítve; web vs mobil esetén a platformnak megfelelő, legkényelmesebb kontroll.
 - Ha egy felületen egyértelmű, hogy melyik inputot fogja használni a user, az mező legyen automatikusan fókuszban.
 - Offline / backend-offline állapot kezelése: [[Backend-offline first]] + [[Szinkronizációs központ]]. Az offline működés a **natív** builden teljes; a **web build online-only**.
@@ -64,7 +64,7 @@ _Nincs._
 
 ### UI/UX elvárások
 
-Alsó tab bar: lásd [[Frontend]] (Kaja, Edzés, Feladatok, Menü).
+Alsó tab bar: Kaja, Edzés, Feladatok, Menü. Tab-térkép, tabon belüli navigáció, route-térkép és a minden tabon látszó szinkronizációs státuszjelző: [[Frontend]] (app-shell SSOT).
 
 ### Megjegyzések
 
@@ -78,8 +78,10 @@ Nincs nyitott kérdés.
 
 ### Frontend
 
-- Ionic — Angular (hibrid)
+- Ionic — Angular (hibrid), standalone komponensek
+- Állapotkezelés: Angular Signals + root service-ek (nincs NgRx)
 - OpenAPI-ból generált kliens
+- Az első kiadás **kiadott** targetje a natív build; a web online-only és nem QA-zott platform
 - Részletek: [[Frontend]]
 
 #### Backend-offline

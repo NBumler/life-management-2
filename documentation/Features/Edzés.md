@@ -28,7 +28,10 @@ Fejlesztési sorrend: Gyakorlat → Edzésnapló → Heti terv.
 
 ### UI/UX elvárások
 
-_Nincs UI/UX érintettség._ (gyerek specek)
+- Alsó tab: **Edzés** (`/tabs/workout`) — app-shell SSOT: [[Frontend]].
+- A tab gyökerén **felső szegmens**: Edzésnapló | Heti terv | Mászás | Úszás | Bicikli. Alapértelmezett szegmens: [[Edzésnapló]]. A [[Gyakorlat]] törzsadat a fejlécből nyílik (fogaskerék), ahogy a [[Mászónapló]] is a fejlécben tartja az admint.
+- Flag: a `tab.edzes` fedi az Edzésnaplót és a Gyakorlatot; a [[Heti terv]], [[Mászónapló]], [[Úszás napló]], [[Biciklizés napló]] saját flaget kap ([[Frontend]] registry). Ki → az adott szegmens rejtve.
+- Részletek a gyerek specekben.
 
 ### Megjegyzések
 

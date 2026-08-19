@@ -95,6 +95,7 @@ Nincs nyitott kérdés.
 | `_dirty` | `1`, ha van erre a sorra még el nem küldött outbox tétel. |
 | `_local_only` | `1`, ha a sor még **soha** nem került fel a szerverre. |
 | `_sync_error` | `1`, ha a sorhoz tartozó outbox tétel `ERROR` státuszban van (listajelöléshez). |
+| `_needs_refetch` | `1`, ha a helyi sor eldobott (Drop-olt) változtatást tartalmaz, és a szerverről újra kell olvasni — lásd §6 „Kézi beavatkozás”. |
 
 - A migráció **soha nem dobhatja el az outboxot** és a `_dirty` sorokat. (A DB séma-migrációja és az outbox **payload**-migrációja két külön dolog — utóbbi a §7.)
 - **Shared katalógus** (`Food`, `Recipe`, `RecipeIngredient` — [[Bejelentkezés]] ownership mátrix) ugyanebben a user-DB-ben él. Ugyanazon eszközön több user esetén a shared katalógus fizikailag duplikálódik — az elsődleges (személyes) használat mellett ez elfogadott.
@@ -135,7 +136,7 @@ Minden módosító művelet (`POST` / `PUT` / `DELETE`) egy `outbox_item` sor:
 | `SENDING` | Épp fut. App-crash / kill után induláskor visszaállítjuk `PENDING`-re (a művelet idempotens, biztonságos újrapróbálni). |
 | `BLOCKED` | Nem hibás, de egy korábbi `ERROR` tételtől függ. **Számított** állapot: a drain minden futás elején újraszámolja. |
 | `ERROR` | Végleges, user-beavatkozást igénylő hiba (validáció, egyediségi ütközés, jogosultság, kimerült újrapróbálkozás). |
-| `SKIPPED` | A user átugrotta a [[Szinkronizációs központ]]ban. Kimarad a drainből, de **nem törlődik**, és a rá épülő tételek függőségi zárja feloldódik. |
+| `SKIPPED` | A user átugrotta a [[Szinkronizációs központ]]ban. Kimarad a drainből, de **nem törlődik**, és a rá épülő tételek függőségi zárja feloldódik. Bármikor visszatehető a sorba (Unskip — §6). |
 
 ##### Függőségi zár
 
@@ -213,6 +214,29 @@ Ahol a törlés a helyi adatokon is végigfut (pl. [[Eszközök]] `GearItem` tö
 | `2xx` | siker | Lásd a 8. lépést. |
 
 Backoff lépcső (jitterrel): 2 s → 8 s → 30 s → 2 min → 10 min.
+
+##### Kézi beavatkozás (Fix / Skip / Unskip / Drop)
+
+`ERROR` és `SKIPPED` tételt a motor magától soha nem mozdít — csak a user, a [[Szinkronizációs központ]]ból. A négy művelet mechanikája (a UI: ugyanott):
+
+**Fix (javítás és újraküldés).** A tétel payloadja **helyben** módosul, és ugyanabban a helyi tranzakcióban a **helyi entitássor is** — különben a kettő szétcsúszna. Ezután `status = PENDING`, `attemptCount = 0`, `errorCode` / `errorMessage` törlődik; a `sequence` **változatlan**, hogy a függőségi sorrend megmaradjon.
+
+> **Miért nem a normál szerkesztő űrlap?** Mert a coalescing `ERROR` tételt nem módosít: a rendes repository-íráson keresztüli javítás **új** tételt hozna létre, ami a függőségi zár miatt azonnal `BLOCKED` lenne a hibás tétel mögött — a javítás sosem menne fel. A Fix ezért dedikált művelet a tételen, nem sima entitás-szerkesztés.
+
+**Skip.** `status = SKIPPED`; a payload megmarad, a rá épülő tételek zárja feloldódik.
+
+**Unskip (vissza a sorba).** A payload **újraszármaztatódik a jelenlegi helyi sorból** (`POST` / `PUT` esetén; `DELETE`-nél nincs body), majd `status = PENDING`. Így elavult payload nem támadhat fel: a helyi store a definíció szerinti igazság, tehát azt küldjük, amit a user **most** lát. Ha közben ugyanarra a `targetEntityId`-ra keletkezett újabb `PENDING` / `BLOCKED` tétel, akkor az átugrott tétel **eldobandó** helyette: a `PUT` teljes body, tehát az újabb tétel már tartalmazza az aktuális állapotot.
+
+**Drop.** A tétel véglegesen törlődik. A helyi sor sorsa attól függ, volt-e már fent a szerveren:
+
+| Eldobott tétel | Helyi sor |
+|---|---|
+| `POST`, `_local_only = 1` | **Hard remove** (soha nem syncelt draft elvetése). |
+| `PUT` szinkronizált soron | A sor `_needs_refetch = 1`; a helyi módosítás elvész, a sor a **szerver állapotára** áll vissza. |
+| `DELETE` szinkronizált soron | Ugyanaz: `_needs_refetch = 1`, a sor a szerver szerinti (nem törölt) állapotra áll vissza. |
+
+- **Kötelező újraolvasás:** a `_needs_refetch = 1` sorokat a következő elérhető backendnél `GET /api/{entitás}/{id}`-vel újra kell olvasni, és a helyi sort felül kell írni (`_dirty = 0`, `_needs_refetch = 0`). **A delta pull erre nem elég**, mert a cursor-alapú pull csak a szerveren *változott* sorokat adja vissza — egy szerveroldalon érintetlen sor helyi divergenciája így örökre megmaradna.
+- **Cascade drop:** ha az eldobott tétel egy `POST`, amely más tételek `dependsOn` listájában szerepel, akkor azok a tételek **sosem lennének teljesíthetők** (a szülő nem jön létre) — ezért velük együtt eldobandók, ugyanezen szabályok szerint. A UI a megerősítés előtt megmutatja, hány tétel érintett.
 
 #### 7. Payload-verziózás (app frissítés)
 
@@ -402,7 +426,7 @@ Elv: a külső integrációk **soha nincsenek** a saját backenden proxyzva ([[B
 
 #### 16. UI elvárások offline állapotban
 
-- **Globális állapotjelző** a Dashboard felső sávjában (belépő a [[Szinkronizációs központ]]ba):
+- **Globális állapotjelző** minden tab fejlécében (app-shell chrome — [[Frontend]]; belépő a [[Szinkronizációs központ]]ba):
 
 | Állapot | Jelzés |
 |---|---|
@@ -450,6 +474,10 @@ Az offline működés akkor kész, ha az alábbiak mind teljesülnek:
 14. `410 CURSOR_TOO_OLD`: full re-pull fut, a helyi pending változások és az outbox megmaradnak.
 15. Szerveroldali cascade (`Food` törlés): a drain utáni pull után a hivatkozó helyi sorok is tombstone-osak.
 16. Hiányos profil: `~` jelenik meg a kereten, az app nem crashel — és a `~` **nem** az offline állapot miatt van.
+17. **Fix** egy `409 UNIQUE_VIOLATION` tételen: az átnevezés a helyi soron és a payloadon **egyszerre** látszik, a tétel `PENDING` lesz, és a következő drainen felmegy.
+18. **Unskip** olyan tételen, amelynek helyi sora közben módosult: a felküldött payload a **jelenlegi** helyi állapot, nem a skip pillanatában rögzített.
+19. **Drop** egy szinkronizált soron álló `PUT`-on: a sor a szerver állapotára áll vissza (nem marad rajta a nem szinkronizált módosítás), és ehhez nem elég a delta pull — célzott újraolvasás történik.
+20. **Drop** egy `POST`-on, amelyre gyerektételek épülnek: a UI megmutatja az érintett tételek számát, és megerősítés után azok is eldobódnak; nem marad árva, teljesíthetetlen tétel a sorban.
 
 ### Backend
 
