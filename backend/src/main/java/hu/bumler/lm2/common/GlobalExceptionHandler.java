@@ -48,7 +48,9 @@ public class GlobalExceptionHandler {
 	private static final Map<String, String> UNIQUE_INDEX_TO_FIELD = Map.of(
 			"idx_users_username", "username",
 			"idx_user_profile_user_id", "userId",
-			"idx_gear_item_user_id_name_normalized", "name");
+			"idx_gear_item_user_id_name_normalized", "name",
+			"idx_packing_template_user_id_name_normalized", "name",
+			"idx_packing_template_item_template_gear", "gearItemId");
 
 	@ExceptionHandler(DataIntegrityViolationException.class)
 	ResponseEntity<ApiError> handleUniqueConstraint(DataIntegrityViolationException ex) {

@@ -25,6 +25,25 @@ export const routes: Routes = [
             children: [
               { path: '', loadComponent: () => import('./pages/menu/gear/gear-check.page').then((m) => m.GearCheckPage) },
               { path: 'items', loadComponent: () => import('./pages/menu/gear/items/gear-items.page').then((m) => m.GearItemsPage) },
+              {
+                path: 'templates',
+                children: [
+                  {
+                    path: '',
+                    loadComponent: () => import('./pages/menu/gear/templates/packing-templates.page').then((m) => m.PackingTemplatesPage),
+                  },
+                  {
+                    path: 'new',
+                    loadComponent: () =>
+                      import('./pages/menu/gear/templates/packing-template-editor.page').then((m) => m.PackingTemplateEditorPage),
+                  },
+                  {
+                    path: ':id',
+                    loadComponent: () =>
+                      import('./pages/menu/gear/templates/packing-template-editor.page').then((m) => m.PackingTemplateEditorPage),
+                  },
+                ],
+              },
             ],
           },
         ],

@@ -5,18 +5,26 @@ import { Capacitor } from '@capacitor/core';
 import { Network } from '@capacitor/network';
 import { firstValueFrom, timeout } from 'rxjs';
 
-import { GearService } from '../../api/api/gear.service';
+import { GearItemsService } from '../../api/api/gearItems.service';
 import { HealthService } from '../../api/api/health.service';
+import { PackingTemplatesService } from '../../api/api/packingTemplates.service';
 import { ProfileService } from '../../api/api/profile.service';
 import { SyncService } from '../../api/api/sync.service';
 import { ApiError } from '../../api/model/apiError';
 import { GearItem } from '../../api/model/gearItem';
+import { PackingTemplate } from '../../api/model/packingTemplate';
+import { PackingTemplateDetail } from '../../api/model/packingTemplateDetail';
+import { PackingTemplateItem } from '../../api/model/packingTemplateItem';
 import { SyncChangeItem } from '../../api/model/syncChangeItem';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 import {
   gearItemServerApplyTask,
   gearItemTombstoneTask,
+  packingTemplateItemServerApplyTask,
+  packingTemplateItemTombstoneTask,
+  packingTemplateServerApplyTask,
+  packingTemplateTombstoneTask,
   profileServerApplyTask,
   profileTombstoneTask,
   weightHistoryServerApplyTask,
@@ -45,7 +53,8 @@ export class SyncEngineService {
   private readonly http = inject(HttpClient);
   private readonly healthApi = inject(HealthService);
   private readonly profileApi = inject(ProfileService);
-  private readonly gearApi = inject(GearService);
+  private readonly gearApi = inject(GearItemsService);
+  private readonly packingTemplatesApi = inject(PackingTemplatesService);
   private readonly syncApi = inject(SyncService);
   private readonly authSession = inject(AuthSessionService);
   private readonly offlineQueue = inject(OfflineQueueService);
@@ -161,6 +170,16 @@ export class SyncEngineService {
         // same as above
       }
     }
+
+    const staleTemplates = await this.db.query<{ id: string }>('SELECT id FROM packing_template WHERE _needs_refetch = 1');
+    for (const row of staleTemplates) {
+      try {
+        const dto = await firstValueFrom(this.packingTemplatesApi.getPackingTemplate(row.id));
+        await this.db.executeTransaction(this.packingTemplateApplyTasks(dto));
+      } catch {
+        // same as above
+      }
+    }
   }
 
   private async probeBackend(): Promise<boolean> {
@@ -245,7 +264,7 @@ export class SyncEngineService {
           headers: { 'Idempotency-Key': item.id },
         }),
       );
-      await this.db.executeTransaction([this.buildServerApplyTask(item, body)]);
+      await this.db.executeTransaction(this.buildServerApplyTasks(item, body));
       await this.offlineQueue.removeItem(item.id);
       return 'success';
     } catch (error) {
@@ -286,17 +305,32 @@ export class SyncEngineService {
     return 'continue';
   }
 
-  private buildServerApplyTask(item: OutboxItem, body: unknown): SqlTask {
+  private buildServerApplyTasks(item: OutboxItem, body: unknown): SqlTask[] {
     if (item.entityType === 'UserProfile') {
-      return profileServerApplyTask(body as UserProfile);
+      return [profileServerApplyTask(body as UserProfile)];
     }
     if (item.entityType === 'WeightHistoryEntry') {
-      return weightHistoryServerApplyTask(body as WeightHistoryEntry);
+      return [weightHistoryServerApplyTask(body as WeightHistoryEntry)];
     }
     if (item.entityType === 'GearItem') {
-      return gearItemServerApplyTask(body as GearItem);
+      return [gearItemServerApplyTask(body as GearItem)];
+    }
+    if (item.entityType === 'PackingTemplate') {
+      return this.packingTemplateApplyTasks(body as PackingTemplateDetail);
     }
     throw new Error(`SyncEngine: no local writer for entityType "${item.entityType}"`);
+  }
+
+  /**
+   * documentation/Architektúra/Backend.md "Nested aggregate PUT": the response lists every item row
+   * (live or tombstoned — PackingTemplateDetail.yaml), which this applies as authoritative so each
+   * one's local `_dirty`/`_local_only` flags clear too — items never get their own outbox entry, so
+   * nothing else would ever clear them (§8's `_dirty=1` apply rule otherwise keeps the pending value
+   * forever). The subsequent mandatory post-drain pull (§6 point 9) still independently confirms
+   * every row and catches anything this device didn't know about (e.g. a concurrent cascade).
+   */
+  private packingTemplateApplyTasks(dto: PackingTemplateDetail): SqlTask[] {
+    return [packingTemplateServerApplyTask(dto), ...dto.items.map((item: PackingTemplateItem) => packingTemplateItemServerApplyTask(item))];
   }
 
   private async applyTombstone(item: OutboxItem): Promise<void> {
@@ -307,6 +341,13 @@ export class SyncEngineService {
       await this.db.executeTransaction([weightHistoryTombstoneTask(item.targetEntityId, null, now)]);
     } else if (item.entityType === 'GearItem') {
       await this.db.executeTransaction([gearItemTombstoneTask(item.targetEntityId, null, now)]);
+    } else if (item.entityType === 'PackingTemplate') {
+      // documentation/Subfeatures/Sablonok.md: template delete cascades to its own items locally too.
+      const itemRows = await this.db.query<{ id: string }>('SELECT id FROM packing_template_item WHERE template_id = ?', [item.targetEntityId]);
+      await this.db.executeTransaction([
+        packingTemplateTombstoneTask(item.targetEntityId, null, now),
+        ...itemRows.map((row) => packingTemplateItemTombstoneTask(row.id, null, now)),
+      ]);
     }
   }
 
@@ -360,6 +401,18 @@ export class SyncEngineService {
         return [gearItemServerApplyTask(change.data as GearItem)];
       }
       return [gearItemTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
+    }
+    if (change.entityType === 'PackingTemplate') {
+      if (!change.deleted) {
+        return [packingTemplateServerApplyTask(change.data as PackingTemplate)];
+      }
+      return [packingTemplateTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
+    }
+    if (change.entityType === 'PackingTemplateItem') {
+      if (!change.deleted) {
+        return [packingTemplateItemServerApplyTask(change.data as PackingTemplateItem)];
+      }
+      return [packingTemplateItemTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
     }
     return [];
   }

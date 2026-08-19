@@ -1,0 +1,48 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/menu/gear"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ 'GEAR.TEMPLATES.TITLE' | translate }}</ion-title>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-searchbar
+      [value]="query()"
+      (ionInput)="query.set($any($event.target).value ?? '')"
+      [placeholder]="'GEAR.TEMPLATES.SEARCH_PLACEHOLDER' | translate"
+      [debounce]="200"
+    ></ion-searchbar>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-list>
+    <ion-item button routerLink="new">
+      <ion-icon name="add-outline" slot="start" aria-hidden="true"></ion-icon>
+      <ion-label>{{ 'GEAR.TEMPLATES.ADD' | translate }}</ion-label>
+    </ion-item>
+
+    @if (filteredTemplates().length === 0) {
+      <ion-item>
+        <ion-label color="medium">{{ 'GEAR.TEMPLATES.EMPTY' | translate }}</ion-label>
+      </ion-item>
+    }
+
+    @for (template of filteredTemplates(); track template.id) {
+      <ion-item button [routerLink]="[template.id]">
+        <ion-label>
+          <h3>{{ template.name }}</h3>
+          @if (template.notes) {
+            <p>{{ template.notes }}</p>
+          }
+        </ion-label>
+        <ion-button fill="clear" (click)="duplicate(template); $event.stopPropagation()">
+          <ion-icon name="copy-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+        </ion-button>
+        <ion-button fill="clear" color="danger" (click)="delete(template); $event.stopPropagation()">
+          <ion-icon name="trash-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+        </ion-button>
+      </ion-item>
+    }
+  </ion-list>
+</ion-content>

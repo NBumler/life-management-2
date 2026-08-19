@@ -1,7 +1,7 @@
 get:
   operationId: listGearItems
   tags:
-    - gear
+    - gear-items
   summary: The caller's gear catalog, live rows only (deleted = false).
   responses:
     '200':
@@ -13,7 +13,7 @@ get:
 post:
   operationId: createGearItem
   tags:
-    - gear
+    - gear-items
   summary: Create a gear item — idempotent upsert on the client-supplied id.
   requestBody:
     required: true

@@ -26,12 +26,15 @@ import static org.mockito.Mockito.when;
 class GearItemServiceTest {
 
 	private GearItemRepository repository;
+	private PackingTemplateItemRepository templateItemRepository;
 	private GearItemService service;
 
 	@BeforeEach
 	void setUp() {
 		repository = mock(GearItemRepository.class);
-		service = new GearItemService(repository, new GearItemMapper());
+		templateItemRepository = mock(PackingTemplateItemRepository.class);
+		when(templateItemRepository.findByGearItemIdAndUserIdAndDeletedFalse(any(), any())).thenReturn(List.of());
+		service = new GearItemService(repository, new GearItemMapper(), templateItemRepository);
 	}
 
 	private static GearItemEntity entity(UUID id, UUID userId) {
@@ -165,6 +168,21 @@ class GearItemServiceTest {
 
 		assertThat(deleted.getDeleted()).isTrue();
 		verify(repository).saveAndFlush(existing);
+	}
+
+	@Test
+	void delete_cascadesToLiveTemplateItemsReferencingIt() {
+		UUID userId = UUID.randomUUID();
+		GearItemEntity existing = entity(UUID.randomUUID(), userId);
+		when(repository.findByIdAndUserId(existing.getId(), userId)).thenReturn(Optional.of(existing));
+		when(repository.saveAndFlush(any())).thenAnswer(inv -> inv.getArgument(0));
+		PackingTemplateItemEntity templateItem = new PackingTemplateItemEntity(UUID.randomUUID(), userId, UUID.randomUUID(), existing.getId(), 0);
+		when(templateItemRepository.findByGearItemIdAndUserIdAndDeletedFalse(existing.getId(), userId)).thenReturn(List.of(templateItem));
+
+		service.delete(userId, existing.getId());
+
+		assertThat(templateItem.isDeleted()).isTrue();
+		verify(templateItemRepository).save(templateItem);
 	}
 
 	@Test

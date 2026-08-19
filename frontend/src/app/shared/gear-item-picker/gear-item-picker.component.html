@@ -1,0 +1,21 @@
+<ion-searchbar
+  [value]="query()"
+  (ionInput)="query.set($any($event.target).value ?? '')"
+  [placeholder]="'GEAR.PICKER.SEARCH_PLACEHOLDER' | translate"
+  [debounce]="200"
+></ion-searchbar>
+<ion-list>
+  @if (sortedItems().length === 0) {
+    <ion-item>
+      <ion-label color="medium">{{ 'GEAR.PICKER.EMPTY' | translate }}</ion-label>
+    </ion-item>
+  }
+  @for (item of sortedItems(); track item.id) {
+    <ion-item button [disabled]="isExcluded(item)" (click)="pick(item)">
+      <ion-label>{{ item.name }}</ion-label>
+      @if (isExcluded(item)) {
+        <ion-icon name="checkmark-outline" slot="end" aria-hidden="true"></ion-icon>
+      }
+    </ion-item>
+  }
+</ion-list>

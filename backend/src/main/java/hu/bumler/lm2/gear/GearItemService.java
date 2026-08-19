@@ -17,10 +17,12 @@ class GearItemService {
 
 	private final GearItemRepository repository;
 	private final GearItemMapper mapper;
+	private final PackingTemplateItemRepository templateItemRepository;
 
-	GearItemService(GearItemRepository repository, GearItemMapper mapper) {
+	GearItemService(GearItemRepository repository, GearItemMapper mapper, PackingTemplateItemRepository templateItemRepository) {
 		this.repository = repository;
 		this.mapper = mapper;
+		this.templateItemRepository = templateItemRepository;
 	}
 
 	@Transactional(readOnly = true)
@@ -62,9 +64,9 @@ class GearItemService {
 	}
 
 	/**
-	 * Soft delete, idempotent. documentation/Subfeatures/Eszközök.md also requires cascading this
-	 * to PackingTemplateItem / PackingSessionItem rows referencing this item — added once those
-	 * tables exist, so this method stays a plain soft delete for now.
+	 * Soft delete, idempotent, cascading to every live PackingTemplateItem referencing this item
+	 * (documentation/Subfeatures/Eszközök.md). PackingSessionItem cascade is added once that table
+	 * exists.
 	 */
 	@Transactional
 	GearItem delete(UUID userId, UUID id) {
@@ -73,6 +75,11 @@ class GearItemService {
 		if (!entity.isDeleted()) {
 			entity.softDelete();
 			repository.saveAndFlush(entity);
+			for (PackingTemplateItemEntity templateItem : templateItemRepository.findByGearItemIdAndUserIdAndDeletedFalse(id, userId)) {
+				templateItem.softDelete();
+				templateItemRepository.save(templateItem);
+			}
+			templateItemRepository.flush();
 		}
 		return mapper.toDto(entity);
 	}

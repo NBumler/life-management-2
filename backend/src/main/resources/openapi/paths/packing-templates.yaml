@@ -1,0 +1,38 @@
+get:
+  operationId: listPackingTemplates
+  tags:
+    - packing-templates
+  summary: The caller's packing templates, live rows only (deleted = false), without items.
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/PackingTemplateList.yaml'
+post:
+  operationId: createPackingTemplate
+  tags:
+    - packing-templates
+  summary: >-
+    Create a template with its items in one request — idempotent upsert on the client-supplied id
+    (documentation/Architektúra/Backend-offline first.md §11 nested aggregate save).
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/PackingTemplateDetail.yaml'
+  responses:
+    '200':
+      description: Created or, on retry with the same id, the existing tree.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/PackingTemplateDetail.yaml'
+    '409':
+      description: Another live template already has this name.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'

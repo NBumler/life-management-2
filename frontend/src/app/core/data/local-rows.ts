@@ -1,5 +1,7 @@
 import { SqlTask } from '../storage/local-database.service';
 import { GearItem } from '../../api/model/gearItem';
+import { PackingTemplate } from '../../api/model/packingTemplate';
+import { PackingTemplateItem } from '../../api/model/packingTemplateItem';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 
@@ -217,6 +219,154 @@ export function gearItemTombstoneTask(id: string, deletedAt: string | null, upda
     statement: `
       INSERT INTO gear_item (id, name, updated_at, deleted, deleted_at, _dirty, _local_only)
       VALUES (?, '', ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+export interface PackingTemplateRow {
+  id: string;
+  name: string;
+  notes: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+export function packingTemplateRowToDto(row: PackingTemplateRow): PackingTemplate {
+  return {
+    id: row.id,
+    name: row.name,
+    notes: row.notes,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+export function packingTemplateLocalWriteTask(dto: { id: string; name: string; notes: string | null }): SqlTask {
+  return {
+    statement: `
+      INSERT INTO packing_template (id, name, notes, _dirty, _local_only)
+      VALUES (?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET name = excluded.name, notes = excluded.notes, _dirty = 1`,
+    values: [dto.id, dto.name, dto.notes],
+  };
+}
+
+export function packingTemplateServerApplyTask(dto: PackingTemplate): SqlTask {
+  return {
+    statement: `
+      INSERT INTO packing_template (id, name, notes, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        name = excluded.name, notes = excluded.notes, created_at = excluded.created_at,
+        updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE packing_template._dirty = 0`,
+    values: [
+      dto.id,
+      dto.name,
+      dto.notes ?? null,
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function packingTemplateTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO packing_template (id, name, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '', ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+export interface PackingTemplateItemRow {
+  id: string;
+  template_id: string;
+  gear_item_id: string;
+  sort_order: number;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+export function packingTemplateItemRowToDto(row: PackingTemplateItemRow): PackingTemplateItem {
+  return {
+    id: row.id,
+    templateId: row.template_id,
+    gearItemId: row.gear_item_id,
+    sortOrder: row.sort_order,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+export function packingTemplateItemLocalWriteTask(dto: { id: string; templateId: string; gearItemId: string; sortOrder: number }): SqlTask {
+  return {
+    statement: `
+      INSERT INTO packing_template_item (id, template_id, gear_item_id, sort_order, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET gear_item_id = excluded.gear_item_id, sort_order = excluded.sort_order, deleted = 0, deleted_at = NULL, _dirty = 1`,
+    values: [dto.id, dto.templateId, dto.gearItemId, dto.sortOrder],
+  };
+}
+
+/** Local-only removal of an item dropped from a template during an edit (not a standalone outbox entry — see SqliteStorageBackend.savePackingTemplate). */
+export function packingTemplateItemLocalRemoveTask(id: string): SqlTask {
+  return {
+    statement: `UPDATE packing_template_item SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?`,
+    values: [new Date().toISOString(), id],
+  };
+}
+
+export function packingTemplateItemServerApplyTask(dto: PackingTemplateItem): SqlTask {
+  return {
+    statement: `
+      INSERT INTO packing_template_item (id, template_id, gear_item_id, sort_order, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        template_id = excluded.template_id, gear_item_id = excluded.gear_item_id, sort_order = excluded.sort_order,
+        created_at = excluded.created_at, updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at,
+        _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE packing_template_item._dirty = 0`,
+    values: [
+      dto.id,
+      dto.templateId,
+      dto.gearItemId,
+      dto.sortOrder,
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function packingTemplateItemTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO packing_template_item (id, template_id, gear_item_id, sort_order, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '', '', 0, ?, 1, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
     values: [id, updatedAt, deletedAt],
   };

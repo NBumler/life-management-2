@@ -7,10 +7,12 @@ api/admin.serviceInterface.ts
 api/api.ts
 api/auth.service.ts
 api/auth.serviceInterface.ts
-api/gear.service.ts
-api/gear.serviceInterface.ts
+api/gearItems.service.ts
+api/gearItems.serviceInterface.ts
 api/health.service.ts
 api/health.serviceInterface.ts
+api/packingTemplates.service.ts
+api/packingTemplates.serviceInterface.ts
 api/profile.service.ts
 api/profile.serviceInterface.ts
 api/sync.service.ts
@@ -28,6 +30,9 @@ model/gearItem.ts
 model/healthResponse.ts
 model/loginRequest.ts
 model/models.ts
+model/packingTemplate.ts
+model/packingTemplateDetail.ts
+model/packingTemplateItem.ts
 model/refreshRequest.ts
 model/syncChangeItem.ts
 model/syncChangesResponse.ts

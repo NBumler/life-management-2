@@ -97,6 +97,7 @@
   "GEAR": {
     "TITLE": "GearCheck",
     "HUB_ITEMS": "Gear",
+    "HUB_TEMPLATES": "Templates",
     "ITEMS": {
       "TITLE": "Gear",
       "SEARCH_PLACEHOLDER": "Search",
@@ -107,6 +108,25 @@
       "NAME_CONFLICT": "\"{{name}}\" is already in your catalog.",
       "DELETE_CONFIRM_TITLE": "Delete item",
       "DELETE_CONFIRM_MESSAGE": "Are you sure you want to delete \"{{name}}\"?"
+    },
+    "PICKER": {
+      "SEARCH_PLACEHOLDER": "Search gear",
+      "EMPTY": "No matches."
+    },
+    "TEMPLATES": {
+      "TITLE": "Templates",
+      "EDIT_TITLE": "Edit template",
+      "SEARCH_PLACEHOLDER": "Search",
+      "ADD": "New template",
+      "NAME": "Name",
+      "NOTES": "Notes",
+      "EMPTY": "No templates yet.",
+      "ITEMS_EMPTY": "No items in this template.",
+      "ITEM_PICKER_ADD": "Add item",
+      "ITEM_PICKER_CLOSE": "Close",
+      "NAME_CONFLICT": "\"{{name}}\" is already among your templates.",
+      "DELETE_CONFIRM_TITLE": "Delete template",
+      "DELETE_CONFIRM_MESSAGE": "Are you sure you want to delete \"{{name}}\"? Any active packing session stays untouched."
     }
   }
 }

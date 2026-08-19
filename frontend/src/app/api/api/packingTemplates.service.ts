@@ -19,41 +19,43 @@ import { OpenApiHttpParams, QueryParamStyle } from '../query.params';
 // @ts-ignore
 import { ApiError } from '../model/apiError';
 // @ts-ignore
-import { GearItem } from '../model/gearItem';
+import { PackingTemplate } from '../model/packingTemplate';
+// @ts-ignore
+import { PackingTemplateDetail } from '../model/packingTemplateDetail';
 
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS }                     from '../variables';
 import { Configuration }                                     from '../configuration';
 import { BaseService } from '../api.base.service';
 import {
-    GearServiceInterface
-} from './gear.serviceInterface';
+    PackingTemplatesServiceInterface
+} from './packingTemplates.serviceInterface';
 
 
 
 @Injectable({
   providedIn: 'root'
 })
-export class GearService extends BaseService implements GearServiceInterface {
+export class PackingTemplatesService extends BaseService implements PackingTemplatesServiceInterface {
 
     constructor(protected httpClient: HttpClient, @Optional() @Inject(BASE_PATH) basePath: string|string[], @Optional() configuration?: Configuration) {
         super(basePath, configuration);
     }
 
     /**
-     * Create a gear item — idempotent upsert on the client-supplied id.
-     * @endpoint post /api/gear-items
-     * @param gearItem 
+     * Create a template with its items in one request — idempotent upsert on the client-supplied id (documentation/Architektúra/Backend-offline first.md §11 nested aggregate save).
+     * @endpoint post /api/packing-templates
+     * @param packingTemplateDetail 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      * @param options additional options
      */
-    public createGearItem(gearItem: GearItem, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<GearItem>;
-    public createGearItem(gearItem: GearItem, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<GearItem>>;
-    public createGearItem(gearItem: GearItem, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<GearItem>>;
-    public createGearItem(gearItem: GearItem, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
-        if (gearItem === null || gearItem === undefined) {
-            throw new Error('Required parameter gearItem was null or undefined when calling createGearItem.');
+    public createPackingTemplate(packingTemplateDetail: PackingTemplateDetail, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<PackingTemplateDetail>;
+    public createPackingTemplate(packingTemplateDetail: PackingTemplateDetail, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<PackingTemplateDetail>>;
+    public createPackingTemplate(packingTemplateDetail: PackingTemplateDetail, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<PackingTemplateDetail>>;
+    public createPackingTemplate(packingTemplateDetail: PackingTemplateDetail, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (packingTemplateDetail === null || packingTemplateDetail === undefined) {
+            throw new Error('Required parameter packingTemplateDetail was null or undefined when calling createPackingTemplate.');
         }
 
         let localVarHeaders = this.defaultHeaders;
@@ -93,12 +95,12 @@ export class GearService extends BaseService implements GearServiceInterface {
             }
         }
 
-        let localVarPath = `/api/gear-items`;
+        let localVarPath = `/api/packing-templates`;
         const { basePath, withCredentials } = this.configuration;
-        return this.httpClient.request<GearItem>('post', `${basePath}${localVarPath}`,
+        return this.httpClient.request<PackingTemplateDetail>('post', `${basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
-                body: gearItem,
+                body: packingTemplateDetail,
                 responseType: <any>responseType_,
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
@@ -110,19 +112,19 @@ export class GearService extends BaseService implements GearServiceInterface {
     }
 
     /**
-     * Soft delete, idempotent. Cascades to soft-deleting this item on every referencing PackingTemplateItem / PackingSessionItem row (documentation/Subfeatures/Eszközök.md).
-     * @endpoint delete /api/gear-items/{id}
+     * Soft delete, idempotent. Cascades to soft-deleting every item on this template.
+     * @endpoint delete /api/packing-templates/{id}
      * @param id 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      * @param options additional options
      */
-    public deleteGearItem(id: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<GearItem>;
-    public deleteGearItem(id: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<GearItem>>;
-    public deleteGearItem(id: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<GearItem>>;
-    public deleteGearItem(id: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+    public deletePackingTemplate(id: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<PackingTemplateDetail>;
+    public deletePackingTemplate(id: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<PackingTemplateDetail>>;
+    public deletePackingTemplate(id: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<PackingTemplateDetail>>;
+    public deletePackingTemplate(id: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
         if (id === null || id === undefined) {
-            throw new Error('Required parameter id was null or undefined when calling deleteGearItem.');
+            throw new Error('Required parameter id was null or undefined when calling deletePackingTemplate.');
         }
 
         let localVarHeaders = this.defaultHeaders;
@@ -153,9 +155,9 @@ export class GearService extends BaseService implements GearServiceInterface {
             }
         }
 
-        let localVarPath = `/api/gear-items/${this.configuration.encodeParam({name: "id", value: id, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: "uuid"})}`;
+        let localVarPath = `/api/packing-templates/${this.configuration.encodeParam({name: "id", value: id, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: "uuid"})}`;
         const { basePath, withCredentials } = this.configuration;
-        return this.httpClient.request<GearItem>('delete', `${basePath}${localVarPath}`,
+        return this.httpClient.request<PackingTemplateDetail>('delete', `${basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
                 responseType: <any>responseType_,
@@ -169,19 +171,19 @@ export class GearService extends BaseService implements GearServiceInterface {
     }
 
     /**
-     * A single gear item. Own deleted row returns 200 with deleted&#x3D;true (not 404).
-     * @endpoint get /api/gear-items/{id}
+     * The full template tree. Own deleted row returns 200 with deleted&#x3D;true (not 404).
+     * @endpoint get /api/packing-templates/{id}
      * @param id 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      * @param options additional options
      */
-    public getGearItem(id: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<GearItem>;
-    public getGearItem(id: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<GearItem>>;
-    public getGearItem(id: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<GearItem>>;
-    public getGearItem(id: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+    public getPackingTemplate(id: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<PackingTemplateDetail>;
+    public getPackingTemplate(id: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<PackingTemplateDetail>>;
+    public getPackingTemplate(id: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<PackingTemplateDetail>>;
+    public getPackingTemplate(id: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
         if (id === null || id === undefined) {
-            throw new Error('Required parameter id was null or undefined when calling getGearItem.');
+            throw new Error('Required parameter id was null or undefined when calling getPackingTemplate.');
         }
 
         let localVarHeaders = this.defaultHeaders;
@@ -212,9 +214,9 @@ export class GearService extends BaseService implements GearServiceInterface {
             }
         }
 
-        let localVarPath = `/api/gear-items/${this.configuration.encodeParam({name: "id", value: id, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: "uuid"})}`;
+        let localVarPath = `/api/packing-templates/${this.configuration.encodeParam({name: "id", value: id, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: "uuid"})}`;
         const { basePath, withCredentials } = this.configuration;
-        return this.httpClient.request<GearItem>('get', `${basePath}${localVarPath}`,
+        return this.httpClient.request<PackingTemplateDetail>('get', `${basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
                 responseType: <any>responseType_,
@@ -228,16 +230,16 @@ export class GearService extends BaseService implements GearServiceInterface {
     }
 
     /**
-     * The caller\&#39;s gear catalog, live rows only (deleted &#x3D; false).
-     * @endpoint get /api/gear-items
+     * The caller\&#39;s packing templates, live rows only (deleted &#x3D; false), without items.
+     * @endpoint get /api/packing-templates
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      * @param options additional options
      */
-    public listGearItems(observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<GearItem>>;
-    public listGearItems(observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<GearItem>>>;
-    public listGearItems(observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<GearItem>>>;
-    public listGearItems(observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+    public listPackingTemplates(observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<PackingTemplate>>;
+    public listPackingTemplates(observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<PackingTemplate>>>;
+    public listPackingTemplates(observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<PackingTemplate>>>;
+    public listPackingTemplates(observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
 
         let localVarHeaders = this.defaultHeaders;
 
@@ -267,9 +269,9 @@ export class GearService extends BaseService implements GearServiceInterface {
             }
         }
 
-        let localVarPath = `/api/gear-items`;
+        let localVarPath = `/api/packing-templates`;
         const { basePath, withCredentials } = this.configuration;
-        return this.httpClient.request<Array<GearItem>>('get', `${basePath}${localVarPath}`,
+        return this.httpClient.request<Array<PackingTemplate>>('get', `${basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
                 responseType: <any>responseType_,
@@ -283,23 +285,23 @@ export class GearService extends BaseService implements GearServiceInterface {
     }
 
     /**
-     * Full update (last-write-wins).
-     * @endpoint put /api/gear-items/{id}
+     * Full tree replace (documentation/Architektúra/Backend.md \&quot;Nested aggregate PUT\&quot;): items not present in the body are soft-deleted, last-write-wins on the whole aggregate.
+     * @endpoint put /api/packing-templates/{id}
      * @param id 
-     * @param gearItem 
+     * @param packingTemplateDetail 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      * @param options additional options
      */
-    public updateGearItem(id: string, gearItem: GearItem, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<GearItem>;
-    public updateGearItem(id: string, gearItem: GearItem, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<GearItem>>;
-    public updateGearItem(id: string, gearItem: GearItem, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<GearItem>>;
-    public updateGearItem(id: string, gearItem: GearItem, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+    public updatePackingTemplate(id: string, packingTemplateDetail: PackingTemplateDetail, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<PackingTemplateDetail>;
+    public updatePackingTemplate(id: string, packingTemplateDetail: PackingTemplateDetail, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<PackingTemplateDetail>>;
+    public updatePackingTemplate(id: string, packingTemplateDetail: PackingTemplateDetail, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<PackingTemplateDetail>>;
+    public updatePackingTemplate(id: string, packingTemplateDetail: PackingTemplateDetail, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
         if (id === null || id === undefined) {
-            throw new Error('Required parameter id was null or undefined when calling updateGearItem.');
+            throw new Error('Required parameter id was null or undefined when calling updatePackingTemplate.');
         }
-        if (gearItem === null || gearItem === undefined) {
-            throw new Error('Required parameter gearItem was null or undefined when calling updateGearItem.');
+        if (packingTemplateDetail === null || packingTemplateDetail === undefined) {
+            throw new Error('Required parameter packingTemplateDetail was null or undefined when calling updatePackingTemplate.');
         }
 
         let localVarHeaders = this.defaultHeaders;
@@ -339,12 +341,12 @@ export class GearService extends BaseService implements GearServiceInterface {
             }
         }
 
-        let localVarPath = `/api/gear-items/${this.configuration.encodeParam({name: "id", value: id, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: "uuid"})}`;
+        let localVarPath = `/api/packing-templates/${this.configuration.encodeParam({name: "id", value: id, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: "uuid"})}`;
         const { basePath, withCredentials } = this.configuration;
-        return this.httpClient.request<GearItem>('put', `${basePath}${localVarPath}`,
+        return this.httpClient.request<PackingTemplateDetail>('put', `${basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
-                body: gearItem,
+                body: packingTemplateDetail,
                 responseType: <any>responseType_,
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,

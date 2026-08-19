@@ -19,7 +19,7 @@ import { Configuration }                                     from '../configurat
 
 
 
-export interface GearServiceInterface {
+export interface GearItemsServiceInterface {
     defaultHeaders: HttpHeaders;
     configuration: Configuration;
 

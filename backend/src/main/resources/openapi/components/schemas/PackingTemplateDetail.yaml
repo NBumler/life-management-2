@@ -1,0 +1,41 @@
+type: object
+description: >-
+  documentation/Architektúra/Backend.md "Nested aggregate PUT": PackingTemplate + its
+  PackingTemplateItem rows saved/read as one tree. `items` always lists every row currently in the
+  DB for this template, live or soft-deleted — the client's outbox apply step needs the tombstoned
+  ones too, to clear their local dirty flag (the client always filters `deleted = false` itself
+  when rendering).
+required:
+  - id
+  - name
+  - deleted
+  - items
+properties:
+  id:
+    type: string
+    format: uuid
+  name:
+    type: string
+    minLength: 1
+  notes:
+    type: string
+    nullable: true
+  deleted:
+    type: boolean
+  items:
+    type: array
+    items:
+      $ref: 'PackingTemplateItem.yaml'
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

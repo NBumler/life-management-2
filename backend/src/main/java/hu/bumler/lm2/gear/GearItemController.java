@@ -6,12 +6,12 @@ import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
-import hu.bumler.lm2.api.GearApi;
+import hu.bumler.lm2.api.GearItemsApi;
 import hu.bumler.lm2.api.model.GearItem;
 import hu.bumler.lm2.common.CurrentUser;
 
 @RestController
-class GearItemController implements GearApi {
+class GearItemController implements GearItemsApi {
 
 	private final GearItemService gearItemService;
 	private final CurrentUser currentUser;

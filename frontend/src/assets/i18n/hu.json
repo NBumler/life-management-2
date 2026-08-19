@@ -97,6 +97,7 @@
   "GEAR": {
     "TITLE": "GearCheck",
     "HUB_ITEMS": "Eszközök",
+    "HUB_TEMPLATES": "Sablonok",
     "ITEMS": {
       "TITLE": "Eszközök",
       "SEARCH_PLACEHOLDER": "Keresés",
@@ -107,6 +108,25 @@
       "NAME_CONFLICT": "„{{name}}” már szerepel a katalógusban.",
       "DELETE_CONFIRM_TITLE": "Eszköz törlése",
       "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd a(z) „{{name}}” eszközt?"
+    },
+    "PICKER": {
+      "SEARCH_PLACEHOLDER": "Eszköz keresése",
+      "EMPTY": "Nincs találat."
+    },
+    "TEMPLATES": {
+      "TITLE": "Sablonok",
+      "EDIT_TITLE": "Sablon szerkesztése",
+      "SEARCH_PLACEHOLDER": "Keresés",
+      "ADD": "Új sablon",
+      "NAME": "Név",
+      "NOTES": "Megjegyzés",
+      "EMPTY": "Még nincs felvett sablon.",
+      "ITEMS_EMPTY": "Nincs eszköz a sablonban.",
+      "ITEM_PICKER_ADD": "Eszköz hozzáadása",
+      "ITEM_PICKER_CLOSE": "Bezárás",
+      "NAME_CONFLICT": "„{{name}}” már szerepel a sablonok között.",
+      "DELETE_CONFIRM_TITLE": "Sablon törlése",
+      "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd a(z) „{{name}}” sablont? Az aktív pakolást nem törli."
     }
   }
 }

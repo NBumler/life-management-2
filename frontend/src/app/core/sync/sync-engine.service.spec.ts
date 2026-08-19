@@ -3,11 +3,13 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed, discardPeriodicTasks, fakeAsync, tick } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 
-import { GearService } from '../../api/api/gear.service';
+import { GearItemsService } from '../../api/api/gearItems.service';
 import { HealthService } from '../../api/api/health.service';
+import { PackingTemplatesService } from '../../api/api/packingTemplates.service';
 import { ProfileService } from '../../api/api/profile.service';
 import { SyncService } from '../../api/api/sync.service';
 import { HealthResponse } from '../../api/model/healthResponse';
+import { PackingTemplateDetail } from '../../api/model/packingTemplateDetail';
 import { SyncChangeItem } from '../../api/model/syncChangeItem';
 import { AuthSessionService } from '../session/auth-session.service';
 import { LocalDatabaseService } from '../storage/local-database.service';
@@ -19,6 +21,7 @@ import { SyncEngineService } from './sync-engine.service';
 interface SyncEngineInternals {
   classifyAndHandle(item: OutboxItem, error: unknown): Promise<string>;
   buildApplyTasks(change: SyncChangeItem): Array<{ statement: string; values?: unknown[] }>;
+  buildServerApplyTasks(item: OutboxItem, body: unknown): Array<{ statement: string; values?: unknown[] }>;
   drain(userId: string): Promise<boolean>;
   pull(userId: string): Promise<void>;
   probeAndSync(): Promise<void>;
@@ -35,7 +38,8 @@ describe('SyncEngineService', () => {
   // auth-session.service.spec.ts for the same issue with AuthService).
   let healthApi: any;
   let profileApi: jasmine.SpyObj<ProfileService>;
-  let gearApi: jasmine.SpyObj<GearService>;
+  let gearApi: jasmine.SpyObj<GearItemsService>;
+  let packingTemplatesApi: jasmine.SpyObj<PackingTemplatesService>;
   let syncApi: any;
   let authSession: { userId: () => string | null; clear: jasmine.Spy };
   let offlineQueue: jasmine.SpyObj<OfflineQueueService>;
@@ -68,7 +72,8 @@ describe('SyncEngineService', () => {
   beforeEach(() => {
     healthApi = jasmine.createSpyObj('HealthService', ['getHealth']);
     profileApi = jasmine.createSpyObj('ProfileService', ['getProfile', 'getWeightHistoryEntry']);
-    gearApi = jasmine.createSpyObj('GearService', ['getGearItem']);
+    gearApi = jasmine.createSpyObj('GearItemsService', ['getGearItem']);
+    packingTemplatesApi = jasmine.createSpyObj('PackingTemplatesService', ['getPackingTemplate']);
     syncApi = jasmine.createSpyObj('SyncService', ['getSyncChanges']);
     authSession = { userId: () => 'user-1', clear: jasmine.createSpy('clear').and.resolveTo(undefined) };
     offlineQueue = jasmine.createSpyObj('OfflineQueueService', [
@@ -90,7 +95,8 @@ describe('SyncEngineService', () => {
         provideHttpClientTesting(),
         { provide: HealthService, useValue: healthApi },
         { provide: ProfileService, useValue: profileApi },
-        { provide: GearService, useValue: gearApi },
+        { provide: GearItemsService, useValue: gearApi },
+        { provide: PackingTemplatesService, useValue: packingTemplatesApi },
         { provide: SyncService, useValue: syncApi },
         { provide: AuthSessionService, useValue: authSession },
         { provide: OfflineQueueService, useValue: offlineQueue },
@@ -253,9 +259,67 @@ describe('SyncEngineService', () => {
       expect(tasks[1].values).toEqual(['g1']);
     });
 
+    it('PackingTemplate update: writes the server row as authoritative (no items — that is a separate entityType)', () => {
+      const change: SyncChangeItem = { entityType: 'PackingTemplate', id: 't1', deleted: false, updatedAt: 'now', data: { id: 't1' } };
+      const tasks = internal.buildApplyTasks(change);
+      expect(tasks.length).toBe(1);
+      expect(tasks[0].statement).toContain('INSERT INTO packing_template');
+      expect(tasks[0].statement).not.toContain('packing_template_item');
+    });
+
+    it('PackingTemplate tombstone: writes the tombstone AND discards pending non-DELETE writes', () => {
+      const change: SyncChangeItem = { entityType: 'PackingTemplate', id: 't1', deleted: true, updatedAt: 'now' };
+      const tasks = internal.buildApplyTasks(change);
+      expect(tasks.length).toBe(2);
+      expect(tasks[0].statement).toContain('INSERT INTO packing_template');
+      expect(tasks[0].statement).not.toContain('packing_template_item');
+      expect(tasks[1].statement).toContain('DELETE FROM outbox_item');
+      expect(tasks[1].values).toEqual(['t1']);
+    });
+
+    it('PackingTemplateItem update: writes the server row as authoritative', () => {
+      const change: SyncChangeItem = { entityType: 'PackingTemplateItem', id: 'ti1', deleted: false, updatedAt: 'now', data: { id: 'ti1' } };
+      const tasks = internal.buildApplyTasks(change);
+      expect(tasks.length).toBe(1);
+      expect(tasks[0].statement).toContain('INSERT INTO packing_template_item');
+    });
+
+    it('PackingTemplateItem tombstone: writes the tombstone AND discards pending non-DELETE writes', () => {
+      const change: SyncChangeItem = { entityType: 'PackingTemplateItem', id: 'ti1', deleted: true, updatedAt: 'now' };
+      const tasks = internal.buildApplyTasks(change);
+      expect(tasks.length).toBe(2);
+      expect(tasks[0].statement).toContain('INSERT INTO packing_template_item');
+      expect(tasks[1].values).toEqual(['ti1']);
+    });
+
     it('unknown entity types produce no local tasks', () => {
       const change: SyncChangeItem = { entityType: 'SomethingElse', id: 'x', deleted: false, updatedAt: 'now', data: {} };
       expect(internal.buildApplyTasks(change)).toEqual([]);
+    });
+  });
+
+  describe('buildServerApplyTasks — nested aggregate PUT response (documentation/Architektúra/Backend.md)', () => {
+    it('PackingTemplate: applies the template row AND every item row from the response, live or tombstoned', () => {
+      const body: PackingTemplateDetail = {
+        id: 't1',
+        name: 'Tél',
+        notes: null,
+        deleted: false,
+        items: [
+          { id: 'i1', templateId: 't1', gearItemId: 'g1', sortOrder: 0, deleted: false },
+          { id: 'i2', templateId: 't1', gearItemId: 'g2', sortOrder: 1, deleted: true },
+        ],
+      };
+      const tasks = internal.buildServerApplyTasks(outboxItem({ entityType: 'PackingTemplate', targetEntityId: 't1' }), body);
+
+      expect(tasks.length).toBe(3);
+      expect(tasks[0].statement).toContain('INSERT INTO packing_template');
+      expect(tasks[0].statement).not.toContain('packing_template_item');
+      expect(tasks.slice(1).every((t) => t.statement.includes('INSERT INTO packing_template_item'))).toBe(true);
+    });
+
+    it('unknown entity types throw (a forgotten dispatch branch must fail loudly, not silently no-op)', () => {
+      expect(() => internal.buildServerApplyTasks(outboxItem({ entityType: 'SomethingElse' }), {})).toThrow();
     });
   });
 

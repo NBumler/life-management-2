@@ -95,12 +95,47 @@ const SCHEMA_V2_STATEMENTS: string[] = [
   `CREATE INDEX IF NOT EXISTS idx_gear_item_name ON gear_item (name)`,
 ];
 
-const SCHEMA_VERSION = 2;
+/** documentation/Subfeatures/Sablonok.md — named GearItem lists. */
+const SCHEMA_V3_STATEMENTS: string[] = [
+  `CREATE TABLE IF NOT EXISTS packing_template (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    notes TEXT,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_packing_template_name ON packing_template (name)`,
+  `CREATE TABLE IF NOT EXISTS packing_template_item (
+    id TEXT PRIMARY KEY,
+    template_id TEXT NOT NULL,
+    gear_item_id TEXT NOT NULL,
+    sort_order INTEGER NOT NULL,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_packing_template_item_template_id ON packing_template_item (template_id, sort_order)`,
+  `CREATE INDEX IF NOT EXISTS idx_packing_template_item_gear_item_id ON packing_template_item (gear_item_id)`,
+];
+
+const SCHEMA_VERSION = 3;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 1, statements: SCHEMA_V1_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V2_STATEMENTS },
+  { toVersion: 2, statements: SCHEMA_V2_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V3_STATEMENTS },
 ];
 
 export interface SqlTask {

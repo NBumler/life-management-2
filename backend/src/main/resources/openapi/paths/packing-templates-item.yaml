@@ -1,0 +1,63 @@
+parameters:
+  - name: id
+    in: path
+    required: true
+    schema:
+      type: string
+      format: uuid
+get:
+  operationId: getPackingTemplate
+  tags:
+    - packing-templates
+  summary: The full template tree. Own deleted row returns 200 with deleted=true (not 404).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/PackingTemplateDetail.yaml'
+    '404':
+      description: No such template (or it belongs to another user).
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+put:
+  operationId: updatePackingTemplate
+  tags:
+    - packing-templates
+  summary: >-
+    Full tree replace (documentation/Architektúra/Backend.md "Nested aggregate PUT"): items not
+    present in the body are soft-deleted, last-write-wins on the whole aggregate.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/PackingTemplateDetail.yaml'
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/PackingTemplateDetail.yaml'
+    '409':
+      description: Entity already deleted, or another live template already has this name.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+delete:
+  operationId: deletePackingTemplate
+  tags:
+    - packing-templates
+  summary: Soft delete, idempotent. Cascades to soft-deleting every item on this template.
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/PackingTemplateDetail.yaml'

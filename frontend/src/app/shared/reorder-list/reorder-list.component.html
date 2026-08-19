@@ -1,0 +1,32 @@
+@if (isNative) {
+  <ion-list>
+    @for (item of items; track item.id; let i = $index) {
+      <ion-item>
+        <ion-label>{{ item.label }}</ion-label>
+        <ion-button fill="clear" [disabled]="i === 0" (click)="moveUp(i)">
+          <ion-icon name="chevron-up-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+        </ion-button>
+        <ion-button fill="clear" [disabled]="i === items.length - 1" (click)="moveDown(i)">
+          <ion-icon name="chevron-down-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+        </ion-button>
+        <ion-button fill="clear" color="danger" (click)="remove.emit(item)">
+          <ion-icon name="close-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+        </ion-button>
+      </ion-item>
+    }
+  </ion-list>
+} @else {
+  <ion-list>
+    <ion-reorder-group [disabled]="false" (ionItemReorder)="onIonReorder($event)">
+      @for (item of items; track item.id) {
+        <ion-item>
+          <ion-label>{{ item.label }}</ion-label>
+          <ion-button fill="clear" color="danger" (click)="remove.emit(item)">
+            <ion-icon name="close-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+          </ion-button>
+          <ion-reorder slot="end"></ion-reorder>
+        </ion-item>
+      }
+    </ion-reorder-group>
+  </ion-list>
+}

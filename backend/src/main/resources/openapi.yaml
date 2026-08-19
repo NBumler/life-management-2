@@ -29,6 +29,10 @@ paths:
     $ref: 'openapi/paths/gear-items.yaml'
   /api/gear-items/{id}:
     $ref: 'openapi/paths/gear-items-item.yaml'
+  /api/packing-templates:
+    $ref: 'openapi/paths/packing-templates.yaml'
+  /api/packing-templates/{id}:
+    $ref: 'openapi/paths/packing-templates-item.yaml'
 components:
   securitySchemes:
     bearerAuth:
@@ -70,3 +74,11 @@ components:
       $ref: 'openapi/components/schemas/GearItem.yaml'
     GearItemList:
       $ref: 'openapi/components/schemas/GearItemList.yaml'
+    PackingTemplate:
+      $ref: 'openapi/components/schemas/PackingTemplate.yaml'
+    PackingTemplateList:
+      $ref: 'openapi/components/schemas/PackingTemplateList.yaml'
+    PackingTemplateItem:
+      $ref: 'openapi/components/schemas/PackingTemplateItem.yaml'
+    PackingTemplateDetail:
+      $ref: 'openapi/components/schemas/PackingTemplateDetail.yaml'

@@ -16,7 +16,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 
 /**
  * documentation/Features/GearCheck.md hub: three entries (Eszközök | Sablonok | Pakolás).
- * Sablonok and Pakolás land in a later implementation phase — only Eszközök is wired so far.
+ * Pakolás lands in a later implementation phase — Eszközök and Sablonok are wired so far.
  */
 @Component({
   selector: 'app-gear-check',
