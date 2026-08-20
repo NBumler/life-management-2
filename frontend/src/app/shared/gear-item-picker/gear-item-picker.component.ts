@@ -36,7 +36,7 @@ export class GearItemPickerComponent implements OnInit {
       }
       (excluded.has(item.id) ? disabled : available).push(item);
     }
-    available.sort((a, b) => a.name.localeCompare(b.name) || compareRank(q, a.name, b.name));
+    available.sort((a, b) => compareRank(q, a.name, b.name) || a.name.localeCompare(b.name));
     disabled.sort((a, b) => a.name.localeCompare(b.name));
     return [...available, ...disabled];
   });

@@ -108,7 +108,8 @@
       "EMPTY": "No gear items yet.",
       "NAME_CONFLICT": "\"{{name}}\" is already in your catalog.",
       "DELETE_CONFIRM_TITLE": "Delete item",
-      "DELETE_CONFIRM_MESSAGE": "Are you sure you want to delete \"{{name}}\"?"
+      "DELETE_CONFIRM_MESSAGE": "Are you sure you want to delete \"{{name}}\"?",
+      "DELETE_CONFIRM_CASCADE": "This will also remove it from {{templateCount}} template(s) and {{sessionCount}} active packing session(s)."
     },
     "PICKER": {
       "SEARCH_PLACEHOLDER": "Search gear",

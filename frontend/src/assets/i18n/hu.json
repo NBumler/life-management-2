@@ -108,7 +108,8 @@
       "EMPTY": "Még nincs felvett eszköz.",
       "NAME_CONFLICT": "„{{name}}” már szerepel a katalógusban.",
       "DELETE_CONFIRM_TITLE": "Eszköz törlése",
-      "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd a(z) „{{name}}” eszközt?"
+      "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd a(z) „{{name}}” eszközt?",
+      "DELETE_CONFIRM_CASCADE": "Ez {{templateCount}} sablonból és {{sessionCount}} aktív pakolásból is törlődik."
     },
     "PICKER": {
       "SEARCH_PLACEHOLDER": "Eszköz keresése",

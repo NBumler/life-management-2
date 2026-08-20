@@ -144,6 +144,73 @@ class PackingTemplateIntegrationTest {
 	}
 
 	@Test
+	void put_rejectsItemId_thatBelongsToAnotherUsersTemplate_insteadOfHijackingItViaJpaMerge() throws Exception {
+		String tokenA = registerAndLogin("tpl-hijack-victim");
+		String tokenB = registerAndLogin("tpl-hijack-atk");
+		UUID gearA = createGearItem(tokenA, "Ereszkedő 8-as");
+		UUID victimTemplateId = UUID.randomUUID();
+		UUID victimItemId = UUID.randomUUID();
+		createTemplate(tokenA, new PackingTemplateDetail(victimTemplateId, "A sablonja", false,
+				List.of(new PackingTemplateItem(victimItemId, victimTemplateId, gearA, 0, false)))).andExpect(status().isOk());
+
+		UUID gearB = createGearItem(tokenB, "B kötele");
+		UUID myTemplateId = UUID.randomUUID();
+		createTemplate(tokenB, new PackingTemplateDetail(myTemplateId, "B sablonja", false, List.of())).andExpect(status().isOk());
+
+		// B tries to smuggle A's item id into B's own template PUT.
+		putTemplate(tokenB, myTemplateId,
+				new PackingTemplateDetail(myTemplateId, "B sablonja", false,
+						List.of(new PackingTemplateItem(victimItemId, myTemplateId, gearB, 0, false))))
+				.andExpect(status().isNotFound());
+
+		// A's template and item must be completely untouched.
+		MvcResult result = mockMvc
+				.perform(get("/api/packing-templates/" + victimTemplateId).header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenA))
+				.andExpect(status().isOk()).andReturn();
+		PackingTemplateDetail afterAttack = objectMapper.readValue(result.getResponse().getContentAsString(), PackingTemplateDetail.class);
+		assertThat(itemById(afterAttack, victimItemId).getGearItemId()).isEqualTo(gearA);
+		assertThat(itemById(afterAttack, victimItemId).getDeleted()).isFalse();
+	}
+
+	@Test
+	void createOrUpdate_rejectsItem_referencingAnotherUsersGearItem() throws Exception {
+		String tokenA = registerAndLogin("tpl-frn-gear-victim");
+		String tokenB = registerAndLogin("tpl-frn-gear-atk");
+		UUID gearA = createGearItem(tokenA, "Sisak");
+		UUID templateId = UUID.randomUUID();
+
+		createTemplate(tokenB,
+				new PackingTemplateDetail(templateId, "B sablonja", false,
+						List.of(new PackingTemplateItem(UUID.randomUUID(), templateId, gearA, 0, false))))
+				.andExpect(status().isNotFound());
+	}
+
+	@Test
+	void cascadeFromGearItemDelete_bumpsUpdatedAt_soItAppearsInAnIncrementalDeltaPull() throws Exception {
+		String token = registerAndLogin("template-cascade-delta");
+		UUID gearId = createGearItem(token, "Mászóhevederzet");
+		UUID templateId = UUID.randomUUID();
+		UUID itemId = UUID.randomUUID();
+		createTemplate(token, new PackingTemplateDetail(templateId, "Kaland", false,
+				List.of(new PackingTemplateItem(itemId, templateId, gearId, 0, false)))).andExpect(status().isOk());
+
+		// First pull: capture the cursor once everything so far is caught up.
+		MvcResult firstPull = mockMvc
+				.perform(get("/api/sync/changes").header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+				.andExpect(status().isOk()).andReturn();
+		String cursor = objectMapper.readTree(firstPull.getResponse().getContentAsString()).get("nextCursor").asText();
+
+		mockMvc.perform(delete("/api/gear-items/" + gearId).header(HttpHeaders.AUTHORIZATION, "Bearer " + token)).andExpect(status().isOk());
+
+		// Delta pull from that cursor must show the cascaded item as a fresh, tombstoned change.
+		MvcResult secondPull = mockMvc
+				.perform(get("/api/sync/changes").queryParam("since", cursor).header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+				.andExpect(status().isOk()).andReturn();
+		String body = secondPull.getResponse().getContentAsString();
+		assertThat(body).contains("\"entityType\":\"PackingTemplateItem\"").contains(itemId.toString()).contains("\"deleted\":true");
+	}
+
+	@Test
 	void get_returnsNotFound_whenTemplateBelongsToAnotherUser() throws Exception {
 		String tokenA = registerAndLogin("template-owner-a");
 		String tokenB = registerAndLogin("template-attacker-b");

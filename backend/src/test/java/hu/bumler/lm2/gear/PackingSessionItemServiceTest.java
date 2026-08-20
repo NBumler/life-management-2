@@ -24,18 +24,24 @@ class PackingSessionItemServiceTest {
 
 	private PackingSessionItemRepository repository;
 	private PackingSessionRepository sessionRepository;
+	private GearItemRepository gearItemRepository;
 	private PackingSessionItemService service;
 
 	@BeforeEach
 	void setUp() {
 		repository = mock(PackingSessionItemRepository.class);
 		sessionRepository = mock(PackingSessionRepository.class);
-		service = new PackingSessionItemService(repository, sessionRepository, new PackingSessionItemMapper());
+		gearItemRepository = mock(GearItemRepository.class);
+		service = new PackingSessionItemService(repository, sessionRepository, gearItemRepository, new PackingSessionItemMapper());
 		when(repository.saveAndFlush(any())).thenAnswer(inv -> inv.getArgument(0));
 	}
 
 	private static PackingSessionEntity session(UUID id, UUID userId) {
 		return new PackingSessionEntity(id, userId);
+	}
+
+	private void ownGearItem(UUID userId, UUID gearItemId) {
+		when(gearItemRepository.findByIdAndUserId(gearItemId, userId)).thenReturn(Optional.of(new GearItemEntity(gearItemId, userId)));
 	}
 
 	private static PackingSessionItem itemDto(UUID id, UUID sessionId, UUID gearId, PackingSessionItem.StatusEnum status, int sortOrder) {
@@ -53,6 +59,7 @@ class PackingSessionItemServiceTest {
 		when(sessionRepository.findByIdAndUserId(ownedSession.getId(), userId)).thenReturn(Optional.of(ownedSession));
 		when(repository.findById(id)).thenReturn(Optional.empty());
 		when(repository.findBySessionIdAndGearItemIdAndDeletedFalse(ownedSession.getId(), gearId)).thenReturn(Optional.empty());
+		ownGearItem(userId, gearId);
 
 		PackingSessionItem saved = service.create(userId, itemDto(id, ownedSession.getId(), gearId, PackingSessionItem.StatusEnum.NOT_PACKED, 3));
 
@@ -98,6 +105,7 @@ class PackingSessionItemServiceTest {
 		when(repository.findById(id)).thenReturn(Optional.empty());
 		when(sessionRepository.findByIdAndUserId(ownedSession.getId(), userId)).thenReturn(Optional.of(ownedSession));
 		when(repository.findBySessionIdAndGearItemIdAndDeletedFalse(ownedSession.getId(), gearId)).thenReturn(Optional.of(conflict));
+		ownGearItem(userId, gearId);
 
 		PackingSessionItem dto = itemDto(id, ownedSession.getId(), gearId, PackingSessionItem.StatusEnum.NOT_PACKED, 0);
 
@@ -108,6 +116,22 @@ class PackingSessionItemServiceTest {
 					assertThat(uve.getField()).isEqualTo("gearItemId");
 					assertThat(uve.getConflictingId()).isEqualTo(conflict.getId());
 				});
+		verify(repository, never()).saveAndFlush(any());
+	}
+
+	@Test
+	void create_rejectsNewItem_whenGearItemNotOwnedByCaller() {
+		UUID userId = UUID.randomUUID();
+		PackingSessionEntity ownedSession = session(UUID.randomUUID(), userId);
+		UUID id = UUID.randomUUID();
+		UUID foreignGearId = UUID.randomUUID();
+		when(repository.findById(id)).thenReturn(Optional.empty());
+		when(sessionRepository.findByIdAndUserId(ownedSession.getId(), userId)).thenReturn(Optional.of(ownedSession));
+		when(gearItemRepository.findByIdAndUserId(foreignGearId, userId)).thenReturn(Optional.empty());
+
+		PackingSessionItem dto = itemDto(id, ownedSession.getId(), foreignGearId, PackingSessionItem.StatusEnum.NOT_PACKED, 0);
+
+		assertThatThrownBy(() -> service.create(userId, dto)).isInstanceOf(EntityNotFoundException.class);
 		verify(repository, never()).saveAndFlush(any());
 	}
 

@@ -3,7 +3,7 @@ import { Capacitor } from '@capacitor/core';
 
 import { GearItem } from '../../api/model/gearItem';
 import { normalizeName } from '../../shared/name-normalization';
-import { STORAGE_BACKEND } from '../storage/storage-backend';
+import { GearItemReferenceCounts, STORAGE_BACKEND } from '../storage/storage-backend';
 import { SyncEngineService } from '../sync/sync-engine.service';
 import { uuidV4 } from '../sync/uuid';
 
@@ -57,6 +57,11 @@ export class GearItemRepository {
     await this.storage.deleteGearItem(id);
     this.items.update((list) => list.filter((item) => item.id !== id));
     this.requestDrainIfNative();
+  }
+
+  /** documentation/Subfeatures/Eszközök.md "Törlés UI": cascade count for the delete confirmation, `null` if not computable (web). */
+  countReferences(id: string): Promise<GearItemReferenceCounts | null> {
+    return this.storage.countGearItemReferences(id);
   }
 
   private requestDrainIfNative(): void {

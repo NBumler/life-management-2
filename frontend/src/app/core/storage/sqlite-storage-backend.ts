@@ -37,7 +37,7 @@ import { AuthSessionService } from '../session/auth-session.service';
 import { OfflineQueueService } from '../sync/offline-queue.service';
 import { uuidV4 } from '../sync/uuid';
 import { LocalDatabaseService, SqlTask } from './local-database.service';
-import { PackingSessionStartDraft, PackingTemplateDraft, StorageBackend } from './storage-backend';
+import { GearItemReferenceCounts, PackingSessionStartDraft, PackingTemplateDraft, StorageBackend } from './storage-backend';
 
 /** Native (offlineCapable = true): local-first — every write lands in SQLite + the outbox in one transaction (§5). */
 @Injectable({ providedIn: 'root' })
@@ -181,6 +181,18 @@ export class SqliteStorageBackend implements StorageBackend {
   private async readGearItem(id: string): Promise<GearItem> {
     const rows = await this.db.query<GearItemRow>('SELECT * FROM gear_item WHERE id = ?', [id]);
     return gearItemRowToDto(rows[0]);
+  }
+
+  async countGearItemReferences(gearItemId: string): Promise<GearItemReferenceCounts> {
+    const templateRows = await this.db.query<{ count: number }>(
+      'SELECT COUNT(DISTINCT template_id) AS count FROM packing_template_item WHERE gear_item_id = ? AND deleted = 0',
+      [gearItemId],
+    );
+    const sessionRows = await this.db.query<{ count: number }>(
+      'SELECT COUNT(DISTINCT session_id) AS count FROM packing_session_item WHERE gear_item_id = ? AND deleted = 0',
+      [gearItemId],
+    );
+    return { templateCount: templateRows[0]?.count ?? 0, sessionCount: sessionRows[0]?.count ?? 0 };
   }
 
   async listPackingTemplates(): Promise<PackingTemplate[]> {

@@ -29,7 +29,7 @@
             formControlName="name"
             [label]="'GEAR.ITEMS.NAME' | translate"
             labelPlacement="stacked"
-            [autofocus]="true"
+            [autofocus]="editingId() === 'new'"
           ></ion-input>
           @if (nameConflictError(); as conflictMessage) {
             <ion-text color="danger">

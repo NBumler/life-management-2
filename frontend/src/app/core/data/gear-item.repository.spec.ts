@@ -16,7 +16,7 @@ describe('GearItemRepository', () => {
   }
 
   beforeEach(() => {
-    storage = jasmine.createSpyObj('StorageBackend', ['listGearItems', 'upsertGearItem', 'deleteGearItem']);
+    storage = jasmine.createSpyObj('StorageBackend', ['listGearItems', 'upsertGearItem', 'deleteGearItem', 'countGearItemReferences']);
     syncEngine = jasmine.createSpyObj('SyncEngineService', ['requestDrainDebounced']);
 
     TestBed.configureTestingModule({
@@ -99,6 +99,21 @@ describe('GearItemRepository', () => {
     await repository.remove('g1');
 
     expect(syncEngine.requestDrainDebounced).toHaveBeenCalledTimes(2);
+  });
+
+  it('countReferences(): delegates to the storage backend', async () => {
+    storage.countGearItemReferences.and.resolveTo({ templateCount: 2, sessionCount: 1 });
+
+    const counts = await repository.countReferences('a');
+
+    expect(counts).toEqual({ templateCount: 2, sessionCount: 1 });
+    expect(storage.countGearItemReferences).toHaveBeenCalledWith('a');
+  });
+
+  it('countReferences(): passes through null (web build, no local store to query)', async () => {
+    storage.countGearItemReferences.and.resolveTo(null);
+
+    expect(await repository.countReferences('a')).toBeNull();
   });
 
   it('does not trigger a drain on web', async () => {

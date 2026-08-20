@@ -72,7 +72,7 @@ export class GearItemsPage implements OnInit {
     return this.repository
       .items()
       .filter((item) => matchesSearch(query, item.name))
-      .sort((a, b) => a.name.localeCompare(b.name) || compareRank(query, a.name, b.name));
+      .sort((a, b) => compareRank(query, a.name, b.name) || a.name.localeCompare(b.name));
   });
 
   async ngOnInit(): Promise<void> {
@@ -118,14 +118,28 @@ export class GearItemsPage implements OnInit {
   }
 
   async delete(item: GearItem): Promise<void> {
+    const counts = await this.repository.countReferences(item.id);
     const alert = await this.alertController.create({
       header: this.translate.instant('GEAR.ITEMS.DELETE_CONFIRM_TITLE'),
-      message: this.translate.instant('GEAR.ITEMS.DELETE_CONFIRM_MESSAGE', { name: item.name }),
+      message: this.buildDeleteConfirmMessage(item.name, counts),
       buttons: [
         { text: this.translate.instant('COMMON.CANCEL'), role: 'cancel' },
         { text: this.translate.instant('COMMON.DELETE'), role: 'destructive', handler: () => void this.repository.remove(item.id) },
       ],
     });
     await alert.present();
+  }
+
+  /**
+   * documentation/Subfeatures/Eszközök.md "Törlés UI": "A megerősítő szöveg jelezze, ha ismert: hány
+   * sablonból / hány aktív pakolásból törlődik" — `counts` is `null` on web (no local store to query).
+   */
+  private buildDeleteConfirmMessage(name: string, counts: { templateCount: number; sessionCount: number } | null): string {
+    const base = this.translate.instant('GEAR.ITEMS.DELETE_CONFIRM_MESSAGE', { name });
+    if (counts === null || (counts.templateCount === 0 && counts.sessionCount === 0)) {
+      return base;
+    }
+    const cascadeHint = this.translate.instant('GEAR.ITEMS.DELETE_CONFIRM_CASCADE', counts);
+    return `${base} ${cascadeHint}`;
   }
 }

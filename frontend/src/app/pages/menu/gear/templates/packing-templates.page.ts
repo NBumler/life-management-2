@@ -19,7 +19,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 import { PackingTemplate } from '../../../../api/model/packingTemplate';
 import { PackingTemplateRepository } from '../../../../core/data/packing-template.repository';
-import { matchesSearch } from '../../../../shared/text-search';
+import { compareRank, matchesSearch } from '../../../../shared/text-search';
 
 /** documentation/Subfeatures/Sablonok.md: template list with search, open/edit, másolás, törlés. */
 @Component({
@@ -41,7 +41,7 @@ export class PackingTemplatesPage implements OnInit {
     return this.repository
       .templates()
       .filter((template) => matchesSearch(query, template.name))
-      .sort((a, b) => a.name.localeCompare(b.name));
+      .sort((a, b) => compareRank(query, a.name, b.name) || a.name.localeCompare(b.name));
   });
 
   async ngOnInit(): Promise<void> {

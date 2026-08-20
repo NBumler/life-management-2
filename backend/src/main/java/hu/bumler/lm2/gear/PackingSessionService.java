@@ -17,13 +17,15 @@ class PackingSessionService {
 
 	private final PackingSessionRepository repository;
 	private final PackingSessionItemRepository itemRepository;
+	private final GearItemRepository gearItemRepository;
 	private final PackingSessionMapper mapper;
 	private final PackingSessionItemMapper itemMapper;
 
-	PackingSessionService(PackingSessionRepository repository, PackingSessionItemRepository itemRepository, PackingSessionMapper mapper,
-			PackingSessionItemMapper itemMapper) {
+	PackingSessionService(PackingSessionRepository repository, PackingSessionItemRepository itemRepository,
+			GearItemRepository gearItemRepository, PackingSessionMapper mapper, PackingSessionItemMapper itemMapper) {
 		this.repository = repository;
 		this.itemRepository = itemRepository;
+		this.gearItemRepository = gearItemRepository;
 		this.mapper = mapper;
 		this.itemMapper = itemMapper;
 	}
@@ -55,7 +57,9 @@ class PackingSessionService {
 		repository.saveAndFlush(entity);
 
 		for (PackingSessionItem itemDto : dto.getItems()) {
+			requireOwnGearItem(userId, itemDto.getGearItemId());
 			PackingSessionItemEntity itemEntity = itemRepository.findById(itemDto.getId())
+					.map(existing -> requireOwnSessionItem(existing, userId, entity.getId()))
 					.orElseGet(() -> new PackingSessionItemEntity(itemDto.getId(), userId, entity.getId(), itemDto.getGearItemId(),
 							itemDto.getStatus().getValue(), itemDto.getSortOrder()));
 			itemEntity.setStatus(itemDto.getStatus().getValue());
@@ -109,5 +113,24 @@ class PackingSessionService {
 			throw new EntityNotFoundException("No such session");
 		}
 		return entity;
+	}
+
+	/**
+	 * {@code itemRepository.findById} is table-wide, not scoped to this session: an id collision with
+	 * another user's (or another of the caller's own) session items must not silently overwrite that
+	 * row's status/sortOrder via {@code JpaRepository.save()}'s merge-on-existing-id behavior.
+	 */
+	private static PackingSessionItemEntity requireOwnSessionItem(PackingSessionItemEntity entity, UUID userId, UUID sessionId) {
+		if (!entity.getUserId().equals(userId) || !entity.getSessionId().equals(sessionId)) {
+			throw new EntityNotFoundException("No such session item");
+		}
+		return entity;
+	}
+
+	/** documentation/Subfeatures/Pakolás.md: a session may only reference the caller's own GearItem catalog. */
+	private void requireOwnGearItem(UUID userId, UUID gearItemId) {
+		if (gearItemRepository.findByIdAndUserId(gearItemId, userId).isEmpty()) {
+			throw new EntityNotFoundException("No such gear item");
+		}
 	}
 }

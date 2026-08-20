@@ -30,6 +30,11 @@ export interface PackingSessionStartItem {
   sortOrder: number;
 }
 
+export interface GearItemReferenceCounts {
+  templateCount: number;
+  sessionCount: number;
+}
+
 export interface PackingSessionStartDraft {
   id: string;
   destination: string | null;
@@ -54,6 +59,12 @@ export interface StorageBackend {
   listGearItems(): Promise<GearItem[]>;
   upsertGearItem(item: GearItem): Promise<GearItem>;
   deleteGearItem(id: string): Promise<GearItem>;
+  /**
+   * documentation/Subfeatures/Eszközök.md "Törlés UI": affected live template/session count for the
+   * delete confirmation ("helyi store lekérdezés"). `null` when not computable — the web build has no
+   * local store to query (documentation/Architektúra/Backend-offline first.md §1: web is online-only).
+   */
+  countGearItemReferences(gearItemId: string): Promise<GearItemReferenceCounts | null>;
 
   listPackingTemplates(): Promise<PackingTemplate[]>;
   getPackingTemplateDetail(id: string): Promise<PackingTemplateDetail>;

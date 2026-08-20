@@ -15,7 +15,7 @@ import { PackingTemplateDetail } from '../../api/model/packingTemplateDetail';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 import { uuidV4 } from '../sync/uuid';
-import { PackingSessionStartDraft, PackingTemplateDraft, StorageBackend } from './storage-backend';
+import { GearItemReferenceCounts, PackingSessionStartDraft, PackingTemplateDraft, StorageBackend } from './storage-backend';
 
 /** Web (offlineCapable = false): every call is a direct HTTP round-trip, no local store, no outbox. */
 @Injectable({ providedIn: 'root' })
@@ -65,6 +65,11 @@ export class HttpStorageBackend implements StorageBackend {
 
   deleteGearItem(id: string): Promise<GearItem> {
     return firstValueFrom(this.gearApi.deleteGearItem(id));
+  }
+
+  /** No local store on web to query — the delete confirmation shows a generic message instead. */
+  countGearItemReferences(): Promise<GearItemReferenceCounts | null> {
+    return Promise.resolve(null);
   }
 
   listPackingTemplates(): Promise<PackingTemplate[]> {

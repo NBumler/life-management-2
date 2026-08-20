@@ -21,13 +21,15 @@ class PackingTemplateService {
 
 	private final PackingTemplateRepository repository;
 	private final PackingTemplateItemRepository itemRepository;
+	private final GearItemRepository gearItemRepository;
 	private final PackingTemplateMapper mapper;
 	private final PackingTemplateItemMapper itemMapper;
 
 	PackingTemplateService(PackingTemplateRepository repository, PackingTemplateItemRepository itemRepository,
-			PackingTemplateMapper mapper, PackingTemplateItemMapper itemMapper) {
+			GearItemRepository gearItemRepository, PackingTemplateMapper mapper, PackingTemplateItemMapper itemMapper) {
 		this.repository = repository;
 		this.itemRepository = itemRepository;
+		this.gearItemRepository = gearItemRepository;
 		this.mapper = mapper;
 		this.itemMapper = itemMapper;
 	}
@@ -97,11 +99,9 @@ class PackingTemplateService {
 		Set<UUID> incomingIds = new HashSet<>();
 		for (PackingTemplateItem itemDto : dto.getItems()) {
 			incomingIds.add(itemDto.getId());
-			PackingTemplateItemEntity itemEntity = existingItems.stream()
-					.filter(existing -> existing.getId().equals(itemDto.getId()))
-					.findFirst()
-					.orElseGet(() -> new PackingTemplateItemEntity(itemDto.getId(), userId, entity.getId(), itemDto.getGearItemId(),
-							itemDto.getSortOrder()));
+			requireOwnGearItem(userId, itemDto.getGearItemId());
+			PackingTemplateItemEntity itemEntity = resolveItem(userId, entity.getId(), existingItems, itemDto.getId());
+			itemEntity.setGearItemId(itemDto.getGearItemId());
 			itemEntity.setSortOrder(itemDto.getSortOrder());
 			itemRepository.save(itemEntity);
 		}
@@ -114,6 +114,32 @@ class PackingTemplateService {
 		itemRepository.flush();
 
 		return toDetail(entity);
+	}
+
+	/**
+	 * An id not among this template's own items may still exist elsewhere in the table (another
+	 * template, another user) — since {@code PackingTemplateItemEntity} has a manually-assigned
+	 * {@code @Id}, {@code JpaRepository.save()} always {@code merge()}s, which would silently hijack
+	 * that foreign row's owner/template/gearItem if we blindly built a "new" entity around its id.
+	 * Reject instead: a genuinely new item's client-generated UUID never collides.
+	 */
+	private PackingTemplateItemEntity resolveItem(UUID userId, UUID templateId, List<PackingTemplateItemEntity> existingItems, UUID itemId) {
+		return existingItems.stream()
+				.filter(existing -> existing.getId().equals(itemId))
+				.findFirst()
+				.orElseGet(() -> {
+					if (itemRepository.existsById(itemId)) {
+						throw new EntityNotFoundException("No such template item");
+					}
+					return new PackingTemplateItemEntity(itemId, userId, templateId, null, 0);
+				});
+	}
+
+	/** documentation/Subfeatures/Sablonok.md: a template may only reference the caller's own GearItem catalog. */
+	private void requireOwnGearItem(UUID userId, UUID gearItemId) {
+		if (gearItemRepository.findByIdAndUserId(gearItemId, userId).isEmpty()) {
+			throw new EntityNotFoundException("No such gear item");
+		}
 	}
 
 	private PackingTemplateDetail toDetail(PackingTemplateEntity entity) {

@@ -72,6 +72,10 @@ public class PackingTemplateItemEntity {
 		return gearItemId;
 	}
 
+	public void setGearItemId(UUID gearItemId) {
+		this.gearItemId = gearItemId;
+	}
+
 	public int getSortOrder() {
 		return sortOrder;
 	}

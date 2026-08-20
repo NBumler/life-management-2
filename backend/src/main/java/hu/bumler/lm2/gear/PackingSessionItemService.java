@@ -19,12 +19,14 @@ class PackingSessionItemService {
 
 	private final PackingSessionItemRepository repository;
 	private final PackingSessionRepository sessionRepository;
+	private final GearItemRepository gearItemRepository;
 	private final PackingSessionItemMapper mapper;
 
 	PackingSessionItemService(PackingSessionItemRepository repository, PackingSessionRepository sessionRepository,
-			PackingSessionItemMapper mapper) {
+			GearItemRepository gearItemRepository, PackingSessionItemMapper mapper) {
 		this.repository = repository;
 		this.sessionRepository = sessionRepository;
+		this.gearItemRepository = gearItemRepository;
 		this.mapper = mapper;
 	}
 
@@ -63,6 +65,9 @@ class PackingSessionItemService {
 				.orElseThrow(() -> new EntityNotFoundException("No such session"));
 		if (session.isDeleted()) {
 			throw new EntityDeletedException("Session already deleted");
+		}
+		if (gearItemRepository.findByIdAndUserId(dto.getGearItemId(), userId).isEmpty()) {
+			throw new EntityNotFoundException("No such gear item");
 		}
 		repository.findBySessionIdAndGearItemIdAndDeletedFalse(dto.getSessionId(), dto.getGearItemId())
 				.ifPresent(conflict -> {

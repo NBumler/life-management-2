@@ -30,13 +30,16 @@ class PackingTemplateServiceTest {
 
 	private PackingTemplateRepository repository;
 	private PackingTemplateItemRepository itemRepository;
+	private GearItemRepository gearItemRepository;
 	private PackingTemplateService service;
 
 	@BeforeEach
 	void setUp() {
 		repository = mock(PackingTemplateRepository.class);
 		itemRepository = mock(PackingTemplateItemRepository.class);
-		service = new PackingTemplateService(repository, itemRepository, new PackingTemplateMapper(), new PackingTemplateItemMapper());
+		gearItemRepository = mock(GearItemRepository.class);
+		service = new PackingTemplateService(repository, itemRepository, gearItemRepository, new PackingTemplateMapper(),
+				new PackingTemplateItemMapper());
 		when(repository.saveAndFlush(any())).thenAnswer(inv -> inv.getArgument(0));
 	}
 
@@ -48,6 +51,10 @@ class PackingTemplateServiceTest {
 
 	private static PackingTemplateItemEntity item(UUID id, UUID userId, UUID templateId, UUID gearItemId, int sortOrder) {
 		return new PackingTemplateItemEntity(id, userId, templateId, gearItemId, sortOrder);
+	}
+
+	private void ownGearItem(UUID userId, UUID gearItemId) {
+		when(gearItemRepository.findByIdAndUserId(gearItemId, userId)).thenReturn(Optional.of(new GearItemEntity(gearItemId, userId)));
 	}
 
 	// --- create (idempotent upsert) ---
@@ -121,6 +128,8 @@ class PackingTemplateServiceTest {
 		when(repository.findByIdAndUserId(templateId, userId)).thenReturn(Optional.of(existing));
 		when(repository.findByUserIdAndNameNormalizedAndDeletedFalse(eq(userId), any())).thenReturn(Optional.empty());
 		when(itemRepository.findByTemplateId(templateId)).thenReturn(List.of(kept, removed));
+		ownGearItem(userId, keptGearId);
+		ownGearItem(userId, newGearId);
 
 		UUID newItemId = UUID.randomUUID();
 		PackingTemplateItem keptDto = new PackingTemplateItem(keptItemId, templateId, keptGearId, 1, false); // reordered to index 1
@@ -145,6 +154,71 @@ class PackingTemplateServiceTest {
 		// The item missing from the incoming list is soft-deleted, not hard-removed.
 		assertThat(removed.isDeleted()).isTrue();
 		assertThat(saved).contains(removed);
+	}
+
+	// --- item ownership / cross-tenant safety (regression for the merge()-hijack bug) ---
+
+	@Test
+	void update_updatesGearItemId_onExistingItem() {
+		UUID userId = UUID.randomUUID();
+		UUID templateId = UUID.randomUUID();
+		PackingTemplateEntity existing = template(templateId, userId);
+		UUID itemId = UUID.randomUUID();
+		UUID oldGearId = UUID.randomUUID();
+		UUID newGearId = UUID.randomUUID();
+		PackingTemplateItemEntity existingItem = item(itemId, userId, templateId, oldGearId, 0);
+
+		when(repository.findByIdAndUserId(templateId, userId)).thenReturn(Optional.of(existing));
+		when(repository.findByUserIdAndNameNormalizedAndDeletedFalse(eq(userId), any())).thenReturn(Optional.empty());
+		when(itemRepository.findByTemplateId(templateId)).thenReturn(List.of(existingItem));
+		ownGearItem(userId, newGearId);
+
+		PackingTemplateItem changedDto = new PackingTemplateItem(itemId, templateId, newGearId, 0, false);
+		service.update(userId, templateId, new PackingTemplateDetail(templateId, "Hétvégi mászás", false, List.of(changedDto)));
+
+		assertThat(existingItem.getGearItemId()).isEqualTo(newGearId);
+		verify(itemRepository).save(existingItem);
+	}
+
+	@Test
+	void update_rejectsItemId_thatBelongsToAnotherTemplate_insteadOfHijackingItViaMerge() {
+		UUID attacker = UUID.randomUUID();
+		UUID myTemplateId = UUID.randomUUID();
+		PackingTemplateEntity myTemplate = template(myTemplateId, attacker);
+		UUID victimGearId = UUID.randomUUID();
+		UUID foreignItemId = UUID.randomUUID(); // belongs to some other template/user's row
+
+		when(repository.findByIdAndUserId(myTemplateId, attacker)).thenReturn(Optional.of(myTemplate));
+		when(repository.findByUserIdAndNameNormalizedAndDeletedFalse(eq(attacker), any())).thenReturn(Optional.empty());
+		when(itemRepository.findByTemplateId(myTemplateId)).thenReturn(List.of()); // not one of my own items
+		when(itemRepository.existsById(foreignItemId)).thenReturn(true); // but the id exists somewhere in the table
+		ownGearItem(attacker, victimGearId);
+
+		PackingTemplateItem hijackDto = new PackingTemplateItem(foreignItemId, myTemplateId, victimGearId, 0, false);
+		PackingTemplateDetail dto = new PackingTemplateDetail(myTemplateId, "Hétvégi mászás", false, List.of(hijackDto));
+
+		assertThatThrownBy(() -> service.update(attacker, myTemplateId, dto)).isInstanceOf(EntityNotFoundException.class);
+		verify(itemRepository, never()).save(any());
+	}
+
+	@Test
+	void update_rejectsItem_whenGearItemNotOwnedByCaller() {
+		UUID userId = UUID.randomUUID();
+		UUID templateId = UUID.randomUUID();
+		PackingTemplateEntity existing = template(templateId, userId);
+		UUID foreignGearId = UUID.randomUUID();
+
+		when(repository.findByIdAndUserId(templateId, userId)).thenReturn(Optional.of(existing));
+		when(repository.findByUserIdAndNameNormalizedAndDeletedFalse(eq(userId), any())).thenReturn(Optional.empty());
+		when(itemRepository.findByTemplateId(templateId)).thenReturn(List.of());
+		when(gearItemRepository.findByIdAndUserId(foreignGearId, userId)).thenReturn(Optional.empty());
+
+		PackingTemplateItem dto = new PackingTemplateItem(UUID.randomUUID(), templateId, foreignGearId, 0, false);
+
+		assertThatThrownBy(
+				() -> service.update(userId, templateId, new PackingTemplateDetail(templateId, "Hétvégi mászás", false, List.of(dto))))
+				.isInstanceOf(EntityNotFoundException.class);
+		verify(itemRepository, never()).save(any());
 	}
 
 	@Test

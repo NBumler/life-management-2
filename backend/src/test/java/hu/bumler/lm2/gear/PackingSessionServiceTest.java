@@ -28,18 +28,25 @@ class PackingSessionServiceTest {
 
 	private PackingSessionRepository repository;
 	private PackingSessionItemRepository itemRepository;
+	private GearItemRepository gearItemRepository;
 	private PackingSessionService service;
 
 	@BeforeEach
 	void setUp() {
 		repository = mock(PackingSessionRepository.class);
 		itemRepository = mock(PackingSessionItemRepository.class);
-		service = new PackingSessionService(repository, itemRepository, new PackingSessionMapper(), new PackingSessionItemMapper());
+		gearItemRepository = mock(GearItemRepository.class);
+		service = new PackingSessionService(repository, itemRepository, gearItemRepository, new PackingSessionMapper(),
+				new PackingSessionItemMapper());
 		when(repository.saveAndFlush(any())).thenAnswer(inv -> inv.getArgument(0));
 	}
 
 	private static PackingSessionEntity session(UUID id, UUID userId) {
 		return new PackingSessionEntity(id, userId);
+	}
+
+	private void ownGearItem(UUID userId, UUID gearItemId) {
+		when(gearItemRepository.findByIdAndUserId(gearItemId, userId)).thenReturn(Optional.of(new GearItemEntity(gearItemId, userId)));
 	}
 
 	// --- create (nested, idempotent upsert) ---
@@ -53,6 +60,7 @@ class PackingSessionServiceTest {
 		when(repository.findById(sessionId)).thenReturn(Optional.empty());
 		when(itemRepository.findById(any())).thenReturn(Optional.empty());
 		when(itemRepository.findBySessionId(sessionId)).thenReturn(List.of());
+		ownGearItem(userId, gearId);
 
 		PackingSessionItem itemDto = new PackingSessionItem(UUID.randomUUID(), sessionId, gearId, PackingSessionItem.StatusEnum.NOT_PACKED, 0, false);
 		PackingSessionDetail dto = new PackingSessionDetail(sessionId, false, List.of(itemDto)).destination("Tátra")
@@ -83,6 +91,67 @@ class PackingSessionServiceTest {
 
 		assertThatThrownBy(() -> service.create(attacker, dto)).isInstanceOf(EntityNotFoundException.class);
 		verify(repository, never()).saveAndFlush(any());
+	}
+
+	// --- item ownership / cross-tenant safety (regression: findById is table-wide, unscoped) ---
+
+	@Test
+	void create_rejectsItemId_thatBelongsToAnotherUsersSession_insteadOfOverwritingItsStatus() {
+		UUID attacker = UUID.randomUUID();
+		UUID victim = UUID.randomUUID();
+		UUID mySessionId = UUID.randomUUID();
+		UUID gearId = UUID.randomUUID();
+		PackingSessionItemEntity victimItem = new PackingSessionItemEntity(UUID.randomUUID(), victim, UUID.randomUUID(), gearId, "PACKED", 2);
+
+		when(repository.findById(mySessionId)).thenReturn(Optional.empty());
+		when(itemRepository.findById(victimItem.getId())).thenReturn(Optional.of(victimItem));
+		ownGearItem(attacker, gearId);
+
+		PackingSessionItem hijackDto = new PackingSessionItem(victimItem.getId(), mySessionId, gearId, PackingSessionItem.StatusEnum.NOT_PACKED, 0,
+				false);
+		PackingSessionDetail dto = new PackingSessionDetail(mySessionId, false, List.of(hijackDto));
+
+		assertThatThrownBy(() -> service.create(attacker, dto)).isInstanceOf(EntityNotFoundException.class);
+		// The victim's row must be untouched.
+		assertThat(victimItem.getStatus()).isEqualTo("PACKED");
+		assertThat(victimItem.getSortOrder()).isEqualTo(2);
+		verify(itemRepository, never()).save(any());
+	}
+
+	@Test
+	void create_rejectsItemId_thatBelongsToAnotherSessionOfTheSameUser() {
+		UUID userId = UUID.randomUUID();
+		UUID otherSessionId = UUID.randomUUID();
+		UUID mySessionId = UUID.randomUUID();
+		UUID gearId = UUID.randomUUID();
+		PackingSessionItemEntity otherSessionItem = new PackingSessionItemEntity(UUID.randomUUID(), userId, otherSessionId, gearId, "PACKED", 0);
+
+		when(repository.findById(mySessionId)).thenReturn(Optional.empty());
+		when(itemRepository.findById(otherSessionItem.getId())).thenReturn(Optional.of(otherSessionItem));
+		ownGearItem(userId, gearId);
+
+		PackingSessionItem dto = new PackingSessionItem(otherSessionItem.getId(), mySessionId, gearId, PackingSessionItem.StatusEnum.NOT_PACKED, 0,
+				false);
+
+		assertThatThrownBy(() -> service.create(userId, new PackingSessionDetail(mySessionId, false, List.of(dto))))
+				.isInstanceOf(EntityNotFoundException.class);
+		verify(itemRepository, never()).save(any());
+	}
+
+	@Test
+	void create_rejectsItem_whenGearItemNotOwnedByCaller() {
+		UUID userId = UUID.randomUUID();
+		UUID sessionId = UUID.randomUUID();
+		UUID foreignGearId = UUID.randomUUID();
+		when(repository.findById(sessionId)).thenReturn(Optional.empty());
+		when(gearItemRepository.findByIdAndUserId(foreignGearId, userId)).thenReturn(Optional.empty());
+
+		PackingSessionItem dto = new PackingSessionItem(UUID.randomUUID(), sessionId, foreignGearId, PackingSessionItem.StatusEnum.NOT_PACKED, 0,
+				false);
+
+		assertThatThrownBy(() -> service.create(userId, new PackingSessionDetail(sessionId, false, List.of(dto))))
+				.isInstanceOf(EntityNotFoundException.class);
+		verify(itemRepository, never()).save(any());
 	}
 
 	// --- update (session-level fields only) ---

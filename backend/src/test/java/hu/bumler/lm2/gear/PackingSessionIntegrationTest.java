@@ -166,6 +166,82 @@ class PackingSessionIntegrationTest {
 	}
 
 	@Test
+	void create_rejectsItemId_thatBelongsToAnotherUsersSession_insteadOfOverwritingItsStatus() throws Exception {
+		String tokenA = registerAndLogin("session-hijack-victim");
+		String tokenB = registerAndLogin("session-hijack-attacker");
+		UUID gearA = createGearItem(tokenA, "Ereszkedő eszköz");
+		UUID victimSessionId = UUID.randomUUID();
+		UUID victimItemId = UUID.randomUUID();
+		createSession(tokenA,
+				new PackingSessionDetail(victimSessionId, false,
+						List.of(new PackingSessionItem(victimItemId, victimSessionId, gearA, PackingSessionItem.StatusEnum.PACKED, 0, false))))
+				.andExpect(status().isOk());
+
+		UUID gearB = createGearItem(tokenB, "B sátra");
+		UUID mySessionId = UUID.randomUUID();
+
+		mockMvc.perform(post("/api/packing-sessions").contentType(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenB)
+				.content(json(new PackingSessionDetail(mySessionId, false,
+						List.of(new PackingSessionItem(victimItemId, mySessionId, gearB, PackingSessionItem.StatusEnum.NOT_PACKED, 0, false))))))
+				.andExpect(status().isNotFound());
+
+		// A's item status/gear reference must be completely untouched.
+		MvcResult result = mockMvc
+				.perform(get("/api/packing-sessions/" + victimSessionId).header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenA))
+				.andExpect(status().isOk()).andReturn();
+		PackingSessionDetail afterAttack = objectMapper.readValue(result.getResponse().getContentAsString(), PackingSessionDetail.class);
+		PackingSessionItem victimItem = afterAttack.getItems().stream().filter(i -> i.getId().equals(victimItemId)).findFirst().orElseThrow();
+		assertThat(victimItem.getStatus()).isEqualTo(PackingSessionItem.StatusEnum.PACKED);
+		assertThat(victimItem.getGearItemId()).isEqualTo(gearA);
+	}
+
+	@Test
+	void createOrExtraItem_rejectsItem_referencingAnotherUsersGearItem() throws Exception {
+		String tokenA = registerAndLogin("ses-frn-gear-victim");
+		String tokenB = registerAndLogin("ses-frn-gear-atk");
+		UUID gearA = createGearItem(tokenA, "Sisak");
+		UUID sessionId = UUID.randomUUID();
+
+		mockMvc.perform(post("/api/packing-sessions").contentType(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenB)
+				.content(json(new PackingSessionDetail(sessionId, false,
+						List.of(new PackingSessionItem(UUID.randomUUID(), sessionId, gearA, PackingSessionItem.StatusEnum.NOT_PACKED, 0, false))))))
+				.andExpect(status().isNotFound());
+
+		createSession(tokenB, new PackingSessionDetail(sessionId, false, List.of())).andExpect(status().isOk());
+		mockMvc.perform(post("/api/packing-session-items").contentType(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenB)
+				.content(json(new PackingSessionItem(UUID.randomUUID(), sessionId, gearA, PackingSessionItem.StatusEnum.NOT_PACKED, 0, false))))
+				.andExpect(status().isNotFound());
+	}
+
+	@Test
+	void cascadeFromGearItemDelete_bumpsUpdatedAt_soItAppearsInAnIncrementalDeltaPull() throws Exception {
+		String token = registerAndLogin("session-cascade-delta");
+		UUID gearId = createGearItem(token, "Fejlámpa");
+		UUID sessionId = UUID.randomUUID();
+		UUID itemId = UUID.randomUUID();
+		createSession(token,
+				new PackingSessionDetail(sessionId, false,
+						List.of(new PackingSessionItem(itemId, sessionId, gearId, PackingSessionItem.StatusEnum.NOT_PACKED, 0, false))))
+				.andExpect(status().isOk());
+
+		MvcResult firstPull = mockMvc
+				.perform(get("/api/sync/changes").header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+				.andExpect(status().isOk()).andReturn();
+		String cursor = objectMapper.readTree(firstPull.getResponse().getContentAsString()).get("nextCursor").asText();
+
+		mockMvc.perform(delete("/api/gear-items/" + gearId).header(HttpHeaders.AUTHORIZATION, "Bearer " + token)).andExpect(status().isOk());
+
+		MvcResult secondPull = mockMvc
+				.perform(get("/api/sync/changes").queryParam("since", cursor).header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+				.andExpect(status().isOk()).andReturn();
+		String body = secondPull.getResponse().getContentAsString();
+		assertThat(body).contains("\"entityType\":\"PackingSessionItem\"").contains(itemId.toString()).contains("\"deleted\":true");
+	}
+
+	@Test
 	void get_returnsNotFound_whenSessionBelongsToAnotherUser() throws Exception {
 		String tokenA = registerAndLogin("session-owner-a");
 		String tokenB = registerAndLogin("session-attacker-b");
