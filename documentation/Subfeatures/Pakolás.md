@@ -108,6 +108,7 @@ Egy tétel kártya:
 ### UI/UX elvárások
 
 - Belépés: [[GearCheck]] hub → **Aktív pakolás** (lista a futó sessionökről + új indítás; korlátlan darabszám).
+- Lista soron cím: a `destination`, ha meg van adva; ha nincs, a `sourceTemplateIds` alapján a forrás-sablon(ok) neve, **vesszővel összefűzve** — csak ha egyik forrás-sablon neve sem oldható fel (pl. törölt sablon(ok)ból indult, üres lista), akkor esik vissza „Névtelen pakolás” feliratra.
 - Session képernyő: úticél szerkesztő; forrás-sablonok jelölése; kereső; státusz-sort; manuális reorder; tételkártyák a fenti interakcióval; „eszköz hozzáadása” picker; lezárás gomb + confirmation.
 - Indítás flow: multi-select sablon(ok) (≥1) + opcionális úticél.
 

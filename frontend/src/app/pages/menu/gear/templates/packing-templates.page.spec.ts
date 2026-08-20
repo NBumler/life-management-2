@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { AlertController } from '@ionic/angular/standalone';
 import { provideTranslateService } from '@ngx-translate/core';
 
@@ -18,7 +18,8 @@ describe('PackingTemplatesPage', () => {
     templates: ReturnType<typeof signal<PackingTemplate[]>>;
   };
 
-  beforeEach(async () => {
+  async function createFixture(highlightQueryParam: string | null = null): Promise<void> {
+    TestBed.resetTestingModule();
     repository = jasmine.createSpyObj('PackingTemplateRepository', ['load', 'duplicate', 'remove']) as never;
     repository.templates = signal<PackingTemplate[]>([]);
 
@@ -29,11 +30,17 @@ describe('PackingTemplatesPage', () => {
         provideTranslateService(),
         { provide: PackingTemplateRepository, useValue: repository },
         { provide: AlertController, useValue: jasmine.createSpyObj('AlertController', ['create']) },
+        {
+          provide: ActivatedRoute,
+          useValue: { snapshot: { queryParamMap: convertToParamMap(highlightQueryParam ? { highlight: highlightQueryParam } : {}) } },
+        },
       ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(PackingTemplatesPage);
-  });
+  }
+
+  beforeEach(() => createFixture());
 
   it('documentation/Architektúra/Szöveges keresés.md: an accent-exact match ranks ahead of a fold-only match', () => {
     repository.templates.set([template({ id: 'plain', name: 'Sor' }), template({ id: 'accented', name: 'Sör' })]);
@@ -46,5 +53,15 @@ describe('PackingTemplatesPage', () => {
     repository.templates.set([template({ id: 'z', name: 'Zsák' }), template({ id: 'a', name: 'Alfa' })]);
 
     expect(fixture.componentInstance.filteredTemplates().map((t) => t.id)).toEqual(['a', 'z']);
+  });
+
+  it('documentation/Subfeatures/Sablonok.md "Új sablon mentése után": highlightedId() reflects a `?highlight=<id>` query param set by the editor\'s post-create redirect', async () => {
+    await createFixture('t1');
+
+    expect(fixture.componentInstance.highlightedId()).toBe('t1');
+  });
+
+  it('highlightedId() is null when there is no `highlight` query param', () => {
+    expect(fixture.componentInstance.highlightedId()).toBeNull();
   });
 });

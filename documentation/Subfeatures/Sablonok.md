@@ -72,6 +72,7 @@ Egy sablonon belül ugyanaz a `gearItemId` **legfeljebb egyszer** szerepelhet.
 - Lista: kereső ([[Szöveges keresés]]); soron: `name`, opcionális `notes` előnézet, tételszám; műveletek: megnyitás / szerkesztés, másolás, törlés.
 - Create / edit: `name` (kötelező, auto-focus create-nél), `notes` (opcionális); alatta rendezhető tétellista + „eszköz hozzáadása” picker.
 - Törlés / másolás: egyértelmű gombok; törlésnél confirmation a fenti szöveggel.
+- Új sablon mentése után: navigáció vissza a Sablonok listára (**nem** marad a szerkesztő oldalon); az újonnan létrehozott sor finoman outline-olva jelzi, melyik a friss elem (query paraméterrel átadva, nem perzisztens állapot).
 
 ### Megjegyzések
 
