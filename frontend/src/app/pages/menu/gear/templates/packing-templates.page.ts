@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   AlertController,
   IonBackButton,
@@ -25,6 +25,7 @@ import { compareRank, matchesSearch } from '../../../../shared/text-search';
 @Component({
   selector: 'app-packing-templates',
   templateUrl: 'packing-templates.page.html',
+  styleUrls: ['packing-templates.page.scss'],
   imports: [IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton, IonContent, IonSearchbar, IonList, IonItem, IonLabel, IonButton, IonIcon, RouterLink, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -33,8 +34,12 @@ export class PackingTemplatesPage implements OnInit {
   private readonly alertController = inject(AlertController);
   private readonly translate = inject(TranslateService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   readonly query = signal('');
+
+  /** documentation/Subfeatures/Sablonok.md "Létrehozás": the just-created template, so the list can gently outline it — set via `?highlight=<id>` by the editor's post-create redirect. */
+  readonly highlightedId = signal<string | null>(this.route.snapshot.queryParamMap.get('highlight'));
 
   readonly filteredTemplates = computed(() => {
     const query = this.query();

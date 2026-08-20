@@ -188,6 +188,16 @@ export class LocalDatabaseService {
   private readonly connectionFactory = new SQLiteConnection(CapacitorSQLite);
   private connection: SQLiteDBConnection | null = null;
   private openUserId: string | null = null;
+  /**
+   * Serializes `executeTransaction` calls on the single shared connection. The underlying
+   * `@capacitor-community/sqlite` `executeTransaction` is BEGIN…run…COMMIT spread across several
+   * awaited native-bridge round trips with no reentrancy guard — two concurrent callers (e.g. a
+   * `Promise.all` of several repository writes, as packing-session reorder does) race each other's
+   * BEGIN/COMMIT and one fails with "cannot start a transaction within a transaction", silently
+   * dropping that caller's write. Chaining onto this tail forces write transactions to run one at a
+   * time regardless of how many callers overlap.
+   */
+  private writeQueue: Promise<unknown> = Promise.resolve();
 
   readonly schemaVersion = SCHEMA_VERSION;
 
@@ -232,10 +242,21 @@ export class LocalDatabaseService {
     return { changes: result.changes?.changes ?? 0, lastId: result.changes?.lastId };
   }
 
-  /** documentation/Architektúra/Backend-offline first.md §5: entity row + outbox row in one local transaction. */
-  async executeTransaction(tasks: SqlTask[]): Promise<void> {
-    const db = this.requireConnection();
-    await db.executeTransaction(tasks.map((task) => ({ statement: task.statement, values: task.values as unknown[] | undefined })));
+  /**
+   * documentation/Architektúra/Backend-offline first.md §5: entity row + outbox row in one local
+   * transaction. Queued behind any in-flight transaction — see `writeQueue` — so concurrent callers
+   * never overlap their BEGIN/COMMIT on the shared connection.
+   */
+  executeTransaction(tasks: SqlTask[]): Promise<void> {
+    const runTransaction = async (): Promise<void> => {
+      const db = this.requireConnection();
+      await db.executeTransaction(tasks.map((task) => ({ statement: task.statement, values: task.values as unknown[] | undefined })));
+    };
+    const result = this.writeQueue.then(runTransaction);
+    // Keep the tail alive even if this write rejects, so the failure doesn't wedge later callers,
+    // while still propagating the rejection to this call's own caller via `result`.
+    this.writeQueue = result.catch(() => undefined);
+    return result;
   }
 
   private requireConnection(): SQLiteDBConnection {

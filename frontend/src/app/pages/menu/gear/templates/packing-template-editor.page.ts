@@ -136,7 +136,7 @@ export class PackingTemplateEditorPage implements OnInit {
       const wasNew = this.templateId() === null;
       this.templateId.set(saved.id);
       if (wasNew) {
-        await this.router.navigate(['/tabs/menu/gear/templates', saved.id], { replaceUrl: true });
+        await this.router.navigate(['/tabs/menu/gear/templates'], { queryParams: { highlight: saved.id }, replaceUrl: true });
       }
     } catch (error) {
       if (error instanceof PackingTemplateNameConflictError) {
