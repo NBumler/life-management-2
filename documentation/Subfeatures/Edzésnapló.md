@@ -136,7 +136,7 @@ PR típusok (badge a szett mellett): számított **1RM** megdöntés; **max súl
 
 #### Kapcsolat [[Heti terv]]
 
-- „Edzés indítása a tervből”: új session a `WorkoutPlan` sablonból; előtöltés; `planId = WorkoutPlan.id`.
+- „Edzés indítása a tervből”: új session a `WorkoutPlan` sablonból; előtöltés; `planId = WorkoutPlan.id`. A gyorsindítás lista csak **aktív** sablonokat kínál fel (`WorkoutPlan.active`) — tetszőleges számú sablon lehet egyszerre aktív, lásd [[Heti terv]].
 - Eltérés szabad (nincs hiba); a napló a valóságot rögzíti.
 - **Adherence:** adott héten van-e session ugyanezzel a `planId`-del (részletek: [[Heti terv]]).
 - **Ad-hoc** terv nélkül: támogatott.

@@ -12,6 +12,8 @@
 
 Edzéssablonok (rutinok) és heti kiosztásuk („mit kéne csinálnod?”). Az [[Edzésnapló]] `planId` mezője a **statikus sablon** `WorkoutPlan.id`-jára mutat. Az [[Edzésnapló]] terv nélkül is teljes értékű (ad-hoc + „ugyanaz, mint legutóbb”).
 
+Tetszőleges számú `WorkoutPlan` sablon létezhet, és közülük tetszőleges számú lehet egyszerre **aktív**. Ez teszi lehetővé, hogy egy állandó alap-rotáció (pl. „A” / „B” nap) mellett átmenetileg cél-specifikus sablonok is aktiválhatók legyenek — pl. egy időszakos edzéscél miatt bevezetett extra sablonok —, anélkül hogy az alap sablonokat törölni kellene; a blokk végén az alap sablonok egyszerűen visszaaktiválhatók.
+
 Fejlesztési sorrend: [[Gyakorlat]] → [[Edzésnapló]] → **Heti terv**.
 
 ### Funkcionális leírás
@@ -23,10 +25,19 @@ Fejlesztési sorrend: [[Gyakorlat]] → [[Edzésnapló]] → **Heti terv**.
 | `id` | UUID, kliens |
 | `name` | Kötelező (pl. „Felsőtest A”, „Hangboard Heavy Day”) |
 | `notes` | Opcionális |
+| `active` | Boolean; alapértelmezett `true` létrehozáskor. Kikapcsolása **nem törlés**: a sablon megmarad a katalógusban és a rá mutató múltbeli `WorkoutSession.planId` / meglévő `WeeklyPlan` slot érintetlen, csak elrejtődik a pickerekből (heti slot kiosztás, „Edzés indítása a tervből” gyorsindítás). Bármikor visszakapcsolható. Tetszőleges számú sablon lehet egyszerre aktív — lásd „Aktív / inaktív sablonok” lent. |
+| `goalLabel` | Opcionális szöveg; tisztán megjelenítési célú csoportosító címke a listában és a pickerben (pl. „Alap rotáció”, „Cél: egykezes húzódzkodás”) — nincs hozzá üzleti logika |
 | `defaultWorkoutType` | Opcionális `GENERAL_WEIGHTS` \| `HIIT_CIRCUIT` — session indításkor előtöltés |
 | `exercises` | `WorkoutPlanExercise[]` (nested) |
 | `deleted` | Soft delete |
 | `createdAt` / `updatedAt` | Audit |
+
+#### Aktív / inaktív sablonok
+
+- Új sablon létrehozáskor `active = true`. A sablon lista fejlécén / soronként kapcsolható; nincs szükség edit módba lépésre.
+- **Pickerek csak aktív, nem törölt sablonokat listáznak**: heti dashboard slot kiosztás, [[Edzésnapló]] „Terv indítása” gyorsindítás. A sablon lista (katalógus) képernyő viszont Aktív / Inaktív / Mind szűrővel az inaktívakat is mutatja, hogy visszakapcsolhatók legyenek.
+- Egy már kiosztott `WeeklyPlan` slot vagy múltbeli session `planId`-je akkor is érvényes marad, ha az általa hivatkozott sablon időközben inaktívvá válik — az `active` mező **nem** befolyásolja a visszamenőleges adherence-t (lásd lent), csak azt, hogy a sablon felkínálásra kerül-e új session indításkor / új slot kiosztáskor.
+- Nincs felső korlát az egyszerre aktív sablonok számára.
 
 #### Entitás — `WorkoutPlanExercise` / cél-szettek
 
@@ -40,6 +51,8 @@ Fejlesztési sorrend: [[Gyakorlat]] → [[Edzésnapló]] → **Heti terv**.
 | `targetSets` | Cél szettek listája: `setType`, cél `reps` / `weightKg` / `holdTimeSeconds` / `edgeSizeMm` / `distanceMeters` / `restTimeSeconds` — a `exerciseKind` szerint releváns mezők |
 
 Indításkor az [[Edzésnapló]] átmásolja ezeket session entry / set előtöltésnek; a session `planId = WorkoutPlan.id`.
+
+`targetSets` szabad `setType`-listája már önmagában kifejezi a bemelegítő ramping (több könnyű `WARMUP` szett) + kevés, nehéz `WORKING` szett (alacsony ismétlésszám, hosszú cél `restTimeSeconds`) mintát — nincs szükség külön mezőre a bemelegítés/munka szétválasztásához, sem külön „intenzitás” mezőre: az explicit `FAILURE` típus jelzi, ha egy szett tudatosan a bukásig megy, minden más `WORKING` szett hallgatólagosan tartalék ismétléssel (RIR) végzett.
 
 #### Entitás — `WeeklyPlan` (adott naptári hét kiosztása)
 
@@ -64,6 +77,8 @@ CRUD: sablon lista/szerkesztő; heti dashboard slot szerkesztés; soft delete sa
 ### UI/UX elvárások
 
 - Sablonok lista + nested gyakorlat/cél-szett szerkesztő ([[Gyakorlat]] picker).
+- Sablonok lista szűrő: **Aktív** (alapértelmezett) / Inaktív / Mind; soronkénti aktív/inaktív kapcsoló (nincs szükség edit módba lépésre); opcionális `goalLabel` szerinti csoport-fejléc a listában.
+- Heti dashboard slot kiosztás pickere és az [[Edzésnapló]] „Terv indítása” gyorsindítás listája csak aktív sablonokat kínál fel, `goalLabel` szerint csoportosítva, ha van címke.
 - Heti dashboard: 7 napos nézet; naphoz sablon rendelés; „Teljesítve” jelvény adherence szerint; CTA: Edzés indítása.
 - „Másolás következő hétre” akció.
 - Thumb-zone barát CTA az indításhoz (mobil).
@@ -71,6 +86,8 @@ CRUD: sablon lista/szerkesztő; heti dashboard slot szerkesztés; soft delete sa
 ### Megjegyzések
 
 Nincs bonyolult progresszió-motor az első körben — a napló ghost values / PR viszi a progresszió UX-et ([[Edzésnapló]]).
+
+Az `active` mező szándékosan sablon-szintű kapcsoló, nem egy külön „sablon-készlet” / „program” entitás — tetszőleges kombináció aktiválható egyszerre, nincs kikényszerített „csak egy aktív készlet” szabály. Nagyon gyakori, alacsony volumenű, egy-két gyakorlatos sessionök (pl. napi rövid, nem bukásig menő kiegészítő gyakorlás) külön modell nélkül, sima [[Edzésnapló]] sessionként rögzíthetők — nincs szükség rájuk külön „mikro-session” típusra.
 
 ### Nyitott kérdések
 
@@ -93,8 +110,8 @@ Nincs nyitott kérdés.
 
 ### Backend
 
-- Táblák: `workout_plan`, `workout_plan_exercise`, `workout_plan_set` (vagy JSON nested), `weekly_plan` (+ slotok).
-- OpenAPI: nested plan CRUD; weekly plan CRUD; listák `deleted = false`.
+- Táblák: `workout_plan` (`active boolean`, default `true`; `goal_label` opcionális szöveg), `workout_plan_exercise`, `workout_plan_set` (vagy JSON nested), `weekly_plan` (+ slotok).
+- OpenAPI: nested plan CRUD; weekly plan CRUD; listák `deleted = false`. Aktiválás/inaktiválás sima mező-update (nincs külön endpoint), ugyanazon a nested PUT-on megy át, mint bármely más sablon-módosítás.
 - Auth / user scope.
 
 ### Nyitott kérdések
