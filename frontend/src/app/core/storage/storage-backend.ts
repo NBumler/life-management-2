@@ -1,5 +1,6 @@
 import { InjectionToken } from '@angular/core';
 
+import { CalendarEvent } from '../../api/model/calendarEvent';
 import { GearItem } from '../../api/model/gearItem';
 import { HouseholdRoom } from '../../api/model/householdRoom';
 import { HouseholdTask } from '../../api/model/householdTask';
@@ -100,6 +101,11 @@ export interface StorageBackend {
   listHouseholdTasks(): Promise<HouseholdTask[]>;
   upsertHouseholdTask(task: HouseholdTask): Promise<HouseholdTask>;
   deleteHouseholdTask(id: string): Promise<HouseholdTask>;
+
+  listEvents(): Promise<CalendarEvent[]>;
+  upsertEvent(event: CalendarEvent): Promise<CalendarEvent>;
+  /** documentation/Features/Események.md "Modell: egy sor = egy sorozat": deletes the whole series. */
+  deleteEvent(id: string): Promise<CalendarEvent>;
 }
 
 export const STORAGE_BACKEND = new InjectionToken<StorageBackend>('STORAGE_BACKEND');

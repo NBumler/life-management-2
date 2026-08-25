@@ -1,0 +1,68 @@
+type: object
+description: >-
+  documentation/Features/Események.md — user-owned calendar event: a one-off day or a simple
+  recurring series (DAILY/WEEKLY/YEARLY). One row = one series; there is no occurrence table, the
+  client projects occurrences (Naptár + the event list both read that projection).
+required:
+  - id
+  - title
+  - allDay
+  - date
+  - interval
+  - deleted
+properties:
+  id:
+    type: string
+    format: uuid
+  title:
+    type: string
+    minLength: 1
+  location:
+    type: string
+    nullable: true
+  notes:
+    type: string
+    nullable: true
+  allDay:
+    type: boolean
+  date:
+    type: string
+    format: date
+    description: One-off day, or the series start (dtstart) for a recurring event. Client calendar day.
+  startTime:
+    type: string
+    pattern: '^([01]\d|2[0-3]):[0-5]\d$'
+    nullable: true
+    description: 'HH:mm, 24h. Required together with endTime when allDay = false; both null when allDay = true.'
+  endTime:
+    type: string
+    pattern: '^([01]\d|2[0-3]):[0-5]\d$'
+    nullable: true
+    description: 'HH:mm, 24h. Must be strictly after startTime (same calendar day).'
+  frequency:
+    type: string
+    enum:
+      - DAILY
+      - WEEKLY
+      - YEARLY
+    nullable: true
+    description: Empty/null means a one-off event.
+  interval:
+    type: integer
+    minimum: 1
+    description: Ignored (but still stored) when frequency is null.
+  deleted:
+    type: boolean
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

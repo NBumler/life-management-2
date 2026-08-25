@@ -53,6 +53,10 @@ paths:
     $ref: 'openapi/paths/household-tasks.yaml'
   /api/household-tasks/{id}:
     $ref: 'openapi/paths/household-tasks-item.yaml'
+  /api/events:
+    $ref: 'openapi/paths/events.yaml'
+  /api/events/{id}:
+    $ref: 'openapi/paths/events-item.yaml'
 components:
   securitySchemes:
     bearerAuth:
@@ -122,3 +126,7 @@ components:
       $ref: 'openapi/components/schemas/HouseholdTask.yaml'
     HouseholdTaskList:
       $ref: 'openapi/components/schemas/HouseholdTaskList.yaml'
+    CalendarEvent:
+      $ref: 'openapi/components/schemas/CalendarEvent.yaml'
+    CalendarEventList:
+      $ref: 'openapi/components/schemas/CalendarEventList.yaml'

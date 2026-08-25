@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 
+import { CalendarEvent } from '../../api/model/calendarEvent';
 import { GearItem } from '../../api/model/gearItem';
 import { HouseholdRoom } from '../../api/model/householdRoom';
 import { HouseholdTask } from '../../api/model/householdTask';
@@ -11,6 +12,7 @@ import { normalizeName } from '../../shared/name-normalization';
 import { GearItemRepository } from '../data/gear-item.repository';
 import { HouseholdRoomRepository } from '../data/household-room.repository';
 import {
+  CalendarEventRow,
   GearItemRow,
   HouseholdRoomRow,
   HouseholdTaskRow,
@@ -19,6 +21,8 @@ import {
   PackingSessionRow,
   ProfileRow,
   WeightHistoryRow,
+  calendarEventLocalWriteTask,
+  calendarEventRowToDto,
   gearItemLocalWriteTask,
   gearItemRowToDto,
   householdRoomLocalWriteTask,
@@ -192,6 +196,13 @@ export class OutboxEntityRegistryService {
       // documentation/Architektúra/Névegyediség.md: scope is the room, not the user — the Fix form
       // can't resolve that scope from (value, excludeId) alone, so this mirrors PackingTemplate's
       // "no live pre-check in Fix" precedent; the server's 409 UNIQUE_VIOLATION still guards it.
+      nameUniqueness: null,
+    },
+    CalendarEvent: {
+      table: 'calendar_event',
+      currentPayload: rowLookup<CalendarEventRow, unknown>('calendar_event', calendarEventRowToDto),
+      buildFixWriteTask: (payload) => calendarEventLocalWriteTask(payload as unknown as CalendarEvent),
+      // documentation/Architektúra/Névegyediség.md: CalendarEvent.title is explicitly not unique.
       nameUniqueness: null,
     },
   };

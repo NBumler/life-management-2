@@ -225,6 +225,35 @@
       "DELETE_ROOM_CONFIRM_TITLE": "Delete room",
       "DELETE_ROOM_CONFIRM_MESSAGE": "Are you sure you want to delete \"{{name}}\"?",
       "DELETE_ROOM_CONFIRM_CASCADE": "This will also delete: {{tasks}}."
+    },
+    "EVENTS": {
+      "TITLE": "Events",
+      "SEARCH_PLACEHOLDER": "Search",
+      "ADD": "New event",
+      "EDIT_TITLE": "Edit event",
+      "EMPTY": "No events yet.",
+      "NO_RESULTS": "No results.",
+      "SECTION_TODAY": "Today",
+      "SECTION_UPCOMING": "Upcoming",
+      "SECTION_PAST": "Past",
+      "ALL_DAY": "All day",
+      "TITLE_LABEL": "Title",
+      "ALL_DAY_LABEL": "All day",
+      "DATE_LABEL": "Date",
+      "START_TIME_LABEL": "Start",
+      "END_TIME_LABEL": "End",
+      "FREQUENCY_LABEL": "Repeats",
+      "FREQUENCY_NONE": "Never (one-off)",
+      "FREQUENCY_DAILY": "Daily",
+      "FREQUENCY_WEEKLY": "Weekly",
+      "FREQUENCY_YEARLY": "Yearly",
+      "INTERVAL_LABEL": "Every (N)",
+      "LOCATION_LABEL": "Location",
+      "NOTES_LABEL": "Notes",
+      "TIME_RANGE_ERROR": "End time must be after start time.",
+      "DELETE_CONFIRM_TITLE": "Delete event",
+      "DELETE_CONFIRM_MESSAGE": "Are you sure you want to delete \"{{title}}\"?",
+      "DELETE_CONFIRM_MESSAGE_RECURRING": "Are you sure you want to delete the recurring event \"{{title}}\"? The whole series will be deleted."
     }
   }
 }

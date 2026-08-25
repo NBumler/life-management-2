@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 
+import { CalendarEvent } from '../../api/model/calendarEvent';
 import { GearItem } from '../../api/model/gearItem';
 import { HouseholdRoom } from '../../api/model/householdRoom';
 import { HouseholdTask } from '../../api/model/householdTask';
@@ -12,6 +13,7 @@ import { PackingTemplateDetail } from '../../api/model/packingTemplateDetail';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 import {
+  CalendarEventRow,
   GearItemRow,
   HouseholdRoomRow,
   HouseholdTaskRow,
@@ -22,6 +24,8 @@ import {
   PackingTemplateRow,
   ProfileRow,
   WeightHistoryRow,
+  calendarEventLocalWriteTask,
+  calendarEventRowToDto,
   gearItemLocalWriteTask,
   gearItemRowToDto,
   householdRoomLocalWriteTask,
@@ -663,6 +667,57 @@ export class SqliteStorageBackend implements StorageBackend {
   private async readHouseholdTask(id: string): Promise<HouseholdTask> {
     const rows = await this.db.query<HouseholdTaskRow>('SELECT * FROM household_task WHERE id = ?', [id]);
     return householdTaskRowToDto(rows[0]);
+  }
+
+  async listEvents(): Promise<CalendarEvent[]> {
+    const rows = await this.db.query<CalendarEventRow>('SELECT * FROM calendar_event WHERE deleted = 0 ORDER BY date ASC');
+    return rows.map(calendarEventRowToDto);
+  }
+
+  async upsertEvent(event: CalendarEvent): Promise<CalendarEvent> {
+    const userId = this.requireUserId();
+    const existing = await this.db.query('SELECT 1 FROM calendar_event WHERE id = ?', [event.id]);
+    const isNew = existing.length === 0;
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: isNew ? 'POST' : 'PUT',
+      url: isNew ? '/api/events' : `/api/events/${event.id}`,
+      payload: event,
+      entityType: 'CalendarEvent',
+      targetEntityId: event.id,
+    });
+    await this.db.executeTransaction([calendarEventLocalWriteTask(event), ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    return this.readEvent(event.id);
+  }
+
+  async deleteEvent(id: string): Promise<CalendarEvent> {
+    const userId = this.requireUserId();
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: 'DELETE',
+      url: `/api/events/${id}`,
+      payload: null,
+      entityType: 'CalendarEvent',
+      targetEntityId: id,
+    });
+    const entityTask: SqlTask = enqueue.hardRemoveLocalEntity
+      ? { statement: 'DELETE FROM calendar_event WHERE id = ?', values: [id] }
+      : {
+          statement: 'UPDATE calendar_event SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?',
+          values: [new Date().toISOString(), id],
+        };
+    await this.db.executeTransaction([entityTask, ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    if (enqueue.hardRemoveLocalEntity) {
+      return { id, title: '', allDay: true, date: '', interval: 1, deleted: true };
+    }
+    return this.readEvent(id);
+  }
+
+  private async readEvent(id: string): Promise<CalendarEvent> {
+    const rows = await this.db.query<CalendarEventRow>('SELECT * FROM calendar_event WHERE id = ?', [id]);
+    return calendarEventRowToDto(rows[0]);
   }
 
   private requireUserId(): string {

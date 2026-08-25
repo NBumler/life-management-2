@@ -221,7 +221,32 @@ const SCHEMA_V6_STATEMENTS: string[] = [
   `CREATE INDEX IF NOT EXISTS idx_household_task_next_due ON household_task (next_due)`,
 ];
 
-const SCHEMA_VERSION = 6;
+/** documentation/Features/Események.md — one row = one series; recurrence is projected client-side. */
+const SCHEMA_V7_STATEMENTS: string[] = [
+  `CREATE TABLE IF NOT EXISTS calendar_event (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    location TEXT,
+    notes TEXT,
+    all_day INTEGER NOT NULL DEFAULT 0,
+    date TEXT NOT NULL,
+    start_time TEXT,
+    end_time TEXT,
+    frequency TEXT,
+    interval INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_calendar_event_date ON calendar_event (date)`,
+];
+
+const SCHEMA_VERSION = 7;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -230,7 +255,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 3, statements: SCHEMA_V3_STATEMENTS },
   { toVersion: 4, statements: SCHEMA_V4_STATEMENTS },
   { toVersion: 5, statements: SCHEMA_V5_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V6_STATEMENTS },
+  { toVersion: 6, statements: SCHEMA_V6_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V7_STATEMENTS },
 ];
 
 export interface SqlTask {

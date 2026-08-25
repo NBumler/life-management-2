@@ -20,7 +20,8 @@ export type OutboxEntityType =
   | 'PackingSessionItem'
   | 'LifePlan'
   | 'HouseholdRoom'
-  | 'HouseholdTask';
+  | 'HouseholdTask'
+  | 'CalendarEvent';
 
 /** documentation/Architektúra/Backend-offline first.md §4 "Outbox — adatmodell". */
 export interface OutboxItem {

@@ -7,6 +7,8 @@ api/admin.serviceInterface.ts
 api/api.ts
 api/auth.service.ts
 api/auth.serviceInterface.ts
+api/events.service.ts
+api/events.serviceInterface.ts
 api/gearItems.service.ts
 api/gearItems.serviceInterface.ts
 api/health.service.ts
@@ -36,6 +38,7 @@ model/adminSetPasswordRequest.ts
 model/adminUser.ts
 model/apiError.ts
 model/authTokens.ts
+model/calendarEvent.ts
 model/gearItem.ts
 model/healthResponse.ts
 model/householdRoom.ts

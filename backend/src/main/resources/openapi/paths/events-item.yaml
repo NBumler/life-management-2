@@ -1,0 +1,69 @@
+parameters:
+  - name: id
+    in: path
+    required: true
+    schema:
+      type: string
+      format: uuid
+get:
+  operationId: getEvent
+  tags:
+    - events
+  summary: A single event. Own deleted row returns 200 with deleted=true (not 404).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/CalendarEvent.yaml'
+    '404':
+      description: No such event (or it belongs to another user).
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+put:
+  operationId: updateEvent
+  tags:
+    - events
+  summary: >-
+    Full update (last-write-wins). Always applies to the whole series — there is no "just this
+    occurrence" (documentation/Features/Események.md "Modell: egy sor = egy sorozat").
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/CalendarEvent.yaml'
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/CalendarEvent.yaml'
+    '400':
+      description: allDay/startTime/endTime combination is inconsistent.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+    '409':
+      description: Entity already deleted.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+delete:
+  operationId: deleteEvent
+  tags:
+    - events
+  summary: Soft delete, idempotent. Deletes the whole series (no undelete).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/CalendarEvent.yaml'

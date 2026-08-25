@@ -5,6 +5,7 @@ import { Capacitor } from '@capacitor/core';
 import { Network } from '@capacitor/network';
 import { firstValueFrom, timeout } from 'rxjs';
 
+import { EventsService } from '../../api/api/events.service';
 import { GearItemsService } from '../../api/api/gearItems.service';
 import { HealthService } from '../../api/api/health.service';
 import { HouseholdRoomsService } from '../../api/api/householdRooms.service';
@@ -16,6 +17,7 @@ import { PackingTemplatesService } from '../../api/api/packingTemplates.service'
 import { ProfileService } from '../../api/api/profile.service';
 import { SyncService } from '../../api/api/sync.service';
 import { ApiError } from '../../api/model/apiError';
+import { CalendarEvent } from '../../api/model/calendarEvent';
 import { GearItem } from '../../api/model/gearItem';
 import { HouseholdRoom } from '../../api/model/householdRoom';
 import { HouseholdTask } from '../../api/model/householdTask';
@@ -30,6 +32,8 @@ import { SyncChangeItem } from '../../api/model/syncChangeItem';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 import {
+  calendarEventServerApplyTask,
+  calendarEventTombstoneTask,
   gearItemServerApplyTask,
   gearItemTombstoneTask,
   householdRoomServerApplyTask,
@@ -81,6 +85,7 @@ export class SyncEngineService {
   private readonly lifePlansApi = inject(LifePlansService);
   private readonly householdRoomsApi = inject(HouseholdRoomsService);
   private readonly householdTasksApi = inject(HouseholdTasksService);
+  private readonly eventsApi = inject(EventsService);
   private readonly syncApi = inject(SyncService);
   private readonly authSession = inject(AuthSessionService);
   private readonly offlineQueue = inject(OfflineQueueService);
@@ -266,6 +271,16 @@ export class SyncEngineService {
         // same as above
       }
     }
+
+    const staleEvents = await this.db.query<{ id: string }>('SELECT id FROM calendar_event WHERE _needs_refetch = 1');
+    for (const row of staleEvents) {
+      try {
+        const dto = await firstValueFrom(this.eventsApi.getEvent(row.id));
+        await this.db.executeTransaction([calendarEventServerApplyTask(dto)]);
+      } catch {
+        // same as above
+      }
+    }
   }
 
   private async probeBackend(): Promise<boolean> {
@@ -419,6 +434,9 @@ export class SyncEngineService {
     if (item.entityType === 'HouseholdTask') {
       return [householdTaskServerApplyTask(body as HouseholdTask)];
     }
+    if (item.entityType === 'CalendarEvent') {
+      return [calendarEventServerApplyTask(body as CalendarEvent)];
+    }
     throw new Error(`SyncEngine: no local writer for entityType "${item.entityType}"`);
   }
 
@@ -483,6 +501,8 @@ export class SyncEngineService {
       ]);
     } else if (item.entityType === 'HouseholdTask') {
       await this.db.executeTransaction([householdTaskTombstoneTask(item.targetEntityId, null, now)]);
+    } else if (item.entityType === 'CalendarEvent') {
+      await this.db.executeTransaction([calendarEventTombstoneTask(item.targetEntityId, null, now)]);
     }
   }
 
@@ -583,6 +603,12 @@ export class SyncEngineService {
         return [householdTaskServerApplyTask(change.data as HouseholdTask)];
       }
       return [householdTaskTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
+    }
+    if (change.entityType === 'CalendarEvent') {
+      if (!change.deleted) {
+        return [calendarEventServerApplyTask(change.data as CalendarEvent)];
+      }
+      return [calendarEventTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
     }
     return [];
   }

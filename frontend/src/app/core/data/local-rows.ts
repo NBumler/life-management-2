@@ -1,4 +1,5 @@
 import { SqlTask } from '../storage/local-database.service';
+import { CalendarEvent } from '../../api/model/calendarEvent';
 import { GearItem } from '../../api/model/gearItem';
 import { HouseholdRoom } from '../../api/model/householdRoom';
 import { HouseholdTask } from '../../api/model/householdTask';
@@ -787,6 +788,111 @@ export function householdTaskTombstoneTask(id: string, deletedAt: string | null,
     statement: `
       INSERT INTO household_task (id, room_id, name, energy_level, estimated_minutes, interval_days, next_due, updated_at, deleted, deleted_at, _dirty, _local_only)
       VALUES (?, '', '', 'LOW', 0, 1, '1970-01-01', ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+export interface CalendarEventRow {
+  id: string;
+  title: string;
+  location: string | null;
+  notes: string | null;
+  all_day: number;
+  date: string;
+  start_time: string | null;
+  end_time: string | null;
+  frequency: string | null;
+  interval: number;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+export function calendarEventRowToDto(row: CalendarEventRow): CalendarEvent {
+  return {
+    id: row.id,
+    title: row.title,
+    location: row.location,
+    notes: row.notes,
+    allDay: row.all_day === 1,
+    date: row.date,
+    startTime: row.start_time,
+    endTime: row.end_time,
+    frequency: row.frequency as CalendarEvent.FrequencyEnum | null,
+    interval: row.interval,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+export function calendarEventLocalWriteTask(dto: CalendarEvent): SqlTask {
+  return {
+    statement: `
+      INSERT INTO calendar_event (id, title, location, notes, all_day, date, start_time, end_time, frequency, interval, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET
+        title = excluded.title, location = excluded.location, notes = excluded.notes, all_day = excluded.all_day,
+        date = excluded.date, start_time = excluded.start_time, end_time = excluded.end_time,
+        frequency = excluded.frequency, interval = excluded.interval, _dirty = 1`,
+    values: [
+      dto.id,
+      dto.title,
+      dto.location ?? null,
+      dto.notes ?? null,
+      dto.allDay ? 1 : 0,
+      dto.date,
+      dto.startTime ?? null,
+      dto.endTime ?? null,
+      dto.frequency ?? null,
+      dto.interval,
+    ],
+  };
+}
+
+export function calendarEventServerApplyTask(dto: CalendarEvent): SqlTask {
+  return {
+    statement: `
+      INSERT INTO calendar_event (id, title, location, notes, all_day, date, start_time, end_time, frequency, interval, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        title = excluded.title, location = excluded.location, notes = excluded.notes, all_day = excluded.all_day,
+        date = excluded.date, start_time = excluded.start_time, end_time = excluded.end_time, frequency = excluded.frequency,
+        interval = excluded.interval, created_at = excluded.created_at, updated_at = excluded.updated_at,
+        deleted = excluded.deleted, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE calendar_event._dirty = 0`,
+    values: [
+      dto.id,
+      dto.title,
+      dto.location ?? null,
+      dto.notes ?? null,
+      dto.allDay ? 1 : 0,
+      dto.date,
+      dto.startTime ?? null,
+      dto.endTime ?? null,
+      dto.frequency ?? null,
+      dto.interval,
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function calendarEventTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO calendar_event (id, title, all_day, date, interval, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '', 1, '1970-01-01', 1, ?, 1, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
     values: [id, updatedAt, deletedAt],
   };

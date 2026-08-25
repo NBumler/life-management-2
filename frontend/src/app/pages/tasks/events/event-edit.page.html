@@ -1,0 +1,70 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/tasks/events"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ (eventId() === null ? 'TASKS.EVENTS.ADD' : 'TASKS.EVENTS.EDIT_TITLE') | translate }}</ion-title>
+    @if (eventId() !== null) {
+      <ion-buttons slot="end">
+        <ion-button color="danger" (click)="delete()">{{ 'COMMON.DELETE' | translate }}</ion-button>
+      </ion-buttons>
+    }
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <form [formGroup]="form" (ngSubmit)="save()">
+    <ion-list>
+      <ion-item>
+        <ion-input formControlName="title" [label]="'TASKS.EVENTS.TITLE_LABEL' | translate" labelPlacement="stacked" [autofocus]="eventId() === null"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-toggle formControlName="allDay">{{ 'TASKS.EVENTS.ALL_DAY_LABEL' | translate }}</ion-toggle>
+      </ion-item>
+
+      <ion-item>
+        <ion-input formControlName="date" type="date" [label]="'TASKS.EVENTS.DATE_LABEL' | translate" labelPlacement="stacked"></ion-input>
+      </ion-item>
+
+      @if (!allDayValue()) {
+        <ion-item>
+          <ion-input formControlName="startTime" type="time" [label]="'TASKS.EVENTS.START_TIME_LABEL' | translate" labelPlacement="stacked"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-input formControlName="endTime" type="time" [label]="'TASKS.EVENTS.END_TIME_LABEL' | translate" labelPlacement="stacked"></ion-input>
+        </ion-item>
+        @if (timeRangeError(); as timeError) {
+          <ion-text color="danger">
+            <p class="ion-padding-start">{{ timeError }}</p>
+          </ion-text>
+        }
+      }
+
+      <ion-item>
+        <ion-select formControlName="frequency" [label]="'TASKS.EVENTS.FREQUENCY_LABEL' | translate" labelPlacement="stacked">
+          <ion-select-option [value]="null">{{ 'TASKS.EVENTS.FREQUENCY_NONE' | translate }}</ion-select-option>
+          <ion-select-option [value]="FrequencyEnum.Daily">{{ 'TASKS.EVENTS.FREQUENCY_DAILY' | translate }}</ion-select-option>
+          <ion-select-option [value]="FrequencyEnum.Weekly">{{ 'TASKS.EVENTS.FREQUENCY_WEEKLY' | translate }}</ion-select-option>
+          <ion-select-option [value]="FrequencyEnum.Yearly">{{ 'TASKS.EVENTS.FREQUENCY_YEARLY' | translate }}</ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      @if (frequencyValue() !== null) {
+        <ion-item>
+          <ion-input formControlName="interval" type="number" min="1" [label]="'TASKS.EVENTS.INTERVAL_LABEL' | translate" labelPlacement="stacked"></ion-input>
+        </ion-item>
+      }
+
+      <ion-item>
+        <ion-input formControlName="location" [label]="'TASKS.EVENTS.LOCATION_LABEL' | translate" labelPlacement="stacked"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-input formControlName="notes" [label]="'TASKS.EVENTS.NOTES_LABEL' | translate" labelPlacement="stacked"></ion-input>
+      </ion-item>
+    </ion-list>
+
+    <ion-button expand="block" type="submit" class="ion-margin-top">{{ 'COMMON.SAVE' | translate }}</ion-button>
+  </form>
+</ion-content>

@@ -1,0 +1,36 @@
+get:
+  operationId: listEvents
+  tags:
+    - events
+  summary: The caller's events, live rows only (deleted = false).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/CalendarEventList.yaml'
+post:
+  operationId: createEvent
+  tags:
+    - events
+  summary: Create an event — idempotent upsert on the client-supplied id.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/CalendarEvent.yaml'
+  responses:
+    '200':
+      description: Created or, on retry with the same id, the existing row.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/CalendarEvent.yaml'
+    '400':
+      description: allDay/startTime/endTime combination is inconsistent (documentation/Features/Események.md).
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'

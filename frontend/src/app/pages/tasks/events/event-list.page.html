@@ -1,0 +1,81 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/tasks"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ 'TASKS.EVENTS.TITLE' | translate }}</ion-title>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-searchbar
+      [value]="query()"
+      (ionInput)="query.set($any($event.target).value ?? '')"
+      [placeholder]="'TASKS.EVENTS.SEARCH_PLACEHOLDER' | translate"
+      [debounce]="200"
+    ></ion-searchbar>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-list>
+    <ion-item button routerLink="new">
+      <ion-icon name="add-outline" slot="start" aria-hidden="true"></ion-icon>
+      <ion-label>{{ 'TASKS.EVENTS.ADD' | translate }}</ion-label>
+    </ion-item>
+
+    @if (isEmpty()) {
+      <ion-item>
+        <ion-label color="medium">{{ 'TASKS.EVENTS.EMPTY' | translate }}</ion-label>
+      </ion-item>
+    } @else if (hasNoResults()) {
+      <ion-item>
+        <ion-label color="medium">{{ 'TASKS.EVENTS.NO_RESULTS' | translate }}</ion-label>
+      </ion-item>
+    }
+
+    @if (sections().today.length > 0) {
+      <ion-list-header>{{ 'TASKS.EVENTS.SECTION_TODAY' | translate }}</ion-list-header>
+      @for (row of sections().today; track row.eventId + row.date) {
+        <ion-item button [routerLink]="[row.eventId]">
+          <ion-label>
+            <h3>{{ row.title }}</h3>
+            <p>
+              {{ timeLabel(row) ?? ('TASKS.EVENTS.ALL_DAY' | translate) }}
+              @if (row.location) {
+                · {{ row.location }}
+              }
+            </p>
+          </ion-label>
+        </ion-item>
+      }
+    }
+
+    @if (sections().upcoming.length > 0) {
+      <ion-list-header>{{ 'TASKS.EVENTS.SECTION_UPCOMING' | translate }}</ion-list-header>
+      @for (row of sections().upcoming; track row.eventId + row.date) {
+        <ion-item button [routerLink]="[row.eventId]">
+          <ion-label>
+            <h3>{{ row.title }}</h3>
+            <p>
+              {{ row.date }} · {{ timeLabel(row) ?? ('TASKS.EVENTS.ALL_DAY' | translate) }}
+              @if (row.location) {
+                · {{ row.location }}
+              }
+            </p>
+          </ion-label>
+        </ion-item>
+      }
+    }
+
+    @if (sections().past.length > 0) {
+      <ion-list-header>{{ 'TASKS.EVENTS.SECTION_PAST' | translate }}</ion-list-header>
+      @for (row of sections().past; track row.eventId + row.date) {
+        <ion-item button [routerLink]="[row.eventId]">
+          <ion-label>
+            <h3>{{ row.title }}</h3>
+            <p>{{ row.date }} · {{ timeLabel(row) ?? ('TASKS.EVENTS.ALL_DAY' | translate) }}</p>
+          </ion-label>
+        </ion-item>
+      }
+    }
+  </ion-list>
+</ion-content>

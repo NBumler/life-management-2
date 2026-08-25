@@ -225,6 +225,35 @@
       "DELETE_ROOM_CONFIRM_TITLE": "Helyiség törlése",
       "DELETE_ROOM_CONFIRM_MESSAGE": "Biztosan törlöd a(z) „{{name}}” helyiséget?",
       "DELETE_ROOM_CONFIRM_CASCADE": "Ezzel a következő feladatok is törlődnek: {{tasks}}."
+    },
+    "EVENTS": {
+      "TITLE": "Események",
+      "SEARCH_PLACEHOLDER": "Keresés",
+      "ADD": "Új esemény",
+      "EDIT_TITLE": "Esemény szerkesztése",
+      "EMPTY": "Nincs felvett esemény.",
+      "NO_RESULTS": "Nincs találat.",
+      "SECTION_TODAY": "Ma",
+      "SECTION_UPCOMING": "Közelgő",
+      "SECTION_PAST": "Múlt",
+      "ALL_DAY": "Egész nap",
+      "TITLE_LABEL": "Cím",
+      "ALL_DAY_LABEL": "Egész napos",
+      "DATE_LABEL": "Dátum",
+      "START_TIME_LABEL": "Kezdés",
+      "END_TIME_LABEL": "Befejezés",
+      "FREQUENCY_LABEL": "Ismétlődés",
+      "FREQUENCY_NONE": "Nincs (egyszeri)",
+      "FREQUENCY_DAILY": "Naponta",
+      "FREQUENCY_WEEKLY": "Hetente",
+      "FREQUENCY_YEARLY": "Évente",
+      "INTERVAL_LABEL": "Gyakoriság (hányanta)",
+      "LOCATION_LABEL": "Helyszín",
+      "NOTES_LABEL": "Megjegyzés",
+      "TIME_RANGE_ERROR": "A befejezésnek a kezdés után kell lennie.",
+      "DELETE_CONFIRM_TITLE": "Esemény törlése",
+      "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd a(z) „{{title}}” eseményt?",
+      "DELETE_CONFIRM_MESSAGE_RECURRING": "Biztosan törlöd a(z) „{{title}}” ismétlődő eseményt? Az egész sorozat törlődik."
     }
   }
 }

@@ -90,6 +90,14 @@ export const routes: Routes = [
               { path: ':id', loadComponent: () => import('./pages/tasks/household/household-task-edit.page').then((m) => m.HouseholdTaskEditPage) },
             ],
           },
+          {
+            path: 'events',
+            children: [
+              { path: '', loadComponent: () => import('./pages/tasks/events/event-list.page').then((m) => m.EventListPage) },
+              { path: 'new', loadComponent: () => import('./pages/tasks/events/event-edit.page').then((m) => m.EventEditPage) },
+              { path: ':id', loadComponent: () => import('./pages/tasks/events/event-edit.page').then((m) => m.EventEditPage) },
+            ],
+          },
         ],
       },
       // documentation/Architektúra/Frontend.md "Login utáni default tab": Menü is the only enabled
