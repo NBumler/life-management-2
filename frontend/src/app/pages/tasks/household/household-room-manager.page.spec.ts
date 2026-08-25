@@ -85,6 +85,24 @@ describe('HouseholdRoomManagerPage', () => {
     expect(roomRepository.reorder).not.toHaveBeenCalled();
   });
 
+  it('onIonReorder(): applies the web drag-and-drop completion and persists sequential sortOrder (Sablonok/Pakolás mintára)', () => {
+    const rooms = [room({ id: 'a', sortOrder: 0 }), room({ id: 'b', sortOrder: 1 }), room({ id: 'c', sortOrder: 2 })];
+    roomRepository.items.set(rooms);
+    roomRepository.reorder.and.resolveTo();
+    const reordered = [rooms[2], rooms[0], rooms[1]];
+    const complete = jasmine.createSpy('complete').and.returnValue(reordered);
+    const event = new CustomEvent('ionItemReorder', { detail: { complete } }) as CustomEvent<{ complete: jasmine.Spy }>;
+
+    fixture.componentInstance.onIonReorder(event as never);
+
+    expect(complete).toHaveBeenCalledWith(rooms);
+    expect(roomRepository.reorder).toHaveBeenCalledWith([
+      { id: 'c', sortOrder: 0 },
+      { id: 'a', sortOrder: 1 },
+      { id: 'b', sortOrder: 2 },
+    ]);
+  });
+
   it('delete(): lists the affected live task names in the confirmation message', async () => {
     taskRepository.items.set([task({ id: 't1', roomId: 'r1', name: 'Mosogatás' }), task({ id: 't2', roomId: 'r1', name: 'Takarítás' })]);
     const created = { present: jasmine.createSpy('present').and.resolveTo() };

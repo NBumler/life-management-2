@@ -23,7 +23,17 @@ describe('buildEventOccurrenceRows', () => {
     const rows = buildEventOccurrenceRows([event({ date: '2026-06-01' })], '2026-06-01');
 
     expect(rows).toEqual([
-      { eventId: 'e1', date: '2026-06-01', allDay: false, startTime: '10:00', endTime: '11:00', title: 'Fogorvos', location: null, recurring: false },
+      {
+        eventId: 'e1',
+        date: '2026-06-01',
+        allDay: false,
+        startTime: '10:00',
+        endTime: '11:00',
+        title: 'Fogorvos',
+        location: null,
+        recurring: false,
+        frequency: null,
+      },
     ]);
   });
 });
@@ -48,9 +58,39 @@ describe('groupEventOccurrences', () => {
 
   it('today/upcoming: orders all-day before timed, then startTime ascending, then title', () => {
     const rows = [
-      { eventId: 'timed-late', date: today, allDay: false, startTime: '18:00', endTime: '19:00', title: 'Zulu', location: null, recurring: false },
-      { eventId: 'timed-early', date: today, allDay: false, startTime: '09:00', endTime: '10:00', title: 'Alfa', location: null, recurring: false },
-      { eventId: 'allday', date: today, allDay: true, startTime: null, endTime: null, title: 'Bravo', location: null, recurring: false },
+      {
+        eventId: 'timed-late',
+        date: today,
+        allDay: false,
+        startTime: '18:00',
+        endTime: '19:00',
+        title: 'Zulu',
+        location: null,
+        recurring: false,
+        frequency: null,
+      },
+      {
+        eventId: 'timed-early',
+        date: today,
+        allDay: false,
+        startTime: '09:00',
+        endTime: '10:00',
+        title: 'Alfa',
+        location: null,
+        recurring: false,
+        frequency: null,
+      },
+      {
+        eventId: 'allday',
+        date: today,
+        allDay: true,
+        startTime: null,
+        endTime: null,
+        title: 'Bravo',
+        location: null,
+        recurring: false,
+        frequency: null,
+      },
     ];
 
     const sections = groupEventOccurrences(rows, today);
@@ -60,9 +100,39 @@ describe('groupEventOccurrences', () => {
 
   it('past: orders newest date first, and within a day all-day before timed-descending', () => {
     const rows = [
-      { eventId: 'older', date: '2026-01-01', allDay: false, startTime: '09:00', endTime: '10:00', title: 'X', location: null, recurring: false },
-      { eventId: 'newer-timed', date: '2026-05-01', allDay: false, startTime: '09:00', endTime: '10:00', title: 'X', location: null, recurring: false },
-      { eventId: 'newer-allday', date: '2026-05-01', allDay: true, startTime: null, endTime: null, title: 'X', location: null, recurring: false },
+      {
+        eventId: 'older',
+        date: '2026-01-01',
+        allDay: false,
+        startTime: '09:00',
+        endTime: '10:00',
+        title: 'X',
+        location: null,
+        recurring: false,
+        frequency: null,
+      },
+      {
+        eventId: 'newer-timed',
+        date: '2026-05-01',
+        allDay: false,
+        startTime: '09:00',
+        endTime: '10:00',
+        title: 'X',
+        location: null,
+        recurring: false,
+        frequency: null,
+      },
+      {
+        eventId: 'newer-allday',
+        date: '2026-05-01',
+        allDay: true,
+        startTime: null,
+        endTime: null,
+        title: 'X',
+        location: null,
+        recurring: false,
+        frequency: null,
+      },
     ];
 
     const sections = groupEventOccurrences(rows, today);

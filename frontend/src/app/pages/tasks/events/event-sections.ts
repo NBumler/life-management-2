@@ -10,6 +10,7 @@ export interface EventOccurrenceRow {
   title: string;
   location: string | null;
   recurring: boolean;
+  frequency: CalendarEvent.FrequencyEnum | null;
 }
 
 /** Flattens every live event's horizon occurrences (documentation/Features/Események.md producer) into one list. */
@@ -26,6 +27,7 @@ export function buildEventOccurrenceRows(events: CalendarEvent[], today: string)
         title: event.title,
         location: event.location ?? null,
         recurring: event.frequency != null,
+        frequency: event.frequency ?? null,
       });
     }
   }

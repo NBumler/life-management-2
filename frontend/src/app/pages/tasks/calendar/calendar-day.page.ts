@@ -4,6 +4,7 @@ import {
   IonButton,
   IonButtons,
   IonCheckbox,
+  IonChip,
   IonContent,
   IonHeader,
   IonIcon,
@@ -15,20 +16,37 @@ import {
 } from '@ionic/angular/standalone';
 import { TranslatePipe } from '@ngx-translate/core';
 
+import { FeatureFlagsService } from '../../../core/config/feature-flags.service';
 import { CalendarEventRepository } from '../../../core/data/calendar-event.repository';
 import { addDaysToDate } from '../../../core/data/event-occurrence';
 import { HouseholdRoomRepository } from '../../../core/data/household-room.repository';
 import { HouseholdTaskRepository } from '../../../core/data/household-task.repository';
+import { today } from '../../../shared/local-date';
 import { CalendarOccurrence, CalendarSource, buildCalendarOccurrences, occurrencesForDate } from './calendar-occurrence';
 
 /**
  * documentation/Features/Naptár.md "Napi lista": pipa csak completable-ön (háztartás — ugyanaz a
- * mutáció, mint a listáról), esemény sorra tap → sorozat szerkesztő, nincs create.
+ * mutáció, mint a listáról), esemény sorra tap → sorozat szerkesztő, nincs create. "A szűrő a hónap
+ * és a napi listán ugyanaz; a napi képernyőn is látszanak / állíthatók" — ugyanazok a forrás-chipek.
  */
 @Component({
   selector: 'app-calendar-day',
   templateUrl: 'calendar-day.page.html',
-  imports: [IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonIcon, IonList, IonItem, IonLabel, IonCheckbox, TranslatePipe],
+  imports: [
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonButtons,
+    IonButton,
+    IonContent,
+    IonIcon,
+    IonChip,
+    IonList,
+    IonItem,
+    IonLabel,
+    IonCheckbox,
+    TranslatePipe,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CalendarDayPage implements OnInit {
@@ -37,10 +55,15 @@ export class CalendarDayPage implements OnInit {
   private readonly householdTaskRepository = inject(HouseholdTaskRepository);
   private readonly householdRoomRepository = inject(HouseholdRoomRepository);
   private readonly eventRepository = inject(CalendarEventRepository);
+  private readonly featureFlags = inject(FeatureFlagsService);
 
   private readonly todayIso = today();
   readonly date = signal(this.route.snapshot.paramMap.get('date') ?? this.todayIso);
-  readonly activeSources = signal<ReadonlySet<CalendarSource>>(new Set<CalendarSource>(['HOUSEHOLD_TASK', 'EVENT']));
+
+  readonly eventsSourceAvailable = this.featureFlags.isEnabled('feladatok.esemenyek');
+  readonly activeSources = signal<ReadonlySet<CalendarSource>>(
+    new Set<CalendarSource>(this.eventsSourceAvailable ? ['HOUSEHOLD_TASK', 'EVENT'] : ['HOUSEHOLD_TASK']),
+  );
 
   readonly rows = computed(() =>
     occurrencesForDate(
@@ -75,6 +98,16 @@ export class CalendarDayPage implements OnInit {
     this.date.set(this.todayIso);
   }
 
+  toggleSource(source: CalendarSource): void {
+    const next = new Set(this.activeSources());
+    if (next.has(source)) {
+      next.delete(source);
+    } else {
+      next.add(source);
+    }
+    this.activeSources.set(next);
+  }
+
   async open(row: CalendarOccurrence): Promise<void> {
     const path = row.source === 'HOUSEHOLD_TASK' ? '/tabs/tasks/household' : '/tabs/tasks/events';
     await this.router.navigate([path, row.sourceEntityId]);
@@ -90,8 +123,4 @@ export class CalendarDayPage implements OnInit {
   async goBack(): Promise<void> {
     await this.router.navigate(['/tabs/tasks/calendar'], { queryParams: { highlight: this.date(), month: this.date().slice(0, 7) } });
   }
-}
-
-function today(): string {
-  return new Date().toISOString().slice(0, 10);
 }

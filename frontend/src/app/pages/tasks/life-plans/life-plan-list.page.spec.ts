@@ -61,4 +61,12 @@ describe('LifePlanListPage', () => {
     expect(sections.inProgress.map((p) => p.id)).toEqual(['b']);
     expect(sections.done.map((p) => p.id)).toEqual(['c']);
   });
+
+  it('statusLabelKey(): the i18n key matching each status', () => {
+    expect(fixture.componentInstance.statusLabelKey(plan({ status: LifePlan.StatusEnum.Planned }))).toBe('TASKS.LIFE_PLANS.STATUS_PLANNED');
+    expect(fixture.componentInstance.statusLabelKey(plan({ status: LifePlan.StatusEnum.InProgress }))).toBe(
+      'TASKS.LIFE_PLANS.STATUS_IN_PROGRESS',
+    );
+    expect(fixture.componentInstance.statusLabelKey(plan({ status: LifePlan.StatusEnum.Done }))).toBe('TASKS.LIFE_PLANS.STATUS_DONE');
+  });
 });

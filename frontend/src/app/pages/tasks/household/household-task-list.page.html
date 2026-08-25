@@ -73,7 +73,9 @@
           <ion-checkbox slot="start" (ionChange)="complete(task)"></ion-checkbox>
           <ion-label [routerLink]="[task.id]">
             <h3>{{ task.name }}</h3>
-            <p color="danger">{{ roomName(task) }} · {{ task.nextDue }} · {{ 'TASKS.HOUSEHOLD.OVERDUE_DAYS' | translate: { days: lagDays(task) } }}</p>
+            <p [style.color]="'var(--ion-color-danger)'">
+            {{ roomName(task) }} · {{ task.nextDue }} · {{ 'TASKS.HOUSEHOLD.OVERDUE_DAYS' | translate: { days: lagDays(task) } }}
+          </p>
           </ion-label>
         </ion-item>
       }

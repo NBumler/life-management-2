@@ -42,19 +42,33 @@
       </ion-item>
     }
 
-    @for (room of rooms(); track room.id; let i = $index) {
-      <ion-item button (click)="startEdit(room)">
-        <ion-label>{{ room.name }}</ion-label>
-        <ion-button fill="clear" [disabled]="i === 0" (click)="moveUp(i); $event.stopPropagation()">
-          <ion-icon name="chevron-up-outline" slot="icon-only" aria-hidden="true"></ion-icon>
-        </ion-button>
-        <ion-button fill="clear" [disabled]="i === rooms().length - 1" (click)="moveDown(i); $event.stopPropagation()">
-          <ion-icon name="chevron-down-outline" slot="icon-only" aria-hidden="true"></ion-icon>
-        </ion-button>
-        <ion-button fill="clear" color="danger" (click)="delete(room); $event.stopPropagation()">
-          <ion-icon name="trash-outline" slot="icon-only" aria-hidden="true"></ion-icon>
-        </ion-button>
-      </ion-item>
+    @if (isNative) {
+      @for (room of rooms(); track room.id; let i = $index) {
+        <ion-item button (click)="startEdit(room)">
+          <ion-label>{{ room.name }}</ion-label>
+          <ion-button fill="clear" [disabled]="i === 0" (click)="moveUp(i); $event.stopPropagation()">
+            <ion-icon name="chevron-up-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+          </ion-button>
+          <ion-button fill="clear" [disabled]="i === rooms().length - 1" (click)="moveDown(i); $event.stopPropagation()">
+            <ion-icon name="chevron-down-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+          </ion-button>
+          <ion-button fill="clear" color="danger" (click)="delete(room); $event.stopPropagation()">
+            <ion-icon name="trash-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+          </ion-button>
+        </ion-item>
+      }
+    } @else {
+      <ion-reorder-group [disabled]="false" (ionItemReorder)="onIonReorder($event)">
+        @for (room of rooms(); track room.id) {
+          <ion-item button (click)="startEdit(room)">
+            <ion-label>{{ room.name }}</ion-label>
+            <ion-button fill="clear" color="danger" (click)="delete(room); $event.stopPropagation()">
+              <ion-icon name="trash-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+            </ion-button>
+            <ion-reorder slot="end"></ion-reorder>
+          </ion-item>
+        }
+      </ion-reorder-group>
     }
   </ion-list>
 </ion-content>

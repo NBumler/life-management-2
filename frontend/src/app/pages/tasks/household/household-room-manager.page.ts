@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Capacitor } from '@capacitor/core';
 import {
   AlertController,
   IonBackButton,
@@ -12,9 +13,12 @@ import {
   IonItem,
   IonLabel,
   IonList,
+  IonReorder,
+  IonReorderGroup,
   IonText,
   IonTitle,
   IonToolbar,
+  ItemReorderEventDetail,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
@@ -24,9 +28,10 @@ import { HouseholdTaskRepository } from '../../../core/data/household-task.repos
 
 /**
  * documentation/Subfeatures/Háztartási feladatok.md "Helyiségkezelő": lista, átnevezés, reorder,
- * törlés a cascade-listás confirmationnel. Inline rename needs a row the shared
- * `ReorderListComponent` can't render (label-as-input), so this page uses its own compact
- * up/down-arrow reorder instead of pulling that component in — same up/down semantics, one list.
+ * törlés a cascade-listás confirmationnel. "manuális sorrend (web drag-and-drop; telefon fel / le
+ * nyilak — Sablonok / Pakolás mintára)". Inline rename needs a row the shared `ReorderListComponent`
+ * can't render (label-as-input), so this page mirrors that component's native-vs-web branch itself
+ * instead of pulling it in — up/down arrows on native, `ion-reorder-group` drag-and-drop on web.
  */
 @Component({
   selector: 'app-household-room-manager',
@@ -46,6 +51,8 @@ import { HouseholdTaskRepository } from '../../../core/data/household-task.repos
     IonLabel,
     IonText,
     IonIcon,
+    IonReorderGroup,
+    IonReorder,
     TranslatePipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -56,6 +63,8 @@ export class HouseholdRoomManagerPage implements OnInit {
   private readonly taskRepository = inject(HouseholdTaskRepository);
   private readonly alertController = inject(AlertController);
   private readonly translate = inject(TranslateService);
+
+  readonly isNative = Capacitor.isNativePlatform();
 
   readonly editingId = signal<string | 'new' | null>(null);
   readonly nameConflictError = signal<string | null>(null);
@@ -116,6 +125,11 @@ export class HouseholdRoomManagerPage implements OnInit {
 
   moveDown(index: number): void {
     void this.swapAndPersist(index, index + 1);
+  }
+
+  onIonReorder(event: CustomEvent<ItemReorderEventDetail>): void {
+    const reordered = event.detail.complete(this.rooms().slice()) as HouseholdRoom[];
+    void this.roomRepository.reorder(reordered.map((room, index) => ({ id: room.id, sortOrder: index })));
   }
 
   async delete(room: HouseholdRoom): Promise<void> {

@@ -18,6 +18,7 @@ import { FeatureFlagsService } from '../../../core/config/feature-flags.service'
 import { HouseholdRoomRepository } from '../../../core/data/household-room.repository';
 import { HouseholdTaskRepository } from '../../../core/data/household-task.repository';
 import { CalendarEventRepository } from '../../../core/data/calendar-event.repository';
+import { today } from '../../../shared/local-date';
 import { CalendarSource, buildCalendarOccurrences, groupOccurrencesByDate } from './calendar-occurrence';
 import { MonthGridDay, buildMonthGrid } from './calendar-month-grid';
 
@@ -49,7 +50,14 @@ export class CalendarMonthPage implements OnInit {
   readonly highlightedDate = signal<string | null>(this.route.snapshot.queryParamMap.get('highlight'));
 
   readonly eventsSourceAvailable = this.featureFlags.isEnabled('feladatok.esemenyek');
-  readonly activeSources = signal<ReadonlySet<CalendarSource>>(new Set<CalendarSource>(['HOUSEHOLD_TASK', 'EVENT']));
+  /**
+   * documentation/Features/Naptár.md "Producer registry": a chip csak élő producerből lehet aktív —
+   * ha az Események flag ki van kapcsolva, az EVENT forrás nem csak a chipen tűnik el, a vetítésből
+   * is ki kell esnie.
+   */
+  readonly activeSources = signal<ReadonlySet<CalendarSource>>(
+    new Set<CalendarSource>(this.eventsSourceAvailable ? ['HOUSEHOLD_TASK', 'EVENT'] : ['HOUSEHOLD_TASK']),
+  );
 
   private readonly occurrencesByDate = computed(() =>
     groupOccurrencesByDate(
@@ -142,8 +150,4 @@ export class CalendarMonthPage implements OnInit {
     this.viewYear.set(year);
     this.viewMonth.set(month);
   }
-}
-
-function today(): string {
-  return new Date().toISOString().slice(0, 10);
 }

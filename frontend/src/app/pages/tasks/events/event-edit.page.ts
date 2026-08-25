@@ -23,6 +23,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 import { CalendarEvent } from '../../../api/model/calendarEvent';
 import { CalendarEventRepository } from '../../../core/data/calendar-event.repository';
+import { today } from '../../../shared/local-date';
 import { computeDefaultTimedTimes } from './event-time-defaults';
 
 /**
@@ -158,8 +159,4 @@ export class EventEditPage implements OnInit {
     await this.repository.remove(id);
     await this.router.navigateByUrl('/tabs/tasks/events');
   }
-}
-
-function today(): string {
-  return new Date().toISOString().slice(0, 10);
 }

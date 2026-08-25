@@ -38,14 +38,15 @@
         <ion-item button [routerLink]="[plan.id]">
           <ion-label>
             <h3>{{ plan.title }}</h3>
-            @if (plan.targetDate) {
-              <p [style.color]="isOverdue(plan) ? 'var(--ion-color-danger)' : null">
-                {{ plan.targetDate }}
-                @if (isOverdue(plan)) {
-                  · {{ 'TASKS.LIFE_PLANS.OVERDUE_DAYS' | translate: { days: lagDays(plan) } }}
-                }
-              </p>
-            }
+            <p [style.color]="isOverdue(plan) ? 'var(--ion-color-danger)' : null">
+              {{ statusLabelKey(plan) | translate }}
+              @if (plan.targetDate) {
+                · {{ plan.targetDate }}
+              }
+              @if (isOverdue(plan)) {
+                · {{ 'TASKS.LIFE_PLANS.OVERDUE_DAYS' | translate: { days: lagDays(plan) } }}
+              }
+            </p>
           </ion-label>
         </ion-item>
       }
@@ -57,14 +58,15 @@
         <ion-item button [routerLink]="[plan.id]">
           <ion-label>
             <h3>{{ plan.title }}</h3>
-            @if (plan.targetDate) {
-              <p [style.color]="isOverdue(plan) ? 'var(--ion-color-danger)' : null">
-                {{ plan.targetDate }}
-                @if (isOverdue(plan)) {
-                  · {{ 'TASKS.LIFE_PLANS.OVERDUE_DAYS' | translate: { days: lagDays(plan) } }}
-                }
-              </p>
-            }
+            <p [style.color]="isOverdue(plan) ? 'var(--ion-color-danger)' : null">
+              {{ statusLabelKey(plan) | translate }}
+              @if (plan.targetDate) {
+                · {{ plan.targetDate }}
+              }
+              @if (isOverdue(plan)) {
+                · {{ 'TASKS.LIFE_PLANS.OVERDUE_DAYS' | translate: { days: lagDays(plan) } }}
+              }
+            </p>
           </ion-label>
         </ion-item>
       }
@@ -76,6 +78,12 @@
         <ion-item button [routerLink]="[plan.id]">
           <ion-label>
             <h3>{{ plan.title }}</h3>
+            <p>
+              {{ statusLabelKey(plan) | translate }}
+              @if (plan.targetDate) {
+                · {{ plan.targetDate }}
+              }
+            </p>
           </ion-label>
         </ion-item>
       }

@@ -127,12 +127,32 @@ class HouseholdRoomIntegrationTest {
 				.header(HttpHeaders.AUTHORIZATION, "Bearer " + token).content(json(task)))
 				.andExpect(status().isOk());
 
+		MvcResult pullBeforeDelete = mockMvc
+				.perform(get("/api/sync/changes").header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+				.andExpect(status().isOk()).andReturn();
+		String cursorBeforeDelete = objectMapper.readTree(pullBeforeDelete.getResponse().getContentAsString())
+				.get("nextCursor").asText();
+
 		mockMvc.perform(delete("/api/household-rooms/" + roomId).header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
 				.andExpect(status().isOk());
 
 		mockMvc.perform(get("/api/household-tasks/" + taskId).header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.deleted").value(true));
+
+		// documentation/Architektúra/Backend-offline first.md "kritikus követelmény": the cascaded
+		// task's updated_at must bump too, otherwise it never shows up as a fresh tombstone in the
+		// delta pull and other devices would see a "ghost row" that never gets soft-deleted locally.
+		MvcResult pullAfterDelete = mockMvc
+				.perform(get("/api/sync/changes").queryParam("since", cursorBeforeDelete)
+						.header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+				.andExpect(status().isOk()).andReturn();
+		String bodyAfterDelete = pullAfterDelete.getResponse().getContentAsString();
+		assertThat(bodyAfterDelete).contains(taskId.toString()).contains("\"entityType\":\"HouseholdTask\"");
+		assertThat(objectMapper.readTree(bodyAfterDelete).get("changes")).anySatisfy(change -> {
+			assertThat(change.get("id").asText()).isEqualTo(taskId.toString());
+			assertThat(change.get("deleted").asBoolean()).isTrue();
+		});
 	}
 
 	@Test

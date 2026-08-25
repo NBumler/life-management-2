@@ -69,7 +69,7 @@ class HouseholdRoomService {
 		if (!entity.isDeleted()) {
 			entity.softDelete();
 			repository.saveAndFlush(entity);
-			for (HouseholdTaskEntity task : taskRepository.findByRoomIdAndDeletedFalse(id)) {
+			for (HouseholdTaskEntity task : taskRepository.findByRoomIdAndUserIdAndDeletedFalse(id, userId)) {
 				task.softDelete();
 				taskRepository.save(task);
 			}

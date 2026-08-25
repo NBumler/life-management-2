@@ -26,6 +26,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { HouseholdTask } from '../../../api/model/householdTask';
 import { HouseholdRoomNameConflictError, HouseholdRoomRepository } from '../../../core/data/household-room.repository';
 import { HouseholdTaskNameConflictError, HouseholdTaskRepository } from '../../../core/data/household-task.repository';
+import { today } from '../../../shared/local-date';
 
 /**
  * documentation/Subfeatures/Háztartási feladatok.md "Feladat CRUD": create = room checklist (≥1) ->
@@ -221,8 +222,4 @@ export class HouseholdTaskEditPage implements OnInit {
     await this.taskRepository.remove(id);
     await this.router.navigateByUrl('/tabs/tasks/household');
   }
-}
-
-function today(): string {
-  return new Date().toISOString().slice(0, 10);
 }

@@ -18,8 +18,15 @@ import { TranslatePipe } from '@ngx-translate/core';
 
 import { LifePlan } from '../../../api/model/lifePlan';
 import { LifePlanRepository } from '../../../core/data/life-plan.repository';
+import { today } from '../../../shared/local-date';
 import { matchesSearch } from '../../../shared/text-search';
 import { groupLifePlans, isLifePlanOverdue, lifePlanLagDays } from './life-plan-sections';
+
+const STATUS_LABEL_KEYS: Record<LifePlan.StatusEnum, string> = {
+  [LifePlan.StatusEnum.Planned]: 'TASKS.LIFE_PLANS.STATUS_PLANNED',
+  [LifePlan.StatusEnum.InProgress]: 'TASKS.LIFE_PLANS.STATUS_IN_PROGRESS',
+  [LifePlan.StatusEnum.Done]: 'TASKS.LIFE_PLANS.STATUS_DONE',
+};
 
 /** documentation/Subfeatures/Élet tervek.md: hub tile list — sections Folyamatban / Terv / Kész, search, no checkbox (tap row -> editor). */
 @Component({
@@ -47,7 +54,7 @@ export class LifePlanListPage implements OnInit {
   private readonly repository = inject(LifePlanRepository);
 
   readonly query = signal('');
-  private readonly today = new Date().toISOString().slice(0, 10);
+  private readonly today = today();
 
   private readonly filteredPlans = computed(() => {
     const query = this.query();
@@ -68,5 +75,10 @@ export class LifePlanListPage implements OnInit {
 
   lagDays(plan: LifePlan): number {
     return plan.targetDate === null || plan.targetDate === undefined ? 0 : lifePlanLagDays(plan.targetDate, this.today);
+  }
+
+  /** documentation/Subfeatures/Élet tervek.md "Soron": státusz-címke i18n. */
+  statusLabelKey(plan: LifePlan): string {
+    return STATUS_LABEL_KEYS[plan.status];
   }
 }

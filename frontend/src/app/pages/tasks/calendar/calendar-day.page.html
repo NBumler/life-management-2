@@ -16,6 +16,16 @@
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
+  <ion-toolbar>
+    <ion-chip [outline]="!activeSources().has('HOUSEHOLD_TASK')" (click)="toggleSource('HOUSEHOLD_TASK')">
+      <ion-label>{{ 'CALENDAR.SOURCE_HOUSEHOLD' | translate }}</ion-label>
+    </ion-chip>
+    @if (eventsSourceAvailable) {
+      <ion-chip [outline]="!activeSources().has('EVENT')" (click)="toggleSource('EVENT')">
+        <ion-label>{{ 'CALENDAR.SOURCE_EVENT' | translate }}</ion-label>
+      </ion-chip>
+    }
+  </ion-toolbar>
 </ion-header>
 
 <ion-content>

@@ -33,7 +33,7 @@ class HouseholdRoomServiceTest {
 	void setUp() {
 		repository = mock(HouseholdRoomRepository.class);
 		taskRepository = mock(HouseholdTaskRepository.class);
-		when(taskRepository.findByRoomIdAndDeletedFalse(any())).thenReturn(List.of());
+		when(taskRepository.findByRoomIdAndUserIdAndDeletedFalse(any(), any())).thenReturn(List.of());
 		service = new HouseholdRoomService(repository, taskRepository, new HouseholdRoomMapper());
 	}
 
@@ -163,7 +163,7 @@ class HouseholdRoomServiceTest {
 		when(repository.findByIdAndUserId(existing.getId(), userId)).thenReturn(Optional.of(existing));
 		when(repository.saveAndFlush(any())).thenAnswer(inv -> inv.getArgument(0));
 		HouseholdTaskEntity task = new HouseholdTaskEntity(UUID.randomUUID(), userId);
-		when(taskRepository.findByRoomIdAndDeletedFalse(existing.getId())).thenReturn(List.of(task));
+		when(taskRepository.findByRoomIdAndUserIdAndDeletedFalse(existing.getId(), userId)).thenReturn(List.of(task));
 
 		service.delete(userId, existing.getId());
 

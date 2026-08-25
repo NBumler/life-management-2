@@ -16,9 +16,17 @@ import {
 } from '@ionic/angular/standalone';
 import { TranslatePipe } from '@ngx-translate/core';
 
+import { CalendarEvent } from '../../../api/model/calendarEvent';
 import { CalendarEventRepository } from '../../../core/data/calendar-event.repository';
+import { today } from '../../../shared/local-date';
 import { matchesSearch } from '../../../shared/text-search';
 import { EventOccurrenceRow, buildEventOccurrenceRows, groupEventOccurrences } from './event-sections';
+
+const FREQUENCY_LABEL_KEYS: Record<CalendarEvent.FrequencyEnum, string> = {
+  [CalendarEvent.FrequencyEnum.Daily]: 'TASKS.EVENTS.FREQUENCY_DAILY',
+  [CalendarEvent.FrequencyEnum.Weekly]: 'TASKS.EVENTS.FREQUENCY_WEEKLY',
+  [CalendarEvent.FrequencyEnum.Yearly]: 'TASKS.EVENTS.FREQUENCY_YEARLY',
+};
 
 /** documentation/Features/Események.md: hub tile list — sections Ma/Közelgő/Múlt built from horizon occurrences, not the raw rows. */
 @Component({
@@ -46,7 +54,7 @@ export class EventListPage implements OnInit {
   private readonly repository = inject(CalendarEventRepository);
 
   readonly query = signal('');
-  private readonly today = new Date().toISOString().slice(0, 10);
+  private readonly today = today();
 
   private readonly occurrenceRows = computed(() => buildEventOccurrenceRows(this.repository.items(), this.today));
 
@@ -68,5 +76,10 @@ export class EventListPage implements OnInit {
       return null;
     }
     return row.startTime !== null && row.endTime !== null ? `${row.startTime}–${row.endTime}` : null;
+  }
+
+  /** documentation/Features/Események.md "Soron": ismétlődőnél ritmus-címke (i18n). */
+  rhythmLabelKey(row: EventOccurrenceRow): string | null {
+    return row.frequency === null ? null : FREQUENCY_LABEL_KEYS[row.frequency];
   }
 }

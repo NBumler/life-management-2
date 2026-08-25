@@ -7,6 +7,7 @@ import { HouseholdRoom } from '../../../api/model/householdRoom';
 import { HouseholdTask } from '../../../api/model/householdTask';
 import { HouseholdRoomRepository } from '../../../core/data/household-room.repository';
 import { HouseholdTaskRepository } from '../../../core/data/household-task.repository';
+import { today } from '../../../shared/local-date';
 import { HouseholdTaskListPage } from './household-task-list.page';
 
 function room(overrides: Partial<HouseholdRoom> = {}): HouseholdRoom {
@@ -56,10 +57,7 @@ describe('HouseholdTaskListPage', () => {
   });
 
   it('groups tasks into overdue/today/later sections', () => {
-    taskRepository.items.set([
-      task({ id: 'a', nextDue: '2020-01-01' }),
-      task({ id: 'b', nextDue: new Date().toISOString().slice(0, 10) }),
-    ]);
+    taskRepository.items.set([task({ id: 'a', nextDue: '2020-01-01' }), task({ id: 'b', nextDue: today() })]);
 
     const sections = fixture.componentInstance.sections();
 

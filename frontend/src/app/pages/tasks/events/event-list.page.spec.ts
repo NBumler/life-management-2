@@ -70,6 +70,7 @@ describe('EventListPage', () => {
       title: 'Fogorvos',
       location: null,
       recurring: false,
+      frequency: null,
       ...overrides,
     };
   }
@@ -77,5 +78,12 @@ describe('EventListPage', () => {
   it('timeLabel(): null for all-day, "start–end" for timed', () => {
     expect(fixture.componentInstance.timeLabel(row())).toBe('10:00–11:00');
     expect(fixture.componentInstance.timeLabel(row({ allDay: true, startTime: null, endTime: null }))).toBeNull();
+  });
+
+  it('rhythmLabelKey(): null for one-off events, the matching i18n key for a recurring frequency', () => {
+    expect(fixture.componentInstance.rhythmLabelKey(row({ frequency: null }))).toBeNull();
+    expect(fixture.componentInstance.rhythmLabelKey(row({ frequency: CalendarEvent.FrequencyEnum.Weekly }))).toBe(
+      'TASKS.EVENTS.FREQUENCY_WEEKLY',
+    );
   });
 });

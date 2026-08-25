@@ -16,5 +16,5 @@ interface HouseholdTaskRepository extends JpaRepository<HouseholdTaskEntity, UUI
 	Optional<HouseholdTaskEntity> findByRoomIdAndNameNormalizedAndDeletedFalse(UUID roomId, String nameNormalized);
 
 	/** documentation/Subfeatures/Háztartási feladatok.md "Törlés" cascade source when a room is deleted. */
-	List<HouseholdTaskEntity> findByRoomIdAndDeletedFalse(UUID roomId);
+	List<HouseholdTaskEntity> findByRoomIdAndUserIdAndDeletedFalse(UUID roomId, UUID userId);
 }

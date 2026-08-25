@@ -24,6 +24,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { HouseholdTask } from '../../../api/model/householdTask';
 import { HouseholdRoomRepository } from '../../../core/data/household-room.repository';
 import { HouseholdTaskRepository } from '../../../core/data/household-task.repository';
+import { today } from '../../../shared/local-date';
 import { matchesSearch } from '../../../shared/text-search';
 import { groupHouseholdTasks, householdTaskLagDays } from './household-sections';
 
@@ -63,7 +64,7 @@ export class HouseholdTaskListPage implements OnInit {
   readonly roomFilter = signal<string | null>(null);
   readonly energyFilter = signal<HouseholdTask.EnergyLevelEnum | null>(null);
   readonly maxMinutesFilter = signal<number | null>(null);
-  private readonly today = new Date().toISOString().slice(0, 10);
+  private readonly today = today();
 
   private readonly roomNameById = computed(() => new Map(this.roomRepository.items().map((room) => [room.id, room.name])));
 

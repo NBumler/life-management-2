@@ -43,6 +43,9 @@
               @if (row.location) {
                 · {{ row.location }}
               }
+              @if (rhythmLabelKey(row); as rhythmKey) {
+                · {{ rhythmKey | translate }}
+              }
             </p>
           </ion-label>
         </ion-item>
@@ -60,6 +63,9 @@
               @if (row.location) {
                 · {{ row.location }}
               }
+              @if (rhythmLabelKey(row); as rhythmKey) {
+                · {{ rhythmKey | translate }}
+              }
             </p>
           </ion-label>
         </ion-item>
@@ -72,7 +78,12 @@
         <ion-item button [routerLink]="[row.eventId]">
           <ion-label>
             <h3>{{ row.title }}</h3>
-            <p>{{ row.date }} · {{ timeLabel(row) ?? ('TASKS.EVENTS.ALL_DAY' | translate) }}</p>
+            <p>
+              {{ row.date }} · {{ timeLabel(row) ?? ('TASKS.EVENTS.ALL_DAY' | translate) }}
+              @if (rhythmLabelKey(row); as rhythmKey) {
+                · {{ rhythmKey | translate }}
+              }
+            </p>
           </ion-label>
         </ion-item>
       }
