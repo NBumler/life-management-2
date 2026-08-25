@@ -1,0 +1,58 @@
+.weekday-row,
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.weekday-cell {
+  text-align: center;
+  font-size: 0.8em;
+  color: var(--ion-color-medium);
+  padding: 4px 0;
+}
+
+.day-cell {
+  position: relative;
+  aspect-ratio: 1;
+  border: none;
+  background: transparent;
+  color: var(--ion-text-color);
+  font: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 4px;
+
+  &.other-month {
+    color: var(--ion-color-medium);
+  }
+
+  &.today {
+    font-weight: 700;
+    box-shadow: inset 0 0 0 2px var(--ion-color-primary);
+    border-radius: 8px;
+  }
+
+  &.highlighted {
+    background: var(--ion-color-light);
+    border-radius: 8px;
+  }
+
+  &.overdue .day-number {
+    color: var(--ion-color-danger);
+  }
+}
+
+.day-badge {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  min-width: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--ion-color-medium);
+  color: var(--ion-color-medium-contrast);
+  font-size: 0.65em;
+  text-align: center;
+}

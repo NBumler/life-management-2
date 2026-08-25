@@ -1,0 +1,32 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>{{ 'TABS.FELADATOK' | translate }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-list>
+    <ion-item button routerLink="household">
+      <ion-icon name="home-outline" slot="start" aria-hidden="true"></ion-icon>
+      <ion-label>{{ 'TASKS.HUB_HOUSEHOLD' | translate }}</ion-label>
+    </ion-item>
+    @if (eletTervekEnabled) {
+      <ion-item button routerLink="life-plans">
+        <ion-icon name="flag-outline" slot="start" aria-hidden="true"></ion-icon>
+        <ion-label>{{ 'TASKS.HUB_LIFE_PLANS' | translate }}</ion-label>
+      </ion-item>
+    }
+    @if (naptarEnabled) {
+      <ion-item button routerLink="calendar">
+        <ion-icon name="calendar-outline" slot="start" aria-hidden="true"></ion-icon>
+        <ion-label>{{ 'TASKS.HUB_CALENDAR' | translate }}</ion-label>
+      </ion-item>
+    }
+    @if (esemenyekEnabled) {
+      <ion-item button routerLink="events">
+        <ion-icon name="time-outline" slot="start" aria-hidden="true"></ion-icon>
+        <ion-label>{{ 'TASKS.HUB_EVENTS' | translate }}</ion-label>
+      </ion-item>
+    }
+  </ion-list>
+</ion-content>

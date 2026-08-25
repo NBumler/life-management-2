@@ -1,0 +1,53 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/tasks"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ monthLabel() }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="prevMonth()">
+        <ion-icon name="chevron-back-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+      </ion-button>
+      <ion-button (click)="goToday()">{{ 'CALENDAR.TODAY_BUTTON' | translate }}</ion-button>
+      <ion-button (click)="nextMonth()">
+        <ion-icon name="chevron-forward-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-chip [outline]="!activeSources().has('HOUSEHOLD_TASK')" (click)="toggleSource('HOUSEHOLD_TASK')">
+      <ion-label>{{ 'CALENDAR.SOURCE_HOUSEHOLD' | translate }}</ion-label>
+    </ion-chip>
+    @if (eventsSourceAvailable) {
+      <ion-chip [outline]="!activeSources().has('EVENT')" (click)="toggleSource('EVENT')">
+        <ion-label>{{ 'CALENDAR.SOURCE_EVENT' | translate }}</ion-label>
+      </ion-chip>
+    }
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="weekday-row">
+    @for (weekday of weekdayNames; track weekday) {
+      <div class="weekday-cell">{{ weekday }}</div>
+    }
+  </div>
+  <div class="month-grid">
+    @for (day of grid(); track day.date) {
+      <button
+        type="button"
+        class="day-cell"
+        [class.other-month]="!day.inCurrentMonth"
+        [class.today]="isToday(day)"
+        [class.highlighted]="highlightedDate() === day.date"
+        [class.overdue]="isOverdue(day)"
+        (click)="openDay(day)"
+      >
+        <span class="day-number">{{ day.date.slice(8, 10) }}</span>
+        @if (badgeCount(day) > 0) {
+          <span class="day-badge">{{ badgeLabel(day) }}</span>
+        }
+      </button>
+    }
+  </div>
+</ion-content>

@@ -70,9 +70,7 @@ export const routes: Routes = [
       {
         path: 'tasks',
         children: [
-          // documentation/Features/Tennivalók.md hub (4 tiles) not built yet — temporary redirect to
-          // the first built subfeature until the hub page lands (see IMPLEMENTATION_STATUS.md).
-          { path: '', redirectTo: 'life-plans', pathMatch: 'full' },
+          { path: '', loadComponent: () => import('./pages/tasks/tennivalok-hub.page').then((m) => m.TennivalokHubPage) },
           {
             path: 'life-plans',
             children: [
@@ -96,6 +94,13 @@ export const routes: Routes = [
               { path: '', loadComponent: () => import('./pages/tasks/events/event-list.page').then((m) => m.EventListPage) },
               { path: 'new', loadComponent: () => import('./pages/tasks/events/event-edit.page').then((m) => m.EventEditPage) },
               { path: ':id', loadComponent: () => import('./pages/tasks/events/event-edit.page').then((m) => m.EventEditPage) },
+            ],
+          },
+          {
+            path: 'calendar',
+            children: [
+              { path: '', loadComponent: () => import('./pages/tasks/calendar/calendar-month.page').then((m) => m.CalendarMonthPage) },
+              { path: ':date', loadComponent: () => import('./pages/tasks/calendar/calendar-day.page').then((m) => m.CalendarDayPage) },
             ],
           },
         ],

@@ -39,7 +39,7 @@
           <ion-label>
             <h3>{{ plan.title }}</h3>
             @if (plan.targetDate) {
-              <p [color]="isOverdue(plan) ? 'danger' : undefined">
+              <p [style.color]="isOverdue(plan) ? 'var(--ion-color-danger)' : null">
                 {{ plan.targetDate }}
                 @if (isOverdue(plan)) {
                   · {{ 'TASKS.LIFE_PLANS.OVERDUE_DAYS' | translate: { days: lagDays(plan) } }}
@@ -58,7 +58,7 @@
           <ion-label>
             <h3>{{ plan.title }}</h3>
             @if (plan.targetDate) {
-              <p [color]="isOverdue(plan) ? 'danger' : undefined">
+              <p [style.color]="isOverdue(plan) ? 'var(--ion-color-danger)' : null">
                 {{ plan.targetDate }}
                 @if (isOverdue(plan)) {
                   · {{ 'TASKS.LIFE_PLANS.OVERDUE_DAYS' | translate: { days: lagDays(plan) } }}

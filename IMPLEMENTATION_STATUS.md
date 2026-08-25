@@ -53,16 +53,11 @@ Ha implementálsz egy új feature-t: vedd fel a sort, `Kész`-re állítva, a
 | ↳ [Eszközök](documentation/Subfeatures/Eszközök.md) | `56923be` (2026-08-19) | `GearItem*` | `gear/items/` | |
 | ↳ [Sablonok](documentation/Subfeatures/Sablonok.md) | `dc3a5d9` (2026-08-20) | `PackingTemplate*` | `gear/templates/` | Post-create redirect+highlight UX |
 | ↳ [Pakolás](documentation/Subfeatures/Pakolás.md) | `dc3a5d9` (2026-08-20) | `PackingSession*` | `gear/sessions/` | Cél nélküli session-elnevezés fallback |
-
-## Részleges feature-k
-
-| Feature / Subfeature | Spec commit | Backend | Frontend | Megjegyzés |
-|---|---|---|---|---|
-| [Tennivalók](documentation/Features/Tennivalók.md) | `d1950b4` (2026-08-19) | — | — | Hub (4 csempe) + routing-összekötés még nincs; 2/4 subfeature kész (lásd alatta) |
-| ↳ [Élet tervek](documentation/Subfeatures/Élet%20tervek.md) | `2b44ec6` (2026-08-19) | `hu.bumler.lm2.tasks` (`LifePlan*`) | `pages/tasks/life-plans/`, `core/data/life-plan.repository.ts` | Route ideiglenesen közvetlenül a tabs alatt (`/tabs/tasks/life-plans`), a hub nélkül |
-| ↳ [Háztartási feladatok](documentation/Subfeatures/Háztartási%20feladatok.md) | `56923be` (2026-08-19) | `hu.bumler.lm2.tasks` (`HouseholdRoom*`, `HouseholdTask*`) | `pages/tasks/household/`, `core/data/household-room.repository.ts`, `core/data/household-task.repository.ts` | Naptár-előfordulás vetítő (`household-occurrence.ts`) megírva/tesztelve, de a Naptár képernyő maga még nincs (4. lépés). Route ideiglenesen `/tabs/tasks/household`. Értesítés (`HOUSEHOLD_TASK_DUE`) nincs ebben a körben. |
-| ↳ [Események](documentation/Features/Események.md) | `d1950b4` (2026-08-19) | `hu.bumler.lm2.tasks` (`CalendarEvent*`) | `pages/tasks/events/`, `core/data/calendar-event.repository.ts` | Recurrence-vetítő (`core/data/event-occurrence.ts`, DAILY/WEEKLY/YEARLY, feb-29 skip) megírva/tesztelve — a Naptár erre épül majd. Route ideiglenesen `/tabs/tasks/events`. Google export és Értesítés (`EVENT_OCCURRENCE`) nincs ebben a körben. |
-| ↳ Naptár | — | — | — | Lásd "Nincs elkezdve" |
+| [Tennivalók](documentation/Features/Tennivalók.md) | `d1950b4` (2026-08-19) | `hu.bumler.lm2.tasks` (`LifePlan*`, `HouseholdRoom*`, `HouseholdTask*`, `CalendarEvent*`) | `pages/tasks/` (hub + life-plans/household/events/calendar) | 4/4 subfeature kész, hub + routing véglegesítve. Flag-ek (`tab.feladatok` + 3 csempe) bekapcsolva a `features.json`-ban. Értesítések (`HOUSEHOLD_TASK_DUE`, `EVENT_OCCURRENCE`) és Google export nincs ebben a körben — lásd alul. |
+| ↳ [Élet tervek](documentation/Subfeatures/Élet%20tervek.md) | `2b44ec6` (2026-08-19) | `LifePlan*` | `pages/tasks/life-plans/`, `core/data/life-plan.repository.ts` | |
+| ↳ [Háztartási feladatok](documentation/Subfeatures/Háztartási%20feladatok.md) | `56923be` (2026-08-19) | `HouseholdRoom*`, `HouseholdTask*` | `pages/tasks/household/`, `core/data/household-{room,task}.repository.ts` | Naptár-producer: `core/data/household-occurrence.ts` |
+| ↳ [Események](documentation/Features/Események.md) | `d1950b4` (2026-08-19) | `CalendarEvent*` | `pages/tasks/events/`, `core/data/calendar-event.repository.ts` | Naptár-producer: `core/data/event-occurrence.ts` (DAILY/WEEKLY/YEARLY, feb-29 skip) |
+| ↳ [Naptár](documentation/Features/Naptár.md) | `2b44ec6` (2026-08-19) | — (nincs saját adat) | `pages/tasks/calendar/` | Csak frontend aggregátor; hónap-rács + napi lista; swipe gesztus nincs implementálva, csak chevron (lásd Megjegyzések) |
 
 ## Nincs elkezdve
 
@@ -72,7 +67,6 @@ feature" lent), nem prioritás.
 
 | Feature | Subfeature-ök | Fő függőségek |
 |---|---|---|
-| [Tennivalók](documentation/Features/Tennivalók.md) (1/4 hátra) | [Naptár](documentation/Features/Naptár.md) — Élet tervek, Háztartási feladatok és Események már kész, lásd fent | Naptár: csak frontend aggregátor; mindkét producer-util (`household-occurrence.ts`, `event-occurrence.ts`) már megvan és tesztelt. |
 | [Kaja](documentation/Features/Kaja.md) | Élelmiszerek, Élelmiszer hozzáadása (+manuális/clipboard/vonalkód), Étkezés (+3 forrás), Recept, Élelmiszer tárolás, Kaja statisztika | Profile (TDEE-hez, kész), Tápérték kalkulátor (architektúra doksi) |
 | [Edzés](documentation/Features/Edzés.md) | Edzésnapló, Gyakorlat, Heti terv, Biciklizés napló, Úszás napló, Mászónapló (+ 12 Indoor/Outdoor boulder/köteles al-spec) | Profile (kész) — a Mászónapló ág önmagában a legnagyobb subtree a projektben |
 | [Bevásárlás](documentation/Features/Bevásárlás.md) | Bevásárlólista írás, Bevásárlás teljesítve, Bevásárlás előzmény | Élelmiszerek (Kaja alatt) |
@@ -81,28 +75,41 @@ feature" lent), nem prioritás.
 | [Lépésszám követés](documentation/Features/Lépésszám%20követés.md) | Kézzel bevitel, Samsung Health szinkron | Samsung Health natív integráció |
 | [Értesítések](documentation/Features/Értesítések.md) | — | Több más feature helyi notification-hookjait szolgálja ki (Háztartási feladatok, Élet tervek stb.) |
 
-## Következő javasolt lépés: **Tennivalók → Naptár**
+## Lezárt kör: Tennivalók (2026-08-25)
 
-Élet tervek, Háztartási feladatok és Események (mind 2026-08-25) elkészültek a
-tervezett vertikális szelet szerint — backend entitások (`hu.bumler.lm2.tasks`
-csomag), OpenAPI végpontok, Flyway migrációk, sync data loaderek; frontend
-repository-k + lista/szerkesztő oldalak `/tabs/tasks/life-plans`,
-`/tabs/tasks/household`, `/tabs/tasks/events` alatt, teljes offline-sync
-bekötés (outbox entity type-ok, local-rows, sync-engine ágak, SQLite séma
-v5/v6/v7), és tesztek minden rétegen (lásd "Részleges feature-k" táblázatot).
-Mindkét naptár-producer pure-TS util megvan és tesztelt
-(`core/data/household-occurrence.ts`, `core/data/event-occurrence.ts`) — a
-Naptár képernyő ezekre épül majd, saját vetítés nélkül. A `tabs/tasks` gyökér
-ideiglenesen a life-plans listára redirectel, amíg a hub el nem készül.
+A teljes Tennivalók feature elkészült a jóváhagyott terv szerinti sorrendben —
+Élet tervek → Háztartási feladatok → Események → Naptár → hub + routing
+véglegesítés, mindegyik saját commitban, minden lépés után backend
+(Testcontainers) + frontend (Karma + `ng build` template-ellenőrzéssel) +
+lint zöld. `hu.bumler.lm2.tasks` backend csomag (4 entitás, saját OpenAPI
+végpontokkal, kivéve a Naptárt, aminek nincs saját adata), `pages/tasks/`
+frontend fa, teljes offline-sync bekötés mind a 4 entitásra (outbox entity
+type, local-rows, sync-engine ágak, SQLite séma v5→v7).
 
-**Tervezett sorrend innen** (a jóváhagyott terv szerint):
+**Tudatosan kihagyva ebből a körből** (a terv "Nem cél" szakasza szerint):
+- Értesítések (`HOUSEHOLD_TASK_DUE`, `EVENT_OCCURRENCE`) — külön menetben,
+  amikor több más forrás-feature (Élelmiszer tárolás, Lépésszám, Étkezés) is
+  készen áll, mert az Értesítések egy közös, több feature-t kiszolgáló réteg.
+- Google Calendar export — a spec is MVP-n kívülinek jelöli, `feladatok.googleExport`
+  flag megvan hozzá, alapból kikapcsolva.
+- Napi rács swipe gesztus (Naptár hónapváltás) — csak chevron gombok készültek;
+  a swipe natív gesztuskezelést igényelne (pl. Ionic Gesture API), ami külön
+  belépő nélkül scope-kúszás lett volna.
 
-1. ~~Élet tervek~~ — kész.
-2. ~~Háztartási feladatok~~ — kész (Értesítés `HOUSEHOLD_TASK_DUE` nélkül).
-3. ~~Események~~ — kész (Google export és Értesítés `EVENT_OCCURRENCE` nélkül).
-4. **Naptár** (csak frontend, aggregátor: Háztartási feladatok + Események;
-   hónap-rács + napi lista, forrás-szűrő chipek).
-5. Hub (`tennivalok-hub.page.ts`, 4 csempe) + a `tabs/tasks` routing véglegesítése.
+## Következő javasolt feature: **Kaja vagy Edzés**
 
-Google Calendar export és a teljes Értesítések feature (6 típus) továbbra sem
-cél ebben a menetben — lásd a plan fájl "Nem cél ebben a körben" szakaszát.
+A Tennivalók-hoz hasonló méretű "gyors győzelem" feature-ök elfogytak — a
+maradék listán csak a nagy, több hetes feature-ök vannak (lásd "Nincs
+elkezdve"). Két irány védhető:
+
+- **Kaja** — a fő napi use-case (étkezés naplózás + TDEE), de 4 beviteli mód
+  (manuális / vonalkód / clipboard / recept) + statisztika, és a Tápérték
+  kalkulátor architektúra-doksit is implementálni kell hozzá.
+- **Edzés** — a Mászónapló ág egyedül 12 al-specet visz (Indoor/Outdoor ×
+  boulder/köteles, nehézségi konverziós mátrix); érdemes lenne először csak az
+  Edzésnapló + Gyakorlat + Heti terv "törzset" megcsinálni, a Mászónapló-t
+  külön körre hagyva.
+
+Mindkettő jóval nagyobb, mint bármelyik Tennivalók-lépés volt — érdemes ismét
+egy jóváhagyott plan-nal, subfeature-önkénti bontásban nekifutni, ahogy ez a
+kör is ment.

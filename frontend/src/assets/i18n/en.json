@@ -164,6 +164,10 @@
     }
   },
   "TASKS": {
+    "HUB_HOUSEHOLD": "Household tasks",
+    "HUB_LIFE_PLANS": "Life plans",
+    "HUB_CALENDAR": "Calendar",
+    "HUB_EVENTS": "Events",
     "LIFE_PLANS": {
       "TITLE": "Life plans",
       "SEARCH_PLACEHOLDER": "Search",
@@ -254,6 +258,18 @@
       "DELETE_CONFIRM_TITLE": "Delete event",
       "DELETE_CONFIRM_MESSAGE": "Are you sure you want to delete \"{{title}}\"?",
       "DELETE_CONFIRM_MESSAGE_RECURRING": "Are you sure you want to delete the recurring event \"{{title}}\"? The whole series will be deleted."
+    },
+    "CALENDAR": {
+      "TODAY_BUTTON": "Today",
+      "SOURCE_HOUSEHOLD": "Household",
+      "SOURCE_EVENT": "Events",
+      "ALL_DAY": "All day",
+      "DAY_EMPTY": "No items.",
+      "MONTH_NAMES": [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+      ],
+      "WEEKDAY_NAMES": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
     }
   }
 }

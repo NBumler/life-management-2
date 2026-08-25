@@ -164,6 +164,10 @@
     }
   },
   "TASKS": {
+    "HUB_HOUSEHOLD": "Háztartási feladatok",
+    "HUB_LIFE_PLANS": "Élet tervek",
+    "HUB_CALENDAR": "Naptár",
+    "HUB_EVENTS": "Események",
     "LIFE_PLANS": {
       "TITLE": "Élet tervek",
       "SEARCH_PLACEHOLDER": "Keresés",
@@ -254,6 +258,18 @@
       "DELETE_CONFIRM_TITLE": "Esemény törlése",
       "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd a(z) „{{title}}” eseményt?",
       "DELETE_CONFIRM_MESSAGE_RECURRING": "Biztosan törlöd a(z) „{{title}}” ismétlődő eseményt? Az egész sorozat törlődik."
+    },
+    "CALENDAR": {
+      "TODAY_BUTTON": "Ma",
+      "SOURCE_HOUSEHOLD": "Háztartási",
+      "SOURCE_EVENT": "Események",
+      "ALL_DAY": "Egész nap",
+      "DAY_EMPTY": "Nincs tétel.",
+      "MONTH_NAMES": [
+        "Január", "Február", "Március", "Április", "Május", "Június",
+        "Július", "Augusztus", "Szeptember", "Október", "November", "December"
+      ],
+      "WEEKDAY_NAMES": ["H", "K", "Sze", "Cs", "P", "Szo", "V"]
     }
   }
 }

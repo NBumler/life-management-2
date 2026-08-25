@@ -1,0 +1,45 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="goBack()">
+        <ion-icon name="chevron-back-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>{{ date() }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="prevDay()">
+        <ion-icon name="chevron-back-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+      </ion-button>
+      <ion-button (click)="goToday()">{{ 'CALENDAR.TODAY_BUTTON' | translate }}</ion-button>
+      <ion-button (click)="nextDay()">
+        <ion-icon name="chevron-forward-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-list>
+    @if (rows().length === 0) {
+      <ion-item>
+        <ion-label color="medium">{{ 'CALENDAR.DAY_EMPTY' | translate }}</ion-label>
+      </ion-item>
+    }
+    @for (row of rows(); track row.source + row.sourceEntityId) {
+      <ion-item>
+        @if (row.completable) {
+          <ion-checkbox slot="start" (ionChange)="complete(row)"></ion-checkbox>
+        }
+        <ion-label button (click)="open(row)">
+          <h3>{{ row.title }}</h3>
+          <p [style.color]="row.overdue ? 'var(--ion-color-danger)' : null">
+            {{ timeLabel(row) ?? ('CALENDAR.ALL_DAY' | translate) }}
+            @if (row.subtitle) {
+              · {{ row.subtitle }}
+            }
+          </p>
+        </ion-label>
+      </ion-item>
+    }
+  </ion-list>
+</ion-content>
