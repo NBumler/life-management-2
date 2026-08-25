@@ -183,7 +183,45 @@ const SCHEMA_V5_STATEMENTS: string[] = [
   )`,
 ];
 
-const SCHEMA_VERSION = 5;
+/** documentation/Subfeatures/Háztartási feladatok.md — rooms + recurring room-scoped tasks. */
+const SCHEMA_V6_STATEMENTS: string[] = [
+  `CREATE TABLE IF NOT EXISTS household_room (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE TABLE IF NOT EXISTS household_task (
+    id TEXT PRIMARY KEY,
+    room_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    energy_level TEXT NOT NULL DEFAULT 'MEDIUM',
+    estimated_minutes INTEGER NOT NULL DEFAULT 1,
+    interval_days INTEGER NOT NULL DEFAULT 1,
+    next_due TEXT NOT NULL,
+    last_completed_at TEXT,
+    notes TEXT,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_household_task_room_id ON household_task (room_id)`,
+  `CREATE INDEX IF NOT EXISTS idx_household_task_next_due ON household_task (next_due)`,
+];
+
+const SCHEMA_VERSION = 6;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -191,7 +229,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 2, statements: SCHEMA_V2_STATEMENTS },
   { toVersion: 3, statements: SCHEMA_V3_STATEMENTS },
   { toVersion: 4, statements: SCHEMA_V4_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V5_STATEMENTS },
+  { toVersion: 5, statements: SCHEMA_V5_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V6_STATEMENTS },
 ];
 
 export interface SqlTask {

@@ -58,9 +58,10 @@ Ha implementálsz egy új feature-t: vedd fel a sort, `Kész`-re állítva, a
 
 | Feature / Subfeature | Spec commit | Backend | Frontend | Megjegyzés |
 |---|---|---|---|---|
-| [Tennivalók](documentation/Features/Tennivalók.md) | `d1950b4` (2026-08-19) | — | — | Hub (4 csempe) + routing-összekötés még nincs; csak 1/4 subfeature kész (lásd alatta) |
+| [Tennivalók](documentation/Features/Tennivalók.md) | `d1950b4` (2026-08-19) | — | — | Hub (4 csempe) + routing-összekötés még nincs; 2/4 subfeature kész (lásd alatta) |
 | ↳ [Élet tervek](documentation/Subfeatures/Élet%20tervek.md) | `2b44ec6` (2026-08-19) | `hu.bumler.lm2.tasks` (`LifePlan*`) | `pages/tasks/life-plans/`, `core/data/life-plan.repository.ts` | Route ideiglenesen közvetlenül a tabs alatt (`/tabs/tasks/life-plans`), a hub nélkül |
-| ↳ Háztartási feladatok, Naptár, Események | — | — | — | Lásd "Nincs elkezdve" |
+| ↳ [Háztartási feladatok](documentation/Subfeatures/Háztartási%20feladatok.md) | `56923be` (2026-08-19) | `hu.bumler.lm2.tasks` (`HouseholdRoom*`, `HouseholdTask*`) | `pages/tasks/household/`, `core/data/household-room.repository.ts`, `core/data/household-task.repository.ts` | Naptár-előfordulás vetítő (`household-occurrence.ts`) megírva/tesztelve, de a Naptár képernyő maga még nincs (3. lépés). Route ideiglenesen `/tabs/tasks/household`. Értesítés (`HOUSEHOLD_TASK_DUE`) nincs ebben a körben. |
+| ↳ Naptár, Események | — | — | — | Lásd "Nincs elkezdve" |
 
 ## Nincs elkezdve
 
@@ -70,7 +71,7 @@ feature" lent), nem prioritás.
 
 | Feature | Subfeature-ök | Fő függőségek |
 |---|---|---|
-| [Tennivalók](documentation/Features/Tennivalók.md) (3/4 hátra) | [Háztartási feladatok](documentation/Subfeatures/Háztartási%20feladatok.md), [Naptár](documentation/Features/Naptár.md), [Események](documentation/Features/Események.md) — Élet tervek már kész, lásd fent | Háztartási: Naptár-producer + Értesítések (utóbbi kimarad ebben a körben). Naptár: aggregátor (Háztartási + Események). |
+| [Tennivalók](documentation/Features/Tennivalók.md) (2/4 hátra) | [Naptár](documentation/Features/Naptár.md), [Események](documentation/Features/Események.md) — Élet tervek és Háztartási feladatok már kész, lásd fent | Naptár: aggregátor (Háztartási + Események); a Háztartási oldali producer-util már megvan. Események: nincs függősége. |
 | [Kaja](documentation/Features/Kaja.md) | Élelmiszerek, Élelmiszer hozzáadása (+manuális/clipboard/vonalkód), Étkezés (+3 forrás), Recept, Élelmiszer tárolás, Kaja statisztika | Profile (TDEE-hez, kész), Tápérték kalkulátor (architektúra doksi) |
 | [Edzés](documentation/Features/Edzés.md) | Edzésnapló, Gyakorlat, Heti terv, Biciklizés napló, Úszás napló, Mászónapló (+ 12 Indoor/Outdoor boulder/köteles al-spec) | Profile (kész) — a Mászónapló ág önmagában a legnagyobb subtree a projektben |
 | [Bevásárlás](documentation/Features/Bevásárlás.md) | Bevásárlólista írás, Bevásárlás teljesítve, Bevásárlás előzmény | Élelmiszerek (Kaja alatt) |
@@ -79,23 +80,25 @@ feature" lent), nem prioritás.
 | [Lépésszám követés](documentation/Features/Lépésszám%20követés.md) | Kézzel bevitel, Samsung Health szinkron | Samsung Health natív integráció |
 | [Értesítések](documentation/Features/Értesítések.md) | — | Több más feature helyi notification-hookjait szolgálja ki (Háztartási feladatok, Élet tervek stb.) |
 
-## Következő javasolt lépés: **Tennivalók → Háztartási feladatok**
+## Következő javasolt lépés: **Tennivalók → Események**
 
-Az Élet tervek (2026-08-25) elkészült a tervezett vertikális szelet szerint:
-backend (`hu.bumler.lm2.tasks.LifePlan*` — entitás, OpenAPI, Flyway migráció,
-sync data loader), frontend (`LifePlanRepository`, lista + szerkesztő oldal a
-`/tabs/tasks/life-plans` route-on), teljes offline-sync bekötés (outbox entity
-type, local-rows, sync-engine ágak), és tesztek mindkét oldalon — lásd a
-"Részleges feature-k" táblázatot. A `tabs/tasks` gyökér ideiglenesen a
-life-plans listára redirectel, amíg a hub (5. lépés) el nem készül.
+Élet tervek (2026-08-25) és Háztartási feladatok (2026-08-25) elkészültek a
+tervezett vertikális szelet szerint — backend entitások (`hu.bumler.lm2.tasks`
+csomag), OpenAPI végpontok, Flyway migrációk, sync data loaderek; frontend
+repository-k + lista/szerkesztő oldalak `/tabs/tasks/life-plans` és
+`/tabs/tasks/household` alatt, teljes offline-sync bekötés (outbox entity
+type-ok, local-rows, sync-engine ágak, SQLite séma v5/v6), és tesztek minden
+rétegen (lásd "Részleges feature-k" táblázatot). A Háztartási feladatok
+naptár-producer algoritmusa (`core/data/household-occurrence.ts`) már megvan
+és tesztelt, de a Naptár képernyő maga a 4. lépésre vár. A `tabs/tasks` gyökér
+ideiglenesen a life-plans listára redirectel, amíg a hub el nem készül.
 
 **Tervezett sorrend innen** (a jóváhagyott terv szerint):
 
 1. ~~Élet tervek~~ — kész.
-2. **Háztartási feladatok** (`HouseholdRoom` + `HouseholdTask`, cascade delete,
-   naptár-producer algoritmus). Az Értesítések (`HOUSEHOLD_TASK_DUE`) ebben a
-   körben explicit kimarad — külön menetben jön.
-3. Események (`CalendarEvent`, recurrence-vetítés).
+2. ~~Háztartási feladatok~~ — kész (Értesítés `HOUSEHOLD_TASK_DUE` nélkül).
+3. **Események** (`CalendarEvent`, recurrence-vetítés: DAILY/WEEKLY/YEARLY,
+   ma±1 év horizon, nincs darabszám-sapka).
 4. Naptár (csak frontend, aggregátor: Háztartási feladatok + Események).
 5. Hub (`tennivalok-hub.page.ts`, 4 csempe) + a `tabs/tasks` routing véglegesítése.
 

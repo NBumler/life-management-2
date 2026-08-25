@@ -45,6 +45,14 @@ paths:
     $ref: 'openapi/paths/life-plans.yaml'
   /api/life-plans/{id}:
     $ref: 'openapi/paths/life-plans-item.yaml'
+  /api/household-rooms:
+    $ref: 'openapi/paths/household-rooms.yaml'
+  /api/household-rooms/{id}:
+    $ref: 'openapi/paths/household-rooms-item.yaml'
+  /api/household-tasks:
+    $ref: 'openapi/paths/household-tasks.yaml'
+  /api/household-tasks/{id}:
+    $ref: 'openapi/paths/household-tasks-item.yaml'
 components:
   securitySchemes:
     bearerAuth:
@@ -106,3 +114,11 @@ components:
       $ref: 'openapi/components/schemas/LifePlan.yaml'
     LifePlanList:
       $ref: 'openapi/components/schemas/LifePlanList.yaml'
+    HouseholdRoom:
+      $ref: 'openapi/components/schemas/HouseholdRoom.yaml'
+    HouseholdRoomList:
+      $ref: 'openapi/components/schemas/HouseholdRoomList.yaml'
+    HouseholdTask:
+      $ref: 'openapi/components/schemas/HouseholdTask.yaml'
+    HouseholdTaskList:
+      $ref: 'openapi/components/schemas/HouseholdTaskList.yaml'

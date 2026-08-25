@@ -1,0 +1,61 @@
+type: object
+description: >-
+  documentation/Subfeatures/Háztartási feladatok.md — a recurring, room-scoped household chore.
+  `nextDue` / `lastCompletedAt` are rolled forward by the client (kliens naptári nap); the server
+  only stores whatever it's sent, it never recomputes them.
+required:
+  - id
+  - roomId
+  - name
+  - energyLevel
+  - estimatedMinutes
+  - intervalDays
+  - nextDue
+  - deleted
+properties:
+  id:
+    type: string
+    format: uuid
+  roomId:
+    type: string
+    format: uuid
+  name:
+    type: string
+    minLength: 1
+  energyLevel:
+    type: string
+    enum:
+      - LOW
+      - MEDIUM
+      - HIGH
+  estimatedMinutes:
+    type: integer
+    minimum: 1
+  intervalDays:
+    type: integer
+    minimum: 1
+  nextDue:
+    type: string
+    format: date
+  lastCompletedAt:
+    type: string
+    format: date-time
+    nullable: true
+  notes:
+    type: string
+    nullable: true
+  deleted:
+    type: boolean
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

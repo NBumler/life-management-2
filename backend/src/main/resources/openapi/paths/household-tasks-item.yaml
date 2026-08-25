@@ -1,0 +1,69 @@
+parameters:
+  - name: id
+    in: path
+    required: true
+    schema:
+      type: string
+      format: uuid
+get:
+  operationId: getHouseholdTask
+  tags:
+    - household-tasks
+  summary: A single task. Own deleted row returns 200 with deleted=true (not 404).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/HouseholdTask.yaml'
+    '404':
+      description: No such task (or it belongs to another user).
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+put:
+  operationId: updateHouseholdTask
+  tags:
+    - household-tasks
+  summary: >-
+    Full update (last-write-wins). Completing a task ("pipálás") is a PUT with the client-rolled
+    nextDue / lastCompletedAt (documentation/Subfeatures/Háztartási feladatok.md "Pipálás").
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/HouseholdTask.yaml'
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/HouseholdTask.yaml'
+    '404':
+      description: roomId does not exist or belongs to another user.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+    '409':
+      description: Entity already deleted, or another live task in the same room already has this name.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+delete:
+  operationId: deleteHouseholdTask
+  tags:
+    - household-tasks
+  summary: Soft delete, idempotent. The room itself is untouched.
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/HouseholdTask.yaml'

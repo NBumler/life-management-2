@@ -1,0 +1,99 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/tasks/household"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ (taskId() === null ? 'TASKS.HOUSEHOLD.ADD' : 'TASKS.HOUSEHOLD.EDIT_TITLE') | translate }}</ion-title>
+    @if (taskId() !== null) {
+      <ion-buttons slot="end">
+        <ion-button color="danger" (click)="delete()">{{ 'COMMON.DELETE' | translate }}</ion-button>
+      </ion-buttons>
+    }
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <form [formGroup]="form" (ngSubmit)="save()">
+    <ion-list>
+      <ion-item>
+        <ion-input formControlName="name" [label]="'TASKS.HOUSEHOLD.NAME_LABEL' | translate" labelPlacement="stacked" [autofocus]="taskId() === null"></ion-input>
+      </ion-item>
+      @if (nameConflictError(); as conflictMessage) {
+        <ion-text color="danger">
+          <p class="ion-padding-start">{{ conflictMessage }}</p>
+        </ion-text>
+      }
+
+      @if (taskId() === null) {
+        <ion-item>
+          <ion-label>{{ 'TASKS.HOUSEHOLD.ROOM_CHECKLIST_LABEL' | translate }}</ion-label>
+        </ion-item>
+        @for (room of roomRepository.items(); track room.id) {
+          <ion-item>
+            <ion-checkbox [checked]="selectedRoomIds().has(room.id)" (ionChange)="toggleRoom(room.id)">{{ room.name }}</ion-checkbox>
+          </ion-item>
+        }
+        <ion-item>
+          <ion-input
+            [value]="newRoomName()"
+            (ionInput)="newRoomName.set($any($event.target).value ?? '')"
+            [label]="'TASKS.HOUSEHOLD.NEW_ROOM_INLINE_LABEL' | translate"
+            labelPlacement="stacked"
+          ></ion-input>
+          <ion-button fill="clear" type="button" (click)="addInlineRoom()">{{ 'TASKS.HOUSEHOLD.ADD_ROOM' | translate }}</ion-button>
+        </ion-item>
+        @if (newRoomError(); as roomError) {
+          <ion-text color="danger">
+            <p class="ion-padding-start">{{ roomError }}</p>
+          </ion-text>
+        }
+        @if (roomSelectionError(); as selectionError) {
+          <ion-text color="danger">
+            <p class="ion-padding-start">{{ selectionError }}</p>
+          </ion-text>
+        }
+      } @else {
+        <ion-item>
+          <ion-select formControlName="roomId" [label]="'TASKS.HOUSEHOLD.ROOM_LABEL' | translate" labelPlacement="stacked">
+            @for (room of roomRepository.items(); track room.id) {
+              <ion-select-option [value]="room.id">{{ room.name }}</ion-select-option>
+            }
+          </ion-select>
+        </ion-item>
+      }
+
+      <ion-item>
+        <ion-label>{{ 'TASKS.HOUSEHOLD.ENERGY_LABEL' | translate }}</ion-label>
+      </ion-item>
+      <ion-segment formControlName="energyLevel">
+        <ion-segment-button [value]="EnergyLevelEnum.Low">
+          <ion-label>{{ 'TASKS.HOUSEHOLD.ENERGY_LOW' | translate }}</ion-label>
+        </ion-segment-button>
+        <ion-segment-button [value]="EnergyLevelEnum.Medium">
+          <ion-label>{{ 'TASKS.HOUSEHOLD.ENERGY_MEDIUM' | translate }}</ion-label>
+        </ion-segment-button>
+        <ion-segment-button [value]="EnergyLevelEnum.High">
+          <ion-label>{{ 'TASKS.HOUSEHOLD.ENERGY_HIGH' | translate }}</ion-label>
+        </ion-segment-button>
+      </ion-segment>
+
+      <ion-item>
+        <ion-input formControlName="estimatedMinutes" type="number" min="1" [label]="'TASKS.HOUSEHOLD.MINUTES_LABEL' | translate" labelPlacement="stacked"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-input formControlName="intervalDays" type="number" min="1" [label]="'TASKS.HOUSEHOLD.INTERVAL_LABEL' | translate" labelPlacement="stacked"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-input formControlName="nextDue" type="date" [label]="'TASKS.HOUSEHOLD.NEXT_DUE_LABEL' | translate" labelPlacement="stacked"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-input formControlName="notes" [label]="'TASKS.HOUSEHOLD.NOTES_LABEL' | translate" labelPlacement="stacked"></ion-input>
+      </ion-item>
+    </ion-list>
+
+    <ion-button expand="block" type="submit" class="ion-margin-top">{{ 'COMMON.SAVE' | translate }}</ion-button>
+  </form>
+</ion-content>

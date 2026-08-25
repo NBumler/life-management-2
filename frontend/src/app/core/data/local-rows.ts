@@ -1,5 +1,7 @@
 import { SqlTask } from '../storage/local-database.service';
 import { GearItem } from '../../api/model/gearItem';
+import { HouseholdRoom } from '../../api/model/householdRoom';
+import { HouseholdTask } from '../../api/model/householdTask';
 import { LifePlan } from '../../api/model/lifePlan';
 import { PackingSession } from '../../api/model/packingSession';
 import { PackingSessionItem } from '../../api/model/packingSessionItem';
@@ -608,6 +610,183 @@ export function lifePlanTombstoneTask(id: string, deletedAt: string | null, upda
     statement: `
       INSERT INTO life_plan (id, title, status, updated_at, deleted, deleted_at, _dirty, _local_only)
       VALUES (?, '', 'PLANNED', ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+export interface HouseholdRoomRow {
+  id: string;
+  name: string;
+  sort_order: number;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+export function householdRoomRowToDto(row: HouseholdRoomRow): HouseholdRoom {
+  return {
+    id: row.id,
+    name: row.name,
+    sortOrder: row.sort_order,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+export function householdRoomLocalWriteTask(dto: HouseholdRoom): SqlTask {
+  return {
+    statement: `
+      INSERT INTO household_room (id, name, sort_order, _dirty, _local_only)
+      VALUES (?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET name = excluded.name, sort_order = excluded.sort_order, _dirty = 1`,
+    values: [dto.id, dto.name, dto.sortOrder],
+  };
+}
+
+export function householdRoomServerApplyTask(dto: HouseholdRoom): SqlTask {
+  return {
+    statement: `
+      INSERT INTO household_room (id, name, sort_order, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        name = excluded.name, sort_order = excluded.sort_order, created_at = excluded.created_at,
+        updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE household_room._dirty = 0`,
+    values: [
+      dto.id,
+      dto.name,
+      dto.sortOrder,
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function householdRoomTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO household_room (id, name, sort_order, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '', 0, ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+export interface HouseholdTaskRow {
+  id: string;
+  room_id: string;
+  name: string;
+  energy_level: string;
+  estimated_minutes: number;
+  interval_days: number;
+  next_due: string;
+  last_completed_at: string | null;
+  notes: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+export function householdTaskRowToDto(row: HouseholdTaskRow): HouseholdTask {
+  return {
+    id: row.id,
+    roomId: row.room_id,
+    name: row.name,
+    energyLevel: row.energy_level as HouseholdTask.EnergyLevelEnum,
+    estimatedMinutes: row.estimated_minutes,
+    intervalDays: row.interval_days,
+    nextDue: row.next_due,
+    lastCompletedAt: row.last_completed_at,
+    notes: row.notes,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+export function householdTaskLocalWriteTask(dto: HouseholdTask): SqlTask {
+  return {
+    statement: `
+      INSERT INTO household_task (id, room_id, name, energy_level, estimated_minutes, interval_days, next_due, last_completed_at, notes, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET
+        room_id = excluded.room_id, name = excluded.name, energy_level = excluded.energy_level,
+        estimated_minutes = excluded.estimated_minutes, interval_days = excluded.interval_days,
+        next_due = excluded.next_due, last_completed_at = excluded.last_completed_at, notes = excluded.notes, _dirty = 1`,
+    values: [
+      dto.id,
+      dto.roomId,
+      dto.name,
+      dto.energyLevel,
+      dto.estimatedMinutes,
+      dto.intervalDays,
+      dto.nextDue,
+      dto.lastCompletedAt ?? null,
+      dto.notes ?? null,
+    ],
+  };
+}
+
+/** Local-only removal of a task cascaded from its room being deleted (not a standalone outbox entry — see SqliteStorageBackend.deleteHouseholdRoom). */
+export function householdTaskLocalRemoveTask(id: string): SqlTask {
+  return {
+    statement: `UPDATE household_task SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?`,
+    values: [new Date().toISOString(), id],
+  };
+}
+
+export function householdTaskServerApplyTask(dto: HouseholdTask): SqlTask {
+  return {
+    statement: `
+      INSERT INTO household_task (id, room_id, name, energy_level, estimated_minutes, interval_days, next_due, last_completed_at, notes, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        room_id = excluded.room_id, name = excluded.name, energy_level = excluded.energy_level,
+        estimated_minutes = excluded.estimated_minutes, interval_days = excluded.interval_days, next_due = excluded.next_due,
+        last_completed_at = excluded.last_completed_at, notes = excluded.notes, created_at = excluded.created_at,
+        updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE household_task._dirty = 0`,
+    values: [
+      dto.id,
+      dto.roomId,
+      dto.name,
+      dto.energyLevel,
+      dto.estimatedMinutes,
+      dto.intervalDays,
+      dto.nextDue,
+      dto.lastCompletedAt ?? null,
+      dto.notes ?? null,
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function householdTaskTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO household_task (id, room_id, name, energy_level, estimated_minutes, interval_days, next_due, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '', '', 'LOW', 0, 1, '1970-01-01', ?, 1, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
     values: [id, updatedAt, deletedAt],
   };

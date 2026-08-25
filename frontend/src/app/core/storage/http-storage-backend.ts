@@ -2,12 +2,16 @@ import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
 import { GearItemsService } from '../../api/api/gearItems.service';
+import { HouseholdRoomsService } from '../../api/api/householdRooms.service';
+import { HouseholdTasksService } from '../../api/api/householdTasks.service';
 import { LifePlansService } from '../../api/api/lifePlans.service';
 import { PackingSessionItemsService } from '../../api/api/packingSessionItems.service';
 import { PackingSessionsService } from '../../api/api/packingSessions.service';
 import { PackingTemplatesService } from '../../api/api/packingTemplates.service';
 import { ProfileService } from '../../api/api/profile.service';
 import { GearItem } from '../../api/model/gearItem';
+import { HouseholdRoom } from '../../api/model/householdRoom';
+import { HouseholdTask } from '../../api/model/householdTask';
 import { LifePlan } from '../../api/model/lifePlan';
 import { PackingSession } from '../../api/model/packingSession';
 import { PackingSessionDetail } from '../../api/model/packingSessionDetail';
@@ -28,6 +32,8 @@ export class HttpStorageBackend implements StorageBackend {
   private readonly packingSessionsApi = inject(PackingSessionsService);
   private readonly packingSessionItemsApi = inject(PackingSessionItemsService);
   private readonly lifePlansApi = inject(LifePlansService);
+  private readonly householdRoomsApi = inject(HouseholdRoomsService);
+  private readonly householdTasksApi = inject(HouseholdTasksService);
 
   async getProfile(): Promise<UserProfile | null> {
     try {
@@ -163,6 +169,32 @@ export class HttpStorageBackend implements StorageBackend {
 
   deleteLifePlan(id: string): Promise<LifePlan> {
     return firstValueFrom(this.lifePlansApi.deleteLifePlan(id));
+  }
+
+  listHouseholdRooms(): Promise<HouseholdRoom[]> {
+    return firstValueFrom(this.householdRoomsApi.listHouseholdRooms());
+  }
+
+  /** POST with an existing id is an idempotent upsert server-side, so this covers both create and update. */
+  upsertHouseholdRoom(room: HouseholdRoom): Promise<HouseholdRoom> {
+    return firstValueFrom(this.householdRoomsApi.createHouseholdRoom(room));
+  }
+
+  deleteHouseholdRoom(id: string): Promise<HouseholdRoom> {
+    return firstValueFrom(this.householdRoomsApi.deleteHouseholdRoom(id));
+  }
+
+  listHouseholdTasks(): Promise<HouseholdTask[]> {
+    return firstValueFrom(this.householdTasksApi.listHouseholdTasks());
+  }
+
+  /** POST with an existing id is an idempotent upsert server-side, so this covers both create and update. */
+  upsertHouseholdTask(task: HouseholdTask): Promise<HouseholdTask> {
+    return firstValueFrom(this.householdTasksApi.createHouseholdTask(task));
+  }
+
+  deleteHouseholdTask(id: string): Promise<HouseholdTask> {
+    return firstValueFrom(this.householdTasksApi.deleteHouseholdTask(id));
   }
 }
 

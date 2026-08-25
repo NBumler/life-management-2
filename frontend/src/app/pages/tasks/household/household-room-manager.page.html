@@ -1,0 +1,60 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/tasks/household"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ 'TASKS.HOUSEHOLD.ROOM_MANAGER_TITLE' | translate }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-list>
+    @if (editingId() === null) {
+      <ion-item button (click)="startAdd()">
+        <ion-icon name="add-outline" slot="start" aria-hidden="true"></ion-icon>
+        <ion-label>{{ 'TASKS.HOUSEHOLD.ADD_ROOM' | translate }}</ion-label>
+      </ion-item>
+    } @else {
+      <ion-item>
+        <form [formGroup]="form" (ngSubmit)="save()" class="item-form">
+          <ion-input
+            formControlName="name"
+            [label]="'TASKS.HOUSEHOLD.ROOM_NAME' | translate"
+            labelPlacement="stacked"
+            [autofocus]="editingId() === 'new'"
+          ></ion-input>
+          @if (nameConflictError(); as conflictMessage) {
+            <ion-text color="danger">
+              <p>{{ conflictMessage }}</p>
+            </ion-text>
+          }
+          <div class="item-form-actions">
+            <ion-button fill="clear" type="button" (click)="cancelEdit()">{{ 'COMMON.CANCEL' | translate }}</ion-button>
+            <ion-button type="submit">{{ 'COMMON.SAVE' | translate }}</ion-button>
+          </div>
+        </form>
+      </ion-item>
+    }
+
+    @if (rooms().length === 0) {
+      <ion-item>
+        <ion-label color="medium">{{ 'TASKS.HOUSEHOLD.ROOMS_EMPTY' | translate }}</ion-label>
+      </ion-item>
+    }
+
+    @for (room of rooms(); track room.id; let i = $index) {
+      <ion-item button (click)="startEdit(room)">
+        <ion-label>{{ room.name }}</ion-label>
+        <ion-button fill="clear" [disabled]="i === 0" (click)="moveUp(i); $event.stopPropagation()">
+          <ion-icon name="chevron-up-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+        </ion-button>
+        <ion-button fill="clear" [disabled]="i === rooms().length - 1" (click)="moveDown(i); $event.stopPropagation()">
+          <ion-icon name="chevron-down-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+        </ion-button>
+        <ion-button fill="clear" color="danger" (click)="delete(room); $event.stopPropagation()">
+          <ion-icon name="trash-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+        </ion-button>
+      </ion-item>
+    }
+  </ion-list>
+</ion-content>

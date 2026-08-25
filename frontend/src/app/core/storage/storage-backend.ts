@@ -1,6 +1,8 @@
 import { InjectionToken } from '@angular/core';
 
 import { GearItem } from '../../api/model/gearItem';
+import { HouseholdRoom } from '../../api/model/householdRoom';
+import { HouseholdTask } from '../../api/model/householdTask';
 import { LifePlan } from '../../api/model/lifePlan';
 import { PackingSession } from '../../api/model/packingSession';
 import { PackingSessionDetail } from '../../api/model/packingSessionDetail';
@@ -89,6 +91,15 @@ export interface StorageBackend {
   listLifePlans(): Promise<LifePlan[]>;
   upsertLifePlan(plan: LifePlan): Promise<LifePlan>;
   deleteLifePlan(id: string): Promise<LifePlan>;
+
+  listHouseholdRooms(): Promise<HouseholdRoom[]>;
+  upsertHouseholdRoom(room: HouseholdRoom): Promise<HouseholdRoom>;
+  /** documentation/Subfeatures/Háztartási feladatok.md "Törlés": cascades to every live task in the room. */
+  deleteHouseholdRoom(id: string): Promise<HouseholdRoom>;
+
+  listHouseholdTasks(): Promise<HouseholdTask[]>;
+  upsertHouseholdTask(task: HouseholdTask): Promise<HouseholdTask>;
+  deleteHouseholdTask(id: string): Promise<HouseholdTask>;
 }
 
 export const STORAGE_BACKEND = new InjectionToken<StorageBackend>('STORAGE_BACKEND');

@@ -1,0 +1,31 @@
+type: object
+description: documentation/Subfeatures/Háztartási feladatok.md — user-owned room; name-only + manual sort order.
+required:
+  - id
+  - name
+  - sortOrder
+  - deleted
+properties:
+  id:
+    type: string
+    format: uuid
+  name:
+    type: string
+    minLength: 1
+  sortOrder:
+    type: integer
+  deleted:
+    type: boolean
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

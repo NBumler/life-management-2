@@ -1,14 +1,19 @@
 import { Injectable, inject } from '@angular/core';
 
 import { GearItem } from '../../api/model/gearItem';
+import { HouseholdRoom } from '../../api/model/householdRoom';
+import { HouseholdTask } from '../../api/model/householdTask';
 import { LifePlan } from '../../api/model/lifePlan';
 import { PackingSessionItem } from '../../api/model/packingSessionItem';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 import { normalizeName } from '../../shared/name-normalization';
 import { GearItemRepository } from '../data/gear-item.repository';
+import { HouseholdRoomRepository } from '../data/household-room.repository';
 import {
   GearItemRow,
+  HouseholdRoomRow,
+  HouseholdTaskRow,
   LifePlanRow,
   PackingSessionItemRow,
   PackingSessionRow,
@@ -16,6 +21,10 @@ import {
   WeightHistoryRow,
   gearItemLocalWriteTask,
   gearItemRowToDto,
+  householdRoomLocalWriteTask,
+  householdRoomRowToDto,
+  householdTaskLocalWriteTask,
+  householdTaskRowToDto,
   lifePlanLocalWriteTask,
   lifePlanRowToDto,
   packingSessionItemLocalWriteTask,
@@ -105,6 +114,7 @@ async function packingTemplateCurrentPayload(ctx: OutboxEntityFixContext): Promi
 @Injectable({ providedIn: 'root' })
 export class OutboxEntityRegistryService {
   private readonly gearItems = inject(GearItemRepository);
+  private readonly householdRooms = inject(HouseholdRoomRepository);
 
   private readonly registry: Record<OutboxEntityType, OutboxEntityDescriptor> = {
     UserProfile: {
@@ -158,6 +168,30 @@ export class OutboxEntityRegistryService {
       currentPayload: rowLookup<LifePlanRow, unknown>('life_plan', lifePlanRowToDto),
       buildFixWriteTask: (payload) => lifePlanLocalWriteTask(payload as unknown as LifePlan),
       // documentation/Architektúra/Névegyediség.md: LifePlan.title is explicitly not unique.
+      nameUniqueness: null,
+    },
+    HouseholdRoom: {
+      table: 'household_room',
+      currentPayload: rowLookup<HouseholdRoomRow, unknown>('household_room', householdRoomRowToDto),
+      buildFixWriteTask: (payload) => householdRoomLocalWriteTask(payload as unknown as HouseholdRoom),
+      nameUniqueness: {
+        field: 'name',
+        findConflict: async (value, excludeId) => {
+          if (!this.householdRooms.loaded()) {
+            await this.householdRooms.load();
+          }
+          const normalized = normalizeName(value);
+          return this.householdRooms.items().find((room) => room.id !== excludeId && normalizeName(room.name) === normalized)?.id ?? null;
+        },
+      },
+    },
+    HouseholdTask: {
+      table: 'household_task',
+      currentPayload: rowLookup<HouseholdTaskRow, unknown>('household_task', householdTaskRowToDto),
+      buildFixWriteTask: (payload) => householdTaskLocalWriteTask(payload as unknown as HouseholdTask),
+      // documentation/Architektúra/Névegyediség.md: scope is the room, not the user — the Fix form
+      // can't resolve that scope from (value, excludeId) alone, so this mirrors PackingTemplate's
+      // "no live pre-check in Fix" precedent; the server's 409 UNIQUE_VIOLATION still guards it.
       nameUniqueness: null,
     },
   };

@@ -45,13 +45,18 @@ public class GlobalExceptionHandler {
 	// scope): a real Névegyediség uniqueness constraint. GearItemService.applyName pre-checks this
 	// same scope before saving, so this mapping is only the safety net for a genuine multi-device
 	// race — see the comment above for why the fallback (rather than 500) matters.
+	// idx_household_room_user_id_name_normalized / idx_household_task_room_id_name_normalized
+	// (V10 migration): same Névegyediség pattern — room name unique per user, task name unique per
+	// room (not per user) — pre-checked in HouseholdRoomService / HouseholdTaskService.applyName.
 	private static final Map<String, String> UNIQUE_INDEX_TO_FIELD = Map.ofEntries(
 			Map.entry("idx_users_username", "username"),
 			Map.entry("idx_user_profile_user_id", "userId"),
 			Map.entry("idx_gear_item_user_id_name_normalized", "name"),
 			Map.entry("idx_packing_template_user_id_name_normalized", "name"),
 			Map.entry("idx_packing_template_item_template_gear", "gearItemId"),
-			Map.entry("idx_packing_session_item_session_gear", "gearItemId"));
+			Map.entry("idx_packing_session_item_session_gear", "gearItemId"),
+			Map.entry("idx_household_room_user_id_name_normalized", "name"),
+			Map.entry("idx_household_task_room_id_name_normalized", "name"));
 
 	@ExceptionHandler(DataIntegrityViolationException.class)
 	ResponseEntity<ApiError> handleUniqueConstraint(DataIntegrityViolationException ex) {

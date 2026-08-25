@@ -1,0 +1,44 @@
+get:
+  operationId: listHouseholdTasks
+  tags:
+    - household-tasks
+  summary: The caller's household tasks, live rows only (deleted = false).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/HouseholdTaskList.yaml'
+post:
+  operationId: createHouseholdTask
+  tags:
+    - household-tasks
+  summary: >-
+    Create a task — idempotent upsert on the client-supplied id. A multi-room create on the client
+    is N independent POSTs, one per room (documentation/Subfeatures/Háztartási feladatok.md).
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/HouseholdTask.yaml'
+  responses:
+    '200':
+      description: Created or, on retry with the same id, the existing row.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/HouseholdTask.yaml'
+    '404':
+      description: roomId does not exist or belongs to another user.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+    '409':
+      description: Another live task in the same room already has this name.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'

@@ -1,6 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 
 import { GearItem } from '../../api/model/gearItem';
+import { HouseholdRoom } from '../../api/model/householdRoom';
+import { HouseholdTask } from '../../api/model/householdTask';
 import { LifePlan } from '../../api/model/lifePlan';
 import { PackingSession } from '../../api/model/packingSession';
 import { PackingSessionDetail } from '../../api/model/packingSessionDetail';
@@ -11,6 +13,8 @@ import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 import {
   GearItemRow,
+  HouseholdRoomRow,
+  HouseholdTaskRow,
   LifePlanRow,
   PackingSessionItemRow,
   PackingSessionRow,
@@ -20,6 +24,11 @@ import {
   WeightHistoryRow,
   gearItemLocalWriteTask,
   gearItemRowToDto,
+  householdRoomLocalWriteTask,
+  householdRoomRowToDto,
+  householdTaskLocalRemoveTask,
+  householdTaskLocalWriteTask,
+  householdTaskRowToDto,
   lifePlanLocalWriteTask,
   lifePlanRowToDto,
   packingSessionItemLocalRemoveTask,
@@ -296,7 +305,7 @@ export class SqliteStorageBackend implements StorageBackend {
   }
 
   /** documentation/Architektúra/Backend-offline first.md §10 "Függőségi láncok": ids among `candidateIds` whose row hasn't reached the server yet. */
-  private async findLocalOnlyIds(table: 'gear_item', candidateIds: string[]): Promise<string[]> {
+  private async findLocalOnlyIds(table: 'gear_item' | 'household_room', candidateIds: string[]): Promise<string[]> {
     if (candidateIds.length === 0) {
       return [];
     }
@@ -538,6 +547,122 @@ export class SqliteStorageBackend implements StorageBackend {
   private async readLifePlan(id: string): Promise<LifePlan> {
     const rows = await this.db.query<LifePlanRow>('SELECT * FROM life_plan WHERE id = ?', [id]);
     return lifePlanRowToDto(rows[0]);
+  }
+
+  async listHouseholdRooms(): Promise<HouseholdRoom[]> {
+    const rows = await this.db.query<HouseholdRoomRow>('SELECT * FROM household_room WHERE deleted = 0 ORDER BY sort_order ASC');
+    return rows.map(householdRoomRowToDto);
+  }
+
+  async upsertHouseholdRoom(room: HouseholdRoom): Promise<HouseholdRoom> {
+    const userId = this.requireUserId();
+    const existing = await this.db.query('SELECT 1 FROM household_room WHERE id = ?', [room.id]);
+    const isNew = existing.length === 0;
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: isNew ? 'POST' : 'PUT',
+      url: isNew ? '/api/household-rooms' : `/api/household-rooms/${room.id}`,
+      payload: room,
+      entityType: 'HouseholdRoom',
+      targetEntityId: room.id,
+    });
+    await this.db.executeTransaction([householdRoomLocalWriteTask(room), ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    return this.readHouseholdRoom(room.id);
+  }
+
+  /**
+   * documentation/Subfeatures/Háztartási feladatok.md "Törlés": cascades to every live task in the
+   * room, mirroring GearItem's local cascade to referencing rows — the server does its own cascade
+   * on the DELETE, and the post-drain pull confirms each task's tombstone independently.
+   */
+  async deleteHouseholdRoom(id: string): Promise<HouseholdRoom> {
+    const userId = this.requireUserId();
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: 'DELETE',
+      url: `/api/household-rooms/${id}`,
+      payload: null,
+      entityType: 'HouseholdRoom',
+      targetEntityId: id,
+    });
+    const entityTask: SqlTask = enqueue.hardRemoveLocalEntity
+      ? { statement: 'DELETE FROM household_room WHERE id = ?', values: [id] }
+      : {
+          statement: 'UPDATE household_room SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?',
+          values: [new Date().toISOString(), id],
+        };
+    const cascadeTaskRows = await this.db.query<{ id: string }>(
+      'SELECT id FROM household_task WHERE room_id = ? AND deleted = 0',
+      [id],
+    );
+    const cascadeTasks = cascadeTaskRows.map((row) => householdTaskLocalRemoveTask(row.id));
+    await this.db.executeTransaction([entityTask, ...cascadeTasks, ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    if (enqueue.hardRemoveLocalEntity) {
+      return { id, name: '', sortOrder: 0, deleted: true };
+    }
+    return this.readHouseholdRoom(id);
+  }
+
+  private async readHouseholdRoom(id: string): Promise<HouseholdRoom> {
+    const rows = await this.db.query<HouseholdRoomRow>('SELECT * FROM household_room WHERE id = ?', [id]);
+    return householdRoomRowToDto(rows[0]);
+  }
+
+  async listHouseholdTasks(): Promise<HouseholdTask[]> {
+    const rows = await this.db.query<HouseholdTaskRow>('SELECT * FROM household_task WHERE deleted = 0 ORDER BY next_due ASC');
+    return rows.map(householdTaskRowToDto);
+  }
+
+  async upsertHouseholdTask(task: HouseholdTask): Promise<HouseholdTask> {
+    const userId = this.requireUserId();
+    const existing = await this.db.query('SELECT 1 FROM household_task WHERE id = ?', [task.id]);
+    const isNew = existing.length === 0;
+    // documentation/Architektúra/Backend-offline first.md §10 "Függőségi láncok": a task created
+    // right after an inline new room must wait for that room's own POST to land first.
+    const dependsOn = await this.findLocalOnlyIds('household_room', [task.roomId]);
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: isNew ? 'POST' : 'PUT',
+      url: isNew ? '/api/household-tasks' : `/api/household-tasks/${task.id}`,
+      payload: task,
+      entityType: 'HouseholdTask',
+      targetEntityId: task.id,
+      dependsOn,
+    });
+    await this.db.executeTransaction([householdTaskLocalWriteTask(task), ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    return this.readHouseholdTask(task.id);
+  }
+
+  async deleteHouseholdTask(id: string): Promise<HouseholdTask> {
+    const userId = this.requireUserId();
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: 'DELETE',
+      url: `/api/household-tasks/${id}`,
+      payload: null,
+      entityType: 'HouseholdTask',
+      targetEntityId: id,
+    });
+    const entityTask: SqlTask = enqueue.hardRemoveLocalEntity
+      ? { statement: 'DELETE FROM household_task WHERE id = ?', values: [id] }
+      : {
+          statement: 'UPDATE household_task SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?',
+          values: [new Date().toISOString(), id],
+        };
+    await this.db.executeTransaction([entityTask, ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    if (enqueue.hardRemoveLocalEntity) {
+      return { id, roomId: '', name: '', energyLevel: HouseholdTask.EnergyLevelEnum.Medium, estimatedMinutes: 1, intervalDays: 1, nextDue: '', deleted: true };
+    }
+    return this.readHouseholdTask(id);
+  }
+
+  private async readHouseholdTask(id: string): Promise<HouseholdTask> {
+    const rows = await this.db.query<HouseholdTaskRow>('SELECT * FROM household_task WHERE id = ?', [id]);
+    return householdTaskRowToDto(rows[0]);
   }
 
   private requireUserId(): string {

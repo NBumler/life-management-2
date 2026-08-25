@@ -11,6 +11,10 @@ api/gearItems.service.ts
 api/gearItems.serviceInterface.ts
 api/health.service.ts
 api/health.serviceInterface.ts
+api/householdRooms.service.ts
+api/householdRooms.serviceInterface.ts
+api/householdTasks.service.ts
+api/householdTasks.serviceInterface.ts
 api/lifePlans.service.ts
 api/lifePlans.serviceInterface.ts
 api/packingSessionItems.service.ts
@@ -34,6 +38,8 @@ model/apiError.ts
 model/authTokens.ts
 model/gearItem.ts
 model/healthResponse.ts
+model/householdRoom.ts
+model/householdTask.ts
 model/lifePlan.ts
 model/loginRequest.ts
 model/models.ts

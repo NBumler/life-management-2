@@ -1,0 +1,36 @@
+get:
+  operationId: listHouseholdRooms
+  tags:
+    - household-rooms
+  summary: The caller's rooms, live rows only (deleted = false).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/HouseholdRoomList.yaml'
+post:
+  operationId: createHouseholdRoom
+  tags:
+    - household-rooms
+  summary: Create a room — idempotent upsert on the client-supplied id.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/HouseholdRoom.yaml'
+  responses:
+    '200':
+      description: Created or, on retry with the same id, the existing row.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/HouseholdRoom.yaml'
+    '409':
+      description: Another live room already has this name (documentation/Architektúra/Névegyediség.md — scope is the user).
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'

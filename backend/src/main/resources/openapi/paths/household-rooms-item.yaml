@@ -1,0 +1,63 @@
+parameters:
+  - name: id
+    in: path
+    required: true
+    schema:
+      type: string
+      format: uuid
+get:
+  operationId: getHouseholdRoom
+  tags:
+    - household-rooms
+  summary: A single room. Own deleted row returns 200 with deleted=true (not 404).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/HouseholdRoom.yaml'
+    '404':
+      description: No such room (or it belongs to another user).
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+put:
+  operationId: updateHouseholdRoom
+  tags:
+    - household-rooms
+  summary: Full update (last-write-wins) — rename and/or manual reorder.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/HouseholdRoom.yaml'
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/HouseholdRoom.yaml'
+    '409':
+      description: Entity already deleted, or another live room already has this name.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+delete:
+  operationId: deleteHouseholdRoom
+  tags:
+    - household-rooms
+  summary: >-
+    Soft delete, idempotent. Cascades to soft-deleting every live HouseholdTask in this room
+    (documentation/Subfeatures/Háztartási feladatok.md).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/HouseholdRoom.yaml'

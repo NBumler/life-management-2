@@ -1,0 +1,108 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/tasks"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ 'TASKS.HOUSEHOLD.TITLE' | translate }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button routerLink="rooms">{{ 'TASKS.HOUSEHOLD.MANAGE_ROOMS' | translate }}</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-searchbar
+      [value]="query()"
+      (ionInput)="query.set($any($event.target).value ?? '')"
+      [placeholder]="'TASKS.HOUSEHOLD.SEARCH_PLACEHOLDER' | translate"
+      [debounce]="200"
+    ></ion-searchbar>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-select
+      [value]="roomFilter()"
+      (ionChange)="roomFilter.set($any($event.target).value)"
+      [placeholder]="'TASKS.HOUSEHOLD.FILTER_ALL_ROOMS' | translate"
+      interface="popover"
+    >
+      <ion-select-option [value]="null">{{ 'TASKS.HOUSEHOLD.FILTER_ALL_ROOMS' | translate }}</ion-select-option>
+      @for (room of roomRepository.items(); track room.id) {
+        <ion-select-option [value]="room.id">{{ room.name }}</ion-select-option>
+      }
+    </ion-select>
+    <ion-select
+      [value]="energyFilter()"
+      (ionChange)="energyFilter.set($any($event.target).value)"
+      [placeholder]="'TASKS.HOUSEHOLD.FILTER_ALL_ENERGY' | translate"
+      interface="popover"
+    >
+      <ion-select-option [value]="null">{{ 'TASKS.HOUSEHOLD.FILTER_ALL_ENERGY' | translate }}</ion-select-option>
+      <ion-select-option [value]="EnergyLevelEnum.Low">{{ 'TASKS.HOUSEHOLD.ENERGY_LOW' | translate }}</ion-select-option>
+      <ion-select-option [value]="EnergyLevelEnum.Medium">{{ 'TASKS.HOUSEHOLD.ENERGY_MEDIUM' | translate }}</ion-select-option>
+      <ion-select-option [value]="EnergyLevelEnum.High">{{ 'TASKS.HOUSEHOLD.ENERGY_HIGH' | translate }}</ion-select-option>
+    </ion-select>
+    <ion-input
+      type="number"
+      min="1"
+      [value]="maxMinutesFilter()"
+      (ionInput)="maxMinutesFilter.set($any($event.target).value ? +$any($event.target).value : null)"
+      [placeholder]="'TASKS.HOUSEHOLD.FILTER_MAX_MINUTES' | translate"
+    ></ion-input>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-list>
+    <ion-item button routerLink="new">
+      <ion-icon name="add-outline" slot="start" aria-hidden="true"></ion-icon>
+      <ion-label>{{ 'TASKS.HOUSEHOLD.ADD' | translate }}</ion-label>
+    </ion-item>
+
+    @if (isEmpty()) {
+      <ion-item>
+        <ion-label color="medium">{{ 'TASKS.HOUSEHOLD.EMPTY' | translate }}</ion-label>
+      </ion-item>
+    } @else if (hasNoResults()) {
+      <ion-item>
+        <ion-label color="medium">{{ 'TASKS.HOUSEHOLD.NO_RESULTS' | translate }}</ion-label>
+      </ion-item>
+    }
+
+    @if (sections().overdue.length > 0) {
+      <ion-list-header>{{ 'TASKS.HOUSEHOLD.SECTION_OVERDUE' | translate }}</ion-list-header>
+      @for (task of sections().overdue; track task.id) {
+        <ion-item>
+          <ion-checkbox slot="start" (ionChange)="complete(task)"></ion-checkbox>
+          <ion-label [routerLink]="[task.id]">
+            <h3>{{ task.name }}</h3>
+            <p color="danger">{{ roomName(task) }} · {{ task.nextDue }} · {{ 'TASKS.HOUSEHOLD.OVERDUE_DAYS' | translate: { days: lagDays(task) } }}</p>
+          </ion-label>
+        </ion-item>
+      }
+    }
+
+    @if (sections().today.length > 0) {
+      <ion-list-header>{{ 'TASKS.HOUSEHOLD.SECTION_TODAY' | translate }}</ion-list-header>
+      @for (task of sections().today; track task.id) {
+        <ion-item>
+          <ion-checkbox slot="start" (ionChange)="complete(task)"></ion-checkbox>
+          <ion-label [routerLink]="[task.id]">
+            <h3>{{ task.name }}</h3>
+            <p>{{ roomName(task) }}</p>
+          </ion-label>
+        </ion-item>
+      }
+    }
+
+    @if (sections().later.length > 0) {
+      <ion-list-header>{{ 'TASKS.HOUSEHOLD.SECTION_LATER' | translate }}</ion-list-header>
+      @for (task of sections().later; track task.id) {
+        <ion-item>
+          <ion-checkbox slot="start" (ionChange)="complete(task)"></ion-checkbox>
+          <ion-label [routerLink]="[task.id]">
+            <h3>{{ task.name }}</h3>
+            <p>{{ roomName(task) }} · {{ task.nextDue }}</p>
+          </ion-label>
+        </ion-item>
+      }
+    }
+  </ion-list>
+</ion-content>

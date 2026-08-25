@@ -7,6 +7,8 @@ import { firstValueFrom, timeout } from 'rxjs';
 
 import { GearItemsService } from '../../api/api/gearItems.service';
 import { HealthService } from '../../api/api/health.service';
+import { HouseholdRoomsService } from '../../api/api/householdRooms.service';
+import { HouseholdTasksService } from '../../api/api/householdTasks.service';
 import { LifePlansService } from '../../api/api/lifePlans.service';
 import { PackingSessionItemsService } from '../../api/api/packingSessionItems.service';
 import { PackingSessionsService } from '../../api/api/packingSessions.service';
@@ -15,6 +17,8 @@ import { ProfileService } from '../../api/api/profile.service';
 import { SyncService } from '../../api/api/sync.service';
 import { ApiError } from '../../api/model/apiError';
 import { GearItem } from '../../api/model/gearItem';
+import { HouseholdRoom } from '../../api/model/householdRoom';
+import { HouseholdTask } from '../../api/model/householdTask';
 import { LifePlan } from '../../api/model/lifePlan';
 import { PackingSession } from '../../api/model/packingSession';
 import { PackingSessionDetail } from '../../api/model/packingSessionDetail';
@@ -28,6 +32,10 @@ import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 import {
   gearItemServerApplyTask,
   gearItemTombstoneTask,
+  householdRoomServerApplyTask,
+  householdRoomTombstoneTask,
+  householdTaskServerApplyTask,
+  householdTaskTombstoneTask,
   lifePlanServerApplyTask,
   lifePlanTombstoneTask,
   packingSessionItemServerApplyTask,
@@ -71,6 +79,8 @@ export class SyncEngineService {
   private readonly packingSessionsApi = inject(PackingSessionsService);
   private readonly packingSessionItemsApi = inject(PackingSessionItemsService);
   private readonly lifePlansApi = inject(LifePlansService);
+  private readonly householdRoomsApi = inject(HouseholdRoomsService);
+  private readonly householdTasksApi = inject(HouseholdTasksService);
   private readonly syncApi = inject(SyncService);
   private readonly authSession = inject(AuthSessionService);
   private readonly offlineQueue = inject(OfflineQueueService);
@@ -236,6 +246,26 @@ export class SyncEngineService {
         // same as above
       }
     }
+
+    const staleRooms = await this.db.query<{ id: string }>('SELECT id FROM household_room WHERE _needs_refetch = 1');
+    for (const row of staleRooms) {
+      try {
+        const dto = await firstValueFrom(this.householdRoomsApi.getHouseholdRoom(row.id));
+        await this.db.executeTransaction([householdRoomServerApplyTask(dto)]);
+      } catch {
+        // same as above
+      }
+    }
+
+    const staleTasks = await this.db.query<{ id: string }>('SELECT id FROM household_task WHERE _needs_refetch = 1');
+    for (const row of staleTasks) {
+      try {
+        const dto = await firstValueFrom(this.householdTasksApi.getHouseholdTask(row.id));
+        await this.db.executeTransaction([householdTaskServerApplyTask(dto)]);
+      } catch {
+        // same as above
+      }
+    }
   }
 
   private async probeBackend(): Promise<boolean> {
@@ -383,6 +413,12 @@ export class SyncEngineService {
     if (item.entityType === 'LifePlan') {
       return [lifePlanServerApplyTask(body as LifePlan)];
     }
+    if (item.entityType === 'HouseholdRoom') {
+      return [householdRoomServerApplyTask(body as HouseholdRoom)];
+    }
+    if (item.entityType === 'HouseholdTask') {
+      return [householdTaskServerApplyTask(body as HouseholdTask)];
+    }
     throw new Error(`SyncEngine: no local writer for entityType "${item.entityType}"`);
   }
 
@@ -438,6 +474,15 @@ export class SyncEngineService {
       await this.db.executeTransaction([packingSessionItemTombstoneTask(item.targetEntityId, null, now)]);
     } else if (item.entityType === 'LifePlan') {
       await this.db.executeTransaction([lifePlanTombstoneTask(item.targetEntityId, null, now)]);
+    } else if (item.entityType === 'HouseholdRoom') {
+      // documentation/Subfeatures/Háztartási feladatok.md: room delete cascades to its own tasks locally too.
+      const taskRows = await this.db.query<{ id: string }>('SELECT id FROM household_task WHERE room_id = ?', [item.targetEntityId]);
+      await this.db.executeTransaction([
+        householdRoomTombstoneTask(item.targetEntityId, null, now),
+        ...taskRows.map((row) => householdTaskTombstoneTask(row.id, null, now)),
+      ]);
+    } else if (item.entityType === 'HouseholdTask') {
+      await this.db.executeTransaction([householdTaskTombstoneTask(item.targetEntityId, null, now)]);
     }
   }
 
@@ -526,6 +571,18 @@ export class SyncEngineService {
         return [lifePlanServerApplyTask(change.data as LifePlan)];
       }
       return [lifePlanTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
+    }
+    if (change.entityType === 'HouseholdRoom') {
+      if (!change.deleted) {
+        return [householdRoomServerApplyTask(change.data as HouseholdRoom)];
+      }
+      return [householdRoomTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
+    }
+    if (change.entityType === 'HouseholdTask') {
+      if (!change.deleted) {
+        return [householdTaskServerApplyTask(change.data as HouseholdTask)];
+      }
+      return [householdTaskTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
     }
     return [];
   }
