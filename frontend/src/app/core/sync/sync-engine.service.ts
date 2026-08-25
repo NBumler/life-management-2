@@ -7,6 +7,7 @@ import { firstValueFrom, timeout } from 'rxjs';
 
 import { GearItemsService } from '../../api/api/gearItems.service';
 import { HealthService } from '../../api/api/health.service';
+import { LifePlansService } from '../../api/api/lifePlans.service';
 import { PackingSessionItemsService } from '../../api/api/packingSessionItems.service';
 import { PackingSessionsService } from '../../api/api/packingSessions.service';
 import { PackingTemplatesService } from '../../api/api/packingTemplates.service';
@@ -14,6 +15,7 @@ import { ProfileService } from '../../api/api/profile.service';
 import { SyncService } from '../../api/api/sync.service';
 import { ApiError } from '../../api/model/apiError';
 import { GearItem } from '../../api/model/gearItem';
+import { LifePlan } from '../../api/model/lifePlan';
 import { PackingSession } from '../../api/model/packingSession';
 import { PackingSessionDetail } from '../../api/model/packingSessionDetail';
 import { PackingSessionItem } from '../../api/model/packingSessionItem';
@@ -26,6 +28,8 @@ import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 import {
   gearItemServerApplyTask,
   gearItemTombstoneTask,
+  lifePlanServerApplyTask,
+  lifePlanTombstoneTask,
   packingSessionItemServerApplyTask,
   packingSessionItemTombstoneTask,
   packingSessionServerApplyTask,
@@ -66,6 +70,7 @@ export class SyncEngineService {
   private readonly packingTemplatesApi = inject(PackingTemplatesService);
   private readonly packingSessionsApi = inject(PackingSessionsService);
   private readonly packingSessionItemsApi = inject(PackingSessionItemsService);
+  private readonly lifePlansApi = inject(LifePlansService);
   private readonly syncApi = inject(SyncService);
   private readonly authSession = inject(AuthSessionService);
   private readonly offlineQueue = inject(OfflineQueueService);
@@ -221,6 +226,16 @@ export class SyncEngineService {
         // same as above
       }
     }
+
+    const staleLifePlans = await this.db.query<{ id: string }>('SELECT id FROM life_plan WHERE _needs_refetch = 1');
+    for (const row of staleLifePlans) {
+      try {
+        const dto = await firstValueFrom(this.lifePlansApi.getLifePlan(row.id));
+        await this.db.executeTransaction([lifePlanServerApplyTask(dto)]);
+      } catch {
+        // same as above
+      }
+    }
   }
 
   private async probeBackend(): Promise<boolean> {
@@ -365,6 +380,9 @@ export class SyncEngineService {
     if (item.entityType === 'PackingSessionItem') {
       return [packingSessionItemServerApplyTask(body as PackingSessionItem)];
     }
+    if (item.entityType === 'LifePlan') {
+      return [lifePlanServerApplyTask(body as LifePlan)];
+    }
     throw new Error(`SyncEngine: no local writer for entityType "${item.entityType}"`);
   }
 
@@ -418,6 +436,8 @@ export class SyncEngineService {
       ]);
     } else if (item.entityType === 'PackingSessionItem') {
       await this.db.executeTransaction([packingSessionItemTombstoneTask(item.targetEntityId, null, now)]);
+    } else if (item.entityType === 'LifePlan') {
+      await this.db.executeTransaction([lifePlanTombstoneTask(item.targetEntityId, null, now)]);
     }
   }
 
@@ -500,6 +520,12 @@ export class SyncEngineService {
         return [packingSessionItemServerApplyTask(change.data as PackingSessionItem)];
       }
       return [packingSessionItemTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
+    }
+    if (change.entityType === 'LifePlan') {
+      if (!change.deleted) {
+        return [lifePlanServerApplyTask(change.data as LifePlan)];
+      }
+      return [lifePlanTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
     }
     return [];
   }

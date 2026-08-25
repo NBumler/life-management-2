@@ -1,0 +1,84 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/tasks"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ 'TASKS.LIFE_PLANS.TITLE' | translate }}</ion-title>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-searchbar
+      [value]="query()"
+      (ionInput)="query.set($any($event.target).value ?? '')"
+      [placeholder]="'TASKS.LIFE_PLANS.SEARCH_PLACEHOLDER' | translate"
+      [debounce]="200"
+    ></ion-searchbar>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-list>
+    <ion-item button routerLink="new">
+      <ion-icon name="add-outline" slot="start" aria-hidden="true"></ion-icon>
+      <ion-label>{{ 'TASKS.LIFE_PLANS.ADD' | translate }}</ion-label>
+    </ion-item>
+
+    @if (isEmpty()) {
+      <ion-item>
+        <ion-label color="medium">{{ 'TASKS.LIFE_PLANS.EMPTY' | translate }}</ion-label>
+      </ion-item>
+    } @else if (hasNoResults()) {
+      <ion-item>
+        <ion-label color="medium">{{ 'TASKS.LIFE_PLANS.NO_RESULTS' | translate }}</ion-label>
+      </ion-item>
+    }
+
+    @if (sections().inProgress.length > 0) {
+      <ion-list-header>{{ 'TASKS.LIFE_PLANS.SECTION_IN_PROGRESS' | translate }}</ion-list-header>
+      @for (plan of sections().inProgress; track plan.id) {
+        <ion-item button [routerLink]="[plan.id]">
+          <ion-label>
+            <h3>{{ plan.title }}</h3>
+            @if (plan.targetDate) {
+              <p [color]="isOverdue(plan) ? 'danger' : undefined">
+                {{ plan.targetDate }}
+                @if (isOverdue(plan)) {
+                  · {{ 'TASKS.LIFE_PLANS.OVERDUE_DAYS' | translate: { days: lagDays(plan) } }}
+                }
+              </p>
+            }
+          </ion-label>
+        </ion-item>
+      }
+    }
+
+    @if (sections().planned.length > 0) {
+      <ion-list-header>{{ 'TASKS.LIFE_PLANS.SECTION_PLANNED' | translate }}</ion-list-header>
+      @for (plan of sections().planned; track plan.id) {
+        <ion-item button [routerLink]="[plan.id]">
+          <ion-label>
+            <h3>{{ plan.title }}</h3>
+            @if (plan.targetDate) {
+              <p [color]="isOverdue(plan) ? 'danger' : undefined">
+                {{ plan.targetDate }}
+                @if (isOverdue(plan)) {
+                  · {{ 'TASKS.LIFE_PLANS.OVERDUE_DAYS' | translate: { days: lagDays(plan) } }}
+                }
+              </p>
+            }
+          </ion-label>
+        </ion-item>
+      }
+    }
+
+    @if (sections().done.length > 0) {
+      <ion-list-header>{{ 'TASKS.LIFE_PLANS.SECTION_DONE' | translate }}</ion-list-header>
+      @for (plan of sections().done; track plan.id) {
+        <ion-item button [routerLink]="[plan.id]">
+          <ion-label>
+            <h3>{{ plan.title }}</h3>
+          </ion-label>
+        </ion-item>
+      }
+    }
+  </ion-list>
+</ion-content>

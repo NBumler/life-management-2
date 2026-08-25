@@ -162,5 +162,28 @@
       "STATUS_PACKED": "Bepakolva",
       "STATUS_NOT_NEEDED": "Nem kell"
     }
+  },
+  "TASKS": {
+    "LIFE_PLANS": {
+      "TITLE": "Élet tervek",
+      "SEARCH_PLACEHOLDER": "Keresés",
+      "ADD": "Új terv",
+      "EDIT_TITLE": "Terv szerkesztése",
+      "TITLE_LABEL": "Cím",
+      "STATUS_LABEL": "Státusz",
+      "TARGET_DATE": "Céldátum",
+      "NOTES": "Megjegyzés",
+      "EMPTY": "Nincs élő terv.",
+      "NO_RESULTS": "Nincs találat.",
+      "SECTION_IN_PROGRESS": "Folyamatban",
+      "SECTION_PLANNED": "Terv",
+      "SECTION_DONE": "Kész",
+      "STATUS_PLANNED": "Tervezett",
+      "STATUS_IN_PROGRESS": "Folyamatban",
+      "STATUS_DONE": "Kész",
+      "OVERDUE_DAYS": "{{days}} napja lejárt",
+      "DELETE_CONFIRM_TITLE": "Terv törlése",
+      "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd a(z) „{{title}}” tervet?"
+    }
   }
 }

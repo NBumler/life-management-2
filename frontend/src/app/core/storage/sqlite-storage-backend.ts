@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 
 import { GearItem } from '../../api/model/gearItem';
+import { LifePlan } from '../../api/model/lifePlan';
 import { PackingSession } from '../../api/model/packingSession';
 import { PackingSessionDetail } from '../../api/model/packingSessionDetail';
 import { PackingSessionItem } from '../../api/model/packingSessionItem';
@@ -10,6 +11,7 @@ import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 import {
   GearItemRow,
+  LifePlanRow,
   PackingSessionItemRow,
   PackingSessionRow,
   PackingTemplateItemRow,
@@ -18,6 +20,8 @@ import {
   WeightHistoryRow,
   gearItemLocalWriteTask,
   gearItemRowToDto,
+  lifePlanLocalWriteTask,
+  lifePlanRowToDto,
   packingSessionItemLocalRemoveTask,
   packingSessionItemLocalWriteTask,
   packingSessionItemRowToDto,
@@ -483,6 +487,57 @@ export class SqliteStorageBackend implements StorageBackend {
   private async readPackingSessionItem(id: string): Promise<PackingSessionItem> {
     const rows = await this.db.query<PackingSessionItemRow>('SELECT * FROM packing_session_item WHERE id = ?', [id]);
     return packingSessionItemRowToDto(rows[0]);
+  }
+
+  async listLifePlans(): Promise<LifePlan[]> {
+    const rows = await this.db.query<LifePlanRow>('SELECT * FROM life_plan WHERE deleted = 0 ORDER BY created_at ASC');
+    return rows.map(lifePlanRowToDto);
+  }
+
+  async upsertLifePlan(plan: LifePlan): Promise<LifePlan> {
+    const userId = this.requireUserId();
+    const existing = await this.db.query('SELECT 1 FROM life_plan WHERE id = ?', [plan.id]);
+    const isNew = existing.length === 0;
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: isNew ? 'POST' : 'PUT',
+      url: isNew ? '/api/life-plans' : `/api/life-plans/${plan.id}`,
+      payload: plan,
+      entityType: 'LifePlan',
+      targetEntityId: plan.id,
+    });
+    await this.db.executeTransaction([lifePlanLocalWriteTask(plan), ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    return this.readLifePlan(plan.id);
+  }
+
+  async deleteLifePlan(id: string): Promise<LifePlan> {
+    const userId = this.requireUserId();
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: 'DELETE',
+      url: `/api/life-plans/${id}`,
+      payload: null,
+      entityType: 'LifePlan',
+      targetEntityId: id,
+    });
+    const entityTask: SqlTask = enqueue.hardRemoveLocalEntity
+      ? { statement: 'DELETE FROM life_plan WHERE id = ?', values: [id] }
+      : {
+          statement: 'UPDATE life_plan SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?',
+          values: [new Date().toISOString(), id],
+        };
+    await this.db.executeTransaction([entityTask, ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    if (enqueue.hardRemoveLocalEntity) {
+      return { id, title: '', status: LifePlan.StatusEnum.Planned, deleted: true };
+    }
+    return this.readLifePlan(id);
+  }
+
+  private async readLifePlan(id: string): Promise<LifePlan> {
+    const rows = await this.db.query<LifePlanRow>('SELECT * FROM life_plan WHERE id = ?', [id]);
+    return lifePlanRowToDto(rows[0]);
   }
 
   private requireUserId(): string {

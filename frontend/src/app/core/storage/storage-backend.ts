@@ -1,6 +1,7 @@
 import { InjectionToken } from '@angular/core';
 
 import { GearItem } from '../../api/model/gearItem';
+import { LifePlan } from '../../api/model/lifePlan';
 import { PackingSession } from '../../api/model/packingSession';
 import { PackingSessionDetail } from '../../api/model/packingSessionDetail';
 import { PackingSessionItem } from '../../api/model/packingSessionItem';
@@ -84,6 +85,10 @@ export interface StorageBackend {
   addPackingSessionItem(sessionId: string, gearItemId: string, sortOrder: number): Promise<PackingSessionItem>;
   /** Status tap or manual reorder — its own outbox entry per item, deliberately not nested (see PackingSessionItem.yaml). */
   updatePackingSessionItem(item: PackingSessionItem): Promise<PackingSessionItem>;
+
+  listLifePlans(): Promise<LifePlan[]>;
+  upsertLifePlan(plan: LifePlan): Promise<LifePlan>;
+  deleteLifePlan(id: string): Promise<LifePlan>;
 }
 
 export const STORAGE_BACKEND = new InjectionToken<StorageBackend>('STORAGE_BACKEND');

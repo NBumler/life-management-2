@@ -41,6 +41,10 @@ paths:
     $ref: 'openapi/paths/packing-session-items.yaml'
   /api/packing-session-items/{id}:
     $ref: 'openapi/paths/packing-session-items-item.yaml'
+  /api/life-plans:
+    $ref: 'openapi/paths/life-plans.yaml'
+  /api/life-plans/{id}:
+    $ref: 'openapi/paths/life-plans-item.yaml'
 components:
   securitySchemes:
     bearerAuth:
@@ -98,3 +102,7 @@ components:
       $ref: 'openapi/components/schemas/PackingSessionItem.yaml'
     PackingSessionDetail:
       $ref: 'openapi/components/schemas/PackingSessionDetail.yaml'
+    LifePlan:
+      $ref: 'openapi/components/schemas/LifePlan.yaml'
+    LifePlanList:
+      $ref: 'openapi/components/schemas/LifePlanList.yaml'

@@ -1,0 +1,36 @@
+get:
+  operationId: listLifePlans
+  tags:
+    - life-plans
+  summary: The caller's life plans, live rows only (deleted = false).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/LifePlanList.yaml'
+post:
+  operationId: createLifePlan
+  tags:
+    - life-plans
+  summary: Create a life plan — idempotent upsert on the client-supplied id.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/LifePlan.yaml'
+  responses:
+    '200':
+      description: Created or, on retry with the same id, the existing row.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/LifePlan.yaml'
+    '400':
+      description: status/completedAt pair is inconsistent (documentation/Subfeatures/Élet tervek.md "Állapotgép").
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'

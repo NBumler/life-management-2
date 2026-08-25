@@ -2,11 +2,13 @@ import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
 import { GearItemsService } from '../../api/api/gearItems.service';
+import { LifePlansService } from '../../api/api/lifePlans.service';
 import { PackingSessionItemsService } from '../../api/api/packingSessionItems.service';
 import { PackingSessionsService } from '../../api/api/packingSessions.service';
 import { PackingTemplatesService } from '../../api/api/packingTemplates.service';
 import { ProfileService } from '../../api/api/profile.service';
 import { GearItem } from '../../api/model/gearItem';
+import { LifePlan } from '../../api/model/lifePlan';
 import { PackingSession } from '../../api/model/packingSession';
 import { PackingSessionDetail } from '../../api/model/packingSessionDetail';
 import { PackingSessionItem } from '../../api/model/packingSessionItem';
@@ -25,6 +27,7 @@ export class HttpStorageBackend implements StorageBackend {
   private readonly packingTemplatesApi = inject(PackingTemplatesService);
   private readonly packingSessionsApi = inject(PackingSessionsService);
   private readonly packingSessionItemsApi = inject(PackingSessionItemsService);
+  private readonly lifePlansApi = inject(LifePlansService);
 
   async getProfile(): Promise<UserProfile | null> {
     try {
@@ -147,6 +150,19 @@ export class HttpStorageBackend implements StorageBackend {
 
   updatePackingSessionItem(item: PackingSessionItem): Promise<PackingSessionItem> {
     return firstValueFrom(this.packingSessionItemsApi.updatePackingSessionItem(item.id, item));
+  }
+
+  listLifePlans(): Promise<LifePlan[]> {
+    return firstValueFrom(this.lifePlansApi.listLifePlans());
+  }
+
+  /** POST with an existing id is an idempotent upsert server-side, so this covers both create and update. */
+  upsertLifePlan(plan: LifePlan): Promise<LifePlan> {
+    return firstValueFrom(this.lifePlansApi.createLifePlan(plan));
+  }
+
+  deleteLifePlan(id: string): Promise<LifePlan> {
+    return firstValueFrom(this.lifePlansApi.deleteLifePlan(id));
   }
 }
 

@@ -200,6 +200,11 @@ This is an **Obsidian vault**, and it's under active governance:
   items, packing templates, packing sessions — exist so far). Check a feature's own spec under
   `documentation/Features/` or `documentation/Subfeatures/` for its concrete contract before
   implementing it.
+- [`IMPLEMENTATION_STATUS.md`](IMPLEMENTATION_STATUS.md) (repo root) tracks *code* completeness per
+  feature — separate from the vault's `Státusz` field, which only tracks spec completeness (and is
+  always `Kész`). Each done entry pins the spec file's commit hash at verification time; if that spec
+  file has since moved on, the feature is stale and needs re-verification before being trusted as done.
+  Check it before re-surveying the whole repo, and update it when you finish or touch a feature.
 - Backend/frontend version numbers are **not pinned by the spec** — `build.gradle.kts` and
   `package.json` are the source of truth; the architecture docs only state constraints (e.g. Java 25,
   Spring Boot 4.x, Postgres, Ionic 8+, Angular Signals + standalone, Capacitor 8+).

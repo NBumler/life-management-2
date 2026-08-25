@@ -5,6 +5,7 @@ export * from './apiError';
 export * from './authTokens';
 export * from './gearItem';
 export * from './healthResponse';
+export * from './lifePlan';
 export * from './loginRequest';
 export * from './packingSession';
 export * from './packingSessionDetail';

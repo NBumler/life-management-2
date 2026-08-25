@@ -163,14 +163,35 @@ const SCHEMA_V4_STATEMENTS: string[] = [
   `CREATE INDEX IF NOT EXISTS idx_packing_session_item_gear_item_id ON packing_session_item (gear_item_id)`,
 ];
 
-const SCHEMA_VERSION = 4;
+/** documentation/Subfeatures/Élet tervek.md — Tennivalók's first table. */
+const SCHEMA_V5_STATEMENTS: string[] = [
+  `CREATE TABLE IF NOT EXISTS life_plan (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    notes TEXT,
+    status TEXT NOT NULL DEFAULT 'PLANNED',
+    target_date TEXT,
+    completed_at TEXT,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+];
+
+const SCHEMA_VERSION = 5;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 1, statements: SCHEMA_V1_STATEMENTS },
   { toVersion: 2, statements: SCHEMA_V2_STATEMENTS },
   { toVersion: 3, statements: SCHEMA_V3_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V4_STATEMENTS },
+  { toVersion: 4, statements: SCHEMA_V4_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V5_STATEMENTS },
 ];
 
 export interface SqlTask {

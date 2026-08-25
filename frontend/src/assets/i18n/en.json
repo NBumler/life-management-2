@@ -162,5 +162,28 @@
       "STATUS_PACKED": "Packed",
       "STATUS_NOT_NEEDED": "Not needed"
     }
+  },
+  "TASKS": {
+    "LIFE_PLANS": {
+      "TITLE": "Life plans",
+      "SEARCH_PLACEHOLDER": "Search",
+      "ADD": "New plan",
+      "EDIT_TITLE": "Edit plan",
+      "TITLE_LABEL": "Title",
+      "STATUS_LABEL": "Status",
+      "TARGET_DATE": "Target date",
+      "NOTES": "Notes",
+      "EMPTY": "No live plans yet.",
+      "NO_RESULTS": "No results.",
+      "SECTION_IN_PROGRESS": "In progress",
+      "SECTION_PLANNED": "Planned",
+      "SECTION_DONE": "Done",
+      "STATUS_PLANNED": "Planned",
+      "STATUS_IN_PROGRESS": "In progress",
+      "STATUS_DONE": "Done",
+      "OVERDUE_DAYS": "{{days}} days overdue",
+      "DELETE_CONFIRM_TITLE": "Delete plan",
+      "DELETE_CONFIRM_MESSAGE": "Are you sure you want to delete \"{{title}}\"?"
+    }
   }
 }

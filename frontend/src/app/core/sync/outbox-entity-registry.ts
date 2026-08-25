@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 
 import { GearItem } from '../../api/model/gearItem';
+import { LifePlan } from '../../api/model/lifePlan';
 import { PackingSessionItem } from '../../api/model/packingSessionItem';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
@@ -8,12 +9,15 @@ import { normalizeName } from '../../shared/name-normalization';
 import { GearItemRepository } from '../data/gear-item.repository';
 import {
   GearItemRow,
+  LifePlanRow,
   PackingSessionItemRow,
   PackingSessionRow,
   ProfileRow,
   WeightHistoryRow,
   gearItemLocalWriteTask,
   gearItemRowToDto,
+  lifePlanLocalWriteTask,
+  lifePlanRowToDto,
   packingSessionItemLocalWriteTask,
   packingSessionItemRowToDto,
   packingSessionLocalWriteTask,
@@ -147,6 +151,13 @@ export class OutboxEntityRegistryService {
       table: 'packing_session_item',
       currentPayload: rowLookup<PackingSessionItemRow, unknown>('packing_session_item', packingSessionItemRowToDto),
       buildFixWriteTask: (payload) => packingSessionItemLocalWriteTask(payload as unknown as PackingSessionItem),
+      nameUniqueness: null,
+    },
+    LifePlan: {
+      table: 'life_plan',
+      currentPayload: rowLookup<LifePlanRow, unknown>('life_plan', lifePlanRowToDto),
+      buildFixWriteTask: (payload) => lifePlanLocalWriteTask(payload as unknown as LifePlan),
+      // documentation/Architektúra/Névegyediség.md: LifePlan.title is explicitly not unique.
       nameUniqueness: null,
     },
   };

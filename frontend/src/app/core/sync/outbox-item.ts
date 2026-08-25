@@ -11,7 +11,14 @@ export type OutboxStatus = 'PENDING' | 'SENDING' | 'BLOCKED' | 'ERROR' | 'SKIPPE
  * Szinkronizációs központ's Fix/Skip/Unskip/Drop coverage the way GearCheck's did — see
  * documentation/Features/Szinkronizációs központ.md.
  */
-export type OutboxEntityType = 'UserProfile' | 'WeightHistoryEntry' | 'GearItem' | 'PackingTemplate' | 'PackingSession' | 'PackingSessionItem';
+export type OutboxEntityType =
+  | 'UserProfile'
+  | 'WeightHistoryEntry'
+  | 'GearItem'
+  | 'PackingTemplate'
+  | 'PackingSession'
+  | 'PackingSessionItem'
+  | 'LifePlan';
 
 /** documentation/Architektúra/Backend-offline first.md §4 "Outbox — adatmodell". */
 export interface OutboxItem {

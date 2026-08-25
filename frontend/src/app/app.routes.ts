@@ -67,6 +67,22 @@ export const routes: Routes = [
           },
         ],
       },
+      {
+        path: 'tasks',
+        children: [
+          // documentation/Features/Tennivalók.md hub (4 tiles) not built yet — temporary redirect to
+          // the first built subfeature until the hub page lands (see IMPLEMENTATION_STATUS.md).
+          { path: '', redirectTo: 'life-plans', pathMatch: 'full' },
+          {
+            path: 'life-plans',
+            children: [
+              { path: '', loadComponent: () => import('./pages/tasks/life-plans/life-plan-list.page').then((m) => m.LifePlanListPage) },
+              { path: 'new', loadComponent: () => import('./pages/tasks/life-plans/life-plan-edit.page').then((m) => m.LifePlanEditPage) },
+              { path: ':id', loadComponent: () => import('./pages/tasks/life-plans/life-plan-edit.page').then((m) => m.LifePlanEditPage) },
+            ],
+          },
+        ],
+      },
       // documentation/Architektúra/Frontend.md "Login utáni default tab": Menü is the only enabled
       // tab until a feature flag turns Kaja/Edzés/Feladatok on.
       { path: '', redirectTo: 'menu', pathMatch: 'full' },

@@ -1,5 +1,6 @@
 import { SqlTask } from '../storage/local-database.service';
 import { GearItem } from '../../api/model/gearItem';
+import { LifePlan } from '../../api/model/lifePlan';
 import { PackingSession } from '../../api/model/packingSession';
 import { PackingSessionItem } from '../../api/model/packingSessionItem';
 import { PackingTemplate } from '../../api/model/packingTemplate';
@@ -527,6 +528,86 @@ export function packingSessionItemTombstoneTask(id: string, deletedAt: string | 
     statement: `
       INSERT INTO packing_session_item (id, session_id, gear_item_id, status, sort_order, updated_at, deleted, deleted_at, _dirty, _local_only)
       VALUES (?, '', '', 'NOT_PACKED', 0, ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+export interface LifePlanRow {
+  id: string;
+  title: string;
+  notes: string | null;
+  status: string;
+  target_date: string | null;
+  completed_at: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+export function lifePlanRowToDto(row: LifePlanRow): LifePlan {
+  return {
+    id: row.id,
+    title: row.title,
+    notes: row.notes,
+    status: row.status as LifePlan.StatusEnum,
+    targetDate: row.target_date,
+    completedAt: row.completed_at,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+export function lifePlanLocalWriteTask(dto: LifePlan): SqlTask {
+  return {
+    statement: `
+      INSERT INTO life_plan (id, title, notes, status, target_date, completed_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET
+        title = excluded.title, notes = excluded.notes, status = excluded.status,
+        target_date = excluded.target_date, completed_at = excluded.completed_at, _dirty = 1`,
+    values: [dto.id, dto.title, dto.notes ?? null, dto.status, dto.targetDate ?? null, dto.completedAt ?? null],
+  };
+}
+
+export function lifePlanServerApplyTask(dto: LifePlan): SqlTask {
+  return {
+    statement: `
+      INSERT INTO life_plan (id, title, notes, status, target_date, completed_at, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        title = excluded.title, notes = excluded.notes, status = excluded.status, target_date = excluded.target_date,
+        completed_at = excluded.completed_at, created_at = excluded.created_at, updated_at = excluded.updated_at,
+        deleted = excluded.deleted, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE life_plan._dirty = 0`,
+    values: [
+      dto.id,
+      dto.title,
+      dto.notes ?? null,
+      dto.status,
+      dto.targetDate ?? null,
+      dto.completedAt ?? null,
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function lifePlanTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO life_plan (id, title, status, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '', 'PLANNED', ?, 1, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
     values: [id, updatedAt, deletedAt],
   };
