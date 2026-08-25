@@ -26,6 +26,13 @@ export class OfflineQueueService {
 
   readonly pendingCount = signal(0);
   readonly errorCount = signal(0);
+  /**
+   * documentation/Features/Szinkronizációs központ.md: "a lista... élőben látszanak, külön frissítés
+   * nélkül" — the sync center reads this signal directly instead of re-querying on a poll timer.
+   * Hydrated by `listAll()`, then kept in sync by every mutating method below (all of which the drain
+   * loop and the sync center's manual actions already go through).
+   */
+  readonly items = signal<OutboxItem[]>([]);
 
   async refreshCounts(userId: string): Promise<void> {
     const rows = await this.db.query<{ status: string; c: number }>(
@@ -102,8 +109,10 @@ export class OfflineQueueService {
       );
       if (isBlocked && item.status !== 'BLOCKED') {
         await this.db.run(`UPDATE outbox_item SET status = 'BLOCKED' WHERE id = ?`, [item.id]);
+        this.patchItem(item.id, { status: 'BLOCKED' });
       } else if (!isBlocked && item.status === 'BLOCKED') {
         await this.db.run(`UPDATE outbox_item SET status = 'PENDING' WHERE id = ?`, [item.id]);
+        this.patchItem(item.id, { status: 'PENDING' });
       }
     }
   }
@@ -119,12 +128,15 @@ export class OfflineQueueService {
 
   async listAll(userId: string): Promise<OutboxItem[]> {
     const rows = await this.db.query<OutboxRow>(`SELECT * FROM outbox_item WHERE user_id = ? ORDER BY sequence`, [userId]);
-    return rows.map(rowToOutboxItem);
+    const items = rows.map(rowToOutboxItem);
+    this.items.set(items);
+    return items;
   }
 
   /** App-start crash recovery (§4 "SENDING... App-crash / kill után induláskor visszaállítjuk PENDING-re"). */
   async resetSendingToPending(userId: string): Promise<void> {
     await this.db.run(`UPDATE outbox_item SET status = 'PENDING' WHERE user_id = ? AND status = 'SENDING'`, [userId]);
+    this.items.update((list) => list.map((item) => (item.userId === userId && item.status === 'SENDING' ? { ...item, status: 'PENDING' } : item)));
   }
 
   /** Persists an `OutboxMigrator` step-chain result (§7) before the item is drained. */
@@ -135,19 +147,24 @@ export class OfflineQueueService {
       payloadVersion,
       id,
     ]);
+    this.patchItem(id, { payload, url, payloadVersion });
   }
 
   async markSending(id: string): Promise<void> {
-    await this.db.run(`UPDATE outbox_item SET status = 'SENDING', last_attempt_at = ? WHERE id = ?`, [new Date().toISOString(), id]);
+    const lastAttemptAt = new Date().toISOString();
+    await this.db.run(`UPDATE outbox_item SET status = 'SENDING', last_attempt_at = ? WHERE id = ?`, [lastAttemptAt, id]);
+    this.patchItem(id, { status: 'SENDING', lastAttemptAt });
   }
 
   /** Also used for the silent-drop-on-409-ENTITY_DELETED case — both simply remove the item. */
   async removeItem(id: string): Promise<void> {
     await this.db.run(`DELETE FROM outbox_item WHERE id = ?`, [id]);
+    this.removeItems([id]);
   }
 
   async scheduleRetry(id: string, attemptCount: number): Promise<void> {
     await this.db.run(`UPDATE outbox_item SET status = 'PENDING', attempt_count = ? WHERE id = ?`, [attemptCount, id]);
+    this.patchItem(id, { status: 'PENDING', attemptCount });
   }
 
   async markError(
@@ -164,6 +181,7 @@ export class OfflineQueueService {
       errorField,
       id,
     ]);
+    this.patchItem(id, { status: 'ERROR', httpStatus, errorCode, errorMessage, errorField });
   }
 
   // ---- Manual intervention (§6 "Kézi beavatkozás") — UI entry point: Szinkronizációs központ ----
@@ -178,10 +196,21 @@ export class OfflineQueueService {
         values: [JSON.stringify(newPayload), item.id],
       },
     ]);
+    this.patchItem(item.id, {
+      payload: newPayload,
+      status: 'PENDING',
+      attemptCount: 0,
+      lastAttemptAt: null,
+      httpStatus: null,
+      errorCode: null,
+      errorMessage: null,
+      errorField: null,
+    });
   }
 
   async skip(id: string): Promise<void> {
     await this.db.run(`UPDATE outbox_item SET status = 'SKIPPED' WHERE id = ?`, [id]);
+    this.patchItem(id, { status: 'SKIPPED' });
   }
 
   /** `currentPayload` must come from the live local entity row, not the payload captured at skip time (§6 "Unskip"). */
@@ -194,10 +223,9 @@ export class OfflineQueueService {
       await this.removeItem(item.id);
       return;
     }
-    await this.db.run(`UPDATE outbox_item SET payload = ?, status = 'PENDING' WHERE id = ?`, [
-      item.method === 'DELETE' ? null : JSON.stringify(currentPayload),
-      item.id,
-    ]);
+    const payload = item.method === 'DELETE' ? null : currentPayload;
+    await this.db.run(`UPDATE outbox_item SET payload = ?, status = 'PENDING' WHERE id = ?`, [payload === null ? null : JSON.stringify(payload), item.id]);
+    this.patchItem(item.id, { payload, status: 'PENDING' });
   }
 
   /**
@@ -211,12 +239,21 @@ export class OfflineQueueService {
     const dependents = item.method === 'POST' ? await this.findDependents(item.targetEntityId) : [];
     const tasks: SqlTask[] = [entityTask, deleteOutboxRowTask(item.id), ...dependents.map((dep) => deleteOutboxRowTask(dep.id))];
     await this.db.executeTransaction(tasks);
+    this.removeItems([item.id, ...dependents.map((dep) => dep.id)]);
     return dependents;
   }
 
   async findDependents(targetEntityId: string): Promise<OutboxItem[]> {
     const rows = await this.db.query<OutboxRow>(`SELECT * FROM outbox_item`, []);
     return rows.map(rowToOutboxItem).filter((item) => item.dependsOn.includes(targetEntityId));
+  }
+
+  private patchItem(id: string, patch: Partial<OutboxItem>): void {
+    this.items.update((list) => list.map((item) => (item.id === id ? { ...item, ...patch } : item)));
+  }
+
+  private removeItems(ids: string[]): void {
+    this.items.update((list) => list.filter((item) => !ids.includes(item.id)));
   }
 
   private insertTask(request: EnqueueRequest, method: OutboxMethod): SqlTask {

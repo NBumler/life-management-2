@@ -71,7 +71,7 @@ describe('OfflineQueueService', () => {
         method: 'PUT',
         url: '/api/things/entity-x',
         payload: { a: 2 },
-        entityType: 'Thing',
+        entityType: 'GearItem',
         targetEntityId: 'entity-x',
       });
 
@@ -90,7 +90,7 @@ describe('OfflineQueueService', () => {
         method: 'PUT',
         url: '/api/things/entity-x',
         payload: { a: 3 },
-        entityType: 'Thing',
+        entityType: 'GearItem',
         targetEntityId: 'entity-x',
       });
 
@@ -108,7 +108,7 @@ describe('OfflineQueueService', () => {
         method: 'DELETE',
         url: '/api/things/entity-x',
         payload: null,
-        entityType: 'Thing',
+        entityType: 'GearItem',
         targetEntityId: 'entity-x',
       });
 
@@ -127,7 +127,7 @@ describe('OfflineQueueService', () => {
         method: 'DELETE',
         url: '/api/things/entity-x',
         payload: null,
-        entityType: 'Thing',
+        entityType: 'GearItem',
         targetEntityId: 'entity-x',
       });
 
@@ -148,7 +148,7 @@ describe('OfflineQueueService', () => {
           method: 'PUT',
           url: '/api/things/entity-x',
           payload: { a: 1 },
-          entityType: 'Thing',
+          entityType: 'GearItem',
           targetEntityId: 'entity-x',
         }),
       ).toBeRejected();
@@ -163,7 +163,7 @@ describe('OfflineQueueService', () => {
         method: 'POST',
         url: '/api/things/entity-x',
         payload: { a: 5 },
-        entityType: 'Thing',
+        entityType: 'GearItem',
         targetEntityId: 'entity-x',
       });
 
@@ -180,7 +180,7 @@ describe('OfflineQueueService', () => {
         method: 'PUT',
         url: '/api/things/entity-x',
         payload: { a: 9 },
-        entityType: 'Thing',
+        entityType: 'GearItem',
         targetEntityId: 'entity-x',
       });
 
@@ -369,6 +369,115 @@ describe('OfflineQueueService', () => {
       const result = await service.findDependents('entity-x');
 
       expect(result.map((item) => item.id)).toEqual(['m1']);
+    });
+  });
+
+  // documentation/Features/Szinkronizációs központ.md: the sync center reads `items` directly instead
+  // of polling — every mutating method must keep it in step with what it just wrote to SQLite.
+  describe('items (reactive signal, no separate refresh needed)', () => {
+    it('listAll() hydrates the signal', async () => {
+      db.query.and.resolveTo([outboxRow({ id: 'a' }), outboxRow({ id: 'b' })]);
+      await service.listAll('user-1');
+      expect(service.items().map((item) => item.id)).toEqual(['a', 'b']);
+    });
+
+    it('markSending() patches status and lastAttemptAt on the matching item only', async () => {
+      db.query.and.resolveTo([outboxRow({ id: 'a', status: 'PENDING' }), outboxRow({ id: 'b', status: 'PENDING' })]);
+      await service.listAll('user-1');
+      db.run.and.resolveTo({ changes: 1 });
+
+      await service.markSending('a');
+
+      const [a, b] = service.items();
+      expect(a.status).toBe('SENDING');
+      expect(a.lastAttemptAt).not.toBeNull();
+      expect(b.status).toBe('PENDING');
+    });
+
+    it('removeItem() drops the item from the signal', async () => {
+      db.query.and.resolveTo([outboxRow({ id: 'a' }), outboxRow({ id: 'b' })]);
+      await service.listAll('user-1');
+      db.run.and.resolveTo({ changes: 1 });
+
+      await service.removeItem('a');
+
+      expect(service.items().map((item) => item.id)).toEqual(['b']);
+    });
+
+    it('markError() patches status and error fields', async () => {
+      db.query.and.resolveTo([outboxRow({ id: 'a' })]);
+      await service.listAll('user-1');
+      db.run.and.resolveTo({ changes: 1 });
+
+      await service.markError('a', 422, 'UNIQUE_VIOLATION', 'már foglalt', 'name');
+
+      const [a] = service.items();
+      expect(a.status).toBe('ERROR');
+      expect(a.errorCode).toBe('UNIQUE_VIOLATION');
+      expect(a.errorField).toBe('name');
+    });
+
+    it('skip() then unskip() round-trip the status in the signal', async () => {
+      db.query.and.resolveTo([outboxRow({ id: 'a', method: 'PUT', target_entity_id: 'entity-x', sequence: 1 })]);
+      await service.listAll('user-1');
+      db.run.and.resolveTo({ changes: 1 });
+
+      await service.skip('a');
+      expect(service.items()[0].status).toBe('SKIPPED');
+
+      db.query.and.resolveTo([]); // no newer PENDING/BLOCKED row for entity-x
+      const item = service.items()[0];
+      await service.unskip(item, { a: 1 });
+      expect(service.items()[0].status).toBe('PENDING');
+    });
+
+    it('fix() patches payload and clears error state', async () => {
+      db.query.and.resolveTo([outboxRow({ id: 'a', status: 'ERROR', error_code: 'UNIQUE_VIOLATION' })]);
+      await service.listAll('user-1');
+      db.executeTransaction.and.resolveTo(undefined);
+      const item = service.items()[0];
+
+      await service.fix(item, { name: 'fixed' }, { statement: 'UPDATE gear_item SET name = ?', values: ['fixed'] });
+
+      const [a] = service.items();
+      expect(a.status).toBe('PENDING');
+      expect(a.payload).toEqual({ name: 'fixed' });
+      expect(a.errorCode).toBeNull();
+    });
+
+    it('drop() removes the dropped item and its dependents from the signal', async () => {
+      const dependent = outboxRow({ id: 'child-1', method: 'PUT', depends_on: '["entity-x"]' });
+      db.query.and.resolveTo([outboxRow({ id: 'post-1', target_entity_id: 'entity-x', method: 'POST' }), dependent]);
+      await service.listAll('user-1');
+      db.query.and.resolveTo([dependent]); // findDependents query inside drop()
+      db.executeTransaction.and.resolveTo(undefined);
+      const item = service.items().find((i) => i.id === 'post-1') as OutboxItem;
+
+      await service.drop(item, { statement: 'DELETE FROM gear_item WHERE id = ?', values: ['entity-x'] });
+
+      expect(service.items()).toEqual([]);
+    });
+
+    it('recomputeBlocked() patches BLOCKED/PENDING flips in the signal', async () => {
+      const errorRow = outboxRow({ id: 'err-1', sequence: 1, status: 'ERROR', target_entity_id: 'entity-x' });
+      const toBeBlocked = outboxRow({ id: 'p-2', sequence: 2, status: 'PENDING', target_entity_id: 'entity-x' });
+      db.query.and.resolveTo([toBeBlocked]);
+      await service.listAll('user-1'); // hydrates with the PENDING row's current shape
+      db.query.and.callFake((sql: string) => {
+        if (sql.includes("status IN ('PENDING','BLOCKED')")) {
+          return Promise.resolve([toBeBlocked]);
+        }
+        if (sql.includes("status = 'ERROR'")) {
+          return Promise.resolve([errorRow]);
+        }
+        return Promise.resolve([]);
+      });
+      db.run.and.resolveTo({ changes: 1 });
+
+      await service.recomputeBlocked('user-1');
+
+      const patched = service.items().find((i) => i.id === 'p-2');
+      expect(patched?.status).toBe('BLOCKED');
     });
   });
 });

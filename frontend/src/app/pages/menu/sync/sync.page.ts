@@ -1,5 +1,5 @@
 import { DatePipe, JsonPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, OnDestroy, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import {
   AlertController,
@@ -17,32 +17,23 @@ import {
   IonSpinner,
   IonTitle,
   IonToolbar,
+  ToastController,
   ViewWillEnter,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
-import { UserProfile } from '../../../api/model/userProfile';
-import { WeightHistoryEntry } from '../../../api/model/weightHistoryEntry';
-import {
-  ProfileRow,
-  WeightHistoryRow,
-  profileLocalWriteTask,
-  profileRowToDto,
-  weightHistoryLocalWriteTask,
-  weightHistoryRowToDto,
-} from '../../../core/data/local-rows';
 import { AuthSessionService } from '../../../core/session/auth-session.service';
-import { LocalDatabaseService, SqlTask } from '../../../core/storage/local-database.service';
+import { LocalDatabaseService } from '../../../core/storage/local-database.service';
+import { STORAGE_BACKEND } from '../../../core/storage/storage-backend';
 import { OfflineQueueService } from '../../../core/sync/offline-queue.service';
+import { buildOutboxDropTask, OutboxEntityRegistryService } from '../../../core/sync/outbox-entity-registry';
 import { OutboxItem } from '../../../core/sync/outbox-item';
 import { SyncEngineService } from '../../../core/sync/sync-engine.service';
 
-const DRAIN_POLL_MS = 1000;
-
 /**
  * documentation/Features/Szinkronizációs központ.md — the outbox's control surface. Fix's generic
- * payload-driven form only handles flat scalar fields (no nested aggregates exist yet in this
- * phase's scope, so every field qualifies).
+ * payload-driven form only handles flat scalar fields (nested array/object fields are filtered out
+ * per item, and nested-aggregate entities have no Fix at all — see OutboxEntityRegistryService).
  */
 @Component({
   selector: 'app-sync',
@@ -70,60 +61,51 @@ const DRAIN_POLL_MS = 1000;
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SyncPage implements ViewWillEnter, OnDestroy {
+export class SyncPage implements ViewWillEnter {
   private readonly fb = inject(FormBuilder);
   private readonly offlineQueue = inject(OfflineQueueService);
   private readonly syncEngine = inject(SyncEngineService);
   private readonly authSession = inject(AuthSessionService);
   private readonly db = inject(LocalDatabaseService);
+  private readonly storage = inject(STORAGE_BACKEND);
+  private readonly entityRegistry = inject(OutboxEntityRegistryService);
   private readonly alertController = inject(AlertController);
+  private readonly toastController = inject(ToastController);
   private readonly translate = inject(TranslateService);
 
   readonly connectionState = this.syncEngine.connectionState;
   readonly draining = this.syncEngine.draining;
+  readonly lastSuccessfulSyncAt = this.syncEngine.lastSuccessfulSyncAt;
   readonly pendingCount = this.offlineQueue.pendingCount;
   readonly errorCount = this.offlineQueue.errorCount;
-  readonly items = signal<OutboxItem[]>([]);
+  /** documentation/Features/Szinkronizációs központ.md: reactive outbox read — no poll timer. */
+  readonly items = this.offlineQueue.items;
 
   readonly payloadViewItem = signal<OutboxItem | null>(null);
 
   readonly fixItem = signal<OutboxItem | null>(null);
+  readonly fixNameConflict = signal(false);
   fixForm: FormGroup = this.fb.group({});
   fixFieldKeys: string[] = [];
 
-  private pollTimer: ReturnType<typeof setInterval> | null = null;
-
-  constructor() {
-    // documentation/Features/Szinkronizációs központ.md: state changes should show up "live" while a
-    // drain runs. True per-row SQLite reactivity isn't wired up yet, so this polls while draining.
-    effect(() => {
-      if (this.draining()) {
-        this.pollTimer ??= setInterval(() => void this.refresh(), DRAIN_POLL_MS);
-      } else if (this.pollTimer !== null) {
-        clearInterval(this.pollTimer);
-        this.pollTimer = null;
-        void this.refresh();
-      }
-    });
-  }
-
-  /**
-   * documentation/Features/Szinkronizációs központ.md: the list must reflect the outbox every time
-   * this page is entered. `ngOnInit` alone isn't enough — Ionic reuses the cached page instance when
-   * navigating back into an already-visited tab route, so it only fires once per instance, not per
-   * visit; `ionViewWillEnter` fires on every entry, cached instance or not.
-   */
   async ionViewWillEnter(): Promise<void> {
     await this.refresh();
   }
 
-  ngOnDestroy(): void {
-    if (this.pollTimer !== null) {
-      clearInterval(this.pollTimer);
-    }
+  fixEditable(entityType: OutboxItem['entityType']): boolean {
+    return this.entityRegistry.get(entityType).buildFixWriteTask !== null;
   }
 
   async syncNow(): Promise<void> {
+    if (this.connectionState() !== 'ONLINE') {
+      const toast = await this.toastController.create({
+        message: this.translate.instant('SYNC.SYNC_NOW_OFFLINE'),
+        duration: 3000,
+        position: 'bottom',
+      });
+      await toast.present();
+      return;
+    }
     this.syncEngine.requestDrain();
   }
 
@@ -133,41 +115,57 @@ export class SyncPage implements ViewWillEnter, OnDestroy {
 
   async skip(item: OutboxItem): Promise<void> {
     await this.offlineQueue.skip(item.id);
-    await this.refresh();
   }
 
   async unskip(item: OutboxItem): Promise<void> {
     const currentPayload = await this.currentEntityPayload(item);
     await this.offlineQueue.unskip(item, currentPayload);
-    await this.refresh();
   }
 
   startFix(item: OutboxItem): void {
+    if (!this.fixEditable(item.entityType)) {
+      return;
+    }
     const payload = (item.payload ?? {}) as Record<string, unknown>;
     const group: Record<string, FormControl> = {};
     this.fixFieldKeys = [];
     for (const [key, value] of Object.entries(payload)) {
       if (value !== null && typeof value === 'object') {
-        continue; // nested aggregates aren't Fix-editable per spec — none exist in this phase anyway.
+        continue; // nested array/object fields aren't Fix-editable — see OutboxEntityRegistryService doc.
       }
       this.fixFieldKeys.push(key);
       group[key] = new FormControl(value);
     }
     this.fixForm = new FormGroup(group);
+    this.fixNameConflict.set(false);
     this.fixItem.set(item);
   }
 
   async submitFix(): Promise<void> {
     const item = this.fixItem();
-    if (item === null) {
+    if (item === null || !this.fixEditable(item.entityType)) {
       return;
     }
+    const descriptor = this.entityRegistry.get(item.entityType);
     const rawPayload = (item.payload ?? {}) as Record<string, unknown>;
     const newPayload = { ...rawPayload, ...this.fixForm.getRawValue() };
-    const entityTask = this.buildEntityWriteTask(item, newPayload);
-    await this.offlineQueue.fix(item, newPayload, entityTask);
+
+    if (descriptor.nameUniqueness) {
+      const { field, findConflict } = descriptor.nameUniqueness;
+      const value = String(newPayload[field] ?? '');
+      const conflictId = await findConflict(value, item.targetEntityId);
+      if (conflictId !== null) {
+        this.fixNameConflict.set(true);
+        return;
+      }
+    }
+
+    const entityTask = descriptor.buildFixWriteTask;
+    if (entityTask === null) {
+      return;
+    }
+    await this.offlineQueue.fix(item, newPayload, entityTask(newPayload));
     this.fixItem.set(null);
-    await this.refresh();
   }
 
   async drop(item: OutboxItem): Promise<void> {
@@ -187,9 +185,9 @@ export class SyncPage implements ViewWillEnter, OnDestroy {
   }
 
   private async doDrop(item: OutboxItem): Promise<void> {
-    const entityTask = this.buildDropEntityTask(item);
+    const descriptor = this.entityRegistry.get(item.entityType);
+    const entityTask = buildOutboxDropTask(descriptor, item.method, item.targetEntityId);
     await this.offlineQueue.drop(item, entityTask);
-    await this.refresh();
   }
 
   private async refresh(): Promise<void> {
@@ -197,41 +195,15 @@ export class SyncPage implements ViewWillEnter, OnDestroy {
     if (userId === null) {
       return;
     }
-    this.items.set(await this.offlineQueue.listAll(userId));
+    await this.offlineQueue.listAll(userId);
     await this.offlineQueue.refreshCounts(userId);
   }
 
-  /** The outbox payload is the DTO shape the server expects (camelCase) — must be re-derived from the row, not the raw SQL columns. */
   private async currentEntityPayload(item: OutboxItem): Promise<unknown> {
     if (item.method === 'DELETE') {
       return null;
     }
-    if (item.entityType === 'UserProfile') {
-      const rows = await this.db.query<ProfileRow>('SELECT * FROM user_profile WHERE id = ?', [item.targetEntityId]);
-      return rows[0] ? profileRowToDto(rows[0]) : item.payload;
-    }
-    if (item.entityType === 'WeightHistoryEntry') {
-      const rows = await this.db.query<WeightHistoryRow>('SELECT * FROM weight_history_entry WHERE id = ?', [item.targetEntityId]);
-      return rows[0] ? weightHistoryRowToDto(rows[0]) : item.payload;
-    }
-    return item.payload;
-  }
-
-  private buildEntityWriteTask(item: OutboxItem, payload: Record<string, unknown>): SqlTask {
-    if (item.entityType === 'UserProfile') {
-      return profileLocalWriteTask(payload as unknown as UserProfile);
-    }
-    if (item.entityType === 'WeightHistoryEntry') {
-      return weightHistoryLocalWriteTask(payload as unknown as WeightHistoryEntry);
-    }
-    throw new Error(`SyncPage: no entity writer for "${item.entityType}"`);
-  }
-
-  private buildDropEntityTask(item: OutboxItem): SqlTask {
-    const table = item.entityType === 'UserProfile' ? 'user_profile' : 'weight_history_entry';
-    if (item.method === 'POST') {
-      return { statement: `DELETE FROM ${table} WHERE id = ?`, values: [item.targetEntityId] };
-    }
-    return { statement: `UPDATE ${table} SET _needs_refetch = 1, _dirty = 0 WHERE id = ?`, values: [item.targetEntityId] };
+    const descriptor = this.entityRegistry.get(item.entityType);
+    return descriptor.currentPayload({ db: this.db, storage: this.storage, targetEntityId: item.targetEntityId, method: item.method });
   }
 }

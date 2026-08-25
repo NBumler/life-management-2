@@ -74,6 +74,12 @@ export class SyncEngineService {
   readonly connectionState = signal<ConnectionState>('UNKNOWN');
   /** For SyncStatusButton's "forgó ikon" state (documentation/Architektúra/Backend-offline first.md §16). */
   readonly draining = signal(false);
+  /**
+   * documentation/Features/Szinkronizációs központ.md fejléc: "utolsó sikeres szinkronizálás ideje".
+   * Backed by `sync_state.last_pull_at` (server clock, `serverTime`) — loaded at `init()` so it
+   * survives across app restarts, then refreshed after every completed `pull()`.
+   */
+  readonly lastSuccessfulSyncAt = signal<string | null>(null);
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private reconnectAttempt = 0;
   private startedForUserId: string | null = null;
@@ -81,6 +87,10 @@ export class SyncEngineService {
 
   /** Cold start step 6 — never awaited by the caller; nothing here may block first render. */
   async init(): Promise<void> {
+    if (Capacitor.isNativePlatform()) {
+      const rows = await this.db.query<{ last_pull_at: string | null }>('SELECT last_pull_at FROM sync_state WHERE id = 1');
+      this.lastSuccessfulSyncAt.set(rows[0]?.last_pull_at ?? null);
+    }
     void Network.addListener('networkStatusChange', (status) => {
       if (!status.connected) {
         this.clearReconnectTimer();
@@ -414,6 +424,7 @@ export class SyncEngineService {
   /** documentation/Architektúra/Backend-offline first.md §8: cursor-paged delta pull. */
   private async pull(userId: string): Promise<void> {
     let hasMore = true;
+    let syncedAt: string | null = null;
     while (hasMore) {
       const stateRows = await this.db.query<{ cursor: string | null }>('SELECT cursor FROM sync_state WHERE id = 1');
       const since = stateRows[0]?.cursor ?? undefined;
@@ -438,7 +449,11 @@ export class SyncEngineService {
         values: [response.nextCursor, response.serverTime, 'OK'],
       });
       await this.db.executeTransaction(tasks);
+      syncedAt = response.serverTime;
       hasMore = response.hasMore;
+    }
+    if (syncedAt !== null) {
+      this.lastSuccessfulSyncAt.set(syncedAt);
     }
     await this.offlineQueue.refreshCounts(userId);
   }

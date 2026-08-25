@@ -14,9 +14,15 @@
       @if (errorCount() > 0) {
         · {{ 'SYNC.ERROR_COUNT' | translate: { count: errorCount() } }}
       }
+      <br />
+      @if (lastSuccessfulSyncAt(); as lastSync) {
+        {{ 'SYNC.LAST_SYNC' | translate }} {{ lastSync | date: 'short' }}
+      } @else {
+        {{ 'SYNC.LAST_SYNC_NEVER' | translate }}
+      }
     </ion-note>
     <ion-buttons slot="end">
-      <ion-button (click)="syncNow()" [disabled]="draining() || connectionState() !== 'ONLINE'">
+      <ion-button (click)="syncNow()" [disabled]="draining()">
         @if (draining()) {
           <ion-spinner name="dots"></ion-spinner>
         } @else {
@@ -32,6 +38,13 @@
     <div class="empty-state ion-padding ion-text-center">
       <ion-icon name="checkmark-done-outline" size="large" color="success" aria-hidden="true"></ion-icon>
       <p>{{ 'SYNC.EMPTY_TITLE' | translate }}</p>
+      <p>
+        @if (lastSuccessfulSyncAt(); as lastSync) {
+          {{ 'SYNC.LAST_SYNC' | translate }} {{ lastSync | date: 'short' }}
+        } @else {
+          {{ 'SYNC.LAST_SYNC_NEVER' | translate }}
+        }
+      </p>
     </div>
   }
 
@@ -76,9 +89,11 @@
             <ion-icon name="document-text-outline" slot="icon-only" aria-hidden="true"></ion-icon>
           </ion-button>
           @if (item.status === 'ERROR') {
-            <ion-button fill="clear" (click)="startFix(item)">
-              <ion-icon name="create-outline" slot="icon-only" aria-hidden="true"></ion-icon>
-            </ion-button>
+            @if (fixEditable(item.entityType)) {
+              <ion-button fill="clear" (click)="startFix(item)">
+                <ion-icon name="create-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+              </ion-button>
+            }
             <ion-button fill="clear" (click)="skip(item)">
               <ion-icon name="play-skip-forward-outline" slot="icon-only" aria-hidden="true"></ion-icon>
             </ion-button>
@@ -140,6 +155,9 @@
               </ion-item>
             }
           </ion-list>
+          @if (fixNameConflict()) {
+            <ion-note color="danger" class="ion-text-wrap">{{ 'SYNC.FIX_NAME_CONFLICT' | translate }}</ion-note>
+          }
           <ion-button expand="block" type="submit" class="ion-margin-top">{{ 'COMMON.SAVE' | translate }}</ion-button>
         </form>
       }

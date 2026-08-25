@@ -92,7 +92,11 @@
     "FIX_TITLE": "Fix and resend",
     "DROP_CONFIRM_TITLE": "Drop item",
     "DROP_CONFIRM_MESSAGE": "The change will be lost and the row will revert to the server's stored state. This cannot be undone.",
-    "DROP_CONFIRM_CASCADE": "The change will be lost, and {{count}} more item(s) that depend on it will be dropped too. This cannot be undone."
+    "DROP_CONFIRM_CASCADE": "The change will be lost, and {{count}} more item(s) that depend on it will be dropped too. This cannot be undone.",
+    "LAST_SYNC": "Last successful sync:",
+    "LAST_SYNC_NEVER": "No successful sync yet",
+    "SYNC_NOW_OFFLINE": "No server available — the queue is unchanged.",
+    "FIX_NAME_CONFLICT": "This name is already taken."
   },
   "GEAR": {
     "TITLE": "GearCheck",

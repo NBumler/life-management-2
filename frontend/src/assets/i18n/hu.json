@@ -92,7 +92,11 @@
     "FIX_TITLE": "Javítás és újraküldés",
     "DROP_CONFIRM_TITLE": "Tétel eldobása",
     "DROP_CONFIRM_MESSAGE": "A módosítás elvész, a tétel visszaáll a szerveren tárolt állapotra. Ez nem visszavonható.",
-    "DROP_CONFIRM_CASCADE": "A módosítás elvész, és ezzel együtt {{count}} további, erre épülő tétel is eldobódik. Ez nem visszavonható."
+    "DROP_CONFIRM_CASCADE": "A módosítás elvész, és ezzel együtt {{count}} további, erre épülő tétel is eldobódik. Ez nem visszavonható.",
+    "LAST_SYNC": "Utolsó sikeres szinkronizálás:",
+    "LAST_SYNC_NEVER": "Még nem volt sikeres szinkronizálás",
+    "SYNC_NOW_OFFLINE": "Nincs elérhető szerver — a sor változatlan marad.",
+    "FIX_NAME_CONFLICT": "Ez a név már foglalt."
   },
   "GEAR": {
     "TITLE": "GearCheck",

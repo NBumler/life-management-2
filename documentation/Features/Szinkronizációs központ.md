@@ -83,6 +83,7 @@ Nincs nyitott kérdés.
 - A lista a helyi outbox tábla **reaktív** olvasása: drain közben a státuszváltások (`PENDING` → `SENDING` → eltűnik / `ERROR`) élőben látszanak, külön frissítés nélkül.
 - A Fix űrlap a payload egyszerű mezőiből generálódik; a mentés a payloadot és a helyi entitássort **egy** helyi tranzakcióban írja.
 - Csak natív platformon jelenik meg: a web build online-only, nincs outbox — a `offlineCapable` képesség-flag alapján ([[Frontend]], [[Backend-offline first]]). Nem külön feature flag mögött van.
+- **Entitás-lefedettség SSOT:** a Fix/Skip/Unskip/Drop pontos hatása entitásonként (melyik SQLite tábla, szerkeszthető-e Fix-ben, van-e név-egyediség ellenőrzés) az `OutboxEntityRegistryService`-ben (`core/sync/outbox-entity-registry.ts`) él, egy `Record<OutboxEntityType, ...>` alakban. Ez fordítási hiba, ha egy új feature új outbox entitástípust vezet be (`OutboxEntityType` bővítése) anélkül, hogy ezt a registry-t is bővítené — enélkül a GearCheck bevezetésekor pont ez történt: a felület hónapokig csak a `UserProfile`/`WeightHistoryEntry` típusokat ismerte, a GearCheck entitásokon a Fix/Drop csendben hibázott vagy rossz táblát írt. Új entitástípusnál mindig itt kell bővíteni, nem a lap saját kódjában.
 
 #### Backend-offline
 

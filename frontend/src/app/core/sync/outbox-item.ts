@@ -1,6 +1,18 @@
 export type OutboxMethod = 'POST' | 'PUT' | 'DELETE';
 export type OutboxStatus = 'PENDING' | 'SENDING' | 'BLOCKED' | 'ERROR' | 'SKIPPED';
 
+/**
+ * documentation/Architektúra/Backend-offline first.md §4: the closed set of entity types that ever
+ * get their own `outbox_item` row. Deliberately **not** `string` — every repository call to
+ * `OfflineQueueService.buildEnqueueTasks` must pass one of these literals, and
+ * `OutboxEntityRegistryService` (`outbox-entity-registry.ts`) is typed as `Record<OutboxEntityType, ...>`,
+ * so adding a new literal here without also adding a matching registry entry is a compile error. This
+ * is the mechanism that stops a future feature's outbox entity type from silently falling out of the
+ * Szinkronizációs központ's Fix/Skip/Unskip/Drop coverage the way GearCheck's did — see
+ * documentation/Features/Szinkronizációs központ.md.
+ */
+export type OutboxEntityType = 'UserProfile' | 'WeightHistoryEntry' | 'GearItem' | 'PackingTemplate' | 'PackingSession' | 'PackingSessionItem';
+
 /** documentation/Architektúra/Backend-offline first.md §4 "Outbox — adatmodell". */
 export interface OutboxItem {
   sequence: number;
@@ -11,6 +23,12 @@ export interface OutboxItem {
   url: string;
   payload: unknown;
   payloadVersion: number;
+  /**
+   * Deliberately `string`, not `OutboxEntityType` — unlike `EnqueueRequest` (the write path, which
+   * only this app version's repositories call), a row read back here could in principle predate an
+   * app update that dropped an entity type, and `OutboxMigrator` (§7) is specifically designed to
+   * stay generic over whatever string is here rather than assume it's one of the currently-known set.
+   */
   entityType: string;
   targetEntityId: string;
   dependsOn: string[];
@@ -28,7 +46,7 @@ export interface EnqueueRequest {
   method: OutboxMethod;
   url: string;
   payload: unknown;
-  entityType: string;
+  entityType: OutboxEntityType;
   targetEntityId: string;
   dependsOn?: string[];
 }
