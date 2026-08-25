@@ -1,0 +1,248 @@
+package hu.bumler.lm2.food;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import hu.bumler.lm2.api.model.Food;
+import hu.bumler.lm2.common.exception.EntityDeletedException;
+import hu.bumler.lm2.common.exception.EntityNotFoundException;
+import hu.bumler.lm2.common.exception.UniqueViolationException;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+/** Plain JUnit 5 + Mockito, no Spring context (spring-boot-conventions testing.md). */
+class FoodServiceTest {
+
+	private FoodRepository repository;
+	private FoodService service;
+
+	@BeforeEach
+	void setUp() {
+		repository = mock(FoodRepository.class);
+		when(repository.findByDeletedFalse()).thenReturn(List.of());
+		when(repository.saveAndFlush(any())).thenAnswer(inv -> inv.getArgument(0));
+		service = new FoodService(repository, new FoodMapper());
+	}
+
+	private static Food food(UUID id, String name) {
+		return new Food(id, name, false);
+	}
+
+	// --- create (idempotent upsert) ---
+
+	@Test
+	void create_insertsNewFood_whenIdNotFoundAnywhere() {
+		UUID id = UUID.randomUUID();
+		when(repository.findById(id)).thenReturn(Optional.empty());
+
+		Food saved = service.create(food(id, "Tej"));
+
+		assertThat(saved.getId()).isEqualTo(id);
+		assertThat(saved.getName()).isEqualTo("Tej");
+	}
+
+	@Test
+	void create_isIdempotent_whenTheSameIdIsPostedTwice() {
+		UUID id = UUID.randomUUID();
+		FoodEntity existing = new FoodEntity(id);
+		existing.rename("Tej", "tej");
+		when(repository.findById(id)).thenReturn(Optional.empty()).thenReturn(Optional.of(existing));
+
+		service.create(food(id, "Tej"));
+		Food second = service.create(food(id, "Tej"));
+
+		assertThat(second.getName()).isEqualTo("Tej");
+	}
+
+	@Test
+	void create_onlyRequiresName_everyOtherFieldOptional() {
+		UUID id = UUID.randomUUID();
+		when(repository.findById(id)).thenReturn(Optional.empty());
+
+		Food saved = service.create(food(id, "Tej"));
+
+		assertThat(saved.getStore().orElse(null)).isNull();
+		assertThat(saved.getEnergyKcal().orElse(null)).isNull();
+	}
+
+	@Test
+	void create_throwsUniqueViolation_whenEveryFieldMatchesALiveItem() {
+		UUID conflictId = UUID.randomUUID();
+		FoodEntity conflict = new FoodEntity(conflictId);
+		conflict.rename("Tej", "tej");
+		conflict.setStore("Aldi");
+		conflict.setEnergyKcal(BigDecimal.valueOf(42));
+		when(repository.findByDeletedFalse()).thenReturn(List.of(conflict));
+
+		UUID newId = UUID.randomUUID();
+		when(repository.findById(newId)).thenReturn(Optional.empty());
+		Food dto = food(newId, "Tej").store("Aldi").energyKcal(BigDecimal.valueOf(42));
+
+		assertThatThrownBy(() -> service.create(dto))
+				.isInstanceOf(UniqueViolationException.class)
+				.satisfies(ex -> assertThat(((UniqueViolationException) ex).getConflictingId()).isEqualTo(conflictId));
+		verify(repository, never()).saveAndFlush(any());
+	}
+
+	@Test
+	void create_allowsPartialMatch_whenOnlyTheNameIsTheSame() {
+		// documentation/Subfeatures/Élelmiszerek.md: "ugyanaz a termék más üzletben = külön tétel".
+		UUID existingId = UUID.randomUUID();
+		FoodEntity existing = new FoodEntity(existingId);
+		existing.rename("Tej", "tej");
+		existing.setStore("Aldi");
+		when(repository.findByDeletedFalse()).thenReturn(List.of(existing));
+
+		UUID newId = UUID.randomUUID();
+		when(repository.findById(newId)).thenReturn(Optional.empty());
+		Food dto = food(newId, "Tej").store("Lidl");
+
+		Food saved = service.create(dto);
+
+		assertThat(saved.getStore().orElse(null)).isEqualTo("Lidl");
+	}
+
+	@Test
+	void create_treatsNullAndZeroAsDifferent_forNumericFields() {
+		// documentation/Architektúra/Névegyediség.md: "null != 0".
+		UUID existingId = UUID.randomUUID();
+		FoodEntity existing = new FoodEntity(existingId);
+		existing.rename("Só", "só");
+		existing.setEnergyKcal(null);
+		when(repository.findByDeletedFalse()).thenReturn(List.of(existing));
+
+		UUID newId = UUID.randomUUID();
+		when(repository.findById(newId)).thenReturn(Optional.empty());
+		Food dto = food(newId, "Só").energyKcal(BigDecimal.ZERO);
+
+		Food saved = service.create(dto);
+
+		assertThat(saved.getEnergyKcal().orElse(null)).isEqualByComparingTo(BigDecimal.ZERO);
+	}
+
+	@Test
+	void create_treatsDifferentUnitFamiliesAsNeverEqual_evenWithMatchingNumericAmount() {
+		// documentation/Architektúra/Mennyiség mező.md: "egy 3db és egy 3g érték soha nem egyenlő".
+		UUID existingId = UUID.randomUUID();
+		FoodEntity existing = new FoodEntity(existingId);
+		existing.rename("Tojás", "tojás");
+		existing.setNetAmount(BigDecimal.valueOf(3), "db");
+		when(repository.findByDeletedFalse()).thenReturn(List.of(existing));
+
+		UUID newId = UUID.randomUUID();
+		when(repository.findById(newId)).thenReturn(Optional.empty());
+		Food dto = food(newId, "Tojás").netAmount(BigDecimal.valueOf(3)).netUnit("g");
+
+		Food saved = service.create(dto);
+
+		assertThat(saved.getNetUnit().orElse(null)).isEqualTo("g");
+	}
+
+	@Test
+	void create_treatsDifferentUnitsOfTheSameFamilyAsEqual_whenCanonicalAmountMatches() {
+		// documentation/Architektúra/Mennyiség mező.md: "1 l = 100 cl".
+		UUID conflictId = UUID.randomUUID();
+		FoodEntity conflict = new FoodEntity(conflictId);
+		conflict.rename("Tej", "tej");
+		conflict.setNetAmount(BigDecimal.ONE, "l");
+		when(repository.findByDeletedFalse()).thenReturn(List.of(conflict));
+
+		UUID newId = UUID.randomUUID();
+		when(repository.findById(newId)).thenReturn(Optional.empty());
+		Food dto = food(newId, "Tej").netAmount(BigDecimal.valueOf(100)).netUnit("cl");
+
+		assertThatThrownBy(() -> service.create(dto)).isInstanceOf(UniqueViolationException.class);
+	}
+
+	// --- update ---
+
+	@Test
+	void update_allowsKeepingItsOwnValues_whenSavingUnchanged() {
+		UUID id = UUID.randomUUID();
+		FoodEntity existing = new FoodEntity(id);
+		existing.rename("Tej", "tej");
+		when(repository.findById(id)).thenReturn(Optional.of(existing));
+		when(repository.findByDeletedFalse()).thenReturn(List.of(existing));
+
+		Food saved = service.update(id, food(id, "Tej"));
+
+		assertThat(saved.getName()).isEqualTo("Tej");
+	}
+
+	@Test
+	void update_throwsEntityDeleted_whenAlreadyDeleted() {
+		UUID id = UUID.randomUUID();
+		FoodEntity existing = new FoodEntity(id);
+		existing.rename("Tej", "tej");
+		existing.softDelete();
+		when(repository.findById(id)).thenReturn(Optional.of(existing));
+
+		assertThatThrownBy(() -> service.update(id, food(id, "Tej"))).isInstanceOf(EntityDeletedException.class);
+		verify(repository, never()).saveAndFlush(any());
+	}
+
+	// --- get ---
+
+	@Test
+	void get_throwsNotFound_whenIdUnknown() {
+		UUID id = UUID.randomUUID();
+		when(repository.findById(id)).thenReturn(Optional.empty());
+
+		assertThatThrownBy(() -> service.get(id)).isInstanceOf(EntityNotFoundException.class);
+	}
+
+	// --- delete (soft, idempotent) ---
+
+	@Test
+	void delete_softDeletes_whenNotYetDeleted() {
+		UUID id = UUID.randomUUID();
+		FoodEntity existing = new FoodEntity(id);
+		existing.rename("Tej", "tej");
+		when(repository.findById(id)).thenReturn(Optional.of(existing));
+
+		Food deleted = service.delete(id);
+
+		assertThat(deleted.getDeleted()).isTrue();
+		verify(repository).saveAndFlush(existing);
+	}
+
+	@Test
+	void delete_isIdempotent_whenAlreadyDeleted() {
+		UUID id = UUID.randomUUID();
+		FoodEntity existing = new FoodEntity(id);
+		existing.rename("Tej", "tej");
+		existing.softDelete();
+		when(repository.findById(id)).thenReturn(Optional.of(existing));
+
+		Food deleted = service.delete(id);
+
+		assertThat(deleted.getDeleted()).isTrue();
+		verify(repository, never()).saveAndFlush(any());
+	}
+
+	// --- list ---
+
+	@Test
+	void list_returnsLiveItemsOnly() {
+		FoodEntity a = new FoodEntity(UUID.randomUUID());
+		a.rename("Alma", "alma");
+		FoodEntity b = new FoodEntity(UUID.randomUUID());
+		b.rename("Banán", "banán");
+		when(repository.findByDeletedFalseOrderByNameAsc()).thenReturn(List.of(a, b));
+
+		List<Food> result = service.list();
+
+		assertThat(result).extracting(Food::getName).containsExactly("Alma", "Banán");
+	}
+}

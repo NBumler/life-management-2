@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 
 import { CalendarEvent } from '../../api/model/calendarEvent';
+import { Food } from '../../api/model/food';
 import { GearItem } from '../../api/model/gearItem';
 import { HouseholdRoom } from '../../api/model/householdRoom';
 import { HouseholdTask } from '../../api/model/householdTask';
@@ -13,6 +14,7 @@ import { GearItemRepository } from '../data/gear-item.repository';
 import { HouseholdRoomRepository } from '../data/household-room.repository';
 import {
   CalendarEventRow,
+  FoodRow,
   GearItemRow,
   HouseholdRoomRow,
   HouseholdTaskRow,
@@ -23,6 +25,8 @@ import {
   WeightHistoryRow,
   calendarEventLocalWriteTask,
   calendarEventRowToDto,
+  foodLocalWriteTask,
+  foodRowToDto,
   gearItemLocalWriteTask,
   gearItemRowToDto,
   householdRoomLocalWriteTask,
@@ -203,6 +207,15 @@ export class OutboxEntityRegistryService {
       currentPayload: rowLookup<CalendarEventRow, unknown>('calendar_event', calendarEventRowToDto),
       buildFixWriteTask: (payload) => calendarEventLocalWriteTask(payload as unknown as CalendarEvent),
       // documentation/Architektúra/Névegyediség.md: CalendarEvent.title is explicitly not unique.
+      nameUniqueness: null,
+    },
+    Food: {
+      table: 'food',
+      currentPayload: rowLookup<FoodRow, unknown>('food', foodRowToDto),
+      buildFixWriteTask: (payload) => foodLocalWriteTask(payload as unknown as Food),
+      // documentation/Architektúra/Névegyediség.md "Mezőhalmaz-egyediség": duplicate-ness depends on
+      // every field at once, not one value — can't be expressed as (value, excludeId), same reasoning
+      // as PackingTemplate/HouseholdTask above. The server's 409 UNIQUE_VIOLATION still guards it.
       nameUniqueness: null,
     },
   };

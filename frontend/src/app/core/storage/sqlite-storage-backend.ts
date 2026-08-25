@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 
 import { CalendarEvent } from '../../api/model/calendarEvent';
+import { Food } from '../../api/model/food';
 import { GearItem } from '../../api/model/gearItem';
 import { HouseholdRoom } from '../../api/model/householdRoom';
 import { HouseholdTask } from '../../api/model/householdTask';
@@ -14,6 +15,7 @@ import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 import {
   CalendarEventRow,
+  FoodRow,
   GearItemRow,
   HouseholdRoomRow,
   HouseholdTaskRow,
@@ -26,6 +28,8 @@ import {
   WeightHistoryRow,
   calendarEventLocalWriteTask,
   calendarEventRowToDto,
+  foodLocalWriteTask,
+  foodRowToDto,
   gearItemLocalWriteTask,
   gearItemRowToDto,
   householdRoomLocalWriteTask,
@@ -718,6 +722,58 @@ export class SqliteStorageBackend implements StorageBackend {
   private async readEvent(id: string): Promise<CalendarEvent> {
     const rows = await this.db.query<CalendarEventRow>('SELECT * FROM calendar_event WHERE id = ?', [id]);
     return calendarEventRowToDto(rows[0]);
+  }
+
+  /** documentation/Subfeatures/Élelmiszerek.md: shared/global catalog — every live row, not scoped by user. */
+  async listFoods(): Promise<Food[]> {
+    const rows = await this.db.query<FoodRow>('SELECT * FROM food WHERE deleted = 0 ORDER BY name ASC');
+    return rows.map(foodRowToDto);
+  }
+
+  async upsertFood(food: Food): Promise<Food> {
+    const userId = this.requireUserId();
+    const existing = await this.db.query('SELECT 1 FROM food WHERE id = ?', [food.id]);
+    const isNew = existing.length === 0;
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: isNew ? 'POST' : 'PUT',
+      url: isNew ? '/api/foods' : `/api/foods/${food.id}`,
+      payload: food,
+      entityType: 'Food',
+      targetEntityId: food.id,
+    });
+    await this.db.executeTransaction([foodLocalWriteTask(food), ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    return this.readFood(food.id);
+  }
+
+  async deleteFood(id: string): Promise<Food> {
+    const userId = this.requireUserId();
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: 'DELETE',
+      url: `/api/foods/${id}`,
+      payload: null,
+      entityType: 'Food',
+      targetEntityId: id,
+    });
+    const entityTask: SqlTask = enqueue.hardRemoveLocalEntity
+      ? { statement: 'DELETE FROM food WHERE id = ?', values: [id] }
+      : {
+          statement: 'UPDATE food SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?',
+          values: [new Date().toISOString(), id],
+        };
+    await this.db.executeTransaction([entityTask, ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    if (enqueue.hardRemoveLocalEntity) {
+      return { id, name: '', deleted: true };
+    }
+    return this.readFood(id);
+  }
+
+  private async readFood(id: string): Promise<Food> {
+    const rows = await this.db.query<FoodRow>('SELECT * FROM food WHERE id = ?', [id]);
+    return foodRowToDto(rows[0]);
   }
 
   private requireUserId(): string {

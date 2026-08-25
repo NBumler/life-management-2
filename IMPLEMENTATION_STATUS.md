@@ -59,6 +59,17 @@ Ha implementálsz egy új feature-t: vedd fel a sort, `Kész`-re állítva, a
 | ↳ [Események](documentation/Features/Események.md) | `d1950b4` (2026-08-19) | `CalendarEvent*` | `pages/tasks/events/`, `core/data/calendar-event.repository.ts` | Naptár-producer: `core/data/event-occurrence.ts` (DAILY/WEEKLY/YEARLY, feb-29 skip) |
 | ↳ [Naptár](documentation/Features/Naptár.md) | `2b44ec6` (2026-08-19) | — (nincs saját adat) | `pages/tasks/calendar/` | Csak frontend aggregátor; hónap-rács + napi lista; swipe gesztus nincs implementálva, csak chevron (lásd Megjegyzések) |
 
+## Folyamatban
+
+| Feature / Subfeature | Spec commit | Backend | Frontend | Megjegyzés |
+|---|---|---|---|---|
+| [Kaja](documentation/Features/Kaja.md) | `3b4564f` (2026-08-19) | — | — | Csak a hub navigáció; a subfeature-ök közül eddig egy sincs kész, lásd alul. |
+| ↳ [Élelmiszerek](documentation/Subfeatures/Élelmiszerek.md) | `56923be` (2026-08-19) | `hu.bumler.lm2.food` (`Food`) | `pages/food/catalog/` (lista + kereső + törlés), `core/data/food.repository.ts` | **Kész** — első shared/global (nem user-owned) entitás a kódbázisban; a duplikáció-ellenőrzés alkalmazás-szintű, minden mezőre ([[Névegyediség]]). |
+| ↳ [Élelmiszer hozzáadása](documentation/Subfeatures/Élelmiszer%20hozzáadása.md) | `74583ce` (2026-07-24) | — | `pages/food/catalog/` "+" FAB → közvetlenül a manuális űrlapra | **Részleges** — csak a manuális csatorna aktív; vonalkód + clipboard import még nincs, a hub választó (action sheet) ezért nincs megépítve (egyetlen célpont miatt szükségtelen lenne). |
+| ↳ [Élelmiszer manuális bevitele](documentation/Subfeatures/Élelmiszer%20manuális%20bevitele.md) | `d1950b4` (2026-08-19) | (ua., mint Élelmiszerek) | `pages/food/catalog/food-edit.page.ts` | **Részleges** — teljes űrlap (13 tápanyag mező fix sorrendben, só→nátrium/klorid auto-számítás touched-állapottal, romlási idők) kész; az Open Food Facts "sync" gomb (vonalkód alapú előtöltés/frissítés) nincs implementálva — a [[Vonalkódos élelmiszer beolvasás]]-sal közös munka, együtt kerül sorra. |
+| [Mennyiség mező](documentation/Architektúra/Mennyiség%20mező.md) (architektúra SSOT) | `d1950b4` (2026-08-19) | `hu.bumler.lm2.common.QuantityConverter` (kanonikus egyenlőség) | `shared/quantity.ts`, `shared/quantity-input/` | **Kész** — parser + `QuantityInputComponent` (`quantity`/`duration` mód), kanonikus bázisegység-tábla mindkét oldalon a közös `shared/fixtures/quantity-conversion.json`-nal paritásban tesztelve. |
+| [Névegyediség](documentation/Architektúra/Névegyediség.md) (architektúra SSOT) | `56923be` (2026-08-19) | `hu.bumler.lm2.common.BarcodeNormalizer` (a `NameNormalizer` már megvolt) | `shared/barcode-normalization.ts` (a `name-normalization.ts` már megvolt) | **Kész** a Food mezőhalmaz-egyediséghez szükséges rész (barcode normalizálás); a hex szín normalizálás ([[Indoor boulder admin]]) még nem kellett, nincs implementálva. |
+
 ## Nincs elkezdve
 
 Nincs backend package, nincs frontend page/repository ezekhez — teljes egészében
@@ -67,7 +78,7 @@ feature" lent), nem prioritás.
 
 | Feature | Subfeature-ök | Fő függőségek |
 |---|---|---|
-| [Kaja](documentation/Features/Kaja.md) | Élelmiszerek, Élelmiszer hozzáadása (+manuális/clipboard/vonalkód), Étkezés (+3 forrás), Recept, Élelmiszer tárolás, Kaja statisztika | Profile (TDEE-hez, kész), Tápérték kalkulátor (architektúra doksi) |
+| ↳ Kaja folytatása | Vonalkódos beolvasás + Élelmiszer importálása clipboard-ról → Élelmiszer tárolás → Recept → Tápérték kalkulátor → Étkezés (+3 forrás) → Kaja statisztika (javasolt sorrend, lásd a "Folyamatban" szakaszt fent a már kész Élelmiszerek/manuális bevitel körért) | Lásd fent |
 | [Edzés](documentation/Features/Edzés.md) | Edzésnapló, Gyakorlat, Heti terv, Biciklizés napló, Úszás napló, Mászónapló (+ 12 Indoor/Outdoor boulder/köteles al-spec) | Profile (kész) — a Mászónapló ág önmagában a legnagyobb subtree a projektben |
 | [Bevásárlás](documentation/Features/Bevásárlás.md) | Bevásárlólista írás, Bevásárlás teljesítve, Bevásárlás előzmény | Élelmiszerek (Kaja alatt) |
 | [Pénzügyek](documentation/Features/Pénzügyek.md) | Nettó fizetés kalkulátor, Rendszeres kiadások | Nincs |

@@ -4,6 +4,7 @@ export * from './adminUser';
 export * from './apiError';
 export * from './authTokens';
 export * from './calendarEvent';
+export * from './food';
 export * from './gearItem';
 export * from './healthResponse';
 export * from './householdRoom';

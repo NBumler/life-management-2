@@ -271,5 +271,59 @@
       ],
       "WEEKDAY_NAMES": ["H", "K", "Sze", "Cs", "P", "Szo", "V"]
     }
+  },
+  "SHARED": {
+    "QUANTITY_INPUT": {
+      "HELP_TITLE": "Hogyan add meg",
+      "HELP_QUANTITY": "Írj számot és egységet, szóköz opcionális. Példa: 120dkg, 3 db, 2l, 5cl.",
+      "HELP_DURATION": "Írj számot és időegységet. Példa: 14nap, 2 hét, 3hó.",
+      "ERROR_QUANTITY": "Ismeretlen mennyiség vagy egység.",
+      "ERROR_DURATION": "Ismeretlen időtartam vagy időegység."
+    }
+  },
+  "FOOD": {
+    "CATALOG": {
+      "TITLE": "Katalógus",
+      "SEARCH_PLACEHOLDER": "Keresés",
+      "ADD": "Új élelmiszer",
+      "EMPTY": "Még nincs élelmiszer.",
+      "NO_RESULTS": "Nincs találat.",
+      "DELETE_CONFIRM_TITLE": "Élelmiszer törlése",
+      "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd a(z) „{{name}}” tételt? Ez egy közös katalóguselem — a törlés más felhasználók tárolását, receptjeit, bevásárlólistáit és étkezéseit is érintheti.",
+      "DELETE_CONFIRM_MESSAGE_WITH_REFS": "Biztosan törlöd a(z) „{{name}}” tételt? Erre még hivatkozik: {{refs}}. A törlés ezeket is törli, minden felhasználónál."
+    },
+    "FORM": {
+      "ADD_TITLE": "Új élelmiszer",
+      "EDIT_TITLE": "Élelmiszer szerkesztése",
+      "NAME_LABEL": "Termék",
+      "STORE_LABEL": "Üzlet",
+      "BRAND_LABEL": "Márka",
+      "BARCODE_LABEL": "Vonalkód (EAN)",
+      "BARCODE_SYNC": "Frissítés az Open Food Facts-ből",
+      "NOTE_LABEL": "Egyéb",
+      "PRICE_LABEL": "Ár (Ft / csomag)",
+      "NET_AMOUNT_LABEL": "1 csomag nettó tartalma",
+      "SECTION_NUTRIENTS": "Tápanyagok (100 g / 100 ml)",
+      "SECTION_SHELF_LIFE": "Romlási idők",
+      "NUTRIENT_ENERGY": "Energia (kcal)",
+      "NUTRIENT_FAT": "Zsír (g)",
+      "NUTRIENT_FAT_SATURATED": "Zsír — telített (g)",
+      "NUTRIENT_FAT_UNSATURATED": "Zsír — telítetlen (g)",
+      "NUTRIENT_FAT_TRANS": "Zsír — transz (g)",
+      "NUTRIENT_CARBS": "Szénhidrát (g)",
+      "NUTRIENT_CARBS_SUGARS": "Szénhidrát — cukrok — egyszerű (g)",
+      "NUTRIENT_CARBS_COMPLEX": "Szénhidrát — összetett (g)",
+      "NUTRIENT_CARBS_FIBER": "Szénhidrát — összetett — rost (g)",
+      "NUTRIENT_PROTEIN": "Fehérje (g)",
+      "NUTRIENT_SALT": "Só (g)",
+      "NUTRIENT_SODIUM": "Nátrium (g)",
+      "NUTRIENT_CHLORIDE": "Klorid (g)",
+      "SHELF_ROOM_LABEL": "Szobahőmérsékleten (kamra)",
+      "SHELF_FRIDGE_LABEL": "Hűtőben",
+      "SHELF_FREEZER_LABEL": "Fagyasztva",
+      "SHELF_AFTER_OPENING_LABEL": "Felbontás után",
+      "NAME_REQUIRED_ERROR": "A termék neve kötelező.",
+      "DUPLICATE_ERROR": "Már létezik ezzel teljesen megegyező élelmiszer a katalógusban."
+    }
   }
 }

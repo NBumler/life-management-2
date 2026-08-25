@@ -1,0 +1,16 @@
+<ion-input
+  [value]="text()"
+  [label]="label"
+  labelPlacement="stacked"
+  [disabled]="disabled()"
+  style="font-size: 16px"
+  (ionInput)="onInput($any($event.target).value ?? '')"
+  (ionBlur)="onBlur()"
+>
+  <ion-button slot="end" fill="clear" (click)="showHelp()" [attr.aria-label]="'SHARED.QUANTITY_INPUT.HELP_TITLE' | translate">
+    <ion-icon slot="icon-only" name="help-circle-outline"></ion-icon>
+  </ion-button>
+</ion-input>
+@if (errorMessage(); as error) {
+  <ion-note color="danger">{{ error }}</ion-note>
+}

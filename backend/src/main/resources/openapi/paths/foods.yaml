@@ -1,0 +1,38 @@
+get:
+  operationId: listFoods
+  tags:
+    - foods
+  summary: The shared food catalog, live rows only (deleted = false). Not user-scoped.
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/FoodList.yaml'
+post:
+  operationId: createFood
+  tags:
+    - foods
+  summary: Create a food — idempotent upsert on the client-supplied id.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/Food.yaml'
+  responses:
+    '200':
+      description: Created or, on retry with the same id, the existing row.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/Food.yaml'
+    '409':
+      description: >-
+        Another live catalog item already matches on every field
+        (documentation/Architektúra/Névegyediség.md "Mezőhalmaz-egyediség").
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'

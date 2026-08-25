@@ -1,0 +1,63 @@
+parameters:
+  - name: id
+    in: path
+    required: true
+    schema:
+      type: string
+      format: uuid
+get:
+  operationId: getFood
+  tags:
+    - foods
+  summary: A single food. Shared catalog — a deleted row returns 200 with deleted=true (not 404).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/Food.yaml'
+    '404':
+      description: No such food.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+put:
+  operationId: updateFood
+  tags:
+    - foods
+  summary: Full update (last-write-wins).
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/Food.yaml'
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/Food.yaml'
+    '409':
+      description: Entity already deleted, or another live item already matches on every field.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+delete:
+  operationId: deleteFood
+  tags:
+    - foods
+  summary: >-
+    Soft delete, idempotent. Cascades to soft-deleting every referencing storage / recipe /
+    shopping-list / meal item, for every user (documentation/Subfeatures/Élelmiszerek.md).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/Food.yaml'

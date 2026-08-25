@@ -246,7 +246,56 @@ const SCHEMA_V7_STATEMENTS: string[] = [
   `CREATE INDEX IF NOT EXISTS idx_calendar_event_date ON calendar_event (date)`,
 ];
 
-const SCHEMA_VERSION = 7;
+/**
+ * documentation/Subfeatures/Élelmiszerek.md — shared/global catalog: unlike every earlier table,
+ * these rows are not scoped by user (see hu.bumler.lm2.food.FoodEntity on the backend), but that
+ * only affects server-side sync scoping; the local SQLite copy has no per-user isolation anyway.
+ */
+const SCHEMA_V8_STATEMENTS: string[] = [
+  `CREATE TABLE IF NOT EXISTS food (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    store TEXT,
+    brand TEXT,
+    barcode TEXT,
+    note TEXT,
+    price_huf INTEGER,
+    net_amount REAL,
+    net_unit TEXT,
+    energy_kcal REAL,
+    fat_g REAL,
+    fat_saturated_g REAL,
+    fat_unsaturated_g REAL,
+    fat_trans_g REAL,
+    carbs_g REAL,
+    carbs_sugars_g REAL,
+    carbs_complex_g REAL,
+    carbs_fiber_g REAL,
+    protein_g REAL,
+    salt_g REAL,
+    sodium_g REAL,
+    chloride_g REAL,
+    shelf_room_amount REAL,
+    shelf_room_unit TEXT,
+    shelf_fridge_amount REAL,
+    shelf_fridge_unit TEXT,
+    shelf_freezer_amount REAL,
+    shelf_freezer_unit TEXT,
+    shelf_after_opening_amount REAL,
+    shelf_after_opening_unit TEXT,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_food_name ON food (name)`,
+];
+
+const SCHEMA_VERSION = 8;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -256,7 +305,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 4, statements: SCHEMA_V4_STATEMENTS },
   { toVersion: 5, statements: SCHEMA_V5_STATEMENTS },
   { toVersion: 6, statements: SCHEMA_V6_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V7_STATEMENTS },
+  { toVersion: 7, statements: SCHEMA_V7_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V8_STATEMENTS },
 ];
 
 export interface SqlTask {

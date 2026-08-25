@@ -1,0 +1,120 @@
+type: object
+description: >-
+  documentation/Subfeatures/Élelmiszerek.md — shared/global food catalog entry (no per-user
+  ownership). Only name is required; every other field may be absent (partial catalog items are
+  allowed).
+required:
+  - id
+  - name
+  - deleted
+properties:
+  id:
+    type: string
+    format: uuid
+  name:
+    type: string
+    minLength: 1
+  store:
+    type: string
+    nullable: true
+  brand:
+    type: string
+    nullable: true
+  barcode:
+    type: string
+    nullable: true
+  note:
+    type: string
+    nullable: true
+  priceHuf:
+    type: integer
+    nullable: true
+  netAmount:
+    type: number
+    nullable: true
+  netUnit:
+    type: string
+    nullable: true
+    description: 'documentation/Architektúra/Mennyiség mező.md quantity unit: db, g, dkg, kg, l, dl, cl, or ml.'
+  energyKcal:
+    type: number
+    nullable: true
+  fatG:
+    type: number
+    nullable: true
+  fatSaturatedG:
+    type: number
+    nullable: true
+  fatUnsaturatedG:
+    type: number
+    nullable: true
+  fatTransG:
+    type: number
+    nullable: true
+  carbsG:
+    type: number
+    nullable: true
+  carbsSugarsG:
+    type: number
+    nullable: true
+  carbsComplexG:
+    type: number
+    nullable: true
+  carbsFiberG:
+    type: number
+    nullable: true
+  proteinG:
+    type: number
+    nullable: true
+  saltG:
+    type: number
+    nullable: true
+  sodiumG:
+    type: number
+    nullable: true
+  chlorideG:
+    type: number
+    nullable: true
+  shelfRoomAmount:
+    type: number
+    nullable: true
+  shelfRoomUnit:
+    type: string
+    nullable: true
+    description: 'documentation/Architektúra/Mennyiség mező.md duration unit: perc, óra, nap, hét, hó, or év.'
+  shelfFridgeAmount:
+    type: number
+    nullable: true
+  shelfFridgeUnit:
+    type: string
+    nullable: true
+    description: 'documentation/Architektúra/Mennyiség mező.md duration unit: perc, óra, nap, hét, hó, or év.'
+  shelfFreezerAmount:
+    type: number
+    nullable: true
+  shelfFreezerUnit:
+    type: string
+    nullable: true
+    description: 'documentation/Architektúra/Mennyiség mező.md duration unit: perc, óra, nap, hét, hó, or év.'
+  shelfAfterOpeningAmount:
+    type: number
+    nullable: true
+  shelfAfterOpeningUnit:
+    type: string
+    nullable: true
+    description: 'documentation/Architektúra/Mennyiség mező.md duration unit: perc, óra, nap, hét, hó, or év.'
+  deleted:
+    type: boolean
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

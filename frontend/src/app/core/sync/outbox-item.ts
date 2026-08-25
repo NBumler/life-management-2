@@ -21,7 +21,8 @@ export type OutboxEntityType =
   | 'LifePlan'
   | 'HouseholdRoom'
   | 'HouseholdTask'
-  | 'CalendarEvent';
+  | 'CalendarEvent'
+  | 'Food';
 
 /** documentation/Architektúra/Backend-offline first.md §4 "Outbox — adatmodell". */
 export interface OutboxItem {

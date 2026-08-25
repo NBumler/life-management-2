@@ -1,5 +1,6 @@
 import { SqlTask } from '../storage/local-database.service';
 import { CalendarEvent } from '../../api/model/calendarEvent';
+import { Food } from '../../api/model/food';
 import { GearItem } from '../../api/model/gearItem';
 import { HouseholdRoom } from '../../api/model/householdRoom';
 import { HouseholdTask } from '../../api/model/householdTask';
@@ -893,6 +894,195 @@ export function calendarEventTombstoneTask(id: string, deletedAt: string | null,
     statement: `
       INSERT INTO calendar_event (id, title, all_day, date, interval, updated_at, deleted, deleted_at, _dirty, _local_only)
       VALUES (?, '', 1, '1970-01-01', 1, ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+export interface FoodRow {
+  id: string;
+  name: string;
+  store: string | null;
+  brand: string | null;
+  barcode: string | null;
+  note: string | null;
+  price_huf: number | null;
+  net_amount: number | null;
+  net_unit: string | null;
+  energy_kcal: number | null;
+  fat_g: number | null;
+  fat_saturated_g: number | null;
+  fat_unsaturated_g: number | null;
+  fat_trans_g: number | null;
+  carbs_g: number | null;
+  carbs_sugars_g: number | null;
+  carbs_complex_g: number | null;
+  carbs_fiber_g: number | null;
+  protein_g: number | null;
+  salt_g: number | null;
+  sodium_g: number | null;
+  chloride_g: number | null;
+  shelf_room_amount: number | null;
+  shelf_room_unit: string | null;
+  shelf_fridge_amount: number | null;
+  shelf_fridge_unit: string | null;
+  shelf_freezer_amount: number | null;
+  shelf_freezer_unit: string | null;
+  shelf_after_opening_amount: number | null;
+  shelf_after_opening_unit: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+export function foodRowToDto(row: FoodRow): Food {
+  return {
+    id: row.id,
+    name: row.name,
+    store: row.store,
+    brand: row.brand,
+    barcode: row.barcode,
+    note: row.note,
+    priceHuf: row.price_huf,
+    netAmount: row.net_amount,
+    netUnit: row.net_unit,
+    energyKcal: row.energy_kcal,
+    fatG: row.fat_g,
+    fatSaturatedG: row.fat_saturated_g,
+    fatUnsaturatedG: row.fat_unsaturated_g,
+    fatTransG: row.fat_trans_g,
+    carbsG: row.carbs_g,
+    carbsSugarsG: row.carbs_sugars_g,
+    carbsComplexG: row.carbs_complex_g,
+    carbsFiberG: row.carbs_fiber_g,
+    proteinG: row.protein_g,
+    saltG: row.salt_g,
+    sodiumG: row.sodium_g,
+    chlorideG: row.chloride_g,
+    shelfRoomAmount: row.shelf_room_amount,
+    shelfRoomUnit: row.shelf_room_unit,
+    shelfFridgeAmount: row.shelf_fridge_amount,
+    shelfFridgeUnit: row.shelf_fridge_unit,
+    shelfFreezerAmount: row.shelf_freezer_amount,
+    shelfFreezerUnit: row.shelf_freezer_unit,
+    shelfAfterOpeningAmount: row.shelf_after_opening_amount,
+    shelfAfterOpeningUnit: row.shelf_after_opening_unit,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+const FOOD_COLUMNS = [
+  'name',
+  'store',
+  'brand',
+  'barcode',
+  'note',
+  'price_huf',
+  'net_amount',
+  'net_unit',
+  'energy_kcal',
+  'fat_g',
+  'fat_saturated_g',
+  'fat_unsaturated_g',
+  'fat_trans_g',
+  'carbs_g',
+  'carbs_sugars_g',
+  'carbs_complex_g',
+  'carbs_fiber_g',
+  'protein_g',
+  'salt_g',
+  'sodium_g',
+  'chloride_g',
+  'shelf_room_amount',
+  'shelf_room_unit',
+  'shelf_fridge_amount',
+  'shelf_fridge_unit',
+  'shelf_freezer_amount',
+  'shelf_freezer_unit',
+  'shelf_after_opening_amount',
+  'shelf_after_opening_unit',
+] as const;
+
+function foodValues(dto: Food): unknown[] {
+  return [
+    dto.name,
+    dto.store ?? null,
+    dto.brand ?? null,
+    dto.barcode ?? null,
+    dto.note ?? null,
+    dto.priceHuf ?? null,
+    dto.netAmount ?? null,
+    dto.netUnit ?? null,
+    dto.energyKcal ?? null,
+    dto.fatG ?? null,
+    dto.fatSaturatedG ?? null,
+    dto.fatUnsaturatedG ?? null,
+    dto.fatTransG ?? null,
+    dto.carbsG ?? null,
+    dto.carbsSugarsG ?? null,
+    dto.carbsComplexG ?? null,
+    dto.carbsFiberG ?? null,
+    dto.proteinG ?? null,
+    dto.saltG ?? null,
+    dto.sodiumG ?? null,
+    dto.chlorideG ?? null,
+    dto.shelfRoomAmount ?? null,
+    dto.shelfRoomUnit ?? null,
+    dto.shelfFridgeAmount ?? null,
+    dto.shelfFridgeUnit ?? null,
+    dto.shelfFreezerAmount ?? null,
+    dto.shelfFreezerUnit ?? null,
+    dto.shelfAfterOpeningAmount ?? null,
+    dto.shelfAfterOpeningUnit ?? null,
+  ];
+}
+
+export function foodLocalWriteTask(dto: Food): SqlTask {
+  const assignments = FOOD_COLUMNS.map((column) => `${column} = excluded.${column}`).join(', ');
+  return {
+    statement: `
+      INSERT INTO food (id, ${FOOD_COLUMNS.join(', ')}, _dirty, _local_only)
+      VALUES (?, ${FOOD_COLUMNS.map(() => '?').join(', ')}, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET ${assignments}, _dirty = 1`,
+    values: [dto.id, ...foodValues(dto)],
+  };
+}
+
+export function foodServerApplyTask(dto: Food): SqlTask {
+  const assignments = FOOD_COLUMNS.map((column) => `${column} = excluded.${column}`).join(', ');
+  return {
+    statement: `
+      INSERT INTO food (id, ${FOOD_COLUMNS.join(', ')}, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ${FOOD_COLUMNS.map(() => '?').join(', ')}, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        ${assignments}, created_at = excluded.created_at, updated_at = excluded.updated_at,
+        deleted = excluded.deleted, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE food._dirty = 0`,
+    values: [
+      dto.id,
+      ...foodValues(dto),
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function foodTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO food (id, name, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '', ?, 1, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
     values: [id, updatedAt, deletedAt],
   };

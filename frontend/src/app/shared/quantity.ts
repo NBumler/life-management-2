@@ -1,0 +1,137 @@
+/**
+ * documentation/Architektúra/Mennyiség mező.md — shared `quantity`/`duration` value parsing,
+ * formatting, and canonical-unit equality comparison (used by the Food field-set duplicate check,
+ * documentation/Architektúra/Névegyediség.md).
+ *
+ * The multiplier tables mirror shared/fixtures/quantity-conversion.json exactly — that fixture is
+ * the parity SSOT with the backend's hu.bumler.lm2.common.QuantityConverter; quantity.spec.ts
+ * asserts this file's tables match it structurally.
+ */
+
+export type QuantityMode = 'quantity' | 'duration';
+export type QuantityUnit = 'db' | 'g' | 'dkg' | 'kg' | 'l' | 'dl' | 'cl' | 'ml';
+export type DurationUnit = 'perc' | 'óra' | 'nap' | 'hét' | 'hó' | 'év';
+export type QuantityFamily = 'weight' | 'volume' | 'piece' | 'time';
+
+export interface ParsedQuantity<U extends string = QuantityUnit | DurationUnit> {
+  amount: number | null;
+  unit: U | null;
+}
+
+export class QuantityParseError extends Error {}
+
+const QUANTITY_UNITS: readonly QuantityUnit[] = ['db', 'g', 'dkg', 'kg', 'l', 'dl', 'cl', 'ml'];
+
+/** documentation/Architektúra/Mennyiség mező.md "Támogatott egységek — duration": alias → canonical unit, case-insensitive. */
+const DURATION_ALIASES: Record<string, DurationUnit> = {
+  perc: 'perc',
+  p: 'perc',
+  min: 'perc',
+  óra: 'óra',
+  ora: 'óra',
+  h: 'óra',
+  nap: 'nap',
+  n: 'nap',
+  d: 'nap',
+  hét: 'hét',
+  het: 'hét',
+  w: 'hét',
+  hó: 'hó',
+  ho: 'hó',
+  honap: 'hó',
+  hónap: 'hó',
+  m: 'hó',
+  év: 'év',
+  ev: 'év',
+  y: 'év',
+};
+
+export const QUANTITY_WEIGHT_MULTIPLIERS: Record<string, number> = { g: 1, dkg: 10, kg: 1000 };
+export const QUANTITY_VOLUME_MULTIPLIERS: Record<string, number> = { ml: 1, cl: 10, dl: 100, l: 1000 };
+export const QUANTITY_PIECE_MULTIPLIERS: Record<string, number> = { db: 1 };
+export const DURATION_MULTIPLIERS: Record<string, number> = { perc: 1, óra: 60, nap: 1440, hét: 10080, hó: 43200, év: 525600 };
+
+const INPUT_PATTERN = /^(-?\d+(?:[.,]\d+)?)\s*([a-zA-Zóőúűáéíöü]+)$/;
+
+/**
+ * documentation/Architektúra/Mennyiség mező.md "Parser kimenet": empty input is a valid "no value"
+ * (amount/unit both null). Throws {@link QuantityParseError} for anything unparseable, including a
+ * unit outside the given mode's set.
+ */
+export function parseQuantityInput(input: string, mode: QuantityMode): ParsedQuantity {
+  const trimmed = input.trim();
+  if (trimmed === '') {
+    return { amount: null, unit: null };
+  }
+  const match = INPUT_PATTERN.exec(trimmed);
+  if (!match) {
+    throw new QuantityParseError(`Cannot parse "${input}" as ${mode}`);
+  }
+  const amount = Number(match[1].replace(',', '.'));
+  if (!Number.isFinite(amount)) {
+    throw new QuantityParseError(`Invalid number in "${input}"`);
+  }
+  const rawUnit = match[2].toLowerCase();
+  const unit = mode === 'quantity' ? resolveQuantityUnit(rawUnit) : resolveDurationUnit(rawUnit);
+  if (!unit) {
+    throw new QuantityParseError(`Unknown ${mode} unit "${match[2]}"`);
+  }
+  return { amount, unit };
+}
+
+/** documentation/Architektúra/Mennyiség mező.md "Parser kimenet": no space in the canonical display form. */
+export function formatQuantityValue(value: ParsedQuantity): string {
+  if (value.amount === null || value.unit === null) {
+    return '';
+  }
+  return `${value.amount}${value.unit}`;
+}
+
+function resolveQuantityUnit(rawUnit: string): QuantityUnit | null {
+  return (QUANTITY_UNITS as readonly string[]).includes(rawUnit) ? (rawUnit as QuantityUnit) : null;
+}
+
+function resolveDurationUnit(rawUnit: string): DurationUnit | null {
+  return DURATION_ALIASES[rawUnit] ?? null;
+}
+
+export function quantityFamily(unit: QuantityUnit): QuantityFamily {
+  if (unit === 'db') {
+    return 'piece';
+  }
+  if (unit in QUANTITY_WEIGHT_MULTIPLIERS) {
+    return 'weight';
+  }
+  return 'volume';
+}
+
+export function canonicalQuantityAmount(amount: number, unit: QuantityUnit): number {
+  const family = quantityFamily(unit);
+  const multipliers = family === 'weight' ? QUANTITY_WEIGHT_MULTIPLIERS : family === 'volume' ? QUANTITY_VOLUME_MULTIPLIERS : QUANTITY_PIECE_MULTIPLIERS;
+  return amount * multipliers[unit];
+}
+
+export function canonicalDurationAmount(amount: number, unit: DurationUnit): number {
+  return amount * DURATION_MULTIPLIERS[unit];
+}
+
+/**
+ * documentation/Architektúra/Mennyiség mező.md: unit families never compare equal to each other,
+ * even with numerically equal `amount`. Both values missing counts as equal.
+ */
+export function quantitiesEqual(a: ParsedQuantity<QuantityUnit>, b: ParsedQuantity<QuantityUnit>): boolean {
+  if (a.amount === null || a.unit === null || b.amount === null || b.unit === null) {
+    return a.amount === null && a.unit === null && b.amount === null && b.unit === null;
+  }
+  if (quantityFamily(a.unit) !== quantityFamily(b.unit)) {
+    return false;
+  }
+  return canonicalQuantityAmount(a.amount, a.unit) === canonicalQuantityAmount(b.amount, b.unit);
+}
+
+export function durationsEqual(a: ParsedQuantity<DurationUnit>, b: ParsedQuantity<DurationUnit>): boolean {
+  if (a.amount === null || a.unit === null || b.amount === null || b.unit === null) {
+    return a.amount === null && a.unit === null && b.amount === null && b.unit === null;
+  }
+  return canonicalDurationAmount(a.amount, a.unit) === canonicalDurationAmount(b.amount, b.unit);
+}

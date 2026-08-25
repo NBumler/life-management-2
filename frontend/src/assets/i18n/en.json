@@ -271,5 +271,59 @@
       ],
       "WEEKDAY_NAMES": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
     }
+  },
+  "SHARED": {
+    "QUANTITY_INPUT": {
+      "HELP_TITLE": "How to enter this",
+      "HELP_QUANTITY": "Type a number and a unit, the space is optional. Example: 120dkg, 3 db, 2l, 5cl.",
+      "HELP_DURATION": "Type a number and a time unit. Example: 14nap, 2 hét, 3hó.",
+      "ERROR_QUANTITY": "Unrecognized amount or unit.",
+      "ERROR_DURATION": "Unrecognized amount or time unit."
+    }
+  },
+  "FOOD": {
+    "CATALOG": {
+      "TITLE": "Catalog",
+      "SEARCH_PLACEHOLDER": "Search",
+      "ADD": "New food",
+      "EMPTY": "No foods yet.",
+      "NO_RESULTS": "No results.",
+      "DELETE_CONFIRM_TITLE": "Delete food",
+      "DELETE_CONFIRM_MESSAGE": "Are you sure you want to delete \"{{name}}\"? This is a shared catalog item — deleting it may also affect other users' storage, recipes, shopping lists, and meals referencing it.",
+      "DELETE_CONFIRM_MESSAGE_WITH_REFS": "Are you sure you want to delete \"{{name}}\"? This is a shared catalog item, and other data still references it: {{refs}}. Deleting it will also delete those, for every user."
+    },
+    "FORM": {
+      "ADD_TITLE": "New food",
+      "EDIT_TITLE": "Edit food",
+      "NAME_LABEL": "Product",
+      "STORE_LABEL": "Store",
+      "BRAND_LABEL": "Brand",
+      "BARCODE_LABEL": "Barcode (EAN)",
+      "BARCODE_SYNC": "Refresh from Open Food Facts",
+      "NOTE_LABEL": "Other",
+      "PRICE_LABEL": "Price (HUF / package)",
+      "NET_AMOUNT_LABEL": "Net content per package",
+      "SECTION_NUTRIENTS": "Nutrition (per 100 g / 100 ml)",
+      "SECTION_SHELF_LIFE": "Shelf life",
+      "NUTRIENT_ENERGY": "Energy (kcal)",
+      "NUTRIENT_FAT": "Fat (g)",
+      "NUTRIENT_FAT_SATURATED": "Fat — saturated (g)",
+      "NUTRIENT_FAT_UNSATURATED": "Fat — unsaturated (g)",
+      "NUTRIENT_FAT_TRANS": "Fat — trans (g)",
+      "NUTRIENT_CARBS": "Carbs (g)",
+      "NUTRIENT_CARBS_SUGARS": "Carbs — sugars (g)",
+      "NUTRIENT_CARBS_COMPLEX": "Carbs — complex (g)",
+      "NUTRIENT_CARBS_FIBER": "Carbs — complex — fiber (g)",
+      "NUTRIENT_PROTEIN": "Protein (g)",
+      "NUTRIENT_SALT": "Salt (g)",
+      "NUTRIENT_SODIUM": "Sodium (g)",
+      "NUTRIENT_CHLORIDE": "Chloride (g)",
+      "SHELF_ROOM_LABEL": "Room temperature (pantry)",
+      "SHELF_FRIDGE_LABEL": "Fridge",
+      "SHELF_FREEZER_LABEL": "Freezer",
+      "SHELF_AFTER_OPENING_LABEL": "After opening",
+      "NAME_REQUIRED_ERROR": "Product name is required.",
+      "DUPLICATE_ERROR": "An identical food already exists in the catalog."
+    }
   }
 }

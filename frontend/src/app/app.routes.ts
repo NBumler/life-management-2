@@ -105,6 +105,24 @@ export const routes: Routes = [
           },
         ],
       },
+      {
+        // documentation/Features/Kaja.md: the tab's real root is the Étkezés|Tárolás|Katalógus|Recept|Stat
+        // segmented hub, not built yet (`tab.kaja` stays off until that full core segment set exists —
+        // see Frontend.md's flag registry). Until then this redirect makes the one segment that does
+        // exist (Katalógus) reachable by direct URL for manual testing.
+        path: 'food',
+        children: [
+          { path: '', redirectTo: 'catalog', pathMatch: 'full' },
+          {
+            path: 'catalog',
+            children: [
+              { path: '', loadComponent: () => import('./pages/food/catalog/food-list.page').then((m) => m.FoodListPage) },
+              { path: 'new', loadComponent: () => import('./pages/food/catalog/food-edit.page').then((m) => m.FoodEditPage) },
+              { path: ':id', loadComponent: () => import('./pages/food/catalog/food-edit.page').then((m) => m.FoodEditPage) },
+            ],
+          },
+        ],
+      },
       // documentation/Architektúra/Frontend.md "Login utáni default tab": Menü is the only enabled
       // tab until a feature flag turns Kaja/Edzés/Feladatok on.
       { path: '', redirectTo: 'menu', pathMatch: 'full' },
