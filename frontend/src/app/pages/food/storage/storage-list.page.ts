@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal, viewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import {
   AlertController,
@@ -16,6 +16,7 @@ import {
   IonSegment,
   IonSegmentButton,
   IonToolbar,
+  ViewWillEnter,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
@@ -60,7 +61,9 @@ interface StorageRow {
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class StorageListPage implements OnInit {
+export class StorageListPage implements OnInit, ViewWillEnter {
+  private readonly segment = viewChild.required<IonSegment>('sectionSegment');
+
   private readonly repository = inject(StoredFoodRepository);
   private readonly foodRepository = inject(FoodRepository);
   private readonly alertController = inject(AlertController);
@@ -85,6 +88,16 @@ export class StorageListPage implements OnInit {
 
   async ngOnInit(): Promise<void> {
     await Promise.all([this.repository.load(), this.foodRepository.load()]);
+  }
+
+  /**
+   * Ionic's router outlet keeps this page's DOM (and its ion-segment) alive across visits instead
+   * of recreating it, so the segment's `value="storage"` template attribute only applies once, on
+   * first creation — re-entering after clicking away to Katalógus leaves it showing "Katalógus" as
+   * checked. ionViewWillEnter fires on every (re-)entry, unlike ngOnInit, so re-assert it here.
+   */
+  ionViewWillEnter(): void {
+    this.segment().value = 'storage';
   }
 
   isSpoiled(item: StoredFood): boolean {
