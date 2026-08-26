@@ -42,7 +42,7 @@ On Windows use `gradlew.bat`. `bootRun` auto-loads secrets from the repo-root `.
 docker-compose reads) if not already set in the environment; `test` does not — Testcontainers
 provisions its own Postgres.
 
-Frontend (`frontend/`, Angular 22 / Ionic 8 / Capacitor 8):
+Frontend (`frontend/`, Angular 20 / Ionic 8 / Capacitor 8):
 ```
 cd frontend && npm start                     # ng serve; /api proxied to :8080 via proxy.conf.json
 cd frontend && npm run build
@@ -143,6 +143,22 @@ and 20 acceptance criteria: [`Backend-offline first.md`](documentation/Architekt
   30 days — needed because the atomic multi-entity endpoints (e.g.
   `POST /api/shopping-lists/{id}/complete`) are not naturally idempotent the way plain CRUD upsert is.
 - Admin API (`/api/admin/**`) is gated by `X-Admin-Api-Key`, not a JWT role.
+- **Nested aggregate PUT pattern** (parent + child rows saved atomically as one tree): first used for
+  `PackingTemplate`+`PackingTemplateItem` (`gear/PackingTemplateService.saveTree`), reused for
+  `Recipe`+`RecipeIngredient` (`food/RecipeService.saveTree`). It's not delete-then-reinsert or a diff
+  algorithm — the incoming child list is treated as the complete desired live set; each child is
+  resolved by id via the shared `common/NestedChildResolver` (create/undelete/error), any existing live
+  child missing from the incoming list is soft-deleted, and parent+children commit together in one
+  `@Transactional` method whose response echoes every row (live or tombstoned). Frontend mirror:
+  `core/storage/sqlite-storage-backend.ts` (`saveRecipe()` and the packing-template equivalent) does the
+  same id-diff locally, committing parent+children+outbox-enqueue in one `executeTransaction`. Reuse
+  this pattern for any future parent/children-as-one-unit endpoint rather than inventing a new one.
+- **Shared/global (non-user-owned) entities**: `Food`, `Recipe`, `RecipeIngredient`
+  (`hu.bumler.lm2.food`) are the first tables with no `user_id` column — every authenticated user sees
+  and can edit every live row (see `V12__food.sql`). `GET /api/sync/changes` handles this generically
+  via `WHERE (user_id = ? OR user_id IS NULL)` in `common/sync/SyncChangesRepository`, so a global row
+  syncs identically to every device. Default new entities to **user-owned** (`user_id` column) unless
+  the spec explicitly calls for a shared catalog like this one.
 
 ### Frontend (`frontend/src/app/`)
 
@@ -172,6 +188,11 @@ Layering (`pages/`, `shared/`, `core/`, `api/`):
 - **Tab registry, not hardcoded tabs**: 4 bottom tabs (Kaja/food, Edzés/workout, Feladatok/tasks, Menü),
   built from a feature-flagged config. Disabling a flag removes its tab/segment/route (guarded), never
   leaves a disabled-looking button. Full route map and flag registry: Frontend.md.
+- **Local SQLite schema versioning**: `core/storage/local-database.service.ts` defines numbered
+  `SCHEMA_Vn_STATEMENTS` arrays (a `SCHEMA_VERSION` constant tracks the current one) fed to
+  `@capacitor-community/sqlite`'s built-in versioned-upgrade mechanism, which replays only the delta
+  between a device's stored version and the target — the on-device analogue of Flyway. Same rule as
+  Flyway migrations: never edit a past `SCHEMA_Vn` block, only append a new one.
 - Every screen/entity spec documents its offline behavior per the vault's shared template — see
   "Documentation specs" below.
 
