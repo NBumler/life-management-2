@@ -58,7 +58,6 @@ import {
   packingTemplateTombstoneTask,
   profileServerApplyTask,
   profileTombstoneTask,
-  storedFoodLocalRemoveTask,
   storedFoodServerApplyTask,
   storedFoodTombstoneTask,
   weightHistoryServerApplyTask,
@@ -545,7 +544,7 @@ export class SyncEngineService {
       const storedFoodRows = await this.db.query<{ id: string }>('SELECT id FROM stored_food WHERE food_id = ?', [item.targetEntityId]);
       await this.db.executeTransaction([
         foodTombstoneTask(item.targetEntityId, null, now),
-        ...storedFoodRows.map((row) => storedFoodLocalRemoveTask(row.id)),
+        ...storedFoodRows.map((row) => storedFoodTombstoneTask(row.id, null, now)),
       ]);
     } else if (item.entityType === 'StoredFood') {
       await this.db.executeTransaction([storedFoodTombstoneTask(item.targetEntityId, null, now)]);
@@ -665,7 +664,7 @@ export class SyncEngineService {
       return [
         foodTombstoneTask(change.id, null, change.updatedAt),
         discardPendingWritesTask(change.id),
-        ...storedFoodRows.map((row) => storedFoodLocalRemoveTask(row.id)),
+        ...storedFoodRows.map((row) => storedFoodTombstoneTask(row.id, null, change.updatedAt)),
       ];
     }
     if (change.entityType === 'StoredFood') {

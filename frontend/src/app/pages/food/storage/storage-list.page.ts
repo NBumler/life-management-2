@@ -68,7 +68,6 @@ export class StorageListPage implements OnInit {
   private readonly router = inject(Router);
 
   readonly StorageLocationEnum = StoredFood.StorageLocationEnum;
-  readonly today = today();
   readonly query = signal('');
   readonly locationFilter = signal<LocationFilter>('ALL');
 
@@ -89,7 +88,7 @@ export class StorageListPage implements OnInit {
   }
 
   isSpoiled(item: StoredFood): boolean {
-    return item.expiresOn < this.today;
+    return item.expiresOn < today();
   }
 
   subtitle(row: StorageRow): string {
@@ -99,7 +98,7 @@ export class StorageListPage implements OnInit {
   /** documentation/Subfeatures/Élelmiszer tárolás.md "Felbontás": new expiry = min(today + after-opening duration, previous expiry). */
   async open(row: StorageRow): Promise<void> {
     const duration = afterOpeningDuration(row.food);
-    const expiresOn = computeOpenedExpiry(row.item.expiresOn, this.today, duration);
+    const expiresOn = computeOpenedExpiry(row.item.expiresOn, today(), duration);
     await this.repository.save({ ...row.item, opened: true, openedAt: new Date().toISOString(), expiresOn });
   }
 

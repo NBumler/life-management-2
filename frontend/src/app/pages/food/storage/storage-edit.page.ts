@@ -115,19 +115,23 @@ export class StorageEditPage implements OnInit {
     await Promise.all([this.repository.load(), this.foodRepository.load()]);
     const idParam = this.route.snapshot.paramMap.get('id');
     if (idParam !== null && idParam !== 'new') {
-      this.itemId.set(idParam);
       const existing = this.repository.items().find((item) => item.id === idParam);
-      if (existing !== undefined) {
-        this.selectedFood.set(this.foodRepository.items().find((food) => food.id === existing.foodId) ?? null);
-        this.form.reset(
-          {
-            quantity: { amount: existing.quantityAmount, unit: existing.quantityUnit as QuantityUnit },
-            storageLocation: existing.storageLocation,
-            expiresOn: existing.expiresOn,
-          },
-          { emitEvent: false },
-        );
+      if (existing === undefined) {
+        // Deleted (or otherwise gone) item — a stale deep-link/back-navigation must not fall through
+        // to the food-picker flow, since Save would then PUT against the dead row (409 ENTITY_DELETED).
+        await this.router.navigateByUrl('/tabs/food/storage');
+        return;
       }
+      this.itemId.set(idParam);
+      this.selectedFood.set(this.foodRepository.items().find((food) => food.id === existing.foodId) ?? null);
+      this.form.reset(
+        {
+          quantity: { amount: existing.quantityAmount, unit: existing.quantityUnit as QuantityUnit },
+          storageLocation: existing.storageLocation,
+          expiresOn: existing.expiresOn,
+        },
+        { emitEvent: false },
+      );
     }
   }
 
