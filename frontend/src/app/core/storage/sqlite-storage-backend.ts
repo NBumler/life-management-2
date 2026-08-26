@@ -11,6 +11,7 @@ import { PackingSessionDetail } from '../../api/model/packingSessionDetail';
 import { PackingSessionItem } from '../../api/model/packingSessionItem';
 import { PackingTemplate } from '../../api/model/packingTemplate';
 import { PackingTemplateDetail } from '../../api/model/packingTemplateDetail';
+import { Recipe } from '../../api/model/recipe';
 import { StoredFood } from '../../api/model/storedFood';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
@@ -26,6 +27,8 @@ import {
   PackingTemplateItemRow,
   PackingTemplateRow,
   ProfileRow,
+  RecipeIngredientRow,
+  RecipeRow,
   StoredFoodRow,
   WeightHistoryRow,
   calendarEventLocalWriteTask,
@@ -53,6 +56,11 @@ import {
   packingTemplateRowToDto,
   profileLocalWriteTask,
   profileRowToDto,
+  recipeIngredientLocalRemoveTask,
+  recipeIngredientLocalWriteTask,
+  recipeIngredientRowToDto,
+  recipeLocalWriteTask,
+  recipeRowToDto,
   storedFoodLocalRemoveTask,
   storedFoodLocalWriteTask,
   storedFoodRowToDto,
@@ -63,7 +71,7 @@ import { AuthSessionService } from '../session/auth-session.service';
 import { OfflineQueueService } from '../sync/offline-queue.service';
 import { uuidV4 } from '../sync/uuid';
 import { LocalDatabaseService, SqlTask } from './local-database.service';
-import { GearItemReferenceCounts, PackingSessionStartDraft, PackingTemplateDraft, StorageBackend } from './storage-backend';
+import { GearItemReferenceCounts, PackingSessionStartDraft, PackingTemplateDraft, RecipeDraft, StorageBackend } from './storage-backend';
 
 /** Native (offlineCapable = true): local-first — every write lands in SQLite + the outbox in one transaction (§5). */
 @Injectable({ providedIn: 'root' })
@@ -777,7 +785,14 @@ export class SqliteStorageBackend implements StorageBackend {
       'SELECT id FROM stored_food WHERE food_id = ? AND deleted = 0',
       [id],
     );
-    const cascadeTasks = cascadeStoredFoodRows.map((row) => storedFoodLocalRemoveTask(row.id));
+    const cascadeRecipeIngredientRows = await this.db.query<{ id: string }>(
+      'SELECT id FROM recipe_ingredient WHERE food_id = ? AND deleted = 0',
+      [id],
+    );
+    const cascadeTasks = [
+      ...cascadeStoredFoodRows.map((row) => storedFoodLocalRemoveTask(row.id)),
+      ...cascadeRecipeIngredientRows.map((row) => recipeIngredientLocalRemoveTask(row.id)),
+    ];
     await this.db.executeTransaction([entityTask, ...cascadeTasks, ...enqueue.outboxTasks]);
     await this.offlineQueue.refreshCounts(userId);
     if (enqueue.hardRemoveLocalEntity) {
@@ -845,6 +860,132 @@ export class SqliteStorageBackend implements StorageBackend {
   private async readStoredFood(id: string): Promise<StoredFood> {
     const rows = await this.db.query<StoredFoodRow>('SELECT * FROM stored_food WHERE id = ?', [id]);
     return storedFoodRowToDto(rows[0]);
+  }
+
+  async listRecipes(): Promise<Recipe[]> {
+    const recipeRows = await this.db.query<RecipeRow>('SELECT * FROM recipe WHERE deleted = 0 ORDER BY name COLLATE NOCASE');
+    const ingredientRows = await this.db.query<RecipeIngredientRow>('SELECT * FROM recipe_ingredient WHERE deleted = 0 ORDER BY sort_order');
+    const ingredientsByRecipe = new Map<string, Recipe['ingredients']>();
+    for (const row of ingredientRows) {
+      const dto = recipeIngredientRowToDto(row);
+      const list = ingredientsByRecipe.get(dto.recipeId) ?? [];
+      list.push(dto);
+      ingredientsByRecipe.set(dto.recipeId, list);
+    }
+    return recipeRows.map((row) => ({ ...recipeRowToDto(row), ingredients: ingredientsByRecipe.get(row.id) ?? [] }));
+  }
+
+  getRecipe(id: string): Promise<Recipe> {
+    return this.readRecipe(id);
+  }
+
+  /** documentation/Architektúra/Backend.md "Nested aggregate PUT": recipe + ingredients in one local transaction and one outbox entry. */
+  async saveRecipe(draft: RecipeDraft): Promise<Recipe> {
+    const userId = this.requireUserId();
+    const existingRecipeRows = await this.db.query('SELECT 1 FROM recipe WHERE id = ?', [draft.id]);
+    const isNew = existingRecipeRows.length === 0;
+
+    const existingIngredientRows = await this.db.query<RecipeIngredientRow>(
+      'SELECT * FROM recipe_ingredient WHERE recipe_id = ?',
+      [draft.id],
+    );
+    const incomingIds = new Set(draft.ingredients.map((ingredient) => ingredient.id));
+
+    const localTasks: SqlTask[] = [recipeLocalWriteTask({ id: draft.id, name: draft.name, note: draft.note })];
+    for (const ingredient of draft.ingredients) {
+      localTasks.push(
+        recipeIngredientLocalWriteTask({
+          id: ingredient.id,
+          recipeId: draft.id,
+          foodId: ingredient.foodId,
+          quantityAmount: ingredient.quantityAmount,
+          quantityUnit: ingredient.quantityUnit,
+          sortOrder: ingredient.sortOrder,
+        }),
+      );
+    }
+    for (const existing of existingIngredientRows) {
+      if (existing.deleted === 0 && !incomingIds.has(existing.id)) {
+        localTasks.push(recipeIngredientLocalRemoveTask(existing.id));
+      }
+    }
+
+    // documentation/Architektúra/Backend-offline first.md §10 "Függőségi láncok": a new ingredient
+    // referencing a Food created in the same offline session must wait for that Food's own POST first.
+    const dependsOn = await this.findLocalOnlyIds('food', draft.ingredients.map((ingredient) => ingredient.foodId));
+    const payload: Recipe = {
+      id: draft.id,
+      name: draft.name,
+      note: draft.note,
+      deleted: false,
+      ingredients: draft.ingredients.map((ingredient) => ({
+        id: ingredient.id,
+        recipeId: draft.id,
+        foodId: ingredient.foodId,
+        quantityAmount: ingredient.quantityAmount,
+        quantityUnit: ingredient.quantityUnit,
+        sortOrder: ingredient.sortOrder,
+        deleted: false,
+      })),
+    };
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: isNew ? 'POST' : 'PUT',
+      url: isNew ? '/api/recipes' : `/api/recipes/${draft.id}`,
+      payload,
+      entityType: 'Recipe',
+      targetEntityId: draft.id,
+      dependsOn,
+    });
+    await this.db.executeTransaction([...localTasks, ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    return this.readRecipe(draft.id);
+  }
+
+  async deleteRecipe(id: string): Promise<Recipe> {
+    const userId = this.requireUserId();
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: 'DELETE',
+      url: `/api/recipes/${id}`,
+      payload: null,
+      entityType: 'Recipe',
+      targetEntityId: id,
+    });
+    const liveIngredientRows = await this.db.query<{ id: string }>(
+      'SELECT id FROM recipe_ingredient WHERE recipe_id = ? AND deleted = 0',
+      [id],
+    );
+    const tasks: SqlTask[] = [];
+    if (enqueue.hardRemoveLocalEntity) {
+      tasks.push({ statement: 'DELETE FROM recipe WHERE id = ?', values: [id] });
+      for (const row of liveIngredientRows) {
+        tasks.push({ statement: 'DELETE FROM recipe_ingredient WHERE id = ?', values: [row.id] });
+      }
+    } else {
+      tasks.push({
+        statement: 'UPDATE recipe SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?',
+        values: [new Date().toISOString(), id],
+      });
+      for (const row of liveIngredientRows) {
+        tasks.push(recipeIngredientLocalRemoveTask(row.id));
+      }
+    }
+    await this.db.executeTransaction([...tasks, ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    if (enqueue.hardRemoveLocalEntity) {
+      return { id, name: '', deleted: true, ingredients: [] };
+    }
+    return this.readRecipe(id);
+  }
+
+  private async readRecipe(id: string): Promise<Recipe> {
+    const recipeRows = await this.db.query<RecipeRow>('SELECT * FROM recipe WHERE id = ?', [id]);
+    const ingredientRows = await this.db.query<RecipeIngredientRow>(
+      'SELECT * FROM recipe_ingredient WHERE recipe_id = ? AND deleted = 0 ORDER BY sort_order',
+      [id],
+    );
+    return { ...recipeRowToDto(recipeRows[0]), ingredients: ingredientRows.map(recipeIngredientRowToDto) };
   }
 
   private requireUserId(): string {

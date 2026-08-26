@@ -1,0 +1,41 @@
+type: object
+description: documentation/Subfeatures/Recept.md — a Food reference inside a Recipe, own sync entity.
+required:
+  - id
+  - recipeId
+  - foodId
+  - quantityAmount
+  - quantityUnit
+  - sortOrder
+  - deleted
+properties:
+  id:
+    type: string
+    format: uuid
+  recipeId:
+    type: string
+    format: uuid
+  foodId:
+    type: string
+    format: uuid
+  quantityAmount:
+    type: number
+  quantityUnit:
+    type: string
+  sortOrder:
+    type: integer
+  deleted:
+    type: boolean
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

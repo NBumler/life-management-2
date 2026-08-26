@@ -48,6 +48,11 @@ public class GlobalExceptionHandler {
 	// idx_household_room_user_id_name_normalized / idx_household_task_room_id_name_normalized
 	// (V10 migration): same Névegyediség pattern — room name unique per user, task name unique per
 	// room (not per user) — pre-checked in HouseholdRoomService / HouseholdTaskService.applyName.
+	// idx_recipe_name_normalized (V14 migration): recipe name is, unlike Food, a real global
+	// Névegyediség scope on its own — pre-checked in RecipeService.applyName.
+	// idx_recipe_ingredient_recipe_food (V14 migration): "ugyanaz az élelmiszer kétszer... tiltott"
+	// within one recipe — enforced purely at the DB level (no app-level pre-check), same reasoning
+	// as idx_packing_template_item_template_gear above.
 	private static final Map<String, String> UNIQUE_INDEX_TO_FIELD = Map.ofEntries(
 			Map.entry("idx_users_username", "username"),
 			Map.entry("idx_user_profile_user_id", "userId"),
@@ -56,7 +61,9 @@ public class GlobalExceptionHandler {
 			Map.entry("idx_packing_template_item_template_gear", "gearItemId"),
 			Map.entry("idx_packing_session_item_session_gear", "gearItemId"),
 			Map.entry("idx_household_room_user_id_name_normalized", "name"),
-			Map.entry("idx_household_task_room_id_name_normalized", "name"));
+			Map.entry("idx_household_task_room_id_name_normalized", "name"),
+			Map.entry("idx_recipe_name_normalized", "name"),
+			Map.entry("idx_recipe_ingredient_recipe_food", "foodId"));
 
 	@ExceptionHandler(DataIntegrityViolationException.class)
 	ResponseEntity<ApiError> handleUniqueConstraint(DataIntegrityViolationException ex) {

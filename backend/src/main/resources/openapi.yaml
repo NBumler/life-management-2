@@ -65,6 +65,10 @@ paths:
     $ref: 'openapi/paths/stored-foods.yaml'
   /api/stored-foods/{id}:
     $ref: 'openapi/paths/stored-foods-item.yaml'
+  /api/recipes:
+    $ref: 'openapi/paths/recipes.yaml'
+  /api/recipes/{id}:
+    $ref: 'openapi/paths/recipes-item.yaml'
 components:
   securitySchemes:
     bearerAuth:
@@ -146,3 +150,9 @@ components:
       $ref: 'openapi/components/schemas/StoredFood.yaml'
     StoredFoodList:
       $ref: 'openapi/components/schemas/StoredFoodList.yaml'
+    Recipe:
+      $ref: 'openapi/components/schemas/Recipe.yaml'
+    RecipeList:
+      $ref: 'openapi/components/schemas/RecipeList.yaml'
+    RecipeIngredient:
+      $ref: 'openapi/components/schemas/RecipeIngredient.yaml'

@@ -11,6 +11,7 @@ import { PackingSessionDetail } from '../../api/model/packingSessionDetail';
 import { PackingSessionItem } from '../../api/model/packingSessionItem';
 import { PackingTemplate } from '../../api/model/packingTemplate';
 import { PackingTemplateDetail } from '../../api/model/packingTemplateDetail';
+import { Recipe } from '../../api/model/recipe';
 import { StoredFood } from '../../api/model/storedFood';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
@@ -46,6 +47,22 @@ export interface PackingSessionStartDraft {
   destination: string | null;
   sourceTemplateIds: string[];
   items: PackingSessionStartItem[];
+}
+
+/** documentation/Subfeatures/Recept.md: the desired live ingredient list for a recipe save — id is client-generated for a new ingredient, reused for a kept one. */
+export interface RecipeIngredientSaveItem {
+  id: string;
+  foodId: string;
+  quantityAmount: number;
+  quantityUnit: string;
+  sortOrder: number;
+}
+
+export interface RecipeDraft {
+  id: string;
+  name: string;
+  note: string | null;
+  ingredients: RecipeIngredientSaveItem[];
 }
 
 /**
@@ -118,6 +135,14 @@ export interface StorageBackend {
   listStoredFoods(): Promise<StoredFood[]>;
   upsertStoredFood(item: StoredFood): Promise<StoredFood>;
   deleteStoredFood(id: string): Promise<StoredFood>;
+
+  /** documentation/Subfeatures/Recept.md: shared/global catalog — not scoped by user. Every row (incl. list entries) embeds its full live+tombstoned ingredient set. */
+  listRecipes(): Promise<Recipe[]>;
+  getRecipe(id: string): Promise<Recipe>;
+  /** documentation/Architektúra/Backend.md "Nested aggregate PUT": recipe + ingredients saved as one outbox entry. */
+  saveRecipe(draft: RecipeDraft): Promise<Recipe>;
+  /** documentation/Subfeatures/Recept.md "CRUD / törlés": cascades to every live ingredient on this recipe. */
+  deleteRecipe(id: string): Promise<Recipe>;
 }
 
 export const STORAGE_BACKEND = new InjectionToken<StorageBackend>('STORAGE_BACKEND');

@@ -16,6 +16,7 @@ import { PackingSessionItemsService } from '../../api/api/packingSessionItems.se
 import { PackingSessionsService } from '../../api/api/packingSessions.service';
 import { PackingTemplatesService } from '../../api/api/packingTemplates.service';
 import { ProfileService } from '../../api/api/profile.service';
+import { RecipesService } from '../../api/api/recipes.service';
 import { StoredFoodsService } from '../../api/api/storedFoods.service';
 import { SyncService } from '../../api/api/sync.service';
 import { ApiError } from '../../api/model/apiError';
@@ -31,6 +32,8 @@ import { PackingSessionItem } from '../../api/model/packingSessionItem';
 import { PackingTemplate } from '../../api/model/packingTemplate';
 import { PackingTemplateDetail } from '../../api/model/packingTemplateDetail';
 import { PackingTemplateItem } from '../../api/model/packingTemplateItem';
+import { Recipe } from '../../api/model/recipe';
+import { RecipeIngredient } from '../../api/model/recipeIngredient';
 import { StoredFood } from '../../api/model/storedFood';
 import { SyncChangeItem } from '../../api/model/syncChangeItem';
 import { UserProfile } from '../../api/model/userProfile';
@@ -58,6 +61,10 @@ import {
   packingTemplateTombstoneTask,
   profileServerApplyTask,
   profileTombstoneTask,
+  recipeIngredientServerApplyTask,
+  recipeIngredientTombstoneTask,
+  recipeServerApplyTask,
+  recipeTombstoneTask,
   storedFoodServerApplyTask,
   storedFoodTombstoneTask,
   weightHistoryServerApplyTask,
@@ -96,6 +103,7 @@ export class SyncEngineService {
   private readonly eventsApi = inject(EventsService);
   private readonly foodsApi = inject(FoodsService);
   private readonly storedFoodsApi = inject(StoredFoodsService);
+  private readonly recipesApi = inject(RecipesService);
   private readonly syncApi = inject(SyncService);
   private readonly authSession = inject(AuthSessionService);
   private readonly offlineQueue = inject(OfflineQueueService);
@@ -311,6 +319,16 @@ export class SyncEngineService {
         // same as above
       }
     }
+
+    const staleRecipes = await this.db.query<{ id: string }>('SELECT id FROM recipe WHERE _needs_refetch = 1');
+    for (const row of staleRecipes) {
+      try {
+        const dto = await firstValueFrom(this.recipesApi.getRecipe(row.id));
+        await this.db.executeTransaction(this.recipeApplyTasks(dto));
+      } catch {
+        // same as above
+      }
+    }
   }
 
   private async probeBackend(): Promise<boolean> {
@@ -473,6 +491,9 @@ export class SyncEngineService {
     if (item.entityType === 'StoredFood') {
       return [storedFoodServerApplyTask(body as StoredFood)];
     }
+    if (item.entityType === 'Recipe') {
+      return this.recipeApplyTasks(body as Recipe);
+    }
     throw new Error(`SyncEngine: no local writer for entityType "${item.entityType}"`);
   }
 
@@ -500,6 +521,18 @@ export class SyncEngineService {
       tasks.push(...dto.items.map((item: PackingSessionItem) => packingSessionItemServerApplyTask(item)));
     }
     return tasks;
+  }
+
+  /**
+   * documentation/Architektúra/Backend.md "Nested aggregate PUT": the response lists every
+   * ingredient row (live or tombstoned — Recipe.yaml), which this applies as authoritative so each
+   * one's local `_dirty`/`_local_only` flags clear too — ingredients never get their own outbox
+   * entry, so nothing else would ever clear them (§8's `_dirty=1` apply rule otherwise keeps the
+   * pending value forever). The subsequent mandatory post-drain pull (§6 point 9) still
+   * independently confirms every row and catches anything this device didn't know about.
+   */
+  private recipeApplyTasks(dto: Recipe): SqlTask[] {
+    return [recipeServerApplyTask(dto), ...dto.ingredients.map((ingredient: RecipeIngredient) => recipeIngredientServerApplyTask(ingredient))];
   }
 
   private async applyTombstone(item: OutboxItem): Promise<void> {
@@ -540,14 +573,23 @@ export class SyncEngineService {
     } else if (item.entityType === 'CalendarEvent') {
       await this.db.executeTransaction([calendarEventTombstoneTask(item.targetEntityId, null, now)]);
     } else if (item.entityType === 'Food') {
-      // documentation/Subfeatures/Élelmiszer tárolás.md: Food delete cascades to its storage items locally too.
+      // documentation/Subfeatures/Élelmiszerek.md: Food delete cascades to its storage items and recipe ingredients locally too.
       const storedFoodRows = await this.db.query<{ id: string }>('SELECT id FROM stored_food WHERE food_id = ?', [item.targetEntityId]);
+      const recipeIngredientRows = await this.db.query<{ id: string }>('SELECT id FROM recipe_ingredient WHERE food_id = ?', [item.targetEntityId]);
       await this.db.executeTransaction([
         foodTombstoneTask(item.targetEntityId, null, now),
         ...storedFoodRows.map((row) => storedFoodTombstoneTask(row.id, null, now)),
+        ...recipeIngredientRows.map((row) => recipeIngredientTombstoneTask(row.id, null, now)),
       ]);
     } else if (item.entityType === 'StoredFood') {
       await this.db.executeTransaction([storedFoodTombstoneTask(item.targetEntityId, null, now)]);
+    } else if (item.entityType === 'Recipe') {
+      // documentation/Subfeatures/Recept.md: recipe delete cascades to its own ingredients locally too.
+      const ingredientRows = await this.db.query<{ id: string }>('SELECT id FROM recipe_ingredient WHERE recipe_id = ?', [item.targetEntityId]);
+      await this.db.executeTransaction([
+        recipeTombstoneTask(item.targetEntityId, null, now),
+        ...ingredientRows.map((row) => recipeIngredientTombstoneTask(row.id, null, now)),
+      ]);
     }
   }
 
@@ -659,12 +701,14 @@ export class SyncEngineService {
       if (!change.deleted) {
         return [foodServerApplyTask(change.data as Food)];
       }
-      // documentation/Subfeatures/Élelmiszer tárolás.md: Food delete cascades to this device's own storage items too.
+      // documentation/Subfeatures/Élelmiszerek.md: Food delete cascades to this device's own storage items and recipe ingredients too.
       const storedFoodRows = await this.db.query<{ id: string }>('SELECT id FROM stored_food WHERE food_id = ?', [change.id]);
+      const recipeIngredientRows = await this.db.query<{ id: string }>('SELECT id FROM recipe_ingredient WHERE food_id = ?', [change.id]);
       return [
         foodTombstoneTask(change.id, null, change.updatedAt),
         discardPendingWritesTask(change.id),
         ...storedFoodRows.map((row) => storedFoodTombstoneTask(row.id, null, change.updatedAt)),
+        ...recipeIngredientRows.map((row) => recipeIngredientTombstoneTask(row.id, null, change.updatedAt)),
       ];
     }
     if (change.entityType === 'StoredFood') {
@@ -672,6 +716,24 @@ export class SyncEngineService {
         return [storedFoodServerApplyTask(change.data as StoredFood)];
       }
       return [storedFoodTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
+    }
+    if (change.entityType === 'Recipe') {
+      if (!change.deleted) {
+        return [recipeServerApplyTask(change.data as Recipe)];
+      }
+      // documentation/Subfeatures/Recept.md: recipe delete cascades to this device's own ingredients too.
+      const ingredientRows = await this.db.query<{ id: string }>('SELECT id FROM recipe_ingredient WHERE recipe_id = ?', [change.id]);
+      return [
+        recipeTombstoneTask(change.id, null, change.updatedAt),
+        discardPendingWritesTask(change.id),
+        ...ingredientRows.map((row) => recipeIngredientTombstoneTask(row.id, null, change.updatedAt)),
+      ];
+    }
+    if (change.entityType === 'RecipeIngredient') {
+      if (!change.deleted) {
+        return [recipeIngredientServerApplyTask(change.data as RecipeIngredient)];
+      }
+      return [recipeIngredientTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
     }
     return [];
   }

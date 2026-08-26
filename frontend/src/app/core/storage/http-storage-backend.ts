@@ -11,6 +11,7 @@ import { PackingSessionItemsService } from '../../api/api/packingSessionItems.se
 import { PackingSessionsService } from '../../api/api/packingSessions.service';
 import { PackingTemplatesService } from '../../api/api/packingTemplates.service';
 import { ProfileService } from '../../api/api/profile.service';
+import { RecipesService } from '../../api/api/recipes.service';
 import { StoredFoodsService } from '../../api/api/storedFoods.service';
 import { CalendarEvent } from '../../api/model/calendarEvent';
 import { Food } from '../../api/model/food';
@@ -23,11 +24,12 @@ import { PackingSessionDetail } from '../../api/model/packingSessionDetail';
 import { PackingSessionItem } from '../../api/model/packingSessionItem';
 import { PackingTemplate } from '../../api/model/packingTemplate';
 import { PackingTemplateDetail } from '../../api/model/packingTemplateDetail';
+import { Recipe } from '../../api/model/recipe';
 import { StoredFood } from '../../api/model/storedFood';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 import { uuidV4 } from '../sync/uuid';
-import { GearItemReferenceCounts, PackingSessionStartDraft, PackingTemplateDraft, StorageBackend } from './storage-backend';
+import { GearItemReferenceCounts, PackingSessionStartDraft, PackingTemplateDraft, RecipeDraft, StorageBackend } from './storage-backend';
 
 /** Web (offlineCapable = false): every call is a direct HTTP round-trip, no local store, no outbox. */
 @Injectable({ providedIn: 'root' })
@@ -43,6 +45,7 @@ export class HttpStorageBackend implements StorageBackend {
   private readonly eventsApi = inject(EventsService);
   private readonly foodsApi = inject(FoodsService);
   private readonly storedFoodsApi = inject(StoredFoodsService);
+  private readonly recipesApi = inject(RecipesService);
 
   async getProfile(): Promise<UserProfile | null> {
     try {
@@ -243,6 +246,38 @@ export class HttpStorageBackend implements StorageBackend {
 
   deleteStoredFood(id: string): Promise<StoredFood> {
     return firstValueFrom(this.storedFoodsApi.deleteStoredFood(id));
+  }
+
+  listRecipes(): Promise<Recipe[]> {
+    return firstValueFrom(this.recipesApi.listRecipes());
+  }
+
+  getRecipe(id: string): Promise<Recipe> {
+    return firstValueFrom(this.recipesApi.getRecipe(id));
+  }
+
+  /** POST with an existing id is an idempotent upsert server-side, so this covers both create and update. */
+  saveRecipe(draft: RecipeDraft): Promise<Recipe> {
+    const dto: Recipe = {
+      id: draft.id,
+      name: draft.name,
+      note: draft.note,
+      deleted: false,
+      ingredients: draft.ingredients.map((ingredient) => ({
+        id: ingredient.id,
+        recipeId: draft.id,
+        foodId: ingredient.foodId,
+        quantityAmount: ingredient.quantityAmount,
+        quantityUnit: ingredient.quantityUnit,
+        sortOrder: ingredient.sortOrder,
+        deleted: false,
+      })),
+    };
+    return firstValueFrom(this.recipesApi.createRecipe(dto));
+  }
+
+  deleteRecipe(id: string): Promise<Recipe> {
+    return firstValueFrom(this.recipesApi.deleteRecipe(id));
   }
 }
 

@@ -1,0 +1,134 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/food/recipe"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ (recipeId() === null ? 'FOOD.RECIPE.ADD_TITLE' : 'FOOD.RECIPE.EDIT_TITLE') | translate }}</ion-title>
+    @if (recipeId() !== null) {
+      <ion-buttons slot="end">
+        <ion-button color="danger" (click)="delete()">{{ 'COMMON.DELETE' | translate }}</ion-button>
+      </ion-buttons>
+    }
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <form [formGroup]="form" id="recipe-form" (ngSubmit)="save()">
+    <ion-list>
+      <ion-item>
+        <ion-input formControlName="name" [label]="'FOOD.RECIPE.NAME_LABEL' | translate" labelPlacement="stacked"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-textarea formControlName="note" [label]="'FOOD.RECIPE.NOTE_LABEL' | translate" labelPlacement="stacked" autoGrow="true"></ion-textarea>
+      </ion-item>
+    </ion-list>
+  </form>
+
+  @if (duplicateError(); as message) {
+    <p class="ion-padding-start" style="color: var(--ion-color-danger)">{{ message }}</p>
+  }
+
+  <ion-list>
+    <ion-item lines="none">
+      <ion-label>
+        <h2>{{ 'FOOD.RECIPE.INGREDIENTS_LABEL' | translate }}</h2>
+      </ion-label>
+      <ion-button slot="end" fill="clear" (click)="togglePicker()">
+        {{ (pickerOpen() ? 'COMMON.CLOSE' : 'FOOD.RECIPE.ADD_INGREDIENT') | translate }}
+      </ion-button>
+    </ion-item>
+
+    @if (pickerOpen()) {
+      <ion-searchbar
+        [value]="pickerQuery()"
+        (ionInput)="pickerQuery.set($any($event.target).value ?? '')"
+        [placeholder]="'FOOD.RECIPE.PICKER_SEARCH_PLACEHOLDER' | translate"
+        [debounce]="200"
+      ></ion-searchbar>
+      @if (pickerResults().length === 0) {
+        <ion-item>
+          <ion-label color="medium">{{ 'FOOD.RECIPE.PICKER_EMPTY' | translate }}</ion-label>
+        </ion-item>
+      }
+      @for (food of pickerResults(); track food.id) {
+        <ion-item [disabled]="excludedFoodIds().includes(food.id)" (click)="toggleFoodPick(food)">
+          <ion-checkbox slot="start" [checked]="isPicked(food) || excludedFoodIds().includes(food.id)" [disabled]="excludedFoodIds().includes(food.id)"></ion-checkbox>
+          <ion-label>
+            <h3>{{ food.name }}</h3>
+            @if (food.brand) {
+              <p>{{ food.brand }}</p>
+            }
+          </ion-label>
+        </ion-item>
+      }
+      <ion-item lines="none">
+        <ion-button expand="block" class="ion-margin" (click)="confirmPicked()">{{ 'FOOD.RECIPE.PICKER_CONFIRM' | translate }}</ion-button>
+      </ion-item>
+    } @else if (ingredients().length === 0) {
+      <ion-item>
+        <ion-label color="medium">{{ 'FOOD.RECIPE.NO_INGREDIENTS' | translate }}</ion-label>
+      </ion-item>
+    } @else if (isNative) {
+      @for (row of ingredients(); track row.id; let i = $index) {
+        <ion-item>
+          <ion-label>
+            <h3>{{ foodOf(row)?.name ?? '—' }}</h3>
+            @if (showIngredientErrors() && row.quantity().amount === null) {
+              <p style="color: var(--ion-color-danger)">{{ 'FOOD.RECIPE.QUANTITY_REQUIRED' | translate }}</p>
+            }
+          </ion-label>
+          <app-quantity-input [formControl]="row.quantityControl" mode="quantity"></app-quantity-input>
+          <ion-button fill="clear" [disabled]="i === 0" (click)="moveUp(i)">
+            <ion-icon name="chevron-up-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+          </ion-button>
+          <ion-button fill="clear" [disabled]="i === ingredients().length - 1" (click)="moveDown(i)">
+            <ion-icon name="chevron-down-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+          </ion-button>
+          <ion-button fill="clear" color="danger" (click)="removeIngredient(row)">
+            <ion-icon name="close-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+          </ion-button>
+        </ion-item>
+      }
+    } @else {
+      <ion-reorder-group [disabled]="false" (ionItemReorder)="onIonReorder($event)">
+        @for (row of ingredients(); track row.id) {
+          <ion-item>
+            <ion-label>
+              <h3>{{ foodOf(row)?.name ?? '—' }}</h3>
+              @if (showIngredientErrors() && row.quantity().amount === null) {
+                <p style="color: var(--ion-color-danger)">{{ 'FOOD.RECIPE.QUANTITY_REQUIRED' | translate }}</p>
+              }
+            </ion-label>
+            <app-quantity-input [formControl]="row.quantityControl" mode="quantity"></app-quantity-input>
+            <ion-button fill="clear" color="danger" (click)="removeIngredient(row)">
+              <ion-icon name="close-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+            </ion-button>
+            <ion-reorder slot="end"></ion-reorder>
+          </ion-item>
+        }
+      </ion-reorder-group>
+    }
+  </ion-list>
+
+  <ion-list>
+    <ion-item lines="none">
+      <ion-label>
+        <h2>{{ 'FOOD.RECIPE.SUMMARY_LABEL' | translate }}</h2>
+        <p>{{ 'FOOD.RECIPE.SUMMARY_PRICE' | translate: { price: summaryDisplay().priceHuf } }}</p>
+        <p>{{ 'FOOD.RECIPE.SUMMARY_ENERGY' | translate: { kcal: summaryDisplay().energyKcal } }}</p>
+        <p>{{ 'FOOD.RECIPE.SUMMARY_PROTEIN' | translate: { protein: summaryDisplay().proteinG } }}</p>
+        <p>{{ 'FOOD.RECIPE.SUMMARY_CARBS' | translate: { carbs: summaryDisplay().carbsG } }}</p>
+        <p>{{ 'FOOD.RECIPE.SUMMARY_FAT' | translate: { fat: summaryDisplay().fatG } }}</p>
+        @if (summaryDisplay().incomplete) {
+          <p style="color: var(--ion-color-warning)">{{ 'FOOD.RECIPE.SUMMARY_INCOMPLETE' | translate }}</p>
+        }
+      </ion-label>
+    </ion-item>
+  </ion-list>
+</ion-content>
+
+<ion-footer>
+  <ion-toolbar>
+    <ion-button expand="block" type="submit" form="recipe-form" class="ion-margin">{{ 'COMMON.SAVE' | translate }}</ion-button>
+  </ion-toolbar>
+</ion-footer>

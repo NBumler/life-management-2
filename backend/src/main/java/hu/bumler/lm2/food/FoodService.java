@@ -27,11 +27,14 @@ class FoodService {
 
 	private final FoodRepository repository;
 	private final StoredFoodRepository storedFoodRepository;
+	private final RecipeIngredientRepository recipeIngredientRepository;
 	private final FoodMapper mapper;
 
-	FoodService(FoodRepository repository, StoredFoodRepository storedFoodRepository, FoodMapper mapper) {
+	FoodService(FoodRepository repository, StoredFoodRepository storedFoodRepository, RecipeIngredientRepository recipeIngredientRepository,
+			FoodMapper mapper) {
 		this.repository = repository;
 		this.storedFoodRepository = storedFoodRepository;
+		this.recipeIngredientRepository = recipeIngredientRepository;
 		this.mapper = mapper;
 	}
 
@@ -65,9 +68,9 @@ class FoodService {
 	}
 
 	/**
-	 * Soft delete, idempotent, cascading to every live StoredFood referencing this catalog item
-	 * (across every user — documentation/Subfeatures/Élelmiszer tárolás.md "Törlés"). Recipe /
-	 * shopping-list / meal cascades are added once those features exist.
+	 * Soft delete, idempotent, cascading to every live StoredFood and RecipeIngredient referencing
+	 * this catalog item (across every user/recipe — documentation/Subfeatures/Élelmiszerek.md
+	 * "Törlés"). Shopping-list / meal cascades are added once those features exist.
 	 */
 	@Transactional
 	Food delete(UUID id) {
@@ -80,6 +83,11 @@ class FoodService {
 				storedFoodRepository.save(storedFood);
 			}
 			storedFoodRepository.flush();
+			for (RecipeIngredientEntity ingredient : recipeIngredientRepository.findByFoodIdAndDeletedFalse(id)) {
+				ingredient.softDelete();
+				recipeIngredientRepository.save(ingredient);
+			}
+			recipeIngredientRepository.flush();
 		}
 		return mapper.toDto(entity);
 	}

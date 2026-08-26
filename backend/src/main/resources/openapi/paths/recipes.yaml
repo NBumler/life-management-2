@@ -1,0 +1,38 @@
+get:
+  operationId: listRecipes
+  tags:
+    - recipes
+  summary: Every live recipe (deleted = false), each with its live+tombstoned ingredient rows.
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/RecipeList.yaml'
+post:
+  operationId: createRecipe
+  tags:
+    - recipes
+  summary: >-
+    Create a recipe with its ingredients in one request — idempotent upsert on the client-supplied
+    id (documentation/Architektúra/Backend-offline first.md §11 nested aggregate save).
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/Recipe.yaml'
+  responses:
+    '200':
+      description: Created or, on retry with the same id, the existing tree.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/Recipe.yaml'
+    '409':
+      description: Another live recipe already has this name, ingredient set, or references a deleted Food.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'

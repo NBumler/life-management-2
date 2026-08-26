@@ -9,6 +9,8 @@ import { PackingSession } from '../../api/model/packingSession';
 import { PackingSessionItem } from '../../api/model/packingSessionItem';
 import { PackingTemplate } from '../../api/model/packingTemplate';
 import { PackingTemplateItem } from '../../api/model/packingTemplateItem';
+import { Recipe } from '../../api/model/recipe';
+import { RecipeIngredient } from '../../api/model/recipeIngredient';
 import { StoredFood } from '../../api/model/storedFood';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
@@ -1191,6 +1193,163 @@ export function storedFoodLocalRemoveTask(id: string): SqlTask {
   return {
     statement: `UPDATE stored_food SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?`,
     values: [new Date().toISOString(), id],
+  };
+}
+
+export interface RecipeRow {
+  id: string;
+  name: string;
+  note: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+/** Omits `ingredients` — a Recipe row alone never carries them, see readRecipe in SqliteStorageBackend. */
+export function recipeRowToDto(row: RecipeRow): Omit<Recipe, 'ingredients'> {
+  return {
+    id: row.id,
+    name: row.name,
+    note: row.note,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+export function recipeLocalWriteTask(dto: { id: string; name: string; note: string | null }): SqlTask {
+  return {
+    statement: `
+      INSERT INTO recipe (id, name, note, _dirty, _local_only)
+      VALUES (?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET name = excluded.name, note = excluded.note, _dirty = 1`,
+    values: [dto.id, dto.name, dto.note],
+  };
+}
+
+export function recipeServerApplyTask(dto: Omit<Recipe, 'ingredients'>): SqlTask {
+  return {
+    statement: `
+      INSERT INTO recipe (id, name, note, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        name = excluded.name, note = excluded.note, created_at = excluded.created_at,
+        updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE recipe._dirty = 0`,
+    values: [
+      dto.id,
+      dto.name,
+      dto.note ?? null,
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function recipeTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO recipe (id, name, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '', ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+export interface RecipeIngredientRow {
+  id: string;
+  recipe_id: string;
+  food_id: string;
+  quantity_amount: number;
+  quantity_unit: string;
+  sort_order: number;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+export function recipeIngredientRowToDto(row: RecipeIngredientRow): RecipeIngredient {
+  return {
+    id: row.id,
+    recipeId: row.recipe_id,
+    foodId: row.food_id,
+    quantityAmount: row.quantity_amount,
+    quantityUnit: row.quantity_unit,
+    sortOrder: row.sort_order,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+export function recipeIngredientLocalWriteTask(dto: { id: string; recipeId: string; foodId: string; quantityAmount: number; quantityUnit: string; sortOrder: number }): SqlTask {
+  return {
+    statement: `
+      INSERT INTO recipe_ingredient (id, recipe_id, food_id, quantity_amount, quantity_unit, sort_order, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET
+        food_id = excluded.food_id, quantity_amount = excluded.quantity_amount, quantity_unit = excluded.quantity_unit,
+        sort_order = excluded.sort_order, deleted = 0, deleted_at = NULL, _dirty = 1`,
+    values: [dto.id, dto.recipeId, dto.foodId, dto.quantityAmount, dto.quantityUnit, dto.sortOrder],
+  };
+}
+
+/** Local-only removal — an ingredient dropped from a recipe during an edit, or cascaded from its Food catalog entry being deleted (not a standalone outbox entry — see SqliteStorageBackend.saveRecipe/deleteFood). */
+export function recipeIngredientLocalRemoveTask(id: string): SqlTask {
+  return {
+    statement: `UPDATE recipe_ingredient SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?`,
+    values: [new Date().toISOString(), id],
+  };
+}
+
+export function recipeIngredientServerApplyTask(dto: RecipeIngredient): SqlTask {
+  return {
+    statement: `
+      INSERT INTO recipe_ingredient (id, recipe_id, food_id, quantity_amount, quantity_unit, sort_order, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        recipe_id = excluded.recipe_id, food_id = excluded.food_id, quantity_amount = excluded.quantity_amount, quantity_unit = excluded.quantity_unit,
+        sort_order = excluded.sort_order, created_at = excluded.created_at, updated_at = excluded.updated_at, deleted = excluded.deleted,
+        deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE recipe_ingredient._dirty = 0`,
+    values: [
+      dto.id,
+      dto.recipeId,
+      dto.foodId,
+      dto.quantityAmount,
+      dto.quantityUnit,
+      dto.sortOrder,
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function recipeIngredientTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO recipe_ingredient (id, recipe_id, food_id, quantity_amount, quantity_unit, sort_order, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '', '', 0, '', 0, ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
   };
 }
 

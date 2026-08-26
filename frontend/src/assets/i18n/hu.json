@@ -369,6 +369,33 @@
       "LOCATION_LABEL": "Tárolási hely",
       "EXPIRES_ON_LABEL": "Lejárati dátum",
       "OPENED_ON_CREATE_LABEL": "Már felbontva"
+    },
+    "RECIPE": {
+      "TITLE": "Recept",
+      "SEARCH_PLACEHOLDER": "Keresés",
+      "EMPTY": "Még nincs recept.",
+      "INGREDIENT_COUNT": "Hozzávalók: {{count}}",
+      "DELETE_CONFIRM_TITLE": "Recept törlése",
+      "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd a(z) \"{{name}}\" receptet?",
+      "ADD_TITLE": "Recept hozzáadása",
+      "EDIT_TITLE": "Recept szerkesztése",
+      "NAME_LABEL": "Recept neve",
+      "NOTE_LABEL": "Megjegyzés",
+      "INGREDIENTS_LABEL": "Hozzávalók",
+      "ADD_INGREDIENT": "Hozzávaló hozzáadása",
+      "PICKER_SEARCH_PLACEHOLDER": "Keresés a katalógusban",
+      "PICKER_EMPTY": "Nincs találat.",
+      "PICKER_CONFIRM": "Kijelöltek hozzáadása",
+      "NO_INGREDIENTS": "Még nincs hozzávaló.",
+      "QUANTITY_REQUIRED": "A mennyiség megadása kötelező.",
+      "SUMMARY_LABEL": "Összegzés",
+      "SUMMARY_PRICE": "Ár: {{price}} Ft",
+      "SUMMARY_ENERGY": "Energia: {{kcal}} kcal",
+      "SUMMARY_PROTEIN": "Fehérje: {{protein}} g",
+      "SUMMARY_CARBS": "Szénhidrát: {{carbs}} g",
+      "SUMMARY_FAT": "Zsír: {{fat}} g",
+      "SUMMARY_INCOMPLETE": "Néhány érték hiányos (hiányzó katalógusadat miatt).",
+      "DUPLICATE_ERROR": "Már létezik egy azonos recept."
     }
   }
 }

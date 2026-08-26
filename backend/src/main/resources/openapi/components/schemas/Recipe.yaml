@@ -1,0 +1,42 @@
+type: object
+description: >-
+  documentation/Subfeatures/Recept.md — shared/global catalog, no per-user ownership (mirrors Food).
+  documentation/Architektúra/Backend.md "Nested aggregate PUT": Recipe + its RecipeIngredient rows
+  saved/read as one tree, on every endpoint including the plain list — `ingredients` always lists
+  every row for this recipe, live or soft-deleted, so the client's outbox apply step and the
+  ingredient-set duplicate pre-check both see the full picture (the client filters `deleted = false`
+  itself when rendering or summing).
+required:
+  - id
+  - name
+  - deleted
+  - ingredients
+properties:
+  id:
+    type: string
+    format: uuid
+  name:
+    type: string
+    minLength: 1
+  note:
+    type: string
+    nullable: true
+  deleted:
+    type: boolean
+  ingredients:
+    type: array
+    items:
+      $ref: 'RecipeIngredient.yaml'
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

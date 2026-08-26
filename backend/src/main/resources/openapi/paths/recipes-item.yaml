@@ -1,0 +1,63 @@
+parameters:
+  - name: id
+    in: path
+    required: true
+    schema:
+      type: string
+      format: uuid
+get:
+  operationId: getRecipe
+  tags:
+    - recipes
+  summary: The full recipe tree. A soft-deleted recipe returns 200 with deleted=true (not 404).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/Recipe.yaml'
+    '404':
+      description: No such recipe.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+put:
+  operationId: updateRecipe
+  tags:
+    - recipes
+  summary: >-
+    Full tree replace (documentation/Architektúra/Backend.md "Nested aggregate PUT"): ingredients
+    not present in the body are soft-deleted, last-write-wins on the whole aggregate.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/Recipe.yaml'
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/Recipe.yaml'
+    '409':
+      description: Entity already deleted, name/ingredient-set conflict, or references a deleted Food.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+delete:
+  operationId: deleteRecipe
+  tags:
+    - recipes
+  summary: Soft delete, idempotent. Cascades to soft-deleting every ingredient on this recipe.
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/Recipe.yaml'

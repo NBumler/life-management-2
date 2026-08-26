@@ -1,6 +1,6 @@
 <ion-header>
   <ion-toolbar>
-    <ion-segment #sectionSegment value="catalog" (ionChange)="switchSection($any($event.target).value)">
+    <ion-segment #sectionSegment value="recipe" (ionChange)="switchSection($any($event.target).value)">
       <ion-segment-button value="catalog">
         <ion-label>{{ 'FOOD.CATALOG.TITLE' | translate }}</ion-label>
       </ion-segment-button>
@@ -16,7 +16,7 @@
     <ion-searchbar
       [value]="query()"
       (ionInput)="query.set($any($event.target).value ?? '')"
-      [placeholder]="'FOOD.CATALOG.SEARCH_PLACEHOLDER' | translate"
+      [placeholder]="'FOOD.RECIPE.SEARCH_PLACEHOLDER' | translate"
       [debounce]="200"
     ></ion-searchbar>
   </ion-toolbar>
@@ -26,7 +26,7 @@
   <ion-list>
     @if (filteredItems().length === 0) {
       <ion-item>
-        <ion-label color="medium">{{ 'FOOD.CATALOG.EMPTY' | translate }}</ion-label>
+        <ion-label color="medium">{{ 'FOOD.RECIPE.EMPTY' | translate }}</ion-label>
       </ion-item>
     }
 
@@ -34,9 +34,7 @@
       <ion-item button (click)="edit(item)">
         <ion-label>
           <h3>{{ item.name }}</h3>
-          @if (subtitle(item); as sub) {
-            <p>{{ sub }}</p>
-          }
+          <p>{{ subtitle(item) }}</p>
         </ion-label>
         <ion-button fill="clear" color="danger" (click)="delete(item); $event.stopPropagation()">
           <ion-icon name="trash-outline" slot="icon-only" aria-hidden="true"></ion-icon>
@@ -46,7 +44,7 @@
   </ion-list>
 
   <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-    <ion-fab-button (click)="addFood()">
+    <ion-fab-button (click)="addRecipe()">
       <ion-icon name="add-outline" aria-hidden="true"></ion-icon>
     </ion-fab-button>
   </ion-fab>

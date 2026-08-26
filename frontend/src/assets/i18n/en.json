@@ -369,6 +369,33 @@
       "LOCATION_LABEL": "Storage location",
       "EXPIRES_ON_LABEL": "Expires on",
       "OPENED_ON_CREATE_LABEL": "Already opened"
+    },
+    "RECIPE": {
+      "TITLE": "Recipes",
+      "SEARCH_PLACEHOLDER": "Search",
+      "EMPTY": "No recipes yet.",
+      "INGREDIENT_COUNT": "Ingredients: {{count}}",
+      "DELETE_CONFIRM_TITLE": "Delete recipe",
+      "DELETE_CONFIRM_MESSAGE": "Are you sure you want to delete \"{{name}}\"?",
+      "ADD_TITLE": "Add recipe",
+      "EDIT_TITLE": "Edit recipe",
+      "NAME_LABEL": "Recipe name",
+      "NOTE_LABEL": "Note",
+      "INGREDIENTS_LABEL": "Ingredients",
+      "ADD_INGREDIENT": "Add ingredient",
+      "PICKER_SEARCH_PLACEHOLDER": "Search the catalog",
+      "PICKER_EMPTY": "No matching foods.",
+      "PICKER_CONFIRM": "Add selected",
+      "NO_INGREDIENTS": "No ingredients yet.",
+      "QUANTITY_REQUIRED": "Quantity is required.",
+      "SUMMARY_LABEL": "Summary",
+      "SUMMARY_PRICE": "Price: {{price}} Ft",
+      "SUMMARY_ENERGY": "Energy: {{kcal}} kcal",
+      "SUMMARY_PROTEIN": "Protein: {{protein}} g",
+      "SUMMARY_CARBS": "Carbs: {{carbs}} g",
+      "SUMMARY_FAT": "Fat: {{fat}} g",
+      "SUMMARY_INCOMPLETE": "Some values are incomplete (missing catalog data).",
+      "DUPLICATE_ERROR": "An identical recipe already exists."
     }
   }
 }

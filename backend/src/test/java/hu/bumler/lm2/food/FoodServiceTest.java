@@ -26,16 +26,19 @@ class FoodServiceTest {
 
 	private FoodRepository repository;
 	private StoredFoodRepository storedFoodRepository;
+	private RecipeIngredientRepository recipeIngredientRepository;
 	private FoodService service;
 
 	@BeforeEach
 	void setUp() {
 		repository = mock(FoodRepository.class);
 		storedFoodRepository = mock(StoredFoodRepository.class);
+		recipeIngredientRepository = mock(RecipeIngredientRepository.class);
 		when(repository.findByDeletedFalse()).thenReturn(List.of());
 		when(repository.saveAndFlush(any())).thenAnswer(inv -> inv.getArgument(0));
 		when(storedFoodRepository.findByFoodIdAndDeletedFalse(any())).thenReturn(List.of());
-		service = new FoodService(repository, storedFoodRepository, new FoodMapper());
+		when(recipeIngredientRepository.findByFoodIdAndDeletedFalse(any())).thenReturn(List.of());
+		service = new FoodService(repository, storedFoodRepository, recipeIngredientRepository, new FoodMapper());
 	}
 
 	private static Food food(UUID id, String name) {
@@ -248,6 +251,22 @@ class FoodServiceTest {
 
 		assertThat(storedFood.isDeleted()).isTrue();
 		verify(storedFoodRepository).save(storedFood);
+	}
+
+	@Test
+	void delete_cascadesToLiveRecipeIngredientReferencingThisCatalogItem() {
+		// documentation/Subfeatures/Élelmiszerek.md "Törlés".
+		UUID id = UUID.randomUUID();
+		FoodEntity existing = new FoodEntity(id);
+		existing.rename("Tej", "tej");
+		when(repository.findById(id)).thenReturn(Optional.of(existing));
+		RecipeIngredientEntity ingredient = new RecipeIngredientEntity(UUID.randomUUID(), UUID.randomUUID(), id, BigDecimal.ONE, "l", 0);
+		when(recipeIngredientRepository.findByFoodIdAndDeletedFalse(id)).thenReturn(List.of(ingredient));
+
+		service.delete(id);
+
+		assertThat(ingredient.isDeleted()).isTrue();
+		verify(recipeIngredientRepository).save(ingredient);
 	}
 
 	// --- list ---
