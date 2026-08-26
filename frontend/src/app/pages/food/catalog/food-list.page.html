@@ -36,7 +36,7 @@
   </ion-list>
 
   <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-    <ion-fab-button [routerLink]="['/tabs/food/catalog', 'new']">
+    <ion-fab-button (click)="addFood()">
       <ion-icon name="add-outline" aria-hidden="true"></ion-icon>
     </ion-fab-button>
   </ion-fab>

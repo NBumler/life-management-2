@@ -1,0 +1,73 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/food/catalog"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ 'FOOD.IMPORT.TITLE' | translate }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-textarea
+    [(ngModel)]="text"
+    [autoGrow]="true"
+    rows="6"
+    style="font-size: 16px"
+    [placeholder]="'FOOD.IMPORT.PLACEHOLDER' | translate"
+  ></ion-textarea>
+
+  <ion-accordion-group>
+    <ion-accordion value="new">
+      <ion-item slot="header">
+        <ion-label>{{ 'FOOD.IMPORT.SECTION_NEW' | translate }}</ion-label>
+        <ion-badge slot="end" color="success">{{ newRows().length }}</ion-badge>
+      </ion-item>
+      <ion-list slot="content">
+        @for (row of newRows(); track row.line) {
+          <ion-item lines="none">
+            <ion-label>{{ row.name }}</ion-label>
+          </ion-item>
+        }
+      </ion-list>
+    </ion-accordion>
+
+    <ion-accordion value="duplicate">
+      <ion-item slot="header">
+        <ion-label>{{ 'FOOD.IMPORT.SECTION_DUPLICATE' | translate }}</ion-label>
+        <ion-badge slot="end" color="medium">{{ duplicateRows().length }}</ion-badge>
+      </ion-item>
+      <ion-list slot="content">
+        @for (row of duplicateRows(); track row.line) {
+          <ion-item lines="none">
+            <ion-label>{{ row.name }}</ion-label>
+          </ion-item>
+        }
+      </ion-list>
+    </ion-accordion>
+
+    <ion-accordion value="invalid">
+      <ion-item slot="header">
+        <ion-label>{{ 'FOOD.IMPORT.SECTION_INVALID' | translate }}</ion-label>
+        <ion-badge slot="end" color="danger">{{ invalidRows().length }}</ion-badge>
+      </ion-item>
+      <ion-list slot="content">
+        @for (row of invalidRows(); track row.line) {
+          <ion-item lines="none">
+            <ion-label>
+              <h3>{{ 'FOOD.IMPORT.LINE_LABEL' | translate: { line: row.line } }}{{ row.name ? ': ' + row.name : '' }}</h3>
+              <p>{{ 'FOOD.IMPORT.' + row.reason | translate }}</p>
+            </ion-label>
+          </ion-item>
+        }
+      </ion-list>
+    </ion-accordion>
+  </ion-accordion-group>
+</ion-content>
+
+<ion-footer>
+  <ion-toolbar>
+    <ion-button expand="block" class="ion-margin" [disabled]="newRows().length === 0 || importing()" (click)="import()">
+      {{ 'FOOD.IMPORT.IMPORT_BUTTON' | translate: { count: newRows().length } }}
+    </ion-button>
+  </ion-toolbar>
+</ion-footer>

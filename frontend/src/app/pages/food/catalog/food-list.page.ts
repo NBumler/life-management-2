@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import {
+  ActionSheetController,
   AlertController,
   IonButton,
   IonContent,
@@ -14,12 +15,16 @@ import {
   IonSearchbar,
   IonTitle,
   IonToolbar,
+  ToastController,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 import { Food } from '../../../api/model/food';
 import { FoodRepository } from '../../../core/data/food.repository';
 import { compareRank, matchesSearch } from '../../../shared/text-search';
+import { FoodBarcodeScannerService } from './food-barcode-scanner.service';
+import { FoodPrefillService } from './food-prefill.service';
+import { OpenFoodFactsService } from './open-food-facts.service';
 
 /**
  * documentation/Subfeatures/Élelmiszerek.md: shared/global catalog list with search and soft
@@ -30,7 +35,6 @@ import { compareRank, matchesSearch } from '../../../shared/text-search';
   selector: 'app-food-list',
   templateUrl: 'food-list.page.html',
   imports: [
-    RouterLink,
     IonHeader,
     IonToolbar,
     IonTitle,
@@ -50,8 +54,13 @@ import { compareRank, matchesSearch } from '../../../shared/text-search';
 export class FoodListPage implements OnInit {
   private readonly repository = inject(FoodRepository);
   private readonly alertController = inject(AlertController);
+  private readonly actionSheetController = inject(ActionSheetController);
+  private readonly toastController = inject(ToastController);
   private readonly translate = inject(TranslateService);
   private readonly router = inject(Router);
+  private readonly barcodeScanner = inject(FoodBarcodeScannerService);
+  private readonly openFoodFacts = inject(OpenFoodFactsService);
+  private readonly prefillService = inject(FoodPrefillService);
 
   readonly query = signal('');
 
@@ -85,5 +94,43 @@ export class FoodListPage implements OnInit {
 
   subtitle(item: Food): string {
     return [item.brand, item.store].filter((value): value is string => !!value).join(' · ');
+  }
+
+  /** documentation/Subfeatures/Élelmiszer hozzáadása.md: chooser for the three add channels. */
+  async addFood(): Promise<void> {
+    const sheet = await this.actionSheetController.create({
+      header: this.translate.instant('FOOD.CATALOG.ADD'),
+      buttons: [
+        { text: this.translate.instant('FOOD.CATALOG.ADD_MANUAL'), handler: () => void this.router.navigate(['/tabs/food/catalog', 'new']) },
+        { text: this.translate.instant('FOOD.CATALOG.ADD_BARCODE'), handler: () => void this.scanBarcode() },
+        {
+          text: this.translate.instant('FOOD.CATALOG.ADD_IMPORT'),
+          handler: () => void this.router.navigateByUrl('/tabs/food/catalog/import'),
+        },
+        { text: this.translate.instant('COMMON.CANCEL'), role: 'cancel' },
+      ],
+    });
+    await sheet.present();
+  }
+
+  /** documentation/Subfeatures/Vonalkódos élelmiszer beolvasás.md "Scan & Pre-fill". */
+  async scanBarcode(): Promise<void> {
+    const barcode = await this.barcodeScanner.scan();
+    if (barcode === null) {
+      return;
+    }
+    const mapped = await this.openFoodFacts.lookup(barcode);
+    if (mapped === null) {
+      this.prefillService.set({ barcode });
+      const toast = await this.toastController.create({
+        message: this.translate.instant('FOOD.FORM.BARCODE_SYNC_NO_HIT'),
+        duration: 3000,
+        color: 'warning',
+      });
+      await toast.present();
+    } else {
+      this.prefillService.set({ barcode, ...mapped });
+    }
+    await this.router.navigate(['/tabs/food/catalog', 'new']);
   }
 }

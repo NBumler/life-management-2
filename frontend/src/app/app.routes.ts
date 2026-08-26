@@ -118,6 +118,7 @@ export const routes: Routes = [
             children: [
               { path: '', loadComponent: () => import('./pages/food/catalog/food-list.page').then((m) => m.FoodListPage) },
               { path: 'new', loadComponent: () => import('./pages/food/catalog/food-edit.page').then((m) => m.FoodEditPage) },
+              { path: 'import', loadComponent: () => import('./pages/food/catalog/food-import.page').then((m) => m.FoodImportPage) },
               { path: ':id', loadComponent: () => import('./pages/food/catalog/food-edit.page').then((m) => m.FoodEditPage) },
             ],
           },

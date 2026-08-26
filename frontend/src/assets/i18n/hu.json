@@ -5,6 +5,7 @@
   "COMMON": {
     "SAVE": "Mentés",
     "CANCEL": "Mégse",
+    "CONFIRM": "Megerősítés",
     "DELETE": "Törlés",
     "CLOSE": "Bezárás"
   },
@@ -286,6 +287,9 @@
       "TITLE": "Katalógus",
       "SEARCH_PLACEHOLDER": "Keresés",
       "ADD": "Új élelmiszer",
+      "ADD_MANUAL": "Kézi bevitel",
+      "ADD_BARCODE": "Vonalkód beolvasása",
+      "ADD_IMPORT": "Import vágólapról",
       "EMPTY": "Még nincs élelmiszer.",
       "NO_RESULTS": "Nincs találat.",
       "DELETE_CONFIRM_TITLE": "Élelmiszer törlése",
@@ -300,6 +304,9 @@
       "BRAND_LABEL": "Márka",
       "BARCODE_LABEL": "Vonalkód (EAN)",
       "BARCODE_SYNC": "Frissítés az Open Food Facts-ből",
+      "BARCODE_SYNC_NO_HIT": "A termék nem található az online adatbázisban. Kérjük, töltsd ki manuálisan.",
+      "BARCODE_SYNC_CONFIRM_TITLE": "Frissítés az Open Food Facts adataival?",
+      "BARCODE_SYNC_DIFF_LINE": "{{field}}: {{old}} → {{new}}",
       "NOTE_LABEL": "Egyéb",
       "PRICE_LABEL": "Ár (Ft / csomag)",
       "NET_AMOUNT_LABEL": "1 csomag nettó tartalma",
@@ -324,6 +331,20 @@
       "SHELF_AFTER_OPENING_LABEL": "Felbontás után",
       "NAME_REQUIRED_ERROR": "A termék neve kötelező.",
       "DUPLICATE_ERROR": "Már létezik ezzel teljesen megegyező élelmiszer a katalógusban."
+    },
+    "IMPORT": {
+      "TITLE": "Import vágólapról",
+      "PLACEHOLDER": "Illessz be tab-szeparált (TSV) sorokat, pl. táblázatból másolva.",
+      "SECTION_NEW": "Új",
+      "SECTION_DUPLICATE": "Duplikátum",
+      "SECTION_INVALID": "Invalid",
+      "LINE_LABEL": "{{line}}. sor",
+      "MISSING_NAME": "Hiányzó termék név.",
+      "INVALID_NUMBER": "Egy számmező nem olvasható.",
+      "INVALID_NET_AMOUNT": "A nettó tartalom oszlop nem olvasható.",
+      "COLUMN_COUNT": "Hibás oszlopszám (22 elvárt).",
+      "IMPORT_BUTTON": "{{count}} tétel importálása",
+      "SUCCESS_TOAST": "{{count}} élelmiszer importálva."
     }
   }
 }

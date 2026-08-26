@@ -36,7 +36,11 @@
           style="font-size: 16px"
           [label]="'FOOD.FORM.BARCODE_LABEL' | translate"
           labelPlacement="stacked"
-        ></ion-input>
+        >
+          <ion-button slot="end" fill="clear" [disabled]="syncingBarcode()" (click)="syncBarcode()" [attr.aria-label]="'FOOD.FORM.BARCODE_SYNC' | translate">
+            <ion-icon slot="icon-only" name="sync-outline"></ion-icon>
+          </ion-button>
+        </ion-input>
       </ion-item>
       <ion-item>
         <ion-input formControlName="note" style="font-size: 16px" [label]="'FOOD.FORM.NOTE_LABEL' | translate" labelPlacement="stacked"></ion-input>

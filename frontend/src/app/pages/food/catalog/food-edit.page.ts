@@ -10,6 +10,7 @@ import {
   IonContent,
   IonFooter,
   IonHeader,
+  IonIcon,
   IonInput,
   IonItem,
   IonList,
@@ -17,6 +18,7 @@ import {
   IonText,
   IonTitle,
   IonToolbar,
+  ToastController,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
@@ -24,6 +26,9 @@ import { Food } from '../../../api/model/food';
 import { FoodDuplicateError, FoodRepository } from '../../../core/data/food.repository';
 import { ParsedQuantity } from '../../../shared/quantity';
 import { QuantityInputComponent } from '../../../shared/quantity-input/quantity-input.component';
+import { FoodPrefillService } from './food-prefill.service';
+import { OpenFoodFactsMappedFields, computeOffDiff } from './open-food-facts';
+import { OpenFoodFactsService } from './open-food-facts.service';
 import { chlorideFromSaltAndSodium, sodiumFromSalt } from './salt-sodium-chloride';
 
 const NO_QUANTITY: ParsedQuantity = { amount: null, unit: null };
@@ -38,10 +43,10 @@ function toParsedQuantity(amount: number | null | undefined, unit: string | null
 }
 
 /**
- * documentation/Subfeatures/Élelmiszer manuális bevitele.md — create + edit in one page/form.
- * Barcode OFF lookup ("sync" button) is deliberately out of scope here — it's shared with
- * documentation/Subfeatures/Vonalkódos élelmiszer beolvasás.md's camera flow and lands together
- * with it in a later slice; this form only holds the plain barcode text field for now.
+ * documentation/Subfeatures/Élelmiszer manuális bevitele.md — create + edit in one page/form,
+ * including the barcode "sync" button shared with
+ * documentation/Subfeatures/Vonalkódos élelmiszer beolvasás.md's camera flow (which prefills this
+ * same form via FoodPrefillService instead of duplicating the OFF-mapping logic).
  */
 @Component({
   selector: 'app-food-edit',
@@ -61,6 +66,7 @@ function toParsedQuantity(amount: number | null | undefined, unit: string | null
     IonListHeader,
     IonItem,
     IonInput,
+    IonIcon,
     IonText,
     TranslatePipe,
   ],
@@ -72,10 +78,14 @@ export class FoodEditPage implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly repository = inject(FoodRepository);
   private readonly alertController = inject(AlertController);
+  private readonly toastController = inject(ToastController);
   private readonly translate = inject(TranslateService);
+  private readonly openFoodFacts = inject(OpenFoodFactsService);
+  private readonly prefillService = inject(FoodPrefillService);
 
   readonly foodId = signal<string | null>(null);
   readonly duplicateError = signal<string | null>(null);
+  readonly syncingBarcode = signal(false);
 
   private readonly sodiumTouched = signal(false);
   private readonly chlorideTouched = signal(false);
@@ -139,6 +149,13 @@ export class FoodEditPage implements OnInit {
       if (existing !== undefined) {
         this.loadIntoForm(existing);
       }
+      return;
+    }
+    // documentation/Subfeatures/Vonalkódos élelmiszer beolvasás.md "Scan & Pre-fill": a fresh form
+    // never shows the overwrite-confirm dialog — patchValue only, no diff/confirm needed.
+    const prefill = this.prefillService.take();
+    if (prefill !== null) {
+      this.applyMappedFields(prefill);
     }
   }
 
@@ -196,6 +213,128 @@ export class FoodEditPage implements OnInit {
     this.form.controls.chlorideG.setValue(salt === null || sodium === null ? null : chlorideFromSaltAndSodium(salt, sodium), {
       emitEvent: false,
     });
+  }
+
+  /**
+   * documentation/Subfeatures/Élelmiszer manuális bevitele.md "Vonalkód sync gomb": re-runs the OFF
+   * lookup for the EAN currently in the form (typed or scanned) and, if it would change anything,
+   * confirms field-by-field before applying — "azonos értékek kihagyva" (unchanged fields don't
+   * appear in the dialog at all).
+   */
+  async syncBarcode(): Promise<void> {
+    const barcode = this.form.controls.barcode.value;
+    if (barcode === null || barcode.trim() === '') {
+      return;
+    }
+    this.syncingBarcode.set(true);
+    const mapped = await this.openFoodFacts.lookup(barcode).finally(() => this.syncingBarcode.set(false));
+    if (mapped === null) {
+      const toast = await this.toastController.create({
+        message: this.translate.instant('FOOD.FORM.BARCODE_SYNC_NO_HIT'),
+        duration: 3000,
+        color: 'warning',
+      });
+      await toast.present();
+      return;
+    }
+
+    const diffs = computeOffDiff(this.currentMappableFields(), mapped);
+    if (diffs.length === 0) {
+      return;
+    }
+    const message = diffs
+      .map((diff) => this.translate.instant('FOOD.FORM.BARCODE_SYNC_DIFF_LINE', { field: this.fieldLabel(diff.field), old: diff.oldValue ?? '—', new: diff.newValue }))
+      .join('\n');
+    const alert = await this.alertController.create({
+      header: this.translate.instant('FOOD.FORM.BARCODE_SYNC_CONFIRM_TITLE'),
+      message,
+      buttons: [
+        { text: this.translate.instant('COMMON.CANCEL'), role: 'cancel' },
+        { text: this.translate.instant('COMMON.CONFIRM'), role: 'confirm', handler: () => this.applyMappedFields(mapped) },
+      ],
+    });
+    await alert.present();
+  }
+
+  private currentMappableFields(): Partial<Food> {
+    const raw = this.form.getRawValue();
+    return {
+      name: raw.name,
+      brand: raw.brand,
+      netAmount: raw.netAmount.amount,
+      netUnit: raw.netAmount.unit,
+      energyKcal: raw.energyKcal,
+      fatG: raw.fatG,
+      fatSaturatedG: raw.fatSaturatedG,
+      fatUnsaturatedG: raw.fatUnsaturatedG,
+      fatTransG: raw.fatTransG,
+      carbsG: raw.carbsG,
+      carbsSugarsG: raw.carbsSugarsG,
+      carbsComplexG: raw.carbsComplexG,
+      carbsFiberG: raw.carbsFiberG,
+      proteinG: raw.proteinG,
+      saltG: raw.saltG,
+      sodiumG: raw.sodiumG,
+    };
+  }
+
+  private applyMappedFields(mapped: Partial<Food> & OpenFoodFactsMappedFields): void {
+    const patch: Record<string, unknown> = {};
+    if (mapped.name !== undefined) {
+      patch['name'] = mapped.name;
+    }
+    if (mapped.brand !== undefined) {
+      patch['brand'] = mapped.brand;
+    }
+    if (mapped.barcode !== undefined) {
+      patch['barcode'] = mapped.barcode;
+    }
+    if (mapped.netAmount !== undefined || mapped.netUnit !== undefined) {
+      patch['netAmount'] = toParsedQuantity(mapped.netAmount, mapped.netUnit);
+    }
+    for (const field of [
+      'energyKcal',
+      'fatG',
+      'fatSaturatedG',
+      'fatUnsaturatedG',
+      'fatTransG',
+      'carbsG',
+      'carbsSugarsG',
+      'carbsComplexG',
+      'carbsFiberG',
+      'proteinG',
+      'saltG',
+      'sodiumG',
+    ] as const) {
+      if (mapped[field] !== undefined) {
+        patch[field] = mapped[field];
+      }
+    }
+    // Default emitEvent (true): lets the salt/sodium/chloride auto-calc subscriptions react exactly
+    // as they would to manual typing (see the constructor).
+    this.form.patchValue(patch);
+  }
+
+  private fieldLabel(field: keyof OpenFoodFactsMappedFields): string {
+    const labelKeys: Record<keyof OpenFoodFactsMappedFields, string> = {
+      name: 'FOOD.FORM.NAME_LABEL',
+      brand: 'FOOD.FORM.BRAND_LABEL',
+      netAmount: 'FOOD.FORM.NET_AMOUNT_LABEL',
+      netUnit: 'FOOD.FORM.NET_AMOUNT_LABEL',
+      energyKcal: 'FOOD.FORM.NUTRIENT_ENERGY',
+      fatG: 'FOOD.FORM.NUTRIENT_FAT',
+      fatSaturatedG: 'FOOD.FORM.NUTRIENT_FAT_SATURATED',
+      fatUnsaturatedG: 'FOOD.FORM.NUTRIENT_FAT_UNSATURATED',
+      fatTransG: 'FOOD.FORM.NUTRIENT_FAT_TRANS',
+      carbsG: 'FOOD.FORM.NUTRIENT_CARBS',
+      carbsSugarsG: 'FOOD.FORM.NUTRIENT_CARBS_SUGARS',
+      carbsComplexG: 'FOOD.FORM.NUTRIENT_CARBS_COMPLEX',
+      carbsFiberG: 'FOOD.FORM.NUTRIENT_CARBS_FIBER',
+      proteinG: 'FOOD.FORM.NUTRIENT_PROTEIN',
+      saltG: 'FOOD.FORM.NUTRIENT_SALT',
+      sodiumG: 'FOOD.FORM.NUTRIENT_SODIUM',
+    };
+    return this.translate.instant(labelKeys[field]);
   }
 
   async save(): Promise<void> {

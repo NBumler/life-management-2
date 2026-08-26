@@ -1,12 +1,14 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
-import { AlertController } from '@ionic/angular/standalone';
+import { AlertController, ToastController } from '@ionic/angular/standalone';
 import { provideTranslateService } from '@ngx-translate/core';
 
 import { Food } from '../../../api/model/food';
 import { FoodDuplicateError, FoodRepository } from '../../../core/data/food.repository';
 import { FoodEditPage } from './food-edit.page';
+import { FoodPrefillService } from './food-prefill.service';
+import { OpenFoodFactsService } from './open-food-facts.service';
 
 function food(overrides: Partial<Food> = {}): Food {
   return { id: 'f1', name: 'Tej', deleted: false, ...overrides };
@@ -18,10 +20,20 @@ describe('FoodEditPage', () => {
     items: ReturnType<typeof signal<Food[]>>;
   };
 
+  let openFoodFacts: jasmine.SpyObj<OpenFoodFactsService>;
+  let prefillService: jasmine.SpyObj<FoodPrefillService>;
+  let alertController: jasmine.SpyObj<AlertController>;
+  let toastController: jasmine.SpyObj<ToastController>;
+
   async function createFixture(routeId: string): Promise<void> {
     repository = jasmine.createSpyObj('FoodRepository', ['load', 'save', 'remove']) as never;
     repository.load.and.resolveTo();
     repository.items = signal<Food[]>([]);
+    openFoodFacts = jasmine.createSpyObj('OpenFoodFactsService', ['lookup']);
+    prefillService = jasmine.createSpyObj('FoodPrefillService', ['take']);
+    prefillService.take.and.returnValue(null);
+    alertController = jasmine.createSpyObj('AlertController', ['create']);
+    toastController = jasmine.createSpyObj('ToastController', ['create']);
 
     await TestBed.configureTestingModule({
       imports: [FoodEditPage],
@@ -30,7 +42,10 @@ describe('FoodEditPage', () => {
         provideTranslateService(),
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: routeId }) } } },
         { provide: FoodRepository, useValue: repository },
-        { provide: AlertController, useValue: jasmine.createSpyObj('AlertController', ['create']) },
+        { provide: OpenFoodFactsService, useValue: openFoodFacts },
+        { provide: FoodPrefillService, useValue: prefillService },
+        { provide: AlertController, useValue: alertController },
+        { provide: ToastController, useValue: toastController },
       ],
     }).compileComponents();
 
@@ -102,6 +117,70 @@ describe('FoodEditPage', () => {
     fixture.componentInstance.form.controls.saltG.setValue(5);
 
     expect(fixture.componentInstance.form.controls.sodiumG.value).toBe(0.9);
+  });
+
+  it('create mode: applies a pending barcode-scan prefill from FoodPrefillService', async () => {
+    await createFixture('new');
+    prefillService.take.and.returnValue({ name: 'Tejcsokoládé', brand: 'Milka', barcode: '5901234123457', energyKcal: 539 });
+
+    await fixture.componentInstance.ngOnInit();
+
+    expect(fixture.componentInstance.form.controls.name.value).toBe('Tejcsokoládé');
+    expect(fixture.componentInstance.form.controls.brand.value).toBe('Milka');
+    expect(fixture.componentInstance.form.controls.barcode.value).toBe('5901234123457');
+    expect(fixture.componentInstance.form.controls.energyKcal.value).toBe(539);
+  });
+
+  it('syncBarcode(): does nothing when the barcode field is empty', async () => {
+    await createFixture('new');
+    await fixture.componentInstance.ngOnInit();
+
+    await fixture.componentInstance.syncBarcode();
+
+    expect(openFoodFacts.lookup).not.toHaveBeenCalled();
+  });
+
+  it('syncBarcode(): shows a warning toast and leaves the form untouched when OFF has no hit', async () => {
+    await createFixture('new');
+    await fixture.componentInstance.ngOnInit();
+    fixture.componentInstance.form.controls.barcode.setValue('0000000000000');
+    openFoodFacts.lookup.and.resolveTo(null);
+    const created = { present: jasmine.createSpy('present').and.resolveTo() };
+    toastController.create.and.resolveTo(created as never);
+
+    await fixture.componentInstance.syncBarcode();
+
+    expect(toastController.create).toHaveBeenCalled();
+    expect(alertController.create).not.toHaveBeenCalled();
+  });
+
+  it('syncBarcode(): skips the confirm dialog entirely when nothing would change', async () => {
+    await createFixture('new');
+    await fixture.componentInstance.ngOnInit();
+    fixture.componentInstance.form.patchValue({ barcode: '5901234123457', name: 'Tej' });
+    openFoodFacts.lookup.and.resolveTo({ name: 'Tej' });
+
+    await fixture.componentInstance.syncBarcode();
+
+    expect(alertController.create).not.toHaveBeenCalled();
+  });
+
+  it('syncBarcode(): confirming the diff dialog applies the OFF fields, letting the salt auto-calc react normally', async () => {
+    await createFixture('new');
+    await fixture.componentInstance.ngOnInit();
+    fixture.componentInstance.form.patchValue({ barcode: '5901234123457', name: 'Tej' });
+    openFoodFacts.lookup.and.resolveTo({ name: 'Friss tej', saltG: 0.1 });
+    const created = { present: jasmine.createSpy('present').and.resolveTo() };
+    alertController.create.and.resolveTo(created as never);
+
+    await fixture.componentInstance.syncBarcode();
+    const options = alertController.create.calls.mostRecent().args[0] as { buttons: { role: string; handler?: () => void }[] };
+    const confirmButton = options.buttons.find((b) => b.role === 'confirm')!;
+    confirmButton.handler!();
+
+    expect(fixture.componentInstance.form.controls.name.value).toBe('Friss tej');
+    expect(fixture.componentInstance.form.controls.saltG.value).toBe(0.1);
+    expect(fixture.componentInstance.form.controls.sodiumG.value).toBe(0.04); // auto-calc reacted to the patched salt
   });
 
   it('save(): maps the quantity/duration controls into flat DTO fields', async () => {

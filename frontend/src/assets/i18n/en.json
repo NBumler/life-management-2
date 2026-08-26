@@ -5,6 +5,7 @@
   "COMMON": {
     "SAVE": "Save",
     "CANCEL": "Cancel",
+    "CONFIRM": "Confirm",
     "DELETE": "Delete",
     "CLOSE": "Close"
   },
@@ -286,6 +287,9 @@
       "TITLE": "Catalog",
       "SEARCH_PLACEHOLDER": "Search",
       "ADD": "New food",
+      "ADD_MANUAL": "Enter manually",
+      "ADD_BARCODE": "Scan barcode",
+      "ADD_IMPORT": "Import from clipboard",
       "EMPTY": "No foods yet.",
       "NO_RESULTS": "No results.",
       "DELETE_CONFIRM_TITLE": "Delete food",
@@ -300,6 +304,9 @@
       "BRAND_LABEL": "Brand",
       "BARCODE_LABEL": "Barcode (EAN)",
       "BARCODE_SYNC": "Refresh from Open Food Facts",
+      "BARCODE_SYNC_NO_HIT": "This product isn't in the online database. Please fill it in manually.",
+      "BARCODE_SYNC_CONFIRM_TITLE": "Update from Open Food Facts?",
+      "BARCODE_SYNC_DIFF_LINE": "{{field}}: {{old}} → {{new}}",
       "NOTE_LABEL": "Other",
       "PRICE_LABEL": "Price (HUF / package)",
       "NET_AMOUNT_LABEL": "Net content per package",
@@ -324,6 +331,20 @@
       "SHELF_AFTER_OPENING_LABEL": "After opening",
       "NAME_REQUIRED_ERROR": "Product name is required.",
       "DUPLICATE_ERROR": "An identical food already exists in the catalog."
+    },
+    "IMPORT": {
+      "TITLE": "Import from clipboard",
+      "PLACEHOLDER": "Paste tab-separated (TSV) rows here, e.g. copied from a spreadsheet.",
+      "SECTION_NEW": "New",
+      "SECTION_DUPLICATE": "Duplicate",
+      "SECTION_INVALID": "Invalid",
+      "LINE_LABEL": "Row {{line}}",
+      "MISSING_NAME": "Missing product name.",
+      "INVALID_NUMBER": "A number column could not be read.",
+      "INVALID_NET_AMOUNT": "The net content column could not be read.",
+      "COLUMN_COUNT": "Wrong number of columns (expected 22).",
+      "IMPORT_BUTTON": "Import {{count}} items",
+      "SUCCESS_TOAST": "Imported {{count}} foods."
     }
   }
 }
