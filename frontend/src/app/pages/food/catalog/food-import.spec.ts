@@ -37,6 +37,16 @@ describe('parseFoodImportBatch', () => {
     expect(rows.length).toBe(2);
   });
 
+  it('detects a header row via the nutrient-section pattern when it does not start with Üzlet/Termék', () => {
+    // documentation/Subfeatures/Élelmiszer importálása clipboard-ról.md "Fejléc": "vagy a sor
+    // tartalmazza a 100g / 100ml - energia mintát" — an independent detection path from Üzlet/Termék.
+    const header = row({ 6: '100 g / 100 ml - Energia' });
+    const rows = parseFoodImportBatch([header, VALID_ROW].join('\n'), []);
+
+    expect(rows.length).toBe(1);
+    expect(rows[0].line).toBe(1);
+  });
+
   it('skips blank lines', () => {
     const rows = parseFoodImportBatch(['', VALID_ROW, '   ', VALID_ROW.replace('Tej', 'Kenyér')].join('\n'), []);
 

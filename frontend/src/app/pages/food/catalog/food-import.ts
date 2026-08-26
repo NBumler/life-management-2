@@ -28,9 +28,20 @@ export interface ImportRow {
 /**
  * documentation/Subfeatures/Élelmiszer importálása clipboard-ról.md "Fejléc": presence check only —
  * a real header row is discarded whole, never used to reorder columns (the schema is positional).
+ * Two independent patterns count, per spec ("vagy"): the first two columns read Üzlet/Termék, or any
+ * cell carries the nutrient section's header text ("100g / 100ml - energia") — a header pasted
+ * without the leading Üzlet/Termék columns still needs to be recognized.
  */
 function looksLikeHeaderRow(cells: string[]): boolean {
-  return cells.length >= 2 && matchesSearch('üzlet', cells[0]) && matchesSearch('termék', cells[1]);
+  if (cells.length >= 2 && matchesSearch('üzlet', cells[0]) && matchesSearch('termék', cells[1])) {
+    return true;
+  }
+  return cells.some(isNutrientSectionHeaderCell);
+}
+
+function isNutrientSectionHeaderCell(cell: string): boolean {
+  const compact = cell.replace(/\s+/g, '');
+  return matchesSearch('100g', compact) && matchesSearch('100ml', compact) && matchesSearch('energia', compact);
 }
 
 /** documentation/Subfeatures/Élelmiszer importálása clipboard-ról.md "Formátum": `-` and a truly empty cell both mean "no value". */
