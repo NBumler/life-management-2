@@ -29,6 +29,8 @@ api/packingTemplates.service.ts
 api/packingTemplates.serviceInterface.ts
 api/profile.service.ts
 api/profile.serviceInterface.ts
+api/storedFoods.service.ts
+api/storedFoods.serviceInterface.ts
 api/sync.service.ts
 api/sync.serviceInterface.ts
 configuration.ts
@@ -56,6 +58,7 @@ model/packingTemplate.ts
 model/packingTemplateDetail.ts
 model/packingTemplateItem.ts
 model/refreshRequest.ts
+model/storedFood.ts
 model/syncChangeItem.ts
 model/syncChangesResponse.ts
 model/userProfile.ts

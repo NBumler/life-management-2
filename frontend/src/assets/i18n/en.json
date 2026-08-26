@@ -345,6 +345,30 @@
       "COLUMN_COUNT": "Wrong number of columns (expected 22).",
       "IMPORT_BUTTON": "Import {{count}} items",
       "SUCCESS_TOAST": "Imported {{count}} foods."
+    },
+    "STORAGE": {
+      "TITLE": "Storage",
+      "SEARCH_PLACEHOLDER": "Search",
+      "LOCATION_ALL": "All",
+      "LOCATION_ROOM": "Pantry",
+      "LOCATION_FRIDGE": "Fridge",
+      "LOCATION_FREEZER": "Freezer",
+      "EMPTY": "No stored items yet.",
+      "BADGE_SPOILED": "Spoiled",
+      "BADGE_OPENED": "Opened",
+      "EXPIRES_ON_SHORT": "exp. {{date}}",
+      "OPEN_ACTION": "Opened",
+      "DELETE_CONFIRM_TITLE": "Delete item",
+      "DELETE_CONFIRM_MESSAGE": "Are you sure you want to delete this stored item?",
+      "ADD_TITLE": "Add stored item",
+      "EDIT_TITLE": "Edit stored item",
+      "PICKER_SEARCH_PLACEHOLDER": "Search the catalog",
+      "PICKER_EMPTY": "No matching foods.",
+      "CHANGE_FOOD": "Change",
+      "QUANTITY_LABEL": "Quantity",
+      "LOCATION_LABEL": "Storage location",
+      "EXPIRES_ON_LABEL": "Expires on",
+      "OPENED_ON_CREATE_LABEL": "Already opened"
     }
   }
 }

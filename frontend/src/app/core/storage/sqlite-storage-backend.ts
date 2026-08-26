@@ -11,6 +11,7 @@ import { PackingSessionDetail } from '../../api/model/packingSessionDetail';
 import { PackingSessionItem } from '../../api/model/packingSessionItem';
 import { PackingTemplate } from '../../api/model/packingTemplate';
 import { PackingTemplateDetail } from '../../api/model/packingTemplateDetail';
+import { StoredFood } from '../../api/model/storedFood';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 import {
@@ -25,6 +26,7 @@ import {
   PackingTemplateItemRow,
   PackingTemplateRow,
   ProfileRow,
+  StoredFoodRow,
   WeightHistoryRow,
   calendarEventLocalWriteTask,
   calendarEventRowToDto,
@@ -51,6 +53,9 @@ import {
   packingTemplateRowToDto,
   profileLocalWriteTask,
   profileRowToDto,
+  storedFoodLocalRemoveTask,
+  storedFoodLocalWriteTask,
+  storedFoodRowToDto,
   weightHistoryLocalWriteTask,
   weightHistoryRowToDto,
 } from '../data/local-rows';
@@ -313,7 +318,7 @@ export class SqliteStorageBackend implements StorageBackend {
   }
 
   /** documentation/Architektúra/Backend-offline first.md §10 "Függőségi láncok": ids among `candidateIds` whose row hasn't reached the server yet. */
-  private async findLocalOnlyIds(table: 'gear_item' | 'household_room', candidateIds: string[]): Promise<string[]> {
+  private async findLocalOnlyIds(table: 'gear_item' | 'household_room' | 'food', candidateIds: string[]): Promise<string[]> {
     if (candidateIds.length === 0) {
       return [];
     }
@@ -747,6 +752,11 @@ export class SqliteStorageBackend implements StorageBackend {
     return this.readFood(food.id);
   }
 
+  /**
+   * documentation/Subfeatures/Élelmiszer tárolás.md "Törlés": cascades to every live storage item
+   * referencing this catalog entry, mirroring HouseholdRoom's local cascade to its tasks — the
+   * server does its own cascade on the DELETE, and the post-drain pull confirms each one independently.
+   */
   async deleteFood(id: string): Promise<Food> {
     const userId = this.requireUserId();
     const enqueue = await this.offlineQueue.buildEnqueueTasks({
@@ -763,7 +773,12 @@ export class SqliteStorageBackend implements StorageBackend {
           statement: 'UPDATE food SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?',
           values: [new Date().toISOString(), id],
         };
-    await this.db.executeTransaction([entityTask, ...enqueue.outboxTasks]);
+    const cascadeStoredFoodRows = await this.db.query<{ id: string }>(
+      'SELECT id FROM stored_food WHERE food_id = ? AND deleted = 0',
+      [id],
+    );
+    const cascadeTasks = cascadeStoredFoodRows.map((row) => storedFoodLocalRemoveTask(row.id));
+    await this.db.executeTransaction([entityTask, ...cascadeTasks, ...enqueue.outboxTasks]);
     await this.offlineQueue.refreshCounts(userId);
     if (enqueue.hardRemoveLocalEntity) {
       return { id, name: '', deleted: true };
@@ -774,6 +789,62 @@ export class SqliteStorageBackend implements StorageBackend {
   private async readFood(id: string): Promise<Food> {
     const rows = await this.db.query<FoodRow>('SELECT * FROM food WHERE id = ?', [id]);
     return foodRowToDto(rows[0]);
+  }
+
+  async listStoredFoods(): Promise<StoredFood[]> {
+    const rows = await this.db.query<StoredFoodRow>('SELECT * FROM stored_food WHERE deleted = 0 ORDER BY expires_on ASC');
+    return rows.map(storedFoodRowToDto);
+  }
+
+  async upsertStoredFood(item: StoredFood): Promise<StoredFood> {
+    const userId = this.requireUserId();
+    const existing = await this.db.query('SELECT 1 FROM stored_food WHERE id = ?', [item.id]);
+    const isNew = existing.length === 0;
+    // documentation/Architektúra/Backend-offline first.md §10 "Függőségi láncok": a storage item
+    // created right after an inline new Food (barcode/import flow) must wait for that Food's own
+    // POST to land first.
+    const dependsOn = await this.findLocalOnlyIds('food', [item.foodId]);
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: isNew ? 'POST' : 'PUT',
+      url: isNew ? '/api/stored-foods' : `/api/stored-foods/${item.id}`,
+      payload: item,
+      entityType: 'StoredFood',
+      targetEntityId: item.id,
+      dependsOn,
+    });
+    await this.db.executeTransaction([storedFoodLocalWriteTask(item), ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    return this.readStoredFood(item.id);
+  }
+
+  async deleteStoredFood(id: string): Promise<StoredFood> {
+    const userId = this.requireUserId();
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: 'DELETE',
+      url: `/api/stored-foods/${id}`,
+      payload: null,
+      entityType: 'StoredFood',
+      targetEntityId: id,
+    });
+    const entityTask: SqlTask = enqueue.hardRemoveLocalEntity
+      ? { statement: 'DELETE FROM stored_food WHERE id = ?', values: [id] }
+      : {
+          statement: 'UPDATE stored_food SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?',
+          values: [new Date().toISOString(), id],
+        };
+    await this.db.executeTransaction([entityTask, ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    if (enqueue.hardRemoveLocalEntity) {
+      return { id, foodId: '', quantityAmount: 0, quantityUnit: '', storageLocation: StoredFood.StorageLocationEnum.Room, expiresOn: '', opened: false, deleted: true };
+    }
+    return this.readStoredFood(id);
+  }
+
+  private async readStoredFood(id: string): Promise<StoredFood> {
+    const rows = await this.db.query<StoredFoodRow>('SELECT * FROM stored_food WHERE id = ?', [id]);
+    return storedFoodRowToDto(rows[0]);
   }
 
   private requireUserId(): string {

@@ -108,8 +108,9 @@ export const routes: Routes = [
       {
         // documentation/Features/Kaja.md: the tab's real root is the Étkezés|Tárolás|Katalógus|Recept|Stat
         // segmented hub, not built yet (`tab.kaja` stays off until that full core segment set exists —
-        // see Frontend.md's flag registry). Until then this redirect makes the one segment that does
-        // exist (Katalógus) reachable by direct URL for manual testing.
+        // see Frontend.md's flag registry). Until then this redirect + the ion-segment on each list page
+        // (food-list.page.html / storage-list.page.html) is the lightweight stand-in for the two
+        // segments that do exist (Katalógus, Tárolás).
         path: 'food',
         children: [
           { path: '', redirectTo: 'catalog', pathMatch: 'full' },
@@ -120,6 +121,14 @@ export const routes: Routes = [
               { path: 'new', loadComponent: () => import('./pages/food/catalog/food-edit.page').then((m) => m.FoodEditPage) },
               { path: 'import', loadComponent: () => import('./pages/food/catalog/food-import.page').then((m) => m.FoodImportPage) },
               { path: ':id', loadComponent: () => import('./pages/food/catalog/food-edit.page').then((m) => m.FoodEditPage) },
+            ],
+          },
+          {
+            path: 'storage',
+            children: [
+              { path: '', loadComponent: () => import('./pages/food/storage/storage-list.page').then((m) => m.StorageListPage) },
+              { path: 'new', loadComponent: () => import('./pages/food/storage/storage-edit.page').then((m) => m.StorageEditPage) },
+              { path: ':id', loadComponent: () => import('./pages/food/storage/storage-edit.page').then((m) => m.StorageEditPage) },
             ],
           },
         ],

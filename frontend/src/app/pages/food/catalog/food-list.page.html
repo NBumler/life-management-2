@@ -1,6 +1,13 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>{{ 'FOOD.CATALOG.TITLE' | translate }}</ion-title>
+    <ion-segment value="catalog" (ionChange)="switchSection($any($event.target).value)">
+      <ion-segment-button value="catalog">
+        <ion-label>{{ 'FOOD.CATALOG.TITLE' | translate }}</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="storage">
+        <ion-label>{{ 'FOOD.STORAGE.TITLE' | translate }}</ion-label>
+      </ion-segment-button>
+    </ion-segment>
   </ion-toolbar>
   <ion-toolbar>
     <ion-searchbar

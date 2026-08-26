@@ -9,6 +9,7 @@ import { PackingSession } from '../../api/model/packingSession';
 import { PackingSessionItem } from '../../api/model/packingSessionItem';
 import { PackingTemplate } from '../../api/model/packingTemplate';
 import { PackingTemplateItem } from '../../api/model/packingTemplateItem';
+import { StoredFood } from '../../api/model/storedFood';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 
@@ -1085,6 +1086,111 @@ export function foodTombstoneTask(id: string, deletedAt: string | null, updatedA
       VALUES (?, '', ?, 1, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
     values: [id, updatedAt, deletedAt],
+  };
+}
+
+export interface StoredFoodRow {
+  id: string;
+  food_id: string;
+  quantity_amount: number;
+  quantity_unit: string;
+  storage_location: string;
+  expires_on: string;
+  opened: number;
+  opened_at: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+export function storedFoodRowToDto(row: StoredFoodRow): StoredFood {
+  return {
+    id: row.id,
+    foodId: row.food_id,
+    quantityAmount: row.quantity_amount,
+    quantityUnit: row.quantity_unit,
+    storageLocation: row.storage_location as StoredFood.StorageLocationEnum,
+    expiresOn: row.expires_on,
+    opened: row.opened === 1,
+    openedAt: row.opened_at,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+export function storedFoodLocalWriteTask(dto: StoredFood): SqlTask {
+  return {
+    statement: `
+      INSERT INTO stored_food (id, food_id, quantity_amount, quantity_unit, storage_location, expires_on, opened, opened_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET
+        food_id = excluded.food_id, quantity_amount = excluded.quantity_amount, quantity_unit = excluded.quantity_unit,
+        storage_location = excluded.storage_location, expires_on = excluded.expires_on, opened = excluded.opened,
+        opened_at = excluded.opened_at, _dirty = 1`,
+    values: [
+      dto.id,
+      dto.foodId,
+      dto.quantityAmount,
+      dto.quantityUnit,
+      dto.storageLocation,
+      dto.expiresOn,
+      dto.opened ? 1 : 0,
+      dto.openedAt ?? null,
+    ],
+  };
+}
+
+export function storedFoodServerApplyTask(dto: StoredFood): SqlTask {
+  return {
+    statement: `
+      INSERT INTO stored_food (id, food_id, quantity_amount, quantity_unit, storage_location, expires_on, opened, opened_at, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        food_id = excluded.food_id, quantity_amount = excluded.quantity_amount, quantity_unit = excluded.quantity_unit,
+        storage_location = excluded.storage_location, expires_on = excluded.expires_on, opened = excluded.opened,
+        opened_at = excluded.opened_at, created_at = excluded.created_at, updated_at = excluded.updated_at,
+        deleted = excluded.deleted, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE stored_food._dirty = 0`,
+    values: [
+      dto.id,
+      dto.foodId,
+      dto.quantityAmount,
+      dto.quantityUnit,
+      dto.storageLocation,
+      dto.expiresOn,
+      dto.opened ? 1 : 0,
+      dto.openedAt ?? null,
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function storedFoodTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO stored_food (id, food_id, quantity_amount, quantity_unit, storage_location, expires_on, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '', 0, '', 'ROOM', '1970-01-01', ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+/** Local-only removal of a storage item cascaded from its Food catalog entry being deleted (not a standalone outbox entry — see SqliteStorageBackend.deleteFood). */
+export function storedFoodLocalRemoveTask(id: string): SqlTask {
+  return {
+    statement: `UPDATE stored_food SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?`,
+    values: [new Date().toISOString(), id],
   };
 }
 

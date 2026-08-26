@@ -1,0 +1,36 @@
+get:
+  operationId: listStoredFoods
+  tags:
+    - stored-foods
+  summary: The caller's home storage inventory, live rows only (deleted = false).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/StoredFoodList.yaml'
+post:
+  operationId: createStoredFood
+  tags:
+    - stored-foods
+  summary: Create a storage item — idempotent upsert on the client-supplied id.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/StoredFood.yaml'
+  responses:
+    '200':
+      description: Created or, on retry with the same id, the existing row.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/StoredFood.yaml'
+    '404':
+      description: foodId does not exist or is deleted.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'

@@ -1,0 +1,58 @@
+type: object
+description: >-
+  documentation/Subfeatures/Élelmiszer tárolás.md — a single per-user home-storage item referencing
+  the (global) food catalog. Each row is independent (no merging by food+location+expiry). The
+  "felbontás" expiry recompute and meal-time consumption deduction are client-side business logic
+  (documentation/Architektúra/Backend-offline first.md) — the server just stores whatever full
+  record it's sent.
+required:
+  - id
+  - foodId
+  - quantityAmount
+  - quantityUnit
+  - storageLocation
+  - expiresOn
+  - opened
+  - deleted
+properties:
+  id:
+    type: string
+    format: uuid
+  foodId:
+    type: string
+    format: uuid
+  quantityAmount:
+    type: number
+  quantityUnit:
+    type: string
+    description: 'documentation/Architektúra/Mennyiség mező.md quantity unit: db, g, dkg, kg, l, dl, cl, or ml.'
+  storageLocation:
+    type: string
+    enum:
+      - ROOM
+      - FRIDGE
+      - FREEZER
+  expiresOn:
+    type: string
+    format: date
+  opened:
+    type: boolean
+  openedAt:
+    type: string
+    format: date-time
+    nullable: true
+  deleted:
+    type: boolean
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

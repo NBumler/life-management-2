@@ -25,14 +25,17 @@ import static org.mockito.Mockito.when;
 class FoodServiceTest {
 
 	private FoodRepository repository;
+	private StoredFoodRepository storedFoodRepository;
 	private FoodService service;
 
 	@BeforeEach
 	void setUp() {
 		repository = mock(FoodRepository.class);
+		storedFoodRepository = mock(StoredFoodRepository.class);
 		when(repository.findByDeletedFalse()).thenReturn(List.of());
 		when(repository.saveAndFlush(any())).thenAnswer(inv -> inv.getArgument(0));
-		service = new FoodService(repository, new FoodMapper());
+		when(storedFoodRepository.findByFoodIdAndDeletedFalse(any())).thenReturn(List.of());
+		service = new FoodService(repository, storedFoodRepository, new FoodMapper());
 	}
 
 	private static Food food(UUID id, String name) {
@@ -229,6 +232,22 @@ class FoodServiceTest {
 
 		assertThat(deleted.getDeleted()).isTrue();
 		verify(repository, never()).saveAndFlush(any());
+	}
+
+	@Test
+	void delete_cascadesToLiveStoredFoodReferencingThisCatalogItem() {
+		// documentation/Subfeatures/Élelmiszer tárolás.md "Törlés".
+		UUID id = UUID.randomUUID();
+		FoodEntity existing = new FoodEntity(id);
+		existing.rename("Tej", "tej");
+		when(repository.findById(id)).thenReturn(Optional.of(existing));
+		StoredFoodEntity storedFood = new StoredFoodEntity(UUID.randomUUID(), UUID.randomUUID());
+		when(storedFoodRepository.findByFoodIdAndDeletedFalse(id)).thenReturn(List.of(storedFood));
+
+		service.delete(id);
+
+		assertThat(storedFood.isDeleted()).isTrue();
+		verify(storedFoodRepository).save(storedFood);
 	}
 
 	// --- list ---

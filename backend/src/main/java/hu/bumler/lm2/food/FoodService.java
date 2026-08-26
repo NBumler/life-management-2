@@ -26,10 +26,12 @@ import hu.bumler.lm2.common.exception.UniqueViolationException;
 class FoodService {
 
 	private final FoodRepository repository;
+	private final StoredFoodRepository storedFoodRepository;
 	private final FoodMapper mapper;
 
-	FoodService(FoodRepository repository, FoodMapper mapper) {
+	FoodService(FoodRepository repository, StoredFoodRepository storedFoodRepository, FoodMapper mapper) {
 		this.repository = repository;
+		this.storedFoodRepository = storedFoodRepository;
 		this.mapper = mapper;
 	}
 
@@ -63,9 +65,9 @@ class FoodService {
 	}
 
 	/**
-	 * Soft delete, idempotent. documentation/Subfeatures/Élelmiszerek.md: cascading to referencing
-	 * storage / recipe / shopping-list / meal rows (for every user) is added once those features
-	 * exist — nothing references Food yet in this slice.
+	 * Soft delete, idempotent, cascading to every live StoredFood referencing this catalog item
+	 * (across every user — documentation/Subfeatures/Élelmiszer tárolás.md "Törlés"). Recipe /
+	 * shopping-list / meal cascades are added once those features exist.
 	 */
 	@Transactional
 	Food delete(UUID id) {
@@ -73,6 +75,11 @@ class FoodService {
 		if (!entity.isDeleted()) {
 			entity.softDelete();
 			repository.saveAndFlush(entity);
+			for (StoredFoodEntity storedFood : storedFoodRepository.findByFoodIdAndDeletedFalse(id)) {
+				storedFood.softDelete();
+				storedFoodRepository.save(storedFood);
+			}
+			storedFoodRepository.flush();
 		}
 		return mapper.toDto(entity);
 	}

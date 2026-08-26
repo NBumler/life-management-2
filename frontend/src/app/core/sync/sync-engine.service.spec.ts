@@ -23,7 +23,7 @@ import { SyncEngineService } from './sync-engine.service';
 /** Private-method access for internal-mechanism tests (drain, classify, pull, backoff) — see class-level doc for why these aren't public. */
 interface SyncEngineInternals {
   classifyAndHandle(item: OutboxItem, error: unknown): Promise<string>;
-  buildApplyTasks(change: SyncChangeItem): Array<{ statement: string; values?: unknown[] }>;
+  buildApplyTasks(change: SyncChangeItem): Promise<Array<{ statement: string; values?: unknown[] }>>;
   buildServerApplyTasks(item: OutboxItem, body: unknown): Array<{ statement: string; values?: unknown[] }>;
   drain(userId: string): Promise<boolean>;
   pull(userId: string): Promise<void>;
@@ -219,16 +219,16 @@ describe('SyncEngineService', () => {
   });
 
   describe('buildApplyTasks (§8 apply-szabályok)', () => {
-    it('UserProfile update: writes the server row as authoritative', () => {
+    it('UserProfile update: writes the server row as authoritative', async () => {
       const change: SyncChangeItem = { entityType: 'UserProfile', id: 'p1', deleted: false, updatedAt: 'now', data: { id: 'p1' } };
-      const tasks = internal.buildApplyTasks(change);
+      const tasks = await internal.buildApplyTasks(change);
       expect(tasks.length).toBe(1);
       expect(tasks[0].statement).toContain('INSERT INTO user_profile');
     });
 
-    it('UserProfile tombstone: writes the tombstone AND discards pending non-DELETE writes for it', () => {
+    it('UserProfile tombstone: writes the tombstone AND discards pending non-DELETE writes for it', async () => {
       const change: SyncChangeItem = { entityType: 'UserProfile', id: 'p1', deleted: true, updatedAt: 'now' };
-      const tasks = internal.buildApplyTasks(change);
+      const tasks = await internal.buildApplyTasks(change);
       expect(tasks.length).toBe(2);
       expect(tasks[0].statement).toContain('INSERT INTO user_profile');
       expect(tasks[1].statement).toContain('DELETE FROM outbox_item');
@@ -236,49 +236,49 @@ describe('SyncEngineService', () => {
       expect(tasks[1].values).toEqual(['p1']);
     });
 
-    it('WeightHistoryEntry update: writes the server row as authoritative', () => {
+    it('WeightHistoryEntry update: writes the server row as authoritative', async () => {
       const change: SyncChangeItem = { entityType: 'WeightHistoryEntry', id: 'w1', deleted: false, updatedAt: 'now', data: { id: 'w1' } };
-      const tasks = internal.buildApplyTasks(change);
+      const tasks = await internal.buildApplyTasks(change);
       expect(tasks.length).toBe(1);
       expect(tasks[0].statement).toContain('INSERT INTO weight_history_entry');
     });
 
-    it('WeightHistoryEntry tombstone: writes the tombstone AND discards pending non-DELETE writes — same symmetry as UserProfile', () => {
+    it('WeightHistoryEntry tombstone: writes the tombstone AND discards pending non-DELETE writes — same symmetry as UserProfile', async () => {
       const change: SyncChangeItem = { entityType: 'WeightHistoryEntry', id: 'w1', deleted: true, updatedAt: 'now' };
-      const tasks = internal.buildApplyTasks(change);
+      const tasks = await internal.buildApplyTasks(change);
       expect(tasks.length).toBe(2);
       expect(tasks[0].statement).toContain('INSERT INTO weight_history_entry');
       expect(tasks[1].statement).toContain('DELETE FROM outbox_item');
       expect(tasks[1].values).toEqual(['w1']);
     });
 
-    it('GearItem update: writes the server row as authoritative', () => {
+    it('GearItem update: writes the server row as authoritative', async () => {
       const change: SyncChangeItem = { entityType: 'GearItem', id: 'g1', deleted: false, updatedAt: 'now', data: { id: 'g1' } };
-      const tasks = internal.buildApplyTasks(change);
+      const tasks = await internal.buildApplyTasks(change);
       expect(tasks.length).toBe(1);
       expect(tasks[0].statement).toContain('INSERT INTO gear_item');
     });
 
-    it('GearItem tombstone: writes the tombstone AND discards pending non-DELETE writes — same symmetry as UserProfile', () => {
+    it('GearItem tombstone: writes the tombstone AND discards pending non-DELETE writes — same symmetry as UserProfile', async () => {
       const change: SyncChangeItem = { entityType: 'GearItem', id: 'g1', deleted: true, updatedAt: 'now' };
-      const tasks = internal.buildApplyTasks(change);
+      const tasks = await internal.buildApplyTasks(change);
       expect(tasks.length).toBe(2);
       expect(tasks[0].statement).toContain('INSERT INTO gear_item');
       expect(tasks[1].statement).toContain('DELETE FROM outbox_item');
       expect(tasks[1].values).toEqual(['g1']);
     });
 
-    it('PackingTemplate update: writes the server row as authoritative (no items — that is a separate entityType)', () => {
+    it('PackingTemplate update: writes the server row as authoritative (no items — that is a separate entityType)', async () => {
       const change: SyncChangeItem = { entityType: 'PackingTemplate', id: 't1', deleted: false, updatedAt: 'now', data: { id: 't1' } };
-      const tasks = internal.buildApplyTasks(change);
+      const tasks = await internal.buildApplyTasks(change);
       expect(tasks.length).toBe(1);
       expect(tasks[0].statement).toContain('INSERT INTO packing_template');
       expect(tasks[0].statement).not.toContain('packing_template_item');
     });
 
-    it('PackingTemplate tombstone: writes the tombstone AND discards pending non-DELETE writes', () => {
+    it('PackingTemplate tombstone: writes the tombstone AND discards pending non-DELETE writes', async () => {
       const change: SyncChangeItem = { entityType: 'PackingTemplate', id: 't1', deleted: true, updatedAt: 'now' };
-      const tasks = internal.buildApplyTasks(change);
+      const tasks = await internal.buildApplyTasks(change);
       expect(tasks.length).toBe(2);
       expect(tasks[0].statement).toContain('INSERT INTO packing_template');
       expect(tasks[0].statement).not.toContain('packing_template_item');
@@ -286,56 +286,56 @@ describe('SyncEngineService', () => {
       expect(tasks[1].values).toEqual(['t1']);
     });
 
-    it('PackingTemplateItem update: writes the server row as authoritative', () => {
+    it('PackingTemplateItem update: writes the server row as authoritative', async () => {
       const change: SyncChangeItem = { entityType: 'PackingTemplateItem', id: 'ti1', deleted: false, updatedAt: 'now', data: { id: 'ti1' } };
-      const tasks = internal.buildApplyTasks(change);
+      const tasks = await internal.buildApplyTasks(change);
       expect(tasks.length).toBe(1);
       expect(tasks[0].statement).toContain('INSERT INTO packing_template_item');
     });
 
-    it('PackingTemplateItem tombstone: writes the tombstone AND discards pending non-DELETE writes', () => {
+    it('PackingTemplateItem tombstone: writes the tombstone AND discards pending non-DELETE writes', async () => {
       const change: SyncChangeItem = { entityType: 'PackingTemplateItem', id: 'ti1', deleted: true, updatedAt: 'now' };
-      const tasks = internal.buildApplyTasks(change);
+      const tasks = await internal.buildApplyTasks(change);
       expect(tasks.length).toBe(2);
       expect(tasks[0].statement).toContain('INSERT INTO packing_template_item');
       expect(tasks[1].values).toEqual(['ti1']);
     });
 
-    it('PackingSession update: writes the server row as authoritative (base shape, no items)', () => {
+    it('PackingSession update: writes the server row as authoritative (base shape, no items)', async () => {
       const change: SyncChangeItem = { entityType: 'PackingSession', id: 's1', deleted: false, updatedAt: 'now', data: { id: 's1' } };
-      const tasks = internal.buildApplyTasks(change);
+      const tasks = await internal.buildApplyTasks(change);
       expect(tasks.length).toBe(1);
       expect(tasks[0].statement).toContain('INSERT INTO packing_session');
       expect(tasks[0].statement).not.toContain('packing_session_item');
     });
 
-    it('PackingSession tombstone: writes the tombstone AND discards pending non-DELETE writes', () => {
+    it('PackingSession tombstone: writes the tombstone AND discards pending non-DELETE writes', async () => {
       const change: SyncChangeItem = { entityType: 'PackingSession', id: 's1', deleted: true, updatedAt: 'now' };
-      const tasks = internal.buildApplyTasks(change);
+      const tasks = await internal.buildApplyTasks(change);
       expect(tasks.length).toBe(2);
       expect(tasks[0].statement).toContain('INSERT INTO packing_session');
       expect(tasks[0].statement).not.toContain('packing_session_item');
       expect(tasks[1].values).toEqual(['s1']);
     });
 
-    it('PackingSessionItem update: writes the server row as authoritative', () => {
+    it('PackingSessionItem update: writes the server row as authoritative', async () => {
       const change: SyncChangeItem = { entityType: 'PackingSessionItem', id: 'si1', deleted: false, updatedAt: 'now', data: { id: 'si1' } };
-      const tasks = internal.buildApplyTasks(change);
+      const tasks = await internal.buildApplyTasks(change);
       expect(tasks.length).toBe(1);
       expect(tasks[0].statement).toContain('INSERT INTO packing_session_item');
     });
 
-    it('PackingSessionItem tombstone: writes the tombstone AND discards pending non-DELETE writes', () => {
+    it('PackingSessionItem tombstone: writes the tombstone AND discards pending non-DELETE writes', async () => {
       const change: SyncChangeItem = { entityType: 'PackingSessionItem', id: 'si1', deleted: true, updatedAt: 'now' };
-      const tasks = internal.buildApplyTasks(change);
+      const tasks = await internal.buildApplyTasks(change);
       expect(tasks.length).toBe(2);
       expect(tasks[0].statement).toContain('INSERT INTO packing_session_item');
       expect(tasks[1].values).toEqual(['si1']);
     });
 
-    it('unknown entity types produce no local tasks', () => {
+    it('unknown entity types produce no local tasks', async () => {
       const change: SyncChangeItem = { entityType: 'SomethingElse', id: 'x', deleted: false, updatedAt: 'now', data: {} };
-      expect(internal.buildApplyTasks(change)).toEqual([]);
+      expect(await internal.buildApplyTasks(change)).toEqual([]);
     });
   });
 

@@ -1,0 +1,77 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-segment value="storage" (ionChange)="switchSection($any($event.target).value)">
+      <ion-segment-button value="catalog">
+        <ion-label>{{ 'FOOD.CATALOG.TITLE' | translate }}</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="storage">
+        <ion-label>{{ 'FOOD.STORAGE.TITLE' | translate }}</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-searchbar
+      [value]="query()"
+      (ionInput)="query.set($any($event.target).value ?? '')"
+      [placeholder]="'FOOD.STORAGE.SEARCH_PLACEHOLDER' | translate"
+      [debounce]="200"
+    ></ion-searchbar>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-segment [value]="locationFilter()" (ionChange)="locationFilter.set($any($event.target).value)">
+      <ion-segment-button value="ALL">
+        <ion-label>{{ 'FOOD.STORAGE.LOCATION_ALL' | translate }}</ion-label>
+      </ion-segment-button>
+      <ion-segment-button [value]="StorageLocationEnum.Room">
+        <ion-label>{{ 'FOOD.STORAGE.LOCATION_ROOM' | translate }}</ion-label>
+      </ion-segment-button>
+      <ion-segment-button [value]="StorageLocationEnum.Fridge">
+        <ion-label>{{ 'FOOD.STORAGE.LOCATION_FRIDGE' | translate }}</ion-label>
+      </ion-segment-button>
+      <ion-segment-button [value]="StorageLocationEnum.Freezer">
+        <ion-label>{{ 'FOOD.STORAGE.LOCATION_FREEZER' | translate }}</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-list>
+    @if (rows().length === 0) {
+      <ion-item>
+        <ion-label color="medium">{{ 'FOOD.STORAGE.EMPTY' | translate }}</ion-label>
+      </ion-item>
+    }
+
+    @for (row of rows(); track row.item.id) {
+      <ion-item button (click)="edit(row)">
+        <ion-label>
+          <h3>
+            {{ row.food.name }}
+            @if (isSpoiled(row.item)) {
+              <ion-badge color="danger">{{ 'FOOD.STORAGE.BADGE_SPOILED' | translate }}</ion-badge>
+            }
+            @if (row.item.opened) {
+              <ion-badge color="medium">{{ 'FOOD.STORAGE.BADGE_OPENED' | translate }}</ion-badge>
+            }
+          </h3>
+          <p>{{ subtitle(row) }}</p>
+        </ion-label>
+        @if (!row.item.opened) {
+          <ion-button fill="clear" (click)="open(row); $event.stopPropagation()">
+            {{ 'FOOD.STORAGE.OPEN_ACTION' | translate }}
+          </ion-button>
+        }
+        <ion-button fill="clear" color="danger" (click)="delete(row); $event.stopPropagation()">
+          <ion-icon name="trash-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+        </ion-button>
+      </ion-item>
+    }
+  </ion-list>
+
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button (click)="addItem()">
+      <ion-icon name="add-outline" aria-hidden="true"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+</ion-content>

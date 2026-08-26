@@ -18,6 +18,7 @@ export * from './packingTemplate';
 export * from './packingTemplateDetail';
 export * from './packingTemplateItem';
 export * from './refreshRequest';
+export * from './storedFood';
 export * from './syncChangeItem';
 export * from './syncChangesResponse';
 export * from './userProfile';

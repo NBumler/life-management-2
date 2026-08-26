@@ -16,6 +16,7 @@ import { PackingSessionItemsService } from '../../api/api/packingSessionItems.se
 import { PackingSessionsService } from '../../api/api/packingSessions.service';
 import { PackingTemplatesService } from '../../api/api/packingTemplates.service';
 import { ProfileService } from '../../api/api/profile.service';
+import { StoredFoodsService } from '../../api/api/storedFoods.service';
 import { SyncService } from '../../api/api/sync.service';
 import { ApiError } from '../../api/model/apiError';
 import { CalendarEvent } from '../../api/model/calendarEvent';
@@ -30,6 +31,7 @@ import { PackingSessionItem } from '../../api/model/packingSessionItem';
 import { PackingTemplate } from '../../api/model/packingTemplate';
 import { PackingTemplateDetail } from '../../api/model/packingTemplateDetail';
 import { PackingTemplateItem } from '../../api/model/packingTemplateItem';
+import { StoredFood } from '../../api/model/storedFood';
 import { SyncChangeItem } from '../../api/model/syncChangeItem';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
@@ -56,6 +58,9 @@ import {
   packingTemplateTombstoneTask,
   profileServerApplyTask,
   profileTombstoneTask,
+  storedFoodLocalRemoveTask,
+  storedFoodServerApplyTask,
+  storedFoodTombstoneTask,
   weightHistoryServerApplyTask,
   weightHistoryTombstoneTask,
 } from '../data/local-rows';
@@ -91,6 +96,7 @@ export class SyncEngineService {
   private readonly householdTasksApi = inject(HouseholdTasksService);
   private readonly eventsApi = inject(EventsService);
   private readonly foodsApi = inject(FoodsService);
+  private readonly storedFoodsApi = inject(StoredFoodsService);
   private readonly syncApi = inject(SyncService);
   private readonly authSession = inject(AuthSessionService);
   private readonly offlineQueue = inject(OfflineQueueService);
@@ -296,6 +302,16 @@ export class SyncEngineService {
         // same as above
       }
     }
+
+    const staleStoredFoods = await this.db.query<{ id: string }>('SELECT id FROM stored_food WHERE _needs_refetch = 1');
+    for (const row of staleStoredFoods) {
+      try {
+        const dto = await firstValueFrom(this.storedFoodsApi.getStoredFood(row.id));
+        await this.db.executeTransaction([storedFoodServerApplyTask(dto)]);
+      } catch {
+        // same as above
+      }
+    }
   }
 
   private async probeBackend(): Promise<boolean> {
@@ -455,6 +471,9 @@ export class SyncEngineService {
     if (item.entityType === 'Food') {
       return [foodServerApplyTask(body as Food)];
     }
+    if (item.entityType === 'StoredFood') {
+      return [storedFoodServerApplyTask(body as StoredFood)];
+    }
     throw new Error(`SyncEngine: no local writer for entityType "${item.entityType}"`);
   }
 
@@ -522,7 +541,14 @@ export class SyncEngineService {
     } else if (item.entityType === 'CalendarEvent') {
       await this.db.executeTransaction([calendarEventTombstoneTask(item.targetEntityId, null, now)]);
     } else if (item.entityType === 'Food') {
-      await this.db.executeTransaction([foodTombstoneTask(item.targetEntityId, null, now)]);
+      // documentation/Subfeatures/Élelmiszer tárolás.md: Food delete cascades to its storage items locally too.
+      const storedFoodRows = await this.db.query<{ id: string }>('SELECT id FROM stored_food WHERE food_id = ?', [item.targetEntityId]);
+      await this.db.executeTransaction([
+        foodTombstoneTask(item.targetEntityId, null, now),
+        ...storedFoodRows.map((row) => storedFoodLocalRemoveTask(row.id)),
+      ]);
+    } else if (item.entityType === 'StoredFood') {
+      await this.db.executeTransaction([storedFoodTombstoneTask(item.targetEntityId, null, now)]);
     }
   }
 
@@ -547,7 +573,7 @@ export class SyncEngineService {
 
       const tasks: SqlTask[] = [];
       for (const change of response.changes) {
-        tasks.push(...this.buildApplyTasks(change));
+        tasks.push(...(await this.buildApplyTasks(change)));
       }
       tasks.push({
         statement: 'UPDATE sync_state SET cursor = ?, last_pull_at = ?, last_pull_status = ?, first_pull_completed = 1 WHERE id = 1',
@@ -563,7 +589,7 @@ export class SyncEngineService {
     await this.offlineQueue.refreshCounts(userId);
   }
 
-  private buildApplyTasks(change: SyncChangeItem): SqlTask[] {
+  private async buildApplyTasks(change: SyncChangeItem): Promise<SqlTask[]> {
     if (change.entityType === 'UserProfile') {
       if (!change.deleted) {
         return [profileServerApplyTask(change.data as UserProfile)];
@@ -634,7 +660,19 @@ export class SyncEngineService {
       if (!change.deleted) {
         return [foodServerApplyTask(change.data as Food)];
       }
-      return [foodTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
+      // documentation/Subfeatures/Élelmiszer tárolás.md: Food delete cascades to this device's own storage items too.
+      const storedFoodRows = await this.db.query<{ id: string }>('SELECT id FROM stored_food WHERE food_id = ?', [change.id]);
+      return [
+        foodTombstoneTask(change.id, null, change.updatedAt),
+        discardPendingWritesTask(change.id),
+        ...storedFoodRows.map((row) => storedFoodLocalRemoveTask(row.id)),
+      ];
+    }
+    if (change.entityType === 'StoredFood') {
+      if (!change.deleted) {
+        return [storedFoodServerApplyTask(change.data as StoredFood)];
+      }
+      return [storedFoodTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
     }
     return [];
   }

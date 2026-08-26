@@ -1,0 +1,102 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/food/storage"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ (itemId() === null ? 'FOOD.STORAGE.ADD_TITLE' : 'FOOD.STORAGE.EDIT_TITLE') | translate }}</ion-title>
+    @if (itemId() !== null) {
+      <ion-buttons slot="end">
+        <ion-button color="danger" (click)="delete()">{{ 'COMMON.DELETE' | translate }}</ion-button>
+      </ion-buttons>
+    }
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  @if (foodId() === null) {
+    <ion-searchbar
+      [value]="pickerQuery()"
+      (ionInput)="pickerQuery.set($any($event.target).value ?? '')"
+      [placeholder]="'FOOD.STORAGE.PICKER_SEARCH_PLACEHOLDER' | translate"
+      [debounce]="200"
+    ></ion-searchbar>
+    <ion-list>
+      @if (pickerResults().length === 0) {
+        <ion-item>
+          <ion-label color="medium">{{ 'FOOD.STORAGE.PICKER_EMPTY' | translate }}</ion-label>
+        </ion-item>
+      }
+      @for (food of pickerResults(); track food.id) {
+        <ion-item button (click)="selectFood(food)">
+          <ion-label>
+            <h3>{{ food.name }}</h3>
+            @if (food.brand) {
+              <p>{{ food.brand }}</p>
+            }
+          </ion-label>
+        </ion-item>
+      }
+    </ion-list>
+  } @else {
+    <form [formGroup]="form" id="storage-form" (ngSubmit)="save()">
+      <ion-list>
+        <ion-item>
+          <ion-label>
+            <h3>{{ selectedFood()?.name }}</h3>
+            @if (selectedFood()?.brand) {
+              <p>{{ selectedFood()?.brand }}</p>
+            }
+          </ion-label>
+          @if (itemId() === null) {
+            <ion-button slot="end" fill="clear" type="button" (click)="changeFood()">{{ 'FOOD.STORAGE.CHANGE_FOOD' | translate }}</ion-button>
+          }
+        </ion-item>
+
+        <ion-item>
+          <app-quantity-input formControlName="quantity" mode="quantity" [label]="'FOOD.STORAGE.QUANTITY_LABEL' | translate"></app-quantity-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-label>{{ 'FOOD.STORAGE.LOCATION_LABEL' | translate }}</ion-label>
+        </ion-item>
+        <ion-segment formControlName="storageLocation">
+          @if (allowedLocations().includes(StorageLocationEnum.Room)) {
+            <ion-segment-button [value]="StorageLocationEnum.Room">
+              <ion-label>{{ 'FOOD.STORAGE.LOCATION_ROOM' | translate }}</ion-label>
+            </ion-segment-button>
+          }
+          @if (allowedLocations().includes(StorageLocationEnum.Fridge)) {
+            <ion-segment-button [value]="StorageLocationEnum.Fridge">
+              <ion-label>{{ 'FOOD.STORAGE.LOCATION_FRIDGE' | translate }}</ion-label>
+            </ion-segment-button>
+          }
+          @if (allowedLocations().includes(StorageLocationEnum.Freezer)) {
+            <ion-segment-button [value]="StorageLocationEnum.Freezer">
+              <ion-label>{{ 'FOOD.STORAGE.LOCATION_FREEZER' | translate }}</ion-label>
+            </ion-segment-button>
+          }
+        </ion-segment>
+
+        <ion-item>
+          <ion-input formControlName="expiresOn" type="date" [label]="'FOOD.STORAGE.EXPIRES_ON_LABEL' | translate" labelPlacement="stacked"></ion-input>
+        </ion-item>
+
+        @if (itemId() === null) {
+          <ion-item>
+            <ion-checkbox [checked]="openOnCreate()" (ionChange)="openOnCreate.set($any($event.target).checked)">
+              {{ 'FOOD.STORAGE.OPENED_ON_CREATE_LABEL' | translate }}
+            </ion-checkbox>
+          </ion-item>
+        }
+      </ion-list>
+    </form>
+  }
+</ion-content>
+
+@if (foodId() !== null) {
+  <ion-footer>
+    <ion-toolbar>
+      <ion-button expand="block" type="submit" form="storage-form" class="ion-margin">{{ 'COMMON.SAVE' | translate }}</ion-button>
+    </ion-toolbar>
+  </ion-footer>
+}

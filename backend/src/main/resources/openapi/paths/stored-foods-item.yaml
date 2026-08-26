@@ -1,0 +1,69 @@
+parameters:
+  - name: id
+    in: path
+    required: true
+    schema:
+      type: string
+      format: uuid
+get:
+  operationId: getStoredFood
+  tags:
+    - stored-foods
+  summary: A single storage item. Own deleted row returns 200 with deleted=true (not 404).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/StoredFood.yaml'
+    '404':
+      description: No such storage item (or it belongs to another user).
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+put:
+  operationId: updateStoredFood
+  tags:
+    - stored-foods
+  summary: >-
+    Full update (last-write-wins). "Felbontás" is a PUT with the client-recomputed opened/openedAt/
+    expiresOn (documentation/Subfeatures/Élelmiszer tárolás.md "Felbontás").
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/StoredFood.yaml'
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/StoredFood.yaml'
+    '404':
+      description: foodId does not exist or is deleted.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+    '409':
+      description: Entity already deleted.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+delete:
+  operationId: deleteStoredFood
+  tags:
+    - stored-foods
+  summary: Soft delete, idempotent.
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/StoredFood.yaml'

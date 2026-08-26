@@ -295,7 +295,31 @@ const SCHEMA_V8_STATEMENTS: string[] = [
   `CREATE INDEX IF NOT EXISTS idx_food_name ON food (name)`,
 ];
 
-const SCHEMA_VERSION = 8;
+/** documentation/Subfeatures/Élelmiszer tárolás.md — per-user home storage inventory, referencing the (global) food table. */
+const SCHEMA_V9_STATEMENTS: string[] = [
+  `CREATE TABLE IF NOT EXISTS stored_food (
+    id TEXT PRIMARY KEY,
+    food_id TEXT NOT NULL,
+    quantity_amount REAL NOT NULL,
+    quantity_unit TEXT NOT NULL,
+    storage_location TEXT NOT NULL,
+    expires_on TEXT NOT NULL,
+    opened INTEGER NOT NULL DEFAULT 0,
+    opened_at TEXT,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_stored_food_food_id ON stored_food (food_id)`,
+  `CREATE INDEX IF NOT EXISTS idx_stored_food_expires_on ON stored_food (expires_on)`,
+];
+
+const SCHEMA_VERSION = 9;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -306,7 +330,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 5, statements: SCHEMA_V5_STATEMENTS },
   { toVersion: 6, statements: SCHEMA_V6_STATEMENTS },
   { toVersion: 7, statements: SCHEMA_V7_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V8_STATEMENTS },
+  { toVersion: 8, statements: SCHEMA_V8_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V9_STATEMENTS },
 ];
 
 export interface SqlTask {

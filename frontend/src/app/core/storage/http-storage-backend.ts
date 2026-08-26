@@ -11,6 +11,7 @@ import { PackingSessionItemsService } from '../../api/api/packingSessionItems.se
 import { PackingSessionsService } from '../../api/api/packingSessions.service';
 import { PackingTemplatesService } from '../../api/api/packingTemplates.service';
 import { ProfileService } from '../../api/api/profile.service';
+import { StoredFoodsService } from '../../api/api/storedFoods.service';
 import { CalendarEvent } from '../../api/model/calendarEvent';
 import { Food } from '../../api/model/food';
 import { GearItem } from '../../api/model/gearItem';
@@ -22,6 +23,7 @@ import { PackingSessionDetail } from '../../api/model/packingSessionDetail';
 import { PackingSessionItem } from '../../api/model/packingSessionItem';
 import { PackingTemplate } from '../../api/model/packingTemplate';
 import { PackingTemplateDetail } from '../../api/model/packingTemplateDetail';
+import { StoredFood } from '../../api/model/storedFood';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 import { uuidV4 } from '../sync/uuid';
@@ -40,6 +42,7 @@ export class HttpStorageBackend implements StorageBackend {
   private readonly householdTasksApi = inject(HouseholdTasksService);
   private readonly eventsApi = inject(EventsService);
   private readonly foodsApi = inject(FoodsService);
+  private readonly storedFoodsApi = inject(StoredFoodsService);
 
   async getProfile(): Promise<UserProfile | null> {
     try {
@@ -227,6 +230,19 @@ export class HttpStorageBackend implements StorageBackend {
 
   deleteFood(id: string): Promise<Food> {
     return firstValueFrom(this.foodsApi.deleteFood(id));
+  }
+
+  listStoredFoods(): Promise<StoredFood[]> {
+    return firstValueFrom(this.storedFoodsApi.listStoredFoods());
+  }
+
+  /** POST with an existing id is an idempotent upsert server-side, so this covers both create and update. */
+  upsertStoredFood(item: StoredFood): Promise<StoredFood> {
+    return firstValueFrom(this.storedFoodsApi.createStoredFood(item));
+  }
+
+  deleteStoredFood(id: string): Promise<StoredFood> {
+    return firstValueFrom(this.storedFoodsApi.deleteStoredFood(id));
   }
 }
 

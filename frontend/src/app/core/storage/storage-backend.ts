@@ -11,6 +11,7 @@ import { PackingSessionDetail } from '../../api/model/packingSessionDetail';
 import { PackingSessionItem } from '../../api/model/packingSessionItem';
 import { PackingTemplate } from '../../api/model/packingTemplate';
 import { PackingTemplateDetail } from '../../api/model/packingTemplateDetail';
+import { StoredFood } from '../../api/model/storedFood';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 
@@ -111,7 +112,12 @@ export interface StorageBackend {
   /** documentation/Subfeatures/Élelmiszerek.md: shared/global catalog — not scoped by user. */
   listFoods(): Promise<Food[]>;
   upsertFood(food: Food): Promise<Food>;
+  /** documentation/Subfeatures/Élelmiszer tárolás.md "Törlés": cascades to every live storage item referencing this catalog entry. */
   deleteFood(id: string): Promise<Food>;
+
+  listStoredFoods(): Promise<StoredFood[]>;
+  upsertStoredFood(item: StoredFood): Promise<StoredFood>;
+  deleteStoredFood(id: string): Promise<StoredFood>;
 }
 
 export const STORAGE_BACKEND = new InjectionToken<StorageBackend>('STORAGE_BACKEND');

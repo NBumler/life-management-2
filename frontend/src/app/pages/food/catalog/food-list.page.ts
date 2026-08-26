@@ -13,7 +13,8 @@ import {
   IonLabel,
   IonList,
   IonSearchbar,
-  IonTitle,
+  IonSegment,
+  IonSegmentButton,
   IonToolbar,
   ToastController,
 } from '@ionic/angular/standalone';
@@ -37,7 +38,6 @@ import { OpenFoodFactsService } from './open-food-facts.service';
   imports: [
     IonHeader,
     IonToolbar,
-    IonTitle,
     IonContent,
     IonSearchbar,
     IonList,
@@ -47,6 +47,8 @@ import { OpenFoodFactsService } from './open-food-facts.service';
     IonIcon,
     IonFab,
     IonFabButton,
+    IonSegment,
+    IonSegmentButton,
     TranslatePipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -111,6 +113,13 @@ export class FoodListPage implements OnInit {
       ],
     });
     await sheet.present();
+  }
+
+  /** documentation/Features/Kaja.md: no full segmented hub yet (see app.routes.ts) — this is the lightweight stand-in until Étkezés/Recept/Stat exist too. */
+  switchSection(section: string): void {
+    if (section === 'storage') {
+      void this.router.navigateByUrl('/tabs/food/storage');
+    }
   }
 
   /** documentation/Subfeatures/Vonalkódos élelmiszer beolvasás.md "Scan & Pre-fill". */

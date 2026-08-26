@@ -345,6 +345,30 @@
       "COLUMN_COUNT": "Hibás oszlopszám (22 elvárt).",
       "IMPORT_BUTTON": "{{count}} tétel importálása",
       "SUCCESS_TOAST": "{{count}} élelmiszer importálva."
+    },
+    "STORAGE": {
+      "TITLE": "Tárolás",
+      "SEARCH_PLACEHOLDER": "Keresés",
+      "LOCATION_ALL": "Mind",
+      "LOCATION_ROOM": "Kamra",
+      "LOCATION_FRIDGE": "Hűtő",
+      "LOCATION_FREEZER": "Fagyasztó",
+      "EMPTY": "Még nincs tárolt tétel.",
+      "BADGE_SPOILED": "Romlott",
+      "BADGE_OPENED": "Felbontva",
+      "EXPIRES_ON_SHORT": "lejár: {{date}}",
+      "OPEN_ACTION": "Felbontva",
+      "DELETE_CONFIRM_TITLE": "Tétel törlése",
+      "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd ezt a tárolási tételt?",
+      "ADD_TITLE": "Tárolási tétel hozzáadása",
+      "EDIT_TITLE": "Tárolási tétel szerkesztése",
+      "PICKER_SEARCH_PLACEHOLDER": "Keresés a katalógusban",
+      "PICKER_EMPTY": "Nincs találat.",
+      "CHANGE_FOOD": "Módosítás",
+      "QUANTITY_LABEL": "Mennyiség",
+      "LOCATION_LABEL": "Tárolási hely",
+      "EXPIRES_ON_LABEL": "Lejárati dátum",
+      "OPENED_ON_CREATE_LABEL": "Már felbontva"
     }
   }
 }

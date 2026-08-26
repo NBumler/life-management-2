@@ -7,6 +7,7 @@ import { HouseholdRoom } from '../../api/model/householdRoom';
 import { HouseholdTask } from '../../api/model/householdTask';
 import { LifePlan } from '../../api/model/lifePlan';
 import { PackingSessionItem } from '../../api/model/packingSessionItem';
+import { StoredFood } from '../../api/model/storedFood';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 import { normalizeName } from '../../shared/name-normalization';
@@ -22,6 +23,7 @@ import {
   PackingSessionItemRow,
   PackingSessionRow,
   ProfileRow,
+  StoredFoodRow,
   WeightHistoryRow,
   calendarEventLocalWriteTask,
   calendarEventRowToDto,
@@ -41,6 +43,8 @@ import {
   packingSessionRowToDto,
   profileLocalWriteTask,
   profileRowToDto,
+  storedFoodLocalWriteTask,
+  storedFoodRowToDto,
   weightHistoryLocalWriteTask,
   weightHistoryRowToDto,
 } from '../data/local-rows';
@@ -216,6 +220,12 @@ export class OutboxEntityRegistryService {
       // documentation/Architektúra/Névegyediség.md "Mezőhalmaz-egyediség": duplicate-ness depends on
       // every field at once, not one value — can't be expressed as (value, excludeId), same reasoning
       // as PackingTemplate/HouseholdTask above. The server's 409 UNIQUE_VIOLATION still guards it.
+      nameUniqueness: null,
+    },
+    StoredFood: {
+      table: 'stored_food',
+      currentPayload: rowLookup<StoredFoodRow, unknown>('stored_food', storedFoodRowToDto),
+      buildFixWriteTask: (payload) => storedFoodLocalWriteTask(payload as unknown as StoredFood),
       nameUniqueness: null,
     },
   };
