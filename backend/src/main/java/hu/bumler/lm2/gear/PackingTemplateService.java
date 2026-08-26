@@ -12,6 +12,7 @@ import hu.bumler.lm2.api.model.PackingTemplate;
 import hu.bumler.lm2.api.model.PackingTemplateDetail;
 import hu.bumler.lm2.api.model.PackingTemplateItem;
 import hu.bumler.lm2.common.NameNormalizer;
+import hu.bumler.lm2.common.NestedChildResolver;
 import hu.bumler.lm2.common.exception.EntityDeletedException;
 import hu.bumler.lm2.common.exception.EntityNotFoundException;
 import hu.bumler.lm2.common.exception.UniqueViolationException;
@@ -116,23 +117,11 @@ class PackingTemplateService {
 		return toDetail(entity);
 	}
 
-	/**
-	 * An id not among this template's own items may still exist elsewhere in the table (another
-	 * template, another user) — since {@code PackingTemplateItemEntity} has a manually-assigned
-	 * {@code @Id}, {@code JpaRepository.save()} always {@code merge()}s, which would silently hijack
-	 * that foreign row's owner/template/gearItem if we blindly built a "new" entity around its id.
-	 * Reject instead: a genuinely new item's client-generated UUID never collides.
-	 */
+	/** See {@link NestedChildResolver} — shared with RecipeService.resolveIngredient. */
 	private PackingTemplateItemEntity resolveItem(UUID userId, UUID templateId, List<PackingTemplateItemEntity> existingItems, UUID itemId) {
-		return existingItems.stream()
-				.filter(existing -> existing.getId().equals(itemId))
-				.findFirst()
-				.orElseGet(() -> {
-					if (itemRepository.existsById(itemId)) {
-						throw new EntityNotFoundException("No such template item");
-					}
-					return new PackingTemplateItemEntity(itemId, userId, templateId, null, 0);
-				});
+		return NestedChildResolver.resolve(itemId, existingItems, PackingTemplateItemEntity::getId, PackingTemplateItemEntity::isDeleted,
+				PackingTemplateItemEntity::undelete, itemRepository::existsById,
+				() -> new PackingTemplateItemEntity(itemId, userId, templateId, null, 0), "No such template item");
 	}
 
 	/** documentation/Subfeatures/Sablonok.md: a template may only reference the caller's own GearItem catalog. */

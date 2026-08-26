@@ -118,7 +118,7 @@ describe('RecipeEditPage', () => {
     expect(fixture.componentInstance.isPicked(food({ id: 'egg' }))).toBeFalse();
   });
 
-  it('moveUp/moveDown reorder the ingredient rows', async () => {
+  it('onIngredientsReordered(): applies the ReorderListComponent output to the ingredient rows', async () => {
     await createFixture('new');
     foodRepository.items.set([food({ id: 'a' }), food({ id: 'b' })]);
     await fixture.componentInstance.ngOnInit();
@@ -128,8 +128,9 @@ describe('RecipeEditPage', () => {
     fixture.componentInstance.togglePicker();
     fixture.componentInstance.toggleFoodPick(food({ id: 'b' }));
     fixture.componentInstance.confirmPicked();
+    const [first, second] = fixture.componentInstance.ingredients();
 
-    fixture.componentInstance.moveUp(1);
+    fixture.componentInstance.onIngredientsReordered([second, first]);
 
     expect(fixture.componentInstance.ingredients().map((row) => row.foodId)).toEqual(['b', 'a']);
   });

@@ -121,4 +121,10 @@ public class RecipeIngredientEntity {
 		this.deleted = true;
 		this.deletedAt = OffsetDateTime.now();
 	}
+
+	/** Reverses {@link #softDelete()} — a tombstoned row reappearing in an incoming live tree is revived, not left dead underneath it. */
+	public void undelete() {
+		this.deleted = false;
+		this.deletedAt = null;
+	}
 }

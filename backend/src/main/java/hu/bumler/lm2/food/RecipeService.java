@@ -4,8 +4,10 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import hu.bumler.lm2.api.model.Recipe;
 import hu.bumler.lm2.api.model.RecipeIngredient;
 import hu.bumler.lm2.common.NameNormalizer;
+import hu.bumler.lm2.common.NestedChildResolver;
 import hu.bumler.lm2.common.exception.EntityDeletedException;
 import hu.bumler.lm2.common.exception.EntityNotFoundException;
 import hu.bumler.lm2.common.exception.UniqueViolationException;
@@ -44,7 +47,10 @@ class RecipeService {
 
 	@Transactional(readOnly = true)
 	List<Recipe> list() {
-		return repository.findByDeletedFalseOrderByNameAsc().stream().map(this::toDto).toList();
+		List<RecipeEntity> recipes = repository.findByDeletedFalseOrderByNameAsc();
+		Map<UUID, List<RecipeIngredientEntity>> ingredientsByRecipe = groupByRecipeId(
+				ingredientRepository.findByRecipeIdIn(recipes.stream().map(RecipeEntity::getId).toList()));
+		return recipes.stream().map(recipe -> toDto(recipe, ingredientsByRecipe.getOrDefault(recipe.getId(), List.of()))).toList();
 	}
 
 	@Transactional(readOnly = true)
@@ -132,26 +138,20 @@ class RecipeService {
 		return toDto(entity);
 	}
 
-	/**
-	 * An id not among this recipe's own ingredients may still exist elsewhere in the table (another
-	 * recipe) — since {@code RecipeIngredientEntity} has a manually-assigned {@code @Id},
-	 * {@code JpaRepository.save()} always {@code merge()}s, which would silently hijack that foreign
-	 * row's recipe/food if we blindly built a "new" entity around its id. Reject instead: a genuinely
-	 * new ingredient's client-generated UUID never collides.
-	 */
+	/** See {@link NestedChildResolver} — shared with PackingTemplateService.resolveItem. */
 	private RecipeIngredientEntity resolveIngredient(UUID recipeId, List<RecipeIngredientEntity> existingIngredients, UUID ingredientId) {
-		return existingIngredients.stream()
-				.filter(existing -> existing.getId().equals(ingredientId))
-				.findFirst()
-				.orElseGet(() -> {
-					if (ingredientRepository.existsById(ingredientId)) {
-						throw new EntityNotFoundException("No such recipe ingredient");
-					}
-					return new RecipeIngredientEntity(ingredientId, recipeId, null, null, null, 0);
-				});
+		return NestedChildResolver.resolve(ingredientId, existingIngredients, RecipeIngredientEntity::getId, RecipeIngredientEntity::isDeleted,
+				RecipeIngredientEntity::undelete, ingredientRepository::existsById,
+				() -> new RecipeIngredientEntity(ingredientId, recipeId, null, null, null, 0), "No such recipe ingredient");
 	}
 
-	/** documentation/Subfeatures/Recept.md: a recipe may only reference the (global) Food catalog's live rows. */
+	/**
+	 * documentation/Subfeatures/Recept.md: a recipe may only reference the (global) Food catalog's
+	 * live rows. Runs for every incoming live ingredient, including ones whose foodId didn't change —
+	 * skipping unchanged references would let a stale offline PUT silently revive (via
+	 * {@link #resolveIngredient}) an ingredient row that FoodService.delete's cascade already
+	 * tombstoned for a since-deleted food, corrupting the invariant instead of just erroring the sync.
+	 */
 	private void requireLiveFood(UUID foodId) {
 		FoodEntity food = foodRepository.findById(foodId).orElseThrow(() -> new EntityNotFoundException("No such food"));
 		if (food.isDeleted()) {
@@ -181,11 +181,11 @@ class RecipeService {
 			return;
 		}
 		Set<String> incomingSignature = signatureOf(incomingLive);
-		for (RecipeEntity candidate : repository.findByDeletedFalse()) {
-			if (candidate.getId().equals(selfId)) {
-				continue;
-			}
-			List<RecipeIngredientEntity> candidateIngredients = ingredientRepository.findByRecipeIdAndDeletedFalse(candidate.getId());
+		List<RecipeEntity> candidates = repository.findByDeletedFalse().stream().filter(candidate -> !candidate.getId().equals(selfId)).toList();
+		Map<UUID, List<RecipeIngredientEntity>> ingredientsByRecipe = groupByRecipeId(
+				ingredientRepository.findByRecipeIdInAndDeletedFalse(candidates.stream().map(RecipeEntity::getId).toList()));
+		for (RecipeEntity candidate : candidates) {
+			List<RecipeIngredientEntity> candidateIngredients = ingredientsByRecipe.getOrDefault(candidate.getId(), List.of());
 			if (candidateIngredients.size() == incomingLive.size() && signatureOf(candidateIngredients).equals(incomingSignature)) {
 				throw new UniqueViolationException("An identical recipe already exists", "ingredients", candidate.getId());
 			}
@@ -203,7 +203,14 @@ class RecipeService {
 	}
 
 	private Recipe toDto(RecipeEntity entity) {
-		List<RecipeIngredient> ingredients = ingredientRepository.findByRecipeId(entity.getId()).stream().map(ingredientMapper::toDto).toList();
-		return mapper.toDto(entity, ingredients);
+		return toDto(entity, ingredientRepository.findByRecipeId(entity.getId()));
+	}
+
+	private Recipe toDto(RecipeEntity entity, List<RecipeIngredientEntity> ingredients) {
+		return mapper.toDto(entity, ingredients.stream().map(ingredientMapper::toDto).toList());
+	}
+
+	private static Map<UUID, List<RecipeIngredientEntity>> groupByRecipeId(List<RecipeIngredientEntity> ingredients) {
+		return ingredients.stream().collect(Collectors.groupingBy(RecipeIngredientEntity::getRecipeId));
 	}
 }

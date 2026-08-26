@@ -2,7 +2,11 @@
   <ion-list>
     @for (item of items; track item.id; let i = $index) {
       <ion-item>
-        <ion-label>{{ item.label }}</ion-label>
+        @if (itemTemplate) {
+          <ng-container *ngTemplateOutlet="itemTemplate; context: { $implicit: item, index: i }"></ng-container>
+        } @else {
+          <ion-label>{{ item.label }}</ion-label>
+        }
         <ion-button fill="clear" [disabled]="i === 0" (click)="moveUp(i)">
           <ion-icon name="chevron-up-outline" slot="icon-only" aria-hidden="true"></ion-icon>
         </ion-button>
@@ -18,9 +22,13 @@
 } @else {
   <ion-list>
     <ion-reorder-group [disabled]="false" (ionItemReorder)="onIonReorder($event)">
-      @for (item of items; track item.id) {
+      @for (item of items; track item.id; let i = $index) {
         <ion-item>
-          <ion-label>{{ item.label }}</ion-label>
+          @if (itemTemplate) {
+            <ng-container *ngTemplateOutlet="itemTemplate; context: { $implicit: item, index: i }"></ng-container>
+          } @else {
+            <ion-label>{{ item.label }}</ion-label>
+          }
           <ion-button fill="clear" color="danger" (click)="remove.emit(item)">
             <ion-icon name="close-outline" slot="icon-only" aria-hidden="true"></ion-icon>
           </ion-button>

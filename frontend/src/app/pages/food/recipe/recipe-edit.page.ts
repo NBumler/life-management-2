@@ -2,7 +2,6 @@ import { ChangeDetectionStrategy, Component, Injector, OnInit, Signal, computed,
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Capacitor } from '@capacitor/core';
 import {
   AlertController,
   IonBackButton,
@@ -12,18 +11,14 @@ import {
   IonContent,
   IonFooter,
   IonHeader,
-  IonIcon,
   IonInput,
   IonItem,
   IonLabel,
   IonList,
-  IonReorder,
-  IonReorderGroup,
   IonSearchbar,
   IonTextarea,
   IonTitle,
   IonToolbar,
-  ItemReorderEventDetail,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
@@ -34,6 +29,7 @@ import { RecipeDraft, RecipeIngredientSaveItem } from '../../../core/storage/sto
 import { uuidV4 } from '../../../core/sync/uuid';
 import { ParsedQuantity, QuantityUnit } from '../../../shared/quantity';
 import { QuantityInputComponent } from '../../../shared/quantity-input/quantity-input.component';
+import { ReorderListComponent } from '../../../shared/reorder-list/reorder-list.component';
 import { compareRank, matchesSearch } from '../../../shared/text-search';
 import { computeRecipeSummary, formatIngredientQuantity } from './recipe-summary';
 
@@ -58,6 +54,7 @@ interface IngredientRow {
   imports: [
     ReactiveFormsModule,
     QuantityInputComponent,
+    ReorderListComponent,
     IonHeader,
     IonToolbar,
     IonTitle,
@@ -71,11 +68,8 @@ interface IngredientRow {
     IonInput,
     IonTextarea,
     IonLabel,
-    IonIcon,
     IonCheckbox,
     IonSearchbar,
-    IonReorderGroup,
-    IonReorder,
     TranslatePipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -90,7 +84,6 @@ export class RecipeEditPage implements OnInit {
   private readonly alertController = inject(AlertController);
   private readonly translate = inject(TranslateService);
 
-  readonly isNative = Capacitor.isNativePlatform();
   readonly recipeId = signal<string | null>(null);
   readonly ingredients = signal<IngredientRow[]>([]);
   readonly pickerOpen = signal(false);
@@ -205,29 +198,13 @@ export class RecipeEditPage implements OnInit {
   }
 
   private buildRow(id: string, foodId: string, initialQuantity: ParsedQuantity<QuantityUnit>): IngredientRow {
-    const quantityControl = this.fb.nonNullable.control<ParsedQuantity<QuantityUnit>>(initialQuantity, [
-      (control) => (control.value.amount === null ? { required: true } : null),
-    ]);
+    const quantityControl = this.fb.nonNullable.control<ParsedQuantity<QuantityUnit>>(initialQuantity);
     const quantity = toSignal(quantityControl.valueChanges, { initialValue: quantityControl.getRawValue(), injector: this.injector });
     return { id, foodId, quantityControl, quantity };
   }
 
-  moveUp(index: number): void {
-    if (index === 0) {
-      return;
-    }
-    this.ingredients.update((rows) => swap(rows, index, index - 1));
-  }
-
-  moveDown(index: number): void {
-    if (index === this.ingredients().length - 1) {
-      return;
-    }
-    this.ingredients.update((rows) => swap(rows, index, index + 1));
-  }
-
-  onIonReorder(event: CustomEvent<ItemReorderEventDetail>): void {
-    this.ingredients.set(event.detail.complete(this.ingredients().slice()) as IngredientRow[]);
+  onIngredientsReordered(reordered: IngredientRow[]): void {
+    this.ingredients.set(reordered);
   }
 
   removeIngredient(row: IngredientRow): void {
@@ -282,10 +259,4 @@ export class RecipeEditPage implements OnInit {
     await this.repository.remove(id);
     await this.router.navigateByUrl('/tabs/food/recipe');
   }
-}
-
-function swap<T>(items: readonly T[], a: number, b: number): T[] {
-  const next = items.slice();
-  [next[a], next[b]] = [next[b], next[a]];
-  return next;
 }

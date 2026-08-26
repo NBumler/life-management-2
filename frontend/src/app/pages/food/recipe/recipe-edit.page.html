@@ -68,9 +68,9 @@
       <ion-item>
         <ion-label color="medium">{{ 'FOOD.RECIPE.NO_INGREDIENTS' | translate }}</ion-label>
       </ion-item>
-    } @else if (isNative) {
-      @for (row of ingredients(); track row.id; let i = $index) {
-        <ion-item>
+    } @else {
+      <app-reorder-list [items]="ingredients()" (reorder)="onIngredientsReordered($event)" (remove)="removeIngredient($event)">
+        <ng-template let-row>
           <ion-label>
             <h3>{{ foodOf(row)?.name ?? '—' }}</h3>
             @if (showIngredientErrors() && row.quantity().amount === null) {
@@ -78,35 +78,8 @@
             }
           </ion-label>
           <app-quantity-input [formControl]="row.quantityControl" mode="quantity"></app-quantity-input>
-          <ion-button fill="clear" [disabled]="i === 0" (click)="moveUp(i)">
-            <ion-icon name="chevron-up-outline" slot="icon-only" aria-hidden="true"></ion-icon>
-          </ion-button>
-          <ion-button fill="clear" [disabled]="i === ingredients().length - 1" (click)="moveDown(i)">
-            <ion-icon name="chevron-down-outline" slot="icon-only" aria-hidden="true"></ion-icon>
-          </ion-button>
-          <ion-button fill="clear" color="danger" (click)="removeIngredient(row)">
-            <ion-icon name="close-outline" slot="icon-only" aria-hidden="true"></ion-icon>
-          </ion-button>
-        </ion-item>
-      }
-    } @else {
-      <ion-reorder-group [disabled]="false" (ionItemReorder)="onIonReorder($event)">
-        @for (row of ingredients(); track row.id) {
-          <ion-item>
-            <ion-label>
-              <h3>{{ foodOf(row)?.name ?? '—' }}</h3>
-              @if (showIngredientErrors() && row.quantity().amount === null) {
-                <p style="color: var(--ion-color-danger)">{{ 'FOOD.RECIPE.QUANTITY_REQUIRED' | translate }}</p>
-              }
-            </ion-label>
-            <app-quantity-input [formControl]="row.quantityControl" mode="quantity"></app-quantity-input>
-            <ion-button fill="clear" color="danger" (click)="removeIngredient(row)">
-              <ion-icon name="close-outline" slot="icon-only" aria-hidden="true"></ion-icon>
-            </ion-button>
-            <ion-reorder slot="end"></ion-reorder>
-          </ion-item>
-        }
-      </ion-reorder-group>
+        </ng-template>
+      </app-reorder-list>
     }
   </ion-list>
 

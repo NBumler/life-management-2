@@ -1,6 +1,7 @@
 package hu.bumler.lm2.food;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -32,9 +33,13 @@ class RecipeSyncDataLoader implements SyncedEntityDataLoader {
 
 	@Override
 	public Map<UUID, Object> loadByIds(Collection<UUID> ids) {
-		return repository.findAllById(ids).stream()
+		List<RecipeEntity> entities = repository.findAllById(ids);
+		Map<UUID, List<RecipeIngredientEntity>> ingredientsByRecipe = ingredientRepository
+				.findByRecipeIdIn(entities.stream().map(RecipeEntity::getId).toList()).stream()
+				.collect(Collectors.groupingBy(RecipeIngredientEntity::getRecipeId));
+		return entities.stream()
 				.collect(Collectors.toMap(RecipeEntity::getId,
 						entity -> mapper.toDto(entity,
-								ingredientRepository.findByRecipeId(entity.getId()).stream().map(ingredientMapper::toDto).toList())));
+								ingredientsByRecipe.getOrDefault(entity.getId(), List.of()).stream().map(ingredientMapper::toDto).toList())));
 	}
 }

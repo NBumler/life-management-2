@@ -102,7 +102,7 @@ class RecipeServiceTest {
 		UUID conflictId = UUID.randomUUID();
 		RecipeEntity conflict = recipe(conflictId, "Rántotta 2");
 		when(repository.findByDeletedFalse()).thenReturn(List.of(conflict));
-		when(ingredientRepository.findByRecipeIdAndDeletedFalse(conflictId)).thenReturn(List.of(
+		when(ingredientRepository.findByRecipeIdInAndDeletedFalse(List.of(conflictId))).thenReturn(List.of(
 				ingredient(UUID.randomUUID(), conflictId, foodB, BigDecimal.valueOf(2), "db", 0),
 				ingredient(UUID.randomUUID(), conflictId, foodA, BigDecimal.valueOf(100), "g", 1)));
 
@@ -127,7 +127,6 @@ class RecipeServiceTest {
 		UUID otherId = UUID.randomUUID();
 		RecipeEntity other = recipe(otherId, "Saláta");
 		when(repository.findByDeletedFalse()).thenReturn(List.of(other));
-		when(ingredientRepository.findByRecipeIdAndDeletedFalse(otherId)).thenReturn(List.of());
 
 		UUID id = UUID.randomUUID();
 		when(repository.findById(id)).thenReturn(Optional.empty());
@@ -215,6 +214,28 @@ class RecipeServiceTest {
 
 		assertThatThrownBy(() -> service.update(myRecipeId, dto)).isInstanceOf(EntityNotFoundException.class);
 		verify(ingredientRepository, never()).save(any());
+	}
+
+	@Test
+	void update_revivesTombstonedIngredient_whenItsIdReappearsInIncomingLiveList() {
+		// A stale offline edit re-sends an ingredient id that was soft-deleted (e.g. removed, then
+		// re-added with the same client-generated id) — it must come back live, not stay a tombstone
+		// underneath a live recipe.
+		UUID recipeId = UUID.randomUUID();
+		RecipeEntity existing = recipe(recipeId, "Rántotta");
+		UUID foodId = UUID.randomUUID();
+		RecipeIngredientEntity tombstoned = ingredient(UUID.randomUUID(), recipeId, foodId, BigDecimal.ONE, "db", 0);
+		tombstoned.softDelete();
+
+		when(repository.findById(recipeId)).thenReturn(Optional.of(existing));
+		when(ingredientRepository.findByRecipeId(recipeId)).thenReturn(List.of(tombstoned));
+		liveFood(foodId);
+
+		RecipeIngredient dto = new RecipeIngredient(tombstoned.getId(), recipeId, foodId, BigDecimal.ONE, "db", 0, false);
+		service.update(recipeId, new Recipe(recipeId, "Rántotta", false, List.of(dto)));
+
+		assertThat(tombstoned.isDeleted()).isFalse();
+		verify(ingredientRepository).save(tombstoned);
 	}
 
 	@Test

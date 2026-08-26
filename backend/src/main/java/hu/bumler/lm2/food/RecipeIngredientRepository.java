@@ -1,5 +1,6 @@
 package hu.bumler.lm2.food;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -11,6 +12,12 @@ interface RecipeIngredientRepository extends JpaRepository<RecipeIngredientEntit
 	List<RecipeIngredientEntity> findByRecipeId(UUID recipeId);
 
 	List<RecipeIngredientEntity> findByRecipeIdAndDeletedFalse(UUID recipeId);
+
+	/** Batch form of {@link #findByRecipeId} — list()/RecipeSyncDataLoader group the result by recipeId instead of querying per recipe. */
+	List<RecipeIngredientEntity> findByRecipeIdIn(Collection<UUID> recipeIds);
+
+	/** Batch form of {@link #findByRecipeIdAndDeletedFalse} — checkIngredientSetDuplicate groups the result by recipeId instead of querying per recipe. */
+	List<RecipeIngredientEntity> findByRecipeIdInAndDeletedFalse(Collection<UUID> recipeIds);
 
 	/** documentation/Subfeatures/Élelmiszerek.md — Food delete cascade. */
 	List<RecipeIngredientEntity> findByFoodIdAndDeletedFalse(UUID foodId);

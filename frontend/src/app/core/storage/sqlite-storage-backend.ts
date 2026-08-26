@@ -864,7 +864,9 @@ export class SqliteStorageBackend implements StorageBackend {
 
   async listRecipes(): Promise<Recipe[]> {
     const recipeRows = await this.db.query<RecipeRow>('SELECT * FROM recipe WHERE deleted = 0 ORDER BY name COLLATE NOCASE');
-    const ingredientRows = await this.db.query<RecipeIngredientRow>('SELECT * FROM recipe_ingredient WHERE deleted = 0 ORDER BY sort_order');
+    // Recipe.ingredients contract (recipe.ts): every row, live or tombstoned — matches HttpStorageBackend/the
+    // backend's own toDto. Every caller already filters `!deleted` itself when rendering or summing.
+    const ingredientRows = await this.db.query<RecipeIngredientRow>('SELECT * FROM recipe_ingredient ORDER BY sort_order');
     const ingredientsByRecipe = new Map<string, Recipe['ingredients']>();
     for (const row of ingredientRows) {
       const dto = recipeIngredientRowToDto(row);
@@ -982,7 +984,7 @@ export class SqliteStorageBackend implements StorageBackend {
   private async readRecipe(id: string): Promise<Recipe> {
     const recipeRows = await this.db.query<RecipeRow>('SELECT * FROM recipe WHERE id = ?', [id]);
     const ingredientRows = await this.db.query<RecipeIngredientRow>(
-      'SELECT * FROM recipe_ingredient WHERE recipe_id = ? AND deleted = 0 ORDER BY sort_order',
+      'SELECT * FROM recipe_ingredient WHERE recipe_id = ? ORDER BY sort_order',
       [id],
     );
     return { ...recipeRowToDto(recipeRows[0]), ingredients: ingredientRows.map(recipeIngredientRowToDto) };

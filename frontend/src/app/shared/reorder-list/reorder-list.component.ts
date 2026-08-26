@@ -1,26 +1,31 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
+import { ChangeDetectionStrategy, Component, ContentChild, EventEmitter, Input, Output, TemplateRef } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 import { IonButton, IonIcon, IonItem, IonLabel, IonList, IonReorder, IonReorderGroup, ItemReorderEventDetail } from '@ionic/angular/standalone';
 
 export interface ReorderableItem {
   id: string;
-  label: string;
+  label?: string;
 }
 
 /**
  * documentation/Subfeatures/Sablonok.md "Sorrend": manual reorder — web drag-and-drop, native
- * up/down arrows (mint a Pakolás / Recept mintára). Shared between Sablonok and Pakolás item lists.
+ * up/down arrows (mint a Pakolás / Recept mintára). Shared between Sablonok and Pakolás item lists,
+ * and Recept's ingredient rows (via the `itemTemplate` content projection below — richer per-row
+ * content than the default `label`, e.g. Recept's food name + quantity input).
  */
 @Component({
   selector: 'app-reorder-list',
   templateUrl: 'reorder-list.component.html',
-  imports: [IonList, IonItem, IonLabel, IonButton, IonIcon, IonReorderGroup, IonReorder],
+  imports: [IonList, IonItem, IonLabel, IonButton, IonIcon, IonReorderGroup, IonReorder, NgTemplateOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ReorderListComponent {
-  @Input({ required: true }) items: ReorderableItem[] = [];
-  @Output() readonly reorder = new EventEmitter<ReorderableItem[]>();
-  @Output() readonly remove = new EventEmitter<ReorderableItem>();
+export class ReorderListComponent<T extends ReorderableItem = ReorderableItem> {
+  @Input({ required: true }) items: T[] = [];
+  /** Optional per-row body, projected via `<ng-template let-item let-i="index">…</ng-template>`; falls back to `item.label`. */
+  @ContentChild(TemplateRef) itemTemplate?: TemplateRef<{ $implicit: T; index: number }>;
+  @Output() readonly reorder = new EventEmitter<T[]>();
+  @Output() readonly remove = new EventEmitter<T>();
 
   readonly isNative = Capacitor.isNativePlatform();
 
@@ -39,7 +44,7 @@ export class ReorderListComponent {
   }
 
   onIonReorder(event: CustomEvent<ItemReorderEventDetail>): void {
-    const reordered = event.detail.complete(this.items.slice()) as ReorderableItem[];
+    const reordered = event.detail.complete(this.items.slice()) as T[];
     this.reorder.emit(reordered);
   }
 }

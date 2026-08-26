@@ -181,6 +181,30 @@ class PackingTemplateServiceTest {
 	}
 
 	@Test
+	void update_revivesTombstonedItem_whenItsIdReappearsInIncomingLiveList() {
+		// A stale offline edit re-sends an item id that was soft-deleted (e.g. removed, then re-added
+		// with the same client-generated id) — it must come back live, not stay a tombstone
+		// underneath a live template.
+		UUID userId = UUID.randomUUID();
+		UUID templateId = UUID.randomUUID();
+		PackingTemplateEntity existing = template(templateId, userId);
+		UUID gearId = UUID.randomUUID();
+		PackingTemplateItemEntity tombstoned = item(UUID.randomUUID(), userId, templateId, gearId, 0);
+		tombstoned.softDelete();
+
+		when(repository.findByIdAndUserId(templateId, userId)).thenReturn(Optional.of(existing));
+		when(repository.findByUserIdAndNameNormalizedAndDeletedFalse(eq(userId), any())).thenReturn(Optional.empty());
+		when(itemRepository.findByTemplateId(templateId)).thenReturn(List.of(tombstoned));
+		ownGearItem(userId, gearId);
+
+		PackingTemplateItem dto = new PackingTemplateItem(tombstoned.getId(), templateId, gearId, 0, false);
+		service.update(userId, templateId, new PackingTemplateDetail(templateId, "Hétvégi mászás", false, List.of(dto)));
+
+		assertThat(tombstoned.isDeleted()).isFalse();
+		verify(itemRepository).save(tombstoned);
+	}
+
+	@Test
 	void update_rejectsItemId_thatBelongsToAnotherTemplate_insteadOfHijackingItViaMerge() {
 		UUID attacker = UUID.randomUUID();
 		UUID myTemplateId = UUID.randomUUID();
