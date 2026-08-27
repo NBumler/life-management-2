@@ -7,8 +7,10 @@ import {
   QUANTITY_WEIGHT_MULTIPLIERS,
   QuantityParseError,
   QuantityUnit,
+  canonicalQuantityAmount,
   durationsEqual,
   formatQuantityValue,
+  fromCanonicalQuantityAmount,
   parseQuantityInput,
   quantitiesEqual,
 } from './quantity';
@@ -20,6 +22,23 @@ describe('quantity multiplier tables', () => {
     expect(QUANTITY_PIECE_MULTIPLIERS).toEqual(fixture.quantity.piece.multipliers);
     expect(DURATION_MULTIPLIERS).toEqual(fixture.duration.time.multipliers);
   });
+});
+
+describe('fromCanonicalQuantityAmount', () => {
+  const cases: [QuantityUnit, number][] = [
+    ['g', 250],
+    ['dkg', 12],
+    ['kg', 1.5],
+    ['ml', 400],
+    ['dl', 3],
+    ['l', 2],
+    ['db', 5],
+  ];
+  for (const [unit, amount] of cases) {
+    it(`round-trips ${amount}${unit} through canonical and back`, () => {
+      expect(fromCanonicalQuantityAmount(canonicalQuantityAmount(amount, unit), unit)).toBeCloseTo(amount);
+    });
+  }
 });
 
 describe('parseQuantityInput', () => {

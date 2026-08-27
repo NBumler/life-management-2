@@ -95,4 +95,10 @@ describe('computeDailyNutrition', () => {
   it('returns all-zero totals for an empty meal list', () => {
     expect(computeDailyNutrition([], [], [])).toEqual({ kcal: 0, proteinG: 0, carbsG: 0, fatG: 0, priceHuf: 0, incomplete: false });
   });
+
+  it('returns a fresh totals object per call (no shared zero-totals reference)', () => {
+    const first = computeDailyNutrition([], [], []);
+    const second = computeDailyNutrition([], [], []);
+    expect(first).not.toBe(second);
+  });
 });

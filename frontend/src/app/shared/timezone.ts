@@ -32,7 +32,8 @@ export function calendarDayInZone(isoInstant: string, timeZoneId: string): strin
 /**
  * Builds a UTC instant from a local `YYYY-MM-DD` date + `HH:mm` time picked in the *device's own
  * current* zone — safe as plain `Date` construction (no arbitrary-zone→instant math needed) since
- * the meal editor only ever records "now, here", never a value for a different zone.
+ * the meal editor only calls this when recording "now, here" (a fresh meal, or an edit that actually
+ * changed the date/time); an untouched edit keeps the meal's original stored instant + zone instead.
  */
 export function instantFromLocalDateTime(dateIso: string, timeHHmm: string): string {
   const [year, month, day] = dateIso.split('-').map(Number);

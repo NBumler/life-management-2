@@ -111,6 +111,13 @@ export function canonicalQuantityAmount(amount: number, unit: QuantityUnit): num
   return amount * multipliers[unit];
 }
 
+/** Inverse of {@link canonicalQuantityAmount}: a canonical (g/ml/db) amount back into `unit`. */
+export function fromCanonicalQuantityAmount(canonicalAmount: number, unit: QuantityUnit): number {
+  const family = quantityFamily(unit);
+  const multipliers = family === 'weight' ? QUANTITY_WEIGHT_MULTIPLIERS : family === 'volume' ? QUANTITY_VOLUME_MULTIPLIERS : QUANTITY_PIECE_MULTIPLIERS;
+  return canonicalAmount / multipliers[unit];
+}
+
 export function canonicalDurationAmount(amount: number, unit: DurationUnit): number {
   return amount * DURATION_MULTIPLIERS[unit];
 }

@@ -10,7 +10,12 @@ import { Recipe } from '../../../api/model/recipe';
 import { FoodRepository } from '../../../core/data/food.repository';
 import { MealRepository } from '../../../core/data/meal.repository';
 import { RecipeRepository } from '../../../core/data/recipe.repository';
+import { deviceTimeZoneId } from '../../../shared/timezone';
 import { MealEditPage } from './meal-edit.page';
+
+function customMealItem(overrides: Partial<Meal['items'][number]> = {}): Meal['items'][number] {
+  return { id: 'ci1', mealId: 'm1', type: 'CUSTOM', displayName: 'Torta', caloriesKcal: 450, proteinG: null, carbsG: null, fatG: null, priceHuf: null, servings: 1, sortOrder: 0, deleted: false, ...overrides };
+}
 
 function food(overrides: Partial<Food> = {}): Food {
   return { id: 'f1', name: 'Tej', deleted: false, ...overrides };
@@ -216,6 +221,35 @@ describe('MealEditPage', () => {
       }),
     );
     expect(navigateSpy).toHaveBeenCalledWith('/tabs/food/meal');
+  });
+
+  it('save(): an edit that leaves date/time untouched preserves the meal\'s original eatenAt + timeZoneId', async () => {
+    await createFixture('m1');
+    repository.items.set([meal({ id: 'm1', eatenAt: '2026-08-26T10:00:00.000Z', timeZoneId: 'Pacific/Auckland', items: [customMealItem()] })]);
+    await fixture.componentInstance.ngOnInit();
+    repository.save.and.resolveTo(meal({ id: 'm1' }));
+    spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
+
+    await fixture.componentInstance.save();
+
+    expect(repository.save).toHaveBeenCalledWith(
+      jasmine.objectContaining({ eatenAt: '2026-08-26T10:00:00.000Z', timeZoneId: 'Pacific/Auckland' }),
+    );
+  });
+
+  it('save(): changing the date re-stamps eatenAt and the timeZoneId to this device', async () => {
+    await createFixture('m1');
+    repository.items.set([meal({ id: 'm1', eatenAt: '2026-08-26T10:00:00.000Z', timeZoneId: 'Pacific/Auckland', items: [customMealItem()] })]);
+    await fixture.componentInstance.ngOnInit();
+    fixture.componentInstance.form.controls.date.setValue('2026-08-20');
+    repository.save.and.resolveTo(meal({ id: 'm1' }));
+    spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
+
+    await fixture.componentInstance.save();
+
+    const draft = repository.save.calls.mostRecent().args[0];
+    expect(draft.eatenAt).not.toBe('2026-08-26T10:00:00.000Z');
+    expect(draft.timeZoneId).toBe(deviceTimeZoneId());
   });
 
   it('delete(): the confirmation handler removes the meal via the repository', async () => {

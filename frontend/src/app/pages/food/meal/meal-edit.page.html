@@ -104,7 +104,7 @@
             </ion-label>
             <ion-input
               [value]="row.servings()"
-              (ionChange)="row.servings.set(+($any($event.target).value ?? 1))"
+              (ionChange)="row.servings.set(+($any($event.target).value || 1))"
               type="number"
               [label]="'FOOD.MEAL.SERVINGS_LABEL' | translate"
               labelPlacement="stacked"
@@ -121,7 +121,7 @@
             <app-quantity-input [ngModel]="row.quantity()" (ngModelChange)="row.quantity.set($event)" [ngModelOptions]="{ standalone: true }" mode="quantity"></app-quantity-input>
             <ion-input
               [value]="row.servings()"
-              (ionChange)="row.servings.set(+($any($event.target).value ?? 1))"
+              (ionChange)="row.servings.set(+($any($event.target).value || 1))"
               type="number"
               [label]="'FOOD.MEAL.SERVINGS_LABEL' | translate"
               labelPlacement="stacked"
@@ -178,7 +178,7 @@
             </ion-label>
             <ion-input
               [value]="row.servings()"
-              (ionChange)="row.servings.set(+($any($event.target).value ?? 1))"
+              (ionChange)="row.servings.set(+($any($event.target).value || 1))"
               type="number"
               [label]="'FOOD.MEAL.SERVINGS_LABEL' | translate"
               labelPlacement="stacked"

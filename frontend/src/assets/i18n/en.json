@@ -437,7 +437,8 @@
         "EXCEEDED": "{{amount}} over",
         "ACTIVITY_EXTRA": "+{{amount}} kcal activity",
         "DAILY_PRICE": "Daily price: {{amount}} Ft",
-        "PROFILE_INCOMPLETE_NOTICE": "Fill in your profile to see today's goals."
+        "PROFILE_INCOMPLETE_NOTICE": "Fill in your profile to see today's goals.",
+        "SUMMARY_INCOMPLETE": "~ Some values are estimated — catalog data is missing for an item."
       }
     }
   }

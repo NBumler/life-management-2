@@ -67,6 +67,7 @@ export class MealRepository {
    * `StoredFoodRepository` — each affected row is its own independent local write + outbox entry.
    */
   private async consumeStock(draft: MealDraft): Promise<void> {
+    await this.ensureConsumeInputsLoaded();
     const demand = new Map<string, number>();
     for (const item of draft.items) {
       if (item.type === 'RECIPE') {
@@ -95,6 +96,28 @@ export class MealRepository {
     }
     for (const id of plan.removeIds) {
       await this.storedFoodRepository.remove(id);
+    }
+  }
+
+  /**
+   * `consumeStock` reads three sibling repositories' signals directly; a meal can be created from a
+   * screen that never opened the Storage / Recept / Katalógus tabs (the dashboard is the default food
+   * landing route), so none of them is guaranteed to have run `load()` yet. Without this, an empty
+   * stored-food list makes `planStockConsumption` a silent no-op and no stock is ever deducted.
+   */
+  private async ensureConsumeInputsLoaded(): Promise<void> {
+    const pending: Promise<void>[] = [];
+    if (!this.recipeRepository.loaded()) {
+      pending.push(this.recipeRepository.load());
+    }
+    if (!this.foodRepository.loaded()) {
+      pending.push(this.foodRepository.load());
+    }
+    if (!this.storedFoodRepository.loaded()) {
+      pending.push(this.storedFoodRepository.load());
+    }
+    if (pending.length > 0) {
+      await Promise.all(pending);
     }
   }
 

@@ -437,7 +437,8 @@
         "EXCEEDED": "{{amount}} túllépés",
         "ACTIVITY_EXTRA": "+{{amount}} kcal aktivitás",
         "DAILY_PRICE": "Napi ár: {{amount}} Ft",
-        "PROFILE_INCOMPLETE_NOTICE": "A napi célok megjelenítéséhez töltsd ki a profilodat."
+        "PROFILE_INCOMPLETE_NOTICE": "A napi célok megjelenítéséhez töltsd ki a profilodat.",
+        "SUMMARY_INCOMPLETE": "~ Néhány érték becsült – egy tételhez hiányzik a katalógusadat."
       }
     }
   }

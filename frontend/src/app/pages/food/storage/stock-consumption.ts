@@ -1,13 +1,6 @@
 import { Food } from '../../../api/model/food';
 import { StoredFood } from '../../../api/model/storedFood';
-import {
-  QUANTITY_PIECE_MULTIPLIERS,
-  QUANTITY_VOLUME_MULTIPLIERS,
-  QUANTITY_WEIGHT_MULTIPLIERS,
-  QuantityUnit,
-  canonicalQuantityAmount,
-  quantityFamily,
-} from '../../../shared/quantity';
+import { QuantityUnit, canonicalQuantityAmount, fromCanonicalQuantityAmount } from '../../../shared/quantity';
 import { afterOpeningDuration, computeOpenedExpiry } from './shelf-life';
 
 /**
@@ -75,7 +68,7 @@ export function planStockConsumption(
       }
       updates.push({
         ...row,
-        quantityAmount: fromCanonical(remainingCanonical, unit),
+        quantityAmount: fromCanonicalQuantityAmount(remainingCanonical, unit),
         opened: nextOpened,
         openedAt: wasOpened ? row.openedAt : nowIso,
         expiresOn: nextExpiresOn,
@@ -84,14 +77,4 @@ export function planStockConsumption(
   }
 
   return { updates, removeIds };
-}
-
-function multiplierFor(unit: QuantityUnit): number {
-  const family = quantityFamily(unit);
-  const table = family === 'weight' ? QUANTITY_WEIGHT_MULTIPLIERS : family === 'volume' ? QUANTITY_VOLUME_MULTIPLIERS : QUANTITY_PIECE_MULTIPLIERS;
-  return table[unit];
-}
-
-function fromCanonical(canonicalAmount: number, unit: QuantityUnit): number {
-  return canonicalAmount / multiplierFor(unit);
 }

@@ -44,6 +44,9 @@
       <ion-note>{{ 'FOOD.MEAL.DASHBOARD.PROFILE_INCOMPLETE_NOTICE' | translate }}</ion-note>
     }
     <ion-note class="daily-price">{{ 'FOOD.MEAL.DASHBOARD.DAILY_PRICE' | translate: { amount: (dailyPriceHuf() | number: '1.0-0') } }}</ion-note>
+    @if (dailyTotals().incomplete) {
+      <ion-note class="summary-incomplete" color="warning">{{ 'FOOD.MEAL.DASHBOARD.SUMMARY_INCOMPLETE' | translate }}</ion-note>
+    }
   </div>
 
   <ion-list>

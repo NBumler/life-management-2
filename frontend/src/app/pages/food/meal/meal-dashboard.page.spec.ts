@@ -146,6 +146,24 @@ describe('MealDashboardPage', () => {
     expect(bars.every((bar) => bar.goal > 0)).toBeTrue();
   });
 
+  it('renders the incomplete-estimate note when a day\'s item references catalog data that no longer resolves', () => {
+    const day = fixture.componentInstance.selectedDate();
+    const noonOnSelectedDay = new Date(`${day}T12:00:00`).toISOString();
+    repository.items.set([
+      meal({
+        id: 'm1',
+        eatenAt: noonOnSelectedDay,
+        timeZoneId: deviceTimeZoneId(),
+        items: [{ id: 'i1', mealId: 'm1', type: 'RECIPE', recipeId: 'gone', servings: 1, sortOrder: 0, deleted: false }],
+      }),
+    ]);
+
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.dailyTotals().incomplete).toBeTrue();
+    expect((fixture.nativeElement as HTMLElement).querySelector('.summary-incomplete')).not.toBeNull();
+  });
+
   it('dailyPriceHuf(): sums the selected day\'s live item prices', () => {
     const day = fixture.componentInstance.selectedDate();
     const noonOnSelectedDay = new Date(`${day}T12:00:00`).toISOString();

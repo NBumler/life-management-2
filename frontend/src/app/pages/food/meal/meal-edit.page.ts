@@ -23,6 +23,7 @@ import {
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 import { Food } from '../../../api/model/food';
+import { Meal } from '../../../api/model/meal';
 import { Recipe } from '../../../api/model/recipe';
 import { FoodRepository } from '../../../core/data/food.repository';
 import { MealRepository } from '../../../core/data/meal.repository';
@@ -132,6 +133,8 @@ export class MealEditPage implements OnInit {
   private readonly translate = inject(TranslateService);
 
   readonly mealId = signal<string | null>(null);
+  /** The meal being edited, kept so `save()` can preserve its recorded instant + zone when the user didn't touch date/time. */
+  private readonly loadedMeal = signal<Meal | null>(null);
   readonly items = signal<ItemRow[]>([]);
   readonly activePicker = signal<'none' | 'recipe' | 'food'>('none');
   readonly pickerQuery = signal('');
@@ -173,6 +176,7 @@ export class MealEditPage implements OnInit {
         return;
       }
       this.mealId.set(idParam);
+      this.loadedMeal.set(existing);
       const [dateIso, timeIso] = splitInstant(existing.eatenAt);
       this.form.reset({ date: dateIso, time: timeIso, note: existing.note ?? null }, { emitEvent: false });
       this.items.set(
@@ -280,6 +284,22 @@ export class MealEditPage implements OnInit {
     };
   }
 
+  /**
+   * documentation/Subfeatures/Étkezés.md "Időzóna" — `eatenAt` + `timeZoneId` record *where and when*
+   * the meal was actually eaten. On an edit that leaves the date/time fields untouched, keep the
+   * original pair verbatim; only a real date/time change re-stamps it as "now, in this device's zone".
+   */
+  private resolveInstant(date: string, time: string): { eatenAt: string; timeZoneId: string } {
+    const existing = this.loadedMeal();
+    if (existing !== null) {
+      const [originalDate, originalTime] = splitInstant(existing.eatenAt);
+      if (date === originalDate && time === originalTime) {
+        return { eatenAt: existing.eatenAt, timeZoneId: existing.timeZoneId };
+      }
+    }
+    return { eatenAt: instantFromLocalDateTime(date, time), timeZoneId: deviceTimeZoneId() };
+  }
+
   async save(): Promise<void> {
     const invalidQuantity = this.items().some((row) => row.type === 'FOOD' && row.quantity().amount === null);
     const invalidCustom = this.items().some((row) => row.type === 'CUSTOM' && (row.displayName().trim() === '' || row.caloriesKcal() === null));
@@ -294,8 +314,7 @@ export class MealEditPage implements OnInit {
     const items = this.items().map((row, index) => toSaveItem(row, index));
     const draft: MealDraft = {
       id: this.mealId() ?? '',
-      eatenAt: instantFromLocalDateTime(date, time),
-      timeZoneId: deviceTimeZoneId(),
+      ...this.resolveInstant(date, time),
       note,
       items,
     };

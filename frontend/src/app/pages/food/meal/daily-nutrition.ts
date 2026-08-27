@@ -15,7 +15,10 @@ export interface DailyNutritionTotals {
   incomplete: boolean;
 }
 
-const ZERO_TOTALS: DailyNutritionTotals = { kcal: 0, proteinG: 0, carbsG: 0, fatG: 0, priceHuf: 0, incomplete: false };
+/** Fresh per call — never share one instance as a reduce seed, or a mutating caller corrupts every empty-day total. */
+function zeroTotals(): DailyNutritionTotals {
+  return { kcal: 0, proteinG: 0, carbsG: 0, fatG: 0, priceHuf: 0, incomplete: false };
+}
 
 /**
  * documentation/Subfeatures/Étkezés.md "Dashboard (vékony)" — sums the live items of a given set of
@@ -38,7 +41,7 @@ export function computeDailyNutrition(meals: readonly Meal[], recipes: readonly 
           incomplete: inner.incomplete || effective.incomplete,
         };
       }, totals);
-  }, ZERO_TOTALS);
+  }, zeroTotals());
 }
 
 function toSaveItem(item: MealItem): MealItemSaveItem {
