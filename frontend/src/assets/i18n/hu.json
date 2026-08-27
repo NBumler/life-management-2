@@ -396,6 +396,38 @@
       "SUMMARY_FAT": "Zsír: {{fat}} g",
       "SUMMARY_INCOMPLETE": "Néhány érték hiányos (hiányzó katalógusadat miatt).",
       "DUPLICATE_ERROR": "Már létezik egy azonos recept."
+    },
+    "MEAL": {
+      "TITLE": "Étkezés",
+      "TODAY": "Mai nap",
+      "EMPTY_DAY": "Erre a napra még nincs rögzített étkezés.",
+      "ITEM_COUNT": "{{count}} tétel",
+      "DELETE_CONFIRM_TITLE": "Étkezés törlése",
+      "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd ezt az étkezést?",
+      "ADD_TITLE": "Étkezés rögzítése",
+      "EDIT_TITLE": "Étkezés szerkesztése",
+      "DATE_LABEL": "Dátum",
+      "TIME_LABEL": "Időpont",
+      "NOTE_LABEL": "Megjegyzés",
+      "ITEMS_LABEL": "Tételek",
+      "ADD_RECIPE": "Recept hozzáadása",
+      "ADD_FOOD": "Élelmiszer hozzáadása",
+      "ADD_CUSTOM": "Egyéni tétel hozzáadása",
+      "PICKER_SEARCH_PLACEHOLDER": "Keresés",
+      "PICKER_EMPTY": "Nincs találat.",
+      "PICKER_CONFIRM": "Kijelöltek hozzáadása",
+      "NO_ITEMS": "Még nincs tétel.",
+      "QUANTITY_REQUIRED": "A mennyiség megadása kötelező.",
+      "SERVINGS_LABEL": "Adagszorzó",
+      "CUSTOM_NAME_LABEL": "Megjelenő név",
+      "CUSTOM_NAME_REQUIRED": "A megjelenő név kötelező.",
+      "CUSTOM_CALORIES_LABEL": "Kalória (kcal)",
+      "CUSTOM_CALORIES_REQUIRED": "A kalória megadása kötelező.",
+      "CUSTOM_PROTEIN_LABEL": "Fehérje (g)",
+      "CUSTOM_CARBS_LABEL": "Szénhidrát (g)",
+      "CUSTOM_FAT_LABEL": "Zsír (g)",
+      "CUSTOM_PRICE_LABEL": "Ár (Ft)",
+      "EFFECTIVE_SUMMARY": "{{kcal}} kcal, {{price}} Ft"
     }
   }
 }

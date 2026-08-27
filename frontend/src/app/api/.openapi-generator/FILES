@@ -21,6 +21,8 @@ api/householdTasks.service.ts
 api/householdTasks.serviceInterface.ts
 api/lifePlans.service.ts
 api/lifePlans.serviceInterface.ts
+api/meals.service.ts
+api/meals.serviceInterface.ts
 api/packingSessionItems.service.ts
 api/packingSessionItems.serviceInterface.ts
 api/packingSessions.service.ts
@@ -52,6 +54,8 @@ model/householdRoom.ts
 model/householdTask.ts
 model/lifePlan.ts
 model/loginRequest.ts
+model/meal.ts
+model/mealItem.ts
 model/models.ts
 model/packingSession.ts
 model/packingSessionDetail.ts

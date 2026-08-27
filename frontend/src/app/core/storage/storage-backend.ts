@@ -6,6 +6,7 @@ import { GearItem } from '../../api/model/gearItem';
 import { HouseholdRoom } from '../../api/model/householdRoom';
 import { HouseholdTask } from '../../api/model/householdTask';
 import { LifePlan } from '../../api/model/lifePlan';
+import { Meal } from '../../api/model/meal';
 import { PackingSession } from '../../api/model/packingSession';
 import { PackingSessionDetail } from '../../api/model/packingSessionDetail';
 import { PackingSessionItem } from '../../api/model/packingSessionItem';
@@ -63,6 +64,106 @@ export interface RecipeDraft {
   name: string;
   note: string | null;
   ingredients: RecipeIngredientSaveItem[];
+}
+
+/**
+ * documentation/Subfeatures/Étkezés.md "Tétel — közös": the desired live item list for a meal save
+ * — id is client-generated for a new item, reused for a kept one. Discriminated on `type` so a
+ * screen constructing a RECIPE/FOOD/CUSTOM row can't accidentally set another type's fields.
+ */
+export type MealItemSaveItem =
+  | { id: string; type: 'RECIPE'; recipeId: string; servings: number; sortOrder: number }
+  | { id: string; type: 'FOOD'; foodId: string; quantityAmount: number; quantityUnit: string; servings: number; sortOrder: number }
+  | {
+      id: string;
+      type: 'CUSTOM';
+      displayName: string;
+      caloriesKcal: number;
+      proteinG: number | null;
+      carbsG: number | null;
+      fatG: number | null;
+      priceHuf: number | null;
+      servings: number;
+      sortOrder: number;
+    };
+
+export interface MealDraft {
+  id: string;
+  eatenAt: string;
+  timeZoneId: string;
+  note: string | null;
+  items: MealItemSaveItem[];
+}
+
+/** Expands a discriminated `MealItemSaveItem` into the flat nullable-superset field set every persistence layer (SQLite row, outbox payload, HttpStorageBackend) needs — unused per-type fields are explicitly nulled rather than left undefined. */
+export function expandMealItemSaveItem(
+  item: MealItemSaveItem,
+  mealId: string,
+): {
+  id: string;
+  mealId: string;
+  type: string;
+  recipeId: string | null;
+  foodId: string | null;
+  quantityAmount: number | null;
+  quantityUnit: string | null;
+  displayName: string | null;
+  caloriesKcal: number | null;
+  proteinG: number | null;
+  carbsG: number | null;
+  fatG: number | null;
+  priceHuf: number | null;
+  servings: number;
+  sortOrder: number;
+} {
+  const base = { id: item.id, mealId, servings: item.servings, sortOrder: item.sortOrder };
+  switch (item.type) {
+    case 'RECIPE':
+      return {
+        ...base,
+        type: 'RECIPE',
+        recipeId: item.recipeId,
+        foodId: null,
+        quantityAmount: null,
+        quantityUnit: null,
+        displayName: null,
+        caloriesKcal: null,
+        proteinG: null,
+        carbsG: null,
+        fatG: null,
+        priceHuf: null,
+      };
+    case 'FOOD':
+      return {
+        ...base,
+        type: 'FOOD',
+        recipeId: null,
+        foodId: item.foodId,
+        quantityAmount: item.quantityAmount,
+        quantityUnit: item.quantityUnit,
+        displayName: null,
+        caloriesKcal: null,
+        proteinG: null,
+        carbsG: null,
+        fatG: null,
+        priceHuf: null,
+      };
+    case 'CUSTOM':
+      return {
+        ...base,
+        type: 'CUSTOM',
+        recipeId: null,
+        foodId: null,
+        quantityAmount: null,
+        quantityUnit: null,
+        displayName: item.displayName,
+        caloriesKcal: item.caloriesKcal,
+        proteinG: item.proteinG,
+        carbsG: item.carbsG,
+        fatG: item.fatG,
+        priceHuf: item.priceHuf,
+      };
+  }
 }
 
 /**
@@ -143,6 +244,14 @@ export interface StorageBackend {
   saveRecipe(draft: RecipeDraft): Promise<Recipe>;
   /** documentation/Subfeatures/Recept.md "CRUD / törlés": cascades to every live ingredient on this recipe. */
   deleteRecipe(id: string): Promise<Recipe>;
+
+  /** documentation/Subfeatures/Étkezés.md: per-user meal log. Every row (incl. list entries) embeds its full live+tombstoned item set. */
+  listMeals(): Promise<Meal[]>;
+  getMeal(id: string): Promise<Meal>;
+  /** documentation/Architektúra/Backend.md "Nested aggregate PUT": meal + items saved as one outbox entry. */
+  saveMeal(draft: MealDraft): Promise<Meal>;
+  /** documentation/Subfeatures/Étkezés.md: cascades to every live item on this meal. */
+  deleteMeal(id: string): Promise<Meal>;
 }
 
 export const STORAGE_BACKEND = new InjectionToken<StorageBackend>('STORAGE_BACKEND');

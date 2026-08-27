@@ -28,13 +28,17 @@ class FoodService {
 	private final FoodRepository repository;
 	private final StoredFoodRepository storedFoodRepository;
 	private final RecipeIngredientRepository recipeIngredientRepository;
+	private final MealItemRepository mealItemRepository;
+	private final MealRepository mealRepository;
 	private final FoodMapper mapper;
 
 	FoodService(FoodRepository repository, StoredFoodRepository storedFoodRepository, RecipeIngredientRepository recipeIngredientRepository,
-			FoodMapper mapper) {
+			MealItemRepository mealItemRepository, MealRepository mealRepository, FoodMapper mapper) {
 		this.repository = repository;
 		this.storedFoodRepository = storedFoodRepository;
 		this.recipeIngredientRepository = recipeIngredientRepository;
+		this.mealItemRepository = mealItemRepository;
+		this.mealRepository = mealRepository;
 		this.mapper = mapper;
 	}
 
@@ -68,9 +72,11 @@ class FoodService {
 	}
 
 	/**
-	 * Soft delete, idempotent, cascading to every live StoredFood and RecipeIngredient referencing
-	 * this catalog item (across every user/recipe — documentation/Subfeatures/Élelmiszerek.md
-	 * "Törlés"). Shopping-list / meal cascades are added once those features exist.
+	 * Soft delete, idempotent, cascading to every live StoredFood, RecipeIngredient, and MealItem
+	 * referencing this catalog item (across every user/recipe/meal — documentation/Subfeatures/
+	 * Élelmiszerek.md "Törlés"), plus any Meal left with zero live items as a result
+	 * (documentation/Subfeatures/Étkezés.md "Cascade"). Shopping-list cascades are added once that
+	 * feature exists.
 	 */
 	@Transactional
 	Food delete(UUID id) {
@@ -88,6 +94,7 @@ class FoodService {
 				recipeIngredientRepository.save(ingredient);
 			}
 			recipeIngredientRepository.flush();
+			MealCascade.cascade(mealItemRepository.findByFoodIdAndDeletedFalse(id), mealItemRepository, mealRepository);
 		}
 		return mapper.toDto(entity);
 	}

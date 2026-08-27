@@ -6,6 +6,7 @@ import { GearItem } from '../../api/model/gearItem';
 import { HouseholdRoom } from '../../api/model/householdRoom';
 import { HouseholdTask } from '../../api/model/householdTask';
 import { LifePlan } from '../../api/model/lifePlan';
+import { Meal } from '../../api/model/meal';
 import { PackingSession } from '../../api/model/packingSession';
 import { PackingSessionDetail } from '../../api/model/packingSessionDetail';
 import { PackingSessionItem } from '../../api/model/packingSessionItem';
@@ -22,6 +23,8 @@ import {
   HouseholdRoomRow,
   HouseholdTaskRow,
   LifePlanRow,
+  MealItemRow,
+  MealRow,
   PackingSessionItemRow,
   PackingSessionRow,
   PackingTemplateItemRow,
@@ -44,6 +47,11 @@ import {
   householdTaskRowToDto,
   lifePlanLocalWriteTask,
   lifePlanRowToDto,
+  mealItemLocalRemoveTask,
+  mealItemLocalWriteTask,
+  mealItemRowToDto,
+  mealLocalWriteTask,
+  mealRowToDto,
   packingSessionItemLocalRemoveTask,
   packingSessionItemLocalWriteTask,
   packingSessionItemRowToDto,
@@ -71,7 +79,15 @@ import { AuthSessionService } from '../session/auth-session.service';
 import { OfflineQueueService } from '../sync/offline-queue.service';
 import { uuidV4 } from '../sync/uuid';
 import { LocalDatabaseService, SqlTask } from './local-database.service';
-import { GearItemReferenceCounts, PackingSessionStartDraft, PackingTemplateDraft, RecipeDraft, StorageBackend } from './storage-backend';
+import {
+  GearItemReferenceCounts,
+  MealDraft,
+  PackingSessionStartDraft,
+  PackingTemplateDraft,
+  RecipeDraft,
+  StorageBackend,
+  expandMealItemSaveItem,
+} from './storage-backend';
 
 /** Native (offlineCapable = true): local-first — every write lands in SQLite + the outbox in one transaction (§5). */
 @Injectable({ providedIn: 'root' })
@@ -326,7 +342,7 @@ export class SqliteStorageBackend implements StorageBackend {
   }
 
   /** documentation/Architektúra/Backend-offline first.md §10 "Függőségi láncok": ids among `candidateIds` whose row hasn't reached the server yet. */
-  private async findLocalOnlyIds(table: 'gear_item' | 'household_room' | 'food', candidateIds: string[]): Promise<string[]> {
+  private async findLocalOnlyIds(table: 'gear_item' | 'household_room' | 'food' | 'recipe', candidateIds: string[]): Promise<string[]> {
     if (candidateIds.length === 0) {
       return [];
     }
@@ -988,6 +1004,116 @@ export class SqliteStorageBackend implements StorageBackend {
       [id],
     );
     return { ...recipeRowToDto(recipeRows[0]), ingredients: ingredientRows.map(recipeIngredientRowToDto) };
+  }
+
+  async listMeals(): Promise<Meal[]> {
+    const mealRows = await this.db.query<MealRow>('SELECT * FROM meal WHERE deleted = 0 ORDER BY eaten_at ASC');
+    // Meal.items contract (meal.ts): every row, live or tombstoned — matches HttpStorageBackend/the
+    // backend's own toDto. Every caller already filters `!deleted` itself when rendering or summing.
+    const itemRows = await this.db.query<MealItemRow>('SELECT * FROM meal_item ORDER BY sort_order');
+    const itemsByMeal = new Map<string, Meal['items']>();
+    for (const row of itemRows) {
+      const dto = mealItemRowToDto(row);
+      const list = itemsByMeal.get(dto.mealId) ?? [];
+      list.push(dto);
+      itemsByMeal.set(dto.mealId, list);
+    }
+    return mealRows.map((row) => ({ ...mealRowToDto(row), items: itemsByMeal.get(row.id) ?? [] }));
+  }
+
+  getMeal(id: string): Promise<Meal> {
+    return this.readMeal(id);
+  }
+
+  /** documentation/Architektúra/Backend.md "Nested aggregate PUT": meal + items in one local transaction and one outbox entry. */
+  async saveMeal(draft: MealDraft): Promise<Meal> {
+    const userId = this.requireUserId();
+    const existingMealRows = await this.db.query('SELECT 1 FROM meal WHERE id = ?', [draft.id]);
+    const isNew = existingMealRows.length === 0;
+
+    const existingItemRows = await this.db.query<MealItemRow>('SELECT * FROM meal_item WHERE meal_id = ?', [draft.id]);
+    const incomingIds = new Set(draft.items.map((item) => item.id));
+
+    const localTasks: SqlTask[] = [mealLocalWriteTask({ id: draft.id, eatenAt: draft.eatenAt, timeZoneId: draft.timeZoneId, note: draft.note })];
+    for (const item of draft.items) {
+      localTasks.push(mealItemLocalWriteTask(expandMealItemSaveItem(item, draft.id)));
+    }
+    for (const existing of existingItemRows) {
+      if (existing.deleted === 0 && !incomingIds.has(existing.id)) {
+        localTasks.push(mealItemLocalRemoveTask(existing.id));
+      }
+    }
+
+    // documentation/Architektúra/Backend-offline first.md §10 "Függőségi láncok": a new item
+    // referencing a Food/Recipe created in the same offline session must wait for that row's own POST first.
+    const recipeIds = draft.items.filter((item) => item.type === 'RECIPE').map((item) => item.recipeId);
+    const foodIds = draft.items.filter((item) => item.type === 'FOOD').map((item) => item.foodId);
+    const [localOnlyRecipeIds, localOnlyFoodIds] = await Promise.all([
+      this.findLocalOnlyIds('recipe', recipeIds),
+      this.findLocalOnlyIds('food', foodIds),
+    ]);
+    const dependsOn = [...localOnlyRecipeIds, ...localOnlyFoodIds];
+
+    const payload: Meal = {
+      id: draft.id,
+      eatenAt: draft.eatenAt,
+      timeZoneId: draft.timeZoneId,
+      note: draft.note,
+      deleted: false,
+      items: draft.items.map((item) => ({ ...expandMealItemSaveItem(item, draft.id), deleted: false }) as Meal['items'][number]),
+    };
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: isNew ? 'POST' : 'PUT',
+      url: isNew ? '/api/meals' : `/api/meals/${draft.id}`,
+      payload,
+      entityType: 'Meal',
+      targetEntityId: draft.id,
+      dependsOn,
+    });
+    await this.db.executeTransaction([...localTasks, ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    return this.readMeal(draft.id);
+  }
+
+  async deleteMeal(id: string): Promise<Meal> {
+    const userId = this.requireUserId();
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: 'DELETE',
+      url: `/api/meals/${id}`,
+      payload: null,
+      entityType: 'Meal',
+      targetEntityId: id,
+    });
+    const liveItemRows = await this.db.query<{ id: string }>('SELECT id FROM meal_item WHERE meal_id = ? AND deleted = 0', [id]);
+    const tasks: SqlTask[] = [];
+    if (enqueue.hardRemoveLocalEntity) {
+      tasks.push({ statement: 'DELETE FROM meal WHERE id = ?', values: [id] });
+      for (const row of liveItemRows) {
+        tasks.push({ statement: 'DELETE FROM meal_item WHERE id = ?', values: [row.id] });
+      }
+    } else {
+      tasks.push({
+        statement: 'UPDATE meal SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?',
+        values: [new Date().toISOString(), id],
+      });
+      for (const row of liveItemRows) {
+        tasks.push(mealItemLocalRemoveTask(row.id));
+      }
+    }
+    await this.db.executeTransaction([...tasks, ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    if (enqueue.hardRemoveLocalEntity) {
+      return { id, eatenAt: '', timeZoneId: '', note: null, deleted: true, items: [] };
+    }
+    return this.readMeal(id);
+  }
+
+  private async readMeal(id: string): Promise<Meal> {
+    const mealRows = await this.db.query<MealRow>('SELECT * FROM meal WHERE id = ?', [id]);
+    const itemRows = await this.db.query<MealItemRow>('SELECT * FROM meal_item WHERE meal_id = ? ORDER BY sort_order', [id]);
+    return { ...mealRowToDto(mealRows[0]), items: itemRows.map(mealItemRowToDto) };
   }
 
   private requireUserId(): string {

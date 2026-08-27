@@ -30,6 +30,8 @@ class RecipeServiceTest {
 	private RecipeRepository repository;
 	private RecipeIngredientRepository ingredientRepository;
 	private FoodRepository foodRepository;
+	private MealItemRepository mealItemRepository;
+	private MealRepository mealRepository;
 	private RecipeService service;
 
 	@BeforeEach
@@ -37,7 +39,11 @@ class RecipeServiceTest {
 		repository = mock(RecipeRepository.class);
 		ingredientRepository = mock(RecipeIngredientRepository.class);
 		foodRepository = mock(FoodRepository.class);
-		service = new RecipeService(repository, ingredientRepository, foodRepository, new RecipeMapper(), new RecipeIngredientMapper());
+		mealItemRepository = mock(MealItemRepository.class);
+		mealRepository = mock(MealRepository.class);
+		when(mealItemRepository.findByRecipeIdAndDeletedFalse(any())).thenReturn(List.of());
+		service = new RecipeService(repository, ingredientRepository, foodRepository, mealItemRepository, mealRepository, new RecipeMapper(),
+				new RecipeIngredientMapper());
 		when(repository.saveAndFlush(any())).thenAnswer(inv -> inv.getArgument(0));
 		when(repository.findByDeletedFalse()).thenReturn(List.of());
 		when(repository.findByNameNormalizedAndDeletedFalse(any())).thenReturn(Optional.empty());
@@ -285,6 +291,30 @@ class RecipeServiceTest {
 		assertThat(deleted.getDeleted()).isTrue();
 		assertThat(liveIngredient.isDeleted()).isTrue();
 		verify(ingredientRepository).save(liveIngredient);
+	}
+
+	@Test
+	void delete_cascadesToLiveMealItemReferencingThisRecipe_andSoftDeletesNowEmptyMeal() {
+		// documentation/Subfeatures/Étkezés.md "Cascade".
+		UUID id = UUID.randomUUID();
+		RecipeEntity existing = recipe(id, "Rántotta");
+		when(repository.findById(id)).thenReturn(Optional.of(existing));
+		when(ingredientRepository.findByRecipeIdAndDeletedFalse(id)).thenReturn(List.of());
+		when(ingredientRepository.findByRecipeId(id)).thenReturn(List.of());
+		UUID mealId = UUID.randomUUID();
+		MealItemEntity mealItem = new MealItemEntity(UUID.randomUUID(), mealId, "RECIPE", 0);
+		mealItem.setRecipeId(id);
+		when(mealItemRepository.findByRecipeIdAndDeletedFalse(id)).thenReturn(List.of(mealItem));
+		when(mealItemRepository.findByMealIdAndDeletedFalse(mealId)).thenReturn(List.of());
+		MealEntity meal = new MealEntity(mealId, UUID.randomUUID());
+		when(mealRepository.findById(mealId)).thenReturn(Optional.of(meal));
+
+		service.delete(id);
+
+		assertThat(mealItem.isDeleted()).isTrue();
+		verify(mealItemRepository).save(mealItem);
+		assertThat(meal.isDeleted()).isTrue();
+		verify(mealRepository).save(meal);
 	}
 
 	@Test

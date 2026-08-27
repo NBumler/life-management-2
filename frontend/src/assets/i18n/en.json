@@ -396,6 +396,38 @@
       "SUMMARY_FAT": "Fat: {{fat}} g",
       "SUMMARY_INCOMPLETE": "Some values are incomplete (missing catalog data).",
       "DUPLICATE_ERROR": "An identical recipe already exists."
+    },
+    "MEAL": {
+      "TITLE": "Meals",
+      "TODAY": "Today",
+      "EMPTY_DAY": "No meals logged for this day yet.",
+      "ITEM_COUNT": "{{count}} items",
+      "DELETE_CONFIRM_TITLE": "Delete meal",
+      "DELETE_CONFIRM_MESSAGE": "Are you sure you want to delete this meal?",
+      "ADD_TITLE": "Log a meal",
+      "EDIT_TITLE": "Edit meal",
+      "DATE_LABEL": "Date",
+      "TIME_LABEL": "Time",
+      "NOTE_LABEL": "Note",
+      "ITEMS_LABEL": "Items",
+      "ADD_RECIPE": "Add recipe",
+      "ADD_FOOD": "Add food",
+      "ADD_CUSTOM": "Add custom item",
+      "PICKER_SEARCH_PLACEHOLDER": "Search",
+      "PICKER_EMPTY": "No matches.",
+      "PICKER_CONFIRM": "Add selected",
+      "NO_ITEMS": "No items yet.",
+      "QUANTITY_REQUIRED": "Quantity is required.",
+      "SERVINGS_LABEL": "Servings",
+      "CUSTOM_NAME_LABEL": "Display name",
+      "CUSTOM_NAME_REQUIRED": "Display name is required.",
+      "CUSTOM_CALORIES_LABEL": "Calories (kcal)",
+      "CUSTOM_CALORIES_REQUIRED": "Calories is required.",
+      "CUSTOM_PROTEIN_LABEL": "Protein (g)",
+      "CUSTOM_CARBS_LABEL": "Carbs (g)",
+      "CUSTOM_FAT_LABEL": "Fat (g)",
+      "CUSTOM_PRICE_LABEL": "Price (Ft)",
+      "EFFECTIVE_SUMMARY": "{{kcal}} kcal, {{price}} Ft"
     }
   }
 }

@@ -123,9 +123,11 @@ export class StorageListPage implements OnInit, ViewWillEnter {
     this.router.navigate(['/tabs/food/storage', 'new']);
   }
 
-  /** documentation/Features/Kaja.md: no full segmented hub yet (see app.routes.ts) — this is the lightweight stand-in until Étkezés/Stat exist too. */
+  /** documentation/Features/Kaja.md: no full segmented hub yet (see app.routes.ts) — this is the lightweight stand-in until Stat exists too. */
   switchSection(section: string): void {
-    if (section === 'catalog') {
+    if (section === 'meal') {
+      void this.router.navigateByUrl('/tabs/food/meal');
+    } else if (section === 'catalog') {
       void this.router.navigateByUrl('/tabs/food/catalog');
     } else if (section === 'recipe') {
       void this.router.navigateByUrl('/tabs/food/recipe');

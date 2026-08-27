@@ -1,0 +1,63 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-segment #sectionSegment value="meal" (ionChange)="switchSection($any($event.target).value)">
+      <ion-segment-button value="meal">
+        <ion-label>{{ 'FOOD.MEAL.TITLE' | translate }}</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="storage">
+        <ion-label>{{ 'FOOD.STORAGE.TITLE' | translate }}</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="catalog">
+        <ion-label>{{ 'FOOD.CATALOG.TITLE' | translate }}</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="recipe">
+        <ion-label>{{ 'FOOD.RECIPE.TITLE' | translate }}</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="previousDay()">
+        <ion-icon name="chevron-back-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>{{ selectedDate() }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="goToday()">{{ 'FOOD.MEAL.TODAY' | translate }}</ion-button>
+      <ion-button (click)="nextDay()">
+        <ion-icon name="chevron-forward-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-list>
+    @if (dayMeals().length === 0) {
+      <ion-item>
+        <ion-label color="medium">{{ 'FOOD.MEAL.EMPTY_DAY' | translate }}</ion-label>
+      </ion-item>
+    }
+
+    @for (meal of dayMeals(); track meal.id) {
+      <ion-item button (click)="edit(meal)">
+        <ion-label>
+          <h3>{{ timeOf(meal) }}</h3>
+          <p>{{ 'FOOD.MEAL.ITEM_COUNT' | translate: { count: itemCount(meal) } }}</p>
+          @if (meal.note) {
+            <p>{{ meal.note }}</p>
+          }
+        </ion-label>
+        <ion-button fill="clear" color="danger" (click)="delete(meal); $event.stopPropagation()">
+          <ion-icon name="trash-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+        </ion-button>
+      </ion-item>
+    }
+  </ion-list>
+
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button (click)="addMeal()">
+      <ion-icon name="add-outline" aria-hidden="true"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+</ion-content>

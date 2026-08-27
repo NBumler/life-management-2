@@ -11,6 +11,8 @@ export * from './householdRoom';
 export * from './householdTask';
 export * from './lifePlan';
 export * from './loginRequest';
+export * from './meal';
+export * from './mealItem';
 export * from './packingSession';
 export * from './packingSessionDetail';
 export * from './packingSessionItem';

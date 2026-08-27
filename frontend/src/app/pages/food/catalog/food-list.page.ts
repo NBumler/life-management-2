@@ -128,9 +128,11 @@ export class FoodListPage implements OnInit, ViewWillEnter {
     await sheet.present();
   }
 
-  /** documentation/Features/Kaja.md: no full segmented hub yet (see app.routes.ts) — this is the lightweight stand-in until Étkezés/Stat exist too. */
+  /** documentation/Features/Kaja.md: no full segmented hub yet (see app.routes.ts) — this is the lightweight stand-in until Stat exists too. */
   switchSection(section: string): void {
-    if (section === 'storage') {
+    if (section === 'meal') {
+      void this.router.navigateByUrl('/tabs/food/meal');
+    } else if (section === 'storage') {
       void this.router.navigateByUrl('/tabs/food/storage');
     } else if (section === 'recipe') {
       void this.router.navigateByUrl('/tabs/food/recipe');

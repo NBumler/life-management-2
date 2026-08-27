@@ -27,6 +27,8 @@ class FoodServiceTest {
 	private FoodRepository repository;
 	private StoredFoodRepository storedFoodRepository;
 	private RecipeIngredientRepository recipeIngredientRepository;
+	private MealItemRepository mealItemRepository;
+	private MealRepository mealRepository;
 	private FoodService service;
 
 	@BeforeEach
@@ -34,11 +36,15 @@ class FoodServiceTest {
 		repository = mock(FoodRepository.class);
 		storedFoodRepository = mock(StoredFoodRepository.class);
 		recipeIngredientRepository = mock(RecipeIngredientRepository.class);
+		mealItemRepository = mock(MealItemRepository.class);
+		mealRepository = mock(MealRepository.class);
 		when(repository.findByDeletedFalse()).thenReturn(List.of());
 		when(repository.saveAndFlush(any())).thenAnswer(inv -> inv.getArgument(0));
 		when(storedFoodRepository.findByFoodIdAndDeletedFalse(any())).thenReturn(List.of());
 		when(recipeIngredientRepository.findByFoodIdAndDeletedFalse(any())).thenReturn(List.of());
-		service = new FoodService(repository, storedFoodRepository, recipeIngredientRepository, new FoodMapper());
+		when(mealItemRepository.findByFoodIdAndDeletedFalse(any())).thenReturn(List.of());
+		service = new FoodService(repository, storedFoodRepository, recipeIngredientRepository, mealItemRepository, mealRepository,
+				new FoodMapper());
 	}
 
 	private static Food food(UUID id, String name) {
@@ -267,6 +273,47 @@ class FoodServiceTest {
 
 		assertThat(ingredient.isDeleted()).isTrue();
 		verify(recipeIngredientRepository).save(ingredient);
+	}
+
+	@Test
+	void delete_cascadesToLiveMealItemReferencingThisCatalogItem_andSoftDeletesNowEmptyMeal() {
+		// documentation/Subfeatures/Étkezés.md "Cascade".
+		UUID id = UUID.randomUUID();
+		FoodEntity existing = new FoodEntity(id);
+		existing.rename("Tej", "tej");
+		when(repository.findById(id)).thenReturn(Optional.of(existing));
+		UUID mealId = UUID.randomUUID();
+		MealItemEntity mealItem = new MealItemEntity(UUID.randomUUID(), mealId, "FOOD", 0);
+		mealItem.setFoodId(id);
+		when(mealItemRepository.findByFoodIdAndDeletedFalse(id)).thenReturn(List.of(mealItem));
+		when(mealItemRepository.findByMealIdAndDeletedFalse(mealId)).thenReturn(List.of());
+		MealEntity meal = new MealEntity(mealId, UUID.randomUUID());
+		when(mealRepository.findById(mealId)).thenReturn(Optional.of(meal));
+
+		service.delete(id);
+
+		assertThat(mealItem.isDeleted()).isTrue();
+		verify(mealItemRepository).save(mealItem);
+		assertThat(meal.isDeleted()).isTrue();
+		verify(mealRepository).save(meal);
+	}
+
+	@Test
+	void delete_doesNotSoftDeleteMeal_whenItStillHasOtherLiveItems() {
+		UUID id = UUID.randomUUID();
+		FoodEntity existing = new FoodEntity(id);
+		existing.rename("Tej", "tej");
+		when(repository.findById(id)).thenReturn(Optional.of(existing));
+		UUID mealId = UUID.randomUUID();
+		MealItemEntity mealItem = new MealItemEntity(UUID.randomUUID(), mealId, "FOOD", 0);
+		mealItem.setFoodId(id);
+		MealItemEntity otherLiveItem = new MealItemEntity(UUID.randomUUID(), mealId, "CUSTOM", 1);
+		when(mealItemRepository.findByFoodIdAndDeletedFalse(id)).thenReturn(List.of(mealItem));
+		when(mealItemRepository.findByMealIdAndDeletedFalse(mealId)).thenReturn(List.of(otherLiveItem));
+
+		service.delete(id);
+
+		verify(mealRepository, never()).save(any());
 	}
 
 	// --- list ---

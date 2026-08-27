@@ -355,7 +355,54 @@ const SCHEMA_V10_STATEMENTS: string[] = [
   `CREATE INDEX IF NOT EXISTS idx_recipe_ingredient_food_id ON recipe_ingredient (food_id)`,
 ];
 
-const SCHEMA_VERSION = 10;
+/** documentation/Subfeatures/Étkezés.md — per-user meal log; meal_item is a nullable superset covering all three item source types (RECIPE/FOOD/CUSTOM). */
+const SCHEMA_V11_STATEMENTS: string[] = [
+  `CREATE TABLE IF NOT EXISTS meal (
+    id TEXT PRIMARY KEY,
+    eaten_at TEXT NOT NULL,
+    time_zone_id TEXT NOT NULL,
+    note TEXT,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_meal_eaten_at ON meal (eaten_at)`,
+  `CREATE TABLE IF NOT EXISTS meal_item (
+    id TEXT PRIMARY KEY,
+    meal_id TEXT NOT NULL,
+    type TEXT NOT NULL,
+    recipe_id TEXT,
+    food_id TEXT,
+    quantity_amount REAL,
+    quantity_unit TEXT,
+    display_name TEXT,
+    calories_kcal REAL,
+    protein_g REAL,
+    carbs_g REAL,
+    fat_g REAL,
+    price_huf INTEGER,
+    servings REAL NOT NULL,
+    sort_order INTEGER NOT NULL,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_meal_item_meal_id ON meal_item (meal_id)`,
+  `CREATE INDEX IF NOT EXISTS idx_meal_item_recipe_id ON meal_item (recipe_id)`,
+  `CREATE INDEX IF NOT EXISTS idx_meal_item_food_id ON meal_item (food_id)`,
+];
+
+const SCHEMA_VERSION = 11;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -368,7 +415,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 7, statements: SCHEMA_V7_STATEMENTS },
   { toVersion: 8, statements: SCHEMA_V8_STATEMENTS },
   { toVersion: 9, statements: SCHEMA_V9_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V10_STATEMENTS },
+  { toVersion: 10, statements: SCHEMA_V10_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V11_STATEMENTS },
 ];
 
 export interface SqlTask {

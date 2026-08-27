@@ -1,0 +1,80 @@
+type: object
+description: >-
+  documentation/Subfeatures/Étkezés.md "Tétel — közös" — one polymorphic item on a Meal. `type`
+  selects which of the per-type fields apply: RECIPE uses `recipeId`; FOOD uses `foodId` +
+  `quantityAmount` + `quantityUnit`; CUSTOM uses `displayName` + `caloriesKcal` (+ optionally
+  `proteinG`/`carbsG`/`fatG`/`priceHuf`). Unused fields for a given type are omitted/null.
+required:
+  - id
+  - mealId
+  - type
+  - servings
+  - sortOrder
+  - deleted
+properties:
+  id:
+    type: string
+    format: uuid
+  mealId:
+    type: string
+    format: uuid
+  type:
+    type: string
+    enum:
+      - RECIPE
+      - FOOD
+      - CUSTOM
+  recipeId:
+    type: string
+    format: uuid
+    nullable: true
+  foodId:
+    type: string
+    format: uuid
+    nullable: true
+  quantityAmount:
+    type: number
+    nullable: true
+  quantityUnit:
+    type: string
+    nullable: true
+    description: 'documentation/Architektúra/Mennyiség mező.md quantity unit: db, g, dkg, kg, l, dl, cl, or ml.'
+  displayName:
+    type: string
+    nullable: true
+  caloriesKcal:
+    type: number
+    nullable: true
+  proteinG:
+    type: number
+    nullable: true
+  carbsG:
+    type: number
+    nullable: true
+  fatG:
+    type: number
+    nullable: true
+  priceHuf:
+    type: integer
+    nullable: true
+  servings:
+    type: number
+    minimum: 0
+    exclusiveMinimum: true
+  sortOrder:
+    type: integer
+  deleted:
+    type: boolean
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

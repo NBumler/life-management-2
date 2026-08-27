@@ -121,6 +121,11 @@ async function recipeCurrentPayload(ctx: OutboxEntityFixContext): Promise<unknow
   return ctx.storage.getRecipe(ctx.targetEntityId);
 }
 
+/** documentation/Subfeatures/Étkezés.md: meal + items are always saved together, POST and PUT alike. */
+async function mealCurrentPayload(ctx: OutboxEntityFixContext): Promise<unknown> {
+  return ctx.storage.getMeal(ctx.targetEntityId);
+}
+
 /**
  * documentation/Features/Szinkronizációs központ.md — SSOT the sync center reads to know, per outbox
  * entity type, which table backs it, whether Fix is available, and whether its Fix form has a
@@ -237,6 +242,13 @@ export class OutboxEntityRegistryService {
       table: 'recipe',
       currentPayload: recipeCurrentPayload,
       // Nested aggregate (recipe + ingredients, one body) — excluded from Fix per spec, see buildFixWriteTask doc above.
+      buildFixWriteTask: null,
+      nameUniqueness: null,
+    },
+    Meal: {
+      table: 'meal',
+      currentPayload: mealCurrentPayload,
+      // Nested aggregate (meal + items, one body) — excluded from Fix per spec, see buildFixWriteTask doc above.
       buildFixWriteTask: null,
       nameUniqueness: null,
     },

@@ -1,0 +1,45 @@
+type: object
+description: >-
+  documentation/Subfeatures/Étkezés.md — per-user meal log entry. documentation/Architektúra/
+  Backend.md "Nested aggregate PUT": Meal + its MealItem rows saved/read as one tree, on every
+  endpoint including the plain list — `items` always lists every row for this meal, live or
+  soft-deleted (client filters `deleted = false` itself when rendering or summing).
+required:
+  - id
+  - eatenAt
+  - timeZoneId
+  - deleted
+  - items
+properties:
+  id:
+    type: string
+    format: uuid
+  eatenAt:
+    type: string
+    format: date-time
+    description: UTC instant the meal was eaten.
+  timeZoneId:
+    type: string
+    description: IANA zone id the client was in when eatenAt was recorded (documentation/Subfeatures/Étkezés.md "Időzóna").
+  note:
+    type: string
+    nullable: true
+  items:
+    type: array
+    items:
+      $ref: 'MealItem.yaml'
+  deleted:
+    type: boolean
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

@@ -7,6 +7,7 @@ import { GearItemsService } from '../../api/api/gearItems.service';
 import { HouseholdRoomsService } from '../../api/api/householdRooms.service';
 import { HouseholdTasksService } from '../../api/api/householdTasks.service';
 import { LifePlansService } from '../../api/api/lifePlans.service';
+import { MealsService } from '../../api/api/meals.service';
 import { PackingSessionItemsService } from '../../api/api/packingSessionItems.service';
 import { PackingSessionsService } from '../../api/api/packingSessions.service';
 import { PackingTemplatesService } from '../../api/api/packingTemplates.service';
@@ -19,6 +20,7 @@ import { GearItem } from '../../api/model/gearItem';
 import { HouseholdRoom } from '../../api/model/householdRoom';
 import { HouseholdTask } from '../../api/model/householdTask';
 import { LifePlan } from '../../api/model/lifePlan';
+import { Meal } from '../../api/model/meal';
 import { PackingSession } from '../../api/model/packingSession';
 import { PackingSessionDetail } from '../../api/model/packingSessionDetail';
 import { PackingSessionItem } from '../../api/model/packingSessionItem';
@@ -29,7 +31,15 @@ import { StoredFood } from '../../api/model/storedFood';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 import { uuidV4 } from '../sync/uuid';
-import { GearItemReferenceCounts, PackingSessionStartDraft, PackingTemplateDraft, RecipeDraft, StorageBackend } from './storage-backend';
+import {
+  GearItemReferenceCounts,
+  MealDraft,
+  PackingSessionStartDraft,
+  PackingTemplateDraft,
+  RecipeDraft,
+  StorageBackend,
+  expandMealItemSaveItem,
+} from './storage-backend';
 
 /** Web (offlineCapable = false): every call is a direct HTTP round-trip, no local store, no outbox. */
 @Injectable({ providedIn: 'root' })
@@ -46,6 +56,7 @@ export class HttpStorageBackend implements StorageBackend {
   private readonly foodsApi = inject(FoodsService);
   private readonly storedFoodsApi = inject(StoredFoodsService);
   private readonly recipesApi = inject(RecipesService);
+  private readonly mealsApi = inject(MealsService);
 
   async getProfile(): Promise<UserProfile | null> {
     try {
@@ -278,6 +289,31 @@ export class HttpStorageBackend implements StorageBackend {
 
   deleteRecipe(id: string): Promise<Recipe> {
     return firstValueFrom(this.recipesApi.deleteRecipe(id));
+  }
+
+  listMeals(): Promise<Meal[]> {
+    return firstValueFrom(this.mealsApi.listMeals());
+  }
+
+  getMeal(id: string): Promise<Meal> {
+    return firstValueFrom(this.mealsApi.getMeal(id));
+  }
+
+  /** POST with an existing id is an idempotent upsert server-side, so this covers both create and update. */
+  saveMeal(draft: MealDraft): Promise<Meal> {
+    const dto: Meal = {
+      id: draft.id,
+      eatenAt: draft.eatenAt,
+      timeZoneId: draft.timeZoneId,
+      note: draft.note,
+      deleted: false,
+      items: draft.items.map((item) => ({ ...expandMealItemSaveItem(item, draft.id), deleted: false }) as Meal['items'][number]),
+    };
+    return firstValueFrom(this.mealsApi.createMeal(dto));
+  }
+
+  deleteMeal(id: string): Promise<Meal> {
+    return firstValueFrom(this.mealsApi.deleteMeal(id));
   }
 }
 

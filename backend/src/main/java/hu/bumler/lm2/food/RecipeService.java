@@ -33,14 +33,18 @@ class RecipeService {
 	private final RecipeRepository repository;
 	private final RecipeIngredientRepository ingredientRepository;
 	private final FoodRepository foodRepository;
+	private final MealItemRepository mealItemRepository;
+	private final MealRepository mealRepository;
 	private final RecipeMapper mapper;
 	private final RecipeIngredientMapper ingredientMapper;
 
 	RecipeService(RecipeRepository repository, RecipeIngredientRepository ingredientRepository, FoodRepository foodRepository,
-			RecipeMapper mapper, RecipeIngredientMapper ingredientMapper) {
+			MealItemRepository mealItemRepository, MealRepository mealRepository, RecipeMapper mapper, RecipeIngredientMapper ingredientMapper) {
 		this.repository = repository;
 		this.ingredientRepository = ingredientRepository;
 		this.foodRepository = foodRepository;
+		this.mealItemRepository = mealItemRepository;
+		this.mealRepository = mealRepository;
 		this.mapper = mapper;
 		this.ingredientMapper = ingredientMapper;
 	}
@@ -77,8 +81,8 @@ class RecipeService {
 
 	/**
 	 * Soft delete, idempotent, cascading to every live ingredient on the recipe (documentation/
-	 * Subfeatures/Recept.md "CRUD / törlés"). The further cascade to Meal / Recept forrású étkezés
-	 * references is added once those features exist (same deferral as FoodService.delete's javadoc).
+	 * Subfeatures/Recept.md "CRUD / törlés"), plus every live MealItem referencing this recipe and
+	 * any Meal left with zero live items as a result (documentation/Subfeatures/Étkezés.md "Cascade").
 	 */
 	@Transactional
 	Recipe delete(UUID id) {
@@ -91,6 +95,7 @@ class RecipeService {
 				ingredientRepository.save(ingredient);
 			}
 			ingredientRepository.flush();
+			MealCascade.cascade(mealItemRepository.findByRecipeIdAndDeletedFalse(id), mealItemRepository, mealRepository);
 		}
 		return toDto(entity);
 	}

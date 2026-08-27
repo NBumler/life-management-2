@@ -1,0 +1,70 @@
+parameters:
+  - name: id
+    in: path
+    required: true
+    schema:
+      type: string
+      format: uuid
+get:
+  operationId: getMeal
+  tags:
+    - meals
+  summary: The full meal tree. A soft-deleted meal returns 200 with deleted=true (not 404).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/Meal.yaml'
+    '404':
+      description: No such meal.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+put:
+  operationId: updateMeal
+  tags:
+    - meals
+  summary: >-
+    Full tree replace (documentation/Architektúra/Backend.md "Nested aggregate PUT"): items not
+    present in the body are soft-deleted, last-write-wins on the whole aggregate. No stock
+    re-adjustment on edit (documentation/Subfeatures/Étkezés.md "Készlet").
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/Meal.yaml'
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/Meal.yaml'
+    '409':
+      description: Entity already deleted.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+    '400':
+      description: Zero live items, or an item missing its type-required fields.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+delete:
+  operationId: deleteMeal
+  tags:
+    - meals
+  summary: Soft delete, idempotent. Cascades to soft-deleting every item on this meal.
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/Meal.yaml'

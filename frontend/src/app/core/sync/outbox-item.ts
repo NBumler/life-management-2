@@ -24,7 +24,8 @@ export type OutboxEntityType =
   | 'CalendarEvent'
   | 'Food'
   | 'StoredFood'
-  | 'Recipe';
+  | 'Recipe'
+  | 'Meal';
 
 /** documentation/Architektúra/Backend-offline first.md §4 "Outbox — adatmodell". */
 export interface OutboxItem {
