@@ -427,7 +427,18 @@
       "CUSTOM_CARBS_LABEL": "Szénhidrát (g)",
       "CUSTOM_FAT_LABEL": "Zsír (g)",
       "CUSTOM_PRICE_LABEL": "Ár (Ft)",
-      "EFFECTIVE_SUMMARY": "{{kcal}} kcal, {{price}} Ft"
+      "EFFECTIVE_SUMMARY": "{{kcal}} kcal, {{price}} Ft",
+      "DASHBOARD": {
+        "CALORIES_LABEL": "Kalória",
+        "PROTEIN_LABEL": "Fehérje",
+        "CARBS_LABEL": "Szénhidrát",
+        "FAT_LABEL": "Zsír",
+        "REMAINING": "{{amount}} hátra",
+        "EXCEEDED": "{{amount}} túllépés",
+        "ACTIVITY_EXTRA": "+{{amount}} kcal aktivitás",
+        "DAILY_PRICE": "Napi ár: {{amount}} Ft",
+        "PROFILE_INCOMPLETE_NOTICE": "A napi célok megjelenítéséhez töltsd ki a profilodat."
+      }
     }
   }
 }

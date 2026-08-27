@@ -6,9 +6,12 @@ import { provideTranslateService } from '@ngx-translate/core';
 
 import { Food } from '../../../api/model/food';
 import { Meal } from '../../../api/model/meal';
+import { MealItem } from '../../../api/model/mealItem';
 import { Recipe } from '../../../api/model/recipe';
+import { UserProfile } from '../../../api/model/userProfile';
 import { FoodRepository } from '../../../core/data/food.repository';
 import { MealRepository } from '../../../core/data/meal.repository';
+import { ProfileRepository } from '../../../core/data/profile.repository';
 import { RecipeRepository } from '../../../core/data/recipe.repository';
 import { today } from '../../../shared/local-date';
 import { deviceTimeZoneId } from '../../../shared/timezone';
@@ -18,11 +21,20 @@ function meal(overrides: Partial<Meal> = {}): Meal {
   return { id: 'm1', eatenAt: '2026-08-26T10:00:00.000Z', timeZoneId: 'Europe/Budapest', note: null, deleted: false, items: [], ...overrides };
 }
 
+function customItem(overrides: Partial<MealItem> = {}): MealItem {
+  return { id: 'i1', mealId: 'm1', type: 'CUSTOM', displayName: 'Torta', caloriesKcal: 100, proteinG: null, carbsG: null, fatG: null, priceHuf: 300, servings: 1, sortOrder: 0, deleted: false, ...overrides };
+}
+
+function completeProfile(overrides: Partial<UserProfile> = {}): UserProfile {
+  return { id: 'p1', birthDate: '1990-01-01', sex: 'MALE', heightCm: 180, currentWeightKg: 80, goal: 'MAINTENANCE', kgPerWeek: null, ...overrides };
+}
+
 describe('MealDashboardPage', () => {
   let fixture: ComponentFixture<MealDashboardPage>;
   let repository: jasmine.SpyObj<Pick<MealRepository, 'load' | 'remove'>> & { items: ReturnType<typeof signal<Meal[]>> };
   let recipeRepository: jasmine.SpyObj<Pick<RecipeRepository, 'load'>> & { items: ReturnType<typeof signal<Recipe[]>> };
   let foodRepository: jasmine.SpyObj<Pick<FoodRepository, 'load'>> & { items: ReturnType<typeof signal<Food[]>> };
+  let profileRepository: jasmine.SpyObj<Pick<ProfileRepository, 'load'>> & { profile: ReturnType<typeof signal<UserProfile | null>> };
   let alertController: jasmine.SpyObj<AlertController>;
 
   beforeEach(async () => {
@@ -35,6 +47,9 @@ describe('MealDashboardPage', () => {
     foodRepository = jasmine.createSpyObj('FoodRepository', ['load']) as never;
     foodRepository.load.and.resolveTo();
     foodRepository.items = signal<Food[]>([]);
+    profileRepository = jasmine.createSpyObj('ProfileRepository', ['load']) as never;
+    profileRepository.load.and.resolveTo();
+    profileRepository.profile = signal<UserProfile | null>(null);
     alertController = jasmine.createSpyObj('AlertController', ['create']);
 
     await TestBed.configureTestingModule({
@@ -45,6 +60,7 @@ describe('MealDashboardPage', () => {
         { provide: MealRepository, useValue: repository },
         { provide: RecipeRepository, useValue: recipeRepository },
         { provide: FoodRepository, useValue: foodRepository },
+        { provide: ProfileRepository, useValue: profileRepository },
         { provide: AlertController, useValue: alertController },
       ],
     }).compileComponents();
@@ -111,5 +127,32 @@ describe('MealDashboardPage', () => {
     await destructive.handler!();
 
     expect(repository.remove).toHaveBeenCalledWith('m1');
+  });
+
+  it('tdee(): not computable when the profile is missing/incomplete', () => {
+    profileRepository.profile.set(null);
+    expect(fixture.componentInstance.tdee().computable).toBeFalse();
+    expect(fixture.componentInstance.bars()).toEqual([]);
+    expect(fixture.componentInstance.activityExtraKcal()).toBe(0);
+  });
+
+  it('bars(): renders 4 goal bars, all yellow when nothing has been eaten yet', () => {
+    profileRepository.profile.set(completeProfile());
+
+    const bars = fixture.componentInstance.bars();
+
+    expect(bars.length).toBe(4);
+    expect(bars.every((bar) => bar.color === 'yellow')).toBeTrue();
+    expect(bars.every((bar) => bar.goal > 0)).toBeTrue();
+  });
+
+  it('dailyPriceHuf(): sums the selected day\'s live item prices', () => {
+    const day = fixture.componentInstance.selectedDate();
+    const noonOnSelectedDay = new Date(`${day}T12:00:00`).toISOString();
+    repository.items.set([
+      meal({ id: 'm1', eatenAt: noonOnSelectedDay, timeZoneId: deviceTimeZoneId(), items: [customItem({ id: 'i1', mealId: 'm1', priceHuf: 300 }), customItem({ id: 'i2', mealId: 'm1', priceHuf: 200, deleted: true })] }),
+    ]);
+
+    expect(fixture.componentInstance.dailyPriceHuf()).toBe(300);
   });
 });

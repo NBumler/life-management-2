@@ -1,0 +1,8 @@
+<div class="nutrition-bar">
+  <div class="nutrition-bar-header">
+    <span class="nutrition-bar-label">{{ label }}</span>
+    <span class="nutrition-bar-values">{{ intake | number: '1.0-0' }} / {{ goal | number: '1.0-0' }} {{ unit }}</span>
+  </div>
+  <ion-progress-bar [value]="ratio" [class]="barClass"></ion-progress-bar>
+  <span class="nutrition-bar-status">{{ statusText }}</span>
+</div>

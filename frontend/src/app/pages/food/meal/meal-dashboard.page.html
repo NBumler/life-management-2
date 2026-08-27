@@ -32,6 +32,20 @@
 </ion-header>
 
 <ion-content>
+  <div class="dashboard-summary">
+    @if (tdee().computable) {
+      @for (bar of bars(); track bar.label) {
+        <app-nutrition-progress-bar [label]="bar.label" [intake]="bar.intake" [goal]="bar.goal" [unit]="bar.unit" [color]="bar.color" [statusText]="bar.statusText" />
+      }
+      @if (activityExtraKcal() > 0) {
+        <ion-note class="activity-extra">{{ 'FOOD.MEAL.DASHBOARD.ACTIVITY_EXTRA' | translate: { amount: activityExtraKcal() } }}</ion-note>
+      }
+    } @else {
+      <ion-note>{{ 'FOOD.MEAL.DASHBOARD.PROFILE_INCOMPLETE_NOTICE' | translate }}</ion-note>
+    }
+    <ion-note class="daily-price">{{ 'FOOD.MEAL.DASHBOARD.DAILY_PRICE' | translate: { amount: (dailyPriceHuf() | number: '1.0-0') } }}</ion-note>
+  </div>
+
   <ion-list>
     @if (dayMeals().length === 0) {
       <ion-item>

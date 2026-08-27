@@ -1,0 +1,65 @@
+// documentation/Subfeatures/Étkezés.md "Progress bar színek" — light-mode values here, with a
+// dark-mode override block selected via `:host-context(.ion-palette-dark)`, mirroring
+// status-cycle-card.component.scss's mechanism (ThemeService toggles that class on <html>
+// explicitly; a plain prefers-color-scheme query would miss an explicit in-app Dark choice made
+// while the OS itself is in light mode).
+
+:host {
+  display: block;
+  margin-bottom: 12px;
+}
+
+.nutrition-bar-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.nutrition-bar-label {
+  font-weight: 600;
+}
+
+.nutrition-bar-values {
+  opacity: 0.8;
+}
+
+ion-progress-bar {
+  height: 8px;
+  border-radius: 4px;
+}
+
+.nutrition-bar-status {
+  display: block;
+  font-size: 12px;
+  opacity: 0.8;
+  margin-top: 2px;
+}
+
+.bar-yellow {
+  --progress-background: #e0b400;
+}
+.bar-green {
+  --progress-background: #2e7d32;
+}
+.bar-orange {
+  --progress-background: #e07b00;
+}
+.bar-red {
+  --progress-background: #c62828;
+}
+
+:host-context(.ion-palette-dark) {
+  .bar-yellow {
+    --progress-background: #f0c419;
+  }
+  .bar-green {
+    --progress-background: #4caf50;
+  }
+  .bar-orange {
+    --progress-background: #ff9800;
+  }
+  .bar-red {
+    --progress-background: #ef5350;
+  }
+}

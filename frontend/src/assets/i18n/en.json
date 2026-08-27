@@ -427,7 +427,18 @@
       "CUSTOM_CARBS_LABEL": "Carbs (g)",
       "CUSTOM_FAT_LABEL": "Fat (g)",
       "CUSTOM_PRICE_LABEL": "Price (Ft)",
-      "EFFECTIVE_SUMMARY": "{{kcal}} kcal, {{price}} Ft"
+      "EFFECTIVE_SUMMARY": "{{kcal}} kcal, {{price}} Ft",
+      "DASHBOARD": {
+        "CALORIES_LABEL": "Calories",
+        "PROTEIN_LABEL": "Protein",
+        "CARBS_LABEL": "Carbs",
+        "FAT_LABEL": "Fat",
+        "REMAINING": "{{amount}} left",
+        "EXCEEDED": "{{amount}} over",
+        "ACTIVITY_EXTRA": "+{{amount}} kcal activity",
+        "DAILY_PRICE": "Daily price: {{amount}} Ft",
+        "PROFILE_INCOMPLETE_NOTICE": "Fill in your profile to see today's goals."
+      }
     }
   }
 }
