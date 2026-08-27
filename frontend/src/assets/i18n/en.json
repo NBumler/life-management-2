@@ -466,7 +466,16 @@
       "NON_FOOD_NOTE_LABEL": "Store / note",
       "DELETE_CONFIRM_TITLE": "Delete list",
       "DELETE_CONFIRM_MESSAGE": "Are you sure you want to delete \"{{name}}\"?",
-      "COMPLETE": "Finish shopping"
+      "COMPLETE": "Finish shopping",
+      "HISTORY": "History"
+    },
+    "HISTORY": {
+      "TITLE": "History",
+      "SEARCH_PLACEHOLDER": "Search...",
+      "EMPTY": "No completed shopping trips yet.",
+      "ITEM_COUNT": "{{count}} item(s)",
+      "COMPLETED_AT": "Completed: {{date}}",
+      "RELIST": "Relist"
     },
     "COMPLETE": {
       "TITLE": "Finish shopping",

@@ -82,7 +82,8 @@ export function buildCompleteDraft(
   return { shoppingListId: listId, checkedFoodEntries, storageEntries, newActiveList };
 }
 
-function toSaveItem(item: ShoppingListItem, sortOrder: number): ShoppingListItemSaveItem {
+/** documentation/Subfeatures/Bevásárlás előzmény.md "Újralistázás" also reuses this: copying a live item into a fresh, unchecked item on a new list. */
+export function toSaveItem(item: ShoppingListItem, sortOrder: number): ShoppingListItemSaveItem {
   if (item.type === 'FOOD') {
     return {
       id: uuidV4(),

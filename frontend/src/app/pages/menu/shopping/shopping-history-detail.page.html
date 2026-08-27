@@ -1,0 +1,46 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/menu/shopping/history"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ list()?.name ?? ('SHOPPING.LIST.UNNAMED' | translate) }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  @if (list(); as list) {
+    <ion-list>
+      <ion-item lines="none">
+        <ion-note>{{ 'SHOPPING.HISTORY.COMPLETED_AT' | translate: { date: (list.completedAt | date: 'short') } }}</ion-note>
+      </ion-item>
+
+      @for (item of liveItems(); track item.id) {
+        <ion-item>
+          <ion-checkbox slot="start" [checked]="item.checked" [disabled]="true"></ion-checkbox>
+          @if (item.type === 'FOOD') {
+            <ion-label>
+              <h3>{{ foodOf(item)?.name ?? '—' }}</h3>
+              <p>{{ item.quantityAmount | number }} {{ item.quantityUnit }}</p>
+            </ion-label>
+          } @else {
+            <ion-label>
+              <h3>{{ item.name }}</h3>
+              @if (item.note) {
+                <p>{{ item.note }}</p>
+              }
+              @if (item.quantityAmount !== null && item.quantityAmount !== undefined) {
+                <p>{{ item.quantityAmount | number }} {{ item.quantityUnit }}</p>
+              }
+            </ion-label>
+          }
+        </ion-item>
+      }
+    </ion-list>
+  }
+</ion-content>
+
+<ion-footer>
+  <ion-toolbar>
+    <ion-button expand="block" class="ion-margin" (click)="relist()">{{ 'SHOPPING.HISTORY.RELIST' | translate }}</ion-button>
+  </ion-toolbar>
+</ion-footer>

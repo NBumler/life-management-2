@@ -25,6 +25,8 @@ export const routes: Routes = [
             children: [
               { path: '', loadComponent: () => import('./pages/menu/shopping/shopping-lists.page').then((m) => m.ShoppingListsPage) },
               { path: 'new', loadComponent: () => import('./pages/menu/shopping/shopping-list-editor.page').then((m) => m.ShoppingListEditorPage) },
+              { path: 'history', loadComponent: () => import('./pages/menu/shopping/shopping-history.page').then((m) => m.ShoppingHistoryPage) },
+              { path: 'history/:id', loadComponent: () => import('./pages/menu/shopping/shopping-history-detail.page').then((m) => m.ShoppingHistoryDetailPage) },
               { path: ':id/complete', loadComponent: () => import('./pages/menu/shopping/shopping-list-complete.page').then((m) => m.ShoppingListCompletePage) },
               { path: ':id', loadComponent: () => import('./pages/menu/shopping/shopping-list-editor.page').then((m) => m.ShoppingListEditorPage) },
             ],

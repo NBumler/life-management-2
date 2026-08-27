@@ -1,0 +1,35 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/menu/shopping"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ 'SHOPPING.HISTORY.TITLE' | translate }}</ion-title>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-searchbar
+      [value]="query()"
+      (ionInput)="query.set($any($event.target).value ?? '')"
+      [placeholder]="'SHOPPING.HISTORY.SEARCH_PLACEHOLDER' | translate"
+      [debounce]="200"
+    ></ion-searchbar>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-list>
+    @if (lists().length === 0) {
+      <ion-item>
+        <ion-label color="medium">{{ 'SHOPPING.HISTORY.EMPTY' | translate }}</ion-label>
+      </ion-item>
+    }
+
+    @for (list of lists(); track list.id) {
+      <ion-item button [routerLink]="[list.id]">
+        <ion-label>
+          <h3>{{ list.name ?? ('SHOPPING.LIST.UNNAMED' | translate) }}</h3>
+          <p>{{ 'SHOPPING.HISTORY.ITEM_COUNT' | translate: { count: itemCount(list) } }} · {{ list.completedAt | date: 'short' }}</p>
+        </ion-label>
+      </ion-item>
+    }
+  </ion-list>
+</ion-content>
