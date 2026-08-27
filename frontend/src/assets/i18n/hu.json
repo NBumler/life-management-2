@@ -398,6 +398,17 @@
       "SUMMARY_INCOMPLETE": "Néhány érték hiányos (hiányzó katalógusadat miatt).",
       "DUPLICATE_ERROR": "Már létezik egy azonos recept."
     },
+    "STATS": {
+      "TITLE": "Statisztika",
+      "KIND_FOOD": "Élelmiszer",
+      "KIND_RECIPE": "Recept",
+      "METRIC_PROTEIN_PER_KCAL": "Fehérje/kalória",
+      "METRIC_PROTEIN_PER_CARBS": "Fehérje/szénhidrát",
+      "METRIC_PROTEIN_PER_PRICE": "Fehérje/ár",
+      "SEARCH_PLACEHOLDER": "Keresés",
+      "EMPTY": "Nincs megjeleníthető tétel.",
+      "INCOMPLETE": "Hiányos adat"
+    },
     "MEAL": {
       "TITLE": "Étkezés",
       "TODAY": "Mai nap",

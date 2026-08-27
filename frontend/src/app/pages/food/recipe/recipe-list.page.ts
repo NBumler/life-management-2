@@ -82,6 +82,8 @@ export class RecipeListPage implements OnInit {
       void this.router.navigateByUrl('/tabs/food/catalog');
     } else if (section === 'storage') {
       void this.router.navigateByUrl('/tabs/food/storage');
+    } else if (section === 'stats') {
+      void this.router.navigateByUrl('/tabs/food/stats');
     }
   }
 

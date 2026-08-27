@@ -136,4 +136,13 @@ describe('StorageListPage', () => {
 
     expect(navigateSpy).toHaveBeenCalledWith('/tabs/food/catalog');
   });
+
+  it('switchSection(): navigating to "stats" goes to the Kaja statisztika page', () => {
+    const router = TestBed.inject(Router);
+    const navigateSpy = spyOn(router, 'navigateByUrl').and.resolveTo(true);
+
+    fixture.componentInstance.switchSection('stats');
+
+    expect(navigateSpy).toHaveBeenCalledWith('/tabs/food/stats');
+  });
 });

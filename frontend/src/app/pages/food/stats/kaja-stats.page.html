@@ -1,0 +1,80 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-segment #sectionSegment value="stats" (ionChange)="switchSection($any($event.target).value)">
+      <ion-segment-button value="meal">
+        <ion-label>{{ 'FOOD.MEAL.TITLE' | translate }}</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="storage">
+        <ion-label>{{ 'FOOD.STORAGE.TITLE' | translate }}</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="catalog">
+        <ion-label>{{ 'FOOD.CATALOG.TITLE' | translate }}</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="recipe">
+        <ion-label>{{ 'FOOD.RECIPE.TITLE' | translate }}</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="stats">
+        <ion-label>{{ 'FOOD.STATS.TITLE' | translate }}</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-segment [value]="catalogKind()" (ionChange)="catalogKind.set($any($event.target).value)">
+      <ion-segment-button value="FOOD">
+        <ion-label>{{ 'FOOD.STATS.KIND_FOOD' | translate }}</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="RECIPE">
+        <ion-label>{{ 'FOOD.STATS.KIND_RECIPE' | translate }}</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-segment [value]="metric()" (ionChange)="metric.set($any($event.target).value)">
+      <ion-segment-button value="PROTEIN_PER_KCAL">
+        <ion-label>{{ 'FOOD.STATS.METRIC_PROTEIN_PER_KCAL' | translate }}</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="PROTEIN_PER_CARBS">
+        <ion-label>{{ 'FOOD.STATS.METRIC_PROTEIN_PER_CARBS' | translate }}</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="PROTEIN_PER_PRICE">
+        <ion-label>{{ 'FOOD.STATS.METRIC_PROTEIN_PER_PRICE' | translate }}</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-searchbar
+      [value]="query()"
+      (ionInput)="query.set($any($event.target).value ?? '')"
+      [placeholder]="'FOOD.STATS.SEARCH_PLACEHOLDER' | translate"
+      [debounce]="200"
+    ></ion-searchbar>
+    <ion-button slot="end" fill="clear" (click)="toggleDirection()">
+      <ion-icon [name]="direction() === 'DESC' ? 'chevron-down-outline' : 'chevron-up-outline'" slot="icon-only" aria-hidden="true"></ion-icon>
+    </ion-button>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-list>
+    @if (rows().length === 0) {
+      <ion-item>
+        <ion-label color="medium">{{ 'FOOD.STATS.EMPTY' | translate }}</ion-label>
+      </ion-item>
+    }
+
+    @for (row of rows(); track row.id) {
+      <ion-item button (click)="open(row)">
+        <ion-label slot="start" class="rank">{{ row.rank ?? '—' }}</ion-label>
+        <ion-label>
+          <h3>{{ row.name }}</h3>
+          @if (row.ratio === null) {
+            <p>{{ 'FOOD.STATS.INCOMPLETE' | translate }}</p>
+          }
+        </ion-label>
+        @if (row.ratio !== null) {
+          <ion-label slot="end">{{ row.ratio | number: '1.2-2' }}</ion-label>
+        }
+      </ion-item>
+    }
+  </ion-list>
+</ion-content>

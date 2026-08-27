@@ -118,11 +118,10 @@ export const routes: Routes = [
       },
       {
         // documentation/Features/Kaja.md: the tab's real root is the Étkezés|Tárolás|Katalógus|Recept|Stat
-        // segmented hub, not built yet (`tab.kaja` stays off until that full core segment set exists —
-        // see Frontend.md's flag registry). Until then this redirect + the ion-segment on each list page
-        // (food-list.page.html / storage-list.page.html / recipe-list.page.html / meal-dashboard.page.html)
-        // is the lightweight stand-in for the four segments that do exist so far, landing on Étkezés
-        // first per the spec's eventual segment order.
+        // segmented hub, not built as an actual hub component — this redirect + the ion-segment on each
+        // list page (food-list.page.html / storage-list.page.html / recipe-list.page.html /
+        // meal-dashboard.page.html / kaja-stats.page.html) is the lightweight stand-in, now covering
+        // all five segments, landing on Étkezés first per the spec's eventual segment order.
         path: 'food',
         children: [
           { path: '', redirectTo: 'meal', pathMatch: 'full' },
@@ -158,6 +157,10 @@ export const routes: Routes = [
               { path: 'new', loadComponent: () => import('./pages/food/meal/meal-edit.page').then((m) => m.MealEditPage) },
               { path: ':id', loadComponent: () => import('./pages/food/meal/meal-edit.page').then((m) => m.MealEditPage) },
             ],
+          },
+          {
+            path: 'stats',
+            children: [{ path: '', loadComponent: () => import('./pages/food/stats/kaja-stats.page').then((m) => m.KajaStatsPage) }],
           },
         ],
       },

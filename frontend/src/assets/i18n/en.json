@@ -398,6 +398,17 @@
       "SUMMARY_INCOMPLETE": "Some values are incomplete (missing catalog data).",
       "DUPLICATE_ERROR": "An identical recipe already exists."
     },
+    "STATS": {
+      "TITLE": "Statistics",
+      "KIND_FOOD": "Food",
+      "KIND_RECIPE": "Recipe",
+      "METRIC_PROTEIN_PER_KCAL": "Protein/calorie",
+      "METRIC_PROTEIN_PER_CARBS": "Protein/carbs",
+      "METRIC_PROTEIN_PER_PRICE": "Protein/price",
+      "SEARCH_PLACEHOLDER": "Search",
+      "EMPTY": "Nothing to show.",
+      "INCOMPLETE": "Incomplete data"
+    },
     "MEAL": {
       "TITLE": "Meals",
       "TODAY": "Today",

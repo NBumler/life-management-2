@@ -131,6 +131,8 @@ export class StorageListPage implements OnInit, ViewWillEnter {
       void this.router.navigateByUrl('/tabs/food/catalog');
     } else if (section === 'recipe') {
       void this.router.navigateByUrl('/tabs/food/recipe');
+    } else if (section === 'stats') {
+      void this.router.navigateByUrl('/tabs/food/stats');
     }
   }
 

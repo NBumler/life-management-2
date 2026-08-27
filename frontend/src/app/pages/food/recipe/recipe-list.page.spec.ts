@@ -96,4 +96,13 @@ describe('RecipeListPage', () => {
     expect(navigateSpy).toHaveBeenCalledWith('/tabs/food/storage');
     expect(navigateSpy).toHaveBeenCalledTimes(2);
   });
+
+  it('switchSection(): navigating to "stats" goes to the Kaja statisztika page', () => {
+    const router = TestBed.inject(Router);
+    const navigateSpy = spyOn(router, 'navigateByUrl').and.resolveTo(true);
+
+    fixture.componentInstance.switchSection('stats');
+
+    expect(navigateSpy).toHaveBeenCalledWith('/tabs/food/stats');
+  });
 });
