@@ -37,6 +37,7 @@ export class MenuPage {
   readonly offlineCapable = Capacitor.isNativePlatform();
   readonly pendingCount = this.offlineQueue.pendingCount;
   readonly gearCheckEnabled = this.featureFlags.isEnabled('menu.gearcheck');
+  readonly bevasarlasEnabled = this.featureFlags.isEnabled('menu.bevasarlas');
 
   async logout(): Promise<void> {
     const pending = this.pendingCount();

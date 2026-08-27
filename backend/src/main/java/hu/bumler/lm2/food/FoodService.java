@@ -30,15 +30,18 @@ class FoodService {
 	private final RecipeIngredientRepository recipeIngredientRepository;
 	private final MealItemRepository mealItemRepository;
 	private final MealRepository mealRepository;
+	private final ShoppingListItemRepository shoppingListItemRepository;
 	private final FoodMapper mapper;
 
 	FoodService(FoodRepository repository, StoredFoodRepository storedFoodRepository, RecipeIngredientRepository recipeIngredientRepository,
-			MealItemRepository mealItemRepository, MealRepository mealRepository, FoodMapper mapper) {
+			MealItemRepository mealItemRepository, MealRepository mealRepository, ShoppingListItemRepository shoppingListItemRepository,
+			FoodMapper mapper) {
 		this.repository = repository;
 		this.storedFoodRepository = storedFoodRepository;
 		this.recipeIngredientRepository = recipeIngredientRepository;
 		this.mealItemRepository = mealItemRepository;
 		this.mealRepository = mealRepository;
+		this.shoppingListItemRepository = shoppingListItemRepository;
 		this.mapper = mapper;
 	}
 
@@ -72,11 +75,12 @@ class FoodService {
 	}
 
 	/**
-	 * Soft delete, idempotent, cascading to every live StoredFood, RecipeIngredient, and MealItem
-	 * referencing this catalog item (across every user/recipe/meal — documentation/Subfeatures/
-	 * Élelmiszerek.md "Törlés"), plus any Meal left with zero live items as a result
-	 * (documentation/Subfeatures/Étkezés.md "Cascade"). Shopping-list cascades are added once that
-	 * feature exists.
+	 * Soft delete, idempotent, cascading to every live StoredFood, RecipeIngredient, MealItem, and
+	 * ShoppingListItem referencing this catalog item (across every user/recipe/meal/list —
+	 * documentation/Subfeatures/Élelmiszerek.md "Törlés"), plus any Meal left with zero live items
+	 * as a result (documentation/Subfeatures/Étkezés.md "Cascade"). Unlike Meal, a shopping list is
+	 * never auto-deleted by this cascade even if left empty (documentation/Subfeatures/
+	 * Bevásárlólista írás.md "Üres aktív lista" — deleted manually instead).
 	 */
 	@Transactional
 	Food delete(UUID id) {
@@ -95,6 +99,7 @@ class FoodService {
 			}
 			recipeIngredientRepository.flush();
 			MealCascade.cascade(mealItemRepository.findByFoodIdAndDeletedFalse(id), mealItemRepository, mealRepository);
+			ShoppingListItemCascade.cascade(shoppingListItemRepository.findByFoodIdAndDeletedFalse(id), shoppingListItemRepository);
 		}
 		return mapper.toDto(entity);
 	}

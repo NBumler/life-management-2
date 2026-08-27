@@ -1,0 +1,63 @@
+type: object
+description: >-
+  documentation/Subfeatures/Bevásárlólista írás.md "Tétel hozzáadása" — one polymorphic item on a
+  ShoppingList. `type` selects which of the per-type fields apply: FOOD uses `foodId` +
+  `quantityAmount` + `quantityUnit` (both required); NON_FOOD uses `name` (required) + optional
+  `note` (free text: store/comment/other) + optional `quantityAmount`/`quantityUnit`. Unused
+  fields for a given type are omitted/null.
+required:
+  - id
+  - shoppingListId
+  - type
+  - checked
+  - sortOrder
+  - deleted
+properties:
+  id:
+    type: string
+    format: uuid
+  shoppingListId:
+    type: string
+    format: uuid
+  type:
+    type: string
+    enum:
+      - FOOD
+      - NON_FOOD
+  foodId:
+    type: string
+    format: uuid
+    nullable: true
+  name:
+    type: string
+    nullable: true
+  note:
+    type: string
+    nullable: true
+  quantityAmount:
+    type: number
+    nullable: true
+  quantityUnit:
+    type: string
+    nullable: true
+    description: 'documentation/Architektúra/Mennyiség mező.md quantity unit: db, g, dkg, kg, l, dl, cl, or ml.'
+  checked:
+    type: boolean
+    description: 'documentation/Subfeatures/Bevásárlólista írás.md "pipa" — UI-only until Bevásárlás teljesítve runs.'
+  sortOrder:
+    type: integer
+  deleted:
+    type: boolean
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

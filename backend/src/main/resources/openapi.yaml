@@ -73,6 +73,10 @@ paths:
     $ref: 'openapi/paths/meals.yaml'
   /api/meals/{id}:
     $ref: 'openapi/paths/meals-item.yaml'
+  /api/shopping-lists:
+    $ref: 'openapi/paths/shopping-lists.yaml'
+  /api/shopping-lists/{id}:
+    $ref: 'openapi/paths/shopping-lists-item.yaml'
 components:
   securitySchemes:
     bearerAuth:
@@ -166,3 +170,9 @@ components:
       $ref: 'openapi/components/schemas/MealList.yaml'
     MealItem:
       $ref: 'openapi/components/schemas/MealItem.yaml'
+    ShoppingList:
+      $ref: 'openapi/components/schemas/ShoppingList.yaml'
+    ShoppingListList:
+      $ref: 'openapi/components/schemas/ShoppingListList.yaml'
+    ShoppingListItem:
+      $ref: 'openapi/components/schemas/ShoppingListItem.yaml'

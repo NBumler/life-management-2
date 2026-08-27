@@ -13,6 +13,7 @@ import { PackingSessionsService } from '../../api/api/packingSessions.service';
 import { PackingTemplatesService } from '../../api/api/packingTemplates.service';
 import { ProfileService } from '../../api/api/profile.service';
 import { RecipesService } from '../../api/api/recipes.service';
+import { ShoppingListsService } from '../../api/api/shoppingLists.service';
 import { StoredFoodsService } from '../../api/api/storedFoods.service';
 import { CalendarEvent } from '../../api/model/calendarEvent';
 import { Food } from '../../api/model/food';
@@ -27,6 +28,7 @@ import { PackingSessionItem } from '../../api/model/packingSessionItem';
 import { PackingTemplate } from '../../api/model/packingTemplate';
 import { PackingTemplateDetail } from '../../api/model/packingTemplateDetail';
 import { Recipe } from '../../api/model/recipe';
+import { ShoppingList } from '../../api/model/shoppingList';
 import { StoredFood } from '../../api/model/storedFood';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
@@ -37,8 +39,10 @@ import {
   PackingSessionStartDraft,
   PackingTemplateDraft,
   RecipeDraft,
+  ShoppingListDraft,
   StorageBackend,
   expandMealItemSaveItem,
+  expandShoppingListItemSaveItem,
 } from './storage-backend';
 
 /** Web (offlineCapable = false): every call is a direct HTTP round-trip, no local store, no outbox. */
@@ -57,6 +61,7 @@ export class HttpStorageBackend implements StorageBackend {
   private readonly storedFoodsApi = inject(StoredFoodsService);
   private readonly recipesApi = inject(RecipesService);
   private readonly mealsApi = inject(MealsService);
+  private readonly shoppingListsApi = inject(ShoppingListsService);
 
   async getProfile(): Promise<UserProfile | null> {
     try {
@@ -314,6 +319,29 @@ export class HttpStorageBackend implements StorageBackend {
 
   deleteMeal(id: string): Promise<Meal> {
     return firstValueFrom(this.mealsApi.deleteMeal(id));
+  }
+
+  listShoppingLists(): Promise<ShoppingList[]> {
+    return firstValueFrom(this.shoppingListsApi.listShoppingLists());
+  }
+
+  getShoppingList(id: string): Promise<ShoppingList> {
+    return firstValueFrom(this.shoppingListsApi.getShoppingList(id));
+  }
+
+  /** POST with an existing id is an idempotent upsert server-side, so this covers both create and update. */
+  saveShoppingList(draft: ShoppingListDraft): Promise<ShoppingList> {
+    const dto: ShoppingList = {
+      id: draft.id,
+      name: draft.name,
+      deleted: false,
+      items: draft.items.map((item) => ({ ...expandShoppingListItemSaveItem(item, draft.id), deleted: false }) as ShoppingList['items'][number]),
+    };
+    return firstValueFrom(this.shoppingListsApi.createShoppingList(dto));
+  }
+
+  deleteShoppingList(id: string): Promise<ShoppingList> {
+    return firstValueFrom(this.shoppingListsApi.deleteShoppingList(id));
   }
 }
 

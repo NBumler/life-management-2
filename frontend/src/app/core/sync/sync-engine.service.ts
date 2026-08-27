@@ -37,6 +37,8 @@ import { PackingTemplateDetail } from '../../api/model/packingTemplateDetail';
 import { PackingTemplateItem } from '../../api/model/packingTemplateItem';
 import { Recipe } from '../../api/model/recipe';
 import { RecipeIngredient } from '../../api/model/recipeIngredient';
+import { ShoppingList } from '../../api/model/shoppingList';
+import { ShoppingListItem } from '../../api/model/shoppingListItem';
 import { StoredFood } from '../../api/model/storedFood';
 import { SyncChangeItem } from '../../api/model/syncChangeItem';
 import { UserProfile } from '../../api/model/userProfile';
@@ -72,6 +74,10 @@ import {
   recipeIngredientTombstoneTask,
   recipeServerApplyTask,
   recipeTombstoneTask,
+  shoppingListItemServerApplyTask,
+  shoppingListItemTombstoneTask,
+  shoppingListServerApplyTask,
+  shoppingListTombstoneTask,
   storedFoodServerApplyTask,
   storedFoodTombstoneTask,
   weightHistoryServerApplyTask,
@@ -515,6 +521,9 @@ export class SyncEngineService {
     if (item.entityType === 'Meal') {
       return this.mealApplyTasks(body as Meal);
     }
+    if (item.entityType === 'ShoppingList') {
+      return this.shoppingListApplyTasks(body as ShoppingList);
+    }
     throw new Error(`SyncEngine: no local writer for entityType "${item.entityType}"`);
   }
 
@@ -566,6 +575,17 @@ export class SyncEngineService {
     return [mealServerApplyTask(dto), ...dto.items.map((item: MealItem) => mealItemServerApplyTask(item))];
   }
 
+  /**
+   * documentation/Architektúra/Backend.md "Nested aggregate PUT": the response lists every item row
+   * (live or tombstoned — ShoppingList.yaml), which this applies as authoritative so each one's
+   * local `_dirty`/`_local_only` flags clear too — items never get their own outbox entry, so
+   * nothing else would ever clear them (§8's `_dirty=1` apply rule otherwise keeps the pending value
+   * forever).
+   */
+  private shoppingListApplyTasks(dto: ShoppingList): SqlTask[] {
+    return [shoppingListServerApplyTask(dto), ...dto.items.map((item: ShoppingListItem) => shoppingListItemServerApplyTask(item))];
+  }
+
   private async applyTombstone(item: OutboxItem): Promise<void> {
     const now = new Date().toISOString();
     if (item.entityType === 'UserProfile') {
@@ -604,11 +624,15 @@ export class SyncEngineService {
     } else if (item.entityType === 'CalendarEvent') {
       await this.db.executeTransaction([calendarEventTombstoneTask(item.targetEntityId, null, now)]);
     } else if (item.entityType === 'Food') {
-      // documentation/Subfeatures/Élelmiszerek.md: Food delete cascades to its storage items and recipe ingredients locally too.
+      // documentation/Subfeatures/Élelmiszerek.md: Food delete cascades to its storage items, recipe ingredients, and shopping-list items locally too.
       const storedFoodRows = await this.db.query<{ id: string }>('SELECT id FROM stored_food WHERE food_id = ?', [item.targetEntityId]);
       const recipeIngredientRows = await this.db.query<{ id: string }>('SELECT id FROM recipe_ingredient WHERE food_id = ?', [item.targetEntityId]);
       const mealItemRows = await this.db.query<{ id: string }>(
         'SELECT id FROM meal_item WHERE food_id = ? AND deleted = 0',
+        [item.targetEntityId],
+      );
+      const shoppingListItemRows = await this.db.query<{ id: string }>(
+        'SELECT id FROM shopping_list_item WHERE food_id = ? AND deleted = 0',
         [item.targetEntityId],
       );
       await this.db.executeTransaction([
@@ -616,6 +640,7 @@ export class SyncEngineService {
         ...storedFoodRows.map((row) => storedFoodTombstoneTask(row.id, null, now)),
         ...recipeIngredientRows.map((row) => recipeIngredientTombstoneTask(row.id, null, now)),
         ...(await this.mealItemCascadeTombstoneTasks(mealItemRows, now)),
+        ...shoppingListItemRows.map((row) => shoppingListItemTombstoneTask(row.id, null, now)),
       ]);
     } else if (item.entityType === 'StoredFood') {
       await this.db.executeTransaction([storedFoodTombstoneTask(item.targetEntityId, null, now)]);
@@ -637,6 +662,13 @@ export class SyncEngineService {
       await this.db.executeTransaction([
         mealTombstoneTask(item.targetEntityId, null, now),
         ...itemRows.map((row) => mealItemTombstoneTask(row.id, null, now)),
+      ]);
+    } else if (item.entityType === 'ShoppingList') {
+      // documentation/Subfeatures/Bevásárlólista írás.md: list delete cascades to its own items locally too.
+      const itemRows = await this.db.query<{ id: string }>('SELECT id FROM shopping_list_item WHERE shopping_list_id = ?', [item.targetEntityId]);
+      await this.db.executeTransaction([
+        shoppingListTombstoneTask(item.targetEntityId, null, now),
+        ...itemRows.map((row) => shoppingListItemTombstoneTask(row.id, null, now)),
       ]);
     }
   }

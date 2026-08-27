@@ -13,6 +13,7 @@ import { PackingSessionItem } from '../../api/model/packingSessionItem';
 import { PackingTemplate } from '../../api/model/packingTemplate';
 import { PackingTemplateDetail } from '../../api/model/packingTemplateDetail';
 import { Recipe } from '../../api/model/recipe';
+import { ShoppingList } from '../../api/model/shoppingList';
 import { StoredFood } from '../../api/model/storedFood';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
@@ -167,6 +168,57 @@ export function expandMealItemSaveItem(
 }
 
 /**
+ * documentation/Subfeatures/Bevásárlólista írás.md "Tétel hozzáadása": the desired live item list
+ * for a shopping list save — id is client-generated for a new item, reused for a kept one.
+ * Discriminated on `type` so a screen constructing a FOOD/NON_FOOD row can't accidentally set the
+ * other type's fields. Quantity is required for FOOD (the whole point of that type) but optional
+ * for NON_FOOD (only `name` is required there).
+ */
+export type ShoppingListItemSaveItem =
+  | { id: string; type: 'FOOD'; foodId: string; quantityAmount: number; quantityUnit: string; checked: boolean; sortOrder: number }
+  | {
+      id: string;
+      type: 'NON_FOOD';
+      name: string;
+      note: string | null;
+      quantityAmount: number | null;
+      quantityUnit: string | null;
+      checked: boolean;
+      sortOrder: number;
+    };
+
+export interface ShoppingListDraft {
+  id: string;
+  name: string | null;
+  items: ShoppingListItemSaveItem[];
+}
+
+/** Expands a discriminated `ShoppingListItemSaveItem` into the flat nullable-superset field set every persistence layer (SQLite row, outbox payload, HttpStorageBackend) needs — unused per-type fields are explicitly nulled rather than left undefined. */
+export function expandShoppingListItemSaveItem(
+  item: ShoppingListItemSaveItem,
+  shoppingListId: string,
+): {
+  id: string;
+  shoppingListId: string;
+  type: string;
+  foodId: string | null;
+  name: string | null;
+  note: string | null;
+  quantityAmount: number | null;
+  quantityUnit: string | null;
+  checked: boolean;
+  sortOrder: number;
+} {
+  const base = { id: item.id, shoppingListId, checked: item.checked, sortOrder: item.sortOrder };
+  switch (item.type) {
+    case 'FOOD':
+      return { ...base, type: 'FOOD', foodId: item.foodId, name: null, note: null, quantityAmount: item.quantityAmount, quantityUnit: item.quantityUnit };
+    case 'NON_FOOD':
+      return { ...base, type: 'NON_FOOD', foodId: null, name: item.name, note: item.note, quantityAmount: item.quantityAmount, quantityUnit: item.quantityUnit };
+  }
+}
+
+/**
  * documentation/Architektúra/Frontend.md `core/storage/`: two implementations selected once by
  * `offlineCapable` — SqliteStorageBackend (native: local store + outbox) and HttpStorageBackend
  * (web: direct call on the generated client). Repositories (`core/data/`) are the only callers.
@@ -252,6 +304,14 @@ export interface StorageBackend {
   saveMeal(draft: MealDraft): Promise<Meal>;
   /** documentation/Subfeatures/Étkezés.md: cascades to every live item on this meal. */
   deleteMeal(id: string): Promise<Meal>;
+
+  /** documentation/Subfeatures/Bevásárlólista írás.md: per-user active shopping list. Every row (incl. list entries) embeds its full live+tombstoned item set. */
+  listShoppingLists(): Promise<ShoppingList[]>;
+  getShoppingList(id: string): Promise<ShoppingList>;
+  /** documentation/Architektúra/Backend.md "Nested aggregate PUT": list + items saved as one outbox entry. */
+  saveShoppingList(draft: ShoppingListDraft): Promise<ShoppingList>;
+  /** documentation/Subfeatures/Bevásárlólista írás.md "Törlés": cascades to every live item on this list. */
+  deleteShoppingList(id: string): Promise<ShoppingList>;
 }
 
 export const STORAGE_BACKEND = new InjectionToken<StorageBackend>('STORAGE_BACKEND');

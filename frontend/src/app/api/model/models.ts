@@ -22,6 +22,8 @@ export * from './packingTemplateItem';
 export * from './recipe';
 export * from './recipeIngredient';
 export * from './refreshRequest';
+export * from './shoppingList';
+export * from './shoppingListItem';
 export * from './storedFood';
 export * from './syncChangeItem';
 export * from './syncChangesResponse';

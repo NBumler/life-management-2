@@ -12,7 +12,7 @@
   "feladatok.naptar": true,
   "feladatok.esemenyek": true,
   "feladatok.googleExport": false,
-  "menu.bevasarlas": false,
+  "menu.bevasarlas": true,
   "menu.lepesszam": true,
   "menu.ertesitesek": true,
   "menu.penzugyek": true,

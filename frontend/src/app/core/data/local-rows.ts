@@ -13,6 +13,8 @@ import { PackingTemplate } from '../../api/model/packingTemplate';
 import { PackingTemplateItem } from '../../api/model/packingTemplateItem';
 import { Recipe } from '../../api/model/recipe';
 import { RecipeIngredient } from '../../api/model/recipeIngredient';
+import { ShoppingList } from '../../api/model/shoppingList';
+import { ShoppingListItem } from '../../api/model/shoppingListItem';
 import { StoredFood } from '../../api/model/storedFood';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
@@ -1593,6 +1595,208 @@ export function mealItemTombstoneTask(id: string, deletedAt: string | null, upda
     statement: `
       INSERT INTO meal_item (id, meal_id, type, servings, sort_order, updated_at, deleted, deleted_at, _dirty, _local_only)
       VALUES (?, '', 'CUSTOM', 0, 0, ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+export interface ShoppingListRow {
+  id: string;
+  name: string | null;
+  status: string;
+  completed_at: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+/** Omits `items` — a ShoppingList row alone never carries them, see readShoppingList in SqliteStorageBackend. */
+export function shoppingListRowToDto(row: ShoppingListRow): Omit<ShoppingList, 'items'> {
+  return {
+    id: row.id,
+    name: row.name,
+    status: row.status as ShoppingList.StatusEnum,
+    completedAt: row.completed_at,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+/** `status`/`completed_at` are never written from this write path (see ShoppingList.yaml "read-only") — left untouched on conflict, defaulted to ACTIVE/NULL on insert. */
+export function shoppingListLocalWriteTask(dto: { id: string; name: string | null }): SqlTask {
+  return {
+    statement: `
+      INSERT INTO shopping_list (id, name, _dirty, _local_only)
+      VALUES (?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET name = excluded.name, _dirty = 1`,
+    values: [dto.id, dto.name],
+  };
+}
+
+export function shoppingListServerApplyTask(dto: Omit<ShoppingList, 'items'>): SqlTask {
+  return {
+    statement: `
+      INSERT INTO shopping_list (id, name, status, completed_at, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        name = excluded.name, status = excluded.status, completed_at = excluded.completed_at, created_at = excluded.created_at,
+        updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE shopping_list._dirty = 0`,
+    values: [
+      dto.id,
+      dto.name ?? null,
+      dto.status ?? 'ACTIVE',
+      dto.completedAt ?? null,
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function shoppingListTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO shopping_list (id, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+export interface ShoppingListItemRow {
+  id: string;
+  shopping_list_id: string;
+  type: string;
+  food_id: string | null;
+  name: string | null;
+  note: string | null;
+  quantity_amount: number | null;
+  quantity_unit: string | null;
+  checked: number;
+  sort_order: number;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+export function shoppingListItemRowToDto(row: ShoppingListItemRow): ShoppingListItem {
+  return {
+    id: row.id,
+    shoppingListId: row.shopping_list_id,
+    type: row.type as ShoppingListItem.TypeEnum,
+    foodId: row.food_id,
+    name: row.name,
+    note: row.note,
+    quantityAmount: row.quantity_amount,
+    quantityUnit: row.quantity_unit,
+    checked: row.checked === 1,
+    sortOrder: row.sort_order,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+export function shoppingListItemLocalWriteTask(dto: {
+  id: string;
+  shoppingListId: string;
+  type: string;
+  foodId: string | null;
+  name: string | null;
+  note: string | null;
+  quantityAmount: number | null;
+  quantityUnit: string | null;
+  checked: boolean;
+  sortOrder: number;
+}): SqlTask {
+  return {
+    statement: `
+      INSERT INTO shopping_list_item (
+        id, shopping_list_id, type, food_id, name, note, quantity_amount, quantity_unit, checked, sort_order, _dirty, _local_only
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET
+        type = excluded.type, food_id = excluded.food_id, name = excluded.name, note = excluded.note,
+        quantity_amount = excluded.quantity_amount, quantity_unit = excluded.quantity_unit, checked = excluded.checked,
+        sort_order = excluded.sort_order, deleted = 0, deleted_at = NULL, _dirty = 1`,
+    values: [
+      dto.id,
+      dto.shoppingListId,
+      dto.type,
+      dto.foodId,
+      dto.name,
+      dto.note,
+      dto.quantityAmount,
+      dto.quantityUnit,
+      dto.checked ? 1 : 0,
+      dto.sortOrder,
+    ],
+  };
+}
+
+/** Local-only removal — an item dropped from a list during an edit, or cascaded from its Food reference being deleted (not a standalone outbox entry — see SqliteStorageBackend.saveShoppingList/deleteFood). */
+export function shoppingListItemLocalRemoveTask(id: string): SqlTask {
+  return {
+    statement: `UPDATE shopping_list_item SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?`,
+    values: [new Date().toISOString(), id],
+  };
+}
+
+export function shoppingListItemServerApplyTask(dto: ShoppingListItem): SqlTask {
+  return {
+    statement: `
+      INSERT INTO shopping_list_item (
+        id, shopping_list_id, type, food_id, name, note, quantity_amount, quantity_unit, checked, sort_order,
+        created_at, updated_at, deleted, deleted_at, _dirty, _local_only
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        shopping_list_id = excluded.shopping_list_id, type = excluded.type, food_id = excluded.food_id, name = excluded.name,
+        note = excluded.note, quantity_amount = excluded.quantity_amount, quantity_unit = excluded.quantity_unit,
+        checked = excluded.checked, sort_order = excluded.sort_order, created_at = excluded.created_at, updated_at = excluded.updated_at,
+        deleted = excluded.deleted, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE shopping_list_item._dirty = 0`,
+    values: [
+      dto.id,
+      dto.shoppingListId,
+      dto.type,
+      dto.foodId ?? null,
+      dto.name ?? null,
+      dto.note ?? null,
+      dto.quantityAmount ?? null,
+      dto.quantityUnit ?? null,
+      dto.checked ? 1 : 0,
+      dto.sortOrder,
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function shoppingListItemTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO shopping_list_item (id, shopping_list_id, type, sort_order, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '', 'NON_FOOD', 0, ?, 1, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
     values: [id, updatedAt, deletedAt],
   };

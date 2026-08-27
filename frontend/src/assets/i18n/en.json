@@ -32,6 +32,7 @@
     "LANGUAGE": "Language",
     "SYNC": "Sync center",
     "GEARCHECK": "GearCheck",
+    "BEVASARLAS": "Shopping",
     "LOGOUT": "Log out",
     "LOGOUT_CONFIRM_TITLE": "Log out",
     "LOGOUT_CONFIRM_MESSAGE": "Are you sure you want to log out?",
@@ -440,6 +441,31 @@
         "PROFILE_INCOMPLETE_NOTICE": "Fill in your profile to see today's goals.",
         "SUMMARY_INCOMPLETE": "~ Some values are estimated — catalog data is missing for an item."
       }
+    }
+  },
+  "SHOPPING": {
+    "LIST": {
+      "TITLE": "Shopping",
+      "ADD": "New list",
+      "ADD_TITLE": "New list",
+      "EDIT_TITLE": "Edit list",
+      "EMPTY": "No active shopping lists yet.",
+      "UNNAMED": "Unnamed list",
+      "ITEM_COUNT": "{{count}} item(s)",
+      "NAME_LABEL": "List name",
+      "ITEMS_LABEL": "Items",
+      "ADD_FOOD": "Add food",
+      "ADD_NON_FOOD": "Add other item",
+      "PICKER_SEARCH_PLACEHOLDER": "Search...",
+      "PICKER_EMPTY": "No results.",
+      "PICKER_CONFIRM": "Add",
+      "NO_ITEMS": "No items on this list yet.",
+      "QUANTITY_REQUIRED": "Quantity is required.",
+      "NON_FOOD_NAME_LABEL": "Name",
+      "NON_FOOD_NAME_REQUIRED": "Name is required.",
+      "NON_FOOD_NOTE_LABEL": "Store / note",
+      "DELETE_CONFIRM_TITLE": "Delete list",
+      "DELETE_CONFIRM_MESSAGE": "Are you sure you want to delete \"{{name}}\"?"
     }
   }
 }

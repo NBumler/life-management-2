@@ -402,7 +402,47 @@ const SCHEMA_V11_STATEMENTS: string[] = [
   `CREATE INDEX IF NOT EXISTS idx_meal_item_food_id ON meal_item (food_id)`,
 ];
 
-const SCHEMA_VERSION = 11;
+/** documentation/Subfeatures/Bevásárlólista írás.md — per-user active shopping list; shopping_list_item is a nullable superset covering both item source types (FOOD/NON_FOOD). `status`/`completed_at` mirror the backend schema but are not yet mutated locally either (see local-rows.ts shoppingListLocalWriteTask). */
+const SCHEMA_V12_STATEMENTS: string[] = [
+  `CREATE TABLE IF NOT EXISTS shopping_list (
+    id TEXT PRIMARY KEY,
+    name TEXT,
+    status TEXT NOT NULL DEFAULT 'ACTIVE',
+    completed_at TEXT,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE TABLE IF NOT EXISTS shopping_list_item (
+    id TEXT PRIMARY KEY,
+    shopping_list_id TEXT NOT NULL,
+    type TEXT NOT NULL,
+    food_id TEXT,
+    name TEXT,
+    note TEXT,
+    quantity_amount REAL,
+    quantity_unit TEXT,
+    checked INTEGER NOT NULL DEFAULT 0,
+    sort_order INTEGER NOT NULL,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_shopping_list_item_shopping_list_id ON shopping_list_item (shopping_list_id)`,
+  `CREATE INDEX IF NOT EXISTS idx_shopping_list_item_food_id ON shopping_list_item (food_id)`,
+];
+
+const SCHEMA_VERSION = 12;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -416,7 +456,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 8, statements: SCHEMA_V8_STATEMENTS },
   { toVersion: 9, statements: SCHEMA_V9_STATEMENTS },
   { toVersion: 10, statements: SCHEMA_V10_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V11_STATEMENTS },
+  { toVersion: 11, statements: SCHEMA_V11_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V12_STATEMENTS },
 ];
 
 export interface SqlTask {

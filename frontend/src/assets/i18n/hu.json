@@ -32,6 +32,7 @@
     "LANGUAGE": "Nyelv",
     "SYNC": "Szinkronizációs központ",
     "GEARCHECK": "GearCheck",
+    "BEVASARLAS": "Bevásárlás",
     "LOGOUT": "Kijelentkezés",
     "LOGOUT_CONFIRM_TITLE": "Kijelentkezés",
     "LOGOUT_CONFIRM_MESSAGE": "Biztosan kijelentkezel?",
@@ -440,6 +441,31 @@
         "PROFILE_INCOMPLETE_NOTICE": "A napi célok megjelenítéséhez töltsd ki a profilodat.",
         "SUMMARY_INCOMPLETE": "~ Néhány érték becsült – egy tételhez hiányzik a katalógusadat."
       }
+    }
+  },
+  "SHOPPING": {
+    "LIST": {
+      "TITLE": "Bevásárlás",
+      "ADD": "Új lista",
+      "ADD_TITLE": "Új lista",
+      "EDIT_TITLE": "Lista szerkesztése",
+      "EMPTY": "Még nincs aktív bevásárlólista.",
+      "UNNAMED": "Névtelen lista",
+      "ITEM_COUNT": "{{count}} tétel",
+      "NAME_LABEL": "Lista neve",
+      "ITEMS_LABEL": "Tételek",
+      "ADD_FOOD": "Élelmiszer hozzáadása",
+      "ADD_NON_FOOD": "Egyéb tétel hozzáadása",
+      "PICKER_SEARCH_PLACEHOLDER": "Keresés...",
+      "PICKER_EMPTY": "Nincs találat.",
+      "PICKER_CONFIRM": "Hozzáadás",
+      "NO_ITEMS": "Még nincs tétel a listán.",
+      "QUANTITY_REQUIRED": "A mennyiség megadása kötelező.",
+      "NON_FOOD_NAME_LABEL": "Név",
+      "NON_FOOD_NAME_REQUIRED": "A név megadása kötelező.",
+      "NON_FOOD_NOTE_LABEL": "Bolt / megjegyzés",
+      "DELETE_CONFIRM_TITLE": "Lista törlése",
+      "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd a(z) \"{{name}}\" listát?"
     }
   }
 }

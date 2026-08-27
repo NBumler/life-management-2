@@ -1,0 +1,50 @@
+type: object
+description: >-
+  documentation/Subfeatures/Bevásárlólista írás.md — per-user active shopping list.
+  documentation/Architektúra/Backend.md "Nested aggregate PUT": ShoppingList + its
+  ShoppingListItem rows saved/read as one tree, on every endpoint including the plain list —
+  `items` always lists every row for this list, live or soft-deleted (client filters
+  `deleted = false` itself when rendering or summing). `status`/`completedAt` are read-only in
+  this API version — only the future Bevásárlás teljesítve `POST .../complete` endpoint transitions
+  a list to ARCHIVED.
+required:
+  - id
+  - items
+  - deleted
+properties:
+  id:
+    type: string
+    format: uuid
+  name:
+    type: string
+    nullable: true
+  status:
+    type: string
+    enum:
+      - ACTIVE
+      - ARCHIVED
+    readOnly: true
+  completedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  items:
+    type: array
+    items:
+      $ref: 'ShoppingListItem.yaml'
+  deleted:
+    type: boolean
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

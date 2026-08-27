@@ -13,6 +13,7 @@ import { PackingSessionItem } from '../../api/model/packingSessionItem';
 import { PackingTemplate } from '../../api/model/packingTemplate';
 import { PackingTemplateDetail } from '../../api/model/packingTemplateDetail';
 import { Recipe } from '../../api/model/recipe';
+import { ShoppingList } from '../../api/model/shoppingList';
 import { StoredFood } from '../../api/model/storedFood';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
@@ -32,6 +33,8 @@ import {
   ProfileRow,
   RecipeIngredientRow,
   RecipeRow,
+  ShoppingListItemRow,
+  ShoppingListRow,
   StoredFoodRow,
   WeightHistoryRow,
   calendarEventLocalWriteTask,
@@ -69,6 +72,11 @@ import {
   recipeIngredientRowToDto,
   recipeLocalWriteTask,
   recipeRowToDto,
+  shoppingListItemLocalRemoveTask,
+  shoppingListItemLocalWriteTask,
+  shoppingListItemRowToDto,
+  shoppingListLocalWriteTask,
+  shoppingListRowToDto,
   storedFoodLocalRemoveTask,
   storedFoodLocalWriteTask,
   storedFoodRowToDto,
@@ -85,8 +93,10 @@ import {
   PackingSessionStartDraft,
   PackingTemplateDraft,
   RecipeDraft,
+  ShoppingListDraft,
   StorageBackend,
   expandMealItemSaveItem,
+  expandShoppingListItemSaveItem,
 } from './storage-backend';
 
 /** Native (offlineCapable = true): local-first — every write lands in SQLite + the outbox in one transaction (§5). */
@@ -1114,6 +1124,109 @@ export class SqliteStorageBackend implements StorageBackend {
     const mealRows = await this.db.query<MealRow>('SELECT * FROM meal WHERE id = ?', [id]);
     const itemRows = await this.db.query<MealItemRow>('SELECT * FROM meal_item WHERE meal_id = ? ORDER BY sort_order', [id]);
     return { ...mealRowToDto(mealRows[0]), items: itemRows.map(mealItemRowToDto) };
+  }
+
+  async listShoppingLists(): Promise<ShoppingList[]> {
+    const listRows = await this.db.query<ShoppingListRow>('SELECT * FROM shopping_list WHERE deleted = 0 ORDER BY created_at DESC');
+    // ShoppingList.items contract (shoppingList.ts): every row, live or tombstoned — matches
+    // HttpStorageBackend/the backend's own toDto. Every caller already filters `!deleted` itself.
+    const itemRows = await this.db.query<ShoppingListItemRow>('SELECT * FROM shopping_list_item ORDER BY sort_order');
+    const itemsByList = new Map<string, ShoppingList['items']>();
+    for (const row of itemRows) {
+      const dto = shoppingListItemRowToDto(row);
+      const list = itemsByList.get(dto.shoppingListId) ?? [];
+      list.push(dto);
+      itemsByList.set(dto.shoppingListId, list);
+    }
+    return listRows.map((row) => ({ ...shoppingListRowToDto(row), items: itemsByList.get(row.id) ?? [] }));
+  }
+
+  getShoppingList(id: string): Promise<ShoppingList> {
+    return this.readShoppingList(id);
+  }
+
+  /** documentation/Architektúra/Backend.md "Nested aggregate PUT": list + items in one local transaction and one outbox entry. */
+  async saveShoppingList(draft: ShoppingListDraft): Promise<ShoppingList> {
+    const userId = this.requireUserId();
+    const existingListRows = await this.db.query('SELECT 1 FROM shopping_list WHERE id = ?', [draft.id]);
+    const isNew = existingListRows.length === 0;
+
+    const existingItemRows = await this.db.query<ShoppingListItemRow>('SELECT * FROM shopping_list_item WHERE shopping_list_id = ?', [draft.id]);
+    const incomingIds = new Set(draft.items.map((item) => item.id));
+
+    const localTasks: SqlTask[] = [shoppingListLocalWriteTask({ id: draft.id, name: draft.name })];
+    for (const item of draft.items) {
+      localTasks.push(shoppingListItemLocalWriteTask(expandShoppingListItemSaveItem(item, draft.id)));
+    }
+    for (const existing of existingItemRows) {
+      if (existing.deleted === 0 && !incomingIds.has(existing.id)) {
+        localTasks.push(shoppingListItemLocalRemoveTask(existing.id));
+      }
+    }
+
+    // documentation/Architektúra/Backend-offline first.md §10 "Függőségi láncok": a new item
+    // referencing a Food created in the same offline session must wait for that row's own POST first.
+    const foodIds = draft.items.filter((item) => item.type === 'FOOD').map((item) => item.foodId);
+    const dependsOn = await this.findLocalOnlyIds('food', foodIds);
+
+    const payload: ShoppingList = {
+      id: draft.id,
+      name: draft.name,
+      deleted: false,
+      items: draft.items.map((item) => ({ ...expandShoppingListItemSaveItem(item, draft.id), deleted: false }) as ShoppingList['items'][number]),
+    };
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: isNew ? 'POST' : 'PUT',
+      url: isNew ? '/api/shopping-lists' : `/api/shopping-lists/${draft.id}`,
+      payload,
+      entityType: 'ShoppingList',
+      targetEntityId: draft.id,
+      dependsOn,
+    });
+    await this.db.executeTransaction([...localTasks, ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    return this.readShoppingList(draft.id);
+  }
+
+  async deleteShoppingList(id: string): Promise<ShoppingList> {
+    const userId = this.requireUserId();
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: 'DELETE',
+      url: `/api/shopping-lists/${id}`,
+      payload: null,
+      entityType: 'ShoppingList',
+      targetEntityId: id,
+    });
+    const liveItemRows = await this.db.query<{ id: string }>('SELECT id FROM shopping_list_item WHERE shopping_list_id = ? AND deleted = 0', [id]);
+    const tasks: SqlTask[] = [];
+    if (enqueue.hardRemoveLocalEntity) {
+      tasks.push({ statement: 'DELETE FROM shopping_list WHERE id = ?', values: [id] });
+      for (const row of liveItemRows) {
+        tasks.push({ statement: 'DELETE FROM shopping_list_item WHERE id = ?', values: [row.id] });
+      }
+    } else {
+      tasks.push({
+        statement: 'UPDATE shopping_list SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?',
+        values: [new Date().toISOString(), id],
+      });
+      for (const row of liveItemRows) {
+        tasks.push(shoppingListItemLocalRemoveTask(row.id));
+      }
+    }
+    await this.db.executeTransaction([...tasks, ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    if (enqueue.hardRemoveLocalEntity) {
+      return { id, name: null, deleted: true, items: [] };
+    }
+    return this.readShoppingList(id);
+  }
+
+  private async readShoppingList(id: string): Promise<ShoppingList> {
+    const listRows = await this.db.query<ShoppingListRow>('SELECT * FROM shopping_list WHERE id = ?', [id]);
+    const itemRows = await this.db.query<ShoppingListItemRow>('SELECT * FROM shopping_list_item WHERE shopping_list_id = ? ORDER BY sort_order', [id]);
+    return { ...shoppingListRowToDto(listRows[0]), items: itemRows.map(shoppingListItemRowToDto) };
   }
 
   private requireUserId(): string {

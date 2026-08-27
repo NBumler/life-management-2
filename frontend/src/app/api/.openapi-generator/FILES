@@ -33,6 +33,8 @@ api/profile.service.ts
 api/profile.serviceInterface.ts
 api/recipes.service.ts
 api/recipes.serviceInterface.ts
+api/shoppingLists.service.ts
+api/shoppingLists.serviceInterface.ts
 api/storedFoods.service.ts
 api/storedFoods.serviceInterface.ts
 api/sync.service.ts
@@ -66,6 +68,8 @@ model/packingTemplateItem.ts
 model/recipe.ts
 model/recipeIngredient.ts
 model/refreshRequest.ts
+model/shoppingList.ts
+model/shoppingListItem.ts
 model/storedFood.ts
 model/syncChangeItem.ts
 model/syncChangesResponse.ts

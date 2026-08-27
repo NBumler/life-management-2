@@ -25,7 +25,8 @@ export type OutboxEntityType =
   | 'Food'
   | 'StoredFood'
   | 'Recipe'
-  | 'Meal';
+  | 'Meal'
+  | 'ShoppingList';
 
 /** documentation/Architektúra/Backend-offline first.md §4 "Outbox — adatmodell". */
 export interface OutboxItem {

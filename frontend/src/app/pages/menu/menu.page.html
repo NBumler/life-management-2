@@ -19,6 +19,12 @@
       <ion-icon name="language-outline" slot="start" aria-hidden="true"></ion-icon>
       <ion-label>{{ 'MENU.LANGUAGE' | translate }}</ion-label>
     </ion-item>
+    @if (bevasarlasEnabled) {
+      <ion-item button routerLink="shopping">
+        <ion-icon name="cart-outline" slot="start" aria-hidden="true"></ion-icon>
+        <ion-label>{{ 'MENU.BEVASARLAS' | translate }}</ion-label>
+      </ion-item>
+    }
     @if (gearCheckEnabled) {
       <ion-item button routerLink="gear">
         <ion-icon name="bag-handle-outline" slot="start" aria-hidden="true"></ion-icon>

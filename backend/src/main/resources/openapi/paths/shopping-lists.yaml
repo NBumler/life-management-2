@@ -1,0 +1,39 @@
+get:
+  operationId: listShoppingLists
+  tags:
+    - shopping-lists
+  summary: Every live active shopping list (deleted = false) owned by the caller, each with its live+tombstoned item rows.
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ShoppingListList.yaml'
+post:
+  operationId: createShoppingList
+  tags:
+    - shopping-lists
+  summary: >-
+    Create a shopping list with its items in one request — idempotent upsert on the
+    client-supplied id (documentation/Architektúra/Backend-offline first.md §11 nested aggregate
+    save).
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/ShoppingList.yaml'
+  responses:
+    '200':
+      description: Created or, on retry with the same id, the existing tree.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ShoppingList.yaml'
+    '400':
+      description: An item missing its type-required fields.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'

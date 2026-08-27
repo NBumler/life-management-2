@@ -126,6 +126,11 @@ async function mealCurrentPayload(ctx: OutboxEntityFixContext): Promise<unknown>
   return ctx.storage.getMeal(ctx.targetEntityId);
 }
 
+/** documentation/Subfeatures/Bevásárlólista írás.md: list + items are always saved together, POST and PUT alike. */
+async function shoppingListCurrentPayload(ctx: OutboxEntityFixContext): Promise<unknown> {
+  return ctx.storage.getShoppingList(ctx.targetEntityId);
+}
+
 /**
  * documentation/Features/Szinkronizációs központ.md — SSOT the sync center reads to know, per outbox
  * entity type, which table backs it, whether Fix is available, and whether its Fix form has a
@@ -249,6 +254,13 @@ export class OutboxEntityRegistryService {
       table: 'meal',
       currentPayload: mealCurrentPayload,
       // Nested aggregate (meal + items, one body) — excluded from Fix per spec, see buildFixWriteTask doc above.
+      buildFixWriteTask: null,
+      nameUniqueness: null,
+    },
+    ShoppingList: {
+      table: 'shopping_list',
+      currentPayload: shoppingListCurrentPayload,
+      // Nested aggregate (list + items, one body) — excluded from Fix per spec, see buildFixWriteTask doc above.
       buildFixWriteTask: null,
       nameUniqueness: null,
     },

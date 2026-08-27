@@ -1,0 +1,35 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/menu"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ 'SHOPPING.LIST.TITLE' | translate }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-list>
+    <ion-item button routerLink="new">
+      <ion-icon name="add-outline" slot="start" aria-hidden="true"></ion-icon>
+      <ion-label>{{ 'SHOPPING.LIST.ADD' | translate }}</ion-label>
+    </ion-item>
+
+    @if (lists().length === 0) {
+      <ion-item>
+        <ion-label color="medium">{{ 'SHOPPING.LIST.EMPTY' | translate }}</ion-label>
+      </ion-item>
+    }
+
+    @for (list of lists(); track list.id) {
+      <ion-item button [routerLink]="[list.id]">
+        <ion-label>
+          <h3>{{ list.name ?? ('SHOPPING.LIST.UNNAMED' | translate) }}</h3>
+          <p>{{ 'SHOPPING.LIST.ITEM_COUNT' | translate: { count: itemCount(list) } }}</p>
+        </ion-label>
+        <ion-button fill="clear" color="danger" (click)="delete(list); $event.stopPropagation(); $event.preventDefault()">
+          <ion-icon name="trash-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+        </ion-button>
+      </ion-item>
+    }
+  </ion-list>
+</ion-content>

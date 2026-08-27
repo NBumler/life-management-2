@@ -1,0 +1,70 @@
+parameters:
+  - name: id
+    in: path
+    required: true
+    schema:
+      type: string
+      format: uuid
+get:
+  operationId: getShoppingList
+  tags:
+    - shopping-lists
+  summary: The full shopping list tree. A soft-deleted list returns 200 with deleted=true (not 404).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ShoppingList.yaml'
+    '404':
+      description: No such shopping list.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+put:
+  operationId: updateShoppingList
+  tags:
+    - shopping-lists
+  summary: >-
+    Full tree replace (documentation/Architektúra/Backend.md "Nested aggregate PUT"): items not
+    present in the body are soft-deleted, last-write-wins on the whole aggregate. `status`/
+    `completedAt` are read-only here — see ShoppingList.yaml.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/ShoppingList.yaml'
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ShoppingList.yaml'
+    '409':
+      description: Entity already deleted.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+    '400':
+      description: An item missing its type-required fields.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+delete:
+  operationId: deleteShoppingList
+  tags:
+    - shopping-lists
+  summary: Soft delete, idempotent. Cascades to soft-deleting every item on this list.
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ShoppingList.yaml'
