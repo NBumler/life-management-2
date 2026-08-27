@@ -465,7 +465,15 @@
       "NON_FOOD_NAME_REQUIRED": "Name is required.",
       "NON_FOOD_NOTE_LABEL": "Store / note",
       "DELETE_CONFIRM_TITLE": "Delete list",
-      "DELETE_CONFIRM_MESSAGE": "Are you sure you want to delete \"{{name}}\"?"
+      "DELETE_CONFIRM_MESSAGE": "Are you sure you want to delete \"{{name}}\"?",
+      "COMPLETE": "Finish shopping"
+    },
+    "COMPLETE": {
+      "TITLE": "Finish shopping",
+      "NO_CHECKED_FOOD_NOTE": "No checked food items — the list will be archived, and any unchecked items will move to a new list.",
+      "EXPIRY_LABEL": "Expiration date",
+      "LOCATION_LABEL": "Storage location",
+      "CONFIRM": "Finish"
     }
   }
 }

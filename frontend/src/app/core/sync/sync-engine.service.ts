@@ -38,6 +38,7 @@ import { PackingTemplateItem } from '../../api/model/packingTemplateItem';
 import { Recipe } from '../../api/model/recipe';
 import { RecipeIngredient } from '../../api/model/recipeIngredient';
 import { ShoppingList } from '../../api/model/shoppingList';
+import { ShoppingListCompleteResponse } from '../../api/model/shoppingListCompleteResponse';
 import { ShoppingListItem } from '../../api/model/shoppingListItem';
 import { StoredFood } from '../../api/model/storedFood';
 import { SyncChangeItem } from '../../api/model/syncChangeItem';
@@ -522,7 +523,7 @@ export class SyncEngineService {
       return this.mealApplyTasks(body as Meal);
     }
     if (item.entityType === 'ShoppingList') {
-      return this.shoppingListApplyTasks(body as ShoppingList);
+      return this.shoppingListApplyTasks(body as ShoppingList | ShoppingListCompleteResponse);
     }
     throw new Error(`SyncEngine: no local writer for entityType "${item.entityType}"`);
   }
@@ -582,8 +583,40 @@ export class SyncEngineService {
    * nothing else would ever clear them (§8's `_dirty=1` apply rule otherwise keeps the pending value
    * forever).
    */
-  private shoppingListApplyTasks(dto: ShoppingList): SqlTask[] {
+  /**
+   * documentation/Subfeatures/Bevásárlás teljesítve.md: the `.../complete` action shares
+   * `entityType: 'ShoppingList'` with the plain nested-PUT save (same pattern as PackingSession's
+   * two response shapes under one entityType — see packingSessionApplyTasks) but returns a
+   * `ShoppingListCompleteResponse`, not a `ShoppingList`, so it's routed separately by shape.
+   */
+  private shoppingListApplyTasks(dto: ShoppingList | ShoppingListCompleteResponse): SqlTask[] {
+    if ('archivedListId' in dto) {
+      return this.shoppingListCompleteApplyTasks(dto);
+    }
     return [shoppingListServerApplyTask(dto), ...dto.items.map((item: ShoppingListItem) => shoppingListItemServerApplyTask(item))];
+  }
+
+  /**
+   * documentation/Subfeatures/Bevásárlás teljesítve.md: every row this action touches was already
+   * written locally with the exact final values *before* the request was even sent (local-first —
+   * the client resolves storage location/expiry/split-count itself, the same way the server would),
+   * so there's nothing to re-apply here beyond clearing `_dirty`/`_local_only` on each of them —
+   * unlike a nested-PUT response, there's no richer authoritative row data to pull from this summary
+   * response. The mandatory post-drain pull (§6 point 9) still independently confirms everything.
+   */
+  private shoppingListCompleteApplyTasks(response: ShoppingListCompleteResponse): SqlTask[] {
+    const tasks: SqlTask[] = [clearDirtyFlagsTask('shopping_list', response.archivedListId)];
+    for (const storageEntryId of response.createdStorageEntryIds) {
+      tasks.push(clearDirtyFlagsTask('stored_food', storageEntryId));
+    }
+    if (response.newActiveListId) {
+      tasks.push(clearDirtyFlagsTask('shopping_list', response.newActiveListId));
+      tasks.push({
+        statement: `UPDATE shopping_list_item SET _dirty = 0, _local_only = 0 WHERE shopping_list_id = ?`,
+        values: [response.newActiveListId],
+      });
+    }
+    return tasks;
   }
 
   private async applyTombstone(item: OutboxItem): Promise<void> {
@@ -664,6 +697,12 @@ export class SyncEngineService {
         ...itemRows.map((row) => mealItemTombstoneTask(row.id, null, now)),
       ]);
     } else if (item.entityType === 'ShoppingList') {
+      if (item.url.endsWith('/complete')) {
+        // documentation/Subfeatures/Bevásárlás teljesítve.md: 409 here means another device already
+        // completed this list — it's ARCHIVED, not deleted, so there's nothing to tombstone; the
+        // next delta pull brings the authoritative state (and any StoredFood/new-list rows) down.
+        return;
+      }
       // documentation/Subfeatures/Bevásárlólista írás.md: list delete cascades to its own items locally too.
       const itemRows = await this.db.query<{ id: string }>('SELECT id FROM shopping_list_item WHERE shopping_list_id = ?', [item.targetEntityId]);
       await this.db.executeTransaction([
@@ -876,5 +915,13 @@ function discardPendingWritesTask(targetEntityId: string): SqlTask {
   return {
     statement: "DELETE FROM outbox_item WHERE target_entity_id = ? AND method != 'DELETE' AND status IN ('PENDING','BLOCKED')",
     values: [targetEntityId],
+  };
+}
+
+/** documentation/Subfeatures/Bevásárlás teljesítve.md: this row's final values were already correct locally before the request was sent — only its sync-pending flags need clearing. */
+function clearDirtyFlagsTask(table: string, id: string): SqlTask {
+  return {
+    statement: `UPDATE ${table} SET _dirty = 0, _local_only = 0 WHERE id = ?`,
+    values: [id],
   };
 }

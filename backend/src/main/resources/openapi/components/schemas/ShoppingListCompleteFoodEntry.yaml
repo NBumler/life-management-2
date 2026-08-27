@@ -1,0 +1,33 @@
+type: object
+description: >-
+  documentation/Subfeatures/Bevásárlás teljesítve.md — one checked FOOD item on the list being
+  completed. `storageEntryIds` is client-generated (documentation/Architektúra/Backend-offline
+  first.md §2: every synced entity gets a client-generated UUID) — length N for a `db`-unit item
+  with `amount = N` (one row per unit), else exactly 1. `expirationDate`/`storageLocation` are
+  omitted when the catalog's own shelf-life data makes them unambiguous (exactly one allowed
+  storage location) — the server fills them in from the catalog in that case only; otherwise both
+  are required and validated against the catalog's allowed locations.
+required:
+  - shoppingListItemId
+  - storageEntryIds
+properties:
+  shoppingListItemId:
+    type: string
+    format: uuid
+  storageEntryIds:
+    type: array
+    minItems: 1
+    items:
+      type: string
+      format: uuid
+  expirationDate:
+    type: string
+    format: date
+    nullable: true
+  storageLocation:
+    type: string
+    nullable: true
+    enum:
+      - ROOM
+      - FRIDGE
+      - FREEZER

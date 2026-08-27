@@ -31,7 +31,8 @@ export class ShoppingListsPage implements OnInit {
   private readonly alertController = inject(AlertController);
   private readonly translate = inject(TranslateService);
 
-  readonly lists = computed(() => this.repository.items());
+  /** documentation/Subfeatures/Bevásárlás teljesítve.md: an ARCHIVED list belongs to Bevásárlás előzmény (a future slice), not this active-list overview. */
+  readonly lists = computed(() => this.repository.items().filter((list) => list.status !== 'ARCHIVED'));
 
   async ngOnInit(): Promise<void> {
     await this.repository.load();

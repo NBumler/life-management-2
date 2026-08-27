@@ -41,6 +41,12 @@ describe('ShoppingListsPage', () => {
     fixture = TestBed.createComponent(ShoppingListsPage);
   });
 
+  it('lists(): excludes ARCHIVED lists (they belong to Bevásárlás előzmény, not this overview)', () => {
+    repository.items.set([shoppingList({ id: 'active' }), shoppingList({ id: 'archived', status: 'ARCHIVED' })]);
+
+    expect(fixture.componentInstance.lists().map((l) => l.id)).toEqual(['active']);
+  });
+
   it('itemCount(): counts only live items', () => {
     const list = shoppingList({ items: [nonFoodItem({ id: 'i1' }), nonFoodItem({ id: 'i2', deleted: true })] });
     expect(fixture.componentInstance.itemCount(list)).toBe(1);

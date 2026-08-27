@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, WritableSignal, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   AlertController,
   IonBackButton,
@@ -81,6 +81,7 @@ function toSaveItem(row: ItemRow, sortOrder: number): ShoppingListItemSaveItem {
   imports: [
     ReactiveFormsModule,
     FormsModule,
+    RouterLink,
     QuantityInputComponent,
     ReorderListComponent,
     IonHeader,

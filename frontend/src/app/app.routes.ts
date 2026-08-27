@@ -25,6 +25,7 @@ export const routes: Routes = [
             children: [
               { path: '', loadComponent: () => import('./pages/menu/shopping/shopping-lists.page').then((m) => m.ShoppingListsPage) },
               { path: 'new', loadComponent: () => import('./pages/menu/shopping/shopping-list-editor.page').then((m) => m.ShoppingListEditorPage) },
+              { path: ':id/complete', loadComponent: () => import('./pages/menu/shopping/shopping-list-complete.page').then((m) => m.ShoppingListCompletePage) },
               { path: ':id', loadComponent: () => import('./pages/menu/shopping/shopping-list-editor.page').then((m) => m.ShoppingListEditorPage) },
             ],
           },

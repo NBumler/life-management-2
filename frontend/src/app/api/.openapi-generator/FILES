@@ -69,6 +69,10 @@ model/recipe.ts
 model/recipeIngredient.ts
 model/refreshRequest.ts
 model/shoppingList.ts
+model/shoppingListCompleteFoodEntry.ts
+model/shoppingListCompleteNewList.ts
+model/shoppingListCompleteRequest.ts
+model/shoppingListCompleteResponse.ts
 model/shoppingListItem.ts
 model/storedFood.ts
 model/syncChangeItem.ts

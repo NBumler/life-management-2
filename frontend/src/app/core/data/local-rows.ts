@@ -1673,6 +1673,14 @@ export function shoppingListTombstoneTask(id: string, deletedAt: string | null, 
   };
 }
 
+/** documentation/Subfeatures/Bevásárlás teljesítve.md — the only local write that changes `status`/`completed_at`; every other shopping-list write (`shoppingListLocalWriteTask`) only ever touches `name`. */
+export function shoppingListArchiveLocalTask(id: string, completedAtIso: string): SqlTask {
+  return {
+    statement: `UPDATE shopping_list SET status = 'ARCHIVED', completed_at = ?, _dirty = 1 WHERE id = ?`,
+    values: [completedAtIso, id],
+  };
+}
+
 export interface ShoppingListItemRow {
   id: string;
   shopping_list_id: string;

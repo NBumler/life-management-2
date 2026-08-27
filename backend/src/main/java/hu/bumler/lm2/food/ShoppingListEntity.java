@@ -78,8 +78,17 @@ public class ShoppingListEntity {
 		return status;
 	}
 
+	/** documentation/Subfeatures/Bevásárlás teljesítve.md — the only place this ever changes: ACTIVE → ARCHIVED on completion. */
+	public void setStatus(String status) {
+		this.status = status;
+	}
+
 	public OffsetDateTime getCompletedAt() {
 		return completedAt;
+	}
+
+	public void setCompletedAt(OffsetDateTime completedAt) {
+		this.completedAt = completedAt;
 	}
 
 	public OffsetDateTime getCreatedAt() {

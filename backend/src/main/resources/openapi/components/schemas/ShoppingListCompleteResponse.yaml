@@ -1,0 +1,20 @@
+type: object
+description: documentation/Subfeatures/Bevásárlás teljesítve.md response for a successful completion.
+required:
+  - archivedListId
+  - createdStorageEntryIds
+properties:
+  archivedListId:
+    type: string
+    format: uuid
+  createdStorageEntryIds:
+    type: array
+    description: Echoes the client-supplied `storageEntryIds` back — confirmation, not newly minted ids.
+    items:
+      type: string
+      format: uuid
+  newActiveListId:
+    type: string
+    format: uuid
+    nullable: true
+    description: Echoes `newActiveList.id` back when a new list was created, else null.

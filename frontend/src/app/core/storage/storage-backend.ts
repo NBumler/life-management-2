@@ -219,6 +219,48 @@ export function expandShoppingListItemSaveItem(
 }
 
 /**
+ * documentation/Subfeatures/Bevásárlás teljesítve.md — the atomic "Bevásárlás vége" request. All
+ * ids (`storageEntryIds`, the new list's `id` and its items' ids) are client-generated
+ * (documentation/Architektúra/Backend-offline first.md §2) — built by
+ * `pages/menu/shopping/shopping-list-complete.ts`'s `buildCompleteDraft`.
+ */
+export interface ShoppingListCompleteFoodEntryDraft {
+  shoppingListItemId: string;
+  storageEntryIds: string[];
+  expirationDate: string;
+  storageLocation: string;
+}
+
+/** The flattened, resolved per-row materialization of `checkedFoodEntries` — what the local SQLite write actually needs (one row per `storageEntryIds` element), separate from the wire payload sent to the server. */
+export interface ShoppingListCompleteStorageEntryDraft {
+  id: string;
+  foodId: string;
+  quantityAmount: number;
+  quantityUnit: string;
+  storageLocation: string;
+  expiresOn: string;
+}
+
+export interface ShoppingListCompleteNewListDraft {
+  id: string;
+  name: string | null;
+  items: ShoppingListItemSaveItem[];
+}
+
+export interface ShoppingListCompleteDraft {
+  shoppingListId: string;
+  checkedFoodEntries: ShoppingListCompleteFoodEntryDraft[];
+  storageEntries: ShoppingListCompleteStorageEntryDraft[];
+  newActiveList: ShoppingListCompleteNewListDraft | null;
+}
+
+export interface ShoppingListCompleteResult {
+  archivedListId: string;
+  createdStorageEntryIds: string[];
+  newActiveListId: string | null;
+}
+
+/**
  * documentation/Architektúra/Frontend.md `core/storage/`: two implementations selected once by
  * `offlineCapable` — SqliteStorageBackend (native: local store + outbox) and HttpStorageBackend
  * (web: direct call on the generated client). Repositories (`core/data/`) are the only callers.
@@ -312,6 +354,8 @@ export interface StorageBackend {
   saveShoppingList(draft: ShoppingListDraft): Promise<ShoppingList>;
   /** documentation/Subfeatures/Bevásárlólista írás.md "Törlés": cascades to every live item on this list. */
   deleteShoppingList(id: string): Promise<ShoppingList>;
+  /** documentation/Subfeatures/Bevásárlás teljesítve.md — atomic multi-entity completion: StoredFood rows + list archive + optional spun-off active list, as one outbox entry. */
+  completeShoppingList(draft: ShoppingListCompleteDraft): Promise<ShoppingListCompleteResult>;
 }
 
 export const STORAGE_BACKEND = new InjectionToken<StorageBackend>('STORAGE_BACKEND');

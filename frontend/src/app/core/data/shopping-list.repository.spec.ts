@@ -1,10 +1,12 @@
 import { TestBed } from '@angular/core/testing';
+import { signal } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 
 import { ShoppingList } from '../../api/model/shoppingList';
-import { ShoppingListDraft, StorageBackend, STORAGE_BACKEND } from '../storage/storage-backend';
+import { ShoppingListCompleteDraft, ShoppingListCompleteResult, ShoppingListDraft, StorageBackend, STORAGE_BACKEND } from '../storage/storage-backend';
 import { SyncEngineService } from '../sync/sync-engine.service';
 import { ShoppingListRepository } from './shopping-list.repository';
+import { StoredFoodRepository } from './stored-food.repository';
 
 function shoppingList(overrides: Partial<ShoppingList> = {}): ShoppingList {
   return { id: 'sl-1', name: 'Heti bevásárlás', deleted: false, items: [], ...overrides };
@@ -14,19 +16,27 @@ function draft(overrides: Partial<ShoppingListDraft> = {}): ShoppingListDraft {
   return { id: '', name: null, items: [], ...overrides };
 }
 
+function completeDraft(overrides: Partial<ShoppingListCompleteDraft> = {}): ShoppingListCompleteDraft {
+  return { shoppingListId: 'sl-1', checkedFoodEntries: [], storageEntries: [], newActiveList: null, ...overrides };
+}
+
 describe('ShoppingListRepository', () => {
   let repository: ShoppingListRepository;
   let storage: jasmine.SpyObj<StorageBackend>;
   let syncEngine: jasmine.SpyObj<Pick<SyncEngineService, 'requestDrainDebounced'>>;
+  let storedFoodRepository: jasmine.SpyObj<Pick<StoredFoodRepository, 'load'>>;
 
   beforeEach(() => {
-    storage = jasmine.createSpyObj('StorageBackend', ['listShoppingLists', 'saveShoppingList', 'deleteShoppingList']);
+    storage = jasmine.createSpyObj('StorageBackend', ['listShoppingLists', 'saveShoppingList', 'deleteShoppingList', 'completeShoppingList']);
     syncEngine = jasmine.createSpyObj('SyncEngineService', ['requestDrainDebounced']);
+    storedFoodRepository = jasmine.createSpyObj('StoredFoodRepository', ['load']);
+    storedFoodRepository.load.and.resolveTo();
 
     TestBed.configureTestingModule({
       providers: [
         { provide: STORAGE_BACKEND, useValue: storage },
         { provide: SyncEngineService, useValue: syncEngine },
+        { provide: StoredFoodRepository, useValue: storedFoodRepository },
       ],
     });
     repository = TestBed.inject(ShoppingListRepository);
@@ -95,5 +105,31 @@ describe('ShoppingListRepository', () => {
     await repository.save(draft());
 
     expect(syncEngine.requestDrainDebounced).not.toHaveBeenCalled();
+  });
+
+  it('complete(): delegates to the storage backend, reloads both this repository and StoredFoodRepository', async () => {
+    storage.listShoppingLists.and.resolveTo([]);
+    await repository.load();
+    const result: ShoppingListCompleteResult = { archivedListId: 'sl-1', createdStorageEntryIds: ['sf-1'], newActiveListId: null };
+    storage.completeShoppingList.and.resolveTo(result);
+    storage.listShoppingLists.and.resolveTo([]); // archived list no longer active-listed
+
+    const returned = await repository.complete(completeDraft());
+
+    expect(storage.completeShoppingList).toHaveBeenCalledWith(completeDraft());
+    expect(storage.listShoppingLists).toHaveBeenCalledTimes(2);
+    expect(storedFoodRepository.load).toHaveBeenCalled();
+    expect(returned).toEqual(result);
+  });
+
+  it('complete(): triggers a debounced drain on native', async () => {
+    spyOn(Capacitor, 'isNativePlatform').and.returnValue(true);
+    storage.listShoppingLists.and.resolveTo([]);
+    await repository.load();
+    storage.completeShoppingList.and.resolveTo({ archivedListId: 'sl-1', createdStorageEntryIds: [], newActiveListId: null });
+
+    await repository.complete(completeDraft());
+
+    expect(syncEngine.requestDrainDebounced).toHaveBeenCalled();
   });
 });

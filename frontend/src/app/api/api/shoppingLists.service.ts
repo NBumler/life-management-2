@@ -20,6 +20,10 @@ import { OpenApiHttpParams, QueryParamStyle } from '../query.params';
 import { ApiError } from '../model/apiError';
 // @ts-ignore
 import { ShoppingList } from '../model/shoppingList';
+// @ts-ignore
+import { ShoppingListCompleteRequest } from '../model/shoppingListCompleteRequest';
+// @ts-ignore
+import { ShoppingListCompleteResponse } from '../model/shoppingListCompleteResponse';
 
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS }                     from '../variables';
@@ -38,6 +42,86 @@ export class ShoppingListsService extends BaseService implements ShoppingListsSe
 
     constructor(protected httpClient: HttpClient, @Optional() @Inject(BASE_PATH) basePath: string|string[], @Optional() configuration?: Configuration) {
         super(basePath, configuration);
+    }
+
+    /**
+     * documentation/Subfeatures/Bevásárlás teljesítve.md — atomic \&quot;Bevásárlás vége\&quot;: creates StoredFood rows for the checked FOOD items, archives this list, and optionally spins off a new active list from the leftover unchecked items. documentation/Architektúra/Backend-offline first.md §11 atomic multi-entity endpoint — replay-safe via the required Idempotency-Key header.
+     * @endpoint post /api/shopping-lists/{id}/complete
+     * @param id 
+     * @param idempotencyKey 
+     * @param shoppingListCompleteRequest 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public completeShoppingList(id: string, idempotencyKey: string, shoppingListCompleteRequest: ShoppingListCompleteRequest, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<ShoppingListCompleteResponse>;
+    public completeShoppingList(id: string, idempotencyKey: string, shoppingListCompleteRequest: ShoppingListCompleteRequest, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<ShoppingListCompleteResponse>>;
+    public completeShoppingList(id: string, idempotencyKey: string, shoppingListCompleteRequest: ShoppingListCompleteRequest, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<ShoppingListCompleteResponse>>;
+    public completeShoppingList(id: string, idempotencyKey: string, shoppingListCompleteRequest: ShoppingListCompleteRequest, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (id === null || id === undefined) {
+            throw new Error('Required parameter id was null or undefined when calling completeShoppingList.');
+        }
+        if (idempotencyKey === null || idempotencyKey === undefined) {
+            throw new Error('Required parameter idempotencyKey was null or undefined when calling completeShoppingList.');
+        }
+        if (shoppingListCompleteRequest === null || shoppingListCompleteRequest === undefined) {
+            throw new Error('Required parameter shoppingListCompleteRequest was null or undefined when calling completeShoppingList.');
+        }
+
+        let localVarHeaders = this.defaultHeaders;
+        if (idempotencyKey !== undefined && idempotencyKey !== null) {
+            localVarHeaders = localVarHeaders.set('Idempotency-Key', String(idempotencyKey));
+        }
+
+        // authentication (bearerAuth) required
+        localVarHeaders = this.configuration.addCredentialToHeaders('bearerAuth', 'Authorization', localVarHeaders, 'Bearer ');
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        // to determine the Content-Type header
+        const consumes: string[] = [
+            'application/json'
+        ];
+        const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
+        if (httpContentTypeSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Content-Type', httpContentTypeSelected);
+        }
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/shopping-lists/${this.configuration.encodeParam({name: "id", value: id, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: "uuid"})}/complete`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<ShoppingListCompleteResponse>('post', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                body: shoppingListCompleteRequest,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
     }
 
     /**

@@ -1,0 +1,21 @@
+type: object
+description: >-
+  documentation/Subfeatures/Bevásárlás teljesítve.md — the client-built replacement active list for
+  any items left unchecked. `id` and every item's `id` are client-generated
+  (documentation/Architektúra/Backend-offline first.md §2), matching the client's own already-written
+  local rows (documentation/Architektúra/Backend-offline first.md — local-first: the client writes
+  this list to its local store before the server response arrives).
+required:
+  - id
+  - items
+properties:
+  id:
+    type: string
+    format: uuid
+  name:
+    type: string
+    nullable: true
+  items:
+    type: array
+    items:
+      $ref: 'ShoppingListItem.yaml'

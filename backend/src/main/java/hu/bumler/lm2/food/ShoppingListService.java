@@ -1,7 +1,10 @@
 package hu.bumler.lm2.food;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -12,7 +15,13 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import hu.bumler.lm2.api.model.ShoppingList;
+import hu.bumler.lm2.api.model.ShoppingListCompleteFoodEntry;
+import hu.bumler.lm2.api.model.ShoppingListCompleteNewList;
+import hu.bumler.lm2.api.model.ShoppingListCompleteRequest;
+import hu.bumler.lm2.api.model.ShoppingListCompleteResponse;
 import hu.bumler.lm2.api.model.ShoppingListItem;
 import hu.bumler.lm2.common.NestedChildResolver;
 import hu.bumler.lm2.common.exception.EntityDeletedException;
@@ -24,25 +33,34 @@ import hu.bumler.lm2.common.exception.ValidationException;
  * aggregate PUT like MealService/RecipeService/PackingTemplateService. Unlike Meal, an empty item
  * list is valid (the spec's own "Üres aktív lista" flow deletes it manually instead of forbidding
  * it), so — unlike MealService.saveTree — there is no "at least one live item" check here.
- * Archiving (status → ARCHIVED) is out of this slice's scope; see documentation/Subfeatures/
- * Bevásárlás teljesítve.md for the future atomic complete endpoint that owns that transition.
+ * Archiving (status → ARCHIVED) only ever happens via {@link #complete} — see
+ * documentation/Subfeatures/Bevásárlás teljesítve.md.
  */
 @Service
 class ShoppingListService {
 
+	private static final String COMPLETE_ENDPOINT = "POST /api/shopping-lists/{id}/complete";
+
 	private final ShoppingListRepository repository;
 	private final ShoppingListItemRepository itemRepository;
 	private final FoodRepository foodRepository;
+	private final StoredFoodRepository storedFoodRepository;
+	private final IdempotencyKeyRepository idempotencyKeyRepository;
 	private final ShoppingListMapper mapper;
 	private final ShoppingListItemMapper itemMapper;
+	private final ObjectMapper objectMapper;
 
 	ShoppingListService(ShoppingListRepository repository, ShoppingListItemRepository itemRepository, FoodRepository foodRepository,
-			ShoppingListMapper mapper, ShoppingListItemMapper itemMapper) {
+			StoredFoodRepository storedFoodRepository, IdempotencyKeyRepository idempotencyKeyRepository, ShoppingListMapper mapper,
+			ShoppingListItemMapper itemMapper, ObjectMapper objectMapper) {
 		this.repository = repository;
 		this.itemRepository = itemRepository;
 		this.foodRepository = foodRepository;
+		this.storedFoodRepository = storedFoodRepository;
+		this.idempotencyKeyRepository = idempotencyKeyRepository;
 		this.mapper = mapper;
 		this.itemMapper = itemMapper;
+		this.objectMapper = objectMapper;
 	}
 
 	@Transactional(readOnly = true)
@@ -168,10 +186,160 @@ class ShoppingListService {
 	}
 
 	/** documentation/Subfeatures/Bevásárlólista írás.md: a FOOD item may only reference a live Food. */
-	private void requireLiveFood(UUID foodId) {
+	private FoodEntity requireLiveFood(UUID foodId) {
 		FoodEntity food = foodRepository.findById(foodId).orElseThrow(() -> new EntityNotFoundException("No such food"));
 		if (food.isDeleted()) {
 			throw new EntityNotFoundException("No such food");
+		}
+		return food;
+	}
+
+	// --- complete ("Bevásárlás vége") ---
+
+	/**
+	 * documentation/Subfeatures/Bevásárlás teljesítve.md — the atomic multi-entity completion flow
+	 * (documentation/Architektúra/Backend-offline first.md §11): creates StoredFood rows for the
+	 * checked FOOD items, archives this list, and optionally spins off a new active list from the
+	 * leftover unchecked items. Replay-safe via {@code idempotencyKey} — a second call with the same
+	 * key returns the first call's stored response instead of running any of this again.
+	 */
+	@Transactional
+	ShoppingListCompleteResponse complete(UUID userId, UUID id, UUID idempotencyKey, ShoppingListCompleteRequest request) {
+		return idempotencyKeyRepository.findById(idempotencyKey).map(this::readCachedResponse)
+				.orElseGet(() -> runComplete(userId, id, idempotencyKey, request));
+	}
+
+	private ShoppingListCompleteResponse readCachedResponse(IdempotencyKeyEntity cached) {
+		try {
+			return objectMapper.readValue(cached.getResponseBody(), ShoppingListCompleteResponse.class);
+		} catch (Exception e) {
+			throw new IllegalStateException("Corrupt cached idempotency response for key " + cached.getKey(), e);
+		}
+	}
+
+	private ShoppingListCompleteResponse runComplete(UUID userId, UUID id, UUID idempotencyKey, ShoppingListCompleteRequest request) {
+		ShoppingListEntity list = repository.findByIdAndUserId(id, userId).orElseThrow(() -> new EntityNotFoundException("No such shopping list"));
+		if (!"ACTIVE".equals(list.getStatus())) {
+			throw new EntityDeletedException("Shopping list is not active");
+		}
+
+		Map<UUID, ShoppingListItemEntity> liveItemsById = itemRepository.findByShoppingListIdAndDeletedFalse(id).stream()
+				.collect(Collectors.toMap(ShoppingListItemEntity::getId, it -> it));
+		Set<UUID> checkedFoodItemIds = liveItemsById.values().stream()
+				.filter(it -> it.isChecked() && "FOOD".equals(it.getType()))
+				.map(ShoppingListItemEntity::getId)
+				.collect(Collectors.toSet());
+
+		List<UUID> createdStorageEntryIds = new ArrayList<>();
+		Set<UUID> coveredItemIds = new HashSet<>();
+		for (ShoppingListCompleteFoodEntry entry : request.getCheckedFoodEntries()) {
+			ShoppingListItemEntity item = liveItemsById.get(entry.getShoppingListItemId());
+			if (item == null || !checkedFoodItemIds.contains(item.getId())) {
+				throw new ValidationException("checkedFoodEntries references an item that isn't a checked FOOD item on this list",
+						"checkedFoodEntries");
+			}
+			coveredItemIds.add(item.getId());
+			createdStorageEntryIds.addAll(createStorageEntries(userId, item, entry));
+		}
+		if (!coveredItemIds.equals(checkedFoodItemIds)) {
+			throw new ValidationException("Every checked FOOD item needs exactly one checkedFoodEntries entry", "checkedFoodEntries");
+		}
+
+		list.setStatus("ARCHIVED");
+		list.setCompletedAt(OffsetDateTime.now());
+		repository.saveAndFlush(list);
+
+		UUID newActiveListId = null;
+		ShoppingListCompleteNewList newActiveList = request.getNewActiveList();
+		if (newActiveList != null) {
+			ShoppingListEntity newList = new ShoppingListEntity(newActiveList.getId(), userId);
+			newList.setName(newActiveList.getName().orElse(null));
+			repository.saveAndFlush(newList);
+			for (ShoppingListItem itemDto : newActiveList.getItems()) {
+				ShoppingListItemEntity newItem = new ShoppingListItemEntity(itemDto.getId(), newList.getId(), itemDto.getType().getValue(),
+						itemDto.getSortOrder());
+				applyItem(newItem, itemDto);
+				itemRepository.save(newItem);
+			}
+			itemRepository.flush();
+			newActiveListId = newList.getId();
+		}
+
+		ShoppingListCompleteResponse response = new ShoppingListCompleteResponse(id, createdStorageEntryIds);
+		response.newActiveListId(newActiveListId);
+		cacheResponse(idempotencyKey, userId, response);
+		return response;
+	}
+
+	/**
+	 * documentation/Subfeatures/Élelmiszer tárolás.md "Létrehozás — bevásárlásból": a `db`-unit item
+	 * with `amount = N` splits into N separate rows (one catalog package each); any other unit is one
+	 * row with the list item's own quantity. Storage location / expiry resolution:
+	 * documentation/Subfeatures/Bevásárlás teljesítve.md — exactly one catalog-allowed location can be
+	 * defaulted (location and, via {@link ShelfLifeCalculator}, expiry); more than one (or none
+	 * configured, which behaves like "all three") requires the client to have supplied both.
+	 */
+	private List<UUID> createStorageEntries(UUID userId, ShoppingListItemEntity item, ShoppingListCompleteFoodEntry entry) {
+		FoodEntity food = requireLiveFood(item.getFoodId());
+		List<String> allowed = ShelfLifeCalculator.allowedStorageLocations(food);
+
+		ShoppingListCompleteFoodEntry.StorageLocationEnum requestedLocation = entry.getStorageLocation().orElse(null);
+		String storageLocation = requestedLocation != null ? requestedLocation.getValue() : null;
+		if (storageLocation == null) {
+			if (allowed.size() != 1) {
+				throw new ValidationException("storageLocation is required when more than one location is allowed", "storageLocation");
+			}
+			storageLocation = allowed.get(0);
+		} else if (!allowed.contains(storageLocation)) {
+			throw new ValidationException("storageLocation is not one of the catalog's allowed locations", "storageLocation");
+		}
+
+		LocalDate expirationDate = entry.getExpirationDate().orElse(null);
+		if (expirationDate == null) {
+			BigDecimal durationAmount = ShelfLifeCalculator.catalogDurationAmount(food, storageLocation);
+			String durationUnit = ShelfLifeCalculator.catalogDurationUnit(food, storageLocation);
+			if (durationAmount == null || durationUnit == null) {
+				throw new ValidationException("expirationDate is required (the catalog has no duration for this location)", "expirationDate");
+			}
+			expirationDate = ShelfLifeCalculator.addDurationToDate(LocalDate.now(), durationAmount, durationUnit);
+		}
+
+		int splitCount = "db".equals(item.getQuantityUnit()) ? item.getQuantityAmount().intValue() : 1;
+		if (entry.getStorageEntryIds().size() != splitCount) {
+			throw new ValidationException("storageEntryIds must have exactly " + splitCount + " id(s) for this item", "storageEntryIds");
+		}
+
+		BigDecimal rowAmount;
+		String rowUnit;
+		if (splitCount > 1) {
+			BigDecimal netAmount = food.getNetAmount();
+			rowAmount = netAmount != null ? netAmount : BigDecimal.ONE;
+			rowUnit = netAmount != null ? food.getNetUnit() : "db";
+		} else {
+			rowAmount = item.getQuantityAmount();
+			rowUnit = item.getQuantityUnit();
+		}
+
+		List<UUID> ids = new ArrayList<>();
+		for (UUID storageEntryId : entry.getStorageEntryIds()) {
+			StoredFoodEntity storedFood = new StoredFoodEntity(storageEntryId, userId);
+			storedFood.setFoodId(food.getId());
+			storedFood.setQuantity(rowAmount, rowUnit);
+			storedFood.setStorageLocation(storageLocation);
+			storedFood.setExpiresOn(expirationDate);
+			storedFood.setOpened(false, null);
+			storedFoodRepository.save(storedFood);
+			ids.add(storageEntryId);
+		}
+		return ids;
+	}
+
+	private void cacheResponse(UUID idempotencyKey, UUID userId, ShoppingListCompleteResponse response) {
+		try {
+			String json = objectMapper.writeValueAsString(response);
+			idempotencyKeyRepository.save(new IdempotencyKeyEntity(idempotencyKey, userId, COMPLETE_ENDPOINT, 200, json));
+		} catch (Exception e) {
+			throw new IllegalStateException("Failed to serialize ShoppingListCompleteResponse for caching", e);
 		}
 	}
 

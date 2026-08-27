@@ -104,6 +104,9 @@
 
 <ion-footer>
   <ion-toolbar>
+    @if (listId() !== null && items().length > 0) {
+      <ion-button expand="block" class="ion-margin" [routerLink]="['/tabs/menu/shopping', listId(), 'complete']">{{ 'SHOPPING.LIST.COMPLETE' | translate }}</ion-button>
+    }
     <ion-button expand="block" type="submit" form="shopping-list-form" class="ion-margin">{{ 'COMMON.SAVE' | translate }}</ion-button>
   </ion-toolbar>
 </ion-footer>

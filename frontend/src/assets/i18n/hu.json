@@ -465,7 +465,15 @@
       "NON_FOOD_NAME_REQUIRED": "A név megadása kötelező.",
       "NON_FOOD_NOTE_LABEL": "Bolt / megjegyzés",
       "DELETE_CONFIRM_TITLE": "Lista törlése",
-      "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd a(z) \"{{name}}\" listát?"
+      "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd a(z) \"{{name}}\" listát?",
+      "COMPLETE": "Bevásárlás vége"
+    },
+    "COMPLETE": {
+      "TITLE": "Bevásárlás vége",
+      "NO_CHECKED_FOOD_NOTE": "Nincs bepipált élelmiszer tétel — a lista archiválódik, a pipálatlan tételek új listára kerülnek.",
+      "EXPIRY_LABEL": "Lejárati dátum",
+      "LOCATION_LABEL": "Tárolási hely",
+      "CONFIRM": "Befejezés"
     }
   }
 }

@@ -1,0 +1,53 @@
+parameters:
+  - name: id
+    in: path
+    required: true
+    schema:
+      type: string
+      format: uuid
+  - name: Idempotency-Key
+    in: header
+    required: true
+    schema:
+      type: string
+      format: uuid
+post:
+  operationId: completeShoppingList
+  tags:
+    - shopping-lists
+  summary: >-
+    documentation/Subfeatures/Bevásárlás teljesítve.md — atomic "Bevásárlás vége": creates StoredFood
+    rows for the checked FOOD items, archives this list, and optionally spins off a new active list
+    from the leftover unchecked items. documentation/Architektúra/Backend-offline first.md §11 atomic
+    multi-entity endpoint — replay-safe via the required Idempotency-Key header.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/ShoppingListCompleteRequest.yaml'
+  responses:
+    '200':
+      description: Completed, or — on retry with the same Idempotency-Key — the stored result of the original call.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ShoppingListCompleteResponse.yaml'
+    '404':
+      description: No such shopping list.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+    '409':
+      description: The list is not ACTIVE (already completed or deleted).
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+    '400':
+      description: A checked FOOD item's entry is missing/mismatched, or neither the request nor the catalog gives an unambiguous storage location / expiration date.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'

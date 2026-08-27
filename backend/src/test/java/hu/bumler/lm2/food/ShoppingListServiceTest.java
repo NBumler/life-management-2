@@ -9,6 +9,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import hu.bumler.lm2.api.model.ShoppingList;
 import hu.bumler.lm2.api.model.ShoppingListItem;
 import hu.bumler.lm2.common.exception.EntityDeletedException;
@@ -30,6 +32,8 @@ class ShoppingListServiceTest {
 	private ShoppingListRepository repository;
 	private ShoppingListItemRepository itemRepository;
 	private FoodRepository foodRepository;
+	private StoredFoodRepository storedFoodRepository;
+	private IdempotencyKeyRepository idempotencyKeyRepository;
 	private ShoppingListService service;
 
 	@BeforeEach
@@ -37,7 +41,10 @@ class ShoppingListServiceTest {
 		repository = mock(ShoppingListRepository.class);
 		itemRepository = mock(ShoppingListItemRepository.class);
 		foodRepository = mock(FoodRepository.class);
-		service = new ShoppingListService(repository, itemRepository, foodRepository, new ShoppingListMapper(), new ShoppingListItemMapper());
+		storedFoodRepository = mock(StoredFoodRepository.class);
+		idempotencyKeyRepository = mock(IdempotencyKeyRepository.class);
+		service = new ShoppingListService(repository, itemRepository, foodRepository, storedFoodRepository, idempotencyKeyRepository,
+				new ShoppingListMapper(), new ShoppingListItemMapper(), new ObjectMapper());
 		when(repository.saveAndFlush(any())).thenAnswer(inv -> inv.getArgument(0));
 	}
 

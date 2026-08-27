@@ -1,0 +1,16 @@
+type: object
+description: >-
+  documentation/Subfeatures/Bevásárlás teljesítve.md request body for
+  `POST /api/shopping-lists/{id}/complete`. `checkedFoodEntries` carries one entry per **checked
+  FOOD** item currently on the list (checked/unchecked state and non-FOOD items are already
+  persisted from the list's own saves — this body only adds what completion itself needs).
+required:
+  - checkedFoodEntries
+properties:
+  checkedFoodEntries:
+    type: array
+    items:
+      $ref: 'ShoppingListCompleteFoodEntry.yaml'
+  newActiveList:
+    $ref: 'ShoppingListCompleteNewList.yaml'
+    nullable: true

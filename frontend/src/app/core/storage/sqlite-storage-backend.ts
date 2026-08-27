@@ -73,6 +73,7 @@ import {
   recipeLocalWriteTask,
   recipeRowToDto,
   shoppingListItemLocalRemoveTask,
+  shoppingListArchiveLocalTask,
   shoppingListItemLocalWriteTask,
   shoppingListItemRowToDto,
   shoppingListLocalWriteTask,
@@ -93,6 +94,8 @@ import {
   PackingSessionStartDraft,
   PackingTemplateDraft,
   RecipeDraft,
+  ShoppingListCompleteDraft,
+  ShoppingListCompleteResult,
   ShoppingListDraft,
   StorageBackend,
   expandMealItemSaveItem,
@@ -1227,6 +1230,66 @@ export class SqliteStorageBackend implements StorageBackend {
     const listRows = await this.db.query<ShoppingListRow>('SELECT * FROM shopping_list WHERE id = ?', [id]);
     const itemRows = await this.db.query<ShoppingListItemRow>('SELECT * FROM shopping_list_item WHERE shopping_list_id = ? ORDER BY sort_order', [id]);
     return { ...shoppingListRowToDto(listRows[0]), items: itemRows.map(shoppingListItemRowToDto) };
+  }
+
+  /** documentation/Architektúra/Backend-offline first.md §11: archive + StoredFood rows + optional spun-off list, all in one local transaction and one outbox entry — mirrors startPackingSession's shape. */
+  async completeShoppingList(draft: ShoppingListCompleteDraft): Promise<ShoppingListCompleteResult> {
+    const userId = this.requireUserId();
+    const nowIso = new Date().toISOString();
+
+    const localTasks: SqlTask[] = [shoppingListArchiveLocalTask(draft.shoppingListId, nowIso)];
+    for (const entry of draft.storageEntries) {
+      localTasks.push(
+        storedFoodLocalWriteTask({
+          id: entry.id,
+          foodId: entry.foodId,
+          quantityAmount: entry.quantityAmount,
+          quantityUnit: entry.quantityUnit,
+          storageLocation: entry.storageLocation as StoredFood['storageLocation'],
+          expiresOn: entry.expiresOn,
+          opened: false,
+          deleted: false,
+        }),
+      );
+    }
+    const foodIdsForDependsOn = draft.storageEntries.map((entry) => entry.foodId);
+    if (draft.newActiveList) {
+      localTasks.push(shoppingListLocalWriteTask({ id: draft.newActiveList.id, name: draft.newActiveList.name }));
+      for (const item of draft.newActiveList.items) {
+        localTasks.push(shoppingListItemLocalWriteTask(expandShoppingListItemSaveItem(item, draft.newActiveList.id)));
+        if (item.type === 'FOOD') {
+          foodIdsForDependsOn.push(item.foodId);
+        }
+      }
+    }
+    const dependsOn = await this.findLocalOnlyIds('food', foodIdsForDependsOn);
+
+    const payload = {
+      checkedFoodEntries: draft.checkedFoodEntries.map((entry) => ({
+        shoppingListItemId: entry.shoppingListItemId,
+        storageEntryIds: entry.storageEntryIds,
+        expirationDate: entry.expirationDate,
+        storageLocation: entry.storageLocation,
+      })),
+      newActiveList: draft.newActiveList,
+    };
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: 'POST',
+      url: `/api/shopping-lists/${draft.shoppingListId}/complete`,
+      payload,
+      entityType: 'ShoppingList',
+      targetEntityId: draft.shoppingListId,
+      dependsOn,
+    });
+    await this.db.executeTransaction([...localTasks, ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+
+    return {
+      archivedListId: draft.shoppingListId,
+      createdStorageEntryIds: draft.storageEntries.map((entry) => entry.id),
+      newActiveListId: draft.newActiveList?.id ?? null,
+    };
   }
 
   private requireUserId(): string {

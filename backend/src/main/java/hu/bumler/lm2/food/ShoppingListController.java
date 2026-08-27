@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import hu.bumler.lm2.api.ShoppingListsApi;
 import hu.bumler.lm2.api.model.ShoppingList;
+import hu.bumler.lm2.api.model.ShoppingListCompleteRequest;
+import hu.bumler.lm2.api.model.ShoppingListCompleteResponse;
 import hu.bumler.lm2.common.CurrentUser;
 
 /** documentation/Subfeatures/Bevásárlólista írás.md — per-user active shopping list (see ShoppingListService). */
@@ -45,5 +47,10 @@ class ShoppingListController implements ShoppingListsApi {
 	@Override
 	public ResponseEntity<ShoppingList> deleteShoppingList(UUID id) {
 		return ResponseEntity.ok(shoppingListService.delete(currentUser.id(), id));
+	}
+
+	@Override
+	public ResponseEntity<ShoppingListCompleteResponse> completeShoppingList(UUID id, UUID idempotencyKey, ShoppingListCompleteRequest shoppingListCompleteRequest) {
+		return ResponseEntity.ok(shoppingListService.complete(currentUser.id(), id, idempotencyKey, shoppingListCompleteRequest));
 	}
 }

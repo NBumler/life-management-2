@@ -13,6 +13,8 @@ import { Observable }                                        from 'rxjs';
 
 import { ApiError } from '../model/models';
 import { ShoppingList } from '../model/models';
+import { ShoppingListCompleteRequest } from '../model/models';
+import { ShoppingListCompleteResponse } from '../model/models';
 
 
 import { Configuration }                                     from '../configuration';
@@ -22,6 +24,16 @@ import { Configuration }                                     from '../configurat
 export interface ShoppingListsServiceInterface {
     defaultHeaders: HttpHeaders;
     configuration: Configuration;
+
+    /**
+     * documentation/Subfeatures/Bevásárlás teljesítve.md — atomic \&quot;Bevásárlás vége\&quot;: creates StoredFood rows for the checked FOOD items, archives this list, and optionally spins off a new active list from the leftover unchecked items. documentation/Architektúra/Backend-offline first.md §11 atomic multi-entity endpoint — replay-safe via the required Idempotency-Key header.
+     * 
+     * @endpoint post /api/shopping-lists/{id}/complete
+     * @param id 
+     * @param idempotencyKey 
+     * @param shoppingListCompleteRequest 
+     */
+    completeShoppingList(id: string, idempotencyKey: string, shoppingListCompleteRequest: ShoppingListCompleteRequest, extraHttpRequestParams?: any): Observable<ShoppingListCompleteResponse>;
 
     /**
      * Create a shopping list with its items in one request — idempotent upsert on the client-supplied id (documentation/Architektúra/Backend-offline first.md §11 nested aggregate save).

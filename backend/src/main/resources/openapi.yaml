@@ -77,6 +77,8 @@ paths:
     $ref: 'openapi/paths/shopping-lists.yaml'
   /api/shopping-lists/{id}:
     $ref: 'openapi/paths/shopping-lists-item.yaml'
+  /api/shopping-lists/{id}/complete:
+    $ref: 'openapi/paths/shopping-lists-item-complete.yaml'
 components:
   securitySchemes:
     bearerAuth:
@@ -176,3 +178,11 @@ components:
       $ref: 'openapi/components/schemas/ShoppingListList.yaml'
     ShoppingListItem:
       $ref: 'openapi/components/schemas/ShoppingListItem.yaml'
+    ShoppingListCompleteRequest:
+      $ref: 'openapi/components/schemas/ShoppingListCompleteRequest.yaml'
+    ShoppingListCompleteFoodEntry:
+      $ref: 'openapi/components/schemas/ShoppingListCompleteFoodEntry.yaml'
+    ShoppingListCompleteNewList:
+      $ref: 'openapi/components/schemas/ShoppingListCompleteNewList.yaml'
+    ShoppingListCompleteResponse:
+      $ref: 'openapi/components/schemas/ShoppingListCompleteResponse.yaml'
