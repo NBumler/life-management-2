@@ -1,11 +1,27 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, effect, inject, signal, untracked } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 
 import { Recipe } from '../../api/model/recipe';
 import { normalizeName } from '../../shared/name-normalization';
 import { RecipeDraft, STORAGE_BACKEND } from '../storage/storage-backend';
+import { DataChangeNotifier } from '../sync/data-change-notifier';
 import { SyncEngineService } from '../sync/sync-engine.service';
 import { uuidV4 } from '../sync/uuid';
+
+/**
+ * Identity of a row set for "did the store actually change?" — recipe id + version + tombstone, plus
+ * the same triple for every ingredient row (a nested-aggregate edit only bumps the child rows).
+ */
+function recipeSetSignature(rows: readonly Recipe[]): string {
+  return rows
+    .map(
+      (row) =>
+        `${row.id}:${row.updatedAt ?? ''}:${row.deleted ? 1 : 0}:[${row.ingredients
+          .map((ingredient) => `${ingredient.id}:${ingredient.updatedAt ?? ''}:${ingredient.deleted ? 1 : 0}`)
+          .join(',')}]`,
+    )
+    .join('|');
+}
 
 /** documentation/Subfeatures/Recept.md "Duplikáció": thrown when either the name or the live ingredient set already matches another live recipe. */
 export class RecipeDuplicateError extends Error {
@@ -57,12 +73,64 @@ export function isDuplicateRecipe(existing: Recipe, draft: { id: string; name: s
 export class RecipeRepository {
   private readonly storage = inject(STORAGE_BACKEND);
   private readonly syncEngine = inject(SyncEngineService);
+  private readonly dataChanges = inject(DataChangeNotifier);
 
   readonly items = signal<Recipe[]>([]);
   readonly loaded = signal(false);
 
-  async load(): Promise<void> {
-    this.items.set(await this.storage.listRecipes());
+  /** See FoodRepository — native serves repeat reads from memory; web re-fetches but the signature guard still shields downstream `computed()`s. */
+  private readonly cacheEnabled = Capacitor.isNativePlatform();
+  private inFlight: Promise<void> | null = null;
+  private lastSignature = '';
+
+  constructor() {
+    // See FoodRepository — re-read after a delta pull; first run only primes the `tick` dependency.
+    let primed = false;
+    effect(() => {
+      this.dataChanges.tick();
+      if (!primed) {
+        primed = true;
+        return;
+      }
+      if (untracked(() => this.loaded())) {
+        void this.load({ force: true });
+      }
+    });
+  }
+
+  /**
+   * Reads the recipe catalog (with ingredients) into `items`. Cached on native; pass
+   * `{ force: true }` to re-read after the store changed. `items` is only replaced when the row set
+   * — recipes or their ingredients — actually differs, sparing the O(recipes × ingredients) ranking
+   * pipeline (catalog-ratios.ts) an unnecessary recompute.
+   */
+  async load(options?: { force?: boolean }): Promise<void> {
+    if (this.cacheEnabled && this.loaded() && !options?.force) {
+      return;
+    }
+    if (this.inFlight !== null) {
+      return this.inFlight;
+    }
+    this.inFlight = this.readIntoSignal();
+    try {
+      await this.inFlight;
+    } finally {
+      this.inFlight = null;
+    }
+  }
+
+  /** Forces a re-read from the local store regardless of cache state. */
+  reload(): Promise<void> {
+    return this.load({ force: true });
+  }
+
+  private async readIntoSignal(): Promise<void> {
+    const rows = await this.storage.listRecipes();
+    const signature = recipeSetSignature(rows);
+    if (signature !== this.lastSignature || !this.loaded()) {
+      this.lastSignature = signature;
+      this.items.set(rows);
+    }
     this.loaded.set(true);
   }
 
@@ -87,6 +155,7 @@ export class RecipeRepository {
       next.sort((a, b) => a.name.localeCompare(b.name));
       return next;
     });
+    this.lastSignature = recipeSetSignature(this.items());
     this.requestDrainIfNative();
     return saved;
   }
@@ -94,6 +163,7 @@ export class RecipeRepository {
   async remove(id: string): Promise<void> {
     await this.storage.deleteRecipe(id);
     this.items.update((list) => list.filter((item) => item.id !== id));
+    this.lastSignature = recipeSetSignature(this.items());
     this.requestDrainIfNative();
   }
 

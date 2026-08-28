@@ -70,12 +70,22 @@ export class FoodListPage implements OnInit, ViewWillEnter {
 
   readonly query = signal('');
 
+  /**
+   * Alphabetical sort done once per catalog change, not per keystroke — `localeCompare` over the
+   * whole (potentially imported-in-bulk) catalog was the search box's per-input cost. Mirrors
+   * kaja-stats.page.ts's `ranking`/`rows` split.
+   */
+  private readonly sortedItems = computed(() => [...this.repository.items()].sort((a, b) => a.name.localeCompare(b.name)));
+
   readonly filteredItems = computed(() => {
     const query = this.query();
-    return this.repository
-      .items()
-      .filter((item) => matchesSearch(query, item.name))
-      .sort((a, b) => compareRank(query, a.name, b.name) || a.name.localeCompare(b.name));
+    const base = this.sortedItems();
+    if (query === '') {
+      return base;
+    }
+    // `filter` keeps the alphabetical order; `compareRank` is a stable no-op unless the query is
+    // accented, so it only reorders accent-exact matches ahead — no full re-sort.
+    return base.filter((item) => matchesSearch(query, item.name)).sort((a, b) => compareRank(query, a.name, b.name));
   });
 
   async ngOnInit(): Promise<void> {

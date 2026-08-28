@@ -1,4 +1,4 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, effect, inject, signal, untracked } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 
 import { Food } from '../../api/model/food';
@@ -6,8 +6,14 @@ import { normalizeBarcode } from '../../shared/barcode-normalization';
 import { normalizeName } from '../../shared/name-normalization';
 import { DurationUnit, QuantityUnit, durationsEqual, quantitiesEqual } from '../../shared/quantity';
 import { STORAGE_BACKEND } from '../storage/storage-backend';
+import { DataChangeNotifier } from '../sync/data-change-notifier';
 import { SyncEngineService } from '../sync/sync-engine.service';
 import { uuidV4 } from '../sync/uuid';
+
+/** Identity of a row set for "did the store actually change?" — id + server version + tombstone flag, order-sensitive. */
+function foodSetSignature(rows: readonly Food[]): string {
+  return rows.map((row) => `${row.id}:${row.updatedAt ?? ''}:${row.deleted ? 1 : 0}`).join('|');
+}
 
 /** documentation/Architektúra/Névegyediség.md "Mezőhalmaz-egyediség": thrown when every field matches another live catalog item. */
 export class FoodDuplicateError extends Error {
@@ -76,12 +82,72 @@ export function isDuplicateFood(existing: Food, draft: Food): boolean {
 export class FoodRepository {
   private readonly storage = inject(STORAGE_BACKEND);
   private readonly syncEngine = inject(SyncEngineService);
+  private readonly dataChanges = inject(DataChangeNotifier);
 
   readonly items = signal<Food[]>([]);
   readonly loaded = signal(false);
 
-  async load(): Promise<void> {
-    this.items.set(await this.storage.listFoods());
+  /**
+   * Native only: once the local store has been read, re-reads are served from the in-memory signal.
+   * On web every `load()` re-fetches (there is no delta pull to invalidate a cache — see
+   * `DataChangeNotifier`), but the signature guard below still spares an unchanged response from
+   * re-triggering every downstream `computed()`.
+   */
+  private readonly cacheEnabled = Capacitor.isNativePlatform();
+  private inFlight: Promise<void> | null = null;
+  private lastSignature = '';
+
+  constructor() {
+    // documentation/Architektúra/Backend-offline first.md §8: a delta pull that changed rows makes
+    // the cached snapshot stale — re-read from the local store when it lands. The first effect run
+    // only primes the `tick` dependency; every later run is a real post-pull invalidation.
+    let primed = false;
+    effect(() => {
+      this.dataChanges.tick();
+      if (!primed) {
+        primed = true;
+        return;
+      }
+      if (untracked(() => this.loaded())) {
+        void this.load({ force: true });
+      }
+    });
+  }
+
+  /**
+   * Reads the catalog into `items`. Every food page hits this in `ngOnInit`; with `cacheEnabled` the
+   * repeat calls are a no-op. Pass `{ force: true }` to bypass the cache after the store changed
+   * underneath us (the `DataChangeNotifier` effect above does this). The `items` signal is only
+   * replaced when the row set actually differs, so an unchanged reload doesn't invalidate
+   * downstream `computed()`s or re-render lists.
+   */
+  async load(options?: { force?: boolean }): Promise<void> {
+    if (this.cacheEnabled && this.loaded() && !options?.force) {
+      return;
+    }
+    if (this.inFlight !== null) {
+      return this.inFlight;
+    }
+    this.inFlight = this.readIntoSignal();
+    try {
+      await this.inFlight;
+    } finally {
+      this.inFlight = null;
+    }
+  }
+
+  /** Forces a re-read from the local store regardless of cache state. */
+  reload(): Promise<void> {
+    return this.load({ force: true });
+  }
+
+  private async readIntoSignal(): Promise<void> {
+    const rows = await this.storage.listFoods();
+    const signature = foodSetSignature(rows);
+    if (signature !== this.lastSignature || !this.loaded()) {
+      this.lastSignature = signature;
+      this.items.set(rows);
+    }
     this.loaded.set(true);
   }
 
@@ -104,6 +170,7 @@ export class FoodRepository {
       next.sort((a, b) => a.name.localeCompare(b.name));
       return next;
     });
+    this.lastSignature = foodSetSignature(this.items());
     this.requestDrainIfNative();
     return saved;
   }
@@ -111,6 +178,7 @@ export class FoodRepository {
   async remove(id: string): Promise<void> {
     await this.storage.deleteFood(id);
     this.items.update((list) => list.filter((item) => item.id !== id));
+    this.lastSignature = foodSetSignature(this.items());
     this.requestDrainIfNative();
   }
 

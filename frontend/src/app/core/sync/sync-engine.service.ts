@@ -88,6 +88,7 @@ import {
 import { AuthSessionService } from '../session/auth-session.service';
 import { LocalDatabaseService, SqlTask } from '../storage/local-database.service';
 import { ConnectionState } from './connection-state';
+import { DataChangeNotifier } from './data-change-notifier';
 import { OfflineQueueService } from './offline-queue.service';
 import { OutboxItem } from './outbox-item';
 import { migrateOutboxItem } from './outbox-migrator';
@@ -125,6 +126,7 @@ export class SyncEngineService {
   private readonly authSession = inject(AuthSessionService);
   private readonly offlineQueue = inject(OfflineQueueService);
   private readonly db = inject(LocalDatabaseService);
+  private readonly dataChanges = inject(DataChangeNotifier);
 
   readonly connectionState = signal<ConnectionState>('UNKNOWN');
   /** For SyncStatusButton's "forgó ikon" state (documentation/Architektúra/Backend-offline first.md §16). */
@@ -783,6 +785,7 @@ export class SyncEngineService {
   private async pull(userId: string): Promise<void> {
     let hasMore = true;
     let syncedAt: string | null = null;
+    let appliedChanges = false;
     while (hasMore) {
       const stateRows = await this.db.query<{ cursor: string | null }>('SELECT cursor FROM sync_state WHERE id = 1');
       const since = stateRows[0]?.cursor ?? undefined;
@@ -807,11 +810,17 @@ export class SyncEngineService {
         values: [response.nextCursor, response.serverTime, 'OK'],
       });
       await this.db.executeTransaction(tasks);
+      appliedChanges ||= response.changes.length > 0;
       syncedAt = response.serverTime;
       hasMore = response.hasMore;
     }
     if (syncedAt !== null) {
       this.lastSuccessfulSyncAt.set(syncedAt);
+    }
+    // documentation/Architektúra/Backend-offline first.md §8: cached core/data repositories observe
+    // this to re-read the rows the pull just wrote into the local store.
+    if (appliedChanges) {
+      this.dataChanges.notifyChanged();
     }
     await this.offlineQueue.refreshCounts(userId);
   }

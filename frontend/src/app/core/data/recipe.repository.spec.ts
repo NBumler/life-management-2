@@ -3,6 +3,7 @@ import { Capacitor } from '@capacitor/core';
 
 import { Recipe } from '../../api/model/recipe';
 import { StorageBackend, STORAGE_BACKEND } from '../storage/storage-backend';
+import { DataChangeNotifier } from '../sync/data-change-notifier';
 import { SyncEngineService } from '../sync/sync-engine.service';
 import { RecipeDuplicateError, RecipeRepository, isDuplicateRecipe } from './recipe.repository';
 
@@ -148,5 +149,78 @@ describe('RecipeRepository', () => {
     await repository.save({ id: '', name: 'Tél', note: null, ingredients: [] });
 
     expect(syncEngine.requestDrainDebounced).not.toHaveBeenCalled();
+  });
+});
+
+describe('RecipeRepository caching', () => {
+  let repository: RecipeRepository;
+  let storage: jasmine.SpyObj<StorageBackend>;
+  let dataChanges: DataChangeNotifier;
+
+  function configure(native: boolean): void {
+    spyOn(Capacitor, 'isNativePlatform').and.returnValue(native);
+    storage = jasmine.createSpyObj('StorageBackend', ['listRecipes', 'saveRecipe', 'deleteRecipe']);
+    storage.listRecipes.and.resolveTo([recipe({ id: 'a', name: 'Alma torta' })]);
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: STORAGE_BACKEND, useValue: storage },
+        { provide: SyncEngineService, useValue: jasmine.createSpyObj('SyncEngineService', ['requestDrainDebounced']) },
+      ],
+    });
+    repository = TestBed.inject(RecipeRepository);
+    dataChanges = TestBed.inject(DataChangeNotifier);
+  }
+
+  it('native: a second load() is served from memory instead of re-querying the store', async () => {
+    configure(true);
+
+    await repository.load();
+    await repository.load();
+
+    expect(storage.listRecipes).toHaveBeenCalledTimes(1);
+  });
+
+  it('an unchanged reload does not replace the signal — even when an ingredient version is stable', async () => {
+    configure(false);
+    storage.listRecipes.and.resolveTo([
+      recipe({ id: 'a', name: 'Alma torta', ingredients: [{ id: 'i1', recipeId: 'a', foodId: 'f1', quantityAmount: 1, quantityUnit: 'db', sortOrder: 0, deleted: false }] }),
+    ]);
+
+    await repository.load();
+    const firstReference = repository.items();
+    await repository.load();
+
+    expect(repository.items()).toBe(firstReference);
+  });
+
+  it('reload() picks up an ingredient-only change (nested aggregate)', async () => {
+    configure(true);
+    storage.listRecipes.and.resolveTo([
+      recipe({ id: 'a', name: 'Alma torta', ingredients: [{ id: 'i1', recipeId: 'a', foodId: 'f1', quantityAmount: 1, quantityUnit: 'db', sortOrder: 0, deleted: false, updatedAt: 'v1' }] }),
+    ]);
+    await repository.load();
+    const firstReference = repository.items();
+
+    storage.listRecipes.and.resolveTo([
+      recipe({ id: 'a', name: 'Alma torta', ingredients: [{ id: 'i1', recipeId: 'a', foodId: 'f1', quantityAmount: 2, quantityUnit: 'db', sortOrder: 0, deleted: false, updatedAt: 'v2' }] }),
+    ]);
+    await repository.reload();
+
+    expect(repository.items()).not.toBe(firstReference);
+    expect(repository.items()[0].ingredients[0].quantityAmount).toBe(2);
+  });
+
+  it('a DataChangeNotifier tick (post-pull) invalidates the native cache', async () => {
+    configure(true);
+
+    await repository.load();
+    TestBed.flushEffects();
+    storage.listRecipes.and.resolveTo([recipe({ id: 'a', name: 'Alma torta', updatedAt: 'v2' })]);
+
+    dataChanges.notifyChanged();
+    TestBed.flushEffects();
+    await new Promise((resolve) => setTimeout(resolve));
+
+    expect(storage.listRecipes).toHaveBeenCalledTimes(2);
   });
 });

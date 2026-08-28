@@ -442,7 +442,17 @@ const SCHEMA_V12_STATEMENTS: string[] = [
   `CREATE INDEX IF NOT EXISTS idx_shopping_list_item_food_id ON shopping_list_item (food_id)`,
 ];
 
-const SCHEMA_VERSION = 12;
+/**
+ * Kaja katalógus/statisztika betöltés gyorsítása — `listFoods()`/`listRecipes()` a
+ * `WHERE deleted = 0 ORDER BY name` élő listát olvassa; a partial index a tombstone sorokat
+ * kihagyva rendezetten szolgálja ki, index-only szkennel. Csak új index, séma-adat nem változik.
+ */
+const SCHEMA_V13_STATEMENTS: string[] = [
+  `CREATE INDEX IF NOT EXISTS idx_food_live_name ON food (name) WHERE deleted = 0`,
+  `CREATE INDEX IF NOT EXISTS idx_recipe_live_name ON recipe (name) WHERE deleted = 0`,
+];
+
+const SCHEMA_VERSION = 13;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -457,7 +467,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 9, statements: SCHEMA_V9_STATEMENTS },
   { toVersion: 10, statements: SCHEMA_V10_STATEMENTS },
   { toVersion: 11, statements: SCHEMA_V11_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V12_STATEMENTS },
+  { toVersion: 12, statements: SCHEMA_V12_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V13_STATEMENTS },
 ];
 
 export interface SqlTask {

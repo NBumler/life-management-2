@@ -3,6 +3,7 @@ import { Capacitor } from '@capacitor/core';
 
 import { Food } from '../../api/model/food';
 import { StorageBackend, STORAGE_BACKEND } from '../storage/storage-backend';
+import { DataChangeNotifier } from '../sync/data-change-notifier';
 import { SyncEngineService } from '../sync/sync-engine.service';
 import { FoodDuplicateError, FoodRepository, isDuplicateFood } from './food.repository';
 
@@ -137,5 +138,78 @@ describe('FoodRepository', () => {
     await repository.save(food());
 
     expect(syncEngine.requestDrainDebounced).not.toHaveBeenCalled();
+  });
+});
+
+describe('FoodRepository caching', () => {
+  let repository: FoodRepository;
+  let storage: jasmine.SpyObj<StorageBackend>;
+  let dataChanges: DataChangeNotifier;
+
+  function configure(native: boolean): void {
+    spyOn(Capacitor, 'isNativePlatform').and.returnValue(native);
+    storage = jasmine.createSpyObj('StorageBackend', ['listFoods', 'upsertFood', 'deleteFood']);
+    storage.listFoods.and.resolveTo([food({ id: 'a', name: 'Alma' })]);
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: STORAGE_BACKEND, useValue: storage },
+        { provide: SyncEngineService, useValue: jasmine.createSpyObj('SyncEngineService', ['requestDrainDebounced']) },
+      ],
+    });
+    repository = TestBed.inject(FoodRepository);
+    dataChanges = TestBed.inject(DataChangeNotifier);
+  }
+
+  it('native: a second load() is served from memory instead of re-querying the store', async () => {
+    configure(true);
+
+    await repository.load();
+    await repository.load();
+
+    expect(storage.listFoods).toHaveBeenCalledTimes(1);
+  });
+
+  it('web: load() re-fetches every time, but an unchanged result does not replace the signal', async () => {
+    configure(false);
+
+    await repository.load();
+    const firstReference = repository.items();
+    await repository.load();
+
+    expect(storage.listFoods).toHaveBeenCalledTimes(2);
+    expect(repository.items()).toBe(firstReference);
+  });
+
+  it('reload() bypasses the cache and replaces items when the row set changed', async () => {
+    configure(true);
+
+    await repository.load();
+    storage.listFoods.and.resolveTo([food({ id: 'a', name: 'Alma' }), food({ id: 'b', name: 'Banán' })]);
+    await repository.reload();
+
+    expect(storage.listFoods).toHaveBeenCalledTimes(2);
+    expect(repository.items().map((item) => item.id)).toEqual(['a', 'b']);
+  });
+
+  it('a DataChangeNotifier tick (post-pull) invalidates the native cache', async () => {
+    configure(true);
+
+    await repository.load();
+    TestBed.flushEffects(); // first effect run only primes the tick dependency
+    storage.listFoods.and.resolveTo([food({ id: 'a', name: 'Alma', updatedAt: 'v2' })]);
+
+    dataChanges.notifyChanged();
+    TestBed.flushEffects();
+    await new Promise((resolve) => setTimeout(resolve));
+
+    expect(storage.listFoods).toHaveBeenCalledTimes(2);
+  });
+
+  it('a concurrent second load() reuses the in-flight read', async () => {
+    configure(false);
+
+    await Promise.all([repository.load(), repository.load()]);
+
+    expect(storage.listFoods).toHaveBeenCalledTimes(1);
   });
 });
