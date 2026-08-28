@@ -3,9 +3,37 @@
 </ion-header>
 
 <ion-content>
-  <ion-list>
-    <ion-item>
-      <ion-label color="medium">{{ 'WORKOUT.LOG.EMPTY' | translate }}</ion-label>
-    </ion-item>
-  </ion-list>
+  <div class="cta-row">
+    <ion-button expand="block" routerLink="new">{{ 'WORKOUT.LOG.NEW_SESSION' | translate }}</ion-button>
+    @if (mostRecentId(); as lastId) {
+      <ion-button expand="block" fill="outline" [routerLink]="['new']" [queryParams]="{ copyFrom: lastId }">
+        {{ 'WORKOUT.LOG.SAME_AS_LAST' | translate }}
+      </ion-button>
+    }
+  </div>
+
+  @if (isEmpty()) {
+    <ion-list>
+      <ion-item>
+        <ion-label color="medium">{{ 'WORKOUT.LOG.EMPTY' | translate }}</ion-label>
+      </ion-item>
+    </ion-list>
+  } @else {
+    <ion-list>
+      @for (card of cards(); track card.session.id) {
+        <ion-item button [routerLink]="[card.session.id]" detail="true">
+          <ion-label>
+            <h2>{{ card.session.title || (('WORKOUT.SESSION.TYPE.' + card.session.workoutType) | translate) }}</h2>
+            <p>{{ card.session.date }} · {{ card.exerciseCount }} {{ 'WORKOUT.LOG.EXERCISES_SHORT' | translate }}</p>
+          </ion-label>
+          <ion-note slot="end">
+            {{ card.durationMinutes }} {{ 'WORKOUT.SESSION.MINUTES_SHORT' | translate }}
+            @if (card.kcal > 0) {
+              · ~{{ card.kcal | number: '1.0-0' }} {{ 'WORKOUT.SESSION.KCAL_SHORT' | translate }}
+            }
+          </ion-note>
+        </ion-item>
+      }
+    </ion-list>
+  }
 </ion-content>

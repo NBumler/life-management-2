@@ -1,0 +1,81 @@
+type: object
+description: >-
+  documentation/Subfeatures/Edzésnapló.md "Entitás — WorkoutSetEntry" — one set on a
+  WorkoutExerciseEntry. Only ever saved nested inside a WorkoutSession (documentation/Architektúra/
+  Backend.md "Nested aggregate PUT"), but its own sync row (own tombstones, own delta pull entries).
+  Units are kg / mm / m only; assist (band/pulley) is a negative weightKg. Which of the optional
+  measurement fields apply follows the parent entry's exerciseKind snapshot; the server persists
+  whatever is sent (deliberately loose type rule).
+required:
+  - id
+  - exerciseEntryId
+  - setNumber
+  - setType
+  - isCompleted
+  - orderIndex
+  - deleted
+properties:
+  id:
+    type: string
+    format: uuid
+  exerciseEntryId:
+    type: string
+    format: uuid
+  setNumber:
+    type: integer
+    minimum: 1
+  setType:
+    type: string
+    enum:
+      - WARMUP
+      - WORKING
+      - DROPSET
+      - REST_PAUSE
+      - FAILURE
+  reps:
+    type: integer
+    minimum: 0
+    nullable: true
+  weightKg:
+    type: number
+    nullable: true
+    description: 'kg only. Bodyweight = 0; weighted = +kg; assist (band/pulley) = negative kg.'
+  holdTimeSeconds:
+    type: integer
+    minimum: 0
+    nullable: true
+    description: Isometric / hangboard / time-based / cardio duration.
+  edgeSizeMm:
+    type: integer
+    minimum: 0
+    nullable: true
+    description: Hold size in mm (e.g. 20 mm edge, pinch).
+  distanceMeters:
+    type: integer
+    minimum: 0
+    nullable: true
+    description: Cardio distance in metres (e.g. 1000 m row).
+  restTimeSeconds:
+    type: integer
+    minimum: 0
+    nullable: true
+  isCompleted:
+    type: boolean
+    description: Live mode tick; a skipped set is false or deleted.
+  orderIndex:
+    type: integer
+  deleted:
+    type: boolean
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

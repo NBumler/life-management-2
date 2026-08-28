@@ -1,0 +1,69 @@
+parameters:
+  - name: id
+    in: path
+    required: true
+    schema:
+      type: string
+      format: uuid
+get:
+  operationId: getWorkoutSession
+  tags:
+    - workout-sessions
+  summary: The full session tree. A soft-deleted session returns 200 with deleted=true (not 404).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/WorkoutSession.yaml'
+    '404':
+      description: No such session.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+put:
+  operationId: updateWorkoutSession
+  tags:
+    - workout-sessions
+  summary: >-
+    Full tree replace (documentation/Architektúra/Backend.md "Nested aggregate PUT"): exercises/sets
+    not present in the body are soft-deleted, last-write-wins on the whole aggregate.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/WorkoutSession.yaml'
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/WorkoutSession.yaml'
+    '409':
+      description: Entity already deleted.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+    '400':
+      description: An exercise or set entry is missing a required field.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+delete:
+  operationId: deleteWorkoutSession
+  tags:
+    - workout-sessions
+  summary: Soft delete, idempotent. Cascades to soft-deleting every exercise and set on this session.
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/WorkoutSession.yaml'

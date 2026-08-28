@@ -83,6 +83,10 @@ paths:
     $ref: 'openapi/paths/exercises.yaml'
   /api/exercises/{id}:
     $ref: 'openapi/paths/exercises-item.yaml'
+  /api/workout-sessions:
+    $ref: 'openapi/paths/workout-sessions.yaml'
+  /api/workout-sessions/{id}:
+    $ref: 'openapi/paths/workout-sessions-item.yaml'
 components:
   securitySchemes:
     bearerAuth:
@@ -194,3 +198,11 @@ components:
       $ref: 'openapi/components/schemas/Exercise.yaml'
     ExerciseList:
       $ref: 'openapi/components/schemas/ExerciseList.yaml'
+    WorkoutSession:
+      $ref: 'openapi/components/schemas/WorkoutSession.yaml'
+    WorkoutSessionList:
+      $ref: 'openapi/components/schemas/WorkoutSessionList.yaml'
+    WorkoutExerciseEntry:
+      $ref: 'openapi/components/schemas/WorkoutExerciseEntry.yaml'
+    WorkoutSetEntry:
+      $ref: 'openapi/components/schemas/WorkoutSetEntry.yaml'

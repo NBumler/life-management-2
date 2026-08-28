@@ -1,0 +1,38 @@
+get:
+  operationId: listWorkoutSessions
+  tags:
+    - workout-sessions
+  summary: Every live workout session (deleted = false) owned by the caller, each with its live+tombstoned exercise/set rows.
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/WorkoutSessionList.yaml'
+post:
+  operationId: createWorkoutSession
+  tags:
+    - workout-sessions
+  summary: >-
+    Create a session with its exercises and sets in one request — idempotent upsert on the
+    client-supplied id (documentation/Architektúra/Backend-offline first.md §11 nested aggregate save).
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/WorkoutSession.yaml'
+  responses:
+    '200':
+      description: Created or, on retry with the same id, the existing tree.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/WorkoutSession.yaml'
+    '400':
+      description: An exercise or set entry is missing a required field.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'

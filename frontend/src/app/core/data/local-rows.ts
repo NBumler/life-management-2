@@ -19,6 +19,9 @@ import { ShoppingListItem } from '../../api/model/shoppingListItem';
 import { StoredFood } from '../../api/model/storedFood';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
+import { WorkoutExerciseEntry } from '../../api/model/workoutExerciseEntry';
+import { WorkoutSession } from '../../api/model/workoutSession';
+import { WorkoutSetEntry } from '../../api/model/workoutSetEntry';
 
 /**
  * Row <-> DTO mapping and SQL task builders for the two local tables this phase covers.
@@ -331,6 +334,375 @@ export function exerciseTombstoneTask(id: string, deletedAt: string | null, upda
     statement: `
       INSERT INTO exercise_catalog (id, name, category, kind, updated_at, deleted, deleted_at, _dirty, _local_only)
       VALUES (?, '', 'FULL_BODY', 'WEIGHTED_REPS', ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+// --- Edzésnapló: WorkoutSession → WorkoutExerciseEntry → WorkoutSetEntry (three-level nested aggregate, mirrors recipe/meal) ---
+
+export interface WorkoutSessionRow {
+  id: string;
+  session_date: string;
+  start_time: string | null;
+  end_time: string | null;
+  duration_minutes: number | null;
+  workout_type: string;
+  title: string | null;
+  notes: string | null;
+  location: string | null;
+  plan_id: string | null;
+  rounds_count: number | null;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+/** Omits `exercises` — a WorkoutSession row alone never carries them, see readWorkoutSession in SqliteStorageBackend. */
+export function workoutSessionRowToDto(row: WorkoutSessionRow): Omit<WorkoutSession, 'exercises'> {
+  return {
+    id: row.id,
+    date: row.session_date,
+    startTime: row.start_time,
+    endTime: row.end_time,
+    durationMinutes: row.duration_minutes,
+    workoutType: row.workout_type as WorkoutSession.WorkoutTypeEnum,
+    title: row.title,
+    notes: row.notes,
+    location: (row.location as WorkoutSession.LocationEnum | null) ?? null,
+    planId: row.plan_id,
+    roundsCount: row.rounds_count,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+type WorkoutSessionWriteInput = Pick<
+  WorkoutSession,
+  'id' | 'date' | 'startTime' | 'endTime' | 'durationMinutes' | 'workoutType' | 'title' | 'notes' | 'location' | 'planId' | 'roundsCount'
+>;
+
+export function workoutSessionLocalWriteTask(dto: WorkoutSessionWriteInput): SqlTask {
+  return {
+    statement: `
+      INSERT INTO workout_session (id, session_date, start_time, end_time, duration_minutes, workout_type, title, notes, location, plan_id, rounds_count, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET
+        session_date = excluded.session_date, start_time = excluded.start_time, end_time = excluded.end_time,
+        duration_minutes = excluded.duration_minutes, workout_type = excluded.workout_type, title = excluded.title,
+        notes = excluded.notes, location = excluded.location, plan_id = excluded.plan_id, rounds_count = excluded.rounds_count,
+        deleted = 0, deleted_at = NULL, _dirty = 1`,
+    values: [
+      dto.id,
+      dto.date,
+      dto.startTime ?? null,
+      dto.endTime ?? null,
+      dto.durationMinutes ?? null,
+      dto.workoutType,
+      dto.title ?? null,
+      dto.notes ?? null,
+      dto.location ?? null,
+      dto.planId ?? null,
+      dto.roundsCount ?? null,
+    ],
+  };
+}
+
+export function workoutSessionServerApplyTask(dto: Omit<WorkoutSession, 'exercises'>): SqlTask {
+  return {
+    statement: `
+      INSERT INTO workout_session (id, session_date, start_time, end_time, duration_minutes, workout_type, title, notes, location, plan_id, rounds_count, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        session_date = excluded.session_date, start_time = excluded.start_time, end_time = excluded.end_time,
+        duration_minutes = excluded.duration_minutes, workout_type = excluded.workout_type, title = excluded.title,
+        notes = excluded.notes, location = excluded.location, plan_id = excluded.plan_id, rounds_count = excluded.rounds_count,
+        created_at = excluded.created_at, updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at,
+        _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE workout_session._dirty = 0`,
+    values: [
+      dto.id,
+      dto.date,
+      dto.startTime ?? null,
+      dto.endTime ?? null,
+      dto.durationMinutes ?? null,
+      dto.workoutType,
+      dto.title ?? null,
+      dto.notes ?? null,
+      dto.location ?? null,
+      dto.planId ?? null,
+      dto.roundsCount ?? null,
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function workoutSessionTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO workout_session (id, session_date, workout_type, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '1970-01-01', 'GENERAL_WEIGHTS', ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+export interface WorkoutExerciseEntryRow {
+  id: string;
+  session_id: string;
+  exercise_id: string | null;
+  exercise_name: string;
+  exercise_category: string;
+  exercise_kind: string;
+  order_index: number;
+  superset_group: number | null;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+/** Omits `sets` — a WorkoutExerciseEntry row alone never carries them. */
+export function workoutExerciseEntryRowToDto(row: WorkoutExerciseEntryRow): Omit<WorkoutExerciseEntry, 'sets'> {
+  return {
+    id: row.id,
+    sessionId: row.session_id,
+    exerciseId: row.exercise_id,
+    exerciseName: row.exercise_name,
+    exerciseCategory: row.exercise_category as WorkoutExerciseEntry.ExerciseCategoryEnum,
+    exerciseKind: row.exercise_kind as WorkoutExerciseEntry.ExerciseKindEnum,
+    orderIndex: row.order_index,
+    supersetGroup: row.superset_group,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+type WorkoutExerciseEntryWriteInput = Pick<
+  WorkoutExerciseEntry,
+  'id' | 'sessionId' | 'exerciseId' | 'exerciseName' | 'exerciseCategory' | 'exerciseKind' | 'orderIndex' | 'supersetGroup'
+>;
+
+export function workoutExerciseEntryLocalWriteTask(dto: WorkoutExerciseEntryWriteInput): SqlTask {
+  return {
+    statement: `
+      INSERT INTO workout_exercise_entry (id, session_id, exercise_id, exercise_name, exercise_category, exercise_kind, order_index, superset_group, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET
+        exercise_id = excluded.exercise_id, exercise_name = excluded.exercise_name, exercise_category = excluded.exercise_category,
+        exercise_kind = excluded.exercise_kind, order_index = excluded.order_index, superset_group = excluded.superset_group,
+        deleted = 0, deleted_at = NULL, _dirty = 1`,
+    values: [
+      dto.id,
+      dto.sessionId,
+      dto.exerciseId ?? null,
+      dto.exerciseName,
+      dto.exerciseCategory,
+      dto.exerciseKind,
+      dto.orderIndex,
+      dto.supersetGroup ?? null,
+    ],
+  };
+}
+
+/** Local-only removal — an exercise entry dropped from a session during an edit (not a standalone outbox entry — see SqliteStorageBackend.saveWorkoutSession). */
+export function workoutExerciseEntryLocalRemoveTask(id: string): SqlTask {
+  return {
+    statement: `UPDATE workout_exercise_entry SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?`,
+    values: [new Date().toISOString(), id],
+  };
+}
+
+export function workoutExerciseEntryServerApplyTask(dto: Omit<WorkoutExerciseEntry, 'sets'>): SqlTask {
+  return {
+    statement: `
+      INSERT INTO workout_exercise_entry (id, session_id, exercise_id, exercise_name, exercise_category, exercise_kind, order_index, superset_group, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        session_id = excluded.session_id, exercise_id = excluded.exercise_id, exercise_name = excluded.exercise_name,
+        exercise_category = excluded.exercise_category, exercise_kind = excluded.exercise_kind, order_index = excluded.order_index,
+        superset_group = excluded.superset_group, created_at = excluded.created_at, updated_at = excluded.updated_at,
+        deleted = excluded.deleted, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE workout_exercise_entry._dirty = 0`,
+    values: [
+      dto.id,
+      dto.sessionId,
+      dto.exerciseId ?? null,
+      dto.exerciseName,
+      dto.exerciseCategory,
+      dto.exerciseKind,
+      dto.orderIndex,
+      dto.supersetGroup ?? null,
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function workoutExerciseEntryTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO workout_exercise_entry (id, session_id, exercise_name, exercise_category, exercise_kind, order_index, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '', '', 'FULL_BODY', 'WEIGHTED_REPS', 0, ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+export interface WorkoutSetEntryRow {
+  id: string;
+  exercise_entry_id: string;
+  set_number: number;
+  set_type: string;
+  reps: number | null;
+  weight_kg: number | null;
+  hold_time_seconds: number | null;
+  edge_size_mm: number | null;
+  distance_meters: number | null;
+  rest_time_seconds: number | null;
+  is_completed: number;
+  order_index: number;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+export function workoutSetEntryRowToDto(row: WorkoutSetEntryRow): WorkoutSetEntry {
+  return {
+    id: row.id,
+    exerciseEntryId: row.exercise_entry_id,
+    setNumber: row.set_number,
+    setType: row.set_type as WorkoutSetEntry.SetTypeEnum,
+    reps: row.reps,
+    weightKg: row.weight_kg,
+    holdTimeSeconds: row.hold_time_seconds,
+    edgeSizeMm: row.edge_size_mm,
+    distanceMeters: row.distance_meters,
+    restTimeSeconds: row.rest_time_seconds,
+    isCompleted: row.is_completed === 1,
+    orderIndex: row.order_index,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+type WorkoutSetEntryWriteInput = Pick<
+  WorkoutSetEntry,
+  | 'id'
+  | 'exerciseEntryId'
+  | 'setNumber'
+  | 'setType'
+  | 'reps'
+  | 'weightKg'
+  | 'holdTimeSeconds'
+  | 'edgeSizeMm'
+  | 'distanceMeters'
+  | 'restTimeSeconds'
+  | 'isCompleted'
+  | 'orderIndex'
+>;
+
+export function workoutSetEntryLocalWriteTask(dto: WorkoutSetEntryWriteInput): SqlTask {
+  return {
+    statement: `
+      INSERT INTO workout_set_entry (id, exercise_entry_id, set_number, set_type, reps, weight_kg, hold_time_seconds, edge_size_mm, distance_meters, rest_time_seconds, is_completed, order_index, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET
+        set_number = excluded.set_number, set_type = excluded.set_type, reps = excluded.reps, weight_kg = excluded.weight_kg,
+        hold_time_seconds = excluded.hold_time_seconds, edge_size_mm = excluded.edge_size_mm, distance_meters = excluded.distance_meters,
+        rest_time_seconds = excluded.rest_time_seconds, is_completed = excluded.is_completed, order_index = excluded.order_index,
+        deleted = 0, deleted_at = NULL, _dirty = 1`,
+    values: [
+      dto.id,
+      dto.exerciseEntryId,
+      dto.setNumber,
+      dto.setType,
+      dto.reps ?? null,
+      dto.weightKg ?? null,
+      dto.holdTimeSeconds ?? null,
+      dto.edgeSizeMm ?? null,
+      dto.distanceMeters ?? null,
+      dto.restTimeSeconds ?? null,
+      dto.isCompleted ? 1 : 0,
+      dto.orderIndex,
+    ],
+  };
+}
+
+/** Local-only removal — a set dropped from an exercise entry during an edit (not a standalone outbox entry). */
+export function workoutSetEntryLocalRemoveTask(id: string): SqlTask {
+  return {
+    statement: `UPDATE workout_set_entry SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?`,
+    values: [new Date().toISOString(), id],
+  };
+}
+
+export function workoutSetEntryServerApplyTask(dto: WorkoutSetEntry): SqlTask {
+  return {
+    statement: `
+      INSERT INTO workout_set_entry (id, exercise_entry_id, set_number, set_type, reps, weight_kg, hold_time_seconds, edge_size_mm, distance_meters, rest_time_seconds, is_completed, order_index, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        exercise_entry_id = excluded.exercise_entry_id, set_number = excluded.set_number, set_type = excluded.set_type,
+        reps = excluded.reps, weight_kg = excluded.weight_kg, hold_time_seconds = excluded.hold_time_seconds,
+        edge_size_mm = excluded.edge_size_mm, distance_meters = excluded.distance_meters, rest_time_seconds = excluded.rest_time_seconds,
+        is_completed = excluded.is_completed, order_index = excluded.order_index, created_at = excluded.created_at,
+        updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE workout_set_entry._dirty = 0`,
+    values: [
+      dto.id,
+      dto.exerciseEntryId,
+      dto.setNumber,
+      dto.setType,
+      dto.reps ?? null,
+      dto.weightKg ?? null,
+      dto.holdTimeSeconds ?? null,
+      dto.edgeSizeMm ?? null,
+      dto.distanceMeters ?? null,
+      dto.restTimeSeconds ?? null,
+      dto.isCompleted ? 1 : 0,
+      dto.orderIndex,
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function workoutSetEntryTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO workout_set_entry (id, exercise_entry_id, set_number, set_type, order_index, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '', 0, 'WORKING', 0, ?, 1, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
     values: [id, updatedAt, deletedAt],
   };

@@ -139,6 +139,11 @@ async function mealCurrentPayload(ctx: OutboxEntityFixContext): Promise<unknown>
   return ctx.storage.getMeal(ctx.targetEntityId);
 }
 
+/** documentation/Subfeatures/Edzésnapló.md: session + exercises + sets are always saved together, POST and PUT alike. */
+async function workoutSessionCurrentPayload(ctx: OutboxEntityFixContext): Promise<unknown> {
+  return ctx.storage.getWorkoutSession(ctx.targetEntityId);
+}
+
 /** documentation/Subfeatures/Bevásárlólista írás.md: list + items are always saved together, POST and PUT alike. */
 async function shoppingListCurrentPayload(ctx: OutboxEntityFixContext): Promise<unknown> {
   return ctx.storage.getShoppingList(ctx.targetEntityId);
@@ -283,6 +288,13 @@ export class OutboxEntityRegistryService {
       table: 'meal',
       currentPayload: mealCurrentPayload,
       // Nested aggregate (meal + items, one body) — excluded from Fix per spec, see buildFixWriteTask doc above.
+      buildFixWriteTask: null,
+      nameUniqueness: null,
+    },
+    WorkoutSession: {
+      table: 'workout_session',
+      currentPayload: workoutSessionCurrentPayload,
+      // Nested aggregate (session + exercises + sets, one body) — excluded from Fix per spec, see buildFixWriteTask doc above.
       buildFixWriteTask: null,
       nameUniqueness: null,
     },

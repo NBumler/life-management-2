@@ -7,7 +7,8 @@
     "CANCEL": "Mégse",
     "CONFIRM": "Megerősítés",
     "DELETE": "Törlés",
-    "CLOSE": "Bezárás"
+    "CLOSE": "Bezárás",
+    "REMOVE": "Eltávolítás"
   },
   "LOGIN": {
     "TITLE": "Bejelentkezés",
@@ -268,10 +269,28 @@
       "ALL_DAY": "Egész nap",
       "DAY_EMPTY": "Nincs tétel.",
       "MONTH_NAMES": [
-        "Január", "Február", "Március", "Április", "Május", "Június",
-        "Július", "Augusztus", "Szeptember", "Október", "November", "December"
+        "Január",
+        "Február",
+        "Március",
+        "Április",
+        "Május",
+        "Június",
+        "Július",
+        "Augusztus",
+        "Szeptember",
+        "Október",
+        "November",
+        "December"
       ],
-      "WEEKDAY_NAMES": ["H", "K", "Sze", "Cs", "P", "Szo", "V"]
+      "WEEKDAY_NAMES": [
+        "H",
+        "K",
+        "Sze",
+        "Cs",
+        "P",
+        "Szo",
+        "V"
+      ]
     }
   },
   "SHARED": {
@@ -505,7 +524,64 @@
       "CYCLING": "Bicikli"
     },
     "LOG": {
-      "EMPTY": "Még nincs edzés naplózva."
+      "EMPTY": "Még nincs edzés naplózva.",
+      "NEW_SESSION": "Új edzés",
+      "SAME_AS_LAST": "Ugyanaz, mint legutóbb",
+      "EXERCISES_SHORT": "gyakorlat"
+    },
+    "SESSION": {
+      "NEW_TITLE": "Új edzés",
+      "EDIT_TITLE": "Edzés szerkesztése",
+      "DELETE": "Edzés törlése",
+      "DELETE_CONFIRM_TITLE": "Edzés törlése",
+      "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd ezt az edzésnaplót?",
+      "GHOST": "Legutóbb —",
+      "ADD_EXERCISE": "Gyakorlat hozzáadása",
+      "ADD_SET": "+ Új szett",
+      "COPY_SET": "Előző másolása",
+      "MINUTES_SHORT": "perc",
+      "VOLUME_SHORT": "kg volumen",
+      "KCAL_SHORT": "kcal",
+      "KCAL_NO_WEIGHT": "adj meg testsúlyt a Profilban",
+      "FIELD_DATE": "Dátum",
+      "FIELD_TYPE": "Típus",
+      "FIELD_ROUNDS": "Körök száma",
+      "FIELD_TITLE": "Cím",
+      "FIELD_LOCATION": "Helyszín",
+      "LOCATION_NONE": "Nincs megadva",
+      "FIELD_START": "Kezdés",
+      "FIELD_END": "Befejezés",
+      "FIELD_DURATION": "Időtartam (perc)",
+      "FIELD_NOTES": "Megjegyzés",
+      "FIELD_SET_TYPE": "Szett típusa",
+      "FIELD_REPS": "Ism.",
+      "FIELD_WEIGHT": "Súly (kg)",
+      "FIELD_HOLD": "Tartás (mp)",
+      "FIELD_EDGE": "Léc (mm)",
+      "FIELD_DISTANCE": "Táv (m)",
+      "TYPE": {
+        "GENERAL_WEIGHTS": "Súlyzós edzés",
+        "HIIT_CIRCUIT": "HIIT / köredzés"
+      },
+      "LOCATION": {
+        "HOME_GYM": "Otthoni terem",
+        "COMMERCIAL_GYM": "Kondi terem",
+        "OUTDOOR_PARK": "Szabadtéri park"
+      },
+      "SET_TYPE": {
+        "WARMUP": "Bemelegítő",
+        "WORKING": "Munka",
+        "DROPSET": "Dropset",
+        "REST_PAUSE": "Rest-pause",
+        "FAILURE": "Kifáradásig"
+      }
+    },
+    "PICKER": {
+      "TITLE": "Gyakorlat választása",
+      "ADD": "Hozzáadás",
+      "ADHOC_TITLE": "Ad-hoc gyakorlat",
+      "ADHOC_HINT": "Írj be egy nevet, ha nincs a katalógusban. A napló a mentéskori nevet/kategóriát/típust rögzíti.",
+      "SAVE_TO_CATALOG": "Mentés a katalógusba"
     },
     "EXERCISES": {
       "TITLE": "Gyakorlatok",

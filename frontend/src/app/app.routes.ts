@@ -179,6 +179,8 @@ export const routes: Routes = [
             path: 'log',
             children: [
               { path: '', loadComponent: () => import('./pages/workout/log/workout-log-list.page').then((m) => m.WorkoutLogListPage) },
+              { path: 'new', loadComponent: () => import('./pages/workout/log/workout-session-edit.page').then((m) => m.WorkoutSessionEditPage) },
+              { path: ':id', loadComponent: () => import('./pages/workout/log/workout-session-edit.page').then((m) => m.WorkoutSessionEditPage) },
             ],
           },
           {

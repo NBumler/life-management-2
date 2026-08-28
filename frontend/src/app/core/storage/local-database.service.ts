@@ -491,7 +491,82 @@ const SCHEMA_V15_STATEMENTS: string[] = [
   `CREATE INDEX IF NOT EXISTS idx_exercise_catalog_live_name ON exercise_catalog (name COLLATE NOCASE) WHERE deleted = 0`,
 ];
 
-const SCHEMA_VERSION = 15;
+/**
+ * documentation/Subfeatures/Edzésnapló.md — per-user workout log, three-level nested aggregate
+ * (session → exercise entry → set entry), mirrors the meal/meal_item shape (child tables carry no
+ * user_id — ownership flows through the parent). `session_date` is spelled out (not `date`) to match
+ * the backend column. Snapshot columns (`exercise_name`/`exercise_category`/`exercise_kind`) let a
+ * later rename/delete of the master exercise never rewrite past entries.
+ */
+const SCHEMA_V16_STATEMENTS: string[] = [
+  `CREATE TABLE IF NOT EXISTS workout_session (
+    id TEXT PRIMARY KEY,
+    session_date TEXT NOT NULL,
+    start_time TEXT,
+    end_time TEXT,
+    duration_minutes INTEGER,
+    workout_type TEXT NOT NULL DEFAULT 'GENERAL_WEIGHTS',
+    title TEXT,
+    notes TEXT,
+    location TEXT,
+    plan_id TEXT,
+    rounds_count INTEGER,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_workout_session_session_date ON workout_session (session_date DESC)`,
+  `CREATE TABLE IF NOT EXISTS workout_exercise_entry (
+    id TEXT PRIMARY KEY,
+    session_id TEXT NOT NULL,
+    exercise_id TEXT,
+    exercise_name TEXT NOT NULL,
+    exercise_category TEXT NOT NULL,
+    exercise_kind TEXT NOT NULL,
+    order_index INTEGER NOT NULL,
+    superset_group INTEGER,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_workout_exercise_entry_session_id ON workout_exercise_entry (session_id, order_index)`,
+  `CREATE INDEX IF NOT EXISTS idx_workout_exercise_entry_exercise_id ON workout_exercise_entry (exercise_id)`,
+  `CREATE TABLE IF NOT EXISTS workout_set_entry (
+    id TEXT PRIMARY KEY,
+    exercise_entry_id TEXT NOT NULL,
+    set_number INTEGER NOT NULL,
+    set_type TEXT NOT NULL DEFAULT 'WORKING',
+    reps INTEGER,
+    weight_kg REAL,
+    hold_time_seconds INTEGER,
+    edge_size_mm INTEGER,
+    distance_meters INTEGER,
+    rest_time_seconds INTEGER,
+    is_completed INTEGER NOT NULL DEFAULT 1,
+    order_index INTEGER NOT NULL,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_workout_set_entry_exercise_entry_id ON workout_set_entry (exercise_entry_id, order_index)`,
+];
+
+const SCHEMA_VERSION = 16;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -509,7 +584,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 12, statements: SCHEMA_V12_STATEMENTS },
   { toVersion: 13, statements: SCHEMA_V13_STATEMENTS },
   { toVersion: 14, statements: SCHEMA_V14_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V15_STATEMENTS },
+  { toVersion: 15, statements: SCHEMA_V15_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V16_STATEMENTS },
 ];
 
 export interface SqlTask {

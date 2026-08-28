@@ -55,4 +55,7 @@ export * from './storedFoods.serviceInterface';
 export * from './sync.service';
 import { SyncService } from './sync.service';
 export * from './sync.serviceInterface';
-export const APIS = [AdminService, AuthService, EventsService, ExercisesService, FoodsService, GearItemsService, HealthService, HouseholdRoomsService, HouseholdTasksService, LifePlansService, MealsService, PackingSessionItemsService, PackingSessionsService, PackingTemplatesService, ProfileService, RecipesService, ShoppingListsService, StoredFoodsService, SyncService];
+export * from './workoutSessions.service';
+import { WorkoutSessionsService } from './workoutSessions.service';
+export * from './workoutSessions.serviceInterface';
+export const APIS = [AdminService, AuthService, EventsService, ExercisesService, FoodsService, GearItemsService, HealthService, HouseholdRoomsService, HouseholdTasksService, LifePlansService, MealsService, PackingSessionItemsService, PackingSessionsService, PackingTemplatesService, ProfileService, RecipesService, ShoppingListsService, StoredFoodsService, SyncService, WorkoutSessionsService];

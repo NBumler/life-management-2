@@ -1,0 +1,88 @@
+type: object
+description: >-
+  documentation/Subfeatures/Edzésnapló.md — one logged strength / HIIT / mászó-kiegészítő session
+  ("mit csináltál ténylegesen?"). documentation/Architektúra/Backend.md "Nested aggregate PUT":
+  WorkoutSession + its WorkoutExerciseEntry rows + their WorkoutSetEntry rows saved/read as one tree,
+  on every endpoint including the plain list — `exercises` (and each entry's `sets`) always lists
+  every row, live or soft-deleted (the client filters `deleted = false` itself when rendering or
+  summing). No kcal / body-weight field: `activityExtraKcal` is a pure client calculation
+  (documentation/Features/Tápérték kalkulátor.md).
+required:
+  - id
+  - date
+  - workoutType
+  - deleted
+  - exercises
+properties:
+  id:
+    type: string
+    format: uuid
+  date:
+    type: string
+    format: date
+    description: Calendar date in the client's TZ — the aznapi activityExtraKcal bucket.
+  startTime:
+    type: string
+    pattern: '^([01]\d|2[0-3]):[0-5]\d$'
+    nullable: true
+    description: 'HH:mm, 24h. Optional; independently of endTime.'
+  endTime:
+    type: string
+    pattern: '^([01]\d|2[0-3]):[0-5]\d$'
+    nullable: true
+    description: 'HH:mm, 24h. Must be strictly after startTime when both are present.'
+  durationMinutes:
+    type: integer
+    minimum: 1
+    nullable: true
+    description: >-
+      Manually overridable. Default endTime − startTime, or a stopwatch. Missing → the client
+      estimates (sets × 3 min) for the kcal preview; the server just stores what is sent.
+  workoutType:
+    type: string
+    enum:
+      - GENERAL_WEIGHTS
+      - HIIT_CIRCUIT
+    description: MET source — GENERAL_WEIGHTS 5.0, HIIT_CIRCUIT 8.0. Editable after save.
+  title:
+    type: string
+    nullable: true
+  notes:
+    type: string
+    nullable: true
+  location:
+    type: string
+    enum:
+      - HOME_GYM
+      - COMMERCIAL_GYM
+      - OUTDOOR_PARK
+    nullable: true
+  planId:
+    type: string
+    format: uuid
+    nullable: true
+    description: '→ [[Heti terv]] WorkoutPlan.id (static template). Null = ad-hoc.'
+  roundsCount:
+    type: integer
+    minimum: 1
+    nullable: true
+    description: HIIT_CIRCUIT rounds count.
+  exercises:
+    type: array
+    items:
+      $ref: 'WorkoutExerciseEntry.yaml'
+  deleted:
+    type: boolean
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

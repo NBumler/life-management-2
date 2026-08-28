@@ -1,0 +1,78 @@
+type: object
+description: >-
+  documentation/Subfeatures/Edzésnapló.md "Entitás — WorkoutExerciseEntry" — one exercise block on a
+  WorkoutSession. `exerciseName` / `exerciseCategory` / `exerciseKind` are a SNAPSHOT taken at save
+  time; a later rename or soft delete of the master exercise never rewrites them, so `exerciseId` is
+  a soft link only (null for ad-hoc). Only ever saved nested inside a WorkoutSession
+  (documentation/Architektúra/Backend.md "Nested aggregate PUT"), but its own sync row. The enum
+  values match Exercise.yaml's category/kind exactly (kept inline here rather than a shared $ref to
+  avoid retyping the already-shipped Exercise model).
+required:
+  - id
+  - sessionId
+  - exerciseName
+  - exerciseCategory
+  - exerciseKind
+  - orderIndex
+  - deleted
+  - sets
+properties:
+  id:
+    type: string
+    format: uuid
+  sessionId:
+    type: string
+    format: uuid
+  exerciseId:
+    type: string
+    format: uuid
+    nullable: true
+    description: '→ Gyakorlat master (exercise_catalog). Null for ad-hoc; a soft link only.'
+  exerciseName:
+    type: string
+    minLength: 1
+  exerciseCategory:
+    type: string
+    enum:
+      - CHEST
+      - BACK
+      - LEGS
+      - SHOULDERS
+      - ARMS
+      - CORE
+      - FOREARM_FINGERS
+      - FULL_BODY
+  exerciseKind:
+    type: string
+    enum:
+      - WEIGHTED_REPS
+      - BODYWEIGHT_REPS
+      - ISOMETRIC_TIME
+      - HANGBOARD_PINCH
+      - CARDIO_TIME_DIST
+    description: Snapshot of the master ExerciseKind — the set UI fields follow this.
+  orderIndex:
+    type: integer
+  supersetGroup:
+    type: integer
+    nullable: true
+    description: Same value = visual superset / round group (no per-set superset UI).
+  sets:
+    type: array
+    items:
+      $ref: 'WorkoutSetEntry.yaml'
+  deleted:
+    type: boolean
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

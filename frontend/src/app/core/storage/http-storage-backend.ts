@@ -16,6 +16,7 @@ import { ProfileService } from '../../api/api/profile.service';
 import { RecipesService } from '../../api/api/recipes.service';
 import { ShoppingListsService } from '../../api/api/shoppingLists.service';
 import { StoredFoodsService } from '../../api/api/storedFoods.service';
+import { WorkoutSessionsService } from '../../api/api/workoutSessions.service';
 import { CalendarEvent } from '../../api/model/calendarEvent';
 import { Exercise } from '../../api/model/exercise';
 import { Food } from '../../api/model/food';
@@ -34,6 +35,7 @@ import { ShoppingList } from '../../api/model/shoppingList';
 import { StoredFood } from '../../api/model/storedFood';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
+import { WorkoutSession } from '../../api/model/workoutSession';
 import { buildSeedExercises } from '../data/exercise-seed';
 import { AuthSessionService } from '../session/auth-session.service';
 import { uuidV4 } from '../sync/uuid';
@@ -47,6 +49,7 @@ import {
   ShoppingListCompleteResult,
   ShoppingListDraft,
   StorageBackend,
+  WorkoutSessionDraft,
   buildShoppingListCompleteRequestPayload,
   expandMealItemSaveItem,
   expandShoppingListItemSaveItem,
@@ -70,6 +73,7 @@ export class HttpStorageBackend implements StorageBackend {
   private readonly recipesApi = inject(RecipesService);
   private readonly mealsApi = inject(MealsService);
   private readonly shoppingListsApi = inject(ShoppingListsService);
+  private readonly workoutSessionsApi = inject(WorkoutSessionsService);
   private readonly authSession = inject(AuthSessionService);
 
   async getProfile(): Promise<UserProfile | null> {
@@ -342,6 +346,63 @@ export class HttpStorageBackend implements StorageBackend {
 
   deleteRecipe(id: string): Promise<Recipe> {
     return firstValueFrom(this.recipesApi.deleteRecipe(id));
+  }
+
+  listWorkoutSessions(): Promise<WorkoutSession[]> {
+    return firstValueFrom(this.workoutSessionsApi.listWorkoutSessions());
+  }
+
+  getWorkoutSession(id: string): Promise<WorkoutSession> {
+    return firstValueFrom(this.workoutSessionsApi.getWorkoutSession(id));
+  }
+
+  /** POST with an existing id is an idempotent upsert server-side, so this covers both create and update. */
+  saveWorkoutSession(draft: WorkoutSessionDraft): Promise<WorkoutSession> {
+    const dto: WorkoutSession = {
+      id: draft.id,
+      date: draft.date,
+      startTime: draft.startTime,
+      endTime: draft.endTime,
+      durationMinutes: draft.durationMinutes,
+      workoutType: draft.workoutType,
+      title: draft.title,
+      notes: draft.notes,
+      location: draft.location,
+      planId: draft.planId,
+      roundsCount: draft.roundsCount,
+      deleted: false,
+      exercises: draft.exercises.map((exercise) => ({
+        id: exercise.id,
+        sessionId: draft.id,
+        exerciseId: exercise.exerciseId,
+        exerciseName: exercise.exerciseName,
+        exerciseCategory: exercise.exerciseCategory,
+        exerciseKind: exercise.exerciseKind,
+        orderIndex: exercise.orderIndex,
+        supersetGroup: exercise.supersetGroup,
+        deleted: false,
+        sets: exercise.sets.map((set) => ({
+          id: set.id,
+          exerciseEntryId: exercise.id,
+          setNumber: set.setNumber,
+          setType: set.setType,
+          reps: set.reps,
+          weightKg: set.weightKg,
+          holdTimeSeconds: set.holdTimeSeconds,
+          edgeSizeMm: set.edgeSizeMm,
+          distanceMeters: set.distanceMeters,
+          restTimeSeconds: set.restTimeSeconds,
+          isCompleted: set.isCompleted,
+          orderIndex: set.orderIndex,
+          deleted: false,
+        })),
+      })),
+    };
+    return firstValueFrom(this.workoutSessionsApi.createWorkoutSession(dto));
+  }
+
+  deleteWorkoutSession(id: string): Promise<WorkoutSession> {
+    return firstValueFrom(this.workoutSessionsApi.deleteWorkoutSession(id));
   }
 
   listMeals(): Promise<Meal[]> {

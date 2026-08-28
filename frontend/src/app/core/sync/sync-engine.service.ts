@@ -22,6 +22,7 @@ import { RecipesService } from '../../api/api/recipes.service';
 import { ShoppingListsService } from '../../api/api/shoppingLists.service';
 import { StoredFoodsService } from '../../api/api/storedFoods.service';
 import { SyncService } from '../../api/api/sync.service';
+import { WorkoutSessionsService } from '../../api/api/workoutSessions.service';
 import { ApiError } from '../../api/model/apiError';
 import { CalendarEvent } from '../../api/model/calendarEvent';
 import { Exercise } from '../../api/model/exercise';
@@ -47,6 +48,9 @@ import { StoredFood } from '../../api/model/storedFood';
 import { SyncChangeItem } from '../../api/model/syncChangeItem';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
+import { WorkoutExerciseEntry } from '../../api/model/workoutExerciseEntry';
+import { WorkoutSession } from '../../api/model/workoutSession';
+import { WorkoutSetEntry } from '../../api/model/workoutSetEntry';
 import {
   calendarEventServerApplyTask,
   calendarEventTombstoneTask,
@@ -88,6 +92,12 @@ import {
   storedFoodTombstoneTask,
   weightHistoryServerApplyTask,
   weightHistoryTombstoneTask,
+  workoutExerciseEntryServerApplyTask,
+  workoutExerciseEntryTombstoneTask,
+  workoutSessionServerApplyTask,
+  workoutSessionTombstoneTask,
+  workoutSetEntryServerApplyTask,
+  workoutSetEntryTombstoneTask,
 } from '../data/local-rows';
 import { AuthSessionService } from '../session/auth-session.service';
 import { LocalDatabaseService, SqlTask } from '../storage/local-database.service';
@@ -127,6 +137,7 @@ export class SyncEngineService {
   private readonly recipesApi = inject(RecipesService);
   private readonly mealsApi = inject(MealsService);
   private readonly shoppingListsApi = inject(ShoppingListsService);
+  private readonly workoutSessionsApi = inject(WorkoutSessionsService);
   private readonly syncApi = inject(SyncService);
   private readonly authSession = inject(AuthSessionService);
   private readonly offlineQueue = inject(OfflineQueueService);
@@ -383,6 +394,16 @@ export class SyncEngineService {
         // same as above
       }
     }
+
+    const staleWorkoutSessions = await this.db.query<{ id: string }>('SELECT id FROM workout_session WHERE _needs_refetch = 1');
+    for (const row of staleWorkoutSessions) {
+      try {
+        const dto = await firstValueFrom(this.workoutSessionsApi.getWorkoutSession(row.id));
+        await this.db.executeTransaction(this.workoutSessionApplyTasks(dto));
+      } catch {
+        // same as above
+      }
+    }
   }
 
   private async probeBackend(): Promise<boolean> {
@@ -557,6 +578,9 @@ export class SyncEngineService {
     if (item.entityType === 'ShoppingList') {
       return this.shoppingListApplyTasks(body as ShoppingList);
     }
+    if (item.entityType === 'WorkoutSession') {
+      return this.workoutSessionApplyTasks(body as WorkoutSession);
+    }
     if (item.entityType === 'ShoppingListComplete') {
       return this.shoppingListCompleteApplyTasks(item, body as ShoppingListCompleteResponse);
     }
@@ -620,6 +644,24 @@ export class SyncEngineService {
    */
   private shoppingListApplyTasks(dto: ShoppingList): SqlTask[] {
     return [shoppingListServerApplyTask(dto), ...dto.items.map((item: ShoppingListItem) => shoppingListItemServerApplyTask(item))];
+  }
+
+  /**
+   * documentation/Architektúra/Backend.md "Nested aggregate PUT": the response lists every exercise
+   * entry and set row (live or tombstoned — WorkoutSession.yaml), applied as authoritative so each
+   * one's local `_dirty`/`_local_only` flags clear too — the child rows never get their own outbox
+   * entry, so nothing else would ever clear them (§8's `_dirty=1` apply rule otherwise keeps the
+   * pending value forever). The mandatory post-drain pull (§6 point 9) still independently confirms.
+   */
+  private workoutSessionApplyTasks(dto: WorkoutSession): SqlTask[] {
+    const tasks: SqlTask[] = [workoutSessionServerApplyTask(dto)];
+    for (const exercise of dto.exercises as WorkoutExerciseEntry[]) {
+      tasks.push(workoutExerciseEntryServerApplyTask(exercise));
+      for (const set of exercise.sets as WorkoutSetEntry[]) {
+        tasks.push(workoutSetEntryServerApplyTask(set));
+      }
+    }
+    return tasks;
   }
 
   /**
@@ -744,6 +786,18 @@ export class SyncEngineService {
       await this.db.executeTransaction([
         shoppingListTombstoneTask(item.targetEntityId, null, now),
         ...itemRows.map((row) => shoppingListItemTombstoneTask(row.id, null, now)),
+      ]);
+    } else if (item.entityType === 'WorkoutSession') {
+      // documentation/Subfeatures/Edzésnapló.md: session delete cascades to its own exercise entries and sets locally too.
+      const exerciseRows = await this.db.query<{ id: string }>('SELECT id FROM workout_exercise_entry WHERE session_id = ?', [item.targetEntityId]);
+      const setRows = await this.db.query<{ id: string }>(
+        'SELECT s.id FROM workout_set_entry s JOIN workout_exercise_entry e ON s.exercise_entry_id = e.id WHERE e.session_id = ?',
+        [item.targetEntityId],
+      );
+      await this.db.executeTransaction([
+        workoutSessionTombstoneTask(item.targetEntityId, null, now),
+        ...exerciseRows.map((row) => workoutExerciseEntryTombstoneTask(row.id, null, now)),
+        ...setRows.map((row) => workoutSetEntryTombstoneTask(row.id, null, now)),
       ]);
     } else if (item.entityType === 'ShoppingListComplete') {
       // documentation/Subfeatures/Bevásárlás teljesítve.md: 409 ENTITY_DELETED here means the list was
@@ -997,6 +1051,35 @@ export class SyncEngineService {
         return [shoppingListItemServerApplyTask(change.data as ShoppingListItem)];
       }
       return [shoppingListItemTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
+    }
+    if (change.entityType === 'WorkoutSession') {
+      if (!change.deleted) {
+        return [workoutSessionServerApplyTask(change.data as WorkoutSession)];
+      }
+      // documentation/Subfeatures/Edzésnapló.md: session delete cascades to this device's own exercise entries and sets too.
+      const exerciseRows = await this.db.query<{ id: string }>('SELECT id FROM workout_exercise_entry WHERE session_id = ?', [change.id]);
+      const setRows = await this.db.query<{ id: string }>(
+        'SELECT s.id FROM workout_set_entry s JOIN workout_exercise_entry e ON s.exercise_entry_id = e.id WHERE e.session_id = ?',
+        [change.id],
+      );
+      return [
+        workoutSessionTombstoneTask(change.id, null, change.updatedAt),
+        discardPendingWritesTask(change.id),
+        ...exerciseRows.map((row) => workoutExerciseEntryTombstoneTask(row.id, null, change.updatedAt)),
+        ...setRows.map((row) => workoutSetEntryTombstoneTask(row.id, null, change.updatedAt)),
+      ];
+    }
+    if (change.entityType === 'WorkoutExerciseEntry') {
+      if (!change.deleted) {
+        return [workoutExerciseEntryServerApplyTask(change.data as WorkoutExerciseEntry)];
+      }
+      return [workoutExerciseEntryTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
+    }
+    if (change.entityType === 'WorkoutSetEntry') {
+      if (!change.deleted) {
+        return [workoutSetEntryServerApplyTask(change.data as WorkoutSetEntry)];
+      }
+      return [workoutSetEntryTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
     }
     return [];
   }

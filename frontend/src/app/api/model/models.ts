@@ -34,3 +34,6 @@ export * from './syncChangeItem';
 export * from './syncChangesResponse';
 export * from './userProfile';
 export * from './weightHistoryEntry';
+export * from './workoutExerciseEntry';
+export * from './workoutSession';
+export * from './workoutSetEntry';

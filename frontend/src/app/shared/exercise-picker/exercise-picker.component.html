@@ -1,0 +1,99 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>{{ 'WORKOUT.PICKER.TITLE' | translate }}</ion-title>
+    <ion-buttons slot="start">
+      <ion-button (click)="cancel()">{{ 'COMMON.CANCEL' | translate }}</ion-button>
+    </ion-buttons>
+    <ion-buttons slot="end">
+      <ion-button [strong]="true" [disabled]="!canConfirm()" (click)="confirm()">{{ 'WORKOUT.PICKER.ADD' | translate }}</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-searchbar
+      [value]="query()"
+      (ionInput)="query.set($any($event.target).value ?? '')"
+      [placeholder]="'WORKOUT.EXERCISES.SEARCH_PLACEHOLDER' | translate"
+    ></ion-searchbar>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="chip-row">
+    <ion-chip [outline]="!favoritesOnly()" [color]="favoritesOnly() ? 'primary' : undefined" (click)="toggleFavoritesOnly()">
+      {{ 'WORKOUT.EXERCISES.FAVORITES_FILTER' | translate }}
+    </ion-chip>
+    @for (category of categories; track category) {
+      <ion-chip
+        [outline]="categoryFilter() !== category"
+        [color]="categoryFilter() === category ? 'primary' : undefined"
+        (click)="toggleCategory(category)"
+      >
+        {{ categoryLabelKey(category) | translate }}
+      </ion-chip>
+    }
+  </div>
+
+  <ion-list>
+    @for (exercise of filtered(); track exercise.id) {
+      <ion-item button (click)="togglePick(exercise.id)">
+        <ion-checkbox slot="start" [checked]="isPicked(exercise.id)" (click)="$event.preventDefault()"></ion-checkbox>
+        <ion-label>
+          <h2>{{ exercise.name }}</h2>
+          <p>{{ categoryLabelKey(exercise.category) | translate }} · {{ ('WORKOUT.EXERCISES.KIND.' + exercise.kind) | translate }}</p>
+        </ion-label>
+      </ion-item>
+    }
+    @if (filtered().length === 0) {
+      <ion-item>
+        <ion-label color="medium">{{ 'WORKOUT.EXERCISES.NO_RESULTS' | translate }}</ion-label>
+      </ion-item>
+    }
+  </ion-list>
+
+  <ion-list>
+    <ion-item lines="none">
+      <ion-label class="section-label">{{ 'WORKOUT.PICKER.ADHOC_TITLE' | translate }}</ion-label>
+    </ion-item>
+    <ion-item>
+      <ion-input
+        label-placement="stacked"
+        [label]="'WORKOUT.EXERCISES.FIELD_NAME' | translate"
+        [placeholder]="'WORKOUT.EXERCISES.FIELD_NAME_PLACEHOLDER' | translate"
+        [value]="adhocName()"
+        (ionInput)="adhocName.set($any($event.target).value ?? '')"
+      ></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-select
+        label-placement="stacked"
+        [label]="'WORKOUT.EXERCISES.FIELD_CATEGORY' | translate"
+        [value]="adhocCategory()"
+        (ionChange)="adhocCategory.set($event.detail.value)"
+      >
+        @for (category of categories; track category) {
+          <ion-select-option [value]="category">{{ categoryLabelKey(category) | translate }}</ion-select-option>
+        }
+      </ion-select>
+    </ion-item>
+    <ion-item>
+      <ion-select
+        label-placement="stacked"
+        [label]="'WORKOUT.EXERCISES.FIELD_KIND' | translate"
+        [value]="adhocKind()"
+        (ionChange)="adhocKind.set($event.detail.value)"
+      >
+        @for (kind of kinds; track kind) {
+          <ion-select-option [value]="kind">{{ kindLabelKey(kind) | translate }}</ion-select-option>
+        }
+      </ion-select>
+    </ion-item>
+    <ion-item>
+      <ion-checkbox [checked]="adhocSaveToCatalog()" (ionChange)="adhocSaveToCatalog.set($event.detail.checked)">
+        {{ 'WORKOUT.PICKER.SAVE_TO_CATALOG' | translate }}
+      </ion-checkbox>
+    </ion-item>
+    <ion-item lines="none">
+      <ion-note>{{ 'WORKOUT.PICKER.ADHOC_HINT' | translate }}</ion-note>
+    </ion-item>
+  </ion-list>
+</ion-content>

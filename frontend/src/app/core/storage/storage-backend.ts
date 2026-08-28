@@ -21,6 +21,9 @@ import { ShoppingListItem } from '../../api/model/shoppingListItem';
 import { StoredFood } from '../../api/model/storedFood';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
+import { WorkoutExerciseEntry } from '../../api/model/workoutExerciseEntry';
+import { WorkoutSession } from '../../api/model/workoutSession';
+import { WorkoutSetEntry } from '../../api/model/workoutSetEntry';
 
 /** documentation/Subfeatures/Sablonok.md: the desired live item list for a template save — id is client-generated for a new item, reused for a kept one. */
 export interface PackingTemplateSaveItem {
@@ -69,6 +72,51 @@ export interface RecipeDraft {
   name: string;
   note: string | null;
   ingredients: RecipeIngredientSaveItem[];
+}
+
+/**
+ * documentation/Subfeatures/Edzésnapló.md — the desired live tree for a workout session save. Ids
+ * are client-generated for a new row, reused for a kept one, at all three levels. `exercise*` on an
+ * entry is a snapshot (see WorkoutExerciseEntry.yaml); `exerciseId` is a soft link, null for ad-hoc.
+ */
+export interface WorkoutSetSaveItem {
+  id: string;
+  setNumber: number;
+  setType: WorkoutSetEntry.SetTypeEnum;
+  reps: number | null;
+  weightKg: number | null;
+  holdTimeSeconds: number | null;
+  edgeSizeMm: number | null;
+  distanceMeters: number | null;
+  restTimeSeconds: number | null;
+  isCompleted: boolean;
+  orderIndex: number;
+}
+
+export interface WorkoutExerciseSaveItem {
+  id: string;
+  exerciseId: string | null;
+  exerciseName: string;
+  exerciseCategory: WorkoutExerciseEntry.ExerciseCategoryEnum;
+  exerciseKind: WorkoutExerciseEntry.ExerciseKindEnum;
+  orderIndex: number;
+  supersetGroup: number | null;
+  sets: WorkoutSetSaveItem[];
+}
+
+export interface WorkoutSessionDraft {
+  id: string;
+  date: string;
+  startTime: string | null;
+  endTime: string | null;
+  durationMinutes: number | null;
+  workoutType: WorkoutSession.WorkoutTypeEnum;
+  title: string | null;
+  notes: string | null;
+  location: WorkoutSession.LocationEnum | null;
+  planId: string | null;
+  roundsCount: number | null;
+  exercises: WorkoutExerciseSaveItem[];
 }
 
 /**
@@ -351,6 +399,14 @@ export interface StorageBackend {
    * catalog is non-empty. Each backend resolves the current user id itself.
    */
   seedExercises(): Promise<void>;
+
+  /** documentation/Subfeatures/Edzésnapló.md: per-user workout log. Every row (incl. list entries) embeds its full live+tombstoned exercise/set tree. */
+  listWorkoutSessions(): Promise<WorkoutSession[]>;
+  getWorkoutSession(id: string): Promise<WorkoutSession>;
+  /** documentation/Architektúra/Backend.md "Nested aggregate PUT": session + exercises + sets saved as one outbox entry. */
+  saveWorkoutSession(draft: WorkoutSessionDraft): Promise<WorkoutSession>;
+  /** documentation/Subfeatures/Edzésnapló.md "Törlés": cascades to every live exercise entry and set on this session. */
+  deleteWorkoutSession(id: string): Promise<WorkoutSession>;
 
   listHouseholdRooms(): Promise<HouseholdRoom[]>;
   upsertHouseholdRoom(room: HouseholdRoom): Promise<HouseholdRoom>;

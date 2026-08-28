@@ -7,7 +7,8 @@
     "CANCEL": "Cancel",
     "CONFIRM": "Confirm",
     "DELETE": "Delete",
-    "CLOSE": "Close"
+    "CLOSE": "Close",
+    "REMOVE": "Remove"
   },
   "LOGIN": {
     "TITLE": "Log in",
@@ -268,10 +269,28 @@
       "ALL_DAY": "All day",
       "DAY_EMPTY": "No items.",
       "MONTH_NAMES": [
-        "January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December"
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December"
       ],
-      "WEEKDAY_NAMES": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+      "WEEKDAY_NAMES": [
+        "Mon",
+        "Tue",
+        "Wed",
+        "Thu",
+        "Fri",
+        "Sat",
+        "Sun"
+      ]
     }
   },
   "SHARED": {
@@ -505,7 +524,10 @@
       "CYCLING": "Cycling"
     },
     "LOG": {
-      "EMPTY": "No workouts logged yet."
+      "EMPTY": "No workouts logged yet.",
+      "NEW_SESSION": "New workout",
+      "SAME_AS_LAST": "Same as last time",
+      "EXERCISES_SHORT": "exercises"
     },
     "EXERCISES": {
       "TITLE": "Exercises",
@@ -553,6 +575,60 @@
         "HANGBOARD_PINCH": "Per set: edge size (mm) + hold time (s) (+ optional weight).",
         "CARDIO_TIME_DIST": "Per set: time (s) + distance (m)."
       }
+    },
+    "SESSION": {
+      "NEW_TITLE": "New workout",
+      "EDIT_TITLE": "Edit workout",
+      "DELETE": "Delete workout",
+      "DELETE_CONFIRM_TITLE": "Delete workout",
+      "DELETE_CONFIRM_MESSAGE": "Delete this workout log entry?",
+      "GHOST": "Last time —",
+      "ADD_EXERCISE": "Add exercise",
+      "ADD_SET": "+ Add set",
+      "COPY_SET": "Copy previous",
+      "MINUTES_SHORT": "min",
+      "VOLUME_SHORT": "kg volume",
+      "KCAL_SHORT": "kcal",
+      "KCAL_NO_WEIGHT": "set a body weight in Profile",
+      "FIELD_DATE": "Date",
+      "FIELD_TYPE": "Type",
+      "FIELD_ROUNDS": "Rounds",
+      "FIELD_TITLE": "Title",
+      "FIELD_LOCATION": "Location",
+      "LOCATION_NONE": "Not set",
+      "FIELD_START": "Start",
+      "FIELD_END": "End",
+      "FIELD_DURATION": "Duration (min)",
+      "FIELD_NOTES": "Notes",
+      "FIELD_SET_TYPE": "Set type",
+      "FIELD_REPS": "Reps",
+      "FIELD_WEIGHT": "Weight (kg)",
+      "FIELD_HOLD": "Hold (s)",
+      "FIELD_EDGE": "Edge (mm)",
+      "FIELD_DISTANCE": "Distance (m)",
+      "TYPE": {
+        "GENERAL_WEIGHTS": "General weights",
+        "HIIT_CIRCUIT": "HIIT / circuit"
+      },
+      "LOCATION": {
+        "HOME_GYM": "Home gym",
+        "COMMERCIAL_GYM": "Commercial gym",
+        "OUTDOOR_PARK": "Outdoor park"
+      },
+      "SET_TYPE": {
+        "WARMUP": "Warm-up",
+        "WORKING": "Working",
+        "DROPSET": "Drop set",
+        "REST_PAUSE": "Rest-pause",
+        "FAILURE": "To failure"
+      }
+    },
+    "PICKER": {
+      "TITLE": "Pick exercise",
+      "ADD": "Add",
+      "ADHOC_TITLE": "Ad-hoc exercise",
+      "ADHOC_HINT": "Type a name if it is not in the catalog. The log snapshots the name/category/kind at save time.",
+      "SAVE_TO_CATALOG": "Save to catalog"
     }
   }
 }

@@ -18,6 +18,7 @@ import { ShoppingList } from '../../api/model/shoppingList';
 import { StoredFood } from '../../api/model/storedFood';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
+import { WorkoutSession } from '../../api/model/workoutSession';
 import { buildSeedExercises } from '../data/exercise-seed';
 import {
   CalendarEventRow,
@@ -88,6 +89,17 @@ import {
   storedFoodRowToDto,
   weightHistoryLocalWriteTask,
   weightHistoryRowToDto,
+  WorkoutExerciseEntryRow,
+  WorkoutSessionRow,
+  WorkoutSetEntryRow,
+  workoutExerciseEntryLocalRemoveTask,
+  workoutExerciseEntryLocalWriteTask,
+  workoutExerciseEntryRowToDto,
+  workoutSessionLocalWriteTask,
+  workoutSessionRowToDto,
+  workoutSetEntryLocalRemoveTask,
+  workoutSetEntryLocalWriteTask,
+  workoutSetEntryRowToDto,
 } from '../data/local-rows';
 import { AuthSessionService } from '../session/auth-session.service';
 import { OfflineQueueService } from '../sync/offline-queue.service';
@@ -103,6 +115,7 @@ import {
   ShoppingListCompleteResult,
   ShoppingListDraft,
   StorageBackend,
+  WorkoutSessionDraft,
   buildShoppingListCompleteRequestPayload,
   expandMealItemSaveItem,
   expandShoppingListItemSaveItem,
@@ -361,7 +374,10 @@ export class SqliteStorageBackend implements StorageBackend {
   }
 
   /** documentation/Architektúra/Backend-offline first.md §10 "Függőségi láncok": ids among `candidateIds` whose row hasn't reached the server yet. */
-  private async findLocalOnlyIds(table: 'gear_item' | 'household_room' | 'food' | 'recipe', candidateIds: string[]): Promise<string[]> {
+  private async findLocalOnlyIds(
+    table: 'gear_item' | 'household_room' | 'food' | 'recipe' | 'exercise_catalog',
+    candidateIds: string[],
+  ): Promise<string[]> {
     if (candidateIds.length === 0) {
       return [];
     }
@@ -1088,6 +1104,148 @@ export class SqliteStorageBackend implements StorageBackend {
     return { ...recipeRowToDto(recipeRows[0]), ingredients: ingredientRows.map(recipeIngredientRowToDto) };
   }
 
+  async listWorkoutSessions(): Promise<WorkoutSession[]> {
+    const sessionRows = await this.db.query<WorkoutSessionRow>(
+      'SELECT * FROM workout_session WHERE deleted = 0 ORDER BY session_date DESC, created_at DESC',
+    );
+    // WorkoutSession.exercises / entry.sets contract: every row, live or tombstoned — matches
+    // HttpStorageBackend / the backend's own toDto. Callers filter `!deleted` themselves.
+    const exerciseRows = await this.db.query<WorkoutExerciseEntryRow>('SELECT * FROM workout_exercise_entry ORDER BY order_index');
+    const setRows = await this.db.query<WorkoutSetEntryRow>('SELECT * FROM workout_set_entry ORDER BY order_index');
+    return sessionRows.map((row) => assembleWorkoutSession(row, exerciseRows, setRows));
+  }
+
+  getWorkoutSession(id: string): Promise<WorkoutSession> {
+    return this.readWorkoutSession(id);
+  }
+
+  /** documentation/Architektúra/Backend.md "Nested aggregate PUT": session + exercises + sets in one local transaction and one outbox entry. */
+  async saveWorkoutSession(draft: WorkoutSessionDraft): Promise<WorkoutSession> {
+    const userId = this.requireUserId();
+    const existingSessionRows = await this.db.query('SELECT 1 FROM workout_session WHERE id = ?', [draft.id]);
+    const isNew = existingSessionRows.length === 0;
+
+    const existingExerciseRows = await this.db.query<WorkoutExerciseEntryRow>(
+      'SELECT * FROM workout_exercise_entry WHERE session_id = ?',
+      [draft.id],
+    );
+    const existingSetRows = await this.db.query<WorkoutSetEntryRow>(
+      `SELECT s.* FROM workout_set_entry s JOIN workout_exercise_entry e ON s.exercise_entry_id = e.id WHERE e.session_id = ?`,
+      [draft.id],
+    );
+    const incomingExerciseIds = new Set(draft.exercises.map((exercise) => exercise.id));
+
+    const localTasks: SqlTask[] = [workoutSessionLocalWriteTask(draft)];
+    for (const exercise of draft.exercises) {
+      localTasks.push(workoutExerciseEntryLocalWriteTask({ ...exercise, sessionId: draft.id }));
+      const incomingSetIds = new Set(exercise.sets.map((set) => set.id));
+      for (const set of exercise.sets) {
+        localTasks.push(workoutSetEntryLocalWriteTask({ ...set, exerciseEntryId: exercise.id }));
+      }
+      for (const existingSet of existingSetRows) {
+        if (existingSet.exercise_entry_id === exercise.id && existingSet.deleted === 0 && !incomingSetIds.has(existingSet.id)) {
+          localTasks.push(workoutSetEntryLocalRemoveTask(existingSet.id));
+        }
+      }
+    }
+    for (const existingExercise of existingExerciseRows) {
+      if (existingExercise.deleted === 0 && !incomingExerciseIds.has(existingExercise.id)) {
+        localTasks.push(workoutExerciseEntryLocalRemoveTask(existingExercise.id));
+        for (const existingSet of existingSetRows) {
+          if (existingSet.exercise_entry_id === existingExercise.id && existingSet.deleted === 0) {
+            localTasks.push(workoutSetEntryLocalRemoveTask(existingSet.id));
+          }
+        }
+      }
+    }
+
+    // documentation/Architektúra/Backend-offline first.md §10 "Függőségi láncok": an entry that
+    // references an exercise_catalog row created in the same offline session must wait for that
+    // exercise's own POST first (the workout_exercise_entry.exercise_id FK).
+    const dependsOn = await this.findLocalOnlyIds(
+      'exercise_catalog',
+      draft.exercises.map((exercise) => exercise.exerciseId).filter((id): id is string => id !== null),
+    );
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: isNew ? 'POST' : 'PUT',
+      url: isNew ? '/api/workout-sessions' : `/api/workout-sessions/${draft.id}`,
+      payload: buildWorkoutSessionPayload(draft),
+      entityType: 'WorkoutSession',
+      targetEntityId: draft.id,
+      dependsOn,
+    });
+    await this.db.executeTransaction([...localTasks, ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    return this.readWorkoutSession(draft.id);
+  }
+
+  async deleteWorkoutSession(id: string): Promise<WorkoutSession> {
+    const userId = this.requireUserId();
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: 'DELETE',
+      url: `/api/workout-sessions/${id}`,
+      payload: null,
+      entityType: 'WorkoutSession',
+      targetEntityId: id,
+    });
+    const liveExerciseRows = await this.db.query<{ id: string }>(
+      'SELECT id FROM workout_exercise_entry WHERE session_id = ? AND deleted = 0',
+      [id],
+    );
+    const liveSetRows = await this.db.query<{ id: string }>(
+      `SELECT s.id FROM workout_set_entry s JOIN workout_exercise_entry e ON s.exercise_entry_id = e.id WHERE e.session_id = ? AND s.deleted = 0`,
+      [id],
+    );
+    const tasks: SqlTask[] = [];
+    if (enqueue.hardRemoveLocalEntity) {
+      for (const row of liveSetRows) {
+        tasks.push({ statement: 'DELETE FROM workout_set_entry WHERE id = ?', values: [row.id] });
+      }
+      for (const row of liveExerciseRows) {
+        tasks.push({ statement: 'DELETE FROM workout_exercise_entry WHERE id = ?', values: [row.id] });
+      }
+      tasks.push({ statement: 'DELETE FROM workout_session WHERE id = ?', values: [id] });
+    } else {
+      tasks.push({
+        statement: 'UPDATE workout_session SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?',
+        values: [new Date().toISOString(), id],
+      });
+      for (const row of liveExerciseRows) {
+        tasks.push(workoutExerciseEntryLocalRemoveTask(row.id));
+      }
+      for (const row of liveSetRows) {
+        tasks.push(workoutSetEntryLocalRemoveTask(row.id));
+      }
+    }
+    await this.db.executeTransaction([...tasks, ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    if (enqueue.hardRemoveLocalEntity) {
+      return {
+        id,
+        date: '1970-01-01',
+        workoutType: WorkoutSession.WorkoutTypeEnum.GeneralWeights,
+        deleted: true,
+        exercises: [],
+      };
+    }
+    return this.readWorkoutSession(id);
+  }
+
+  private async readWorkoutSession(id: string): Promise<WorkoutSession> {
+    const sessionRows = await this.db.query<WorkoutSessionRow>('SELECT * FROM workout_session WHERE id = ?', [id]);
+    const exerciseRows = await this.db.query<WorkoutExerciseEntryRow>(
+      'SELECT * FROM workout_exercise_entry WHERE session_id = ? ORDER BY order_index',
+      [id],
+    );
+    const setRows = await this.db.query<WorkoutSetEntryRow>(
+      `SELECT s.* FROM workout_set_entry s JOIN workout_exercise_entry e ON s.exercise_entry_id = e.id WHERE e.session_id = ? ORDER BY s.order_index`,
+      [id],
+    );
+    return assembleWorkoutSession(sessionRows[0], exerciseRows, setRows);
+  }
+
   async listMeals(): Promise<Meal[]> {
     const mealRows = await this.db.query<MealRow>('SELECT * FROM meal WHERE deleted = 0 ORDER BY eaten_at ASC');
     // Meal.items contract (meal.ts): every row, live or tombstoned — matches HttpStorageBackend/the
@@ -1363,4 +1521,69 @@ export class SqliteStorageBackend implements StorageBackend {
     }
     return userId;
   }
+}
+
+/** Stitches flat session/exercise/set row lists back into one nested `WorkoutSession` tree (every row, live or tombstoned). */
+function assembleWorkoutSession(
+  sessionRow: WorkoutSessionRow,
+  exerciseRows: WorkoutExerciseEntryRow[],
+  setRows: WorkoutSetEntryRow[],
+): WorkoutSession {
+  const setsByExercise = new Map<string, WorkoutSetEntryRow[]>();
+  for (const row of setRows) {
+    const list = setsByExercise.get(row.exercise_entry_id) ?? [];
+    list.push(row);
+    setsByExercise.set(row.exercise_entry_id, list);
+  }
+  const exercises = exerciseRows
+    .filter((row) => row.session_id === sessionRow.id)
+    .map((row) => ({
+      ...workoutExerciseEntryRowToDto(row),
+      sets: (setsByExercise.get(row.id) ?? []).map(workoutSetEntryRowToDto),
+    }));
+  return { ...workoutSessionRowToDto(sessionRow), exercises };
+}
+
+/** The full `WorkoutSession` wire body for the outbox — mirrors HttpStorageBackend.saveWorkoutSession. */
+function buildWorkoutSessionPayload(draft: WorkoutSessionDraft): WorkoutSession {
+  return {
+    id: draft.id,
+    date: draft.date,
+    startTime: draft.startTime,
+    endTime: draft.endTime,
+    durationMinutes: draft.durationMinutes,
+    workoutType: draft.workoutType,
+    title: draft.title,
+    notes: draft.notes,
+    location: draft.location,
+    planId: draft.planId,
+    roundsCount: draft.roundsCount,
+    deleted: false,
+    exercises: draft.exercises.map((exercise) => ({
+      id: exercise.id,
+      sessionId: draft.id,
+      exerciseId: exercise.exerciseId,
+      exerciseName: exercise.exerciseName,
+      exerciseCategory: exercise.exerciseCategory,
+      exerciseKind: exercise.exerciseKind,
+      orderIndex: exercise.orderIndex,
+      supersetGroup: exercise.supersetGroup,
+      deleted: false,
+      sets: exercise.sets.map((set) => ({
+        id: set.id,
+        exerciseEntryId: exercise.id,
+        setNumber: set.setNumber,
+        setType: set.setType,
+        reps: set.reps,
+        weightKg: set.weightKg,
+        holdTimeSeconds: set.holdTimeSeconds,
+        edgeSizeMm: set.edgeSizeMm,
+        distanceMeters: set.distanceMeters,
+        restTimeSeconds: set.restTimeSeconds,
+        isCompleted: set.isCompleted,
+        orderIndex: set.orderIndex,
+        deleted: false,
+      })),
+    })),
+  };
 }
