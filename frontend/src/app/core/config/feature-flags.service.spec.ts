@@ -132,10 +132,10 @@ describe('FeatureFlagsService (real build asset)', () => {
   });
 
   it('isEnabled() reflects the shipped config for a couple of representative keys', () => {
-    // documentation/Architektúra/Frontend.md: tab.edzes is not implemented yet, so everything gated
-    // behind it must be off; tab.kaja is on (Élelmiszerek + Élelmiszer tárolás exist); menu.* core
-    // utilities are on.
-    expect(service.isEnabled('tab.edzes')).toBe(false);
+    // tab.edzes is on (Edzésnapló + Heti terv shipped in the current round); tab.kaja is on
+    // (Élelmiszerek + Élelmiszer tárolás exist); menu.* core utilities are on.
+    expect(service.isEnabled('tab.edzes')).toBe(true);
+    expect(service.isEnabled('edzes.hetiTerv')).toBe(true);
     expect(service.isEnabled('menu.lepesszam')).toBe(true);
   });
 

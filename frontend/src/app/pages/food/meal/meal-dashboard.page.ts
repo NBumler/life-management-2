@@ -24,10 +24,12 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 import { Meal } from '../../../api/model/meal';
 import { UserProfile } from '../../../api/model/userProfile';
+import { workoutKcalForDay } from '../../../core/data/activity-kcal';
 import { FoodRepository } from '../../../core/data/food.repository';
 import { MealRepository } from '../../../core/data/meal.repository';
 import { ProfileRepository } from '../../../core/data/profile.repository';
 import { RecipeRepository } from '../../../core/data/recipe.repository';
+import { WorkoutSessionRepository } from '../../../core/data/workout-session.repository';
 import { today } from '../../../shared/local-date';
 import { TdeeCalculation, TdeeProfileInput, computeTdee } from '../../../shared/tdee-calculator';
 import { calendarDayInZone, deviceTimeZoneId } from '../../../shared/timezone';
@@ -96,6 +98,7 @@ export class MealDashboardPage implements OnInit, ViewWillEnter {
   private readonly recipeRepository = inject(RecipeRepository);
   private readonly foodRepository = inject(FoodRepository);
   private readonly profileRepository = inject(ProfileRepository);
+  private readonly workoutRepository = inject(WorkoutSessionRepository);
   private readonly alertController = inject(AlertController);
   private readonly translate = inject(TranslateService);
   private readonly router = inject(Router);
@@ -111,7 +114,18 @@ export class MealDashboardPage implements OnInit, ViewWillEnter {
       .sort((a, b) => a.eatenAt.localeCompare(b.eatenAt));
   });
 
-  readonly tdee = computed<TdeeCalculation>(() => computeTdee(toTdeeInput(this.profileRepository.profile()), this.selectedDate()));
+  /**
+   * documentation/Features/Tápérték kalkulátor.md: `activityExtraKcal` = lépéskalória + Σ
+   * edzéskalóriák. Only the workout half exists so far ([[Lépésszám követés]] not built) — Σ
+   * `sessionKcal()` for the selected day at the current profile weight.
+   */
+  readonly workoutExtraKcal = computed(() =>
+    workoutKcalForDay(this.workoutRepository.items(), this.selectedDate(), this.profileRepository.profile()?.currentWeightKg ?? null),
+  );
+
+  readonly tdee = computed<TdeeCalculation>(() =>
+    computeTdee(toTdeeInput(this.profileRepository.profile()), this.selectedDate(), this.workoutExtraKcal()),
+  );
 
   readonly dailyTotals = computed(() => computeDailyNutrition(this.dayMeals(), this.recipeRepository.items(), this.foodRepository.items()));
 
@@ -137,7 +151,13 @@ export class MealDashboardPage implements OnInit, ViewWillEnter {
   });
 
   async ngOnInit(): Promise<void> {
-    await Promise.all([this.repository.load(), this.recipeRepository.load(), this.foodRepository.load(), this.profileRepository.load()]);
+    await Promise.all([
+      this.repository.load(),
+      this.recipeRepository.load(),
+      this.foodRepository.load(),
+      this.profileRepository.load(),
+      this.workoutRepository.load(),
+    ]);
   }
 
   private barFor(labelKey: string, intake: number, goal: number, unit: string, color: ProgressBarColor): BarViewModel {
