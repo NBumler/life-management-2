@@ -1,0 +1,11 @@
+// documentation/Subfeatures/Kaja statisztika.md — the rank number is a narrow gutter, not a column
+// that competes with the name for width. Without this an <ion-label> defaults to flex: 1 and the
+// single-digit rank claims a third of the row.
+.rank {
+  flex: 0 0 auto;
+  min-width: 1.75rem;
+  margin-inline-end: 0.75rem;
+  text-align: end;
+  color: var(--ion-color-medium);
+  font-variant-numeric: tabular-nums;
+}

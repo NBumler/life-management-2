@@ -1,6 +1,6 @@
 <ion-header>
   <ion-toolbar>
-    <ion-segment #sectionSegment value="recipe" (ionChange)="switchSection($any($event.target).value)">
+    <ion-segment #sectionSegment scrollable value="recipe" (ionChange)="switchSection($any($event.target).value)">
       <ion-segment-button value="meal">
         <ion-label>{{ 'FOOD.MEAL.TITLE' | translate }}</ion-label>
       </ion-segment-button>

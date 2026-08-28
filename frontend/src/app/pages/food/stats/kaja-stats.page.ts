@@ -33,6 +33,7 @@ type CatalogKind = 'FOOD' | 'RECIPE';
 @Component({
   selector: 'app-kaja-stats',
   templateUrl: 'kaja-stats.page.html',
+  styleUrls: ['kaja-stats.page.scss'],
   imports: [IonHeader, IonToolbar, IonSegment, IonSegmentButton, IonLabel, IonContent, IonSearchbar, IonList, IonItem, IonButton, IonIcon, TranslatePipe, DecimalPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
