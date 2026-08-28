@@ -1,0 +1,79 @@
+<ion-header>
+  <app-workout-segment-header current="weekly-plan" />
+</ion-header>
+
+<ion-content>
+  <div class="cta-row">
+    <ion-buttons>
+      <ion-button fill="clear" (click)="shiftWeek(-1)">
+        <ion-icon slot="icon-only" name="chevron-back-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-button size="small" fill="clear" (click)="goToday()">
+      {{ 'WORKOUT.WEEKLY.WEEK_OF' | translate }} {{ weekStart() }}
+    </ion-button>
+    <ion-buttons>
+      <ion-button fill="clear" (click)="shiftWeek(1)">
+        <ion-icon slot="icon-only" name="chevron-forward-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </div>
+
+  <div class="cta-row">
+    <ion-button expand="block" fill="outline" routerLink="plans">{{ 'WORKOUT.WEEKLY.MANAGE_PLANS' | translate }}</ion-button>
+  </div>
+
+  @if (activePlans().length === 0) {
+    <ion-list>
+      <ion-item>
+        <ion-label color="medium">{{ 'WORKOUT.WEEKLY.NO_ACTIVE_PLANS' | translate }}</ion-label>
+      </ion-item>
+      <ion-item button routerLink="plans/new" detail="true">
+        <ion-label color="primary">{{ 'WORKOUT.PLAN.ADD' | translate }}</ion-label>
+      </ion-item>
+    </ion-list>
+  } @else {
+    <ion-list>
+      @for (day of days(); track day.dayOfWeek) {
+        <ion-item lines="full">
+          <ion-label>
+            <h2>{{ ('WORKOUT.WEEKLY.DAY.' + day.dayOfWeek) | translate }}</h2>
+            <p>{{ day.date }}</p>
+            <ion-select
+              [value]="day.planId ?? ''"
+              interface="action-sheet"
+              [placeholder]="'WORKOUT.WEEKLY.ASSIGN' | translate"
+              (ionChange)="assignDay(day, $any($event.target).value)"
+              [aria-label]="'WORKOUT.WEEKLY.ASSIGN' | translate"
+            >
+              <ion-select-option value="">{{ 'WORKOUT.WEEKLY.REST_DAY' | translate }}</ion-select-option>
+              @for (plan of activePlans(); track plan.id) {
+                <ion-select-option [value]="plan.id">{{ plan.name }}</ion-select-option>
+              }
+            </ion-select>
+          </ion-label>
+
+          @if (day.completed) {
+            <ion-badge slot="end" color="success">{{ 'WORKOUT.WEEKLY.DONE' | translate }}</ion-badge>
+          }
+          @if (day.planId) {
+            <ion-button
+              slot="end"
+              size="small"
+              routerLink="/tabs/workout/log/active"
+              [queryParams]="{ planId: day.planId }"
+            >
+              {{ 'WORKOUT.WEEKLY.START' | translate }}
+            </ion-button>
+          }
+        </ion-item>
+      }
+    </ion-list>
+
+    @if (hasAnySlot()) {
+      <div class="cta-row">
+        <ion-button expand="block" fill="clear" (click)="copyToNextWeek()">{{ 'WORKOUT.WEEKLY.COPY_NEXT_WEEK' | translate }}</ion-button>
+      </div>
+    }
+  }
+</ion-content>

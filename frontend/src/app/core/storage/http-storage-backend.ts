@@ -16,6 +16,8 @@ import { ProfileService } from '../../api/api/profile.service';
 import { RecipesService } from '../../api/api/recipes.service';
 import { ShoppingListsService } from '../../api/api/shoppingLists.service';
 import { StoredFoodsService } from '../../api/api/storedFoods.service';
+import { WeeklyPlansService } from '../../api/api/weeklyPlans.service';
+import { WorkoutPlansService } from '../../api/api/workoutPlans.service';
 import { WorkoutSessionsService } from '../../api/api/workoutSessions.service';
 import { CalendarEvent } from '../../api/model/calendarEvent';
 import { Exercise } from '../../api/model/exercise';
@@ -34,7 +36,9 @@ import { Recipe } from '../../api/model/recipe';
 import { ShoppingList } from '../../api/model/shoppingList';
 import { StoredFood } from '../../api/model/storedFood';
 import { UserProfile } from '../../api/model/userProfile';
+import { WeeklyPlan } from '../../api/model/weeklyPlan';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
+import { WorkoutPlan } from '../../api/model/workoutPlan';
 import { WorkoutSession } from '../../api/model/workoutSession';
 import { buildSeedExercises } from '../data/exercise-seed';
 import { AuthSessionService } from '../session/auth-session.service';
@@ -49,6 +53,8 @@ import {
   ShoppingListCompleteResult,
   ShoppingListDraft,
   StorageBackend,
+  WeeklyPlanDraft,
+  WorkoutPlanDraft,
   WorkoutSessionDraft,
   buildShoppingListCompleteRequestPayload,
   expandMealItemSaveItem,
@@ -74,6 +80,8 @@ export class HttpStorageBackend implements StorageBackend {
   private readonly mealsApi = inject(MealsService);
   private readonly shoppingListsApi = inject(ShoppingListsService);
   private readonly workoutSessionsApi = inject(WorkoutSessionsService);
+  private readonly workoutPlansApi = inject(WorkoutPlansService);
+  private readonly weeklyPlansApi = inject(WeeklyPlansService);
   private readonly authSession = inject(AuthSessionService);
 
   async getProfile(): Promise<UserProfile | null> {
@@ -403,6 +411,85 @@ export class HttpStorageBackend implements StorageBackend {
 
   deleteWorkoutSession(id: string): Promise<WorkoutSession> {
     return firstValueFrom(this.workoutSessionsApi.deleteWorkoutSession(id));
+  }
+
+  listWorkoutPlans(): Promise<WorkoutPlan[]> {
+    return firstValueFrom(this.workoutPlansApi.listWorkoutPlans());
+  }
+
+  getWorkoutPlan(id: string): Promise<WorkoutPlan> {
+    return firstValueFrom(this.workoutPlansApi.getWorkoutPlan(id));
+  }
+
+  /** POST with an existing id is an idempotent upsert server-side, so this covers both create and update. */
+  saveWorkoutPlan(draft: WorkoutPlanDraft): Promise<WorkoutPlan> {
+    const dto: WorkoutPlan = {
+      id: draft.id,
+      name: draft.name,
+      notes: draft.notes,
+      active: draft.active,
+      goalLabel: draft.goalLabel,
+      defaultWorkoutType: draft.defaultWorkoutType,
+      deleted: false,
+      exercises: draft.exercises.map((exercise) => ({
+        id: exercise.id,
+        planId: draft.id,
+        exerciseId: exercise.exerciseId,
+        exerciseName: exercise.exerciseName,
+        exerciseCategory: exercise.exerciseCategory,
+        exerciseKind: exercise.exerciseKind,
+        orderIndex: exercise.orderIndex,
+        supersetGroup: exercise.supersetGroup,
+        deleted: false,
+        targetSets: exercise.targetSets.map((set) => ({
+          id: set.id,
+          planExerciseId: exercise.id,
+          setType: set.setType,
+          reps: set.reps,
+          weightKg: set.weightKg,
+          holdTimeSeconds: set.holdTimeSeconds,
+          edgeSizeMm: set.edgeSizeMm,
+          distanceMeters: set.distanceMeters,
+          restTimeSeconds: set.restTimeSeconds,
+          orderIndex: set.orderIndex,
+          deleted: false,
+        })),
+      })),
+    };
+    return firstValueFrom(this.workoutPlansApi.createWorkoutPlan(dto));
+  }
+
+  deleteWorkoutPlan(id: string): Promise<WorkoutPlan> {
+    return firstValueFrom(this.workoutPlansApi.deleteWorkoutPlan(id));
+  }
+
+  listWeeklyPlans(): Promise<WeeklyPlan[]> {
+    return firstValueFrom(this.weeklyPlansApi.listWeeklyPlans());
+  }
+
+  getWeeklyPlan(id: string): Promise<WeeklyPlan> {
+    return firstValueFrom(this.weeklyPlansApi.getWeeklyPlan(id));
+  }
+
+  /** POST with an existing id is an idempotent upsert server-side (and revives a soft-deleted same-week row). */
+  saveWeeklyPlan(draft: WeeklyPlanDraft): Promise<WeeklyPlan> {
+    const dto: WeeklyPlan = {
+      id: draft.id,
+      weekStartDate: draft.weekStartDate,
+      deleted: false,
+      slots: draft.slots.map((slot) => ({
+        id: slot.id,
+        weeklyPlanId: draft.id,
+        dayOfWeek: slot.dayOfWeek,
+        planId: slot.planId,
+        deleted: false,
+      })),
+    };
+    return firstValueFrom(this.weeklyPlansApi.createWeeklyPlan(dto));
+  }
+
+  deleteWeeklyPlan(id: string): Promise<WeeklyPlan> {
+    return firstValueFrom(this.weeklyPlansApi.deleteWeeklyPlan(id));
   }
 
   listMeals(): Promise<Meal[]> {

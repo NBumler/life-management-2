@@ -1,0 +1,162 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/workout/weekly-plan/plans"></ion-back-button>
+    </ion-buttons>
+    <ion-title>
+      {{ (isEditing() ? 'WORKOUT.PLAN.EDIT_TITLE' : 'WORKOUT.PLAN.NEW_TITLE') | translate }}
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button [strong]="true" (click)="save()">{{ 'COMMON.SAVE' | translate }}</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <form [formGroup]="form">
+    <ion-list>
+      <ion-item>
+        <ion-input
+          formControlName="name"
+          [label]="'WORKOUT.PLAN.FIELD_NAME' | translate"
+          [placeholder]="'WORKOUT.PLAN.FIELD_NAME_PLACEHOLDER' | translate"
+          label-placement="stacked"
+        ></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input
+          formControlName="goalLabel"
+          [label]="'WORKOUT.PLAN.FIELD_GOAL_LABEL' | translate"
+          [placeholder]="'WORKOUT.PLAN.FIELD_GOAL_LABEL_PLACEHOLDER' | translate"
+          label-placement="stacked"
+        ></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-select
+          formControlName="defaultWorkoutType"
+          [label]="'WORKOUT.PLAN.FIELD_DEFAULT_TYPE' | translate"
+          label-placement="stacked"
+          [placeholder]="'WORKOUT.PLAN.DEFAULT_TYPE_NONE' | translate"
+        >
+          @for (type of workoutTypes; track type) {
+            <ion-select-option [value]="type">{{ ('WORKOUT.SESSION.TYPE.' + type) | translate }}</ion-select-option>
+          }
+        </ion-select>
+      </ion-item>
+      <ion-item>
+        <ion-textarea formControlName="notes" [label]="'WORKOUT.PLAN.FIELD_NOTES' | translate" label-placement="stacked" [autoGrow]="true"></ion-textarea>
+      </ion-item>
+    </ion-list>
+  </form>
+
+  @for (row of exercises(); track row.id) {
+    <ion-list>
+      <ion-item lines="none">
+        <ion-label>
+          <h2>{{ row.exerciseName }}</h2>
+          <p>{{ ('WORKOUT.EXERCISES.KIND.' + row.exerciseKind) | translate }}</p>
+        </ion-label>
+        <ion-button slot="end" fill="clear" color="medium" (click)="removeExercise(row)">
+          {{ 'COMMON.REMOVE' | translate }}
+        </ion-button>
+      </ion-item>
+
+      @for (set of row.sets(); track set.id; let i = $index) {
+        <ion-item>
+          <ion-label slot="start" class="set-number">{{ i + 1 }}</ion-label>
+          <div class="set-fields">
+            <ion-select
+              [value]="set.setType()"
+              (ionChange)="set.setType.set($event.detail.value)"
+              interface="popover"
+              [aria-label]="'WORKOUT.SESSION.FIELD_SET_TYPE' | translate"
+            >
+              @for (type of setTypes; track type) {
+                <ion-select-option [value]="type">{{ ('WORKOUT.SESSION.SET_TYPE.' + type) | translate }}</ion-select-option>
+              }
+            </ion-select>
+            @if (fieldsFor(row).reps) {
+              <ion-input
+                type="number"
+                inputmode="numeric"
+                [value]="set.reps()"
+                (ionInput)="set.reps.set($any($event.target).value === '' ? null : +$any($event.target).value)"
+                [label]="'WORKOUT.SESSION.FIELD_REPS' | translate"
+                label-placement="stacked"
+              ></ion-input>
+            }
+            @if (fieldsFor(row).weightKg) {
+              <ion-input
+                type="number"
+                inputmode="decimal"
+                [value]="set.weightKg()"
+                (ionInput)="set.weightKg.set($any($event.target).value === '' ? null : +$any($event.target).value)"
+                [label]="'WORKOUT.SESSION.FIELD_WEIGHT' | translate"
+                label-placement="stacked"
+              ></ion-input>
+            }
+            @if (fieldsFor(row).holdTimeSeconds) {
+              <ion-input
+                type="number"
+                inputmode="numeric"
+                [value]="set.holdTimeSeconds()"
+                (ionInput)="set.holdTimeSeconds.set($any($event.target).value === '' ? null : +$any($event.target).value)"
+                [label]="'WORKOUT.SESSION.FIELD_HOLD' | translate"
+                label-placement="stacked"
+              ></ion-input>
+            }
+            @if (fieldsFor(row).edgeSizeMm) {
+              <ion-input
+                type="number"
+                inputmode="numeric"
+                [value]="set.edgeSizeMm()"
+                (ionInput)="set.edgeSizeMm.set($any($event.target).value === '' ? null : +$any($event.target).value)"
+                [label]="'WORKOUT.SESSION.FIELD_EDGE' | translate"
+                label-placement="stacked"
+              ></ion-input>
+            }
+            @if (fieldsFor(row).distanceMeters) {
+              <ion-input
+                type="number"
+                inputmode="numeric"
+                [value]="set.distanceMeters()"
+                (ionInput)="set.distanceMeters.set($any($event.target).value === '' ? null : +$any($event.target).value)"
+                [label]="'WORKOUT.SESSION.FIELD_DISTANCE' | translate"
+                label-placement="stacked"
+              ></ion-input>
+            }
+            <ion-input
+              type="number"
+              inputmode="numeric"
+              [value]="set.restTimeSeconds()"
+              (ionInput)="set.restTimeSeconds.set($any($event.target).value === '' ? null : +$any($event.target).value)"
+              [label]="'WORKOUT.PLAN.FIELD_REST' | translate"
+              label-placement="stacked"
+            ></ion-input>
+          </div>
+          <ion-button slot="end" size="small" fill="clear" color="medium" (click)="removeSet(row, set)">✕</ion-button>
+        </ion-item>
+      }
+
+      <ion-item lines="none">
+        <ion-button fill="clear" (click)="addSet(row)">{{ 'WORKOUT.SESSION.ADD_SET' | translate }}</ion-button>
+      </ion-item>
+    </ion-list>
+  }
+
+  <div class="add-exercise">
+    <ion-button expand="block" fill="outline" (click)="openPicker()">{{ 'WORKOUT.SESSION.ADD_EXERCISE' | translate }}</ion-button>
+  </div>
+
+  @if (isEditing()) {
+    <div class="add-exercise">
+      <ion-button expand="block" fill="clear" color="danger" (click)="delete()">{{ 'WORKOUT.PLAN.DELETE' | translate }}</ion-button>
+    </div>
+  }
+</ion-content>
+
+<ion-modal [isOpen]="pickerOpen()" (didDismiss)="pickerOpen.set(false)">
+  <ng-template>
+    <app-exercise-picker (confirmed)="onPicked($event)" (cancelled)="pickerOpen.set(false)"></app-exercise-picker>
+  </ng-template>
+</ion-modal>

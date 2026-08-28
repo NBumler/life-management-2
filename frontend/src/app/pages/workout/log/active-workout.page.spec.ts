@@ -11,6 +11,7 @@ import { WorkoutSetEntry } from '../../../api/model/workoutSetEntry';
 import { ExerciseRepository } from '../../../core/data/exercise.repository';
 import { ProfileRepository } from '../../../core/data/profile.repository';
 import { WorkoutDraftService } from '../../../core/data/workout-draft.service';
+import { WorkoutPlanRepository } from '../../../core/data/workout-plan.repository';
 import { WorkoutSessionRepository } from '../../../core/data/workout-session.repository';
 import { ExercisePickResult } from '../../../shared/exercise-picker/exercise-picker.component';
 import { ActiveWorkoutPage } from './active-workout.page';
@@ -99,6 +100,7 @@ describe('ActiveWorkoutPage', () => {
         provideTranslateService(),
         { provide: WorkoutSessionRepository, useValue: repository },
         { provide: ExerciseRepository, useValue: exerciseRepository },
+        { provide: WorkoutPlanRepository, useValue: { load: () => Promise.resolve(), byId: () => undefined, items: signal([]) } },
         { provide: ProfileRepository, useValue: { load: () => Promise.resolve(), profile: signal(null) } },
         { provide: Router, useValue: router },
         { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(queryParams) } } },

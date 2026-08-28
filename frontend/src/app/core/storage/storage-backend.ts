@@ -20,8 +20,13 @@ import { ShoppingListCompleteRequest } from '../../api/model/shoppingListComplet
 import { ShoppingListItem } from '../../api/model/shoppingListItem';
 import { StoredFood } from '../../api/model/storedFood';
 import { UserProfile } from '../../api/model/userProfile';
+import { WeeklyPlan } from '../../api/model/weeklyPlan';
+import { WeeklyPlanSlot } from '../../api/model/weeklyPlanSlot';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 import { WorkoutExerciseEntry } from '../../api/model/workoutExerciseEntry';
+import { WorkoutPlan } from '../../api/model/workoutPlan';
+import { WorkoutPlanExercise } from '../../api/model/workoutPlanExercise';
+import { WorkoutPlanSet } from '../../api/model/workoutPlanSet';
 import { WorkoutSession } from '../../api/model/workoutSession';
 import { WorkoutSetEntry } from '../../api/model/workoutSetEntry';
 
@@ -117,6 +122,63 @@ export interface WorkoutSessionDraft {
   planId: string | null;
   roundsCount: number | null;
   exercises: WorkoutExerciseSaveItem[];
+}
+
+/**
+ * documentation/Subfeatures/Heti terv.md — the desired live tree for a WorkoutPlan (static template)
+ * save. Ids are client-generated for a new row, reused for a kept one, at all three levels
+ * (plan → exercise → target set). `exercise*` on an exercise line is a snapshot taken from the
+ * Gyakorlat picker; `exerciseId` is required in a template (unlike the log's ad-hoc entries).
+ */
+export interface WorkoutPlanSetSaveItem {
+  id: string;
+  setType: WorkoutPlanSet.SetTypeEnum;
+  reps: number | null;
+  weightKg: number | null;
+  holdTimeSeconds: number | null;
+  edgeSizeMm: number | null;
+  distanceMeters: number | null;
+  restTimeSeconds: number | null;
+  orderIndex: number;
+}
+
+export interface WorkoutPlanExerciseSaveItem {
+  id: string;
+  exerciseId: string;
+  exerciseName: string;
+  exerciseCategory: WorkoutPlanExercise.ExerciseCategoryEnum;
+  exerciseKind: WorkoutPlanExercise.ExerciseKindEnum;
+  orderIndex: number;
+  supersetGroup: number | null;
+  targetSets: WorkoutPlanSetSaveItem[];
+}
+
+export interface WorkoutPlanDraft {
+  id: string;
+  name: string;
+  notes: string | null;
+  active: boolean;
+  goalLabel: string | null;
+  defaultWorkoutType: WorkoutPlan.DefaultWorkoutTypeEnum | null;
+  exercises: WorkoutPlanExerciseSaveItem[];
+}
+
+/**
+ * documentation/Subfeatures/Heti terv.md "Entitás — WeeklyPlan" — the desired live slot set for one
+ * calendar week. A slot exists only where a day has a template assigned; a day cleared in the editor
+ * simply drops out of `slots` and is soft-deleted. `weeklyPlan.id` is a deterministic UUID v5 of
+ * (userId, weekStartDate) so two offline devices editing the same week converge.
+ */
+export interface WeeklyPlanSlotSaveItem {
+  id: string;
+  dayOfWeek: WeeklyPlanSlot.DayOfWeekEnum;
+  planId: string;
+}
+
+export interface WeeklyPlanDraft {
+  id: string;
+  weekStartDate: string;
+  slots: WeeklyPlanSlotSaveItem[];
 }
 
 /**
@@ -407,6 +469,22 @@ export interface StorageBackend {
   saveWorkoutSession(draft: WorkoutSessionDraft): Promise<WorkoutSession>;
   /** documentation/Subfeatures/Edzésnapló.md "Törlés": cascades to every live exercise entry and set on this session. */
   deleteWorkoutSession(id: string): Promise<WorkoutSession>;
+
+  /** documentation/Subfeatures/Heti terv.md: per-user static training templates. Every row (incl. list entries) embeds its full live+tombstoned exercise/target-set tree. */
+  listWorkoutPlans(): Promise<WorkoutPlan[]>;
+  getWorkoutPlan(id: string): Promise<WorkoutPlan>;
+  /** documentation/Architektúra/Backend.md "Nested aggregate PUT": plan + exercises + target sets saved as one outbox entry. `active` is a plain field on the same body. */
+  saveWorkoutPlan(draft: WorkoutPlanDraft): Promise<WorkoutPlan>;
+  /** documentation/Subfeatures/Heti terv.md "CRUD": cascades to every live exercise line and target set; past WorkoutSession.planId / WeeklyPlan slots pointing here are untouched. */
+  deleteWorkoutPlan(id: string): Promise<WorkoutPlan>;
+
+  /** documentation/Subfeatures/Heti terv.md: per-user weekly day→template assignments. Every row embeds its full live+tombstoned slot set. */
+  listWeeklyPlans(): Promise<WeeklyPlan[]>;
+  getWeeklyPlan(id: string): Promise<WeeklyPlan>;
+  /** documentation/Architektúra/Backend.md "Nested aggregate PUT": week + slots saved as one outbox entry. */
+  saveWeeklyPlan(draft: WeeklyPlanDraft): Promise<WeeklyPlan>;
+  /** documentation/Subfeatures/Heti terv.md "CRUD": cascades to every live slot on this week. */
+  deleteWeeklyPlan(id: string): Promise<WeeklyPlan>;
 
   listHouseholdRooms(): Promise<HouseholdRoom[]>;
   upsertHouseholdRoom(room: HouseholdRoom): Promise<HouseholdRoom>;

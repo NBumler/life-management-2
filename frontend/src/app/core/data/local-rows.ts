@@ -19,7 +19,12 @@ import { ShoppingListItem } from '../../api/model/shoppingListItem';
 import { StoredFood } from '../../api/model/storedFood';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
+import { WeeklyPlan } from '../../api/model/weeklyPlan';
+import { WeeklyPlanSlot } from '../../api/model/weeklyPlanSlot';
 import { WorkoutExerciseEntry } from '../../api/model/workoutExerciseEntry';
+import { WorkoutPlan } from '../../api/model/workoutPlan';
+import { WorkoutPlanExercise } from '../../api/model/workoutPlanExercise';
+import { WorkoutPlanSet } from '../../api/model/workoutPlanSet';
 import { WorkoutSession } from '../../api/model/workoutSession';
 import { WorkoutSetEntry } from '../../api/model/workoutSetEntry';
 
@@ -703,6 +708,462 @@ export function workoutSetEntryTombstoneTask(id: string, deletedAt: string | nul
     statement: `
       INSERT INTO workout_set_entry (id, exercise_entry_id, set_number, set_type, order_index, updated_at, deleted, deleted_at, _dirty, _local_only)
       VALUES (?, '', 0, 'WORKING', 0, ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+// --- Heti terv: WorkoutPlan → WorkoutPlanExercise → WorkoutPlanSet (three-level nested aggregate, mirrors the workout log) ---
+
+export interface WorkoutPlanRow {
+  id: string;
+  name: string;
+  notes: string | null;
+  active: number;
+  goal_label: string | null;
+  default_workout_type: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+/** Omits `exercises` — a WorkoutPlan row alone never carries them, see readWorkoutPlan in SqliteStorageBackend. */
+export function workoutPlanRowToDto(row: WorkoutPlanRow): Omit<WorkoutPlan, 'exercises'> {
+  return {
+    id: row.id,
+    name: row.name,
+    notes: row.notes,
+    active: row.active === 1,
+    goalLabel: row.goal_label,
+    defaultWorkoutType: (row.default_workout_type as WorkoutPlan.DefaultWorkoutTypeEnum | null) ?? null,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+type WorkoutPlanWriteInput = Pick<WorkoutPlan, 'id' | 'name' | 'notes' | 'active' | 'goalLabel' | 'defaultWorkoutType'>;
+
+export function workoutPlanLocalWriteTask(dto: WorkoutPlanWriteInput): SqlTask {
+  return {
+    statement: `
+      INSERT INTO workout_plan (id, name, notes, active, goal_label, default_workout_type, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET
+        name = excluded.name, notes = excluded.notes, active = excluded.active, goal_label = excluded.goal_label,
+        default_workout_type = excluded.default_workout_type, deleted = 0, deleted_at = NULL, _dirty = 1`,
+    values: [dto.id, dto.name, dto.notes ?? null, dto.active ? 1 : 0, dto.goalLabel ?? null, dto.defaultWorkoutType ?? null],
+  };
+}
+
+export function workoutPlanServerApplyTask(dto: Omit<WorkoutPlan, 'exercises'>): SqlTask {
+  return {
+    statement: `
+      INSERT INTO workout_plan (id, name, notes, active, goal_label, default_workout_type, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        name = excluded.name, notes = excluded.notes, active = excluded.active, goal_label = excluded.goal_label,
+        default_workout_type = excluded.default_workout_type, created_at = excluded.created_at, updated_at = excluded.updated_at,
+        deleted = excluded.deleted, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE workout_plan._dirty = 0`,
+    values: [
+      dto.id,
+      dto.name,
+      dto.notes ?? null,
+      dto.active ? 1 : 0,
+      dto.goalLabel ?? null,
+      dto.defaultWorkoutType ?? null,
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function workoutPlanTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO workout_plan (id, name, active, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '', 1, ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+export interface WorkoutPlanExerciseRow {
+  id: string;
+  plan_id: string;
+  exercise_id: string;
+  exercise_name: string;
+  exercise_category: string;
+  exercise_kind: string;
+  order_index: number;
+  superset_group: number | null;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+/** Omits `targetSets` — a WorkoutPlanExercise row alone never carries them. */
+export function workoutPlanExerciseRowToDto(row: WorkoutPlanExerciseRow): Omit<WorkoutPlanExercise, 'targetSets'> {
+  return {
+    id: row.id,
+    planId: row.plan_id,
+    exerciseId: row.exercise_id,
+    exerciseName: row.exercise_name,
+    exerciseCategory: row.exercise_category as WorkoutPlanExercise.ExerciseCategoryEnum,
+    exerciseKind: row.exercise_kind as WorkoutPlanExercise.ExerciseKindEnum,
+    orderIndex: row.order_index,
+    supersetGroup: row.superset_group,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+type WorkoutPlanExerciseWriteInput = Pick<
+  WorkoutPlanExercise,
+  'id' | 'planId' | 'exerciseId' | 'exerciseName' | 'exerciseCategory' | 'exerciseKind' | 'orderIndex' | 'supersetGroup'
+>;
+
+export function workoutPlanExerciseLocalWriteTask(dto: WorkoutPlanExerciseWriteInput): SqlTask {
+  return {
+    statement: `
+      INSERT INTO workout_plan_exercise (id, plan_id, exercise_id, exercise_name, exercise_category, exercise_kind, order_index, superset_group, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET
+        exercise_id = excluded.exercise_id, exercise_name = excluded.exercise_name, exercise_category = excluded.exercise_category,
+        exercise_kind = excluded.exercise_kind, order_index = excluded.order_index, superset_group = excluded.superset_group,
+        deleted = 0, deleted_at = NULL, _dirty = 1`,
+    values: [
+      dto.id,
+      dto.planId,
+      dto.exerciseId,
+      dto.exerciseName,
+      dto.exerciseCategory,
+      dto.exerciseKind,
+      dto.orderIndex,
+      dto.supersetGroup ?? null,
+    ],
+  };
+}
+
+/** Local-only removal — an exercise line dropped from a plan during an edit (not a standalone outbox entry). */
+export function workoutPlanExerciseLocalRemoveTask(id: string): SqlTask {
+  return {
+    statement: `UPDATE workout_plan_exercise SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?`,
+    values: [new Date().toISOString(), id],
+  };
+}
+
+export function workoutPlanExerciseServerApplyTask(dto: Omit<WorkoutPlanExercise, 'targetSets'>): SqlTask {
+  return {
+    statement: `
+      INSERT INTO workout_plan_exercise (id, plan_id, exercise_id, exercise_name, exercise_category, exercise_kind, order_index, superset_group, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        plan_id = excluded.plan_id, exercise_id = excluded.exercise_id, exercise_name = excluded.exercise_name,
+        exercise_category = excluded.exercise_category, exercise_kind = excluded.exercise_kind, order_index = excluded.order_index,
+        superset_group = excluded.superset_group, created_at = excluded.created_at, updated_at = excluded.updated_at,
+        deleted = excluded.deleted, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE workout_plan_exercise._dirty = 0`,
+    values: [
+      dto.id,
+      dto.planId,
+      dto.exerciseId,
+      dto.exerciseName,
+      dto.exerciseCategory,
+      dto.exerciseKind,
+      dto.orderIndex,
+      dto.supersetGroup ?? null,
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function workoutPlanExerciseTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO workout_plan_exercise (id, plan_id, exercise_id, exercise_name, exercise_category, exercise_kind, order_index, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '', '', '', 'FULL_BODY', 'WEIGHTED_REPS', 0, ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+export interface WorkoutPlanSetRow {
+  id: string;
+  plan_exercise_id: string;
+  set_type: string;
+  reps: number | null;
+  weight_kg: number | null;
+  hold_time_seconds: number | null;
+  edge_size_mm: number | null;
+  distance_meters: number | null;
+  rest_time_seconds: number | null;
+  order_index: number;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+export function workoutPlanSetRowToDto(row: WorkoutPlanSetRow): WorkoutPlanSet {
+  return {
+    id: row.id,
+    planExerciseId: row.plan_exercise_id,
+    setType: row.set_type as WorkoutPlanSet.SetTypeEnum,
+    reps: row.reps,
+    weightKg: row.weight_kg,
+    holdTimeSeconds: row.hold_time_seconds,
+    edgeSizeMm: row.edge_size_mm,
+    distanceMeters: row.distance_meters,
+    restTimeSeconds: row.rest_time_seconds,
+    orderIndex: row.order_index,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+type WorkoutPlanSetWriteInput = Pick<
+  WorkoutPlanSet,
+  'id' | 'planExerciseId' | 'setType' | 'reps' | 'weightKg' | 'holdTimeSeconds' | 'edgeSizeMm' | 'distanceMeters' | 'restTimeSeconds' | 'orderIndex'
+>;
+
+export function workoutPlanSetLocalWriteTask(dto: WorkoutPlanSetWriteInput): SqlTask {
+  return {
+    statement: `
+      INSERT INTO workout_plan_set (id, plan_exercise_id, set_type, reps, weight_kg, hold_time_seconds, edge_size_mm, distance_meters, rest_time_seconds, order_index, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET
+        set_type = excluded.set_type, reps = excluded.reps, weight_kg = excluded.weight_kg, hold_time_seconds = excluded.hold_time_seconds,
+        edge_size_mm = excluded.edge_size_mm, distance_meters = excluded.distance_meters, rest_time_seconds = excluded.rest_time_seconds,
+        order_index = excluded.order_index, deleted = 0, deleted_at = NULL, _dirty = 1`,
+    values: [
+      dto.id,
+      dto.planExerciseId,
+      dto.setType,
+      dto.reps ?? null,
+      dto.weightKg ?? null,
+      dto.holdTimeSeconds ?? null,
+      dto.edgeSizeMm ?? null,
+      dto.distanceMeters ?? null,
+      dto.restTimeSeconds ?? null,
+      dto.orderIndex,
+    ],
+  };
+}
+
+/** Local-only removal — a target set dropped from an exercise line during an edit. */
+export function workoutPlanSetLocalRemoveTask(id: string): SqlTask {
+  return {
+    statement: `UPDATE workout_plan_set SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?`,
+    values: [new Date().toISOString(), id],
+  };
+}
+
+export function workoutPlanSetServerApplyTask(dto: WorkoutPlanSet): SqlTask {
+  return {
+    statement: `
+      INSERT INTO workout_plan_set (id, plan_exercise_id, set_type, reps, weight_kg, hold_time_seconds, edge_size_mm, distance_meters, rest_time_seconds, order_index, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        plan_exercise_id = excluded.plan_exercise_id, set_type = excluded.set_type, reps = excluded.reps, weight_kg = excluded.weight_kg,
+        hold_time_seconds = excluded.hold_time_seconds, edge_size_mm = excluded.edge_size_mm, distance_meters = excluded.distance_meters,
+        rest_time_seconds = excluded.rest_time_seconds, order_index = excluded.order_index, created_at = excluded.created_at,
+        updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE workout_plan_set._dirty = 0`,
+    values: [
+      dto.id,
+      dto.planExerciseId,
+      dto.setType,
+      dto.reps ?? null,
+      dto.weightKg ?? null,
+      dto.holdTimeSeconds ?? null,
+      dto.edgeSizeMm ?? null,
+      dto.distanceMeters ?? null,
+      dto.restTimeSeconds ?? null,
+      dto.orderIndex,
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function workoutPlanSetTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO workout_plan_set (id, plan_exercise_id, set_type, order_index, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '', 'WORKING', 0, ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+// --- Heti terv: WeeklyPlan → WeeklyPlanSlot (two-level nested aggregate) ---
+
+export interface WeeklyPlanRow {
+  id: string;
+  week_start_date: string;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+/** Omits `slots` — a WeeklyPlan row alone never carries them. */
+export function weeklyPlanRowToDto(row: WeeklyPlanRow): Omit<WeeklyPlan, 'slots'> {
+  return {
+    id: row.id,
+    weekStartDate: row.week_start_date,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+export function weeklyPlanLocalWriteTask(dto: Pick<WeeklyPlan, 'id' | 'weekStartDate'>): SqlTask {
+  return {
+    statement: `
+      INSERT INTO weekly_plan (id, week_start_date, _dirty, _local_only)
+      VALUES (?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET week_start_date = excluded.week_start_date, deleted = 0, deleted_at = NULL, _dirty = 1`,
+    values: [dto.id, dto.weekStartDate],
+  };
+}
+
+export function weeklyPlanServerApplyTask(dto: Omit<WeeklyPlan, 'slots'>): SqlTask {
+  return {
+    statement: `
+      INSERT INTO weekly_plan (id, week_start_date, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        week_start_date = excluded.week_start_date, created_at = excluded.created_at, updated_at = excluded.updated_at,
+        deleted = excluded.deleted, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE weekly_plan._dirty = 0`,
+    values: [dto.id, dto.weekStartDate, dto.createdAt ?? null, dto.updatedAt ?? null, dto.deleted ? 1 : 0, dto.deletedAt ?? null],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function weeklyPlanTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO weekly_plan (id, week_start_date, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '1970-01-01', ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+export interface WeeklyPlanSlotRow {
+  id: string;
+  weekly_plan_id: string;
+  day_of_week: string;
+  plan_id: string;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+export function weeklyPlanSlotRowToDto(row: WeeklyPlanSlotRow): WeeklyPlanSlot {
+  return {
+    id: row.id,
+    weeklyPlanId: row.weekly_plan_id,
+    dayOfWeek: row.day_of_week as WeeklyPlanSlot.DayOfWeekEnum,
+    planId: row.plan_id,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+export function weeklyPlanSlotLocalWriteTask(dto: Pick<WeeklyPlanSlot, 'id' | 'weeklyPlanId' | 'dayOfWeek' | 'planId'>): SqlTask {
+  return {
+    statement: `
+      INSERT INTO weekly_plan_slot (id, weekly_plan_id, day_of_week, plan_id, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET
+        day_of_week = excluded.day_of_week, plan_id = excluded.plan_id, deleted = 0, deleted_at = NULL, _dirty = 1`,
+    values: [dto.id, dto.weeklyPlanId, dto.dayOfWeek, dto.planId],
+  };
+}
+
+/** Local-only removal — a day cleared in the weekly editor (not a standalone outbox entry). */
+export function weeklyPlanSlotLocalRemoveTask(id: string): SqlTask {
+  return {
+    statement: `UPDATE weekly_plan_slot SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?`,
+    values: [new Date().toISOString(), id],
+  };
+}
+
+export function weeklyPlanSlotServerApplyTask(dto: WeeklyPlanSlot): SqlTask {
+  return {
+    statement: `
+      INSERT INTO weekly_plan_slot (id, weekly_plan_id, day_of_week, plan_id, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        weekly_plan_id = excluded.weekly_plan_id, day_of_week = excluded.day_of_week, plan_id = excluded.plan_id,
+        created_at = excluded.created_at, updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at,
+        _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE weekly_plan_slot._dirty = 0`,
+    values: [
+      dto.id,
+      dto.weeklyPlanId,
+      dto.dayOfWeek,
+      dto.planId,
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function weeklyPlanSlotTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO weekly_plan_slot (id, weekly_plan_id, day_of_week, plan_id, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '', 'MONDAY', '', ?, 1, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
     values: [id, updatedAt, deletedAt],
   };

@@ -22,6 +22,8 @@ import { RecipesService } from '../../api/api/recipes.service';
 import { ShoppingListsService } from '../../api/api/shoppingLists.service';
 import { StoredFoodsService } from '../../api/api/storedFoods.service';
 import { SyncService } from '../../api/api/sync.service';
+import { WeeklyPlansService } from '../../api/api/weeklyPlans.service';
+import { WorkoutPlansService } from '../../api/api/workoutPlans.service';
 import { WorkoutSessionsService } from '../../api/api/workoutSessions.service';
 import { ApiError } from '../../api/model/apiError';
 import { CalendarEvent } from '../../api/model/calendarEvent';
@@ -47,8 +49,13 @@ import { ShoppingListItem } from '../../api/model/shoppingListItem';
 import { StoredFood } from '../../api/model/storedFood';
 import { SyncChangeItem } from '../../api/model/syncChangeItem';
 import { UserProfile } from '../../api/model/userProfile';
+import { WeeklyPlan } from '../../api/model/weeklyPlan';
+import { WeeklyPlanSlot } from '../../api/model/weeklyPlanSlot';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 import { WorkoutExerciseEntry } from '../../api/model/workoutExerciseEntry';
+import { WorkoutPlan } from '../../api/model/workoutPlan';
+import { WorkoutPlanExercise } from '../../api/model/workoutPlanExercise';
+import { WorkoutPlanSet } from '../../api/model/workoutPlanSet';
 import { WorkoutSession } from '../../api/model/workoutSession';
 import { WorkoutSetEntry } from '../../api/model/workoutSetEntry';
 import {
@@ -90,10 +97,20 @@ import {
   shoppingListTombstoneTask,
   storedFoodServerApplyTask,
   storedFoodTombstoneTask,
+  weeklyPlanServerApplyTask,
+  weeklyPlanSlotServerApplyTask,
+  weeklyPlanSlotTombstoneTask,
+  weeklyPlanTombstoneTask,
   weightHistoryServerApplyTask,
   weightHistoryTombstoneTask,
   workoutExerciseEntryServerApplyTask,
   workoutExerciseEntryTombstoneTask,
+  workoutPlanExerciseServerApplyTask,
+  workoutPlanExerciseTombstoneTask,
+  workoutPlanServerApplyTask,
+  workoutPlanSetServerApplyTask,
+  workoutPlanSetTombstoneTask,
+  workoutPlanTombstoneTask,
   workoutSessionServerApplyTask,
   workoutSessionTombstoneTask,
   workoutSetEntryServerApplyTask,
@@ -138,6 +155,8 @@ export class SyncEngineService {
   private readonly mealsApi = inject(MealsService);
   private readonly shoppingListsApi = inject(ShoppingListsService);
   private readonly workoutSessionsApi = inject(WorkoutSessionsService);
+  private readonly workoutPlansApi = inject(WorkoutPlansService);
+  private readonly weeklyPlansApi = inject(WeeklyPlansService);
   private readonly syncApi = inject(SyncService);
   private readonly authSession = inject(AuthSessionService);
   private readonly offlineQueue = inject(OfflineQueueService);
@@ -404,6 +423,26 @@ export class SyncEngineService {
         // same as above
       }
     }
+
+    const staleWorkoutPlans = await this.db.query<{ id: string }>('SELECT id FROM workout_plan WHERE _needs_refetch = 1');
+    for (const row of staleWorkoutPlans) {
+      try {
+        const dto = await firstValueFrom(this.workoutPlansApi.getWorkoutPlan(row.id));
+        await this.db.executeTransaction(this.workoutPlanApplyTasks(dto));
+      } catch {
+        // same as above
+      }
+    }
+
+    const staleWeeklyPlans = await this.db.query<{ id: string }>('SELECT id FROM weekly_plan WHERE _needs_refetch = 1');
+    for (const row of staleWeeklyPlans) {
+      try {
+        const dto = await firstValueFrom(this.weeklyPlansApi.getWeeklyPlan(row.id));
+        await this.db.executeTransaction(this.weeklyPlanApplyTasks(dto));
+      } catch {
+        // same as above
+      }
+    }
   }
 
   private async probeBackend(): Promise<boolean> {
@@ -581,6 +620,12 @@ export class SyncEngineService {
     if (item.entityType === 'WorkoutSession') {
       return this.workoutSessionApplyTasks(body as WorkoutSession);
     }
+    if (item.entityType === 'WorkoutPlan') {
+      return this.workoutPlanApplyTasks(body as WorkoutPlan);
+    }
+    if (item.entityType === 'WeeklyPlan') {
+      return this.weeklyPlanApplyTasks(body as WeeklyPlan);
+    }
     if (item.entityType === 'ShoppingListComplete') {
       return this.shoppingListCompleteApplyTasks(item, body as ShoppingListCompleteResponse);
     }
@@ -662,6 +707,28 @@ export class SyncEngineService {
       }
     }
     return tasks;
+  }
+
+  /**
+   * documentation/Architektúra/Backend.md "Nested aggregate PUT": the response lists every exercise
+   * line and target-set row (live or tombstoned — WorkoutPlan.yaml), applied as authoritative so each
+   * one's local `_dirty`/`_local_only` flags clear too — the child rows never get their own outbox
+   * entry. The mandatory post-drain pull (§6 point 9) still independently confirms.
+   */
+  private workoutPlanApplyTasks(dto: WorkoutPlan): SqlTask[] {
+    const tasks: SqlTask[] = [workoutPlanServerApplyTask(dto)];
+    for (const exercise of dto.exercises as WorkoutPlanExercise[]) {
+      tasks.push(workoutPlanExerciseServerApplyTask(exercise));
+      for (const set of exercise.targetSets as WorkoutPlanSet[]) {
+        tasks.push(workoutPlanSetServerApplyTask(set));
+      }
+    }
+    return tasks;
+  }
+
+  /** documentation/Architektúra/Backend.md "Nested aggregate PUT": the response lists every slot row (live or tombstoned — WeeklyPlan.yaml), applied as authoritative. */
+  private weeklyPlanApplyTasks(dto: WeeklyPlan): SqlTask[] {
+    return [weeklyPlanServerApplyTask(dto), ...dto.slots.map((slot: WeeklyPlanSlot) => weeklyPlanSlotServerApplyTask(slot))];
   }
 
   /**
@@ -798,6 +865,25 @@ export class SyncEngineService {
         workoutSessionTombstoneTask(item.targetEntityId, null, now),
         ...exerciseRows.map((row) => workoutExerciseEntryTombstoneTask(row.id, null, now)),
         ...setRows.map((row) => workoutSetEntryTombstoneTask(row.id, null, now)),
+      ]);
+    } else if (item.entityType === 'WorkoutPlan') {
+      // documentation/Subfeatures/Heti terv.md: plan delete cascades to its own exercise lines and target sets locally too.
+      const exerciseRows = await this.db.query<{ id: string }>('SELECT id FROM workout_plan_exercise WHERE plan_id = ?', [item.targetEntityId]);
+      const setRows = await this.db.query<{ id: string }>(
+        'SELECT s.id FROM workout_plan_set s JOIN workout_plan_exercise e ON s.plan_exercise_id = e.id WHERE e.plan_id = ?',
+        [item.targetEntityId],
+      );
+      await this.db.executeTransaction([
+        workoutPlanTombstoneTask(item.targetEntityId, null, now),
+        ...exerciseRows.map((row) => workoutPlanExerciseTombstoneTask(row.id, null, now)),
+        ...setRows.map((row) => workoutPlanSetTombstoneTask(row.id, null, now)),
+      ]);
+    } else if (item.entityType === 'WeeklyPlan') {
+      // documentation/Subfeatures/Heti terv.md: week delete cascades to its own slots locally too.
+      const slotRows = await this.db.query<{ id: string }>('SELECT id FROM weekly_plan_slot WHERE weekly_plan_id = ?', [item.targetEntityId]);
+      await this.db.executeTransaction([
+        weeklyPlanTombstoneTask(item.targetEntityId, null, now),
+        ...slotRows.map((row) => weeklyPlanSlotTombstoneTask(row.id, null, now)),
       ]);
     } else if (item.entityType === 'ShoppingListComplete') {
       // documentation/Subfeatures/Bevásárlás teljesítve.md: 409 ENTITY_DELETED here means the list was
@@ -1080,6 +1166,53 @@ export class SyncEngineService {
         return [workoutSetEntryServerApplyTask(change.data as WorkoutSetEntry)];
       }
       return [workoutSetEntryTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
+    }
+    if (change.entityType === 'WorkoutPlan') {
+      if (!change.deleted) {
+        return [workoutPlanServerApplyTask(change.data as WorkoutPlan)];
+      }
+      // documentation/Subfeatures/Heti terv.md: plan delete cascades to this device's own exercise lines and target sets too.
+      const exerciseRows = await this.db.query<{ id: string }>('SELECT id FROM workout_plan_exercise WHERE plan_id = ?', [change.id]);
+      const setRows = await this.db.query<{ id: string }>(
+        'SELECT s.id FROM workout_plan_set s JOIN workout_plan_exercise e ON s.plan_exercise_id = e.id WHERE e.plan_id = ?',
+        [change.id],
+      );
+      return [
+        workoutPlanTombstoneTask(change.id, null, change.updatedAt),
+        discardPendingWritesTask(change.id),
+        ...exerciseRows.map((row) => workoutPlanExerciseTombstoneTask(row.id, null, change.updatedAt)),
+        ...setRows.map((row) => workoutPlanSetTombstoneTask(row.id, null, change.updatedAt)),
+      ];
+    }
+    if (change.entityType === 'WorkoutPlanExercise') {
+      if (!change.deleted) {
+        return [workoutPlanExerciseServerApplyTask(change.data as WorkoutPlanExercise)];
+      }
+      return [workoutPlanExerciseTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
+    }
+    if (change.entityType === 'WorkoutPlanSet') {
+      if (!change.deleted) {
+        return [workoutPlanSetServerApplyTask(change.data as WorkoutPlanSet)];
+      }
+      return [workoutPlanSetTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
+    }
+    if (change.entityType === 'WeeklyPlan') {
+      if (!change.deleted) {
+        return [weeklyPlanServerApplyTask(change.data as WeeklyPlan)];
+      }
+      // documentation/Subfeatures/Heti terv.md: week delete cascades to this device's own slots too.
+      const slotRows = await this.db.query<{ id: string }>('SELECT id FROM weekly_plan_slot WHERE weekly_plan_id = ?', [change.id]);
+      return [
+        weeklyPlanTombstoneTask(change.id, null, change.updatedAt),
+        discardPendingWritesTask(change.id),
+        ...slotRows.map((row) => weeklyPlanSlotTombstoneTask(row.id, null, change.updatedAt)),
+      ];
+    }
+    if (change.entityType === 'WeeklyPlanSlot') {
+      if (!change.deleted) {
+        return [weeklyPlanSlotServerApplyTask(change.data as WeeklyPlanSlot)];
+      }
+      return [weeklyPlanSlotTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
     }
     return [];
   }

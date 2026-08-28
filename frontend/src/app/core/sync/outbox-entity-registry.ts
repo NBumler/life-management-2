@@ -144,6 +144,16 @@ async function workoutSessionCurrentPayload(ctx: OutboxEntityFixContext): Promis
   return ctx.storage.getWorkoutSession(ctx.targetEntityId);
 }
 
+/** documentation/Subfeatures/Heti terv.md: plan + exercises + target sets are always saved together, POST and PUT alike. */
+async function workoutPlanCurrentPayload(ctx: OutboxEntityFixContext): Promise<unknown> {
+  return ctx.storage.getWorkoutPlan(ctx.targetEntityId);
+}
+
+/** documentation/Subfeatures/Heti terv.md: week + slots are always saved together, POST and PUT alike. */
+async function weeklyPlanCurrentPayload(ctx: OutboxEntityFixContext): Promise<unknown> {
+  return ctx.storage.getWeeklyPlan(ctx.targetEntityId);
+}
+
 /** documentation/Subfeatures/Bevásárlólista írás.md: list + items are always saved together, POST and PUT alike. */
 async function shoppingListCurrentPayload(ctx: OutboxEntityFixContext): Promise<unknown> {
   return ctx.storage.getShoppingList(ctx.targetEntityId);
@@ -295,6 +305,21 @@ export class OutboxEntityRegistryService {
       table: 'workout_session',
       currentPayload: workoutSessionCurrentPayload,
       // Nested aggregate (session + exercises + sets, one body) — excluded from Fix per spec, see buildFixWriteTask doc above.
+      buildFixWriteTask: null,
+      nameUniqueness: null,
+    },
+    WorkoutPlan: {
+      table: 'workout_plan',
+      currentPayload: workoutPlanCurrentPayload,
+      // Nested aggregate (plan + exercises + target sets, one body) — excluded from Fix per spec, see buildFixWriteTask doc above.
+      buildFixWriteTask: null,
+      // documentation/Subfeatures/Heti terv.md: WorkoutPlan.name is not unique (matches LifePlan/CalendarEvent).
+      nameUniqueness: null,
+    },
+    WeeklyPlan: {
+      table: 'weekly_plan',
+      currentPayload: weeklyPlanCurrentPayload,
+      // Nested aggregate (week + slots, one body) — excluded from Fix per spec, see buildFixWriteTask doc above.
       buildFixWriteTask: null,
       nameUniqueness: null,
     },

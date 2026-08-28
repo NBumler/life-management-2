@@ -185,6 +185,23 @@ export const routes: Routes = [
             ],
           },
           {
+            // documentation/Subfeatures/Heti terv.md: the "Heti terv" segment lands on the 7-day
+            // dashboard; the static-template catalog (list + nested editor) is a sub-route off it.
+            path: 'weekly-plan',
+            canActivate: [featureFlagGuard('edzes.hetiTerv')],
+            children: [
+              { path: '', loadComponent: () => import('./pages/workout/weekly-plan/weekly-plan.page').then((m) => m.WeeklyPlanPage) },
+              {
+                path: 'plans',
+                children: [
+                  { path: '', loadComponent: () => import('./pages/workout/plan/plan-list.page').then((m) => m.PlanListPage) },
+                  { path: 'new', loadComponent: () => import('./pages/workout/plan/plan-edit.page').then((m) => m.PlanEditPage) },
+                  { path: ':id', loadComponent: () => import('./pages/workout/plan/plan-edit.page').then((m) => m.PlanEditPage) },
+                ],
+              },
+            ],
+          },
+          {
             // documentation/Features/Edzés.md: Gyakorlat törzsadat opens from the workout header
             // (fogaskerék), not a segment. Gated by tab.edzes along with the rest of the tab.
             path: 'exercises',

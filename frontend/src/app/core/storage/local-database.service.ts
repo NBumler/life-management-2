@@ -566,7 +566,101 @@ const SCHEMA_V16_STATEMENTS: string[] = [
   `CREATE INDEX IF NOT EXISTS idx_workout_set_entry_exercise_entry_id ON workout_set_entry (exercise_entry_id, order_index)`,
 ];
 
-const SCHEMA_VERSION = 16;
+/**
+ * documentation/Subfeatures/Heti terv.md — static training templates (`workout_plan` →
+ * `workout_plan_exercise` → `workout_plan_set`, a three-level nested aggregate mirroring the workout
+ * log) plus the per-week day→template assignment (`weekly_plan` → `weekly_plan_slot`). Child tables
+ * carry no user scope — ownership flows through the parent, as with `meal`/`workout_session`.
+ * `active` is a plain column toggled through the ordinary nested save (no dedicated endpoint).
+ */
+const SCHEMA_V17_STATEMENTS: string[] = [
+  `CREATE TABLE IF NOT EXISTS workout_plan (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    notes TEXT,
+    active INTEGER NOT NULL DEFAULT 1,
+    goal_label TEXT,
+    default_workout_type TEXT,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE TABLE IF NOT EXISTS workout_plan_exercise (
+    id TEXT PRIMARY KEY,
+    plan_id TEXT NOT NULL,
+    exercise_id TEXT NOT NULL,
+    exercise_name TEXT NOT NULL,
+    exercise_category TEXT NOT NULL,
+    exercise_kind TEXT NOT NULL,
+    order_index INTEGER NOT NULL,
+    superset_group INTEGER,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_workout_plan_exercise_plan_id ON workout_plan_exercise (plan_id, order_index)`,
+  `CREATE TABLE IF NOT EXISTS workout_plan_set (
+    id TEXT PRIMARY KEY,
+    plan_exercise_id TEXT NOT NULL,
+    set_type TEXT NOT NULL DEFAULT 'WORKING',
+    reps INTEGER,
+    weight_kg REAL,
+    hold_time_seconds INTEGER,
+    edge_size_mm INTEGER,
+    distance_meters INTEGER,
+    rest_time_seconds INTEGER,
+    order_index INTEGER NOT NULL,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_workout_plan_set_plan_exercise_id ON workout_plan_set (plan_exercise_id, order_index)`,
+  `CREATE TABLE IF NOT EXISTS weekly_plan (
+    id TEXT PRIMARY KEY,
+    week_start_date TEXT NOT NULL,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_weekly_plan_week_start_date ON weekly_plan (week_start_date DESC)`,
+  `CREATE TABLE IF NOT EXISTS weekly_plan_slot (
+    id TEXT PRIMARY KEY,
+    weekly_plan_id TEXT NOT NULL,
+    day_of_week TEXT NOT NULL,
+    plan_id TEXT NOT NULL,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_weekly_plan_slot_weekly_plan_id ON weekly_plan_slot (weekly_plan_id)`,
+];
+
+const SCHEMA_VERSION = 17;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -585,7 +679,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 13, statements: SCHEMA_V13_STATEMENTS },
   { toVersion: 14, statements: SCHEMA_V14_STATEMENTS },
   { toVersion: 15, statements: SCHEMA_V15_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V16_STATEMENTS },
+  { toVersion: 16, statements: SCHEMA_V16_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V17_STATEMENTS },
 ];
 
 export interface SqlTask {

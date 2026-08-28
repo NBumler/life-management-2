@@ -1,0 +1,51 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/workout/weekly-plan"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ 'WORKOUT.PLAN.LIST_TITLE' | translate }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button routerLink="new">{{ 'WORKOUT.PLAN.ADD' | translate }}</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-segment [value]="filter()" (ionChange)="setFilter($any($event.target).value)">
+      <ion-segment-button value="ACTIVE">{{ 'WORKOUT.PLAN.FILTER_ACTIVE' | translate }}</ion-segment-button>
+      <ion-segment-button value="INACTIVE">{{ 'WORKOUT.PLAN.FILTER_INACTIVE' | translate }}</ion-segment-button>
+      <ion-segment-button value="ALL">{{ 'WORKOUT.PLAN.FILTER_ALL' | translate }}</ion-segment-button>
+    </ion-segment>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  @if (isEmpty()) {
+    <ion-list>
+      <ion-item>
+        <ion-label color="medium">{{ 'WORKOUT.PLAN.EMPTY' | translate }}</ion-label>
+      </ion-item>
+    </ion-list>
+  } @else {
+    @for (group of groups(); track group.label) {
+      <ion-list>
+        @if (group.label !== null) {
+          <ion-list-header>{{ group.label }}</ion-list-header>
+        }
+        @for (plan of group.plans; track plan.id) {
+          <ion-item button [routerLink]="[plan.id]" detail="true">
+            <ion-label>
+              <h2>{{ plan.name }}</h2>
+              <p>{{ liveExerciseCount(plan) }} {{ 'WORKOUT.PLAN.EXERCISES_SHORT' | translate }}</p>
+            </ion-label>
+            <ion-toggle
+              slot="end"
+              [checked]="plan.active"
+              (click)="$event.stopPropagation()"
+              (ionChange)="toggleActive(plan, $any($event.target).checked)"
+              [attr.aria-label]="'WORKOUT.PLAN.TOGGLE_ACTIVE' | translate"
+            ></ion-toggle>
+          </ion-item>
+        }
+      </ion-list>
+    }
+  }
+</ion-content>

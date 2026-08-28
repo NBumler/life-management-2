@@ -647,6 +647,48 @@
       "ADHOC_TITLE": "Ad-hoc exercise",
       "ADHOC_HINT": "Type a name if it is not in the catalog. The log snapshots the name/category/kind at save time.",
       "SAVE_TO_CATALOG": "Save to catalog"
+    },
+    "PLAN": {
+      "LIST_TITLE": "Workout templates",
+      "ADD": "New template",
+      "NEW_TITLE": "New template",
+      "EDIT_TITLE": "Edit template",
+      "EMPTY": "No template matches the filter.",
+      "EXERCISES_SHORT": "exercises",
+      "TOGGLE_ACTIVE": "Toggle active",
+      "FILTER_ACTIVE": "Active",
+      "FILTER_INACTIVE": "Inactive",
+      "FILTER_ALL": "All",
+      "FIELD_NAME": "Name",
+      "FIELD_NAME_PLACEHOLDER": "e.g. Upper body A",
+      "FIELD_GOAL_LABEL": "Group label",
+      "FIELD_GOAL_LABEL_PLACEHOLDER": "e.g. Base rotation",
+      "FIELD_DEFAULT_TYPE": "Default workout type",
+      "DEFAULT_TYPE_NONE": "Not set",
+      "FIELD_NOTES": "Notes",
+      "FIELD_REST": "Target rest (s)",
+      "DELETE": "Delete template",
+      "DELETE_CONFIRM_TITLE": "Delete template",
+      "DELETE_CONFIRM_MESSAGE": "Delete this template? Past workout logs and weekly assignments pointing at it are left untouched."
+    },
+    "WEEKLY": {
+      "WEEK_OF": "Week of:",
+      "MANAGE_PLANS": "Manage templates",
+      "NO_ACTIVE_PLANS": "No active workout template yet.",
+      "ASSIGN": "Pick a template",
+      "REST_DAY": "Rest day",
+      "DONE": "Done",
+      "START": "Start workout",
+      "COPY_NEXT_WEEK": "Copy to next week",
+      "DAY": {
+        "MONDAY": "Monday",
+        "TUESDAY": "Tuesday",
+        "WEDNESDAY": "Wednesday",
+        "THURSDAY": "Thursday",
+        "FRIDAY": "Friday",
+        "SATURDAY": "Saturday",
+        "SUNDAY": "Sunday"
+      }
     }
   }
 }

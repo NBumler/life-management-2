@@ -26,10 +26,12 @@ import {
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 import { WorkoutExerciseEntry } from '../../../api/model/workoutExerciseEntry';
+import { WorkoutPlan } from '../../../api/model/workoutPlan';
 import { WorkoutSession } from '../../../api/model/workoutSession';
 import { WorkoutSetEntry } from '../../../api/model/workoutSetEntry';
 import { ExerciseRepository } from '../../../core/data/exercise.repository';
 import { ProfileRepository } from '../../../core/data/profile.repository';
+import { WorkoutPlanRepository } from '../../../core/data/workout-plan.repository';
 import {
   ActiveExerciseDraft,
   ActiveWorkoutDraft,
@@ -110,6 +112,7 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
   private readonly draftService = inject(WorkoutDraftService);
   private readonly repository = inject(WorkoutSessionRepository);
   private readonly exerciseRepository = inject(ExerciseRepository);
+  private readonly planRepository = inject(WorkoutPlanRepository);
   private readonly profileRepository = inject(ProfileRepository);
   private readonly alertController = inject(AlertController);
   private readonly translate = inject(TranslateService);
@@ -150,6 +153,7 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
     await Promise.all([
       this.repository.load(),
       this.exerciseRepository.load(),
+      this.planRepository.load(),
       this.profileRepository.load(),
       this.draftService.refresh(),
     ]);
@@ -171,6 +175,19 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
         this.workoutType.set(source.workoutType);
         this.planId = source.planId ?? null;
         this.exercises.set(this.rowsFromSession(source));
+      }
+      // documentation/Subfeatures/Heti terv.md "Edzés indítása a tervből": preload structure + target
+      // sets from a WorkoutPlan; the session's planId then points at that template for adherence.
+      const planIdParam = this.route.snapshot.queryParamMap.get('planId');
+      if (source === undefined && planIdParam !== null) {
+        const plan = this.planRepository.byId(planIdParam);
+        if (plan !== undefined && !plan.deleted) {
+          this.planId = plan.id;
+          if (plan.defaultWorkoutType != null && (WORKOUT_TYPES as string[]).includes(plan.defaultWorkoutType)) {
+            this.workoutType.set(plan.defaultWorkoutType as unknown as WorkoutSession.WorkoutTypeEnum);
+          }
+          this.exercises.set(this.rowsFromPlan(plan));
+        }
       }
       await this.persist();
     }
@@ -558,6 +575,38 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
             .map((set) => ({
               id: uuidV4(),
               setType: signal(set.setType),
+              reps: signal(set.reps ?? null),
+              weightKg: signal(set.weightKg ?? null),
+              holdTimeSeconds: signal(set.holdTimeSeconds ?? null),
+              edgeSizeMm: signal(set.edgeSizeMm ?? null),
+              distanceMeters: signal(set.distanceMeters ?? null),
+              restTimeSeconds: signal(set.restTimeSeconds ?? null),
+              isCompleted: signal(false),
+            })),
+        ),
+      }));
+  }
+
+  /** documentation/Subfeatures/Heti terv.md "Indítás": clone a template's structure + target sets, fresh ids, un-ticked. */
+  private rowsFromPlan(plan: WorkoutPlan): ExerciseRow[] {
+    return plan.exercises
+      .filter((exercise) => !exercise.deleted)
+      .sort((a, b) => a.orderIndex - b.orderIndex)
+      .map((exercise) => ({
+        id: uuidV4(),
+        exerciseId: exercise.exerciseId,
+        exerciseName: exercise.exerciseName,
+        exerciseCategory: exercise.exerciseCategory as unknown as WorkoutExerciseEntry.ExerciseCategoryEnum,
+        exerciseKind: exercise.exerciseKind as unknown as WorkoutExerciseEntry.ExerciseKindEnum,
+        defaultRestTimeSeconds: this.catalogRestFor(exercise.exerciseId),
+        supersetGroup: signal(exercise.supersetGroup ?? null),
+        sets: signal(
+          exercise.targetSets
+            .filter((set) => !set.deleted)
+            .sort((a, b) => a.orderIndex - b.orderIndex)
+            .map((set) => ({
+              id: uuidV4(),
+              setType: signal(set.setType as unknown as WorkoutSetEntry.SetTypeEnum),
               reps: signal(set.reps ?? null),
               weightKg: signal(set.weightKg ?? null),
               holdTimeSeconds: signal(set.holdTimeSeconds ?? null),

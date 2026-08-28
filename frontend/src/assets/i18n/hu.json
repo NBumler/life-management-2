@@ -647,6 +647,48 @@
         "HANGBOARD_PINCH": "A szetten: léc mérete (mm) + tartás ideje (mp) (+ opcionális súly).",
         "CARDIO_TIME_DIST": "A szetten: idő (mp) + táv (m)."
       }
+    },
+    "PLAN": {
+      "LIST_TITLE": "Edzéssablonok",
+      "ADD": "Új sablon",
+      "NEW_TITLE": "Új sablon",
+      "EDIT_TITLE": "Sablon szerkesztése",
+      "EMPTY": "Nincs a szűrőnek megfelelő sablon.",
+      "EXERCISES_SHORT": "gyakorlat",
+      "TOGGLE_ACTIVE": "Aktív ki/be",
+      "FILTER_ACTIVE": "Aktív",
+      "FILTER_INACTIVE": "Inaktív",
+      "FILTER_ALL": "Mind",
+      "FIELD_NAME": "Név",
+      "FIELD_NAME_PLACEHOLDER": "pl. Felsőtest A",
+      "FIELD_GOAL_LABEL": "Csoport címke",
+      "FIELD_GOAL_LABEL_PLACEHOLDER": "pl. Alap rotáció",
+      "FIELD_DEFAULT_TYPE": "Alap edzéstípus",
+      "DEFAULT_TYPE_NONE": "Nincs megadva",
+      "FIELD_NOTES": "Megjegyzés",
+      "FIELD_REST": "Cél pihenő (mp)",
+      "DELETE": "Sablon törlése",
+      "DELETE_CONFIRM_TITLE": "Sablon törlése",
+      "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd ezt a sablont? A korábbi edzésnaplók és a rá mutató heti kiosztások érintetlenek maradnak."
+    },
+    "WEEKLY": {
+      "WEEK_OF": "Hét kezdete:",
+      "MANAGE_PLANS": "Sablonok kezelése",
+      "NO_ACTIVE_PLANS": "Még nincs aktív edzéssablon.",
+      "ASSIGN": "Sablon választása",
+      "REST_DAY": "Pihenőnap",
+      "DONE": "Teljesítve",
+      "START": "Edzés indítása",
+      "COPY_NEXT_WEEK": "Másolás következő hétre",
+      "DAY": {
+        "MONDAY": "Hétfő",
+        "TUESDAY": "Kedd",
+        "WEDNESDAY": "Szerda",
+        "THURSDAY": "Csütörtök",
+        "FRIDAY": "Péntek",
+        "SATURDAY": "Szombat",
+        "SUNDAY": "Vasárnap"
+      }
     }
   }
 }
