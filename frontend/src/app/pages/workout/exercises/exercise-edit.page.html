@@ -1,0 +1,97 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/workout/exercises"></ion-back-button>
+    </ion-buttons>
+    <ion-title>
+      {{ (exerciseId() ? 'WORKOUT.EXERCISES.EDIT_TITLE' : 'WORKOUT.EXERCISES.NEW_TITLE') | translate }}
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button strong="true" (click)="save()">{{ 'COMMON.SAVE' | translate }}</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <form [formGroup]="form" (ngSubmit)="save()">
+    <ion-list>
+      <ion-item>
+        <ion-input
+          label="{{ 'WORKOUT.EXERCISES.FIELD_NAME' | translate }}"
+          labelPlacement="stacked"
+          formControlName="name"
+          [placeholder]="'WORKOUT.EXERCISES.FIELD_NAME_PLACEHOLDER' | translate"
+        ></ion-input>
+      </ion-item>
+      @if (nameConflictError()) {
+        <ion-item lines="none">
+          <ion-note color="danger">{{ nameConflictError() }}</ion-note>
+        </ion-item>
+      }
+
+      <ion-item>
+        <ion-select
+          label="{{ 'WORKOUT.EXERCISES.FIELD_CATEGORY' | translate }}"
+          labelPlacement="stacked"
+          formControlName="category"
+          interface="popover"
+        >
+          @for (category of categories; track category) {
+            <ion-select-option [value]="category">{{ categoryLabelKeys[category] | translate }}</ion-select-option>
+          }
+        </ion-select>
+      </ion-item>
+
+      <ion-item>
+        <ion-select
+          label="{{ 'WORKOUT.EXERCISES.FIELD_KIND' | translate }}"
+          labelPlacement="stacked"
+          formControlName="kind"
+          interface="popover"
+          (ionChange)="onKindChange($any($event.detail.value))"
+        >
+          @for (kind of kinds; track kind) {
+            <ion-select-option [value]="kind">{{ kindLabelKeys[kind] | translate }}</ion-select-option>
+          }
+        </ion-select>
+      </ion-item>
+      <ion-item lines="none">
+        <ion-note>{{ kindFieldHintKey() | translate }}</ion-note>
+      </ion-item>
+
+      <ion-item>
+        <ion-input
+          type="number"
+          inputmode="numeric"
+          label="{{ 'WORKOUT.EXERCISES.FIELD_REST_SECONDS' | translate }}"
+          labelPlacement="stacked"
+          formControlName="defaultRestTimeSeconds"
+          [placeholder]="'WORKOUT.EXERCISES.FIELD_REST_SECONDS_PLACEHOLDER' | translate"
+          min="1"
+        ></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-input
+          label="{{ 'WORKOUT.EXERCISES.FIELD_EQUIPMENT' | translate }}"
+          labelPlacement="stacked"
+          formControlName="equipment"
+          [placeholder]="'WORKOUT.EXERCISES.FIELD_EQUIPMENT_PLACEHOLDER' | translate"
+        ></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-toggle formControlName="isFavorite">{{ 'WORKOUT.EXERCISES.FIELD_FAVORITE' | translate }}</ion-toggle>
+      </ion-item>
+    </ion-list>
+
+    <div class="ion-padding">
+      <ion-button expand="block" type="submit">{{ 'COMMON.SAVE' | translate }}</ion-button>
+      @if (exerciseId()) {
+        <ion-button expand="block" fill="clear" color="danger" (click)="delete()">
+          {{ 'COMMON.DELETE' | translate }}
+        </ion-button>
+      }
+    </div>
+  </form>
+</ion-content>

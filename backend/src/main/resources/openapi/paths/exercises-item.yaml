@@ -1,0 +1,63 @@
+parameters:
+  - name: id
+    in: path
+    required: true
+    schema:
+      type: string
+      format: uuid
+get:
+  operationId: getExercise
+  tags:
+    - exercises
+  summary: A single exercise. Own deleted row returns 200 with deleted=true (not 404).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/Exercise.yaml'
+    '404':
+      description: No such exercise (or it belongs to another user).
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+put:
+  operationId: updateExercise
+  tags:
+    - exercises
+  summary: Full update (last-write-wins).
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/Exercise.yaml'
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/Exercise.yaml'
+    '409':
+      description: Entity already deleted, or another live exercise already has this name.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+delete:
+  operationId: deleteExercise
+  tags:
+    - exercises
+  summary: >-
+    Soft delete, idempotent. Past Edzésnapló / Heti terv snapshots are untouched
+    (documentation/Subfeatures/Gyakorlat.md "Törlés").
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/Exercise.yaml'

@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 
 import { CalendarEvent } from '../../api/model/calendarEvent';
+import { Exercise } from '../../api/model/exercise';
 import { Food } from '../../api/model/food';
 import { GearItem } from '../../api/model/gearItem';
 import { HouseholdRoom } from '../../api/model/householdRoom';
@@ -11,10 +12,12 @@ import { StoredFood } from '../../api/model/storedFood';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 import { normalizeName } from '../../shared/name-normalization';
+import { ExerciseRepository } from '../data/exercise.repository';
 import { GearItemRepository } from '../data/gear-item.repository';
 import { HouseholdRoomRepository } from '../data/household-room.repository';
 import {
   CalendarEventRow,
+  ExerciseRow,
   FoodRow,
   GearItemRow,
   HouseholdRoomRow,
@@ -27,6 +30,8 @@ import {
   WeightHistoryRow,
   calendarEventLocalWriteTask,
   calendarEventRowToDto,
+  exerciseLocalWriteTask,
+  exerciseRowToDto,
   foodLocalWriteTask,
   foodRowToDto,
   gearItemLocalWriteTask,
@@ -149,6 +154,7 @@ async function shoppingListCurrentPayload(ctx: OutboxEntityFixContext): Promise<
 @Injectable({ providedIn: 'root' })
 export class OutboxEntityRegistryService {
   private readonly gearItems = inject(GearItemRepository);
+  private readonly exercises = inject(ExerciseRepository);
   private readonly householdRooms = inject(HouseholdRoomRepository);
 
   private readonly registry: Record<OutboxEntityType, OutboxEntityDescriptor> = {
@@ -204,6 +210,21 @@ export class OutboxEntityRegistryService {
       buildFixWriteTask: (payload) => lifePlanLocalWriteTask(payload as unknown as LifePlan),
       // documentation/Architektúra/Névegyediség.md: LifePlan.title is explicitly not unique.
       nameUniqueness: null,
+    },
+    Exercise: {
+      table: 'exercise_catalog',
+      currentPayload: rowLookup<ExerciseRow, unknown>('exercise_catalog', exerciseRowToDto),
+      buildFixWriteTask: (payload) => exerciseLocalWriteTask(payload as unknown as Exercise),
+      nameUniqueness: {
+        field: 'name',
+        findConflict: async (value, excludeId) => {
+          if (!this.exercises.loaded()) {
+            await this.exercises.load();
+          }
+          const normalized = normalizeName(value);
+          return this.exercises.items().find((item) => item.id !== excludeId && normalizeName(item.name) === normalized)?.id ?? null;
+        },
+      },
     },
     HouseholdRoom: {
       table: 'household_room',

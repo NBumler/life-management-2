@@ -1,0 +1,78 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/workout"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ 'WORKOUT.EXERCISES.TITLE' | translate }}</ion-title>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-searchbar
+      [value]="query()"
+      (ionInput)="query.set($any($event.target).value ?? '')"
+      [placeholder]="'WORKOUT.EXERCISES.SEARCH_PLACEHOLDER' | translate"
+      [debounce]="200"
+    ></ion-searchbar>
+  </ion-toolbar>
+  <ion-toolbar>
+    <div class="filter-chips">
+      <ion-chip [outline]="!favoritesOnly()" [color]="favoritesOnly() ? 'warning' : undefined" (click)="toggleFavoritesOnly()">
+        <ion-icon [name]="favoritesOnly() ? 'star' : 'star-outline'" aria-hidden="true"></ion-icon>
+        <ion-label>{{ 'WORKOUT.EXERCISES.FAVORITES_FILTER' | translate }}</ion-label>
+      </ion-chip>
+      @for (category of categories; track category) {
+        <ion-chip
+          [outline]="categoryFilter() !== category"
+          [color]="categoryFilter() === category ? 'primary' : undefined"
+          (click)="toggleCategory(category)"
+        >
+          <ion-label>{{ categoryLabelKeys[category] | translate }}</ion-label>
+        </ion-chip>
+      }
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-list>
+    <ion-item button routerLink="new">
+      <ion-icon name="add-outline" slot="start" aria-hidden="true"></ion-icon>
+      <ion-label>{{ 'WORKOUT.EXERCISES.ADD' | translate }}</ion-label>
+    </ion-item>
+
+    @if (isEmpty()) {
+      <ion-item>
+        <ion-label color="medium">{{ 'WORKOUT.EXERCISES.EMPTY' | translate }}</ion-label>
+      </ion-item>
+    } @else if (hasNoResults()) {
+      <ion-item>
+        <ion-label color="medium">{{ 'WORKOUT.EXERCISES.NO_RESULTS' | translate }}</ion-label>
+      </ion-item>
+    }
+
+    @for (exercise of filtered(); track exercise.id) {
+      <ion-item button [routerLink]="[exercise.id]">
+        <ion-button
+          slot="start"
+          fill="clear"
+          [attr.aria-label]="'WORKOUT.EXERCISES.TOGGLE_FAVORITE' | translate"
+          (click)="toggleFavorite(exercise, $event)"
+        >
+          <ion-icon
+            slot="icon-only"
+            [name]="exercise.isFavorite ? 'star' : 'star-outline'"
+            [color]="exercise.isFavorite ? 'warning' : 'medium'"
+          ></ion-icon>
+        </ion-button>
+        <ion-label>
+          <h3>{{ exercise.name }}</h3>
+          <p>
+            {{ categoryLabelKeys[exercise.category] | translate }} · {{ kindLabelKeys[exercise.kind] | translate }}
+            @if (exercise.equipment) {
+              · {{ exercise.equipment }}
+            }
+          </p>
+        </ion-label>
+      </ion-item>
+    }
+  </ion-list>
+</ion-content>

@@ -1,6 +1,7 @@
 import { InjectionToken } from '@angular/core';
 
 import { CalendarEvent } from '../../api/model/calendarEvent';
+import { Exercise } from '../../api/model/exercise';
 import { Food } from '../../api/model/food';
 import { GearItem } from '../../api/model/gearItem';
 import { HouseholdRoom } from '../../api/model/householdRoom';
@@ -338,6 +339,18 @@ export interface StorageBackend {
   listLifePlans(): Promise<LifePlan[]>;
   upsertLifePlan(plan: LifePlan): Promise<LifePlan>;
   deleteLifePlan(id: string): Promise<LifePlan>;
+
+  /** documentation/Subfeatures/Gyakorlat.md: user-owned exercise master catalog. */
+  listExercises(): Promise<Exercise[]>;
+  upsertExercise(exercise: Exercise): Promise<Exercise>;
+  deleteExercise(id: string): Promise<Exercise>;
+  /**
+   * documentation/Subfeatures/Gyakorlat.md "Seed": first-run bootstrap of the built-in exercises
+   * (`core/data/exercise-seed.ts`). Each row is written like a normal create (local + outbox on
+   * native, POST on web); ids are deterministic UUID v5 so two devices converge. A no-op once the
+   * catalog is non-empty. Each backend resolves the current user id itself.
+   */
+  seedExercises(): Promise<void>;
 
   listHouseholdRooms(): Promise<HouseholdRoom[]>;
   upsertHouseholdRoom(room: HouseholdRoom): Promise<HouseholdRoom>;

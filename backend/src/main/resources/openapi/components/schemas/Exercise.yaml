@@ -1,0 +1,63 @@
+type: object
+description: >-
+  documentation/Subfeatures/Gyakorlat.md — user-owned exercise master catalog entry. `kind`
+  determines which set-entry input fields the Edzésnapló shows; `category` drives picker chips and
+  statistics. Edzésnapló entries snapshot name/category/kind, so editing or soft-deleting a row here
+  never rewrites past sessions.
+required:
+  - id
+  - name
+  - category
+  - kind
+  - isFavorite
+  - deleted
+properties:
+  id:
+    type: string
+    format: uuid
+  name:
+    type: string
+    minLength: 1
+  category:
+    type: string
+    enum:
+      - CHEST
+      - BACK
+      - LEGS
+      - SHOULDERS
+      - ARMS
+      - CORE
+      - FOREARM_FINGERS
+      - FULL_BODY
+  kind:
+    type: string
+    enum:
+      - WEIGHTED_REPS
+      - BODYWEIGHT_REPS
+      - ISOMETRIC_TIME
+      - HANGBOARD_PINCH
+      - CARDIO_TIME_DIST
+  defaultRestTimeSeconds:
+    type: integer
+    minimum: 1
+    nullable: true
+  isFavorite:
+    type: boolean
+  equipment:
+    type: string
+    nullable: true
+  deleted:
+    type: boolean
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

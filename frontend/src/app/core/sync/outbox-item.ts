@@ -19,6 +19,7 @@ export type OutboxEntityType =
   | 'PackingSession'
   | 'PackingSessionItem'
   | 'LifePlan'
+  | 'Exercise'
   | 'HouseholdRoom'
   | 'HouseholdTask'
   | 'CalendarEvent'

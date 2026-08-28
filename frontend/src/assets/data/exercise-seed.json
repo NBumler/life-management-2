@@ -1,0 +1,14 @@
+[
+  { "name": "Fekvenyomás", "category": "CHEST", "kind": "WEIGHTED_REPS", "defaultRestTimeSeconds": 180, "isFavorite": true, "equipment": "Rúd + pad" },
+  { "name": "Fekvőtámasz", "category": "CHEST", "kind": "BODYWEIGHT_REPS", "defaultRestTimeSeconds": 90, "isFavorite": false, "equipment": null },
+  { "name": "Guggolás", "category": "LEGS", "kind": "WEIGHTED_REPS", "defaultRestTimeSeconds": 180, "isFavorite": true, "equipment": "Rúd + állvány" },
+  { "name": "Csípőemelés", "category": "LEGS", "kind": "WEIGHTED_REPS", "defaultRestTimeSeconds": 120, "isFavorite": false, "equipment": "Rúd + pad" },
+  { "name": "Felhúzás", "category": "BACK", "kind": "WEIGHTED_REPS", "defaultRestTimeSeconds": 180, "isFavorite": true, "equipment": "Rúd" },
+  { "name": "Húzódzkodás", "category": "BACK", "kind": "BODYWEIGHT_REPS", "defaultRestTimeSeconds": 120, "isFavorite": false, "equipment": "Húzódzkodó rúd" },
+  { "name": "Vállból nyomás", "category": "SHOULDERS", "kind": "WEIGHTED_REPS", "defaultRestTimeSeconds": 150, "isFavorite": false, "equipment": "Rúd" },
+  { "name": "Bicepsz hajlítás", "category": "ARMS", "kind": "WEIGHTED_REPS", "defaultRestTimeSeconds": 90, "isFavorite": false, "equipment": "Kézisúlyzók" },
+  { "name": "Tricepsz nyújtás", "category": "ARMS", "kind": "WEIGHTED_REPS", "defaultRestTimeSeconds": 90, "isFavorite": false, "equipment": "Kábel" },
+  { "name": "Plank", "category": "CORE", "kind": "ISOMETRIC_TIME", "defaultRestTimeSeconds": 60, "isFavorite": false, "equipment": null },
+  { "name": "Evezőgép", "category": "FULL_BODY", "kind": "CARDIO_TIME_DIST", "defaultRestTimeSeconds": 60, "isFavorite": false, "equipment": "Evezőgép" },
+  { "name": "Ujjedző léc", "category": "FOREARM_FINGERS", "kind": "HANGBOARD_PINCH", "defaultRestTimeSeconds": 180, "isFavorite": false, "equipment": "Ujjedző tábla" }
+]

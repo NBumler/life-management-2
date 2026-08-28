@@ -6,6 +6,7 @@ import { Network } from '@capacitor/network';
 import { firstValueFrom, timeout } from 'rxjs';
 
 import { EventsService } from '../../api/api/events.service';
+import { ExercisesService } from '../../api/api/exercises.service';
 import { FoodsService } from '../../api/api/foods.service';
 import { GearItemsService } from '../../api/api/gearItems.service';
 import { HealthService } from '../../api/api/health.service';
@@ -23,6 +24,7 @@ import { StoredFoodsService } from '../../api/api/storedFoods.service';
 import { SyncService } from '../../api/api/sync.service';
 import { ApiError } from '../../api/model/apiError';
 import { CalendarEvent } from '../../api/model/calendarEvent';
+import { Exercise } from '../../api/model/exercise';
 import { Food } from '../../api/model/food';
 import { GearItem } from '../../api/model/gearItem';
 import { HouseholdRoom } from '../../api/model/householdRoom';
@@ -48,6 +50,8 @@ import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 import {
   calendarEventServerApplyTask,
   calendarEventTombstoneTask,
+  exerciseServerApplyTask,
+  exerciseTombstoneTask,
   foodServerApplyTask,
   foodTombstoneTask,
   gearItemServerApplyTask,
@@ -114,6 +118,7 @@ export class SyncEngineService {
   private readonly packingSessionsApi = inject(PackingSessionsService);
   private readonly packingSessionItemsApi = inject(PackingSessionItemsService);
   private readonly lifePlansApi = inject(LifePlansService);
+  private readonly exercisesApi = inject(ExercisesService);
   private readonly householdRoomsApi = inject(HouseholdRoomsService);
   private readonly householdTasksApi = inject(HouseholdTasksService);
   private readonly eventsApi = inject(EventsService);
@@ -284,6 +289,16 @@ export class SyncEngineService {
       try {
         const dto = await firstValueFrom(this.lifePlansApi.getLifePlan(row.id));
         await this.db.executeTransaction([lifePlanServerApplyTask(dto)]);
+      } catch {
+        // same as above
+      }
+    }
+
+    const staleExercises = await this.db.query<{ id: string }>('SELECT id FROM exercise_catalog WHERE _needs_refetch = 1');
+    for (const row of staleExercises) {
+      try {
+        const dto = await firstValueFrom(this.exercisesApi.getExercise(row.id));
+        await this.db.executeTransaction([exerciseServerApplyTask(dto)]);
       } catch {
         // same as above
       }
@@ -515,6 +530,9 @@ export class SyncEngineService {
     if (item.entityType === 'LifePlan') {
       return [lifePlanServerApplyTask(body as LifePlan)];
     }
+    if (item.entityType === 'Exercise') {
+      return [exerciseServerApplyTask(body as Exercise)];
+    }
     if (item.entityType === 'HouseholdRoom') {
       return [householdRoomServerApplyTask(body as HouseholdRoom)];
     }
@@ -667,6 +685,8 @@ export class SyncEngineService {
       await this.db.executeTransaction([packingSessionItemTombstoneTask(item.targetEntityId, null, now)]);
     } else if (item.entityType === 'LifePlan') {
       await this.db.executeTransaction([lifePlanTombstoneTask(item.targetEntityId, null, now)]);
+    } else if (item.entityType === 'Exercise') {
+      await this.db.executeTransaction([exerciseTombstoneTask(item.targetEntityId, null, now)]);
     } else if (item.entityType === 'HouseholdRoom') {
       // documentation/Subfeatures/Háztartási feladatok.md: room delete cascades to its own tasks locally too.
       const taskRows = await this.db.query<{ id: string }>('SELECT id FROM household_task WHERE room_id = ?', [item.targetEntityId]);
@@ -876,6 +896,12 @@ export class SyncEngineService {
         return [lifePlanServerApplyTask(change.data as LifePlan)];
       }
       return [lifePlanTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
+    }
+    if (change.entityType === 'Exercise') {
+      if (!change.deleted) {
+        return [exerciseServerApplyTask(change.data as Exercise)];
+      }
+      return [exerciseTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
     }
     if (change.entityType === 'HouseholdRoom') {
       if (!change.deleted) {

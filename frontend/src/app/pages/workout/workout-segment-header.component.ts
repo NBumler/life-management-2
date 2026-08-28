@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
-import { Router } from '@angular/router';
-import { IonLabel, IonSegment, IonSegmentButton, IonToolbar } from '@ionic/angular/standalone';
+import { Router, RouterLink } from '@angular/router';
+import { IonButton, IonButtons, IonIcon, IonLabel, IonSegment, IonSegmentButton, IonToolbar } from '@ionic/angular/standalone';
 import { TranslatePipe } from '@ngx-translate/core';
 
 import { FeatureFlagsService } from '../../core/config/feature-flags.service';
@@ -26,9 +26,14 @@ import { WORKOUT_SECTIONS, WorkoutSection, WorkoutSectionDef, navigateWorkoutSec
           </ion-segment-button>
         }
       </ion-segment>
+      <ion-buttons slot="end">
+        <ion-button routerLink="/tabs/workout/exercises" [attr.aria-label]="'WORKOUT.EXERCISES.TITLE' | translate">
+          <ion-icon slot="icon-only" name="settings-outline"></ion-icon>
+        </ion-button>
+      </ion-buttons>
     </ion-toolbar>
   `,
-  imports: [IonToolbar, IonSegment, IonSegmentButton, IonLabel, TranslatePipe],
+  imports: [IonToolbar, IonSegment, IonSegmentButton, IonLabel, IonButtons, IonButton, IonIcon, RouterLink, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WorkoutSegmentHeaderComponent {

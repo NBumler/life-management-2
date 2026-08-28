@@ -506,6 +506,53 @@
     },
     "LOG": {
       "EMPTY": "No workouts logged yet."
+    },
+    "EXERCISES": {
+      "TITLE": "Exercises",
+      "EDIT_TITLE": "Edit exercise",
+      "NEW_TITLE": "New exercise",
+      "ADD": "New exercise",
+      "EMPTY": "No exercises in the catalog yet.",
+      "NO_RESULTS": "No exercise matches the filters.",
+      "SEARCH_PLACEHOLDER": "Search by name or equipment",
+      "FAVORITES_FILTER": "Favorites",
+      "TOGGLE_FAVORITE": "Toggle favorite",
+      "NAME_CONFLICT": "An exercise named “{{name}}” already exists in the live catalog.",
+      "DELETE_CONFIRM_TITLE": "Delete exercise",
+      "DELETE_CONFIRM_MESSAGE": "Delete the exercise “{{name}}”? Past workout logs are left untouched.",
+      "FIELD_NAME": "Name",
+      "FIELD_NAME_PLACEHOLDER": "e.g. Bench press",
+      "FIELD_CATEGORY": "Category",
+      "FIELD_KIND": "Kind",
+      "FIELD_REST_SECONDS": "Default rest time (s)",
+      "FIELD_REST_SECONDS_PLACEHOLDER": "e.g. 120",
+      "FIELD_EQUIPMENT": "Equipment",
+      "FIELD_EQUIPMENT_PLACEHOLDER": "e.g. Barbell + bench",
+      "FIELD_FAVORITE": "Favorite",
+      "CATEGORY": {
+        "CHEST": "Chest",
+        "BACK": "Back",
+        "LEGS": "Legs",
+        "SHOULDERS": "Shoulders",
+        "ARMS": "Arms",
+        "CORE": "Core",
+        "FOREARM_FINGERS": "Forearm, fingers",
+        "FULL_BODY": "Full body"
+      },
+      "KIND": {
+        "WEIGHTED_REPS": "Weighted reps",
+        "BODYWEIGHT_REPS": "Bodyweight reps",
+        "ISOMETRIC_TIME": "Isometric (hold)",
+        "HANGBOARD_PINCH": "Hangboard / pinch",
+        "CARDIO_TIME_DIST": "Cardio (time + distance)"
+      },
+      "KIND_HINT": {
+        "WEIGHTED_REPS": "Per set: reps + weight (kg).",
+        "BODYWEIGHT_REPS": "Per set: reps (+ optional weight for assistance / added load).",
+        "ISOMETRIC_TIME": "Per set: hold time (s) (+ optional weight).",
+        "HANGBOARD_PINCH": "Per set: edge size (mm) + hold time (s) (+ optional weight).",
+        "CARDIO_TIME_DIST": "Per set: time (s) + distance (m)."
+      }
     }
   }
 }

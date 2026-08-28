@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
 import { EventsService } from '../../api/api/events.service';
+import { ExercisesService } from '../../api/api/exercises.service';
 import { FoodsService } from '../../api/api/foods.service';
 import { GearItemsService } from '../../api/api/gearItems.service';
 import { HouseholdRoomsService } from '../../api/api/householdRooms.service';
@@ -16,6 +17,7 @@ import { RecipesService } from '../../api/api/recipes.service';
 import { ShoppingListsService } from '../../api/api/shoppingLists.service';
 import { StoredFoodsService } from '../../api/api/storedFoods.service';
 import { CalendarEvent } from '../../api/model/calendarEvent';
+import { Exercise } from '../../api/model/exercise';
 import { Food } from '../../api/model/food';
 import { GearItem } from '../../api/model/gearItem';
 import { HouseholdRoom } from '../../api/model/householdRoom';
@@ -32,6 +34,8 @@ import { ShoppingList } from '../../api/model/shoppingList';
 import { StoredFood } from '../../api/model/storedFood';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
+import { buildSeedExercises } from '../data/exercise-seed';
+import { AuthSessionService } from '../session/auth-session.service';
 import { uuidV4 } from '../sync/uuid';
 import {
   GearItemReferenceCounts,
@@ -57,6 +61,7 @@ export class HttpStorageBackend implements StorageBackend {
   private readonly packingSessionsApi = inject(PackingSessionsService);
   private readonly packingSessionItemsApi = inject(PackingSessionItemsService);
   private readonly lifePlansApi = inject(LifePlansService);
+  private readonly exercisesApi = inject(ExercisesService);
   private readonly householdRoomsApi = inject(HouseholdRoomsService);
   private readonly householdTasksApi = inject(HouseholdTasksService);
   private readonly eventsApi = inject(EventsService);
@@ -65,6 +70,7 @@ export class HttpStorageBackend implements StorageBackend {
   private readonly recipesApi = inject(RecipesService);
   private readonly mealsApi = inject(MealsService);
   private readonly shoppingListsApi = inject(ShoppingListsService);
+  private readonly authSession = inject(AuthSessionService);
 
   async getProfile(): Promise<UserProfile | null> {
     try {
@@ -200,6 +206,34 @@ export class HttpStorageBackend implements StorageBackend {
 
   deleteLifePlan(id: string): Promise<LifePlan> {
     return firstValueFrom(this.lifePlansApi.deleteLifePlan(id));
+  }
+
+  listExercises(): Promise<Exercise[]> {
+    return firstValueFrom(this.exercisesApi.listExercises());
+  }
+
+  /** POST with an existing id is an idempotent upsert server-side, so this covers both create and update. */
+  upsertExercise(exercise: Exercise): Promise<Exercise> {
+    return firstValueFrom(this.exercisesApi.createExercise(exercise));
+  }
+
+  deleteExercise(id: string): Promise<Exercise> {
+    return firstValueFrom(this.exercisesApi.deleteExercise(id));
+  }
+
+  /** documentation/Subfeatures/Gyakorlat.md "Seed": web has no local store to gate on, so seed only into an empty server catalog; the deterministic v5 ids keep repeat POSTs idempotent. */
+  async seedExercises(): Promise<void> {
+    const userId = this.authSession.userId();
+    if (userId === null) {
+      return;
+    }
+    const existing = await firstValueFrom(this.exercisesApi.listExercises());
+    if (existing.length > 0) {
+      return;
+    }
+    for (const exercise of await buildSeedExercises(userId)) {
+      await firstValueFrom(this.exercisesApi.createExercise(exercise));
+    }
   }
 
   listHouseholdRooms(): Promise<HouseholdRoom[]> {

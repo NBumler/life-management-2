@@ -79,6 +79,10 @@ paths:
     $ref: 'openapi/paths/shopping-lists-item.yaml'
   /api/shopping-lists/{id}/complete:
     $ref: 'openapi/paths/shopping-lists-item-complete.yaml'
+  /api/exercises:
+    $ref: 'openapi/paths/exercises.yaml'
+  /api/exercises/{id}:
+    $ref: 'openapi/paths/exercises-item.yaml'
 components:
   securitySchemes:
     bearerAuth:
@@ -186,3 +190,7 @@ components:
       $ref: 'openapi/components/schemas/ShoppingListCompleteNewList.yaml'
     ShoppingListCompleteResponse:
       $ref: 'openapi/components/schemas/ShoppingListCompleteResponse.yaml'
+    Exercise:
+      $ref: 'openapi/components/schemas/Exercise.yaml'
+    ExerciseList:
+      $ref: 'openapi/components/schemas/ExerciseList.yaml'

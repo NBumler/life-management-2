@@ -506,6 +506,53 @@
     },
     "LOG": {
       "EMPTY": "Még nincs edzés naplózva."
+    },
+    "EXERCISES": {
+      "TITLE": "Gyakorlatok",
+      "EDIT_TITLE": "Gyakorlat szerkesztése",
+      "NEW_TITLE": "Új gyakorlat",
+      "ADD": "Új gyakorlat",
+      "EMPTY": "Még nincs gyakorlat a katalógusban.",
+      "NO_RESULTS": "Nincs a szűrőknek megfelelő gyakorlat.",
+      "SEARCH_PLACEHOLDER": "Keresés név vagy eszköz szerint",
+      "FAVORITES_FILTER": "Kedvencek",
+      "TOGGLE_FAVORITE": "Kedvenc ki/be",
+      "NAME_CONFLICT": "Már van „{{name}}” nevű gyakorlat az élő katalógusban.",
+      "DELETE_CONFIRM_TITLE": "Gyakorlat törlése",
+      "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd a(z) „{{name}}” gyakorlatot? A korábbi edzésnaplók érintetlenek maradnak.",
+      "FIELD_NAME": "Név",
+      "FIELD_NAME_PLACEHOLDER": "pl. Fekvenyomás",
+      "FIELD_CATEGORY": "Kategória",
+      "FIELD_KIND": "Típus",
+      "FIELD_REST_SECONDS": "Alapértelmezett pihenőidő (mp)",
+      "FIELD_REST_SECONDS_PLACEHOLDER": "pl. 120",
+      "FIELD_EQUIPMENT": "Eszközigény",
+      "FIELD_EQUIPMENT_PLACEHOLDER": "pl. Rúd + pad",
+      "FIELD_FAVORITE": "Kedvenc",
+      "CATEGORY": {
+        "CHEST": "Mell",
+        "BACK": "Hát",
+        "LEGS": "Láb",
+        "SHOULDERS": "Váll",
+        "ARMS": "Kar",
+        "CORE": "Törzs",
+        "FOREARM_FINGERS": "Alkar, ujjak",
+        "FULL_BODY": "Egész test"
+      },
+      "KIND": {
+        "WEIGHTED_REPS": "Súlyos ismétlés",
+        "BODYWEIGHT_REPS": "Saját testsúlyos ismétlés",
+        "ISOMETRIC_TIME": "Izometrikus (tartás)",
+        "HANGBOARD_PINCH": "Ujjedző / pinch",
+        "CARDIO_TIME_DIST": "Kardió (idő + táv)"
+      },
+      "KIND_HINT": {
+        "WEIGHTED_REPS": "A szetten: ismétlés + súly (kg).",
+        "BODYWEIGHT_REPS": "A szetten: ismétlés (+ opcionális súly rásegítéshez / plusz súlyhoz).",
+        "ISOMETRIC_TIME": "A szetten: tartás ideje (mp) (+ opcionális súly).",
+        "HANGBOARD_PINCH": "A szetten: léc mérete (mm) + tartás ideje (mp) (+ opcionális súly).",
+        "CARDIO_TIME_DIST": "A szetten: idő (mp) + táv (m)."
+      }
     }
   }
 }

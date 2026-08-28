@@ -1,5 +1,6 @@
 import { SqlTask } from '../storage/local-database.service';
 import { CalendarEvent } from '../../api/model/calendarEvent';
+import { Exercise } from '../../api/model/exercise';
 import { Food } from '../../api/model/food';
 import { GearItem } from '../../api/model/gearItem';
 import { HouseholdRoom } from '../../api/model/householdRoom';
@@ -233,6 +234,99 @@ export function gearItemTombstoneTask(id: string, deletedAt: string | null, upda
     statement: `
       INSERT INTO gear_item (id, name, updated_at, deleted, deleted_at, _dirty, _local_only)
       VALUES (?, '', ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+export interface ExerciseRow {
+  id: string;
+  name: string;
+  category: string;
+  kind: string;
+  default_rest_time_seconds: number | null;
+  is_favorite: number;
+  equipment: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+export function exerciseRowToDto(row: ExerciseRow): Exercise {
+  return {
+    id: row.id,
+    name: row.name,
+    category: row.category as Exercise.CategoryEnum,
+    kind: row.kind as Exercise.KindEnum,
+    defaultRestTimeSeconds: row.default_rest_time_seconds,
+    isFavorite: row.is_favorite === 1,
+    equipment: row.equipment,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+export function exerciseLocalWriteTask(dto: Exercise): SqlTask {
+  return {
+    statement: `
+      INSERT INTO exercise_catalog (id, name, category, kind, default_rest_time_seconds, is_favorite, equipment, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET
+        name = excluded.name, category = excluded.category, kind = excluded.kind,
+        default_rest_time_seconds = excluded.default_rest_time_seconds, is_favorite = excluded.is_favorite,
+        equipment = excluded.equipment, deleted = 0, deleted_at = NULL, _dirty = 1`,
+    values: [
+      dto.id,
+      dto.name,
+      dto.category,
+      dto.kind,
+      dto.defaultRestTimeSeconds ?? null,
+      dto.isFavorite ? 1 : 0,
+      dto.equipment ?? null,
+    ],
+  };
+}
+
+export function exerciseServerApplyTask(dto: Exercise): SqlTask {
+  return {
+    statement: `
+      INSERT INTO exercise_catalog (id, name, category, kind, default_rest_time_seconds, is_favorite, equipment, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        name = excluded.name, category = excluded.category, kind = excluded.kind,
+        default_rest_time_seconds = excluded.default_rest_time_seconds, is_favorite = excluded.is_favorite,
+        equipment = excluded.equipment, created_at = excluded.created_at, updated_at = excluded.updated_at,
+        deleted = excluded.deleted, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE exercise_catalog._dirty = 0`,
+    values: [
+      dto.id,
+      dto.name,
+      dto.category,
+      dto.kind,
+      dto.defaultRestTimeSeconds ?? null,
+      dto.isFavorite ? 1 : 0,
+      dto.equipment ?? null,
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function exerciseTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO exercise_catalog (id, name, category, kind, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '', 'FULL_BODY', 'WEIGHTED_REPS', ?, 1, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
     values: [id, updatedAt, deletedAt],
   };

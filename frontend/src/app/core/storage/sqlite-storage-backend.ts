@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 
 import { CalendarEvent } from '../../api/model/calendarEvent';
+import { Exercise } from '../../api/model/exercise';
 import { Food } from '../../api/model/food';
 import { GearItem } from '../../api/model/gearItem';
 import { HouseholdRoom } from '../../api/model/householdRoom';
@@ -17,8 +18,10 @@ import { ShoppingList } from '../../api/model/shoppingList';
 import { StoredFood } from '../../api/model/storedFood';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
+import { buildSeedExercises } from '../data/exercise-seed';
 import {
   CalendarEventRow,
+  ExerciseRow,
   FoodRow,
   GearItemRow,
   HouseholdRoomRow,
@@ -39,6 +42,8 @@ import {
   WeightHistoryRow,
   calendarEventLocalWriteTask,
   calendarEventRowToDto,
+  exerciseLocalWriteTask,
+  exerciseRowToDto,
   foodLocalWriteTask,
   foodRowToDto,
   gearItemLocalWriteTask,
@@ -598,6 +603,69 @@ export class SqliteStorageBackend implements StorageBackend {
   private async readLifePlan(id: string): Promise<LifePlan> {
     const rows = await this.db.query<LifePlanRow>('SELECT * FROM life_plan WHERE id = ?', [id]);
     return lifePlanRowToDto(rows[0]);
+  }
+
+  async listExercises(): Promise<Exercise[]> {
+    const rows = await this.db.query<ExerciseRow>('SELECT * FROM exercise_catalog WHERE deleted = 0 ORDER BY name COLLATE NOCASE');
+    return rows.map(exerciseRowToDto);
+  }
+
+  async upsertExercise(exercise: Exercise): Promise<Exercise> {
+    const userId = this.requireUserId();
+    const existing = await this.db.query('SELECT 1 FROM exercise_catalog WHERE id = ?', [exercise.id]);
+    const isNew = existing.length === 0;
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: isNew ? 'POST' : 'PUT',
+      url: isNew ? '/api/exercises' : `/api/exercises/${exercise.id}`,
+      payload: exercise,
+      entityType: 'Exercise',
+      targetEntityId: exercise.id,
+    });
+    await this.db.executeTransaction([exerciseLocalWriteTask(exercise), ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    return this.readExercise(exercise.id);
+  }
+
+  async deleteExercise(id: string): Promise<Exercise> {
+    const userId = this.requireUserId();
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: 'DELETE',
+      url: `/api/exercises/${id}`,
+      payload: null,
+      entityType: 'Exercise',
+      targetEntityId: id,
+    });
+    const entityTask: SqlTask = enqueue.hardRemoveLocalEntity
+      ? { statement: 'DELETE FROM exercise_catalog WHERE id = ?', values: [id] }
+      : {
+          statement: 'UPDATE exercise_catalog SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?',
+          values: [new Date().toISOString(), id],
+        };
+    await this.db.executeTransaction([entityTask, ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    if (enqueue.hardRemoveLocalEntity) {
+      return { id, name: '', category: Exercise.CategoryEnum.FullBody, kind: Exercise.KindEnum.WeightedReps, isFavorite: false, deleted: true };
+    }
+    return this.readExercise(id);
+  }
+
+  /** documentation/Subfeatures/Gyakorlat.md "Seed": no-op once the catalog has any row (live or tombstoned). */
+  async seedExercises(): Promise<void> {
+    const userId = this.requireUserId();
+    const rows = await this.db.query<{ count: number }>('SELECT COUNT(*) AS count FROM exercise_catalog');
+    if ((rows[0]?.count ?? 0) > 0) {
+      return;
+    }
+    for (const exercise of await buildSeedExercises(userId)) {
+      await this.upsertExercise(exercise);
+    }
+  }
+
+  private async readExercise(id: string): Promise<Exercise> {
+    const rows = await this.db.query<ExerciseRow>('SELECT * FROM exercise_catalog WHERE id = ?', [id]);
+    return exerciseRowToDto(rows[0]);
   }
 
   async listHouseholdRooms(): Promise<HouseholdRoom[]> {

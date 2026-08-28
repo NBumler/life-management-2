@@ -1,0 +1,36 @@
+get:
+  operationId: listExercises
+  tags:
+    - exercises
+  summary: The caller's exercise catalog, live rows only (deleted = false).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ExerciseList.yaml'
+post:
+  operationId: createExercise
+  tags:
+    - exercises
+  summary: Create an exercise — idempotent upsert on the client-supplied id.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/Exercise.yaml'
+  responses:
+    '200':
+      description: Created or, on retry with the same id, the existing row.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/Exercise.yaml'
+    '409':
+      description: Another live exercise already has this name (documentation/Architektúra/Névegyediség.md).
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'

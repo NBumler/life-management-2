@@ -177,6 +177,16 @@ export const routes: Routes = [
               { path: '', loadComponent: () => import('./pages/workout/log/workout-log-list.page').then((m) => m.WorkoutLogListPage) },
             ],
           },
+          {
+            // documentation/Features/Edzés.md: Gyakorlat törzsadat opens from the workout header
+            // (fogaskerék), not a segment. Gated by tab.edzes along with the rest of the tab.
+            path: 'exercises',
+            children: [
+              { path: '', loadComponent: () => import('./pages/workout/exercises/exercise-list.page').then((m) => m.ExerciseListPage) },
+              { path: 'new', loadComponent: () => import('./pages/workout/exercises/exercise-edit.page').then((m) => m.ExerciseEditPage) },
+              { path: ':id', loadComponent: () => import('./pages/workout/exercises/exercise-edit.page').then((m) => m.ExerciseEditPage) },
+            ],
+          },
         ],
       },
       // documentation/Architektúra/Frontend.md "Login utáni default tab": Menü is the only enabled

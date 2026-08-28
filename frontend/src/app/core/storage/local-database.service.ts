@@ -465,7 +465,33 @@ const SCHEMA_V14_STATEMENTS: string[] = [
   `CREATE INDEX IF NOT EXISTS idx_recipe_live_name ON recipe (name COLLATE NOCASE) WHERE deleted = 0`,
 ];
 
-const SCHEMA_VERSION = 14;
+/**
+ * documentation/Subfeatures/Gyakorlat.md — the Edzés törzs's first table: a user-owned exercise
+ * master catalog. `name_normalized` isn't stored locally (the repository normalizes in memory for
+ * its uniqueness pre-check, same as `gear_item`).
+ */
+const SCHEMA_V15_STATEMENTS: string[] = [
+  `CREATE TABLE IF NOT EXISTS exercise_catalog (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    category TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    default_rest_time_seconds INTEGER,
+    is_favorite INTEGER NOT NULL DEFAULT 0,
+    equipment TEXT,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_exercise_catalog_live_name ON exercise_catalog (name COLLATE NOCASE) WHERE deleted = 0`,
+];
+
+const SCHEMA_VERSION = 15;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -482,7 +508,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 11, statements: SCHEMA_V11_STATEMENTS },
   { toVersion: 12, statements: SCHEMA_V12_STATEMENTS },
   { toVersion: 13, statements: SCHEMA_V13_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V14_STATEMENTS },
+  { toVersion: 14, statements: SCHEMA_V14_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V15_STATEMENTS },
 ];
 
 export interface SqlTask {

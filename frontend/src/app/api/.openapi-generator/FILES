@@ -9,6 +9,8 @@ api/auth.service.ts
 api/auth.serviceInterface.ts
 api/events.service.ts
 api/events.serviceInterface.ts
+api/exercises.service.ts
+api/exercises.serviceInterface.ts
 api/foods.service.ts
 api/foods.serviceInterface.ts
 api/gearItems.service.ts
@@ -49,6 +51,7 @@ model/adminUser.ts
 model/apiError.ts
 model/authTokens.ts
 model/calendarEvent.ts
+model/exercise.ts
 model/food.ts
 model/gearItem.ts
 model/healthResponse.ts
