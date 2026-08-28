@@ -63,7 +63,7 @@ describe('OfflineQueueService', () => {
 
   describe('buildEnqueueTasks — outbox-összevonás (§5 coalescing table)', () => {
     it('POST(X) + PUT(X): updates the POST payload, creates no new row', async () => {
-      const postRow = outboxRow({ id: 'post-1', method: 'POST' });
+      const postRow = outboxRow({ id: 'post-1', method: 'POST', entity_type: 'GearItem' });
       db.query.and.resolveTo([postRow]);
 
       const result = await service.buildEnqueueTasks({
@@ -82,7 +82,7 @@ describe('OfflineQueueService', () => {
     });
 
     it('PUT(X) + PUT(X): overwrites the existing PUT payload in place', async () => {
-      const putRow = outboxRow({ id: 'put-1', method: 'PUT' });
+      const putRow = outboxRow({ id: 'put-1', method: 'PUT', entity_type: 'GearItem' });
       db.query.and.resolveTo([putRow]);
 
       const result = await service.buildEnqueueTasks({
@@ -100,7 +100,7 @@ describe('OfflineQueueService', () => {
     });
 
     it('POST(X) + DELETE(X): both removed from the outbox; caller must hard-remove the local row (never-synced draft)', async () => {
-      const postRow = outboxRow({ id: 'post-1', method: 'POST' });
+      const postRow = outboxRow({ id: 'post-1', method: 'POST', entity_type: 'GearItem' });
       db.query.and.resolveTo([postRow]);
 
       const result = await service.buildEnqueueTasks({
@@ -155,7 +155,7 @@ describe('OfflineQueueService', () => {
     });
 
     it('repeated natural-key upsert (POST again over a PENDING POST): payload updates, no new row', async () => {
-      const postRow = outboxRow({ id: 'post-1', method: 'POST' });
+      const postRow = outboxRow({ id: 'post-1', method: 'POST', entity_type: 'GearItem' });
       db.query.and.resolveTo([postRow]);
 
       const result = await service.buildEnqueueTasks({
@@ -170,6 +170,26 @@ describe('OfflineQueueService', () => {
       expect(result.outboxTasks.length).toBe(1);
       expect(result.outboxTasks[0].statement).toContain('UPDATE outbox_item SET payload');
       expect(result.outboxTasks[0].values).toEqual([JSON.stringify({ a: 5 }), 'post-1']);
+    });
+
+    it('action endpoint (different entityType, same targetEntityId): never coalesces into the entity’s create POST', async () => {
+      // documentation/Subfeatures/Bevásárlás teljesítve.md: a ShoppingListComplete POST shares the
+      // list's targetEntityId but must stay its own row — folding it into the pending create POST
+      // would send the completion body to the create URL.
+      const createPost = outboxRow({ id: 'create-1', method: 'POST', entity_type: 'ShoppingList', url: '/api/shopping-lists', target_entity_id: 'list-1' });
+      db.query.and.resolveTo([createPost]);
+
+      const result = await service.buildEnqueueTasks({
+        userId: 'user-1',
+        method: 'POST',
+        url: '/api/shopping-lists/list-1/complete',
+        payload: { checkedFoodEntries: [] },
+        entityType: 'ShoppingListComplete',
+        targetEntityId: 'list-1',
+      });
+
+      expect(result.outboxTasks.length).toBe(1);
+      expect(result.outboxTasks[0].statement).toContain('INSERT INTO outbox_item');
     });
 
     it('no PENDING row for the entity: creates a brand-new item (a SENDING/ERROR/SKIPPED row is never coalesced into — the PENDING-only WHERE clause already excludes it)', async () => {

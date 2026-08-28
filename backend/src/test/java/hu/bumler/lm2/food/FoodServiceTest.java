@@ -45,7 +45,6 @@ class FoodServiceTest {
 		when(storedFoodRepository.findByFoodIdAndDeletedFalse(any())).thenReturn(List.of());
 		when(recipeIngredientRepository.findByFoodIdAndDeletedFalse(any())).thenReturn(List.of());
 		when(mealItemRepository.findByFoodIdAndDeletedFalse(any())).thenReturn(List.of());
-		when(shoppingListItemRepository.findByFoodIdAndDeletedFalse(any())).thenReturn(List.of());
 		service = new FoodService(repository, storedFoodRepository, recipeIngredientRepository, mealItemRepository, mealRepository,
 				shoppingListItemRepository, new FoodMapper());
 	}
@@ -304,19 +303,16 @@ class FoodServiceTest {
 	@Test
 	void delete_cascadesToLiveShoppingListItemReferencingThisCatalogItem_withoutTouchingTheList() {
 		// documentation/Subfeatures/Bevásárlólista írás.md "Üres aktív lista": unlike Meal, the
-		// parent list is never auto-deleted even if this cascade leaves it empty.
+		// parent list is never auto-deleted even if this cascade leaves it empty. One bulk UPDATE.
 		UUID id = UUID.randomUUID();
 		FoodEntity existing = new FoodEntity(id);
 		existing.rename("Tej", "tej");
 		when(repository.findById(id)).thenReturn(Optional.of(existing));
-		ShoppingListItemEntity item = new ShoppingListItemEntity(UUID.randomUUID(), UUID.randomUUID(), "FOOD", 0);
-		item.setFoodId(id);
-		when(shoppingListItemRepository.findByFoodIdAndDeletedFalse(id)).thenReturn(List.of(item));
 
 		service.delete(id);
 
-		assertThat(item.isDeleted()).isTrue();
-		verify(shoppingListItemRepository).save(item);
+		verify(shoppingListItemRepository).softDeleteByFoodIdAndDeletedFalse(id);
+		verify(shoppingListItemRepository, never()).save(any());
 	}
 
 	@Test

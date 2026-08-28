@@ -188,7 +188,8 @@ describe('SyncPage', () => {
       options.buttons[1].handler?.();
       await Promise.resolve();
 
-      const [, entityTask] = offlineQueue.drop.calls.mostRecent().args;
+      const [, entityTasks] = offlineQueue.drop.calls.mostRecent().args;
+      const [entityTask] = Array.isArray(entityTasks) ? entityTasks : [entityTasks];
       expect(entityTask.statement).toContain('UPDATE packing_session SET _needs_refetch = 1, _dirty = 0');
       expect(entityTask.values).toEqual(['sess-1']);
     });

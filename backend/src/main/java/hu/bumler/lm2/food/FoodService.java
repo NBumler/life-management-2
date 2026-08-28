@@ -99,7 +99,9 @@ class FoodService {
 			}
 			recipeIngredientRepository.flush();
 			MealCascade.cascade(mealItemRepository.findByFoodIdAndDeletedFalse(id), mealItemRepository, mealRepository);
-			ShoppingListItemCascade.cascade(shoppingListItemRepository.findByFoodIdAndDeletedFalse(id), shoppingListItemRepository);
+			// documentation/Subfeatures/Bevásárlólista írás.md "Üres aktív lista": one bulk UPDATE, parent
+			// list untouched even if emptied (unlike MealCascade, which nulls out a now-empty meal).
+			shoppingListItemRepository.softDeleteByFoodIdAndDeletedFalse(id);
 		}
 		return mapper.toDto(entity);
 	}

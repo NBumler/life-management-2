@@ -24,6 +24,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Food } from '../../../api/model/food';
 import { FoodRepository } from '../../../core/data/food.repository';
 import { compareRank, matchesSearch } from '../../../shared/text-search';
+import { navigateFoodSection } from '../food-sections';
 import { FoodBarcodeScannerService } from './food-barcode-scanner.service';
 import { FoodPrefillService } from './food-prefill.service';
 import { OpenFoodFactsService } from './open-food-facts.service';
@@ -130,15 +131,7 @@ export class FoodListPage implements OnInit, ViewWillEnter {
 
   /** documentation/Features/Kaja.md: no full segmented hub yet (see app.routes.ts) — this is the lightweight stand-in until Stat exists too. */
   switchSection(section: string): void {
-    if (section === 'meal') {
-      void this.router.navigateByUrl('/tabs/food/meal');
-    } else if (section === 'storage') {
-      void this.router.navigateByUrl('/tabs/food/storage');
-    } else if (section === 'recipe') {
-      void this.router.navigateByUrl('/tabs/food/recipe');
-    } else if (section === 'stats') {
-      void this.router.navigateByUrl('/tabs/food/stats');
-    }
+    navigateFoodSection(this.router, section, 'catalog');
   }
 
   /** documentation/Subfeatures/Vonalkódos élelmiszer beolvasás.md "Scan & Pre-fill". */

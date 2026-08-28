@@ -26,6 +26,7 @@ import { FoodRepository } from '../../../core/data/food.repository';
 import { StoredFoodRepository } from '../../../core/data/stored-food.repository';
 import { today } from '../../../shared/local-date';
 import { matchesSearch } from '../../../shared/text-search';
+import { navigateFoodSection } from '../food-sections';
 import { afterOpeningDuration, computeOpenedExpiry } from './shelf-life';
 
 type LocationFilter = 'ALL' | StoredFood.StorageLocationEnum;
@@ -125,15 +126,7 @@ export class StorageListPage implements OnInit, ViewWillEnter {
 
   /** documentation/Features/Kaja.md: no full segmented hub yet (see app.routes.ts) — this is the lightweight stand-in until Stat exists too. */
   switchSection(section: string): void {
-    if (section === 'meal') {
-      void this.router.navigateByUrl('/tabs/food/meal');
-    } else if (section === 'catalog') {
-      void this.router.navigateByUrl('/tabs/food/catalog');
-    } else if (section === 'recipe') {
-      void this.router.navigateByUrl('/tabs/food/recipe');
-    } else if (section === 'stats') {
-      void this.router.navigateByUrl('/tabs/food/stats');
-    }
+    navigateFoodSection(this.router, section, 'storage');
   }
 
   async delete(row: StorageRow): Promise<void> {

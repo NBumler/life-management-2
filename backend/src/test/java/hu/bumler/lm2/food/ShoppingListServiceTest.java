@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import hu.bumler.lm2.api.model.ShoppingList;
 import hu.bumler.lm2.api.model.ShoppingListItem;
+import hu.bumler.lm2.common.IdempotencyKeyRepository;
 import hu.bumler.lm2.common.exception.EntityDeletedException;
 import hu.bumler.lm2.common.exception.EntityNotFoundException;
 import hu.bumler.lm2.common.exception.ValidationException;
@@ -288,19 +289,19 @@ class ShoppingListServiceTest {
 	// --- delete (soft, cascading, idempotent) ---
 
 	@Test
-	void delete_softDeletesListAndCascadesToLiveItems() {
+	void delete_softDeletesListAndCascadesToLiveItems_asOneBulkUpdate() {
 		UUID userId = UUID.randomUUID();
 		ShoppingListEntity existing = shoppingList(UUID.randomUUID(), userId);
-		ShoppingListItemEntity liveItem = new ShoppingListItemEntity(UUID.randomUUID(), existing.getId(), "NON_FOOD", 0);
+		ShoppingListItemEntity item = new ShoppingListItemEntity(UUID.randomUUID(), existing.getId(), "NON_FOOD", 0);
+		item.softDelete();
 		when(repository.findByIdAndUserId(existing.getId(), userId)).thenReturn(Optional.of(existing));
-		when(itemRepository.findByShoppingListIdAndDeletedFalse(existing.getId())).thenReturn(List.of(liveItem));
-		when(itemRepository.findByShoppingListId(existing.getId())).thenReturn(List.of(liveItem));
+		when(itemRepository.findByShoppingListId(existing.getId())).thenReturn(List.of(item));
 
 		ShoppingList deleted = service.delete(userId, existing.getId());
 
 		assertThat(deleted.getDeleted()).isTrue();
-		assertThat(liveItem.isDeleted()).isTrue();
-		verify(itemRepository).save(liveItem);
+		verify(itemRepository).softDeleteByShoppingListIdAndDeletedFalse(existing.getId());
+		verify(itemRepository, never()).save(any());
 	}
 
 	@Test
@@ -315,7 +316,7 @@ class ShoppingListServiceTest {
 
 		assertThat(deleted.getDeleted()).isTrue();
 		verify(repository, never()).saveAndFlush(any());
-		verify(itemRepository, never()).findByShoppingListIdAndDeletedFalse(any());
+		verify(itemRepository, never()).softDeleteByShoppingListIdAndDeletedFalse(any());
 	}
 
 	// --- list ---

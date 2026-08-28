@@ -14,6 +14,8 @@ export interface RecipeSummary {
   proteinG: number;
   carbsG: number;
   fatG: number;
+  /** Total canonical gram/ml equivalent across all ingredients — the recipe's own "bázis mennyiség", used to normalize price to a per-100 basis the same way `pricePer100` does for a single Food. */
+  baseAmountG: number;
   /** documentation/Subfeatures/Recept.md: set when any ingredient's price/nutrient math couldn't be completed (missing catalog field, or a since-deleted Food). */
   incomplete: boolean;
 }
@@ -67,17 +69,27 @@ function priceContribution(amount: number, unit: QuantityUnit, food: Food): { va
   return { value: (usedBase / netBase) * food.priceHuf, missing: false };
 }
 
-/** documentation/Subfeatures/Recept.md "Receptösszeg = hozzávalók összege" — sums price + the four headline nutrients across every ingredient. */
-export function computeRecipeSummary(ingredients: RecipeIngredientQuantity[], foods: readonly Food[]): RecipeSummary {
+/**
+ * documentation/Subfeatures/Recept.md "Receptösszeg = hozzávalók összege" — sums price + the four
+ * headline nutrients across every ingredient. `foods` may be a pre-built id→Food map (callers that
+ * summarize many recipes over the same catalog — e.g. catalog-ratios.ts — pass one so the per-recipe
+ * cost isn't an O(catalog) linear scan per ingredient).
+ */
+export function computeRecipeSummary(
+  ingredients: RecipeIngredientQuantity[],
+  foods: readonly Food[] | ReadonlyMap<string, Food>,
+): RecipeSummary {
+  const byId: ReadonlyMap<string, Food> = foods instanceof Map ? foods : new Map((foods as readonly Food[]).map((food) => [food.id, food]));
   let priceHuf = 0;
   let energyKcal = 0;
   let proteinG = 0;
   let carbsG = 0;
   let fatG = 0;
+  let baseAmountG = 0;
   let incomplete = false;
 
   for (const ingredient of ingredients) {
-    const food = foods.find((candidate) => candidate.id === ingredient.foodId);
+    const food = byId.get(ingredient.foodId);
     if (food === undefined) {
       incomplete = true;
       continue;
@@ -94,10 +106,11 @@ export function computeRecipeSummary(ingredients: RecipeIngredientQuantity[], fo
     proteinG += protein.value;
     carbsG += carbs.value;
     fatG += fat.value;
+    baseAmountG += baseAmount;
     incomplete = incomplete || baseMissing || price.missing || energy.missing || protein.missing || carbs.missing || fat.missing;
   }
 
-  return { priceHuf, energyKcal, proteinG, carbsG, fatG, incomplete };
+  return { priceHuf, energyKcal, proteinG, carbsG, fatG, baseAmountG, incomplete };
 }
 
 /** documentation/Subfeatures/Recept.md "`db` megjelenítés": `2db (1000g)` when the catalog's net content is known, else just `2db`. */

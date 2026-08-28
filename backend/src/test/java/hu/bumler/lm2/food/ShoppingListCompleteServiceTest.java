@@ -186,6 +186,91 @@ class ShoppingListCompleteServiceTest {
 	}
 
 	@Test
+	void complete_rejectsDuplicateEntryForTheSameCheckedItem() throws Exception {
+		String token = registerAndLogin("complete-dup-entry");
+		UUID foodId = createFoodWithSingleAllowedLocation(token, "Túró");
+		UUID listId = UUID.randomUUID();
+		UUID itemId = UUID.randomUUID();
+		createList(token, listId, foodItemDto(itemId, listId, foodId, BigDecimal.ONE, "kg", true));
+
+		ShoppingListCompleteRequest request = new ShoppingListCompleteRequest(List.of(
+				new ShoppingListCompleteFoodEntry(itemId, List.of(UUID.randomUUID())),
+				new ShoppingListCompleteFoodEntry(itemId, List.of(UUID.randomUUID()))));
+
+		complete(token, listId, UUID.randomUUID(), request)
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+				.andExpect(jsonPath("$.field").value("checkedFoodEntries"));
+	}
+
+	@Test
+	void complete_rejectsNewActiveList_whenItsIdCollidesWithAnExistingList() throws Exception {
+		String token = registerAndLogin("complete-collision");
+		UUID foodId = createFoodWithSingleAllowedLocation(token, "Rizs");
+		UUID listId = UUID.randomUUID();
+		UUID checkedItemId = UUID.randomUUID();
+		UUID uncheckedItemId = UUID.randomUUID();
+		createList(token, listId,
+				List.of(foodItemDto(checkedItemId, listId, foodId, BigDecimal.ONE, "kg", true), nonFoodItemDto(uncheckedItemId, listId, "Szivacs", false)));
+
+		UUID collidingListId = UUID.randomUUID();
+		createList(token, collidingListId, nonFoodItemDto(UUID.randomUUID(), collidingListId, "Már létezik", false));
+
+		ShoppingListCompleteNewList newActiveList = new ShoppingListCompleteNewList(collidingListId,
+				List.of(nonFoodItemDto(UUID.randomUUID(), collidingListId, "Szivacs", false)));
+		ShoppingListCompleteRequest request = new ShoppingListCompleteRequest(
+				List.of(new ShoppingListCompleteFoodEntry(checkedItemId, List.of(UUID.randomUUID()))));
+		request.newActiveList(newActiveList);
+
+		complete(token, listId, UUID.randomUUID(), request)
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+				.andExpect(jsonPath("$.field").value("newActiveList"));
+	}
+
+	@Test
+	void complete_forcesUncheckedBoxesOnTheSpunOffList_evenIfTheClientSentCheckedItems() throws Exception {
+		String token = registerAndLogin("force-unchecked");
+		UUID foodId = createFoodWithSingleAllowedLocation(token, "Bab");
+		UUID listId = UUID.randomUUID();
+		UUID checkedItemId = UUID.randomUUID();
+		UUID uncheckedItemId = UUID.randomUUID();
+		createList(token, listId,
+				List.of(foodItemDto(checkedItemId, listId, foodId, BigDecimal.ONE, "kg", true), nonFoodItemDto(uncheckedItemId, listId, "Fólia", false)));
+
+		UUID newListId = UUID.randomUUID();
+		ShoppingListCompleteNewList newActiveList = new ShoppingListCompleteNewList(newListId,
+				List.of(nonFoodItemDto(UUID.randomUUID(), newListId, "Fólia", true)));
+		ShoppingListCompleteRequest request = new ShoppingListCompleteRequest(
+				List.of(new ShoppingListCompleteFoodEntry(checkedItemId, List.of(UUID.randomUUID()))));
+		request.newActiveList(newActiveList);
+
+		complete(token, listId, UUID.randomUUID(), request).andExpect(status().isOk());
+
+		mockMvc.perform(get("/api/shopping-lists/" + newListId).header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.items[0].checked").value(false));
+	}
+
+	@Test
+	void updateShoppingList_isRejected_afterTheListIsArchived() throws Exception {
+		String token = registerAndLogin("archived-edit");
+		UUID foodId = createFoodWithSingleAllowedLocation(token, "Méz");
+		UUID listId = UUID.randomUUID();
+		UUID itemId = UUID.randomUUID();
+		createList(token, listId, foodItemDto(itemId, listId, foodId, BigDecimal.ONE, "kg", true));
+		complete(token, listId, UUID.randomUUID(),
+				new ShoppingListCompleteRequest(List.of(new ShoppingListCompleteFoodEntry(itemId, List.of(UUID.randomUUID())))))
+				.andExpect(status().isOk());
+
+		mockMvc.perform(post("/api/shopping-lists").contentType(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+				.content(json(new ShoppingList(listId, List.of(), false))))
+				.andExpect(status().isConflict())
+				.andExpect(jsonPath("$.code").value("ENTITY_DELETED"));
+	}
+
+	@Test
 	void complete_returnsValidationError_whenACheckedFoodItemHasNoMatchingEntry() throws Exception {
 		String token = registerAndLogin("complete-missing-entry");
 		UUID foodId = createFoodWithSingleAllowedLocation(token, "Alma");

@@ -21,6 +21,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Recipe } from '../../../api/model/recipe';
 import { RecipeRepository } from '../../../core/data/recipe.repository';
 import { compareRank, matchesSearch } from '../../../shared/text-search';
+import { navigateFoodSection } from '../food-sections';
 
 /**
  * documentation/Subfeatures/Recept.md — shared/global recipe catalog list with search and soft
@@ -76,15 +77,7 @@ export class RecipeListPage implements OnInit {
   }
 
   switchSection(section: string): void {
-    if (section === 'meal') {
-      void this.router.navigateByUrl('/tabs/food/meal');
-    } else if (section === 'catalog') {
-      void this.router.navigateByUrl('/tabs/food/catalog');
-    } else if (section === 'storage') {
-      void this.router.navigateByUrl('/tabs/food/storage');
-    } else if (section === 'stats') {
-      void this.router.navigateByUrl('/tabs/food/stats');
-    }
+    navigateFoodSection(this.router, section, 'recipe');
   }
 
   subtitle(item: Recipe): string {

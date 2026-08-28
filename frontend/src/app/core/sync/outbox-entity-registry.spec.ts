@@ -7,7 +7,8 @@ import { GearItemRepository } from '../data/gear-item.repository';
 import { LocalDatabaseService } from '../storage/local-database.service';
 import { StorageBackend, STORAGE_BACKEND } from '../storage/storage-backend';
 import { SyncEngineService } from '../sync/sync-engine.service';
-import { OutboxEntityFixContext, OutboxEntityRegistryService, OutboxEntityType, buildOutboxDropTask } from './outbox-entity-registry';
+import { OutboxItem } from './outbox-item';
+import { OutboxEntityDescriptor, OutboxEntityFixContext, OutboxEntityRegistryService, OutboxEntityType, buildOutboxDropTasks } from './outbox-entity-registry';
 
 // documentation/Features/Szinkronizációs központ.md: this registry is the single place that must be
 // kept in lockstep with the outbox's closed entity-type set — every branch below exists specifically
@@ -162,15 +163,31 @@ describe('OutboxEntityRegistryService', () => {
   });
 });
 
-describe('buildOutboxDropTask', () => {
+describe('buildOutboxDropTasks', () => {
+  const gearDescriptor: OutboxEntityDescriptor = { table: 'gear_item', currentPayload: async () => null, buildFixWriteTask: null, nameUniqueness: null };
+  const item = (patch: Partial<OutboxItem>): OutboxItem => ({ method: 'POST', entityType: 'GearItem', targetEntityId: 'entity-x', payload: null, ...patch }) as OutboxItem;
+
   it('POST: hard-removes the local row (never synced, nothing to restore)', () => {
-    const task = buildOutboxDropTask({ table: 'gear_item', currentPayload: async () => null, buildFixWriteTask: null, nameUniqueness: null }, 'POST', 'entity-x');
-    expect(task).toEqual({ statement: 'DELETE FROM gear_item WHERE id = ?', values: ['entity-x'] });
+    expect(buildOutboxDropTasks(gearDescriptor, item({ method: 'POST' }))).toEqual([{ statement: 'DELETE FROM gear_item WHERE id = ?', values: ['entity-x'] }]);
   });
 
   it('PUT/DELETE: flags the row for a server refetch instead of deleting it', () => {
-    const task = buildOutboxDropTask({ table: 'gear_item', currentPayload: async () => null, buildFixWriteTask: null, nameUniqueness: null }, 'PUT', 'entity-x');
+    const [task] = buildOutboxDropTasks(gearDescriptor, item({ method: 'PUT' }));
     expect(task.statement).toContain('UPDATE gear_item SET _needs_refetch = 1, _dirty = 0');
     expect(task.values).toEqual(['entity-x']);
+  });
+
+  it('ShoppingListComplete: refetches the archived list and drops the completion’s local-only side effects', () => {
+    // The ShoppingListComplete branch keys on item.entityType and never touches descriptor.table.
+    const tasks = buildOutboxDropTasks(gearDescriptor, item({
+      method: 'POST',
+      entityType: 'ShoppingListComplete',
+      targetEntityId: 'list-1',
+      payload: { checkedFoodEntries: [{ storageEntryIds: ['sf-1', 'sf-2'] }], newActiveList: { id: 'list-2', items: [{ id: 'sli-1' }] } },
+    }));
+    expect(tasks[0]).toEqual({ statement: 'UPDATE shopping_list SET _needs_refetch = 1, _dirty = 0 WHERE id = ?', values: ['list-1'] });
+    expect(tasks).toContain(jasmine.objectContaining({ statement: 'DELETE FROM stored_food WHERE id = ? AND _local_only = 1', values: ['sf-2'] }));
+    expect(tasks).toContain(jasmine.objectContaining({ statement: 'DELETE FROM shopping_list_item WHERE id = ? AND _local_only = 1', values: ['sli-1'] }));
+    expect(tasks).toContain(jasmine.objectContaining({ statement: 'DELETE FROM shopping_list WHERE id = ? AND _local_only = 1', values: ['list-2'] }));
   });
 });

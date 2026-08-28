@@ -50,7 +50,7 @@ import {
 } from '../data/local-rows';
 import { LocalDatabaseService, SqlTask } from '../storage/local-database.service';
 import { StorageBackend } from '../storage/storage-backend';
-import { OutboxEntityType, OutboxMethod } from './outbox-item';
+import { OutboxEntityType, OutboxItem, OutboxMethod } from './outbox-item';
 
 export type { OutboxEntityType };
 
@@ -87,6 +87,14 @@ export interface OutboxEntityDescriptor {
   buildFixWriteTask: ((payload: Record<string, unknown>) => SqlTask) | null;
   /** Live-uniqueness check for the Fix form's name-like field, or null when this entity has none. */
   nameUniqueness: OutboxEntityNameUniqueness | null;
+  /**
+   * documentation/Features/Szinkronizációs központ.md "Unskip": true for an action endpoint whose
+   * body can't be reconstructed from local rows (ShoppingList's `/complete` — the wizard-resolved
+   * storage locations/expiry/split ids only exist in the captured payload). Unskip then re-sends the
+   * payload as captured instead of re-deriving it. The list is ARCHIVED and can't be edited further,
+   * so the captured payload is still the correct one.
+   */
+  keepPayloadOnUnskip?: boolean;
 }
 
 function rowLookup<Row, Dto>(table: string, rowToDto: (row: Row) => Dto): (ctx: OutboxEntityFixContext) => Promise<unknown> {
@@ -264,6 +272,15 @@ export class OutboxEntityRegistryService {
       buildFixWriteTask: null,
       nameUniqueness: null,
     },
+    ShoppingListComplete: {
+      table: 'shopping_list',
+      // Never actually read: keepPayloadOnUnskip short-circuits Unskip, Fix is null, and the payload
+      // viewer reads item.payload directly.
+      currentPayload: async () => null,
+      buildFixWriteTask: null,
+      nameUniqueness: null,
+      keepPayloadOnUnskip: true,
+    },
   };
 
   /**
@@ -277,10 +294,39 @@ export class OutboxEntityRegistryService {
   }
 }
 
-/** Convenience for callers that only need the drop-restore task and not the full descriptor. */
-export function buildOutboxDropTask(descriptor: OutboxEntityDescriptor, method: OutboxMethod, targetEntityId: string): SqlTask {
-  if (method === 'POST') {
-    return { statement: `DELETE FROM ${descriptor.table} WHERE id = ?`, values: [targetEntityId] };
+/**
+ * §6 "Kézi beavatkozás" Drop table: hard-remove for a never-synced create POST, `_needs_refetch = 1`
+ * for a PUT/DELETE on an already-synced row. ShoppingList's `/complete` is a POST on an *existing*
+ * (synced) list, so it gets neither: the archived list is flagged for a targeted re-read (it's still
+ * ACTIVE server-side), and the completion's local-only side effects — the spun-off list, its items,
+ * the StoredFood rows, none of which have their own outbox entry — are hard-removed.
+ */
+export function buildOutboxDropTasks(descriptor: OutboxEntityDescriptor, item: OutboxItem): SqlTask[] {
+  if (item.entityType === 'ShoppingListComplete') {
+    const payload = (item.payload ?? {}) as {
+      checkedFoodEntries?: { storageEntryIds?: string[] }[];
+      newActiveList?: { id?: string; items?: { id?: string }[] } | null;
+    };
+    const tasks: SqlTask[] = [
+      { statement: `UPDATE shopping_list SET _needs_refetch = 1, _dirty = 0 WHERE id = ?`, values: [item.targetEntityId] },
+    ];
+    for (const entry of payload.checkedFoodEntries ?? []) {
+      for (const storageEntryId of entry.storageEntryIds ?? []) {
+        tasks.push({ statement: `DELETE FROM stored_food WHERE id = ? AND _local_only = 1`, values: [storageEntryId] });
+      }
+    }
+    if (payload.newActiveList?.id) {
+      for (const newItem of payload.newActiveList.items ?? []) {
+        if (newItem.id) {
+          tasks.push({ statement: `DELETE FROM shopping_list_item WHERE id = ? AND _local_only = 1`, values: [newItem.id] });
+        }
+      }
+      tasks.push({ statement: `DELETE FROM shopping_list WHERE id = ? AND _local_only = 1`, values: [payload.newActiveList.id] });
+    }
+    return tasks;
   }
-  return { statement: `UPDATE ${descriptor.table} SET _needs_refetch = 1, _dirty = 0 WHERE id = ?`, values: [targetEntityId] };
+  if (item.method === 'POST') {
+    return [{ statement: `DELETE FROM ${descriptor.table} WHERE id = ?`, values: [item.targetEntityId] }];
+  }
+  return [{ statement: `UPDATE ${descriptor.table} SET _needs_refetch = 1, _dirty = 0 WHERE id = ?`, values: [item.targetEntityId] }];
 }

@@ -1,6 +1,7 @@
 package hu.bumler.lm2.food;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -23,6 +24,8 @@ import hu.bumler.lm2.api.model.ShoppingListCompleteNewList;
 import hu.bumler.lm2.api.model.ShoppingListCompleteRequest;
 import hu.bumler.lm2.api.model.ShoppingListCompleteResponse;
 import hu.bumler.lm2.api.model.ShoppingListItem;
+import hu.bumler.lm2.common.IdempotencyKeyEntity;
+import hu.bumler.lm2.common.IdempotencyKeyRepository;
 import hu.bumler.lm2.common.NestedChildResolver;
 import hu.bumler.lm2.common.exception.EntityDeletedException;
 import hu.bumler.lm2.common.exception.EntityNotFoundException;
@@ -100,13 +103,11 @@ class ShoppingListService {
 		if (!entity.isDeleted()) {
 			entity.softDelete();
 			repository.saveAndFlush(entity);
-			for (ShoppingListItemEntity item : itemRepository.findByShoppingListIdAndDeletedFalse(id)) {
-				item.softDelete();
-				itemRepository.save(item);
-			}
-			itemRepository.flush();
+			// One bulk UPDATE for the whole item cascade — the BEFORE-UPDATE trigger still stamps
+			// updated_at on every affected row, which the delta pull relies on (CLAUDE.md).
+			itemRepository.softDeleteByShoppingListIdAndDeletedFalse(id);
 		}
-		return toDto(entity);
+		return toDto(entity, itemRepository.findByShoppingListId(id));
 	}
 
 	/**
@@ -117,6 +118,12 @@ class ShoppingListService {
 	 * (see class javadoc) — only {@code name} is ever written from this endpoint.
 	 */
 	private ShoppingList saveTree(ShoppingListEntity entity, ShoppingList dto) {
+		if (!"ACTIVE".equals(entity.getStatus())) {
+			// documentation/Subfeatures/Bevásárlás előzmény.md: an ARCHIVED list is read-only history.
+			// The editor never opens one (shopping-list-editor.page.ts bails on a non-ACTIVE list); this
+			// guards a stale client or a second device from silently rewriting a completed shopping trip.
+			throw new EntityDeletedException("Shopping list is archived and cannot be edited");
+		}
 		entity.setName(dto.getName().orElse(null));
 		repository.saveAndFlush(entity);
 
@@ -136,15 +143,22 @@ class ShoppingListService {
 		for (ShoppingListItemEntity itemEntity : incomingLive) {
 			itemRepository.save(itemEntity);
 		}
+		// The response echoes every row (live or tombstoned — ShoppingList.yaml). Build it from the rows
+		// already in hand rather than re-SELECTing: incoming-live plus every existing row not in the
+		// incoming set (which includes the ones just soft-deleted here and any already-dead ones).
+		List<ShoppingListItemEntity> echoRows = new ArrayList<>(incomingLive);
 		for (ShoppingListItemEntity existing : existingItems) {
-			if (!existing.isDeleted() && !incomingIds.contains(existing.getId())) {
-				existing.softDelete();
-				itemRepository.save(existing);
+			if (!incomingIds.contains(existing.getId())) {
+				if (!existing.isDeleted()) {
+					existing.softDelete();
+					itemRepository.save(existing);
+				}
+				echoRows.add(existing);
 			}
 		}
 		itemRepository.flush();
 
-		return toDto(entity);
+		return toDto(entity, echoRows);
 	}
 
 	/** See {@link NestedChildResolver} — shared with MealService.resolveItem / RecipeService.resolveIngredient / PackingTemplateService.resolveItem. */
@@ -205,11 +219,32 @@ class ShoppingListService {
 	 */
 	@Transactional
 	ShoppingListCompleteResponse complete(UUID userId, UUID id, UUID idempotencyKey, ShoppingListCompleteRequest request) {
-		return idempotencyKeyRepository.findById(idempotencyKey).map(this::readCachedResponse)
-				.orElseGet(() -> runComplete(userId, id, idempotencyKey, request));
+		// Take the row-level write lock FIRST, so two concurrent completions of the same list serialize
+		// (documentation/Subfeatures/Bevásárlás teljesítve.md "Idempotencia"). 404 for an unknown or
+		// foreign list, ahead of any replay/state check.
+		ShoppingListEntity list = repository.findByIdAndUserIdForUpdate(id, userId)
+				.orElseThrow(() -> new EntityNotFoundException("No such shopping list"));
+
+		// Now that we hold the lock the replay check is race-free: a concurrent call with the same key
+		// has either already committed (→ return its stored response) or is still blocked behind us.
+		var cached = idempotencyKeyRepository.findById(idempotencyKey);
+		if (cached.isPresent()) {
+			return readCachedResponse(cached.get(), userId);
+		}
+
+		if (list.isDeleted() || !"ACTIVE".equals(list.getStatus())) {
+			// Not ACTIVE: already completed (possibly from another device with a different key) or deleted.
+			throw new EntityDeletedException("Shopping list is not active");
+		}
+		return runComplete(userId, idempotencyKey, request, list);
 	}
 
-	private ShoppingListCompleteResponse readCachedResponse(IdempotencyKeyEntity cached) {
+	private ShoppingListCompleteResponse readCachedResponse(IdempotencyKeyEntity cached, UUID userId) {
+		if (!userId.equals(cached.getUserId()) || !COMPLETE_ENDPOINT.equals(cached.getEndpoint())) {
+			// The idempotency_key table is keyed by the client UUID alone — a value colliding across
+			// tenants or endpoints must never serve another party's stored response.
+			throw new ValidationException("Idempotency-Key already used for a different request", "Idempotency-Key");
+		}
 		try {
 			return objectMapper.readValue(cached.getResponseBody(), ShoppingListCompleteResponse.class);
 		} catch (Exception e) {
@@ -217,12 +252,8 @@ class ShoppingListService {
 		}
 	}
 
-	private ShoppingListCompleteResponse runComplete(UUID userId, UUID id, UUID idempotencyKey, ShoppingListCompleteRequest request) {
-		ShoppingListEntity list = repository.findByIdAndUserId(id, userId).orElseThrow(() -> new EntityNotFoundException("No such shopping list"));
-		if (!"ACTIVE".equals(list.getStatus())) {
-			throw new EntityDeletedException("Shopping list is not active");
-		}
-
+	private ShoppingListCompleteResponse runComplete(UUID userId, UUID idempotencyKey, ShoppingListCompleteRequest request, ShoppingListEntity list) {
+		UUID id = list.getId();
 		Map<UUID, ShoppingListItemEntity> liveItemsById = itemRepository.findByShoppingListIdAndDeletedFalse(id).stream()
 				.collect(Collectors.toMap(ShoppingListItemEntity::getId, it -> it));
 		Set<UUID> checkedFoodItemIds = liveItemsById.values().stream()
@@ -238,7 +269,9 @@ class ShoppingListService {
 				throw new ValidationException("checkedFoodEntries references an item that isn't a checked FOOD item on this list",
 						"checkedFoodEntries");
 			}
-			coveredItemIds.add(item.getId());
+			if (!coveredItemIds.add(item.getId())) {
+				throw new ValidationException("checkedFoodEntries has more than one entry for the same item", "checkedFoodEntries");
+			}
 			createdStorageEntryIds.addAll(createStorageEntries(userId, item, entry));
 		}
 		if (!coveredItemIds.equals(checkedFoodItemIds)) {
@@ -249,26 +282,48 @@ class ShoppingListService {
 		list.setCompletedAt(OffsetDateTime.now());
 		repository.saveAndFlush(list);
 
-		UUID newActiveListId = null;
 		ShoppingListCompleteNewList newActiveList = request.getNewActiveList();
-		if (newActiveList != null) {
-			ShoppingListEntity newList = new ShoppingListEntity(newActiveList.getId(), userId);
-			newList.setName(newActiveList.getName().orElse(null));
-			repository.saveAndFlush(newList);
-			for (ShoppingListItem itemDto : newActiveList.getItems()) {
-				ShoppingListItemEntity newItem = new ShoppingListItemEntity(itemDto.getId(), newList.getId(), itemDto.getType().getValue(),
-						itemDto.getSortOrder());
-				applyItem(newItem, itemDto);
-				itemRepository.save(newItem);
-			}
-			itemRepository.flush();
-			newActiveListId = newList.getId();
-		}
+		UUID newActiveListId = newActiveList != null ? createSpunOffList(userId, newActiveList) : null;
 
 		ShoppingListCompleteResponse response = new ShoppingListCompleteResponse(id, createdStorageEntryIds);
 		response.newActiveListId(newActiveListId);
 		cacheResponse(idempotencyKey, userId, response);
 		return response;
+	}
+
+	/**
+	 * documentation/Subfeatures/Bevásárlás teljesítve.md 3. — the leftover-items list. Every id is
+	 * client-generated and must be genuinely new: unlike {@link #saveTree} (which upserts through
+	 * {@link NestedChildResolver}), a collision here means a client bug or a replay that slipped past
+	 * the idempotency guard, so it is rejected rather than merged — {@code JpaRepository.save()} on an
+	 * assigned id {@code merge()}s, which would otherwise hijack the colliding row's parent/owner.
+	 * Checkboxes always start empty ("üres pipákkal"), regardless of what the client sent.
+	 */
+	private UUID createSpunOffList(UUID userId, ShoppingListCompleteNewList newActiveList) {
+		UUID newListId = newActiveList.getId();
+		if (repository.existsById(newListId)) {
+			throw new ValidationException("newActiveList.id already exists", "newActiveList");
+		}
+		ShoppingListEntity newList = new ShoppingListEntity(newListId, userId);
+		newList.setName(newActiveList.getName().orElse(null));
+		repository.saveAndFlush(newList);
+
+		Set<UUID> seenItemIds = new HashSet<>();
+		for (ShoppingListItem itemDto : newActiveList.getItems()) {
+			if (!seenItemIds.add(itemDto.getId())) {
+				throw new ValidationException("newActiveList has a duplicate item id", "newActiveList");
+			}
+			if (itemRepository.existsById(itemDto.getId())) {
+				throw new ValidationException("newActiveList item id already exists", "newActiveList");
+			}
+			ShoppingListItemEntity newItem = new ShoppingListItemEntity(itemDto.getId(), newListId, itemDto.getType().getValue(),
+					itemDto.getSortOrder());
+			applyItem(newItem, itemDto);
+			newItem.setChecked(false);
+			itemRepository.save(newItem);
+		}
+		itemRepository.flush();
+		return newListId;
 	}
 
 	/**
@@ -304,7 +359,7 @@ class ShoppingListService {
 			expirationDate = ShelfLifeCalculator.addDurationToDate(LocalDate.now(), durationAmount, durationUnit);
 		}
 
-		int splitCount = "db".equals(item.getQuantityUnit()) ? item.getQuantityAmount().intValue() : 1;
+		int splitCount = splitCountFor(item);
 		if (entry.getStorageEntryIds().size() != splitCount) {
 			throw new ValidationException("storageEntryIds must have exactly " + splitCount + " id(s) for this item", "storageEntryIds");
 		}
@@ -332,6 +387,19 @@ class ShoppingListService {
 			ids.add(storageEntryId);
 		}
 		return ids;
+	}
+
+	/**
+	 * documentation/Subfeatures/Élelmiszer tárolás.md: a `db`-unit item splits into one storage row
+	 * per unit; every other unit is a single row. Rounded HALF_UP and floored at 1 so it can never
+	 * disagree with the client's own {@code splitCountFor()} (shopping-list-complete.ts) for any
+	 * positive amount — the editor already blocks a non-positive FOOD quantity.
+	 */
+	private static int splitCountFor(ShoppingListItemEntity item) {
+		if (!"db".equals(item.getQuantityUnit()) || item.getQuantityAmount() == null) {
+			return 1;
+		}
+		return Math.max(1, item.getQuantityAmount().setScale(0, RoundingMode.HALF_UP).intValueExact());
 	}
 
 	private void cacheResponse(UUID idempotencyKey, UUID userId, ShoppingListCompleteResponse response) {

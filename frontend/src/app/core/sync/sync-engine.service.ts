@@ -18,6 +18,7 @@ import { PackingSessionsService } from '../../api/api/packingSessions.service';
 import { PackingTemplatesService } from '../../api/api/packingTemplates.service';
 import { ProfileService } from '../../api/api/profile.service';
 import { RecipesService } from '../../api/api/recipes.service';
+import { ShoppingListsService } from '../../api/api/shoppingLists.service';
 import { StoredFoodsService } from '../../api/api/storedFoods.service';
 import { SyncService } from '../../api/api/sync.service';
 import { ApiError } from '../../api/model/apiError';
@@ -119,6 +120,7 @@ export class SyncEngineService {
   private readonly storedFoodsApi = inject(StoredFoodsService);
   private readonly recipesApi = inject(RecipesService);
   private readonly mealsApi = inject(MealsService);
+  private readonly shoppingListsApi = inject(ShoppingListsService);
   private readonly syncApi = inject(SyncService);
   private readonly authSession = inject(AuthSessionService);
   private readonly offlineQueue = inject(OfflineQueueService);
@@ -354,6 +356,16 @@ export class SyncEngineService {
         // same as above
       }
     }
+
+    const staleShoppingLists = await this.db.query<{ id: string }>('SELECT id FROM shopping_list WHERE _needs_refetch = 1');
+    for (const row of staleShoppingLists) {
+      try {
+        const dto = await firstValueFrom(this.shoppingListsApi.getShoppingList(row.id));
+        await this.db.executeTransaction(this.shoppingListApplyTasks(dto));
+      } catch {
+        // same as above
+      }
+    }
   }
 
   private async probeBackend(): Promise<boolean> {
@@ -523,7 +535,10 @@ export class SyncEngineService {
       return this.mealApplyTasks(body as Meal);
     }
     if (item.entityType === 'ShoppingList') {
-      return this.shoppingListApplyTasks(body as ShoppingList | ShoppingListCompleteResponse);
+      return this.shoppingListApplyTasks(body as ShoppingList);
+    }
+    if (item.entityType === 'ShoppingListComplete') {
+      return this.shoppingListCompleteApplyTasks(item, body as ShoppingListCompleteResponse);
     }
     throw new Error(`SyncEngine: no local writer for entityType "${item.entityType}"`);
   }
@@ -583,38 +598,43 @@ export class SyncEngineService {
    * nothing else would ever clear them (§8's `_dirty=1` apply rule otherwise keeps the pending value
    * forever).
    */
-  /**
-   * documentation/Subfeatures/Bevásárlás teljesítve.md: the `.../complete` action shares
-   * `entityType: 'ShoppingList'` with the plain nested-PUT save (same pattern as PackingSession's
-   * two response shapes under one entityType — see packingSessionApplyTasks) but returns a
-   * `ShoppingListCompleteResponse`, not a `ShoppingList`, so it's routed separately by shape.
-   */
-  private shoppingListApplyTasks(dto: ShoppingList | ShoppingListCompleteResponse): SqlTask[] {
-    if ('archivedListId' in dto) {
-      return this.shoppingListCompleteApplyTasks(dto);
-    }
+  private shoppingListApplyTasks(dto: ShoppingList): SqlTask[] {
     return [shoppingListServerApplyTask(dto), ...dto.items.map((item: ShoppingListItem) => shoppingListItemServerApplyTask(item))];
   }
 
   /**
    * documentation/Subfeatures/Bevásárlás teljesítve.md: every row this action touches was already
-   * written locally with the exact final values *before* the request was even sent (local-first —
-   * the client resolves storage location/expiry/split-count itself, the same way the server would),
-   * so there's nothing to re-apply here beyond clearing `_dirty`/`_local_only` on each of them —
-   * unlike a nested-PUT response, there's no richer authoritative row data to pull from this summary
-   * response. The mandatory post-drain pull (§6 point 9) still independently confirms everything.
+   * written locally with the exact final values *before* the request was sent (local-first — the
+   * client resolves storage location/expiry/split-count itself, the same way the server would), so
+   * there's nothing to re-apply beyond clearing `_dirty`/`_local_only` on exactly the rows named in
+   * the request payload: the archived list and its own items, the created StoredFood rows, and the
+   * spun-off list plus each of its items *by id* (not a blanket `WHERE shopping_list_id = ?`, which
+   * would also wrongly clear an item the user added to that new list between the local write and this
+   * drain). The mandatory post-drain pull (§6 point 9) still independently confirms everything.
    */
-  private shoppingListCompleteApplyTasks(response: ShoppingListCompleteResponse): SqlTask[] {
-    const tasks: SqlTask[] = [clearDirtyFlagsTask('shopping_list', response.archivedListId)];
+  private shoppingListCompleteApplyTasks(item: OutboxItem, response: ShoppingListCompleteResponse): SqlTask[] {
+    const payload = (item.payload ?? {}) as {
+      checkedFoodEntries?: { storageEntryIds?: string[] }[];
+      newActiveList?: { id?: string; items?: { id?: string }[] } | null;
+    };
+    const tasks: SqlTask[] = [
+      clearDirtyFlagsTask('shopping_list', response.archivedListId),
+      {
+        statement: `UPDATE shopping_list_item SET _dirty = 0, _local_only = 0 WHERE shopping_list_id = ?`,
+        values: [response.archivedListId],
+      },
+    ];
     for (const storageEntryId of response.createdStorageEntryIds) {
       tasks.push(clearDirtyFlagsTask('stored_food', storageEntryId));
     }
-    if (response.newActiveListId) {
+    const newActiveList = payload.newActiveList;
+    if (response.newActiveListId && newActiveList?.id === response.newActiveListId) {
       tasks.push(clearDirtyFlagsTask('shopping_list', response.newActiveListId));
-      tasks.push({
-        statement: `UPDATE shopping_list_item SET _dirty = 0, _local_only = 0 WHERE shopping_list_id = ?`,
-        values: [response.newActiveListId],
-      });
+      for (const newItem of newActiveList.items ?? []) {
+        if (newItem.id) {
+          tasks.push(clearDirtyFlagsTask('shopping_list_item', newItem.id));
+        }
+      }
     }
     return tasks;
   }
@@ -697,18 +717,39 @@ export class SyncEngineService {
         ...itemRows.map((row) => mealItemTombstoneTask(row.id, null, now)),
       ]);
     } else if (item.entityType === 'ShoppingList') {
-      if (item.url.endsWith('/complete')) {
-        // documentation/Subfeatures/Bevásárlás teljesítve.md: 409 here means another device already
-        // completed this list — it's ARCHIVED, not deleted, so there's nothing to tombstone; the
-        // next delta pull brings the authoritative state (and any StoredFood/new-list rows) down.
-        return;
-      }
       // documentation/Subfeatures/Bevásárlólista írás.md: list delete cascades to its own items locally too.
       const itemRows = await this.db.query<{ id: string }>('SELECT id FROM shopping_list_item WHERE shopping_list_id = ?', [item.targetEntityId]);
       await this.db.executeTransaction([
         shoppingListTombstoneTask(item.targetEntityId, null, now),
         ...itemRows.map((row) => shoppingListItemTombstoneTask(row.id, null, now)),
       ]);
+    } else if (item.entityType === 'ShoppingListComplete') {
+      // documentation/Subfeatures/Bevásárlás teljesítve.md: 409 ENTITY_DELETED here means the list was
+      // completed or deleted elsewhere — this device's completion is void. The list itself is ARCHIVED
+      // (or deleted) server-side, not something to tombstone, so flag it for a targeted re-read; and
+      // undo the completion's local-only side effects (the spun-off list + items + StoredFood rows,
+      // none of which have their own outbox entry) so they don't linger as phantom rows.
+      const payload = (item.payload ?? {}) as {
+        checkedFoodEntries?: { storageEntryIds?: string[] }[];
+        newActiveList?: { id?: string; items?: { id?: string }[] } | null;
+      };
+      const tasks: SqlTask[] = [
+        { statement: `UPDATE shopping_list SET _needs_refetch = 1, _dirty = 0 WHERE id = ?`, values: [item.targetEntityId] },
+      ];
+      for (const entry of payload.checkedFoodEntries ?? []) {
+        for (const storageEntryId of entry.storageEntryIds ?? []) {
+          tasks.push({ statement: `DELETE FROM stored_food WHERE id = ? AND _local_only = 1`, values: [storageEntryId] });
+        }
+      }
+      if (payload.newActiveList?.id) {
+        for (const newItem of payload.newActiveList.items ?? []) {
+          if (newItem.id) {
+            tasks.push({ statement: `DELETE FROM shopping_list_item WHERE id = ? AND _local_only = 1`, values: [newItem.id] });
+          }
+        }
+        tasks.push({ statement: `DELETE FROM shopping_list WHERE id = ? AND _local_only = 1`, values: [payload.newActiveList.id] });
+      }
+      await this.db.executeTransaction(tasks);
     }
   }
 
@@ -900,6 +941,24 @@ export class SyncEngineService {
         return [mealItemServerApplyTask(change.data as MealItem)];
       }
       return [mealItemTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
+    }
+    if (change.entityType === 'ShoppingList') {
+      if (!change.deleted) {
+        return [shoppingListServerApplyTask(change.data as ShoppingList)];
+      }
+      // documentation/Subfeatures/Bevásárlólista írás.md: list delete cascades to this device's own items too.
+      const itemRows = await this.db.query<{ id: string }>('SELECT id FROM shopping_list_item WHERE shopping_list_id = ?', [change.id]);
+      return [
+        shoppingListTombstoneTask(change.id, null, change.updatedAt),
+        discardPendingWritesTask(change.id),
+        ...itemRows.map((row) => shoppingListItemTombstoneTask(row.id, null, change.updatedAt)),
+      ];
+    }
+    if (change.entityType === 'ShoppingListItem') {
+      if (!change.deleted) {
+        return [shoppingListItemServerApplyTask(change.data as ShoppingListItem)];
+      }
+      return [shoppingListItemTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
     }
     return [];
   }

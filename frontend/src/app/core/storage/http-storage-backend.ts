@@ -29,9 +29,6 @@ import { PackingTemplate } from '../../api/model/packingTemplate';
 import { PackingTemplateDetail } from '../../api/model/packingTemplateDetail';
 import { Recipe } from '../../api/model/recipe';
 import { ShoppingList } from '../../api/model/shoppingList';
-import { ShoppingListCompleteFoodEntry } from '../../api/model/shoppingListCompleteFoodEntry';
-import { ShoppingListCompleteRequest } from '../../api/model/shoppingListCompleteRequest';
-import { ShoppingListItem } from '../../api/model/shoppingListItem';
 import { StoredFood } from '../../api/model/storedFood';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
@@ -46,6 +43,7 @@ import {
   ShoppingListCompleteResult,
   ShoppingListDraft,
   StorageBackend,
+  buildShoppingListCompleteRequestPayload,
   expandMealItemSaveItem,
   expandShoppingListItemSaveItem,
 } from './storage-backend';
@@ -350,22 +348,10 @@ export class HttpStorageBackend implements StorageBackend {
   }
 
   async completeShoppingList(draft: ShoppingListCompleteDraft): Promise<ShoppingListCompleteResult> {
-    const dto: ShoppingListCompleteRequest = {
-      checkedFoodEntries: draft.checkedFoodEntries.map((entry) => ({
-        shoppingListItemId: entry.shoppingListItemId,
-        storageEntryIds: entry.storageEntryIds,
-        expirationDate: entry.expirationDate,
-        storageLocation: entry.storageLocation as ShoppingListCompleteFoodEntry.StorageLocationEnum,
-      })),
-      newActiveList: draft.newActiveList
-        ? {
-            id: draft.newActiveList.id,
-            name: draft.newActiveList.name,
-            items: draft.newActiveList.items.map((item) => ({ ...expandShoppingListItemSaveItem(item, draft.newActiveList!.id), deleted: false }) as ShoppingListItem),
-          }
-        : undefined,
-    };
-    const response = await firstValueFrom(this.shoppingListsApi.completeShoppingList(draft.shoppingListId, uuidV4(), dto));
+    const dto = buildShoppingListCompleteRequestPayload(draft);
+    // A list is completed exactly once, so its id is a stable, unique Idempotency-Key — a fresh
+    // uuidV4() per call would let a double-tap / retry run the completion twice server-side.
+    const response = await firstValueFrom(this.shoppingListsApi.completeShoppingList(draft.shoppingListId, draft.shoppingListId, dto));
     return {
       archivedListId: response.archivedListId,
       createdStorageEntryIds: response.createdStorageEntryIds,

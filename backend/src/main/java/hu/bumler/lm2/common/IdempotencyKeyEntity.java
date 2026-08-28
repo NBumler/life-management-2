@@ -1,4 +1,4 @@
-package hu.bumler.lm2.food;
+package hu.bumler.lm2.common;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -14,13 +14,15 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 /**
- * documentation/Subfeatures/Bevásárlás teljesítve.md "Idempotencia" — replay protection for the one
- * endpoint in this codebase that isn't naturally idempotent (every other mutating endpoint is a
- * plain upsert-by-id or a full nested-tree replace). The table itself was created by
- * {@code V1__common_infrastructure.sql}; this is the first entity mapping it. {@code key} is the
- * client-supplied {@code Idempotency-Key} header value (the outbox item's own id) and doubles as the
- * primary key — a lookup by key alone is enough, {@code userId}/{@code endpoint} are stored only as
- * diagnostics for the eventual 30-day pruning job.
+ * documentation/Architektúra/Backend.md "Idempotencia" — shared replay-protection infrastructure for
+ * every atomic (non-upsert) mutating endpoint. The first consumer is
+ * {@code POST /api/shopping-lists/{id}/complete} (documentation/Subfeatures/Bevásárlás teljesítve.md),
+ * but this lives in {@code hu.bumler.lm2.common} — not a feature package — because the mechanism is
+ * cross-cutting: any future atomic endpoint reuses it. The table itself was created by
+ * {@code V1__common_infrastructure.sql}. {@code key} is the client-supplied {@code Idempotency-Key}
+ * header value (the outbox item's own id) and doubles as the primary key; {@code userId} and
+ * {@code endpoint} are matched on lookup as well (defence-in-depth against a key value being reused
+ * across tenants or endpoints) and drive the eventual 30-day pruning job.
  */
 @Entity
 @Table(name = "idempotency_key")

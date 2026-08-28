@@ -76,6 +76,8 @@ export class ShoppingListCompletePage implements OnInit {
   readonly listId = signal<string | null>(null);
   readonly rows = signal<CheckedFoodRow[]>([]);
   readonly locationOptions = [StoredFood.StorageLocationEnum.Room, StoredFood.StorageLocationEnum.Fridge, StoredFood.StorageLocationEnum.Freezer];
+  /** Guards against a double-tap running the completion twice (the web path has no outbox to dedupe it). */
+  readonly submitting = signal(false);
 
   readonly hasCheckedFood = computed(() => this.rows().length > 0);
 
@@ -119,18 +121,23 @@ export class ShoppingListCompletePage implements OnInit {
   async confirm(): Promise<void> {
     const listId = this.listId();
     const list = this.repository.items().find((candidate) => candidate.id === listId);
-    if (listId === null || list === undefined) {
+    if (listId === null || list === undefined || this.submitting()) {
       return;
     }
-    const wizardInputs: CheckedFoodWizardInput[] = this.rows().map((row) => ({
-      item: row.item,
-      expirationDate: row.expirationDate(),
-      storageLocation: row.storageLocation(),
-      foodNetAmount: row.food?.netAmount ?? null,
-      foodNetUnit: row.food?.netUnit ?? null,
-    }));
-    const draft = buildCompleteDraft(listId, list.items, wizardInputs);
-    await this.repository.complete(draft);
-    await this.router.navigateByUrl('/tabs/menu/shopping');
+    this.submitting.set(true);
+    try {
+      const wizardInputs: CheckedFoodWizardInput[] = this.rows().map((row) => ({
+        item: row.item,
+        expirationDate: row.expirationDate(),
+        storageLocation: row.storageLocation(),
+        foodNetAmount: row.food?.netAmount ?? null,
+        foodNetUnit: row.food?.netUnit ?? null,
+      }));
+      const draft = buildCompleteDraft(listId, list.items, wizardInputs);
+      await this.repository.complete(draft);
+      await this.router.navigateByUrl('/tabs/menu/shopping');
+    } finally {
+      this.submitting.set(false);
+    }
   }
 }

@@ -36,9 +36,14 @@ export function partitionItems(items: readonly ShoppingListItem[]): { checkedFoo
   };
 }
 
-/** documentation/Subfeatures/Élelmiszer tárolás.md "Létrehozás — bevásárlásból": a `db`-unit item with `amount = N` splits into N storage rows, else exactly 1. */
+/**
+ * documentation/Subfeatures/Élelmiszer tárolás.md "Létrehozás — bevásárlásból": a `db`-unit item
+ * with `amount = N` splits into N storage rows, else exactly 1. Rounded and floored at 1 so it
+ * always matches the backend's own `splitCountFor()` (ShoppingListService) for any positive amount —
+ * the editor blocks a non-positive FOOD quantity, so the floor is only a defensive backstop.
+ */
 export function splitCountFor(item: ShoppingListItem): number {
-  return item.quantityUnit === 'db' ? Math.round(item.quantityAmount ?? 1) : 1;
+  return item.quantityUnit === 'db' ? Math.max(1, Math.round(item.quantityAmount ?? 1)) : 1;
 }
 
 export function buildCompleteDraft(

@@ -31,6 +31,7 @@ import { RecipeRepository } from '../../../core/data/recipe.repository';
 import { today } from '../../../shared/local-date';
 import { TdeeCalculation, TdeeProfileInput, computeTdee } from '../../../shared/tdee-calculator';
 import { calendarDayInZone, deviceTimeZoneId } from '../../../shared/timezone';
+import { navigateFoodSection } from '../food-sections';
 import { addDurationToDate } from '../storage/shelf-life';
 import { computeDailyNutrition } from './daily-nutrition';
 import { NutritionProgressBarComponent } from './nutrition-progress-bar.component';
@@ -153,15 +154,7 @@ export class MealDashboardPage implements OnInit, ViewWillEnter {
 
   /** documentation/Features/Kaja.md: no full segmented hub yet (see app.routes.ts) — this is the lightweight stand-in until Stat exists too. */
   switchSection(section: string): void {
-    if (section === 'catalog') {
-      void this.router.navigateByUrl('/tabs/food/catalog');
-    } else if (section === 'storage') {
-      void this.router.navigateByUrl('/tabs/food/storage');
-    } else if (section === 'recipe') {
-      void this.router.navigateByUrl('/tabs/food/recipe');
-    } else if (section === 'stats') {
-      void this.router.navigateByUrl('/tabs/food/stats');
-    }
+    navigateFoodSection(this.router, section, 'meal');
   }
 
   previousDay(): void {

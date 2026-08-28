@@ -64,8 +64,13 @@ export class OfflineQueueService {
       throw new Error(`Entity ${request.targetEntityId} has a pending delete and cannot be edited further`);
     }
 
-    const existingPost = existing.find((item) => item.method === 'POST');
-    const existingPut = existing.find((item) => item.method === 'PUT');
+    // Coalescing candidates must be the SAME logical operation: an action endpoint like ShoppingList's
+    // `/complete` shares the list's targetEntityId but has its own entityType, so it must neither fold
+    // into the list's create POST nor be folded into by a later list PUT — each stays its own row,
+    // FIFO-ordered, blocked behind the other only via recomputeBlocked's same-targetEntityId rule.
+    const sameType = existing.filter((item) => item.entityType === request.entityType);
+    const existingPost = sameType.find((item) => item.method === 'POST');
+    const existingPut = sameType.find((item) => item.method === 'PUT');
 
     if (request.method === 'DELETE') {
       if (existingPost) {
@@ -235,9 +240,10 @@ export class OfflineQueueService {
    * "Cascade drop"; their own local entity rows are left for the caller to handle if it cares —
    * there is no dependency chain yet among the entities this phase covers.
    */
-  async drop(item: OutboxItem, entityTask: SqlTask): Promise<OutboxItem[]> {
+  async drop(item: OutboxItem, entityTask: SqlTask | SqlTask[]): Promise<OutboxItem[]> {
     const dependents = item.method === 'POST' ? await this.findDependents(item.targetEntityId) : [];
-    const tasks: SqlTask[] = [entityTask, deleteOutboxRowTask(item.id), ...dependents.map((dep) => deleteOutboxRowTask(dep.id))];
+    const entityTasks = Array.isArray(entityTask) ? entityTask : [entityTask];
+    const tasks: SqlTask[] = [...entityTasks, deleteOutboxRowTask(item.id), ...dependents.map((dep) => deleteOutboxRowTask(dep.id))];
     await this.db.executeTransaction(tasks);
     this.removeItems([item.id, ...dependents.map((dep) => dep.id)]);
     return dependents;

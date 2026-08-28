@@ -98,6 +98,7 @@ import {
   ShoppingListCompleteResult,
   ShoppingListDraft,
   StorageBackend,
+  buildShoppingListCompleteRequestPayload,
   expandMealItemSaveItem,
   expandShoppingListItemSaveItem,
 } from './storage-backend';
@@ -1264,21 +1265,16 @@ export class SqliteStorageBackend implements StorageBackend {
     }
     const dependsOn = await this.findLocalOnlyIds('food', foodIdsForDependsOn);
 
-    const payload = {
-      checkedFoodEntries: draft.checkedFoodEntries.map((entry) => ({
-        shoppingListItemId: entry.shoppingListItemId,
-        storageEntryIds: entry.storageEntryIds,
-        expirationDate: entry.expirationDate,
-        storageLocation: entry.storageLocation,
-      })),
-      newActiveList: draft.newActiveList,
-    };
+    // Same wire projection the web path uses — the outbox body and the online body can't drift.
+    const payload = buildShoppingListCompleteRequestPayload(draft);
     const enqueue = await this.offlineQueue.buildEnqueueTasks({
       userId,
       method: 'POST',
       url: `/api/shopping-lists/${draft.shoppingListId}/complete`,
       payload,
-      entityType: 'ShoppingList',
+      // documentation/Subfeatures/Bevásárlás teljesítve.md: its own entity type so the completion
+      // POST never coalesces with a still-pending list create/update for the same targetEntityId.
+      entityType: 'ShoppingListComplete',
       targetEntityId: draft.shoppingListId,
       dependsOn,
     });

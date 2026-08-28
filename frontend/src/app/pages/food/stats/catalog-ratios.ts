@@ -1,7 +1,7 @@
 import { Food } from '../../../api/model/food';
 import { Recipe } from '../../../api/model/recipe';
 import { QuantityUnit, canonicalQuantityAmount } from '../../../shared/quantity';
-import { computeRecipeSummary } from '../recipe/recipe-summary';
+import { RecipeSummary, computeRecipeSummary } from '../recipe/recipe-summary';
 
 /**
  * documentation/Subfeatures/Kaja statisztika.md "Katalógus arányok" — pure ranking utility over a
@@ -55,7 +55,21 @@ function foodRatio(food: Food, metric: RatioMetric): number | null {
   }
 }
 
-function recipeRatio(recipe: Recipe, foods: readonly Food[], metric: RatioMetric): number | null {
+/**
+ * documentation/Subfeatures/Kaja statisztika.md "Bázis mennyiség" — the recipe's price normalized to
+ * a per-100 g/ml basis, so PROTEIN_PER_PRICE ranks recipes on the same scale `pricePer100` puts
+ * foods on (whole-recipe HUF vs per-100 HUF would be an apples-to-oranges rank across the two
+ * segments). Null — "hiányos" — when the recipe has no weight/volume dimension (all-`db`, no net
+ * content), mirroring `pricePer100`'s own `db` exclusion.
+ */
+function recipePricePer100(summary: RecipeSummary): number | null {
+  if (summary.baseAmountG === 0) {
+    return null;
+  }
+  return summary.priceHuf * (100 / summary.baseAmountG);
+}
+
+function recipeRatio(recipe: Recipe, foods: ReadonlyMap<string, Food>, metric: RatioMetric): number | null {
   const summary = computeRecipeSummary(
     recipe.ingredients
       .filter((ingredient) => !ingredient.deleted)
@@ -71,7 +85,7 @@ function recipeRatio(recipe: Recipe, foods: readonly Food[], metric: RatioMetric
     case 'PROTEIN_PER_CARBS':
       return computeRatio(summary.proteinG, summary.carbsG);
     case 'PROTEIN_PER_PRICE':
-      return computeRatio(summary.proteinG, summary.priceHuf);
+      return computeRatio(summary.proteinG, recipePricePer100(summary));
   }
 }
 
@@ -93,6 +107,10 @@ export function rankFoods(foods: readonly Food[], metric: RatioMetric, direction
 }
 
 export function rankRecipes(recipes: readonly Recipe[], foods: readonly Food[], metric: RatioMetric, direction: SortDirection): CatalogRatioRow[] {
-  const rows = recipes.filter((recipe) => !recipe.deleted).map((recipe) => ({ id: recipe.id, name: recipe.name, ratio: recipeRatio(recipe, foods, metric) }));
+  // One id→Food map for the whole ranking rather than an O(catalog) scan per ingredient per recipe.
+  const foodsById = new Map(foods.map((food) => [food.id, food]));
+  const rows = recipes
+    .filter((recipe) => !recipe.deleted)
+    .map((recipe) => ({ id: recipe.id, name: recipe.name, ratio: recipeRatio(recipe, foodsById, metric) }));
   return buildRanking(rows, direction);
 }

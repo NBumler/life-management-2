@@ -137,7 +137,9 @@ export class ShoppingListEditorPage implements OnInit {
     const idParam = this.route.snapshot.paramMap.get('id');
     if (idParam !== null && idParam !== 'new') {
       const existing = this.repository.items().find((item) => item.id === idParam);
-      if (existing === undefined) {
+      if (existing === undefined || existing.deleted || existing.status === 'ARCHIVED') {
+        // documentation/Subfeatures/Bevásárlás előzmény.md: an archived list is read-only history —
+        // it has its own detail page. The editor only ever touches an ACTIVE list.
         await this.router.navigateByUrl('/tabs/menu/shopping');
         return;
       }
@@ -223,7 +225,7 @@ export class ShoppingListEditorPage implements OnInit {
   }
 
   async save(): Promise<void> {
-    const invalidQuantity = this.items().some((row) => row.type === 'FOOD' && row.quantity().amount === null);
+    const invalidQuantity = this.items().some((row) => row.type === 'FOOD' && (row.quantity().amount === null || row.quantity().amount! <= 0));
     const invalidName = this.items().some((row) => row.type === 'NON_FOOD' && row.name().trim() === '');
     if (invalidQuantity || invalidName) {
       this.showItemErrors.set(true);

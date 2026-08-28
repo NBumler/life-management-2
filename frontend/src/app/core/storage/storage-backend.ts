@@ -14,6 +14,9 @@ import { PackingTemplate } from '../../api/model/packingTemplate';
 import { PackingTemplateDetail } from '../../api/model/packingTemplateDetail';
 import { Recipe } from '../../api/model/recipe';
 import { ShoppingList } from '../../api/model/shoppingList';
+import { ShoppingListCompleteFoodEntry } from '../../api/model/shoppingListCompleteFoodEntry';
+import { ShoppingListCompleteRequest } from '../../api/model/shoppingListCompleteRequest';
+import { ShoppingListItem } from '../../api/model/shoppingListItem';
 import { StoredFood } from '../../api/model/storedFood';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
@@ -258,6 +261,35 @@ export interface ShoppingListCompleteResult {
   archivedListId: string;
   createdStorageEntryIds: string[];
   newActiveListId: string | null;
+}
+
+/**
+ * documentation/Subfeatures/Bevásárlás teljesítve.md — the one place a `ShoppingListCompleteDraft`
+ * is projected onto the `POST /api/shopping-lists/{id}/complete` wire body. Shared by both storage
+ * backends so the online call (HttpStorageBackend) and the offline outbox payload
+ * (SqliteStorageBackend) can never drift. The spun-off list's items are expanded to the full
+ * `ShoppingListItem` shape — the backend DTO requires `shoppingListId` and `deleted` — and forced
+ * unchecked ("üres pipákkal"), matching the server.
+ */
+export function buildShoppingListCompleteRequestPayload(draft: ShoppingListCompleteDraft): ShoppingListCompleteRequest {
+  return {
+    checkedFoodEntries: draft.checkedFoodEntries.map((entry) => ({
+      shoppingListItemId: entry.shoppingListItemId,
+      storageEntryIds: entry.storageEntryIds,
+      expirationDate: entry.expirationDate,
+      storageLocation: entry.storageLocation as ShoppingListCompleteFoodEntry.StorageLocationEnum,
+    })),
+    newActiveList: draft.newActiveList
+      ? {
+          id: draft.newActiveList.id,
+          name: draft.newActiveList.name,
+          items: draft.newActiveList.items.map(
+            (item) =>
+              ({ ...expandShoppingListItemSaveItem(item, draft.newActiveList!.id), checked: false, deleted: false }) as ShoppingListItem,
+          ),
+        }
+      : undefined,
+  };
 }
 
 /**

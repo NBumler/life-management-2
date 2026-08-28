@@ -26,7 +26,7 @@ import { AuthSessionService } from '../../../core/session/auth-session.service';
 import { LocalDatabaseService } from '../../../core/storage/local-database.service';
 import { STORAGE_BACKEND } from '../../../core/storage/storage-backend';
 import { OfflineQueueService } from '../../../core/sync/offline-queue.service';
-import { buildOutboxDropTask, OutboxEntityRegistryService } from '../../../core/sync/outbox-entity-registry';
+import { buildOutboxDropTasks, OutboxEntityRegistryService } from '../../../core/sync/outbox-entity-registry';
 import { OutboxItem } from '../../../core/sync/outbox-item';
 import { SyncEngineService } from '../../../core/sync/sync-engine.service';
 
@@ -186,8 +186,7 @@ export class SyncPage implements ViewWillEnter {
 
   private async doDrop(item: OutboxItem): Promise<void> {
     const descriptor = this.entityRegistry.get(item.entityType);
-    const entityTask = buildOutboxDropTask(descriptor, item.method, item.targetEntityId);
-    await this.offlineQueue.drop(item, entityTask);
+    await this.offlineQueue.drop(item, buildOutboxDropTasks(descriptor, item));
   }
 
   private async refresh(): Promise<void> {
@@ -204,6 +203,11 @@ export class SyncPage implements ViewWillEnter {
       return null;
     }
     const descriptor = this.entityRegistry.get(item.entityType);
+    if (descriptor.keepPayloadOnUnskip) {
+      // documentation/Features/Szinkronizációs központ.md "Unskip": re-send the captured body as-is —
+      // an action endpoint's payload can't be re-derived from local rows (see the descriptor doc).
+      return item.payload;
+    }
     return descriptor.currentPayload({ db: this.db, storage: this.storage, targetEntityId: item.targetEntityId, method: item.method });
   }
 }

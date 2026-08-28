@@ -26,7 +26,11 @@ export type OutboxEntityType =
   | 'StoredFood'
   | 'Recipe'
   | 'Meal'
-  | 'ShoppingList';
+  | 'ShoppingList'
+  // documentation/Subfeatures/Bevásárlás teljesítve.md: the `.../complete` action endpoint. Its own
+  // outbox entity type (not 'ShoppingList') so it never coalesces with — or is recovered like — the
+  // list's plain CRUD writes, even though it shares the list's targetEntityId.
+  | 'ShoppingListComplete';
 
 /** documentation/Architektúra/Backend-offline first.md §4 "Outbox — adatmodell". */
 export interface OutboxItem {

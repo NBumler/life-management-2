@@ -80,7 +80,7 @@ describe('recipe-summary', () => {
     it('returns all zeros and not incomplete for an empty ingredient list', () => {
       const summary = computeRecipeSummary([], []);
 
-      expect(summary).toEqual({ priceHuf: 0, energyKcal: 0, proteinG: 0, carbsG: 0, fatG: 0, incomplete: false });
+      expect(summary).toEqual({ priceHuf: 0, energyKcal: 0, proteinG: 0, carbsG: 0, fatG: 0, baseAmountG: 0, incomplete: false });
     });
   });
 
