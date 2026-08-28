@@ -3,13 +3,20 @@
 </ion-header>
 
 <ion-content>
+  @if (hasDraft()) {
+    <div class="cta-row">
+      <ion-button expand="block" color="warning" routerLink="active">{{ 'WORKOUT.LOG.RESUME' | translate }}</ion-button>
+    </div>
+  }
+
   <div class="cta-row">
-    <ion-button expand="block" routerLink="new">{{ 'WORKOUT.LOG.NEW_SESSION' | translate }}</ion-button>
+    <ion-button expand="block" routerLink="active">{{ 'WORKOUT.LOG.NEW_SESSION' | translate }}</ion-button>
     @if (mostRecentId(); as lastId) {
-      <ion-button expand="block" fill="outline" [routerLink]="['new']" [queryParams]="{ copyFrom: lastId }">
+      <ion-button expand="block" fill="outline" [routerLink]="['active']" [queryParams]="{ copyFrom: lastId }">
         {{ 'WORKOUT.LOG.SAME_AS_LAST' | translate }}
       </ion-button>
     }
+    <ion-button expand="block" fill="clear" routerLink="new">{{ 'WORKOUT.LOG.LOG_PAST' | translate }}</ion-button>
   </div>
 
   @if (isEmpty()) {

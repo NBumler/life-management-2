@@ -34,6 +34,7 @@ import { uuidV4 } from '../../../core/sync/uuid';
 import { WorkoutExerciseSaveItem, WorkoutSessionDraft } from '../../../core/storage/storage-backend';
 import { today } from '../../../shared/local-date';
 import { ExercisePickResult, ExercisePickerComponent } from '../../../shared/exercise-picker/exercise-picker.component';
+import { LOCATIONS, SET_TYPES, WORKOUT_TYPES, visibleFields } from './workout-fields';
 import { effectiveDurationMinutes, ghostForExercise, sessionKcal, sessionVolume } from './workout-metrics';
 
 interface SetRow {
@@ -56,32 +57,6 @@ interface ExerciseRow {
   exerciseKind: WorkoutExerciseEntry.ExerciseKindEnum;
   supersetGroup: WritableSignal<number | null>;
   sets: WritableSignal<SetRow[]>;
-}
-
-const SET_TYPES = Object.values(WorkoutSetEntry.SetTypeEnum);
-const WORKOUT_TYPES = Object.values(WorkoutSession.WorkoutTypeEnum);
-const LOCATIONS = Object.values(WorkoutSession.LocationEnum);
-
-/** Which set-entry fields the spec's `exerciseKind` table exposes (weightKg is shown wherever it applies, required or optional). */
-function visibleFields(kind: WorkoutExerciseEntry.ExerciseKindEnum): {
-  reps: boolean;
-  weightKg: boolean;
-  holdTimeSeconds: boolean;
-  edgeSizeMm: boolean;
-  distanceMeters: boolean;
-} {
-  switch (kind) {
-    case WorkoutExerciseEntry.ExerciseKindEnum.WeightedReps:
-      return { reps: true, weightKg: true, holdTimeSeconds: false, edgeSizeMm: false, distanceMeters: false };
-    case WorkoutExerciseEntry.ExerciseKindEnum.BodyweightReps:
-      return { reps: true, weightKg: true, holdTimeSeconds: false, edgeSizeMm: false, distanceMeters: false };
-    case WorkoutExerciseEntry.ExerciseKindEnum.IsometricTime:
-      return { reps: false, weightKg: true, holdTimeSeconds: true, edgeSizeMm: false, distanceMeters: false };
-    case WorkoutExerciseEntry.ExerciseKindEnum.HangboardPinch:
-      return { reps: false, weightKg: true, holdTimeSeconds: true, edgeSizeMm: true, distanceMeters: false };
-    case WorkoutExerciseEntry.ExerciseKindEnum.CardioTimeDist:
-      return { reps: false, weightKg: false, holdTimeSeconds: true, edgeSizeMm: false, distanceMeters: true };
-  }
 }
 
 /**

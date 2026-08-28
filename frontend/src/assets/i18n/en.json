@@ -527,7 +527,25 @@
       "EMPTY": "No workouts logged yet.",
       "NEW_SESSION": "New workout",
       "SAME_AS_LAST": "Same as last time",
-      "EXERCISES_SHORT": "exercises"
+      "EXERCISES_SHORT": "exercises",
+      "RESUME": "Resume active workout",
+      "LOG_PAST": "Log a past workout"
+    },
+    "ACTIVE": {
+      "DISCARD": "Discard",
+      "DISCARD_CONFIRM_TITLE": "Discard workout",
+      "DISCARD_CONFIRM_MESSAGE": "Discard this in-progress workout? Logged sets will be lost.",
+      "FINISH": "Finish workout",
+      "REST": "Rest:",
+      "SECONDS_SHORT": "s",
+      "REST_SKIP": "Skip",
+      "ROUND": "Round",
+      "NEXT_ROUND": "Next round",
+      "COPY_ROUND": "Copy round",
+      "SET_DONE": "Set done",
+      "PR_1RM": "1RM PR",
+      "PR_WEIGHT": "Weight PR",
+      "PR_VOLUME": "Volume PR"
     },
     "EXERCISES": {
       "TITLE": "Exercises",

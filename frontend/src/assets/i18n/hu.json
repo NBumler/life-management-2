@@ -527,7 +527,25 @@
       "EMPTY": "Még nincs edzés naplózva.",
       "NEW_SESSION": "Új edzés",
       "SAME_AS_LAST": "Ugyanaz, mint legutóbb",
-      "EXERCISES_SHORT": "gyakorlat"
+      "EXERCISES_SHORT": "gyakorlat",
+      "RESUME": "Aktív edzés folytatása",
+      "LOG_PAST": "Utólagos rögzítés"
+    },
+    "ACTIVE": {
+      "DISCARD": "Elvetés",
+      "DISCARD_CONFIRM_TITLE": "Edzés elvetése",
+      "DISCARD_CONFIRM_MESSAGE": "Biztosan elveted ezt a folyamatban lévő edzést? A rögzített szettek elvesznek.",
+      "FINISH": "Edzés befejezése",
+      "REST": "Pihenő:",
+      "SECONDS_SHORT": "mp",
+      "REST_SKIP": "Kihagyás",
+      "ROUND": "Kör",
+      "NEXT_ROUND": "Következő kör",
+      "COPY_ROUND": "Kör másolása",
+      "SET_DONE": "Szett kész",
+      "PR_1RM": "1RM PR",
+      "PR_WEIGHT": "Súly PR",
+      "PR_VOLUME": "Volumen PR"
     },
     "SESSION": {
       "NEW_TITLE": "Új edzés",
