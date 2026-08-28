@@ -495,5 +495,17 @@
       "LOCATION_LABEL": "Storage location",
       "CONFIRM": "Finish"
     }
+  },
+  "WORKOUT": {
+    "SEGMENTS": {
+      "LOG": "Workout log",
+      "WEEKLY_PLAN": "Weekly plan",
+      "CLIMBING": "Climbing",
+      "SWIMMING": "Swimming",
+      "CYCLING": "Cycling"
+    },
+    "LOG": {
+      "EMPTY": "No workouts logged yet."
+    }
   }
 }

@@ -164,6 +164,21 @@ export const routes: Routes = [
           },
         ],
       },
+      {
+        // documentation/Features/Edzés.md: the tab root is the Edzésnapló | Heti terv | Mászás | Úszás
+        // | Bicikli top segment (documentation/Architektúra/Frontend.md route map). Only `log` exists
+        // as of the tab-scaffold commit; the flagged segments' routes are added by their own slices.
+        path: 'workout',
+        children: [
+          { path: '', redirectTo: 'log', pathMatch: 'full' },
+          {
+            path: 'log',
+            children: [
+              { path: '', loadComponent: () => import('./pages/workout/log/workout-log-list.page').then((m) => m.WorkoutLogListPage) },
+            ],
+          },
+        ],
+      },
       // documentation/Architektúra/Frontend.md "Login utáni default tab": Menü is the only enabled
       // tab until a feature flag turns Kaja/Edzés/Feladatok on.
       { path: '', redirectTo: 'menu', pathMatch: 'full' },

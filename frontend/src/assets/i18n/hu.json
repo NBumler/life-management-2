@@ -495,5 +495,17 @@
       "LOCATION_LABEL": "Tárolási hely",
       "CONFIRM": "Befejezés"
     }
+  },
+  "WORKOUT": {
+    "SEGMENTS": {
+      "LOG": "Edzésnapló",
+      "WEEKLY_PLAN": "Heti terv",
+      "CLIMBING": "Mászás",
+      "SWIMMING": "Úszás",
+      "CYCLING": "Bicikli"
+    },
+    "LOG": {
+      "EMPTY": "Még nincs edzés naplózva."
+    }
   }
 }
