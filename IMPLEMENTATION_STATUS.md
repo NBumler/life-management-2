@@ -36,9 +36,9 @@ Ha implementálsz egy új feature-t: vedd fel a sort, `Kész`-re állítva, a
 
 | Doksi | Spec commit | Infra állapot |
 |---|---|---|
-| [Backend-offline first](documentation/Architektúra/Backend-offline%20first.md) | `d1950b4` (2026-08-19) | Kész — outbox, sync engine, storage backend megvalósítva |
+| [Backend-offline first](documentation/Architektúra/Backend-offline%20first.md) | `18b1ace` (2026-08-28) | Kész — outbox, sync engine, storage backend megvalósítva; §8 a pull utáni repository-cache invalidálással (`DataChangeNotifier`) bővült |
 | [Backend](documentation/Architektúra/Backend.md) | `d1950b4` (2026-08-19) | Kész — OpenAPI spec-first pipeline, Flyway, hibaszerződés áll |
-| [Frontend](documentation/Architektúra/Frontend.md) | `d1950b4` (2026-08-19) | Kész — layering, signals, tab registry, feature flags áll |
+| [Frontend](documentation/Architektúra/Frontend.md) | `18b1ace` (2026-08-28) | Kész — layering, signals, tab registry, feature flags áll; `core/data` repo-k in-memory olvasás-cache-e + `core/sync/DataChangeNotifier` dokumentálva |
 
 ## Kész feature-k
 
