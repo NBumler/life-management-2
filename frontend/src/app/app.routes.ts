@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 
+import { featureFlagGuard } from './core/config/feature-flag.guard';
 import { authGuard } from './core/session/auth.guard';
 
 export const routes: Routes = [
@@ -80,6 +81,7 @@ export const routes: Routes = [
       },
       {
         path: 'tasks',
+        canActivate: [featureFlagGuard('tab.feladatok')],
         children: [
           { path: '', loadComponent: () => import('./pages/tasks/tennivalok-hub.page').then((m) => m.TennivalokHubPage) },
           {
@@ -123,6 +125,7 @@ export const routes: Routes = [
         // meal-dashboard.page.html / kaja-stats.page.html) is the lightweight stand-in, now covering
         // all five segments, landing on Étkezés first per the spec's eventual segment order.
         path: 'food',
+        canActivate: [featureFlagGuard('tab.kaja')],
         children: [
           { path: '', redirectTo: 'meal', pathMatch: 'full' },
           {
@@ -169,6 +172,7 @@ export const routes: Routes = [
         // | Bicikli top segment (documentation/Architektúra/Frontend.md route map). Only `log` exists
         // as of the tab-scaffold commit; the flagged segments' routes are added by their own slices.
         path: 'workout',
+        canActivate: [featureFlagGuard('tab.edzes')],
         children: [
           { path: '', redirectTo: 'log', pathMatch: 'full' },
           {

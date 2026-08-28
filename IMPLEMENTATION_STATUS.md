@@ -78,6 +78,8 @@ Ha implementálsz egy új feature-t: vedd fel a sort, `Kész`-re állítva, a
 | ↳ [Bevásárlólista írás](documentation/Subfeatures/Bevásárlólista%20írás.md) | `3ddf321` (2026-08-14) | `hu.bumler.lm2.food` (`ShoppingList`, `ShoppingListItem` — per-user, `ShoppingListItem` polimorf FOOD/NON_FOOD, kolokálva a `food` csomagban a `Food` FK-referencia miatt, ugyanúgy mint `Meal`/`MealItem`) | `pages/menu/shopping/` (lista + szerkesztő: névmező, FOOD-picker a meal-edit mintájára, NON_FOOD inline sor név+mennyiség+szabad szöveggel, pipa checkbox), `core/data/shopping-list.repository.ts` | **Kész.** Nested aggregate PUT (mint `Meal`/`MealItem`), de a Meal-lel ellentétben **nincs "legalább egy tétel" megkötés** — a spec explicit megengedi az üres aktív listát (kézi törléssel, nem automatikus cascade-del). `status`/`completedAt` mezők megvannak a sémában, de ezt a kört tekintve read-only-k voltak — a [[Bevásárlás teljesítve]] slice azóta beköti a `status` írását. Food törléskor cascade a rá hivatkozó ShoppingListItem sorokra (`ShoppingListItemCascade`, a `MealCascade`-től eltérően **nem** töröl automatikusan üresen maradt listát), mindkét oldalon. A "Bevásárlás vége" belépő ebben a körben még tudatosan hiányzott — a [[Bevásárlás teljesítve]] slice pótolta. `menu.bevasarlas` feature flag bekapcsolva. |
 | ↳ [Bevásárlás teljesítve](documentation/Subfeatures/Bevásárlás%20teljesítve.md) | `d1950b4` (2026-07-27) | `hu.bumler.lm2.food` (`ShoppingListService.complete`, `IdempotencyKeyEntity`/`IdempotencyKeyRepository`, `ShelfLifeCalculator`) | `pages/menu/shopping/shopping-list-complete.page.ts` (egy review-képernyő: lejárat + — ha 1-nél több engedélyezett — tárolási hely soronként), `shopping-list-complete.ts` (pure draft builder), `ShoppingListRepository.complete()` | **Kész — a projekt első `Idempotency-Key`-alapú replay-védelmet implementáló végpontja.** `POST /api/shopping-lists/{id}/complete`: egy tranzakcióban StoredFood sorokat hoz létre a pipált élelmiszer tételekből (`db` egység → N külön sor, katalógus nettó tartalommal vagy `1 db` alapértelmezéssel), archiválja a listát (`status = ARCHIVED`), és — ha maradt pipálatlan tétel — új aktív listát hoz létre azokból. Az `idempotency_key` tábla (V1 migrációból) eddig üresen állt; ez az első entitás, ami ténylegesen olvassa/írja — replay esetén a tárolt választ adja vissza, nem fut le újra a tranzakció. Tárolási hely / lejárat feloldás: pontosan egy engedélyezett katalógus-hely esetén a szerver tud alapértelmezni (helyet és — `ShelfLifeCalculator`, a `shelf-life.ts` szerver-oldali portja — lejáratot is); egyébként a kliensnek explicit meg kell adnia mindkettőt. A kliens **helyi-first**: a wizard már a kérés elküldése előtt felold minden mezőt (ugyanazzal a `shelf-life.ts`-szel, mint a manuális Tárolás-felvétel), és minden új sor id-ját (StoredFood, új lista, új tételek) ő generálja — a szerver visszaigazolja, nem újakat oszt ki. A `sync-engine.service.ts` a `ShoppingList` entityType alatt két válaszformát különböztet meg szerkezet szerint (`'archivedListId' in dto`), a `PackingSession` két-válaszformájú mintáját követve; egy 409 a `.../complete` URL-en nem tombstone-ol (a lista ARCHIVED, nem törölt). |
 | ↳ [Bevásárlás előzmény](documentation/Subfeatures/Bevásárlás%20előzmény.md) | `3ddf321` (2026-08-14) | — | `pages/menu/shopping/shopping-history.page.ts` (archivált listák + kereső), `shopping-history-detail.page.ts` (read-only tétellista + Újralistázás), `shopping-history.ts` (pure keresés/rangsorolás) | **Kész — tisztán frontend, nincs backend érintettség** (a spec saját szava szerint is: a `GET /api/shopping-lists` már eddig is minden nem-törölt listát visszaadott `status`-tól függetlenül, csak a Bevásárlás teljesítve kör óta létező `ShoppingListsPage`-szűrő rejtette el az ARCHIVED sorokat az aktív nézetből). Keresés egy összefűzött szöveg ellen fut (lista neve + minden élő tétel megjelenített szövege — FOOD-nál a katalógusból feloldott név, NON_FOOD-nál name+note), a meglévő `matchesSearch`/`compareRank` (Szöveges keresés) újrafelhasználásával; alapértelmezett sorrend `completedAt` szerint csökkenő, keresés közben az ékezet-pontos találat előre kerül. Az előzmény-részlet nem az editor egy módja — külön, csak-olvasható oldal, hogy az editor "csak ACTIVE listát érint" invariánsa ne sérüljön. Újralistázás a Bevásárlás teljesítve kör `toSaveItem` helperét használja újra (export-olva), és a létrejött másolat editorába navigál. |
+| [Edzés](documentation/Features/Edzés.md) | `61daa22` (2026-08-19) | — (közös edzés-domain a gyerekekben) | `pages/workout/` (tab shell + `workout-segment-header.component.ts` megosztott felső szegmens + `workout-sections.ts` registry), `app.routes.ts` `/tabs/workout` fa | **Folyamatban — tab-váz kész (A0).** Edzésnapló \| Heti terv \| Mászás \| Úszás \| Bicikli felső szegmens; csak a `log` route van bekötve (placeholder shell), a flaggelt szegmensek route-jai a saját slice-ukkal jönnek. A `log` a `tab.edzes` flagen osztozik, a többi szegmens saját `edzes.*` flaget kap (registry). `tab.edzes` **kikapcsolva** a `features.json`-ban → semmi sem látható; a `/tabs/workout` fa `featureFlagGuard('tab.edzes')` mögött (deep link → Menü). |
+| ↳ [Gyakorlat](documentation/Subfeatures/Gyakorlat.md) | `d1950b4` (2026-08-19) | `hu.bumler.lm2.workout` (`ExerciseEntity` + Controller/Service/Mapper/Repository/SyncDataLoader, `exercise_catalog` tábla V17) | `pages/workout/exercises/` (katalógus lista: kereső + kategória-chipek + kedvencek szűrő + inline csillag; create/edit: név/kategória/kind/pihenőidő/eszköz/kedvenc + kind-hint), `core/data/exercise.repository.ts` (+ read-cache mint Food/Recipe), `core/data/exercise-seed.ts` + `assets/data/exercise-seed.json` (12 beépített gyakorlat, determinisztikus v5 id), teljes offline-sync bekötés (`Exercise` outbox entityType, `local-rows`, `SyncEngine` ágak, SQLite séma v15) | **Kész (A1).** User-owned katalógus a `GearItem` slice mintájára: idempotens upsert kliens id-ra, `409 UNIQUE_VIOLATION` + `conflictingId`, `409 ENTITY_DELETED` PUT-after-delete-re, cross-user 404, soft delete cascade nélkül (a napló/heti terv snapshotol). Seed: első indításkor (üres store), determinisztikus id-k → két offline eszköz konvergál; weben `localStorage` latch tartja egyszeri-örökre. Megosztott exercise picker (napló/heti terv) még nincs — a saját slice-aikkal jön. |
 | [Mennyiség mező](documentation/Architektúra/Mennyiség%20mező.md) (architektúra SSOT) | `d1950b4` (2026-08-19) | `hu.bumler.lm2.common.QuantityConverter` (kanonikus egyenlőség) | `shared/quantity.ts`, `shared/quantity-input/` | **Kész** — parser + `QuantityInputComponent` (`quantity`/`duration` mód), kanonikus bázisegység-tábla mindkét oldalon a közös `shared/fixtures/quantity-conversion.json`-nal paritásban tesztelve. |
 | [Névegyediség](documentation/Architektúra/Névegyediség.md) (architektúra SSOT) | `56923be` (2026-08-19) | `hu.bumler.lm2.common.BarcodeNormalizer` (a `NameNormalizer` már megvolt) | `shared/barcode-normalization.ts` (a `name-normalization.ts` már megvolt) | **Kész** a Food mezőhalmaz-egyediséghez szükséges rész (barcode normalizálás); a hex szín normalizálás ([[Indoor boulder admin]]) még nem kellett, nincs implementálva. |
 
@@ -85,11 +87,12 @@ Ha implementálsz egy új feature-t: vedd fel a sort, `Kész`-re állítva, a
 
 Nincs backend package, nincs frontend page/repository ezekhez — teljes egészében
 hátravan. Sorrend a specek mérete / függőségei alapján (lásd "Következő javasolt
-feature" lent), nem prioritás.
+feature" lent), nem prioritás. (Az **Edzés** átkerült a "Folyamatban" szekcióba —
+a tab-váz + a Gyakorlat törzsadat kész; hátra: Edzésnapló, Heti terv, Mászónapló,
+Úszás/Biciklizés napló.)
 
 | Feature | Subfeature-ök | Fő függőségek |
 |---|---|---|
-| [Edzés](documentation/Features/Edzés.md) | Edzésnapló, Gyakorlat, Heti terv, Biciklizés napló, Úszás napló, Mászónapló (+ 12 Indoor/Outdoor boulder/köteles al-spec) | Profile (kész) — a Mászónapló ág önmagában a legnagyobb subtree a projektben |
 | [Pénzügyek](documentation/Features/Pénzügyek.md) | Nettó fizetés kalkulátor, Rendszeres kiadások | Nincs |
 | [AYCM tracker](documentation/Features/AYCM%20tracker.md) | AYCM Check-In, AYCM elfogadóhely hozzáadása, AYCM Statisztikák | Nincs |
 | [Lépésszám követés](documentation/Features/Lépésszám%20követés.md) | Kézzel bevitel, Samsung Health szinkron | Samsung Health natív integráció |
@@ -126,18 +129,22 @@ jóváhagyott plan-sorozatban, subfeature-önkénti bontásban, mindegyik saját
 commitban, minden lépés után backend (Testcontainers, ahol van backend) +
 frontend (Karma + `ng build`) + lint zöld.
 
-## Következő javasolt feature: **Edzés**
+## Folyamatban lévő kör: **Edzés** (2026-08-28–)
 
 A Tennivalók-hoz és a Kaja/Bevásárlás körhöz hasonló méretű "gyors győzelem"
-feature-ök elfogytak — a maradék listán csak nagy, több hetes feature-ök
-vannak (lásd "Nincs elkezdve"). Az egyetlen érdemi hátralévő nagy feature-ág:
+feature-ök elfogytak — az Edzés az egyetlen érdemi hátralévő nagy feature-ág,
+és most ez van folyamatban, subfeature-önkénti bontásban:
 
-- **Edzés** — a Mászónapló ág egyedül 12 al-specet visz (Indoor/Outdoor ×
-  boulder/köteles, nehézségi konverziós mátrix); érdemes lenne először csak az
-  Edzésnapló + Gyakorlat + Heti terv "törzset" megcsinálni, a Mászónapló-t
-  külön körre hagyva.
+- **A0 — tab-váz** (`e924657`): `/tabs/workout` route + Edzésnapló \| Heti terv \|
+  Mászás \| Úszás \| Bicikli felső szegmens (`WorkoutSegmentHeaderComponent` +
+  `workout-sections.ts` registry). `tab.edzes` kikapcsolva.
+- **A1 — Gyakorlat törzsadat** (`eeb7a44`): `hu.bumler.lm2.workout` /
+  `exercise_catalog` (V17) + `pages/workout/exercises/` + `exercise.repository.ts`
+  + seed (12 beépített, determinisztikus v5 id) + teljes offline-sync bekötés.
+
+Hátra: **Edzésnapló → Heti terv**, majd külön körre a **Mászónapló** ág (egyedül
+12 al-spec, Indoor/Outdoor × boulder/köteles + nehézségi konverziós mátrix) és az
+**Úszás / Biciklizés napló**.
 
 (Pénzügyek és AYCM tracker is hátravan, de azok kisebbek — Edzés a legnagyobb
-egyben-hátralévő subtree.) Jóval nagyobb, mint bármelyik eddigi lépés volt —
-érdemes ismét egy jóváhagyott plan-nal, subfeature-önkénti bontásban
-nekifutni, ahogy ez a kör is ment.
+egyben-hátralévő subtree.)

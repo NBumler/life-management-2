@@ -3,8 +3,23 @@ import { Capacitor } from '@capacitor/core';
 
 import { Exercise } from '../../api/model/exercise';
 import { StorageBackend, STORAGE_BACKEND } from '../storage/storage-backend';
+import { DataChangeNotifier } from '../sync/data-change-notifier';
 import { SyncEngineService } from '../sync/sync-engine.service';
 import { ExerciseNameConflictError, ExerciseRepository } from './exercise.repository';
+
+function exerciseRow(overrides: Partial<Exercise> = {}): Exercise {
+  return {
+    id: 'e1',
+    name: 'Fekvenyomás',
+    category: Exercise.CategoryEnum.Chest,
+    kind: Exercise.KindEnum.WeightedReps,
+    defaultRestTimeSeconds: null,
+    isFavorite: false,
+    equipment: null,
+    deleted: false,
+    ...overrides,
+  };
+}
 
 describe('ExerciseRepository', () => {
   let repository: ExerciseRepository;
@@ -169,5 +184,86 @@ describe('ExerciseRepository', () => {
     await repository.save(saveInput({ id: 'e1' }));
 
     expect(syncEngine.requestDrainDebounced).not.toHaveBeenCalled();
+  });
+});
+
+describe('ExerciseRepository caching', () => {
+  let repository: ExerciseRepository;
+  let storage: jasmine.SpyObj<StorageBackend>;
+  let dataChanges: DataChangeNotifier;
+
+  function configure(native: boolean): void {
+    spyOn(Capacitor, 'isNativePlatform').and.returnValue(native);
+    storage = jasmine.createSpyObj('StorageBackend', ['listExercises', 'upsertExercise', 'deleteExercise', 'seedExercises']);
+    storage.seedExercises.and.resolveTo(undefined);
+    storage.listExercises.and.resolveTo([exerciseRow({ id: 'a', name: 'Alfa' })]);
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: STORAGE_BACKEND, useValue: storage },
+        { provide: SyncEngineService, useValue: jasmine.createSpyObj('SyncEngineService', ['requestDrainDebounced']) },
+      ],
+    });
+    repository = TestBed.inject(ExerciseRepository);
+    dataChanges = TestBed.inject(DataChangeNotifier);
+  }
+
+  it('native: a second load() is served from memory instead of re-querying the store', async () => {
+    configure(true);
+
+    await repository.load();
+    await repository.load();
+
+    expect(storage.listExercises).toHaveBeenCalledTimes(1);
+  });
+
+  it('an unchanged reload does not replace the signal', async () => {
+    configure(false);
+    storage.listExercises.and.resolveTo([exerciseRow({ id: 'a', name: 'Alfa', updatedAt: 'v1' })]);
+
+    await repository.load();
+    const firstReference = repository.items();
+    await repository.load();
+
+    expect(repository.items()).toBe(firstReference);
+  });
+
+  it('reload() picks up a changed row version', async () => {
+    configure(true);
+    storage.listExercises.and.resolveTo([exerciseRow({ id: 'a', name: 'Alfa', updatedAt: 'v1' })]);
+    await repository.load();
+    const firstReference = repository.items();
+
+    storage.listExercises.and.resolveTo([exerciseRow({ id: 'a', name: 'Alfa', updatedAt: 'v2', isFavorite: true })]);
+    await repository.reload();
+
+    expect(repository.items()).not.toBe(firstReference);
+    expect(repository.items()[0].isFavorite).toBe(true);
+  });
+
+  it('a DataChangeNotifier tick naming Exercise (post-pull) invalidates the native cache', async () => {
+    configure(true);
+
+    await repository.load();
+    TestBed.flushEffects();
+    storage.listExercises.and.resolveTo([exerciseRow({ id: 'a', name: 'Alfa', updatedAt: 'v2' })]);
+
+    dataChanges.notifyChanged(['Exercise']);
+    TestBed.flushEffects();
+    await new Promise((resolve) => setTimeout(resolve));
+
+    expect(storage.listExercises).toHaveBeenCalledTimes(2);
+  });
+
+  it('a tick that did not touch exercises leaves the cache alone', async () => {
+    configure(true);
+
+    await repository.load();
+    TestBed.flushEffects();
+
+    dataChanges.notifyChanged(['ShoppingListItem']);
+    TestBed.flushEffects();
+    await new Promise((resolve) => setTimeout(resolve));
+
+    expect(storage.listExercises).toHaveBeenCalledTimes(1);
   });
 });

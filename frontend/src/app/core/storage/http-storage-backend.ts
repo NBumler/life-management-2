@@ -221,19 +221,30 @@ export class HttpStorageBackend implements StorageBackend {
     return firstValueFrom(this.exercisesApi.deleteExercise(id));
   }
 
-  /** documentation/Subfeatures/Gyakorlat.md "Seed": web has no local store to gate on, so seed only into an empty server catalog; the deterministic v5 ids keep repeat POSTs idempotent. */
+  /**
+   * documentation/Subfeatures/Gyakorlat.md "Seed": web has no local store to gate on. `listExercises`
+   * returns live rows only, so an "is it empty?" check alone would re-POST the whole seed on every
+   * launch once the user has deleted all of it (and the server `create` won't undelete those
+   * tombstones). A per-user `localStorage` latch makes it genuinely once-ever for this browser;
+   * the "server already non-empty" check still short-circuits a fresh browser whose catalog synced
+   * from a native device. The deterministic v5 ids keep any residual repeat POST idempotent.
+   */
   async seedExercises(): Promise<void> {
     const userId = this.authSession.userId();
     if (userId === null) {
       return;
     }
-    const existing = await firstValueFrom(this.exercisesApi.listExercises());
-    if (existing.length > 0) {
+    const latchKey = `lm2.exerciseSeedDone.${userId}`;
+    if (localStorage.getItem(latchKey) === '1') {
       return;
     }
-    for (const exercise of await buildSeedExercises(userId)) {
-      await firstValueFrom(this.exercisesApi.createExercise(exercise));
+    const existing = await firstValueFrom(this.exercisesApi.listExercises());
+    if (existing.length === 0) {
+      for (const exercise of await buildSeedExercises(userId)) {
+        await firstValueFrom(this.exercisesApi.createExercise(exercise));
+      }
     }
+    localStorage.setItem(latchKey, '1');
   }
 
   listHouseholdRooms(): Promise<HouseholdRoom[]> {

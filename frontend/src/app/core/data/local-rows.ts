@@ -275,13 +275,17 @@ export function exerciseRowToDto(row: ExerciseRow): Exercise {
 
 export function exerciseLocalWriteTask(dto: Exercise): SqlTask {
   return {
+    // Matches `gearItemLocalWriteTask`: a local edit never resurrects a tombstoned row — the server
+    // `create` doesn't undelete either, and a re-add of a deleted name takes a fresh id (the name
+    // uniqueness check only sees live rows). Re-creating a *known* id only happens for seed rows,
+    // which `seedExercises` already gates on the full (incl. tombstoned) row count.
     statement: `
       INSERT INTO exercise_catalog (id, name, category, kind, default_rest_time_seconds, is_favorite, equipment, _dirty, _local_only)
       VALUES (?, ?, ?, ?, ?, ?, ?, 1, 1)
       ON CONFLICT(id) DO UPDATE SET
         name = excluded.name, category = excluded.category, kind = excluded.kind,
         default_rest_time_seconds = excluded.default_rest_time_seconds, is_favorite = excluded.is_favorite,
-        equipment = excluded.equipment, deleted = 0, deleted_at = NULL, _dirty = 1`,
+        equipment = excluded.equipment, _dirty = 1`,
     values: [
       dto.id,
       dto.name,

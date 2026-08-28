@@ -12,6 +12,19 @@ import { byCatalogName } from './catalog-order';
 /** `SyncChangeItem.entityType`s whose local rows affect the exercise catalog `items()` serves. */
 const EXERCISE_CHANGE_TYPES: ReadonlySet<string> = new Set(['Exercise']);
 
+/**
+ * Identity of a row set for "did the store actually change?" — id + server version + tombstone flag.
+ * Order-insensitive: `save()` sorts its in-memory copy while `listExercises()` returns SQLite
+ * collation order, and the signature must match across the two so an unchanged set never looks
+ * changed (mirrors `foodSetSignature` — the exercise catalog has no nested child rows).
+ */
+function exerciseSetSignature(rows: readonly Exercise[]): string {
+  return rows
+    .map((row) => `${row.id}:${row.updatedAt ?? ''}:${row.deleted ? 1 : 0}`)
+    .sort()
+    .join('|');
+}
+
 export interface ExerciseSaveInput {
   id?: string;
   name: string;
@@ -39,11 +52,20 @@ export class ExerciseRepository {
   readonly items = signal<Exercise[]>([]);
   readonly loaded = signal(false);
 
+  /**
+   * See FoodRepository / RecipeRepository — native serves repeat `load()`s from the in-memory
+   * signal; web always re-fetches (no delta pull to invalidate a cache), but the signature guard
+   * below still spares an unchanged response from re-triggering every downstream `computed()`.
+   */
+  private readonly cacheEnabled = Capacitor.isNativePlatform();
+  private inFlight: Promise<void> | null = null;
+  private lastSignature = '';
   private seedAttempted = false;
 
   constructor() {
     // documentation/Architektúra/Backend-offline first.md §8: a delta pull that changed rows makes
-    // the cached snapshot stale — re-read from the local store when it lands.
+    // the cached snapshot stale — re-read from the local store when it lands. The first effect run
+    // only primes the `tick` dependency; every later run is a real post-pull invalidation.
     let primed = false;
     effect(() => {
       this.dataChanges.tick();
@@ -54,24 +76,61 @@ export class ExerciseRepository {
       const changed = untracked(() => this.dataChanges.changedTypes());
       const touchesExercises = [...changed].some((type) => EXERCISE_CHANGE_TYPES.has(type));
       if (touchesExercises && untracked(() => this.loaded())) {
-        void this.reload();
+        void this.load({ force: true });
       }
     });
   }
 
-  async load(): Promise<void> {
+  /**
+   * Reads the catalog into `items`. Both exercise pages hit this in `ngOnInit`; with `cacheEnabled`
+   * the repeat calls are a no-op. Pass `{ force: true }` to bypass the cache after the store changed
+   * underneath us (the `DataChangeNotifier` effect above does this). The `items` signal is only
+   * replaced when the row set actually differs, so an unchanged reload doesn't invalidate
+   * downstream `computed()`s or re-render the list.
+   */
+  async load(options?: { force?: boolean }): Promise<void> {
+    if (this.cacheEnabled && this.loaded() && !options?.force) {
+      return;
+    }
+    if (this.inFlight !== null) {
+      if (!options?.force) {
+        return this.inFlight;
+      }
+      // A forced (post-pull) reload must not ride a read queued against the store *before* the pull
+      // transaction committed — that would resolve with the pre-pull snapshot and leave the cache
+      // stale. Wait the in-flight read out, then read again from the updated store.
+      await this.inFlight.catch(() => undefined);
+      if (this.inFlight !== null) {
+        return this.inFlight;
+      }
+    }
+    this.inFlight = this.readIntoSignal();
+    try {
+      await this.inFlight;
+    } finally {
+      this.inFlight = null;
+    }
+  }
+
+  /** Forces a re-read from the local store regardless of cache state. */
+  reload(): Promise<void> {
+    return this.load({ force: true });
+  }
+
+  private async readIntoSignal(): Promise<void> {
     let rows = await this.storage.listExercises();
     if (rows.length === 0 && !this.seedAttempted) {
       this.seedAttempted = true;
       await this.seed();
       rows = await this.storage.listExercises();
     }
-    this.items.set([...rows].sort(byCatalogName));
+    const sorted = [...rows].sort(byCatalogName);
+    const signature = exerciseSetSignature(sorted);
+    if (signature !== this.lastSignature || !this.loaded()) {
+      this.lastSignature = signature;
+      this.items.set(sorted);
+    }
     this.loaded.set(true);
-  }
-
-  reload(): Promise<void> {
-    return this.load();
   }
 
   /**
@@ -103,6 +162,7 @@ export class ExerciseRepository {
       next.sort(byCatalogName);
       return next;
     });
+    this.lastSignature = exerciseSetSignature(this.items());
     this.requestDrainIfNative();
     return saved;
   }
@@ -127,6 +187,7 @@ export class ExerciseRepository {
   async remove(id: string): Promise<void> {
     await this.storage.deleteExercise(id);
     this.items.update((list) => list.filter((item) => item.id !== id));
+    this.lastSignature = exerciseSetSignature(this.items());
     this.requestDrainIfNative();
   }
 
