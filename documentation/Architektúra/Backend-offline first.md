@@ -286,6 +286,7 @@ Egy hívás **legfeljebb `limit`** darab változást ad vissza, tehát a pull mi
 
 - A pull **soha nem törli** a `_local_only` sorokat és **soha nem törli** az outboxot. Sikertelen pull / sync **nem** üríthet helyi adatot ([[Profile]]: a helyi profil és súlytörténet nem veszhet el).
 - A szerveroldali **cascade** soft delete-ek (`Food` / `Recipe` törlés minden user hivatkozó adatára; `GearItem` → sablon- és pakolás-tételek; helyiség → feladatok) tombstone-ként jönnek a deltában. Ezért kötelező a drain utáni pull.
+- **A pull utáni frissítés a UI-ig ér:** a pull a helyi store-ba ír, de a `core/data` repository-k egy része (a nagy megosztott katalógusok — `Food`, `Recipe`) in-memory signal-cache-t tart, tehát nem minden képernyőbelépéskor olvas újra. Egy legalább egy sort érintő pull végén a `SyncEngine` billenti a `DataChangeNotifier`-t ([[Frontend]] `core/sync/`), amire a cache-elt repository-k újraolvassák az érintett táblát — így a más eszközön módosított sor a **nyitott** képernyőn is frissül, nem csak app-újraindításkor. A nem cache-elt repository-k a következő belépéskor olvasnak újra, mint eddig.
 - **Elavult cursor:** ha a `since` régebbi a szerveroldali tombstone-retenciónál, a szerver `410 Gone` + `CURSOR_TOO_OLD` választ ad → a kliens **full re-pull**-t végez. A `_dirty` sorok és az outbox ilyenkor is megmaradnak.
 - A pull mindig **teljes tranzakcióban** commitol egy lapot: félbevágott állapot nincs, a `cursor` csak sikeres apply után lép.
 
