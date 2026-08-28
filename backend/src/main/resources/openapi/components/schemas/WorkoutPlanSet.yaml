@@ -1,0 +1,76 @@
+type: object
+description: >-
+  documentation/Subfeatures/Heti terv.md "targetSets" — one target set on a WorkoutPlanExercise. Same
+  field shape as WorkoutSetEntry minus `setNumber` / `isCompleted` (a template set has no completed
+  state; ordering is `orderIndex` alone). The free `setType` list already expresses the warm-up
+  ramping + few heavy WORKING sets pattern — no separate intensity field. Only ever saved nested
+  inside a WorkoutPlan (documentation/Architektúra/Backend.md "Nested aggregate PUT"), but its own
+  sync row. Which measurement fields apply follows the parent's `exerciseKind` snapshot; the server
+  persists whatever is sent (deliberately loose type rule).
+required:
+  - id
+  - planExerciseId
+  - setType
+  - orderIndex
+  - deleted
+properties:
+  id:
+    type: string
+    format: uuid
+  planExerciseId:
+    type: string
+    format: uuid
+  setType:
+    type: string
+    enum:
+      - WARMUP
+      - WORKING
+      - DROPSET
+      - REST_PAUSE
+      - FAILURE
+  reps:
+    type: integer
+    minimum: 0
+    nullable: true
+    description: Target reps.
+  weightKg:
+    type: number
+    nullable: true
+    description: 'Target load, kg only. Bodyweight = 0; weighted = +kg; assist (band/pulley) = negative kg.'
+  holdTimeSeconds:
+    type: integer
+    minimum: 0
+    nullable: true
+    description: Target isometric / hangboard / time-based / cardio duration.
+  edgeSizeMm:
+    type: integer
+    minimum: 0
+    nullable: true
+    description: Target hold size in mm (e.g. 20 mm edge, pinch).
+  distanceMeters:
+    type: integer
+    minimum: 0
+    nullable: true
+    description: Target cardio distance in metres.
+  restTimeSeconds:
+    type: integer
+    minimum: 0
+    nullable: true
+    description: Target rest after this set — a long value on a WORKING set signals a heavy effort.
+  orderIndex:
+    type: integer
+  deleted:
+    type: boolean
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

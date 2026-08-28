@@ -1,0 +1,69 @@
+parameters:
+  - name: id
+    in: path
+    required: true
+    schema:
+      type: string
+      format: uuid
+get:
+  operationId: getWeeklyPlan
+  tags:
+    - weekly-plans
+  summary: The full weekly plan tree. A soft-deleted weekly plan returns 200 with deleted=true (not 404).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/WeeklyPlan.yaml'
+    '404':
+      description: No such weekly plan.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+put:
+  operationId: updateWeeklyPlan
+  tags:
+    - weekly-plans
+  summary: >-
+    Full tree replace (documentation/Architektúra/Backend.md "Nested aggregate PUT"): slots not
+    present in the body are soft-deleted, last-write-wins on the whole aggregate.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/WeeklyPlan.yaml'
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/WeeklyPlan.yaml'
+    '409':
+      description: Entity already deleted.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+    '400':
+      description: A slot is missing a required field.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+delete:
+  operationId: deleteWeeklyPlan
+  tags:
+    - weekly-plans
+  summary: Soft delete, idempotent. Cascades to soft-deleting every day slot on this weekly plan.
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/WeeklyPlan.yaml'

@@ -1,0 +1,58 @@
+type: object
+description: >-
+  documentation/Subfeatures/Heti terv.md — a static training template / routine ("mit kéne
+  csinálnod?"). documentation/Architektúra/Backend.md "Nested aggregate PUT": WorkoutPlan + its
+  WorkoutPlanExercise rows + their WorkoutPlanSet rows saved/read as one tree, on every endpoint
+  including the plain list — `exercises` (and each exercise's `targetSets`) always lists every row,
+  live or soft-deleted (the client filters `deleted = false` itself). `active` is a plain field
+  toggled through the ordinary PUT (no dedicated endpoint); turning it off hides the template from
+  the pickers but never touches past WorkoutSession.planId / WeeklyPlan slots pointing at it.
+required:
+  - id
+  - name
+  - active
+  - deleted
+  - exercises
+properties:
+  id:
+    type: string
+    format: uuid
+  name:
+    type: string
+    minLength: 1
+  notes:
+    type: string
+    nullable: true
+  active:
+    type: boolean
+    description: Default true on create. false = hidden from the slot / "Terv indítása" pickers, not deleted.
+  goalLabel:
+    type: string
+    nullable: true
+    description: 'Display-only grouping label in the list / picker ("Alap rotáció", "Cél: …"). No business logic.'
+  defaultWorkoutType:
+    type: string
+    enum:
+      - GENERAL_WEIGHTS
+      - HIIT_CIRCUIT
+    nullable: true
+    description: Optional — pre-fills the session's workoutType when a workout is started from this template.
+  exercises:
+    type: array
+    items:
+      $ref: 'WorkoutPlanExercise.yaml'
+  deleted:
+    type: boolean
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

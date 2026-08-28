@@ -1,0 +1,72 @@
+parameters:
+  - name: id
+    in: path
+    required: true
+    schema:
+      type: string
+      format: uuid
+get:
+  operationId: getWorkoutPlan
+  tags:
+    - workout-plans
+  summary: The full plan tree. A soft-deleted plan returns 200 with deleted=true (not 404).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/WorkoutPlan.yaml'
+    '404':
+      description: No such plan.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+put:
+  operationId: updateWorkoutPlan
+  tags:
+    - workout-plans
+  summary: >-
+    Full tree replace (documentation/Architektúra/Backend.md "Nested aggregate PUT"): exercises/target
+    sets not present in the body are soft-deleted, last-write-wins on the whole aggregate. `active` is
+    just another field on this body — no dedicated activate/deactivate endpoint.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/WorkoutPlan.yaml'
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/WorkoutPlan.yaml'
+    '409':
+      description: Entity already deleted.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+    '400':
+      description: An exercise or target-set is missing a required field.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+delete:
+  operationId: deleteWorkoutPlan
+  tags:
+    - workout-plans
+  summary: >-
+    Soft delete, idempotent. Cascades to soft-deleting every exercise and target set on this plan.
+    Past WorkoutSession.planId values and existing WeeklyPlan slots that reference it are left intact.
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/WorkoutPlan.yaml'

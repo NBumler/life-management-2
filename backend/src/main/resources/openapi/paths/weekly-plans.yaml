@@ -1,0 +1,39 @@
+get:
+  operationId: listWeeklyPlans
+  tags:
+    - weekly-plans
+  summary: Every live weekly plan (deleted = false) owned by the caller, each with its live+tombstoned day slots.
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/WeeklyPlanList.yaml'
+post:
+  operationId: createWeeklyPlan
+  tags:
+    - weekly-plans
+  summary: >-
+    Create a weekly plan with its day slots in one request — idempotent upsert on the client-supplied
+    id (deterministic UUID v5 of userId + weekStartDate, so a POST for an already-existing week
+    resolves to that week's row; a soft-deleted row for the same week is revived).
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/WeeklyPlan.yaml'
+  responses:
+    '200':
+      description: Created or, on retry / re-create for the same week, the existing tree.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/WeeklyPlan.yaml'
+    '400':
+      description: A slot is missing a required field.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'

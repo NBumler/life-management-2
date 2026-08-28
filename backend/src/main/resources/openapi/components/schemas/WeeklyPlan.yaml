@@ -1,0 +1,41 @@
+type: object
+description: >-
+  documentation/Subfeatures/Heti terv.md "Entitás — WeeklyPlan" — one calendar week's assignment of
+  templates to days. documentation/Architektúra/Backend.md "Nested aggregate PUT": WeeklyPlan + its
+  WeeklyPlanSlot rows saved/read as one tree — `slots` always lists every row, live or soft-deleted
+  (clearing a day soft-deletes its slot; the client filters `deleted = false`). `id` is a
+  deterministic client UUID v5 of (userId, weekStartDate) so two offline devices editing the same
+  week converge on one row. "Másolás következő hétre" is a plain client-side clone with a new
+  weekStartDate and fresh slot ids.
+required:
+  - id
+  - weekStartDate
+  - deleted
+  - slots
+properties:
+  id:
+    type: string
+    format: uuid
+  weekStartDate:
+    type: string
+    format: date
+    description: The week's Monday, client TZ.
+  slots:
+    type: array
+    items:
+      $ref: 'WeeklyPlanSlot.yaml'
+  deleted:
+    type: boolean
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

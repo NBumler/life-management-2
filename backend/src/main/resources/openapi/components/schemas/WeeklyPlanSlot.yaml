@@ -1,0 +1,49 @@
+type: object
+description: >-
+  documentation/Subfeatures/Heti terv.md "slots" — one day → template assignment on a WeeklyPlan. A
+  slot exists only where a template is assigned; clearing a day soft-deletes its slot. "max egy
+  sablon / nap az első körben" — at most one live slot per (weeklyPlanId, dayOfWeek). Only ever saved
+  nested inside a WeeklyPlan (documentation/Architektúra/Backend.md "Nested aggregate PUT"), but its
+  own sync row.
+required:
+  - id
+  - weeklyPlanId
+  - dayOfWeek
+  - planId
+  - deleted
+properties:
+  id:
+    type: string
+    format: uuid
+  weeklyPlanId:
+    type: string
+    format: uuid
+  dayOfWeek:
+    type: string
+    enum:
+      - MONDAY
+      - TUESDAY
+      - WEDNESDAY
+      - THURSDAY
+      - FRIDAY
+      - SATURDAY
+      - SUNDAY
+  planId:
+    type: string
+    format: uuid
+    description: '→ WorkoutPlan.id assigned to this day. A soft link — a plan soft-deleted later leaves the slot intact.'
+  deleted:
+    type: boolean
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true
