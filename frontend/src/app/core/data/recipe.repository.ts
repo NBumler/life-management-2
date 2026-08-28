@@ -7,10 +7,20 @@ import { RecipeDraft, STORAGE_BACKEND } from '../storage/storage-backend';
 import { DataChangeNotifier } from '../sync/data-change-notifier';
 import { SyncEngineService } from '../sync/sync-engine.service';
 import { uuidV4 } from '../sync/uuid';
+import { byCatalogName } from './catalog-order';
+
+/**
+ * `SyncChangeItem.entityType`s whose local rows affect the recipe catalog `items()` serves.
+ * `Food` is included because a `Food` delete cascades to `recipe_ingredient` tombstones locally
+ * (see `SyncEngine.buildApplyTasks`).
+ */
+const RECIPE_CHANGE_TYPES: ReadonlySet<string> = new Set(['Recipe', 'RecipeIngredient', 'Food']);
 
 /**
  * Identity of a row set for "did the store actually change?" — recipe id + version + tombstone, plus
  * the same triple for every ingredient row (a nested-aggregate edit only bumps the child rows).
+ * Order-insensitive (both the recipe list and each ingredient list are sorted before joining) so a
+ * `save()`-sorted in-memory copy and a `listRecipes()` reload of the same rows hash identically.
  */
 function recipeSetSignature(rows: readonly Recipe[]): string {
   return rows
@@ -18,8 +28,10 @@ function recipeSetSignature(rows: readonly Recipe[]): string {
       (row) =>
         `${row.id}:${row.updatedAt ?? ''}:${row.deleted ? 1 : 0}:[${row.ingredients
           .map((ingredient) => `${ingredient.id}:${ingredient.updatedAt ?? ''}:${ingredient.deleted ? 1 : 0}`)
+          .sort()
           .join(',')}]`,
     )
+    .sort()
     .join('|');
 }
 
@@ -92,7 +104,9 @@ export class RecipeRepository {
         primed = true;
         return;
       }
-      if (untracked(() => this.loaded())) {
+      const changed = untracked(() => this.dataChanges.changedTypes());
+      const touchesRecipe = [...changed].some((type) => RECIPE_CHANGE_TYPES.has(type));
+      if (touchesRecipe && untracked(() => this.loaded())) {
         void this.load({ force: true });
       }
     });
@@ -109,7 +123,15 @@ export class RecipeRepository {
       return;
     }
     if (this.inFlight !== null) {
-      return this.inFlight;
+      if (!options?.force) {
+        return this.inFlight;
+      }
+      // See FoodRepository — a forced post-pull reload must not ride a read queued before the pull
+      // transaction committed; wait it out, then re-read from the updated store.
+      await this.inFlight.catch(() => undefined);
+      if (this.inFlight !== null) {
+        return this.inFlight;
+      }
     }
     this.inFlight = this.readIntoSignal();
     try {
@@ -152,7 +174,7 @@ export class RecipeRepository {
     this.items.update((list) => {
       const next = list.filter((item) => item.id !== saved.id);
       next.push(saved);
-      next.sort((a, b) => a.name.localeCompare(b.name));
+      next.sort(byCatalogName);
       return next;
     });
     this.lastSignature = recipeSetSignature(this.items());

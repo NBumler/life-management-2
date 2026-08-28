@@ -210,17 +210,44 @@ describe('RecipeRepository caching', () => {
     expect(repository.items()[0].ingredients[0].quantityAmount).toBe(2);
   });
 
-  it('a DataChangeNotifier tick (post-pull) invalidates the native cache', async () => {
+  it('a DataChangeNotifier tick naming Recipe (post-pull) invalidates the native cache', async () => {
     configure(true);
 
     await repository.load();
     TestBed.flushEffects();
     storage.listRecipes.and.resolveTo([recipe({ id: 'a', name: 'Alma torta', updatedAt: 'v2' })]);
 
-    dataChanges.notifyChanged();
+    dataChanges.notifyChanged(['Recipe']);
     TestBed.flushEffects();
     await new Promise((resolve) => setTimeout(resolve));
 
     expect(storage.listRecipes).toHaveBeenCalledTimes(2);
+  });
+
+  it('reloads on a Food tick too — a Food delete cascades to recipe_ingredient locally', async () => {
+    configure(true);
+
+    await repository.load();
+    TestBed.flushEffects();
+    storage.listRecipes.and.resolveTo([recipe({ id: 'a', name: 'Alma torta', updatedAt: 'v2' })]);
+
+    dataChanges.notifyChanged(['Food']);
+    TestBed.flushEffects();
+    await new Promise((resolve) => setTimeout(resolve));
+
+    expect(storage.listRecipes).toHaveBeenCalledTimes(2);
+  });
+
+  it('a tick that touched neither recipes nor food leaves the cache alone', async () => {
+    configure(true);
+
+    await repository.load();
+    TestBed.flushEffects();
+
+    dataChanges.notifyChanged(['ShoppingListItem']);
+    TestBed.flushEffects();
+    await new Promise((resolve) => setTimeout(resolve));
+
+    expect(storage.listRecipes).toHaveBeenCalledTimes(1);
   });
 });

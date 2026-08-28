@@ -769,7 +769,7 @@ export class SqliteStorageBackend implements StorageBackend {
 
   /** documentation/Subfeatures/Élelmiszerek.md: shared/global catalog — every live row, not scoped by user. */
   async listFoods(): Promise<Food[]> {
-    const rows = await this.db.query<FoodRow>('SELECT * FROM food WHERE deleted = 0 ORDER BY name ASC');
+    const rows = await this.db.query<FoodRow>('SELECT * FROM food WHERE deleted = 0 ORDER BY name COLLATE NOCASE');
     return rows.map(foodRowToDto);
   }
 

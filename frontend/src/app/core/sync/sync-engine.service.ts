@@ -785,7 +785,7 @@ export class SyncEngineService {
   private async pull(userId: string): Promise<void> {
     let hasMore = true;
     let syncedAt: string | null = null;
-    let appliedChanges = false;
+    const changedTypes = new Set<string>();
     while (hasMore) {
       const stateRows = await this.db.query<{ cursor: string | null }>('SELECT cursor FROM sync_state WHERE id = 1');
       const since = stateRows[0]?.cursor ?? undefined;
@@ -810,7 +810,9 @@ export class SyncEngineService {
         values: [response.nextCursor, response.serverTime, 'OK'],
       });
       await this.db.executeTransaction(tasks);
-      appliedChanges ||= response.changes.length > 0;
+      for (const change of response.changes) {
+        changedTypes.add(change.entityType);
+      }
       syncedAt = response.serverTime;
       hasMore = response.hasMore;
     }
@@ -818,9 +820,10 @@ export class SyncEngineService {
       this.lastSuccessfulSyncAt.set(syncedAt);
     }
     // documentation/Architektúra/Backend-offline first.md §8: cached core/data repositories observe
-    // this to re-read the rows the pull just wrote into the local store.
-    if (appliedChanges) {
-      this.dataChanges.notifyChanged();
+    // this to re-read the rows the pull just wrote into the local store — each one only reloads if
+    // `changedTypes` names an entity type it serves.
+    if (changedTypes.size > 0) {
+      this.dataChanges.notifyChanged(changedTypes);
     }
     await this.offlineQueue.refreshCounts(userId);
   }

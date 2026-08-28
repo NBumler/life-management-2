@@ -191,18 +191,31 @@ describe('FoodRepository caching', () => {
     expect(repository.items().map((item) => item.id)).toEqual(['a', 'b']);
   });
 
-  it('a DataChangeNotifier tick (post-pull) invalidates the native cache', async () => {
+  it('a DataChangeNotifier tick naming Food (post-pull) invalidates the native cache', async () => {
     configure(true);
 
     await repository.load();
     TestBed.flushEffects(); // first effect run only primes the tick dependency
     storage.listFoods.and.resolveTo([food({ id: 'a', name: 'Alma', updatedAt: 'v2' })]);
 
-    dataChanges.notifyChanged();
+    dataChanges.notifyChanged(['Food']);
     TestBed.flushEffects();
     await new Promise((resolve) => setTimeout(resolve));
 
     expect(storage.listFoods).toHaveBeenCalledTimes(2);
+  });
+
+  it('a tick that changed no Food rows leaves the cache alone', async () => {
+    configure(true);
+
+    await repository.load();
+    TestBed.flushEffects();
+
+    dataChanges.notifyChanged(['PackingSession', 'MealItem']);
+    TestBed.flushEffects();
+    await new Promise((resolve) => setTimeout(resolve));
+
+    expect(storage.listFoods).toHaveBeenCalledTimes(1);
   });
 
   it('a concurrent second load() reuses the in-flight read', async () => {
@@ -211,5 +224,20 @@ describe('FoodRepository caching', () => {
     await Promise.all([repository.load(), repository.load()]);
 
     expect(storage.listFoods).toHaveBeenCalledTimes(1);
+  });
+
+  it('a forced load() arriving during a plain read still re-queries the updated store', async () => {
+    configure(true);
+    let resolveFirst: (rows: Food[]) => void = () => undefined;
+    storage.listFoods.and.returnValue(new Promise<Food[]>((resolve) => (resolveFirst = resolve)));
+
+    const plain = repository.load();
+    const forced = repository.load({ force: true });
+    resolveFirst([food({ id: 'a', name: 'Alma' })]);
+    storage.listFoods.and.resolveTo([food({ id: 'a', name: 'Alma', updatedAt: 'v2' })]);
+    await Promise.all([plain, forced]);
+
+    expect(storage.listFoods).toHaveBeenCalledTimes(2);
+    expect(repository.items()[0].updatedAt).toBe('v2');
   });
 });

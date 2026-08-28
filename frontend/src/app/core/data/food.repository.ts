@@ -9,10 +9,21 @@ import { STORAGE_BACKEND } from '../storage/storage-backend';
 import { DataChangeNotifier } from '../sync/data-change-notifier';
 import { SyncEngineService } from '../sync/sync-engine.service';
 import { uuidV4 } from '../sync/uuid';
+import { byCatalogName } from './catalog-order';
 
-/** Identity of a row set for "did the store actually change?" — id + server version + tombstone flag, order-sensitive. */
+/** `SyncChangeItem.entityType`s whose local rows affect the food catalog `items()` serves. */
+const FOOD_CHANGE_TYPES: ReadonlySet<string> = new Set(['Food']);
+
+/**
+ * Identity of a row set for "did the store actually change?" — id + server version + tombstone flag.
+ * Order-insensitive: `save()` sorts its in-memory copy while `listFoods()` returns SQLite collation
+ * order, and the signature must match across the two so an unchanged set never looks changed.
+ */
 function foodSetSignature(rows: readonly Food[]): string {
-  return rows.map((row) => `${row.id}:${row.updatedAt ?? ''}:${row.deleted ? 1 : 0}`).join('|');
+  return rows
+    .map((row) => `${row.id}:${row.updatedAt ?? ''}:${row.deleted ? 1 : 0}`)
+    .sort()
+    .join('|');
 }
 
 /** documentation/Architektúra/Névegyediség.md "Mezőhalmaz-egyediség": thrown when every field matches another live catalog item. */
@@ -108,7 +119,9 @@ export class FoodRepository {
         primed = true;
         return;
       }
-      if (untracked(() => this.loaded())) {
+      const changed = untracked(() => this.dataChanges.changedTypes());
+      const touchesFood = [...changed].some((type) => FOOD_CHANGE_TYPES.has(type));
+      if (touchesFood && untracked(() => this.loaded())) {
         void this.load({ force: true });
       }
     });
@@ -126,7 +139,16 @@ export class FoodRepository {
       return;
     }
     if (this.inFlight !== null) {
-      return this.inFlight;
+      if (!options?.force) {
+        return this.inFlight;
+      }
+      // A forced (post-pull) reload must not ride a read that was queued against the store *before*
+      // the pull transaction committed — that would resolve with the pre-pull snapshot and leave
+      // the cache stale. Wait the in-flight read out, then read again from the updated store.
+      await this.inFlight.catch(() => undefined);
+      if (this.inFlight !== null) {
+        return this.inFlight;
+      }
     }
     this.inFlight = this.readIntoSignal();
     try {
@@ -167,7 +189,7 @@ export class FoodRepository {
     this.items.update((list) => {
       const next = list.filter((item) => item.id !== saved.id);
       next.push(saved);
-      next.sort((a, b) => a.name.localeCompare(b.name));
+      next.sort(byCatalogName);
       return next;
     });
     this.lastSignature = foodSetSignature(this.items());

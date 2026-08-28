@@ -452,7 +452,20 @@ const SCHEMA_V13_STATEMENTS: string[] = [
   `CREATE INDEX IF NOT EXISTS idx_recipe_live_name ON recipe (name) WHERE deleted = 0`,
 ];
 
-const SCHEMA_VERSION = 13;
+/**
+ * A V13 indexek `name` oszlopa BINARY kollációjú, de `listFoods()`/`listRecipes()` `ORDER BY name
+ * COLLATE NOCASE` szerint rendez — egy BINARY index nem tudja kiszolgálni a NOCASE rendezést, így
+ * maradt a `USE TEMP B-TREE FOR ORDER BY`. Az indexeket `COLLATE NOCASE` kifejezéssel újraépítjük,
+ * hogy a rendezés valóban index-only legyen. Csak index, séma-adat nem változik.
+ */
+const SCHEMA_V14_STATEMENTS: string[] = [
+  `DROP INDEX IF EXISTS idx_food_live_name`,
+  `DROP INDEX IF EXISTS idx_recipe_live_name`,
+  `CREATE INDEX IF NOT EXISTS idx_food_live_name ON food (name COLLATE NOCASE) WHERE deleted = 0`,
+  `CREATE INDEX IF NOT EXISTS idx_recipe_live_name ON recipe (name COLLATE NOCASE) WHERE deleted = 0`,
+];
+
+const SCHEMA_VERSION = 14;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -468,7 +481,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 10, statements: SCHEMA_V10_STATEMENTS },
   { toVersion: 11, statements: SCHEMA_V11_STATEMENTS },
   { toVersion: 12, statements: SCHEMA_V12_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V13_STATEMENTS },
+  { toVersion: 13, statements: SCHEMA_V13_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V14_STATEMENTS },
 ];
 
 export interface SqlTask {
