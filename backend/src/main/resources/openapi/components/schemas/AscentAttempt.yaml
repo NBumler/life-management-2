@@ -1,0 +1,129 @@
+type: object
+description: >-
+  documentation/Features/Mászónapló.md "Entitás — AscentAttempt" — one logged attempt on a problem /
+  route within a ClimbingSession. Only ever saved nested inside a ClimbingSession
+  (documentation/Architektúra/Backend.md "Nested aggregate PUT"), but its own sync row. `deleted` is
+  ONLY for the parent session's cascade soft-delete and the nested-PUT tree diff: an attempt dropped
+  from the incoming `attempts` array is set `deleted = true` server-side (the client does not flag it).
+  The `colorBandId` / `indoorRouteId` / `routeId` / `boulderProblemId` refs are optional soft links —
+  the `*Name` / `color*` / `gradeRange` snapshot fields are what the napló renders. Which fields apply
+  follows the parent session's `locationType` + `discipline` (enforced client-side).
+required:
+  - id
+  - sessionId
+  - isSuccess
+  - orderIndex
+  - pitches
+  - deleted
+properties:
+  id:
+    type: string
+    format: uuid
+  sessionId:
+    type: string
+    format: uuid
+  isSuccess:
+    type: boolean
+  userRawInput:
+    type: string
+    nullable: true
+    description: Raw grade text the user typed; parsed client-side, stored verbatim.
+  absoluteDifficultyIndex:
+    type: integer
+    nullable: true
+    description: >-
+      Resolved matrix index (documentation/Subfeatures/Nehézségi szint skálája (konverziós mátrix).md);
+      the client computes it, the server never recomputes.
+  ascentStyle:
+    type: string
+    enum:
+      - ONSIGHT
+      - FLASH
+      - REDPOINT
+    nullable: true
+    description: Only meaningful when `isSuccess`; the context whitelist is enforced client-side.
+  safetyStyle:
+    type: string
+    enum:
+      - TOPROPE
+      - LEAD
+      - TRAD
+    nullable: true
+    description: Rope only (indoor hides TRAD client-side); null for boulder.
+  failurePoint:
+    type: string
+    nullable: true
+    description: Optional; on an unsuccessful attempt.
+  attemptCount:
+    type: integer
+    minimum: 1
+    nullable: true
+    description: >-
+      Number of goes on this problem / route, context-independent. Statistics (volume, success rate)
+      only — NOT the duration fallback, which counts logged attempt rows.
+  colorBandId:
+    type: string
+    format: uuid
+    nullable: true
+    description: 'Indoor boulder: → GymColorBand. Soft link.'
+  colorName:
+    type: string
+    nullable: true
+  hexColor:
+    type: string
+    nullable: true
+  gradeRange:
+    type: string
+    nullable: true
+    description: Colour-band grade range snapshot, e.g. "6A–6B".
+  indoorRouteId:
+    type: string
+    format: uuid
+    nullable: true
+    description: 'Indoor rope: → IndoorRoute. Soft link.'
+  routeId:
+    type: string
+    format: uuid
+    nullable: true
+    description: 'Outdoor rope: → Route. Soft link.'
+  boulderProblemId:
+    type: string
+    format: uuid
+    nullable: true
+    description: 'Outdoor boulder: → BoulderProblem. Soft link.'
+  routeName:
+    type: string
+    nullable: true
+    description: Snapshot name for whichever route / problem was selected (or an ad-hoc name).
+  lengthInMeters:
+    type: number
+    format: double
+    minimum: 0
+    exclusiveMinimum: true
+    nullable: true
+    description: 'Rope: attempt length. Default from the route / gym wall height, resolved client-side.'
+  notes:
+    type: string
+    nullable: true
+  orderIndex:
+    type: integer
+  pitches:
+    type: array
+    items:
+      $ref: 'PitchLog.yaml'
+    description: Outdoor multi-pitch rope only; empty otherwise.
+  deleted:
+    type: boolean
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

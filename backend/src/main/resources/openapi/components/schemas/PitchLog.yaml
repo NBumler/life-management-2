@@ -1,0 +1,58 @@
+type: object
+description: >-
+  documentation/Subfeatures/Outdoor köteles napló.md "PitchLog" — optional per-pitch breakdown for an
+  outdoor multi-pitch rope attempt. Only ever saved nested inside a ClimbingSession
+  (documentation/Architektúra/Backend.md "Nested aggregate PUT"), but its own sync row (own tombstones,
+  own delta pull entries). `isLead = false` marks a following climber (active MET ×0.8 in the client
+  kcal). If the list is empty the attempt's own `lengthInMeters` and grade stand for the whole route.
+required:
+  - id
+  - attemptId
+  - pitchNumber
+  - isLead
+  - orderIndex
+  - deleted
+properties:
+  id:
+    type: string
+    format: uuid
+  attemptId:
+    type: string
+    format: uuid
+  pitchNumber:
+    type: integer
+    minimum: 1
+  isLead:
+    type: boolean
+    description: false = seconding this pitch (active MET ×0.8 in the client kcal).
+  rawGrade:
+    type: string
+    nullable: true
+    description: Raw grade text for this pitch; parsed client-side, stored verbatim.
+  absoluteDifficultyIndex:
+    type: integer
+    nullable: true
+    description: Resolved matrix index for this pitch; the client computes it.
+  lengthInMeters:
+    type: number
+    format: double
+    minimum: 0
+    exclusiveMinimum: true
+    nullable: true
+  orderIndex:
+    type: integer
+  deleted:
+    type: boolean
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

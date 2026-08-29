@@ -131,6 +131,10 @@ paths:
     $ref: 'openapi/paths/climbing-boulder-problems.yaml'
   /api/climbing/boulder-problems/{id}:
     $ref: 'openapi/paths/climbing-boulder-problems-item.yaml'
+  /api/climbing/sessions:
+    $ref: 'openapi/paths/climbing-sessions.yaml'
+  /api/climbing/sessions/{id}:
+    $ref: 'openapi/paths/climbing-sessions-item.yaml'
 components:
   securitySchemes:
     bearerAuth:
@@ -300,3 +304,11 @@ components:
       $ref: 'openapi/components/schemas/BoulderProblem.yaml'
     BoulderProblemList:
       $ref: 'openapi/components/schemas/BoulderProblemList.yaml'
+    ClimbingSession:
+      $ref: 'openapi/components/schemas/ClimbingSession.yaml'
+    ClimbingSessionList:
+      $ref: 'openapi/components/schemas/ClimbingSessionList.yaml'
+    AscentAttempt:
+      $ref: 'openapi/components/schemas/AscentAttempt.yaml'
+    PitchLog:
+      $ref: 'openapi/components/schemas/PitchLog.yaml'

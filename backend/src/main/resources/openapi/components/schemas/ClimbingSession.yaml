@@ -1,0 +1,127 @@
+type: object
+description: >-
+  documentation/Features/Mászónapló.md — one logged climbing session with its ascent attempts and
+  (outdoor multi-pitch only) pitch logs. documentation/Architektúra/Backend.md "Nested aggregate PUT":
+  ClimbingSession + its AscentAttempt rows + their PitchLog rows are saved / read as one tree on every
+  endpoint including the plain list — `attempts` (and each attempt's `pitches`) always lists every row,
+  live or soft-deleted (the client filters `deleted = false` itself when rendering or summing). No
+  kcal / body-weight / volume field: `activityExtraKcal` and the Volume stat are pure client
+  calculations (documentation/Features/Tápérték kalkulátor.md). `locationType` + `discipline` are
+  discriminator columns — one flat schema, the context-specific fields are all nullable and which
+  apply to which context is enforced client-side (szerver oldalon laza).
+required:
+  - id
+  - date
+  - locationType
+  - discipline
+  - attempts
+  - deleted
+properties:
+  id:
+    type: string
+    format: uuid
+  date:
+    type: string
+    format: date
+    description: Calendar date in the client's TZ — the aznapi activityExtraKcal bucket. Több session / nap OK.
+  locationType:
+    type: string
+    enum:
+      - INDOOR
+      - OUTDOOR
+    description: Dashboard discriminator (not a form choice). A session never mixes INDOOR + OUTDOOR.
+  discipline:
+    type: string
+    enum:
+      - BOULDER
+      - ROPE
+    description: Dashboard discriminator. A session never mixes BOULDER + ROPE.
+  totalSessionDurationMinutes:
+    type: integer
+    minimum: 1
+    nullable: true
+    description: >-
+      Missing / invalid → the client's kcal preview falls back to logged-attempt-rows × 5 min (boulder)
+      or × 15 min (rope); the server just stores what is sent.
+  pumpRating:
+    type: integer
+    minimum: 1
+    maximum: 5
+    nullable: true
+    description: Optional 1–5; a client-side kcal modifier on the active MET.
+  headspaceRating:
+    type: integer
+    minimum: 1
+    maximum: 5
+    nullable: true
+    description: Optional 1–5; statistics only.
+  notes:
+    type: string
+    nullable: true
+  climbingPartners:
+    type: array
+    nullable: true
+    items:
+      type: string
+  weatherConditions:
+    type: string
+    enum:
+      - COLD_DRY
+      - HOT_HUMID
+      - WINDY
+      - WET
+    nullable: true
+    description: Outdoor sessions only.
+  gymId:
+    type: string
+    format: uuid
+    nullable: true
+    description: 'Indoor context: → Gym (climbing/gyms). A soft link only; `gymName` is the snapshot.'
+  gymName:
+    type: string
+    nullable: true
+  cragId:
+    type: string
+    format: uuid
+    nullable: true
+    description: 'Outdoor context: → Crag (climbing/crags). Soft link; `cragName` is the snapshot.'
+  cragName:
+    type: string
+    nullable: true
+  sectorId:
+    type: string
+    format: uuid
+    nullable: true
+    description: 'Outdoor context: → Sector (climbing/sectors). Soft link; `sectorName` is the snapshot.'
+  sectorName:
+    type: string
+    nullable: true
+  rockType:
+    type: string
+    nullable: true
+    description: >-
+      Outdoor: one rock type per session (Crag default, overridable here — there is no attempt-level
+      field). Free-text, matching the Crag/Route master columns.
+  aspect:
+    type: string
+    nullable: true
+    description: 'Outdoor: inherited from the Sector (or the selected Route), overridable here. Free-text.'
+  attempts:
+    type: array
+    items:
+      $ref: 'AscentAttempt.yaml'
+  deleted:
+    type: boolean
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

@@ -1,0 +1,38 @@
+get:
+  operationId: listClimbingSessions
+  tags:
+    - climbing-sessions
+  summary: Every live climbing session (deleted = false) owned by the caller, each with its live+tombstoned attempt/pitch rows.
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ClimbingSessionList.yaml'
+post:
+  operationId: createClimbingSession
+  tags:
+    - climbing-sessions
+  summary: >-
+    Create a session with its attempts and pitches in one request — idempotent upsert on the
+    client-supplied id (documentation/Architektúra/Backend-offline first.md §11 nested aggregate save).
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/ClimbingSession.yaml'
+  responses:
+    '200':
+      description: Created or, on retry with the same id, the existing tree.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ClimbingSession.yaml'
+    '400':
+      description: An attempt or pitch entry is missing a required field.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
