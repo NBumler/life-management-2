@@ -746,6 +746,17 @@
         "MOUNTAIN_TRAIL": "Terep / MTB",
         "ROAD_VIGOROUS": "Országúti, intenzív"
       }
+    },
+    "CLIMBING": {
+      "HUB_TITLE": "Mászónapló",
+      "STATS": "Mászó statisztikák",
+      "ADMIN": "Terem / helyszín admin",
+      "CONTEXT": {
+        "INDOOR_BOULDER": "Indoor boulder",
+        "INDOOR_ROPE": "Indoor köteles",
+        "OUTDOOR_BOULDER": "Outdoor boulder",
+        "OUTDOOR_ROPE": "Outdoor köteles"
+      }
     }
   }
 }

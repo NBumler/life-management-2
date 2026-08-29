@@ -746,6 +746,17 @@
         "MOUNTAIN_TRAIL": "Trail / MTB",
         "ROAD_VIGOROUS": "Road, vigorous"
       }
+    },
+    "CLIMBING": {
+      "HUB_TITLE": "Climbing log",
+      "STATS": "Climbing stats",
+      "ADMIN": "Gym / crag admin",
+      "CONTEXT": {
+        "INDOOR_BOULDER": "Indoor boulder",
+        "INDOOR_ROPE": "Indoor rope",
+        "OUTDOOR_BOULDER": "Outdoor boulder",
+        "OUTDOOR_ROPE": "Outdoor rope"
+      }
     }
   }
 }

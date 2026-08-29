@@ -202,6 +202,17 @@ export const routes: Routes = [
             ],
           },
           {
+            // documentation/Features/Mászónapló.md: the "Mászás" segment — a hub with 4 context
+            // tiles (Indoor/Outdoor × Boulder/Kötél), each opening its own napló flow. Only the hub
+            // exists as of the M1 scaffold; the per-context logs, stats and venue-admin routes are
+            // added by later Mászónapló slices.
+            path: 'climbing',
+            canActivate: [featureFlagGuard('edzes.maszonaplo')],
+            children: [
+              { path: '', loadComponent: () => import('./pages/workout/climbing/climbing-hub.page').then((m) => m.ClimbingHubPage) },
+            ],
+          },
+          {
             // documentation/Features/Úszás napló.md: the "Úszás" segment — flat swim-session CRUD
             // (list / create / edit). Mirrors the `log` sub-tree's shape.
             path: 'swimming',

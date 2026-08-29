@@ -1,0 +1,24 @@
+<ion-header>
+  <app-workout-segment-header current="climbing" />
+  <ion-toolbar>
+    <ion-buttons slot="end">
+      <ion-button routerLink="stats" [attr.aria-label]="'WORKOUT.CLIMBING.STATS' | translate">
+        <ion-icon slot="icon-only" name="stats-chart-outline"></ion-icon>
+      </ion-button>
+      <ion-button routerLink="admin" [attr.aria-label]="'WORKOUT.CLIMBING.ADMIN' | translate">
+        <ion-icon slot="icon-only" name="business-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-list>
+    @for (ctx of contexts; track ctx.key) {
+      <ion-item button [routerLink]="ctx.route" detail="true">
+        <ion-icon [name]="ctx.icon" slot="start" aria-hidden="true"></ion-icon>
+        <ion-label>{{ ctx.labelKey | translate }}</ion-label>
+      </ion-item>
+    }
+  </ion-list>
+</ion-content>
