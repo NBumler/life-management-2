@@ -10,7 +10,7 @@
       <ion-button (click)="prevDay()">
         <ion-icon name="chevron-back-outline" slot="icon-only" aria-hidden="true"></ion-icon>
       </ion-button>
-      <ion-button (click)="goToday()">{{ 'CALENDAR.TODAY_BUTTON' | translate }}</ion-button>
+      <ion-button (click)="goToday()">{{ 'TASKS.CALENDAR.TODAY_BUTTON' | translate }}</ion-button>
       <ion-button (click)="nextDay()">
         <ion-icon name="chevron-forward-outline" slot="icon-only" aria-hidden="true"></ion-icon>
       </ion-button>
@@ -18,11 +18,11 @@
   </ion-toolbar>
   <ion-toolbar>
     <ion-chip [outline]="!activeSources().has('HOUSEHOLD_TASK')" (click)="toggleSource('HOUSEHOLD_TASK')">
-      <ion-label>{{ 'CALENDAR.SOURCE_HOUSEHOLD' | translate }}</ion-label>
+      <ion-label>{{ 'TASKS.CALENDAR.SOURCE_HOUSEHOLD' | translate }}</ion-label>
     </ion-chip>
     @if (eventsSourceAvailable) {
       <ion-chip [outline]="!activeSources().has('EVENT')" (click)="toggleSource('EVENT')">
-        <ion-label>{{ 'CALENDAR.SOURCE_EVENT' | translate }}</ion-label>
+        <ion-label>{{ 'TASKS.CALENDAR.SOURCE_EVENT' | translate }}</ion-label>
       </ion-chip>
     }
   </ion-toolbar>
@@ -32,7 +32,7 @@
   <ion-list>
     @if (rows().length === 0) {
       <ion-item>
-        <ion-label color="medium">{{ 'CALENDAR.DAY_EMPTY' | translate }}</ion-label>
+        <ion-label color="medium">{{ 'TASKS.CALENDAR.DAY_EMPTY' | translate }}</ion-label>
       </ion-item>
     }
     @for (row of rows(); track row.source + row.sourceEntityId) {
@@ -43,7 +43,7 @@
         <ion-label button (click)="open(row)">
           <h3>{{ row.title }}</h3>
           <p [style.color]="row.overdue ? 'var(--ion-color-danger)' : null">
-            {{ timeLabel(row) ?? ('CALENDAR.ALL_DAY' | translate) }}
+            {{ timeLabel(row) ?? ('TASKS.CALENDAR.ALL_DAY' | translate) }}
             @if (row.subtitle) {
               · {{ row.subtitle }}
             }

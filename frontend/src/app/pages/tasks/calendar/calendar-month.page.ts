@@ -74,11 +74,11 @@ export class CalendarMonthPage implements OnInit {
   readonly grid = computed(() => buildMonthGrid(this.viewYear(), this.viewMonth()));
 
   readonly monthLabel = computed(() => {
-    const monthNames = this.translate.instant('CALENDAR.MONTH_NAMES') as string[];
+    const monthNames = this.translate.instant('TASKS.CALENDAR.MONTH_NAMES') as string[];
     return `${monthNames[this.viewMonth() - 1]} ${this.viewYear()}`;
   });
 
-  readonly weekdayNames = this.translate.instant('CALENDAR.WEEKDAY_NAMES') as string[];
+  readonly weekdayNames = this.translate.instant('TASKS.CALENDAR.WEEKDAY_NAMES') as string[];
 
   async ngOnInit(): Promise<void> {
     const monthParam = this.route.snapshot.queryParamMap.get('month');
