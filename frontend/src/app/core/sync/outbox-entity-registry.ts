@@ -9,6 +9,7 @@ import { HouseholdTask } from '../../api/model/householdTask';
 import { LifePlan } from '../../api/model/lifePlan';
 import { PackingSessionItem } from '../../api/model/packingSessionItem';
 import { StoredFood } from '../../api/model/storedFood';
+import { SwimLog } from '../../api/model/swimLog';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 import { normalizeName } from '../../shared/name-normalization';
@@ -27,6 +28,7 @@ import {
   PackingSessionRow,
   ProfileRow,
   StoredFoodRow,
+  SwimLogRow,
   WeightHistoryRow,
   calendarEventLocalWriteTask,
   calendarEventRowToDto,
@@ -50,6 +52,8 @@ import {
   profileRowToDto,
   storedFoodLocalWriteTask,
   storedFoodRowToDto,
+  swimLogLocalWriteTask,
+  swimLogRowToDto,
   weightHistoryLocalWriteTask,
   weightHistoryRowToDto,
 } from '../data/local-rows';
@@ -321,6 +325,13 @@ export class OutboxEntityRegistryService {
       currentPayload: weeklyPlanCurrentPayload,
       // Nested aggregate (week + slots, one body) — excluded from Fix per spec, see buildFixWriteTask doc above.
       buildFixWriteTask: null,
+      nameUniqueness: null,
+    },
+    SwimLog: {
+      table: 'swim_log',
+      currentPayload: rowLookup<SwimLogRow, unknown>('swim_log', swimLogRowToDto),
+      buildFixWriteTask: (payload) => swimLogLocalWriteTask(payload as unknown as SwimLog),
+      // documentation/Features/Úszás napló.md: a swim log has no name — nothing to uniqueness-check.
       nameUniqueness: null,
     },
     ShoppingList: {

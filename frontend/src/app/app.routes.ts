@@ -202,6 +202,17 @@ export const routes: Routes = [
             ],
           },
           {
+            // documentation/Features/Úszás napló.md: the "Úszás" segment — flat swim-session CRUD
+            // (list / create / edit). Mirrors the `log` sub-tree's shape.
+            path: 'swimming',
+            canActivate: [featureFlagGuard('edzes.uszas')],
+            children: [
+              { path: '', loadComponent: () => import('./pages/workout/swimming/swim-log-list.page').then((m) => m.SwimLogListPage) },
+              { path: 'new', loadComponent: () => import('./pages/workout/swimming/swim-log-edit.page').then((m) => m.SwimLogEditPage) },
+              { path: ':id', loadComponent: () => import('./pages/workout/swimming/swim-log-edit.page').then((m) => m.SwimLogEditPage) },
+            ],
+          },
+          {
             // documentation/Features/Edzés.md: Gyakorlat törzsadat opens from the workout header
             // (fogaskerék), not a segment. Gated by tab.edzes along with the rest of the tab.
             path: 'exercises',

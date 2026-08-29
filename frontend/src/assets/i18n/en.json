@@ -692,6 +692,34 @@
         "SATURDAY": "Saturday",
         "SUNDAY": "Sunday"
       }
+    },
+    "SWIM": {
+      "NEW": "New swim",
+      "EMPTY": "No swim logs yet.",
+      "NEW_TITLE": "New swim",
+      "EDIT_TITLE": "Edit swim",
+      "FIELD_DATE": "Date",
+      "FIELD_DURATION": "Duration (min)",
+      "FIELD_INTENSITY": "Intensity",
+      "FIELD_POOL_LENGTH": "Pool length (m)",
+      "FIELD_LAP_COUNT": "Lap count",
+      "FIELD_DISTANCE": "Distance (m)",
+      "METERS_SHORT": "m",
+      "COMPUTED_DISTANCE": "Computed distance",
+      "POOL_PAIR_ERROR": "Pool length and lap count must be entered together.",
+      "NO_BODY_WEIGHT": "Set a body weight in your profile for the kcal estimate.",
+      "DELETE_CONFIRM_TITLE": "Delete swim",
+      "DELETE_CONFIRM_MESSAGE": "Delete this swim log?",
+      "INTENSITY": {
+        "CASUAL": "Casual",
+        "BREASTSTROKE": "Breaststroke",
+        "BACKSTROKE": "Backstroke",
+        "CRAWL_FREESTYLE": "Freestyle / crawl",
+        "OPEN_WATER": "Open water",
+        "BUTTERFLY": "Butterfly",
+        "VIGOROUS": "Vigorous",
+        "MIXED": "Mixed"
+      }
     }
   }
 }

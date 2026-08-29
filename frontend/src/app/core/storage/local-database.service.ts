@@ -660,7 +660,29 @@ const SCHEMA_V17_STATEMENTS: string[] = [
   `CREATE INDEX IF NOT EXISTS idx_weekly_plan_slot_weekly_plan_id ON weekly_plan_slot (weekly_plan_id)`,
 ];
 
-const SCHEMA_VERSION = 17;
+/** documentation/Features/Úszás napló.md — flat swim-session log under the Edzés tab (one row = one swim). */
+const SCHEMA_V18_STATEMENTS: string[] = [
+  `CREATE TABLE IF NOT EXISTS swim_log (
+    id TEXT PRIMARY KEY,
+    swim_date TEXT NOT NULL,
+    duration_minutes INTEGER NOT NULL,
+    intensity TEXT NOT NULL,
+    pool_length_meters INTEGER,
+    lap_count INTEGER,
+    distance_meters INTEGER,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_swim_log_swim_date ON swim_log (swim_date DESC)`,
+];
+
+const SCHEMA_VERSION = 18;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -680,7 +702,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 14, statements: SCHEMA_V14_STATEMENTS },
   { toVersion: 15, statements: SCHEMA_V15_STATEMENTS },
   { toVersion: 16, statements: SCHEMA_V16_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V17_STATEMENTS },
+  { toVersion: 17, statements: SCHEMA_V17_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V18_STATEMENTS },
 ];
 
 export interface SqlTask {

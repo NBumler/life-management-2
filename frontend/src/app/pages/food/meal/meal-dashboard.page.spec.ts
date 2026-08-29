@@ -13,6 +13,7 @@ import { FoodRepository } from '../../../core/data/food.repository';
 import { MealRepository } from '../../../core/data/meal.repository';
 import { ProfileRepository } from '../../../core/data/profile.repository';
 import { RecipeRepository } from '../../../core/data/recipe.repository';
+import { SwimLogRepository } from '../../../core/data/swim-log.repository';
 import { WorkoutSessionRepository } from '../../../core/data/workout-session.repository';
 import { today } from '../../../shared/local-date';
 import { deviceTimeZoneId } from '../../../shared/timezone';
@@ -63,6 +64,7 @@ describe('MealDashboardPage', () => {
         { provide: FoodRepository, useValue: foodRepository },
         { provide: ProfileRepository, useValue: profileRepository },
         { provide: WorkoutSessionRepository, useValue: { load: () => Promise.resolve(), items: signal([]) } },
+        { provide: SwimLogRepository, useValue: { load: () => Promise.resolve(), items: signal([]) } },
         { provide: AlertController, useValue: alertController },
       ],
     }).compileComponents();

@@ -19,6 +19,7 @@ import { ShoppingListCompleteFoodEntry } from '../../api/model/shoppingListCompl
 import { ShoppingListCompleteRequest } from '../../api/model/shoppingListCompleteRequest';
 import { ShoppingListItem } from '../../api/model/shoppingListItem';
 import { StoredFood } from '../../api/model/storedFood';
+import { SwimLog } from '../../api/model/swimLog';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeeklyPlan } from '../../api/model/weeklyPlan';
 import { WeeklyPlanSlot } from '../../api/model/weeklyPlanSlot';
@@ -485,6 +486,11 @@ export interface StorageBackend {
   saveWeeklyPlan(draft: WeeklyPlanDraft): Promise<WeeklyPlan>;
   /** documentation/Subfeatures/Heti terv.md "CRUD": cascades to every live slot on this week. */
   deleteWeeklyPlan(id: string): Promise<WeeklyPlan>;
+
+  /** documentation/Features/Úszás napló.md: per-user swim logs — flat CRUD, no nested rows. */
+  listSwimLogs(): Promise<SwimLog[]>;
+  upsertSwimLog(log: SwimLog): Promise<SwimLog>;
+  deleteSwimLog(id: string): Promise<SwimLog>;
 
   listHouseholdRooms(): Promise<HouseholdRoom[]>;
   upsertHouseholdRoom(room: HouseholdRoom): Promise<HouseholdRoom>;

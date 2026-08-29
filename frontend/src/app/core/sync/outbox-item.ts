@@ -23,6 +23,7 @@ export type OutboxEntityType =
   | 'WorkoutSession'
   | 'WorkoutPlan'
   | 'WeeklyPlan'
+  | 'SwimLog'
   | 'HouseholdRoom'
   | 'HouseholdTask'
   | 'CalendarEvent'

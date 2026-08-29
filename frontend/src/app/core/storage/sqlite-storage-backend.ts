@@ -16,6 +16,7 @@ import { PackingTemplateDetail } from '../../api/model/packingTemplateDetail';
 import { Recipe } from '../../api/model/recipe';
 import { ShoppingList } from '../../api/model/shoppingList';
 import { StoredFood } from '../../api/model/storedFood';
+import { SwimLog } from '../../api/model/swimLog';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeeklyPlan } from '../../api/model/weeklyPlan';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
@@ -42,6 +43,7 @@ import {
   ShoppingListItemRow,
   ShoppingListRow,
   StoredFoodRow,
+  SwimLogRow,
   WeightHistoryRow,
   calendarEventLocalWriteTask,
   calendarEventRowToDto,
@@ -89,6 +91,8 @@ import {
   storedFoodLocalRemoveTask,
   storedFoodLocalWriteTask,
   storedFoodRowToDto,
+  swimLogLocalWriteTask,
+  swimLogRowToDto,
   weightHistoryLocalWriteTask,
   weightHistoryRowToDto,
   WeeklyPlanRow,
@@ -641,6 +645,59 @@ export class SqliteStorageBackend implements StorageBackend {
   private async readLifePlan(id: string): Promise<LifePlan> {
     const rows = await this.db.query<LifePlanRow>('SELECT * FROM life_plan WHERE id = ?', [id]);
     return lifePlanRowToDto(rows[0]);
+  }
+
+  async listSwimLogs(): Promise<SwimLog[]> {
+    const rows = await this.db.query<SwimLogRow>(
+      'SELECT * FROM swim_log WHERE deleted = 0 ORDER BY swim_date DESC, created_at DESC',
+    );
+    return rows.map(swimLogRowToDto);
+  }
+
+  async upsertSwimLog(log: SwimLog): Promise<SwimLog> {
+    const userId = this.requireUserId();
+    const existing = await this.db.query('SELECT 1 FROM swim_log WHERE id = ?', [log.id]);
+    const isNew = existing.length === 0;
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: isNew ? 'POST' : 'PUT',
+      url: isNew ? '/api/swim-logs' : `/api/swim-logs/${log.id}`,
+      payload: log,
+      entityType: 'SwimLog',
+      targetEntityId: log.id,
+    });
+    await this.db.executeTransaction([swimLogLocalWriteTask(log), ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    return this.readSwimLog(log.id);
+  }
+
+  async deleteSwimLog(id: string): Promise<SwimLog> {
+    const userId = this.requireUserId();
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: 'DELETE',
+      url: `/api/swim-logs/${id}`,
+      payload: null,
+      entityType: 'SwimLog',
+      targetEntityId: id,
+    });
+    const entityTask: SqlTask = enqueue.hardRemoveLocalEntity
+      ? { statement: 'DELETE FROM swim_log WHERE id = ?', values: [id] }
+      : {
+          statement: 'UPDATE swim_log SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?',
+          values: [new Date().toISOString(), id],
+        };
+    await this.db.executeTransaction([entityTask, ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    if (enqueue.hardRemoveLocalEntity) {
+      return { id, date: '1970-01-01', durationMinutes: 1, intensity: SwimLog.IntensityEnum.Casual, deleted: true };
+    }
+    return this.readSwimLog(id);
+  }
+
+  private async readSwimLog(id: string): Promise<SwimLog> {
+    const rows = await this.db.query<SwimLogRow>('SELECT * FROM swim_log WHERE id = ?', [id]);
+    return swimLogRowToDto(rows[0]);
   }
 
   async listExercises(): Promise<Exercise[]> {

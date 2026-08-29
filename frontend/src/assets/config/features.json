@@ -5,7 +5,7 @@
   "tab.edzes": true,
   "edzes.hetiTerv": true,
   "edzes.maszonaplo": false,
-  "edzes.uszas": false,
+  "edzes.uszas": true,
   "edzes.bicikli": false,
   "tab.feladatok": true,
   "feladatok.eletTervek": true,

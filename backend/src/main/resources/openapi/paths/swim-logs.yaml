@@ -1,0 +1,38 @@
+get:
+  operationId: listSwimLogs
+  tags:
+    - swim-logs
+  summary: The caller's swim logs, live rows only (deleted = false).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/SwimLogList.yaml'
+post:
+  operationId: createSwimLog
+  tags:
+    - swim-logs
+  summary: Create a swim log — idempotent upsert on the client-supplied id.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/SwimLog.yaml'
+  responses:
+    '200':
+      description: Created or, on retry with the same id, the existing row.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/SwimLog.yaml'
+    '400':
+      description: >-
+        Pool fields inconsistent — only one of poolLengthMeters / lapCount present, or either set
+        while intensity is OPEN_WATER (documentation/Features/Úszás napló.md "Medence mezők együtt").
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'

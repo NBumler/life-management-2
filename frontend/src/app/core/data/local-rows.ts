@@ -17,6 +17,7 @@ import { RecipeIngredient } from '../../api/model/recipeIngredient';
 import { ShoppingList } from '../../api/model/shoppingList';
 import { ShoppingListItem } from '../../api/model/shoppingListItem';
 import { StoredFood } from '../../api/model/storedFood';
+import { SwimLog } from '../../api/model/swimLog';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 import { WeeklyPlan } from '../../api/model/weeklyPlan';
@@ -1550,6 +1551,99 @@ export function lifePlanTombstoneTask(id: string, deletedAt: string | null, upda
     statement: `
       INSERT INTO life_plan (id, title, status, updated_at, deleted, deleted_at, _dirty, _local_only)
       VALUES (?, '', 'PLANNED', ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+export interface SwimLogRow {
+  id: string;
+  swim_date: string;
+  duration_minutes: number;
+  intensity: string;
+  pool_length_meters: number | null;
+  lap_count: number | null;
+  distance_meters: number | null;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+export function swimLogRowToDto(row: SwimLogRow): SwimLog {
+  return {
+    id: row.id,
+    date: row.swim_date,
+    durationMinutes: row.duration_minutes,
+    intensity: row.intensity as SwimLog.IntensityEnum,
+    poolLengthMeters: row.pool_length_meters,
+    lapCount: row.lap_count,
+    distanceMeters: row.distance_meters,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+export function swimLogLocalWriteTask(dto: SwimLog): SqlTask {
+  return {
+    statement: `
+      INSERT INTO swim_log (id, swim_date, duration_minutes, intensity, pool_length_meters, lap_count, distance_meters, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET
+        swim_date = excluded.swim_date, duration_minutes = excluded.duration_minutes, intensity = excluded.intensity,
+        pool_length_meters = excluded.pool_length_meters, lap_count = excluded.lap_count,
+        distance_meters = excluded.distance_meters, _dirty = 1`,
+    values: [
+      dto.id,
+      dto.date,
+      dto.durationMinutes,
+      dto.intensity,
+      dto.poolLengthMeters ?? null,
+      dto.lapCount ?? null,
+      dto.distanceMeters ?? null,
+    ],
+  };
+}
+
+export function swimLogServerApplyTask(dto: SwimLog): SqlTask {
+  return {
+    statement: `
+      INSERT INTO swim_log (id, swim_date, duration_minutes, intensity, pool_length_meters, lap_count, distance_meters, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        swim_date = excluded.swim_date, duration_minutes = excluded.duration_minutes, intensity = excluded.intensity,
+        pool_length_meters = excluded.pool_length_meters, lap_count = excluded.lap_count, distance_meters = excluded.distance_meters,
+        created_at = excluded.created_at, updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at,
+        _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE swim_log._dirty = 0`,
+    values: [
+      dto.id,
+      dto.date,
+      dto.durationMinutes,
+      dto.intensity,
+      dto.poolLengthMeters ?? null,
+      dto.lapCount ?? null,
+      dto.distanceMeters ?? null,
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function swimLogTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO swim_log (id, swim_date, duration_minutes, intensity, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '1970-01-01', 1, 'CASUAL', ?, 1, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
     values: [id, updatedAt, deletedAt],
   };

@@ -1,0 +1,75 @@
+type: object
+description: >-
+  documentation/Features/Úszás napló.md — one logged swim session ("egy napló = egy edzés"). No
+  start/end time, only a calendar date + a manual durationMinutes. No kcal / body-weight field:
+  the aznapi activityExtraKcal contribution is a pure client calculation with the canonical MET
+  formula (documentation/Features/Tápérték kalkulátor.md). Pool length / lap count / distance are
+  log/statistics only — never part of the kcal formula.
+required:
+  - id
+  - date
+  - durationMinutes
+  - intensity
+  - deleted
+properties:
+  id:
+    type: string
+    format: uuid
+  date:
+    type: string
+    format: date
+    description: Calendar date in the client's TZ — the aznapi activityExtraKcal bucket. No time-of-day.
+  durationMinutes:
+    type: integer
+    minimum: 1
+    description: Whole minutes, > 0. The only kcal input alongside intensity.
+  intensity:
+    type: string
+    enum:
+      - CASUAL
+      - BREASTSTROKE
+      - BACKSTROKE
+      - CRAWL_FREESTYLE
+      - OPEN_WATER
+      - BUTTERFLY
+      - VIGOROUS
+      - MIXED
+    description: >-
+      MET source — CASUAL/BREASTSTROKE/MIXED 5.5, BACKSTROKE 7.0, CRAWL_FREESTYLE 8.0,
+      OPEN_WATER 9.5, BUTTERFLY/VIGOROUS 11.0. A single required choice — no separate strokeType.
+  poolLengthMeters:
+    type: integer
+    minimum: 1
+    nullable: true
+    description: >-
+      Pool length for a pool session (typical 25 / 50). Paired with lapCount — if one is present the
+      other is required. Must be null for OPEN_WATER.
+  lapCount:
+    type: integer
+    minimum: 1
+    nullable: true
+    description: >-
+      One lap = one one-way length (not there-and-back). Paired with poolLengthMeters. Must be null
+      for OPEN_WATER.
+  distanceMeters:
+    type: integer
+    minimum: 0
+    nullable: true
+    description: >-
+      Computed as poolLengthMeters × lapCount when both are present (the server overwrites whatever
+      was sent). For OPEN_WATER it is an optional manually-entered value.
+  deleted:
+    type: boolean
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

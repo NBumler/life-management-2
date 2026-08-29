@@ -95,6 +95,10 @@ paths:
     $ref: 'openapi/paths/weekly-plans.yaml'
   /api/weekly-plans/{id}:
     $ref: 'openapi/paths/weekly-plans-item.yaml'
+  /api/swim-logs:
+    $ref: 'openapi/paths/swim-logs.yaml'
+  /api/swim-logs/{id}:
+    $ref: 'openapi/paths/swim-logs-item.yaml'
 components:
   securitySchemes:
     bearerAuth:
@@ -228,3 +232,7 @@ components:
       $ref: 'openapi/components/schemas/WeeklyPlanList.yaml'
     WeeklyPlanSlot:
       $ref: 'openapi/components/schemas/WeeklyPlanSlot.yaml'
+    SwimLog:
+      $ref: 'openapi/components/schemas/SwimLog.yaml'
+    SwimLogList:
+      $ref: 'openapi/components/schemas/SwimLogList.yaml'

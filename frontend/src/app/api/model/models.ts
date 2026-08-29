@@ -30,6 +30,7 @@ export * from './shoppingListCompleteRequest';
 export * from './shoppingListCompleteResponse';
 export * from './shoppingListItem';
 export * from './storedFood';
+export * from './swimLog';
 export * from './syncChangeItem';
 export * from './syncChangesResponse';
 export * from './userProfile';

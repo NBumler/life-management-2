@@ -21,6 +21,7 @@ import { ProfileService } from '../../api/api/profile.service';
 import { RecipesService } from '../../api/api/recipes.service';
 import { ShoppingListsService } from '../../api/api/shoppingLists.service';
 import { StoredFoodsService } from '../../api/api/storedFoods.service';
+import { SwimLogsService } from '../../api/api/swimLogs.service';
 import { SyncService } from '../../api/api/sync.service';
 import { WeeklyPlansService } from '../../api/api/weeklyPlans.service';
 import { WorkoutPlansService } from '../../api/api/workoutPlans.service';
@@ -47,6 +48,7 @@ import { ShoppingList } from '../../api/model/shoppingList';
 import { ShoppingListCompleteResponse } from '../../api/model/shoppingListCompleteResponse';
 import { ShoppingListItem } from '../../api/model/shoppingListItem';
 import { StoredFood } from '../../api/model/storedFood';
+import { SwimLog } from '../../api/model/swimLog';
 import { SyncChangeItem } from '../../api/model/syncChangeItem';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeeklyPlan } from '../../api/model/weeklyPlan';
@@ -97,6 +99,8 @@ import {
   shoppingListTombstoneTask,
   storedFoodServerApplyTask,
   storedFoodTombstoneTask,
+  swimLogServerApplyTask,
+  swimLogTombstoneTask,
   weeklyPlanServerApplyTask,
   weeklyPlanSlotServerApplyTask,
   weeklyPlanSlotTombstoneTask,
@@ -157,6 +161,7 @@ export class SyncEngineService {
   private readonly workoutSessionsApi = inject(WorkoutSessionsService);
   private readonly workoutPlansApi = inject(WorkoutPlansService);
   private readonly weeklyPlansApi = inject(WeeklyPlansService);
+  private readonly swimLogsApi = inject(SwimLogsService);
   private readonly syncApi = inject(SyncService);
   private readonly authSession = inject(AuthSessionService);
   private readonly offlineQueue = inject(OfflineQueueService);
@@ -319,6 +324,16 @@ export class SyncEngineService {
       try {
         const dto = await firstValueFrom(this.lifePlansApi.getLifePlan(row.id));
         await this.db.executeTransaction([lifePlanServerApplyTask(dto)]);
+      } catch {
+        // same as above
+      }
+    }
+
+    const staleSwimLogs = await this.db.query<{ id: string }>('SELECT id FROM swim_log WHERE _needs_refetch = 1');
+    for (const row of staleSwimLogs) {
+      try {
+        const dto = await firstValueFrom(this.swimLogsApi.getSwimLog(row.id));
+        await this.db.executeTransaction([swimLogServerApplyTask(dto)]);
       } catch {
         // same as above
       }
@@ -590,6 +605,9 @@ export class SyncEngineService {
     if (item.entityType === 'LifePlan') {
       return [lifePlanServerApplyTask(body as LifePlan)];
     }
+    if (item.entityType === 'SwimLog') {
+      return [swimLogServerApplyTask(body as SwimLog)];
+    }
     if (item.entityType === 'Exercise') {
       return [exerciseServerApplyTask(body as Exercise)];
     }
@@ -794,6 +812,8 @@ export class SyncEngineService {
       await this.db.executeTransaction([packingSessionItemTombstoneTask(item.targetEntityId, null, now)]);
     } else if (item.entityType === 'LifePlan') {
       await this.db.executeTransaction([lifePlanTombstoneTask(item.targetEntityId, null, now)]);
+    } else if (item.entityType === 'SwimLog') {
+      await this.db.executeTransaction([swimLogTombstoneTask(item.targetEntityId, null, now)]);
     } else if (item.entityType === 'Exercise') {
       await this.db.executeTransaction([exerciseTombstoneTask(item.targetEntityId, null, now)]);
     } else if (item.entityType === 'HouseholdRoom') {
@@ -1036,6 +1056,12 @@ export class SyncEngineService {
         return [lifePlanServerApplyTask(change.data as LifePlan)];
       }
       return [lifePlanTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
+    }
+    if (change.entityType === 'SwimLog') {
+      if (!change.deleted) {
+        return [swimLogServerApplyTask(change.data as SwimLog)];
+      }
+      return [swimLogTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
     }
     if (change.entityType === 'Exercise') {
       if (!change.deleted) {

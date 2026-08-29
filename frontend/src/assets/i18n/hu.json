@@ -692,6 +692,34 @@
         "SATURDAY": "Szombat",
         "SUNDAY": "Vasárnap"
       }
+    },
+    "SWIM": {
+      "NEW": "Új úszás",
+      "EMPTY": "Még nincs úszásbejegyzés.",
+      "NEW_TITLE": "Új úszás",
+      "EDIT_TITLE": "Úszás szerkesztése",
+      "FIELD_DATE": "Dátum",
+      "FIELD_DURATION": "Időtartam (perc)",
+      "FIELD_INTENSITY": "Intenzitás",
+      "FIELD_POOL_LENGTH": "Medencehossz (m)",
+      "FIELD_LAP_COUNT": "Körök száma",
+      "FIELD_DISTANCE": "Táv (m)",
+      "METERS_SHORT": "m",
+      "COMPUTED_DISTANCE": "Számított táv",
+      "POOL_PAIR_ERROR": "A medencehosszt és a körök számát együtt kell megadni.",
+      "NO_BODY_WEIGHT": "Adj meg testsúlyt a profilban a kalóriabecsléshez.",
+      "DELETE_CONFIRM_TITLE": "Úszás törlése",
+      "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd ezt a bejegyzést?",
+      "INTENSITY": {
+        "CASUAL": "Laza",
+        "BREASTSTROKE": "Mellúszás",
+        "BACKSTROKE": "Hátúszás",
+        "CRAWL_FREESTYLE": "Gyorsúszás / crawl",
+        "OPEN_WATER": "Nyílt víz",
+        "BUTTERFLY": "Pillangó",
+        "VIGOROUS": "Intenzív",
+        "MIXED": "Vegyes"
+      }
     }
   }
 }
