@@ -18,6 +18,7 @@ import { ShoppingList } from '../../api/model/shoppingList';
 import { ShoppingListItem } from '../../api/model/shoppingListItem';
 import { StoredFood } from '../../api/model/storedFood';
 import { SwimLog } from '../../api/model/swimLog';
+import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 import { WeeklyPlan } from '../../api/model/weeklyPlan';
@@ -1644,6 +1645,94 @@ export function swimLogTombstoneTask(id: string, deletedAt: string | null, updat
     statement: `
       INSERT INTO swim_log (id, swim_date, duration_minutes, intensity, updated_at, deleted, deleted_at, _dirty, _local_only)
       VALUES (?, '1970-01-01', 1, 'CASUAL', ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+export interface BikeRideLogRow {
+  id: string;
+  ride_date: string;
+  duration_minutes: number;
+  intensity: string;
+  distance_km: number | null;
+  elevation_gain_meters: number | null;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+export function bikeRideLogRowToDto(row: BikeRideLogRow): BikeRideLog {
+  return {
+    id: row.id,
+    date: row.ride_date,
+    durationMinutes: row.duration_minutes,
+    intensity: row.intensity as BikeRideLog.IntensityEnum,
+    distanceKm: row.distance_km,
+    elevationGainMeters: row.elevation_gain_meters,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+export function bikeRideLogLocalWriteTask(dto: BikeRideLog): SqlTask {
+  return {
+    statement: `
+      INSERT INTO bike_ride_log (id, ride_date, duration_minutes, intensity, distance_km, elevation_gain_meters, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET
+        ride_date = excluded.ride_date, duration_minutes = excluded.duration_minutes, intensity = excluded.intensity,
+        distance_km = excluded.distance_km, elevation_gain_meters = excluded.elevation_gain_meters, _dirty = 1`,
+    values: [
+      dto.id,
+      dto.date,
+      dto.durationMinutes,
+      dto.intensity,
+      dto.distanceKm ?? null,
+      dto.elevationGainMeters ?? null,
+    ],
+  };
+}
+
+export function bikeRideLogServerApplyTask(dto: BikeRideLog): SqlTask {
+  return {
+    statement: `
+      INSERT INTO bike_ride_log (id, ride_date, duration_minutes, intensity, distance_km, elevation_gain_meters, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        ride_date = excluded.ride_date, duration_minutes = excluded.duration_minutes, intensity = excluded.intensity,
+        distance_km = excluded.distance_km, elevation_gain_meters = excluded.elevation_gain_meters,
+        created_at = excluded.created_at, updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at,
+        _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE bike_ride_log._dirty = 0`,
+    values: [
+      dto.id,
+      dto.date,
+      dto.durationMinutes,
+      dto.intensity,
+      dto.distanceKm ?? null,
+      dto.elevationGainMeters ?? null,
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function bikeRideLogTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO bike_ride_log (id, ride_date, duration_minutes, intensity, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '1970-01-01', 1, 'CITY', ?, 1, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
     values: [id, updatedAt, deletedAt],
   };

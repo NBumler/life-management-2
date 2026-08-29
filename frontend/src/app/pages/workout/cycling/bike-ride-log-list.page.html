@@ -1,0 +1,42 @@
+<ion-header>
+  <app-workout-segment-header current="cycling" />
+</ion-header>
+
+<ion-content>
+  <div class="cta-row">
+    <ion-button expand="block" routerLink="new">{{ 'WORKOUT.BIKE.NEW' | translate }}</ion-button>
+  </div>
+
+  @if (isEmpty()) {
+    <ion-list>
+      <ion-item>
+        <ion-label color="medium">{{ 'WORKOUT.BIKE.EMPTY' | translate }}</ion-label>
+      </ion-item>
+    </ion-list>
+  } @else {
+    <ion-list>
+      @for (card of cards(); track card.log.id) {
+        <ion-item button [routerLink]="[card.log.id]" detail="true">
+          <ion-label>
+            <h2>{{ (intensityLabelKey(card.log)) | translate }}</h2>
+            <p>
+              {{ card.log.date }}
+              @if (card.distanceKm !== null) {
+                · {{ card.distanceKm | number: '1.0-1' }} {{ 'WORKOUT.BIKE.KM_SHORT' | translate }}
+              }
+              @if (card.elevationGainMeters !== null) {
+                · ↑{{ card.elevationGainMeters }} {{ 'WORKOUT.BIKE.METERS_SHORT' | translate }}
+              }
+            </p>
+          </ion-label>
+          <ion-note slot="end">
+            {{ card.log.durationMinutes }} {{ 'WORKOUT.SESSION.MINUTES_SHORT' | translate }}
+            @if (card.kcal > 0) {
+              · ~{{ card.kcal | number: '1.0-0' }} {{ 'WORKOUT.SESSION.KCAL_SHORT' | translate }}
+            }
+          </ion-note>
+        </ion-item>
+      }
+    </ion-list>
+  }
+</ion-content>

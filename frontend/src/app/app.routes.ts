@@ -213,6 +213,17 @@ export const routes: Routes = [
             ],
           },
           {
+            // documentation/Features/Biciklizés napló.md: the "Bicikli" segment — flat bike-ride CRUD
+            // (list / create / edit). Mirrors the swim slice's shape.
+            path: 'cycling',
+            canActivate: [featureFlagGuard('edzes.bicikli')],
+            children: [
+              { path: '', loadComponent: () => import('./pages/workout/cycling/bike-ride-log-list.page').then((m) => m.BikeRideLogListPage) },
+              { path: 'new', loadComponent: () => import('./pages/workout/cycling/bike-ride-log-edit.page').then((m) => m.BikeRideLogEditPage) },
+              { path: ':id', loadComponent: () => import('./pages/workout/cycling/bike-ride-log-edit.page').then((m) => m.BikeRideLogEditPage) },
+            ],
+          },
+          {
             // documentation/Features/Edzés.md: Gyakorlat törzsadat opens from the workout header
             // (fogaskerék), not a segment. Gated by tab.edzes along with the rest of the tab.
             path: 'exercises',

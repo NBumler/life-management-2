@@ -1,0 +1,62 @@
+type: object
+description: >-
+  documentation/Features/Biciklizés napló.md — one logged bike ride ("egy napló = egy út"). No
+  start/end time, only a calendar date + a manual durationMinutes. No kcal / body-weight field:
+  the aznapi activityExtraKcal contribution is a pure client calculation with the canonical MET
+  formula (documentation/Features/Tápérték kalkulátor.md). distanceKm / elevationGainMeters are
+  log/statistics only (and a speed-based MET hint in the UI) — never part of the kcal formula.
+required:
+  - id
+  - date
+  - durationMinutes
+  - intensity
+  - deleted
+properties:
+  id:
+    type: string
+    format: uuid
+  date:
+    type: string
+    format: date
+    description: Calendar date in the client's TZ — the aznapi activityExtraKcal bucket. No time-of-day.
+  durationMinutes:
+    type: integer
+    minimum: 1
+    description: Whole minutes, > 0. The only kcal input alongside intensity.
+  intensity:
+    type: string
+    enum:
+      - CITY
+      - STATIONARY
+      - ROAD_LEISURE
+      - MOUNTAIN_TRAIL
+      - ROAD_VIGOROUS
+    description: >-
+      MET source — CITY 4.0, STATIONARY 6.0, ROAD_LEISURE 6.8, MOUNTAIN_TRAIL 8.5,
+      ROAD_VIGOROUS 10.0. A single required choice.
+  distanceKm:
+    type: number
+    format: double
+    minimum: 0
+    nullable: true
+    description: Optional; log / statistics only, plus the UI avg-speed MET hint. Never in the kcal formula.
+  elevationGainMeters:
+    type: integer
+    minimum: 0
+    nullable: true
+    description: Optional; log / statistics only. Never in the kcal formula.
+  deleted:
+    type: boolean
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

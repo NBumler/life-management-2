@@ -1,0 +1,98 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/workout/cycling"></ion-back-button>
+    </ion-buttons>
+    <ion-title>
+      {{ (logId() ? 'WORKOUT.BIKE.EDIT_TITLE' : 'WORKOUT.BIKE.NEW_TITLE') | translate }}
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button [strong]="true" (click)="save()">{{ 'COMMON.SAVE' | translate }}</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <form [formGroup]="form">
+    <ion-list>
+      <ion-item>
+        <ion-input
+          type="date"
+          formControlName="date"
+          [label]="'WORKOUT.BIKE.FIELD_DATE' | translate"
+          label-placement="stacked"
+        ></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-input
+          type="number"
+          inputmode="numeric"
+          formControlName="durationMinutes"
+          [label]="'WORKOUT.BIKE.FIELD_DURATION' | translate"
+          label-placement="stacked"
+        ></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-select
+          formControlName="intensity"
+          [label]="'WORKOUT.BIKE.FIELD_INTENSITY' | translate"
+          label-placement="stacked"
+        >
+          @for (option of intensities; track option) {
+            <ion-select-option [value]="option">{{ ('WORKOUT.BIKE.INTENSITY.' + option) | translate }}</ion-select-option>
+          }
+        </ion-select>
+      </ion-item>
+
+      <ion-item>
+        <ion-input
+          type="number"
+          inputmode="decimal"
+          formControlName="distanceKm"
+          [label]="'WORKOUT.BIKE.FIELD_DISTANCE' | translate"
+          label-placement="stacked"
+        ></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-input
+          type="number"
+          inputmode="numeric"
+          formControlName="elevationGainMeters"
+          [label]="'WORKOUT.BIKE.FIELD_ELEVATION' | translate"
+          label-placement="stacked"
+        ></ion-input>
+      </ion-item>
+    </ion-list>
+
+    <ion-list>
+      @if (avgSpeedKmH() !== null) {
+        <ion-item lines="none">
+          <ion-note>
+            {{ 'WORKOUT.BIKE.AVG_SPEED' | translate }}: {{ avgSpeedKmH() | number: '1.0-1' }} {{ 'WORKOUT.BIKE.KMH_SHORT' | translate }}
+            @if (suggestedIntensityKey(); as key) {
+              · {{ 'WORKOUT.BIKE.SUGGESTED' | translate }}: {{ key | translate }}
+            }
+          </ion-note>
+        </ion-item>
+      }
+      <ion-item lines="none">
+        @if (hasBodyWeight()) {
+          <ion-note>~{{ previewKcal() | number: '1.0-0' }} {{ 'WORKOUT.SESSION.KCAL_SHORT' | translate }}</ion-note>
+        } @else {
+          <ion-note color="medium">{{ 'WORKOUT.BIKE.NO_BODY_WEIGHT' | translate }}</ion-note>
+        }
+      </ion-item>
+    </ion-list>
+
+    @if (logId()) {
+      <div class="cta-row">
+        <ion-button expand="block" color="danger" fill="outline" (click)="delete()">
+          {{ 'COMMON.DELETE' | translate }}
+        </ion-button>
+      </div>
+    }
+  </form>
+</ion-content>

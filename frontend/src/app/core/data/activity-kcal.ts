@@ -9,8 +9,10 @@
  * consumed from `meal.repository.ts`. `sessionKcal` uses the CURRENT body weight, never a value
  * frozen into the session, so `bodyWeightKg` is passed through from the live profile.
  */
+import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { SwimLog } from '../../api/model/swimLog';
 import { WorkoutSession } from '../../api/model/workoutSession';
+import { bikeKcal } from '../../pages/workout/cycling/bike-metrics';
 import { sessionKcal } from '../../pages/workout/log/workout-metrics';
 import { swimKcal } from '../../pages/workout/swimming/swim-metrics';
 
@@ -42,4 +44,19 @@ export function swimKcalForDay(
   return logs
     .filter((log) => !log.deleted && log.date === day)
     .reduce((sum, log) => sum + swimKcal(log, bodyWeightKg), 0);
+}
+
+/**
+ * documentation/Features/Biciklizés napló.md: same shape as {@link swimKcalForDay} — Σ `bikeKcal()`
+ * over every live `BikeRideLog` whose `date` is `day`. The Étkezés dashboard adds this to the
+ * workout + swim totals for `activityExtraKcal`.
+ */
+export function bikeKcalForDay(
+  logs: readonly BikeRideLog[],
+  day: string,
+  bodyWeightKg: number | null,
+): number {
+  return logs
+    .filter((log) => !log.deleted && log.date === day)
+    .reduce((sum, log) => sum + bikeKcal(log, bodyWeightKg), 0);
 }

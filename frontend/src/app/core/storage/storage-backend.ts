@@ -20,6 +20,7 @@ import { ShoppingListCompleteRequest } from '../../api/model/shoppingListComplet
 import { ShoppingListItem } from '../../api/model/shoppingListItem';
 import { StoredFood } from '../../api/model/storedFood';
 import { SwimLog } from '../../api/model/swimLog';
+import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeeklyPlan } from '../../api/model/weeklyPlan';
 import { WeeklyPlanSlot } from '../../api/model/weeklyPlanSlot';
@@ -491,6 +492,11 @@ export interface StorageBackend {
   listSwimLogs(): Promise<SwimLog[]>;
   upsertSwimLog(log: SwimLog): Promise<SwimLog>;
   deleteSwimLog(id: string): Promise<SwimLog>;
+
+  /** documentation/Features/Biciklizés napló.md: per-user bike ride logs — flat CRUD, no nested rows. */
+  listBikeRideLogs(): Promise<BikeRideLog[]>;
+  upsertBikeRideLog(log: BikeRideLog): Promise<BikeRideLog>;
+  deleteBikeRideLog(id: string): Promise<BikeRideLog>;
 
   listHouseholdRooms(): Promise<HouseholdRoom[]>;
   upsertHouseholdRoom(room: HouseholdRoom): Promise<HouseholdRoom>;

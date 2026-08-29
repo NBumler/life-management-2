@@ -17,6 +17,7 @@ import { RecipesService } from '../../api/api/recipes.service';
 import { ShoppingListsService } from '../../api/api/shoppingLists.service';
 import { StoredFoodsService } from '../../api/api/storedFoods.service';
 import { SwimLogsService } from '../../api/api/swimLogs.service';
+import { BikeRideLogsService } from '../../api/api/bikeRideLogs.service';
 import { WeeklyPlansService } from '../../api/api/weeklyPlans.service';
 import { WorkoutPlansService } from '../../api/api/workoutPlans.service';
 import { WorkoutSessionsService } from '../../api/api/workoutSessions.service';
@@ -37,6 +38,7 @@ import { Recipe } from '../../api/model/recipe';
 import { ShoppingList } from '../../api/model/shoppingList';
 import { StoredFood } from '../../api/model/storedFood';
 import { SwimLog } from '../../api/model/swimLog';
+import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeeklyPlan } from '../../api/model/weeklyPlan';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
@@ -85,6 +87,7 @@ export class HttpStorageBackend implements StorageBackend {
   private readonly workoutPlansApi = inject(WorkoutPlansService);
   private readonly weeklyPlansApi = inject(WeeklyPlansService);
   private readonly swimLogsApi = inject(SwimLogsService);
+  private readonly bikeRideLogsApi = inject(BikeRideLogsService);
   private readonly authSession = inject(AuthSessionService);
 
   async getProfile(): Promise<UserProfile | null> {
@@ -506,6 +509,19 @@ export class HttpStorageBackend implements StorageBackend {
 
   deleteSwimLog(id: string): Promise<SwimLog> {
     return firstValueFrom(this.swimLogsApi.deleteSwimLog(id));
+  }
+
+  listBikeRideLogs(): Promise<BikeRideLog[]> {
+    return firstValueFrom(this.bikeRideLogsApi.listBikeRideLogs());
+  }
+
+  /** POST with an existing id is an idempotent upsert server-side, so this covers both create and update. */
+  upsertBikeRideLog(log: BikeRideLog): Promise<BikeRideLog> {
+    return firstValueFrom(this.bikeRideLogsApi.createBikeRideLog(log));
+  }
+
+  deleteBikeRideLog(id: string): Promise<BikeRideLog> {
+    return firstValueFrom(this.bikeRideLogsApi.deleteBikeRideLog(id));
   }
 
   listMeals(): Promise<Meal[]> {

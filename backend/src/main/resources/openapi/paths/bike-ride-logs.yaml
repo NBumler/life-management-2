@@ -1,0 +1,30 @@
+get:
+  operationId: listBikeRideLogs
+  tags:
+    - bike-ride-logs
+  summary: The caller's bike ride logs, live rows only (deleted = false).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/BikeRideLogList.yaml'
+post:
+  operationId: createBikeRideLog
+  tags:
+    - bike-ride-logs
+  summary: Create a bike ride log — idempotent upsert on the client-supplied id.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/BikeRideLog.yaml'
+  responses:
+    '200':
+      description: Created or, on retry with the same id, the existing row.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/BikeRideLog.yaml'

@@ -682,7 +682,28 @@ const SCHEMA_V18_STATEMENTS: string[] = [
   `CREATE INDEX IF NOT EXISTS idx_swim_log_swim_date ON swim_log (swim_date DESC)`,
 ];
 
-const SCHEMA_VERSION = 18;
+/** documentation/Features/Biciklizés napló.md — flat bike-ride log under the Edzés tab (one row = one ride). */
+const SCHEMA_V19_STATEMENTS: string[] = [
+  `CREATE TABLE IF NOT EXISTS bike_ride_log (
+    id TEXT PRIMARY KEY,
+    ride_date TEXT NOT NULL,
+    duration_minutes INTEGER NOT NULL,
+    intensity TEXT NOT NULL,
+    distance_km REAL,
+    elevation_gain_meters INTEGER,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_bike_ride_log_ride_date ON bike_ride_log (ride_date DESC)`,
+];
+
+const SCHEMA_VERSION = 19;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -703,7 +724,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 15, statements: SCHEMA_V15_STATEMENTS },
   { toVersion: 16, statements: SCHEMA_V16_STATEMENTS },
   { toVersion: 17, statements: SCHEMA_V17_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V18_STATEMENTS },
+  { toVersion: 18, statements: SCHEMA_V18_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V19_STATEMENTS },
 ];
 
 export interface SqlTask {

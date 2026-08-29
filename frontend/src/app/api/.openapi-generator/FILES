@@ -7,6 +7,8 @@ api/admin.serviceInterface.ts
 api/api.ts
 api/auth.service.ts
 api/auth.serviceInterface.ts
+api/bikeRideLogs.service.ts
+api/bikeRideLogs.serviceInterface.ts
 api/events.service.ts
 api/events.serviceInterface.ts
 api/exercises.service.ts
@@ -58,6 +60,7 @@ model/adminSetPasswordRequest.ts
 model/adminUser.ts
 model/apiError.ts
 model/authTokens.ts
+model/bikeRideLog.ts
 model/calendarEvent.ts
 model/exercise.ts
 model/food.ts

@@ -17,6 +17,7 @@ import { Recipe } from '../../api/model/recipe';
 import { ShoppingList } from '../../api/model/shoppingList';
 import { StoredFood } from '../../api/model/storedFood';
 import { SwimLog } from '../../api/model/swimLog';
+import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeeklyPlan } from '../../api/model/weeklyPlan';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
@@ -44,6 +45,7 @@ import {
   ShoppingListRow,
   StoredFoodRow,
   SwimLogRow,
+  BikeRideLogRow,
   WeightHistoryRow,
   calendarEventLocalWriteTask,
   calendarEventRowToDto,
@@ -93,6 +95,8 @@ import {
   storedFoodRowToDto,
   swimLogLocalWriteTask,
   swimLogRowToDto,
+  bikeRideLogLocalWriteTask,
+  bikeRideLogRowToDto,
   weightHistoryLocalWriteTask,
   weightHistoryRowToDto,
   WeeklyPlanRow,
@@ -698,6 +702,59 @@ export class SqliteStorageBackend implements StorageBackend {
   private async readSwimLog(id: string): Promise<SwimLog> {
     const rows = await this.db.query<SwimLogRow>('SELECT * FROM swim_log WHERE id = ?', [id]);
     return swimLogRowToDto(rows[0]);
+  }
+
+  async listBikeRideLogs(): Promise<BikeRideLog[]> {
+    const rows = await this.db.query<BikeRideLogRow>(
+      'SELECT * FROM bike_ride_log WHERE deleted = 0 ORDER BY ride_date DESC, created_at DESC',
+    );
+    return rows.map(bikeRideLogRowToDto);
+  }
+
+  async upsertBikeRideLog(log: BikeRideLog): Promise<BikeRideLog> {
+    const userId = this.requireUserId();
+    const existing = await this.db.query('SELECT 1 FROM bike_ride_log WHERE id = ?', [log.id]);
+    const isNew = existing.length === 0;
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: isNew ? 'POST' : 'PUT',
+      url: isNew ? '/api/bike-ride-logs' : `/api/bike-ride-logs/${log.id}`,
+      payload: log,
+      entityType: 'BikeRideLog',
+      targetEntityId: log.id,
+    });
+    await this.db.executeTransaction([bikeRideLogLocalWriteTask(log), ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    return this.readBikeRideLog(log.id);
+  }
+
+  async deleteBikeRideLog(id: string): Promise<BikeRideLog> {
+    const userId = this.requireUserId();
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: 'DELETE',
+      url: `/api/bike-ride-logs/${id}`,
+      payload: null,
+      entityType: 'BikeRideLog',
+      targetEntityId: id,
+    });
+    const entityTask: SqlTask = enqueue.hardRemoveLocalEntity
+      ? { statement: 'DELETE FROM bike_ride_log WHERE id = ?', values: [id] }
+      : {
+          statement: 'UPDATE bike_ride_log SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?',
+          values: [new Date().toISOString(), id],
+        };
+    await this.db.executeTransaction([entityTask, ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    if (enqueue.hardRemoveLocalEntity) {
+      return { id, date: '1970-01-01', durationMinutes: 1, intensity: BikeRideLog.IntensityEnum.City, deleted: true };
+    }
+    return this.readBikeRideLog(id);
+  }
+
+  private async readBikeRideLog(id: string): Promise<BikeRideLog> {
+    const rows = await this.db.query<BikeRideLogRow>('SELECT * FROM bike_ride_log WHERE id = ?', [id]);
+    return bikeRideLogRowToDto(rows[0]);
   }
 
   async listExercises(): Promise<Exercise[]> {

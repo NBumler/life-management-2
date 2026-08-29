@@ -720,6 +720,32 @@
         "VIGOROUS": "Intenzív",
         "MIXED": "Vegyes"
       }
+    },
+    "BIKE": {
+      "NEW": "Új út",
+      "EMPTY": "Még nincs kerékpáros bejegyzés.",
+      "NEW_TITLE": "Új kerékpárút",
+      "EDIT_TITLE": "Kerékpárút szerkesztése",
+      "FIELD_DATE": "Dátum",
+      "FIELD_DURATION": "Időtartam (perc)",
+      "FIELD_INTENSITY": "Intenzitás",
+      "FIELD_DISTANCE": "Táv (km)",
+      "FIELD_ELEVATION": "Szintemelkedés (m)",
+      "KM_SHORT": "km",
+      "KMH_SHORT": "km/h",
+      "METERS_SHORT": "m",
+      "AVG_SPEED": "Átlagsebesség",
+      "SUGGESTED": "Javasolt",
+      "NO_BODY_WEIGHT": "Adj meg testsúlyt a profilban a kalóriabecsléshez.",
+      "DELETE_CONFIRM_TITLE": "Kerékpárút törlése",
+      "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd ezt a bejegyzést?",
+      "INTENSITY": {
+        "CITY": "Városi",
+        "STATIONARY": "Szobabicikli",
+        "ROAD_LEISURE": "Országúti, laza",
+        "MOUNTAIN_TRAIL": "Terep / MTB",
+        "ROAD_VIGOROUS": "Országúti, intenzív"
+      }
     }
   }
 }

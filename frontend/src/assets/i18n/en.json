@@ -720,6 +720,32 @@
         "VIGOROUS": "Vigorous",
         "MIXED": "Mixed"
       }
+    },
+    "BIKE": {
+      "NEW": "New ride",
+      "EMPTY": "No bike rides yet.",
+      "NEW_TITLE": "New bike ride",
+      "EDIT_TITLE": "Edit bike ride",
+      "FIELD_DATE": "Date",
+      "FIELD_DURATION": "Duration (min)",
+      "FIELD_INTENSITY": "Intensity",
+      "FIELD_DISTANCE": "Distance (km)",
+      "FIELD_ELEVATION": "Elevation gain (m)",
+      "KM_SHORT": "km",
+      "KMH_SHORT": "km/h",
+      "METERS_SHORT": "m",
+      "AVG_SPEED": "Avg speed",
+      "SUGGESTED": "Suggested",
+      "NO_BODY_WEIGHT": "Set a body weight in your profile for the kcal estimate.",
+      "DELETE_CONFIRM_TITLE": "Delete bike ride",
+      "DELETE_CONFIRM_MESSAGE": "Delete this bike ride log?",
+      "INTENSITY": {
+        "CITY": "City",
+        "STATIONARY": "Stationary",
+        "ROAD_LEISURE": "Road, leisure",
+        "MOUNTAIN_TRAIL": "Trail / MTB",
+        "ROAD_VIGOROUS": "Road, vigorous"
+      }
     }
   }
 }

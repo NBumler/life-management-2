@@ -6,7 +6,7 @@
   "edzes.hetiTerv": true,
   "edzes.maszonaplo": false,
   "edzes.uszas": true,
-  "edzes.bicikli": false,
+  "edzes.bicikli": true,
   "tab.feladatok": true,
   "feladatok.eletTervek": true,
   "feladatok.naptar": true,

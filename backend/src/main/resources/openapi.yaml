@@ -99,6 +99,10 @@ paths:
     $ref: 'openapi/paths/swim-logs.yaml'
   /api/swim-logs/{id}:
     $ref: 'openapi/paths/swim-logs-item.yaml'
+  /api/bike-ride-logs:
+    $ref: 'openapi/paths/bike-ride-logs.yaml'
+  /api/bike-ride-logs/{id}:
+    $ref: 'openapi/paths/bike-ride-logs-item.yaml'
 components:
   securitySchemes:
     bearerAuth:
@@ -236,3 +240,7 @@ components:
       $ref: 'openapi/components/schemas/SwimLog.yaml'
     SwimLogList:
       $ref: 'openapi/components/schemas/SwimLogList.yaml'
+    BikeRideLog:
+      $ref: 'openapi/components/schemas/BikeRideLog.yaml'
+    BikeRideLogList:
+      $ref: 'openapi/components/schemas/BikeRideLogList.yaml'

@@ -10,6 +10,7 @@ import { LifePlan } from '../../api/model/lifePlan';
 import { PackingSessionItem } from '../../api/model/packingSessionItem';
 import { StoredFood } from '../../api/model/storedFood';
 import { SwimLog } from '../../api/model/swimLog';
+import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 import { normalizeName } from '../../shared/name-normalization';
@@ -29,6 +30,7 @@ import {
   ProfileRow,
   StoredFoodRow,
   SwimLogRow,
+  BikeRideLogRow,
   WeightHistoryRow,
   calendarEventLocalWriteTask,
   calendarEventRowToDto,
@@ -54,6 +56,8 @@ import {
   storedFoodRowToDto,
   swimLogLocalWriteTask,
   swimLogRowToDto,
+  bikeRideLogLocalWriteTask,
+  bikeRideLogRowToDto,
   weightHistoryLocalWriteTask,
   weightHistoryRowToDto,
 } from '../data/local-rows';
@@ -332,6 +336,13 @@ export class OutboxEntityRegistryService {
       currentPayload: rowLookup<SwimLogRow, unknown>('swim_log', swimLogRowToDto),
       buildFixWriteTask: (payload) => swimLogLocalWriteTask(payload as unknown as SwimLog),
       // documentation/Features/Úszás napló.md: a swim log has no name — nothing to uniqueness-check.
+      nameUniqueness: null,
+    },
+    BikeRideLog: {
+      table: 'bike_ride_log',
+      currentPayload: rowLookup<BikeRideLogRow, unknown>('bike_ride_log', bikeRideLogRowToDto),
+      buildFixWriteTask: (payload) => bikeRideLogLocalWriteTask(payload as unknown as BikeRideLog),
+      // documentation/Features/Biciklizés napló.md: a bike ride log has no name — nothing to uniqueness-check.
       nameUniqueness: null,
     },
     ShoppingList: {
