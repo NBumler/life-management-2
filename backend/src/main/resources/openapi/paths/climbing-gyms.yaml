@@ -1,0 +1,36 @@
+get:
+  operationId: listClimbingGyms
+  tags:
+    - climbing-gyms
+  summary: The caller's indoor gyms, live rows only (deleted = false).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/GymList.yaml'
+post:
+  operationId: createClimbingGym
+  tags:
+    - climbing-gyms
+  summary: Create a gym — idempotent upsert on the client-supplied id.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/Gym.yaml'
+  responses:
+    '200':
+      description: Created or, on retry with the same id, the existing row.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/Gym.yaml'
+    '409':
+      description: A live gym with the same name already exists (UNIQUE_VIOLATION, with conflictingId).
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'

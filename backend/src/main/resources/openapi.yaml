@@ -103,6 +103,18 @@ paths:
     $ref: 'openapi/paths/bike-ride-logs.yaml'
   /api/bike-ride-logs/{id}:
     $ref: 'openapi/paths/bike-ride-logs-item.yaml'
+  /api/climbing/gyms:
+    $ref: 'openapi/paths/climbing-gyms.yaml'
+  /api/climbing/gyms/{id}:
+    $ref: 'openapi/paths/climbing-gyms-item.yaml'
+  /api/climbing/gym-color-bands:
+    $ref: 'openapi/paths/climbing-gym-color-bands.yaml'
+  /api/climbing/gym-color-bands/{id}:
+    $ref: 'openapi/paths/climbing-gym-color-bands-item.yaml'
+  /api/climbing/indoor-routes:
+    $ref: 'openapi/paths/climbing-indoor-routes.yaml'
+  /api/climbing/indoor-routes/{id}:
+    $ref: 'openapi/paths/climbing-indoor-routes-item.yaml'
 components:
   securitySchemes:
     bearerAuth:
@@ -244,3 +256,15 @@ components:
       $ref: 'openapi/components/schemas/BikeRideLog.yaml'
     BikeRideLogList:
       $ref: 'openapi/components/schemas/BikeRideLogList.yaml'
+    Gym:
+      $ref: 'openapi/components/schemas/Gym.yaml'
+    GymList:
+      $ref: 'openapi/components/schemas/GymList.yaml'
+    GymColorBand:
+      $ref: 'openapi/components/schemas/GymColorBand.yaml'
+    GymColorBandList:
+      $ref: 'openapi/components/schemas/GymColorBandList.yaml'
+    IndoorRoute:
+      $ref: 'openapi/components/schemas/IndoorRoute.yaml'
+    IndoorRouteList:
+      $ref: 'openapi/components/schemas/IndoorRouteList.yaml'

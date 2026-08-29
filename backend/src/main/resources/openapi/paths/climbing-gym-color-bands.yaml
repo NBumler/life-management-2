@@ -1,0 +1,36 @@
+get:
+  operationId: listClimbingGymColorBands
+  tags:
+    - climbing-gym-color-bands
+  summary: The caller's gym colour bands, live rows only (deleted = false).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/GymColorBandList.yaml'
+post:
+  operationId: createClimbingGymColorBand
+  tags:
+    - climbing-gym-color-bands
+  summary: Create a colour band — idempotent upsert on the client-supplied id.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/GymColorBand.yaml'
+  responses:
+    '200':
+      description: Created or, on retry with the same id, the existing row.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/GymColorBand.yaml'
+    '409':
+      description: The gym already has a live band with this canonical hexColor (UNIQUE_VIOLATION, with conflictingId).
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'

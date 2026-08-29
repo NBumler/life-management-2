@@ -1,0 +1,64 @@
+type: object
+description: >-
+  documentation/Subfeatures/Indoor boulder admin.md — one colour band of an indoor boulder gym: a
+  wall colour mapped to a grade range. `hexColor` is unique among the gym's live bands, compared on
+  its canonical form (hu.bumler.lm2.common.HexColorNormalizer — `#rrggbb`, lowercase, short form
+  expanded). `absoluteDifficultyIndex{Lower,Upper}` come from the client's matrix
+  (documentation/Subfeatures/Nehézségi szint skálája (konverziós mátrix).md); the server stores,
+  never recomputes them.
+required:
+  - id
+  - gymId
+  - name
+  - hexColor
+  - variant
+  - gradeLower
+  - gradeUpper
+  - absoluteDifficultyIndexLower
+  - absoluteDifficultyIndexUpper
+  - deleted
+properties:
+  id:
+    type: string
+    format: uuid
+  gymId:
+    type: string
+    format: uuid
+  name:
+    type: string
+    minLength: 1
+  hexColor:
+    type: string
+    pattern: '^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$'
+    description: 3- or 6-digit CSS hex, with or without a leading '#'. Stored canonicalised.
+  variant:
+    type: string
+    enum:
+      - PLUS
+      - MINUS
+      - NEUTRAL
+  gradeLower:
+    type: string
+    minLength: 1
+  gradeUpper:
+    type: string
+    minLength: 1
+  absoluteDifficultyIndexLower:
+    type: integer
+  absoluteDifficultyIndexUpper:
+    type: integer
+  deleted:
+    type: boolean
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

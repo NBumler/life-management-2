@@ -1,0 +1,53 @@
+type: object
+description: >-
+  documentation/Subfeatures/Indoor köteles admin.md — an optional fixed indoor-route catalogue entry
+  ("fix termi út katalógus"). `absoluteDifficultyIndex` comes from the client's matrix
+  (documentation/Subfeatures/Nehézségi szint skálája (konverziós mátrix).md); the server stores,
+  never recomputes it.
+required:
+  - id
+  - gymId
+  - name
+  - discipline
+  - grade
+  - absoluteDifficultyIndex
+  - deleted
+properties:
+  id:
+    type: string
+    format: uuid
+  gymId:
+    type: string
+    format: uuid
+  name:
+    type: string
+    minLength: 1
+  discipline:
+    type: string
+    enum:
+      - BOULDER
+      - ROPE
+  grade:
+    type: string
+    minLength: 1
+  absoluteDifficultyIndex:
+    type: integer
+  sector:
+    type: string
+    nullable: true
+    description: Free-text sector / wall-strip label.
+  deleted:
+    type: boolean
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

@@ -1,0 +1,62 @@
+type: object
+description: >-
+  documentation/Subfeatures/Indoor boulder admin.md + Indoor köteles admin.md — a user-owned indoor
+  climbing gym. The same row is shared by the boulder and rope admin (`disciplines` says which it is
+  set up for). `defaultWallHeightMeters` / `availableSafetyStyles` are rope-only config used to
+  prefill the rope napló. Colour bands (GymColorBand) and the optional fixed-route catalogue
+  (IndoorRoute) are separate resources that reference this row by id.
+required:
+  - id
+  - name
+  - disciplines
+  - deleted
+properties:
+  id:
+    type: string
+    format: uuid
+  name:
+    type: string
+    minLength: 1
+  address:
+    type: string
+    nullable: true
+  disciplines:
+    type: array
+    minItems: 1
+    description: Non-empty set — which disciplines this gym is set up for in the admin.
+    items:
+      type: string
+      enum:
+        - BOULDER
+        - ROPE
+  defaultWallHeightMeters:
+    type: number
+    format: double
+    minimum: 0
+    exclusiveMinimum: true
+    nullable: true
+    description: Rope only — average wall height, the napló's lengthInMeters default.
+  availableSafetyStyles:
+    type: array
+    nullable: true
+    description: Rope only — subset of {TOPROPE, LEAD}. TRAD is never offered indoor.
+    items:
+      type: string
+      enum:
+        - TOPROPE
+        - LEAD
+  deleted:
+    type: boolean
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true
