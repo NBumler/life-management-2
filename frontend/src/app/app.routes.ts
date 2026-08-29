@@ -218,6 +218,43 @@ export const routes: Routes = [
                 children: [
                   { path: '', loadComponent: () => import('./pages/workout/climbing/admin/climbing-admin.page').then((m) => m.ClimbingAdminPage) },
                   {
+                    // documentation/Subfeatures/Outdoor boulder admin.md + Outdoor köteles admin.md
+                    // (M3b): the shared location tree Crag -> Sector -> (Route | BoulderProblem).
+                    // Fully-qualified leaf paths (no empty-path children) so every editor reads all of
+                    // its ancestor ids straight from its own paramMap, with no inheritance-strategy
+                    // subtlety across the two nesting levels.
+                    path: 'crags',
+                    children: [
+                      { path: '', loadComponent: () => import('./pages/workout/climbing/admin/crag-list.page').then((m) => m.CragListPage) },
+                      { path: 'new', loadComponent: () => import('./pages/workout/climbing/admin/crag-edit.page').then((m) => m.CragEditPage) },
+                      { path: ':cragId', loadComponent: () => import('./pages/workout/climbing/admin/crag-edit.page').then((m) => m.CragEditPage) },
+                      {
+                        path: ':cragId/sectors/new',
+                        loadComponent: () => import('./pages/workout/climbing/admin/sector-edit.page').then((m) => m.SectorEditPage),
+                      },
+                      {
+                        path: ':cragId/sectors/:sectorId',
+                        loadComponent: () => import('./pages/workout/climbing/admin/sector-edit.page').then((m) => m.SectorEditPage),
+                      },
+                      {
+                        path: ':cragId/sectors/:sectorId/routes/new',
+                        loadComponent: () => import('./pages/workout/climbing/admin/route-edit.page').then((m) => m.RouteEditPage),
+                      },
+                      {
+                        path: ':cragId/sectors/:sectorId/routes/:routeId',
+                        loadComponent: () => import('./pages/workout/climbing/admin/route-edit.page').then((m) => m.RouteEditPage),
+                      },
+                      {
+                        path: ':cragId/sectors/:sectorId/problems/new',
+                        loadComponent: () => import('./pages/workout/climbing/admin/boulder-problem-edit.page').then((m) => m.BoulderProblemEditPage),
+                      },
+                      {
+                        path: ':cragId/sectors/:sectorId/problems/:problemId',
+                        loadComponent: () => import('./pages/workout/climbing/admin/boulder-problem-edit.page').then((m) => m.BoulderProblemEditPage),
+                      },
+                    ],
+                  },
+                  {
                     path: 'gyms',
                     children: [
                       { path: '', loadComponent: () => import('./pages/workout/climbing/admin/gym-list.page').then((m) => m.GymListPage) },

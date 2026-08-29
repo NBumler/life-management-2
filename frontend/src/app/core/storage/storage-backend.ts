@@ -24,6 +24,10 @@ import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { Gym } from '../../api/model/gym';
 import { GymColorBand } from '../../api/model/gymColorBand';
 import { IndoorRoute } from '../../api/model/indoorRoute';
+import { Crag } from '../../api/model/crag';
+import { Sector } from '../../api/model/sector';
+import { Route } from '../../api/model/route';
+import { BoulderProblem } from '../../api/model/boulderProblem';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeeklyPlan } from '../../api/model/weeklyPlan';
 import { WeeklyPlanSlot } from '../../api/model/weeklyPlanSlot';
@@ -514,6 +518,24 @@ export interface StorageBackend {
   listIndoorRoutes(): Promise<IndoorRoute[]>;
   upsertIndoorRoute(route: IndoorRoute): Promise<IndoorRoute>;
   deleteIndoorRoute(id: string): Promise<IndoorRoute>;
+
+  /** documentation/Subfeatures/Outdoor boulder admin.md + Outdoor köteles admin.md: per-user outdoor location tree — flat CRUD, no name-uniqueness. */
+  listCrags(): Promise<Crag[]>;
+  upsertCrag(crag: Crag): Promise<Crag>;
+  /** documentation/Subfeatures/Outdoor boulder admin.md "Soft delete": no cascade — sectors / routes / boulder problems keep their own tombstones. */
+  deleteCrag(id: string): Promise<Crag>;
+
+  listSectors(): Promise<Sector[]>;
+  upsertSector(sector: Sector): Promise<Sector>;
+  deleteSector(id: string): Promise<Sector>;
+
+  listRoutes(): Promise<Route[]>;
+  upsertRoute(route: Route): Promise<Route>;
+  deleteRoute(id: string): Promise<Route>;
+
+  listBoulderProblems(): Promise<BoulderProblem[]>;
+  upsertBoulderProblem(problem: BoulderProblem): Promise<BoulderProblem>;
+  deleteBoulderProblem(id: string): Promise<BoulderProblem>;
 
   listHouseholdRooms(): Promise<HouseholdRoom[]>;
   upsertHouseholdRoom(room: HouseholdRoom): Promise<HouseholdRoom>;

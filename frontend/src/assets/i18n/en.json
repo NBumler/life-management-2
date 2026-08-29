@@ -761,7 +761,6 @@
       "ADMIN_OUTDOOR": "Outdoor",
       "ADMIN_GYMS": "Gyms",
       "ADMIN_CRAGS": "Crags (Crag → Sector → Route)",
-      "ADMIN_SOON": "coming soon",
       "GRADE_UNPARSED": "Grade not recognised — check the scale help.",
       "DISCIPLINE": {
         "BOULDER": "Boulder",
@@ -818,6 +817,53 @@
         "FIELD_SECTOR": "Sector / wall strip",
         "DELETE_CONFIRM_TITLE": "Delete indoor route",
         "DELETE_CONFIRM_MESSAGE": "Delete this indoor route?"
+      },
+      "CRAG": {
+        "NEW": "New crag",
+        "EMPTY": "No crags yet. Add one.",
+        "NEW_TITLE": "New crag",
+        "EDIT_TITLE": "Edit crag",
+        "FIELD_NAME": "Name",
+        "FIELD_LATITUDE": "Latitude",
+        "FIELD_LONGITUDE": "Longitude",
+        "FIELD_ROCK_TYPE": "Default rock type",
+        "DELETE_CONFIRM_TITLE": "Delete crag",
+        "DELETE_CONFIRM_MESSAGE": "Delete this crag? Its sectors, routes and boulder problems stay, but no longer reference a live crag."
+      },
+      "SECTOR": {
+        "LIST_TITLE": "Sectors",
+        "EMPTY": "No sectors yet.",
+        "NEW": "New sector",
+        "NEW_TITLE": "New sector",
+        "EDIT_TITLE": "Edit sector",
+        "FIELD_NAME": "Name",
+        "FIELD_ASPECT": "Default aspect",
+        "DELETE_CONFIRM_TITLE": "Delete sector",
+        "DELETE_CONFIRM_MESSAGE": "Delete this sector?"
+      },
+      "ROUTE": {
+        "LIST_TITLE": "Routes (rope)",
+        "EMPTY": "No routes yet.",
+        "NEW_TITLE": "New route",
+        "EDIT_TITLE": "Edit route",
+        "FIELD_NAME": "Name",
+        "FIELD_GRADE": "Guidebook grade",
+        "FIELD_LENGTH": "Length (m)",
+        "FIELD_PITCHES": "Total pitches",
+        "FIELD_ROCK_TYPE": "Rock type (overrides sector/crag default)",
+        "FIELD_ASPECT": "Aspect (overrides sector default)",
+        "DELETE_CONFIRM_TITLE": "Delete route",
+        "DELETE_CONFIRM_MESSAGE": "Delete this route?"
+      },
+      "PROBLEM": {
+        "LIST_TITLE": "Boulder problems (optional)",
+        "EMPTY": "No boulder problems yet.",
+        "NEW_TITLE": "New boulder problem",
+        "EDIT_TITLE": "Edit boulder problem",
+        "FIELD_NAME": "Name",
+        "FIELD_GRADE": "Guidebook grade",
+        "DELETE_CONFIRM_TITLE": "Delete boulder problem",
+        "DELETE_CONFIRM_MESSAGE": "Delete this boulder problem?"
       }
     }
   }

@@ -1,0 +1,42 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button [defaultHref]="'/tabs/workout/climbing/admin/crags/' + cragId() + '/sectors/' + sectorId()"></ion-back-button>
+    </ion-buttons>
+    <ion-title>
+      {{ (problemId() ? 'WORKOUT.CLIMBING.PROBLEM.EDIT_TITLE' : 'WORKOUT.CLIMBING.PROBLEM.NEW_TITLE') | translate }}
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button [strong]="true" (click)="save()">{{ 'COMMON.SAVE' | translate }}</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <form [formGroup]="form">
+    <ion-list>
+      <ion-item>
+        <ion-input
+          formControlName="name"
+          [label]="'WORKOUT.CLIMBING.PROBLEM.FIELD_NAME' | translate"
+          label-placement="stacked"
+        ></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input
+          formControlName="guidebookGrade"
+          [label]="'WORKOUT.CLIMBING.PROBLEM.FIELD_GRADE' | translate"
+          label-placement="stacked"
+        ></ion-input>
+      </ion-item>
+    </ion-list>
+
+    @if (problemId()) {
+      <div class="cta-row">
+        <ion-button expand="block" color="danger" fill="outline" (click)="delete()">
+          {{ 'COMMON.DELETE' | translate }}
+        </ion-button>
+      </div>
+    }
+  </form>
+</ion-content>

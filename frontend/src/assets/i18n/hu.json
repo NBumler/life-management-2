@@ -761,7 +761,6 @@
       "ADMIN_OUTDOOR": "Kültéri",
       "ADMIN_GYMS": "Termek",
       "ADMIN_CRAGS": "Sziklák (Crag → Szektor → Út)",
-      "ADMIN_SOON": "hamarosan",
       "GRADE_UNPARSED": "A nehézségi fokozat nem értelmezhető — nézd meg a skála súgót.",
       "DISCIPLINE": {
         "BOULDER": "Boulder",
@@ -818,6 +817,53 @@
         "FIELD_SECTOR": "Szektor / falszakasz",
         "DELETE_CONFIRM_TITLE": "Beltéri út törlése",
         "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd ezt a beltéri utat?"
+      },
+      "CRAG": {
+        "NEW": "Új szikla",
+        "EMPTY": "Még nincs szikla. Vegyél fel egyet.",
+        "NEW_TITLE": "Új szikla",
+        "EDIT_TITLE": "Szikla szerkesztése",
+        "FIELD_NAME": "Név",
+        "FIELD_LATITUDE": "Szélesség (lat)",
+        "FIELD_LONGITUDE": "Hosszúság (lng)",
+        "FIELD_ROCK_TYPE": "Alapértelmezett kőzet",
+        "DELETE_CONFIRM_TITLE": "Szikla törlése",
+        "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd ezt a sziklát? A szektorok, utak és boulderek megmaradnak, de már nem hivatkoznak élő sziklára."
+      },
+      "SECTOR": {
+        "LIST_TITLE": "Szektorok",
+        "EMPTY": "Még nincs szektor.",
+        "NEW": "Új szektor",
+        "NEW_TITLE": "Új szektor",
+        "EDIT_TITLE": "Szektor szerkesztése",
+        "FIELD_NAME": "Név",
+        "FIELD_ASPECT": "Alapértelmezett fekvés",
+        "DELETE_CONFIRM_TITLE": "Szektor törlése",
+        "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd ezt a szektort?"
+      },
+      "ROUTE": {
+        "LIST_TITLE": "Utak (köteles)",
+        "EMPTY": "Még nincs út.",
+        "NEW_TITLE": "Új út",
+        "EDIT_TITLE": "Út szerkesztése",
+        "FIELD_NAME": "Név",
+        "FIELD_GRADE": "Kalauz-fokozat",
+        "FIELD_LENGTH": "Hossz (m)",
+        "FIELD_PITCHES": "Kötélhosszak száma",
+        "FIELD_ROCK_TYPE": "Kőzet (felülírja a szektor/szikla alapot)",
+        "FIELD_ASPECT": "Fekvés (felülírja a szektor alapot)",
+        "DELETE_CONFIRM_TITLE": "Út törlése",
+        "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd ezt az utat?"
+      },
+      "PROBLEM": {
+        "LIST_TITLE": "Boulderek (opcionális)",
+        "EMPTY": "Még nincs boulder.",
+        "NEW_TITLE": "Új boulder",
+        "EDIT_TITLE": "Boulder szerkesztése",
+        "FIELD_NAME": "Név",
+        "FIELD_GRADE": "Kalauz-fokozat",
+        "DELETE_CONFIRM_TITLE": "Boulder törlése",
+        "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd ezt a bouldert?"
       }
     }
   }

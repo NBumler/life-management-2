@@ -26,6 +26,10 @@ import { BikeRideLogsService } from '../../api/api/bikeRideLogs.service';
 import { ClimbingGymsService } from '../../api/api/climbingGyms.service';
 import { ClimbingGymColorBandsService } from '../../api/api/climbingGymColorBands.service';
 import { ClimbingIndoorRoutesService } from '../../api/api/climbingIndoorRoutes.service';
+import { ClimbingCragsService } from '../../api/api/climbingCrags.service';
+import { ClimbingSectorsService } from '../../api/api/climbingSectors.service';
+import { ClimbingRoutesService } from '../../api/api/climbingRoutes.service';
+import { ClimbingBoulderProblemsService } from '../../api/api/climbingBoulderProblems.service';
 import { SyncService } from '../../api/api/sync.service';
 import { WeeklyPlansService } from '../../api/api/weeklyPlans.service';
 import { WorkoutPlansService } from '../../api/api/workoutPlans.service';
@@ -57,6 +61,10 @@ import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { Gym } from '../../api/model/gym';
 import { GymColorBand } from '../../api/model/gymColorBand';
 import { IndoorRoute } from '../../api/model/indoorRoute';
+import { Crag } from '../../api/model/crag';
+import { Sector } from '../../api/model/sector';
+import { Route } from '../../api/model/route';
+import { BoulderProblem } from '../../api/model/boulderProblem';
 import { SyncChangeItem } from '../../api/model/syncChangeItem';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeeklyPlan } from '../../api/model/weeklyPlan';
@@ -117,6 +125,14 @@ import {
   gymColorBandTombstoneTask,
   indoorRouteServerApplyTask,
   indoorRouteTombstoneTask,
+  cragServerApplyTask,
+  cragTombstoneTask,
+  sectorServerApplyTask,
+  sectorTombstoneTask,
+  routeServerApplyTask,
+  routeTombstoneTask,
+  boulderProblemServerApplyTask,
+  boulderProblemTombstoneTask,
   weeklyPlanServerApplyTask,
   weeklyPlanSlotServerApplyTask,
   weeklyPlanSlotTombstoneTask,
@@ -182,6 +198,10 @@ export class SyncEngineService {
   private readonly gymsApi = inject(ClimbingGymsService);
   private readonly gymColorBandsApi = inject(ClimbingGymColorBandsService);
   private readonly indoorRoutesApi = inject(ClimbingIndoorRoutesService);
+  private readonly cragsApi = inject(ClimbingCragsService);
+  private readonly sectorsApi = inject(ClimbingSectorsService);
+  private readonly routesApi = inject(ClimbingRoutesService);
+  private readonly boulderProblemsApi = inject(ClimbingBoulderProblemsService);
   private readonly syncApi = inject(SyncService);
   private readonly authSession = inject(AuthSessionService);
   private readonly offlineQueue = inject(OfflineQueueService);
@@ -394,6 +414,46 @@ export class SyncEngineService {
       try {
         const dto = await firstValueFrom(this.indoorRoutesApi.getClimbingIndoorRoute(row.id));
         await this.db.executeTransaction([indoorRouteServerApplyTask(dto)]);
+      } catch {
+        // same as above
+      }
+    }
+
+    const staleCrags = await this.db.query<{ id: string }>('SELECT id FROM crag WHERE _needs_refetch = 1');
+    for (const row of staleCrags) {
+      try {
+        const dto = await firstValueFrom(this.cragsApi.getClimbingCrag(row.id));
+        await this.db.executeTransaction([cragServerApplyTask(dto)]);
+      } catch {
+        // same as above
+      }
+    }
+
+    const staleSectors = await this.db.query<{ id: string }>('SELECT id FROM sector WHERE _needs_refetch = 1');
+    for (const row of staleSectors) {
+      try {
+        const dto = await firstValueFrom(this.sectorsApi.getClimbingSector(row.id));
+        await this.db.executeTransaction([sectorServerApplyTask(dto)]);
+      } catch {
+        // same as above
+      }
+    }
+
+    const staleRoutes = await this.db.query<{ id: string }>('SELECT id FROM route WHERE _needs_refetch = 1');
+    for (const row of staleRoutes) {
+      try {
+        const dto = await firstValueFrom(this.routesApi.getClimbingRoute(row.id));
+        await this.db.executeTransaction([routeServerApplyTask(dto)]);
+      } catch {
+        // same as above
+      }
+    }
+
+    const staleBoulderProblems = await this.db.query<{ id: string }>('SELECT id FROM boulder_problem WHERE _needs_refetch = 1');
+    for (const row of staleBoulderProblems) {
+      try {
+        const dto = await firstValueFrom(this.boulderProblemsApi.getClimbingBoulderProblem(row.id));
+        await this.db.executeTransaction([boulderProblemServerApplyTask(dto)]);
       } catch {
         // same as above
       }
@@ -680,6 +740,18 @@ export class SyncEngineService {
     if (item.entityType === 'IndoorRoute') {
       return [indoorRouteServerApplyTask(body as IndoorRoute)];
     }
+    if (item.entityType === 'Crag') {
+      return [cragServerApplyTask(body as Crag)];
+    }
+    if (item.entityType === 'Sector') {
+      return [sectorServerApplyTask(body as Sector)];
+    }
+    if (item.entityType === 'Route') {
+      return [routeServerApplyTask(body as Route)];
+    }
+    if (item.entityType === 'BoulderProblem') {
+      return [boulderProblemServerApplyTask(body as BoulderProblem)];
+    }
     if (item.entityType === 'Exercise') {
       return [exerciseServerApplyTask(body as Exercise)];
     }
@@ -896,6 +968,16 @@ export class SyncEngineService {
       await this.db.executeTransaction([gymColorBandTombstoneTask(item.targetEntityId, null, now)]);
     } else if (item.entityType === 'IndoorRoute') {
       await this.db.executeTransaction([indoorRouteTombstoneTask(item.targetEntityId, null, now)]);
+    } else if (item.entityType === 'Crag') {
+      // documentation/Subfeatures/Outdoor boulder admin.md "Soft delete": no cascade — a deleted
+      // crag's sectors / routes / boulder problems keep their own rows and tombstones.
+      await this.db.executeTransaction([cragTombstoneTask(item.targetEntityId, null, now)]);
+    } else if (item.entityType === 'Sector') {
+      await this.db.executeTransaction([sectorTombstoneTask(item.targetEntityId, null, now)]);
+    } else if (item.entityType === 'Route') {
+      await this.db.executeTransaction([routeTombstoneTask(item.targetEntityId, null, now)]);
+    } else if (item.entityType === 'BoulderProblem') {
+      await this.db.executeTransaction([boulderProblemTombstoneTask(item.targetEntityId, null, now)]);
     } else if (item.entityType === 'Exercise') {
       await this.db.executeTransaction([exerciseTombstoneTask(item.targetEntityId, null, now)]);
     } else if (item.entityType === 'HouseholdRoom') {
@@ -1168,6 +1250,30 @@ export class SyncEngineService {
         return [indoorRouteServerApplyTask(change.data as IndoorRoute)];
       }
       return [indoorRouteTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
+    }
+    if (change.entityType === 'Crag') {
+      if (!change.deleted) {
+        return [cragServerApplyTask(change.data as Crag)];
+      }
+      return [cragTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
+    }
+    if (change.entityType === 'Sector') {
+      if (!change.deleted) {
+        return [sectorServerApplyTask(change.data as Sector)];
+      }
+      return [sectorTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
+    }
+    if (change.entityType === 'Route') {
+      if (!change.deleted) {
+        return [routeServerApplyTask(change.data as Route)];
+      }
+      return [routeTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
+    }
+    if (change.entityType === 'BoulderProblem') {
+      if (!change.deleted) {
+        return [boulderProblemServerApplyTask(change.data as BoulderProblem)];
+      }
+      return [boulderProblemTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
     }
     if (change.entityType === 'Exercise') {
       if (!change.deleted) {

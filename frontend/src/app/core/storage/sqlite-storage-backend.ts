@@ -21,6 +21,10 @@ import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { Gym } from '../../api/model/gym';
 import { GymColorBand } from '../../api/model/gymColorBand';
 import { IndoorRoute } from '../../api/model/indoorRoute';
+import { Crag } from '../../api/model/crag';
+import { Sector } from '../../api/model/sector';
+import { Route } from '../../api/model/route';
+import { BoulderProblem } from '../../api/model/boulderProblem';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeeklyPlan } from '../../api/model/weeklyPlan';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
@@ -52,6 +56,10 @@ import {
   GymRow,
   GymColorBandRow,
   IndoorRouteRow,
+  CragRow,
+  SectorRow,
+  RouteRow,
+  BoulderProblemRow,
   WeightHistoryRow,
   calendarEventLocalWriteTask,
   calendarEventRowToDto,
@@ -109,6 +117,14 @@ import {
   gymColorBandRowToDto,
   indoorRouteLocalWriteTask,
   indoorRouteRowToDto,
+  cragLocalWriteTask,
+  cragRowToDto,
+  sectorLocalWriteTask,
+  sectorRowToDto,
+  routeLocalWriteTask,
+  routeRowToDto,
+  boulderProblemLocalWriteTask,
+  boulderProblemRowToDto,
   weightHistoryLocalWriteTask,
   weightHistoryRowToDto,
   WeeklyPlanRow,
@@ -417,7 +433,7 @@ export class SqliteStorageBackend implements StorageBackend {
 
   /** documentation/Architektúra/Backend-offline first.md §10 "Függőségi láncok": ids among `candidateIds` whose row hasn't reached the server yet. */
   private async findLocalOnlyIds(
-    table: 'gear_item' | 'household_room' | 'food' | 'recipe' | 'exercise_catalog' | 'workout_plan' | 'gym',
+    table: 'gear_item' | 'household_room' | 'food' | 'recipe' | 'exercise_catalog' | 'workout_plan' | 'gym' | 'crag' | 'sector',
     candidateIds: string[],
   ): Promise<string[]> {
     if (candidateIds.length === 0) {
@@ -935,6 +951,215 @@ export class SqliteStorageBackend implements StorageBackend {
   private async readIndoorRoute(id: string): Promise<IndoorRoute> {
     const rows = await this.db.query<IndoorRouteRow>('SELECT * FROM indoor_route WHERE id = ?', [id]);
     return indoorRouteRowToDto(rows[0]);
+  }
+
+  async listCrags(): Promise<Crag[]> {
+    const rows = await this.db.query<CragRow>('SELECT * FROM crag WHERE deleted = 0 ORDER BY name COLLATE NOCASE');
+    return rows.map(cragRowToDto);
+  }
+
+  async upsertCrag(crag: Crag): Promise<Crag> {
+    const userId = this.requireUserId();
+    const existing = await this.db.query('SELECT 1 FROM crag WHERE id = ?', [crag.id]);
+    const isNew = existing.length === 0;
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: isNew ? 'POST' : 'PUT',
+      url: isNew ? '/api/climbing/crags' : `/api/climbing/crags/${crag.id}`,
+      payload: crag,
+      entityType: 'Crag',
+      targetEntityId: crag.id,
+    });
+    await this.db.executeTransaction([cragLocalWriteTask(crag), ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    return this.readCrag(crag.id);
+  }
+
+  async deleteCrag(id: string): Promise<Crag> {
+    const userId = this.requireUserId();
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: 'DELETE',
+      url: `/api/climbing/crags/${id}`,
+      payload: null,
+      entityType: 'Crag',
+      targetEntityId: id,
+    });
+    const entityTask: SqlTask = enqueue.hardRemoveLocalEntity
+      ? { statement: 'DELETE FROM crag WHERE id = ?', values: [id] }
+      : {
+          statement: 'UPDATE crag SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?',
+          values: [new Date().toISOString(), id],
+        };
+    await this.db.executeTransaction([entityTask, ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    if (enqueue.hardRemoveLocalEntity) {
+      return { id, name: '', deleted: true };
+    }
+    return this.readCrag(id);
+  }
+
+  private async readCrag(id: string): Promise<Crag> {
+    const rows = await this.db.query<CragRow>('SELECT * FROM crag WHERE id = ?', [id]);
+    return cragRowToDto(rows[0]);
+  }
+
+  async listSectors(): Promise<Sector[]> {
+    const rows = await this.db.query<SectorRow>('SELECT * FROM sector WHERE deleted = 0 ORDER BY name COLLATE NOCASE');
+    return rows.map(sectorRowToDto);
+  }
+
+  async upsertSector(sector: Sector): Promise<Sector> {
+    const userId = this.requireUserId();
+    const existing = await this.db.query('SELECT 1 FROM sector WHERE id = ?', [sector.id]);
+    const isNew = existing.length === 0;
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: isNew ? 'POST' : 'PUT',
+      url: isNew ? '/api/climbing/sectors' : `/api/climbing/sectors/${sector.id}`,
+      payload: sector,
+      entityType: 'Sector',
+      targetEntityId: sector.id,
+      // documentation/Architektúra/Backend-offline first.md §10 "Függőségi láncok": a sector created
+      // right after an inline new crag must wait for that crag's own POST to land first.
+      dependsOn: await this.findLocalOnlyIds('crag', [sector.cragId]),
+    });
+    await this.db.executeTransaction([sectorLocalWriteTask(sector), ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    return this.readSector(sector.id);
+  }
+
+  async deleteSector(id: string): Promise<Sector> {
+    const userId = this.requireUserId();
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: 'DELETE',
+      url: `/api/climbing/sectors/${id}`,
+      payload: null,
+      entityType: 'Sector',
+      targetEntityId: id,
+    });
+    const entityTask: SqlTask = enqueue.hardRemoveLocalEntity
+      ? { statement: 'DELETE FROM sector WHERE id = ?', values: [id] }
+      : {
+          statement: 'UPDATE sector SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?',
+          values: [new Date().toISOString(), id],
+        };
+    await this.db.executeTransaction([entityTask, ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    if (enqueue.hardRemoveLocalEntity) {
+      return { id, cragId: '', name: '', deleted: true };
+    }
+    return this.readSector(id);
+  }
+
+  private async readSector(id: string): Promise<Sector> {
+    const rows = await this.db.query<SectorRow>('SELECT * FROM sector WHERE id = ?', [id]);
+    return sectorRowToDto(rows[0]);
+  }
+
+  async listRoutes(): Promise<Route[]> {
+    const rows = await this.db.query<RouteRow>('SELECT * FROM route WHERE deleted = 0 ORDER BY name COLLATE NOCASE');
+    return rows.map(routeRowToDto);
+  }
+
+  async upsertRoute(route: Route): Promise<Route> {
+    const userId = this.requireUserId();
+    const existing = await this.db.query('SELECT 1 FROM route WHERE id = ?', [route.id]);
+    const isNew = existing.length === 0;
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: isNew ? 'POST' : 'PUT',
+      url: isNew ? '/api/climbing/routes' : `/api/climbing/routes/${route.id}`,
+      payload: route,
+      entityType: 'Route',
+      targetEntityId: route.id,
+      dependsOn: await this.findLocalOnlyIds('sector', [route.sectorId]),
+    });
+    await this.db.executeTransaction([routeLocalWriteTask(route), ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    return this.readRoute(route.id);
+  }
+
+  async deleteRoute(id: string): Promise<Route> {
+    const userId = this.requireUserId();
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: 'DELETE',
+      url: `/api/climbing/routes/${id}`,
+      payload: null,
+      entityType: 'Route',
+      targetEntityId: id,
+    });
+    const entityTask: SqlTask = enqueue.hardRemoveLocalEntity
+      ? { statement: 'DELETE FROM route WHERE id = ?', values: [id] }
+      : {
+          statement: 'UPDATE route SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?',
+          values: [new Date().toISOString(), id],
+        };
+    await this.db.executeTransaction([entityTask, ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    if (enqueue.hardRemoveLocalEntity) {
+      return { id, sectorId: '', name: '', guidebookGrade: '', deleted: true };
+    }
+    return this.readRoute(id);
+  }
+
+  private async readRoute(id: string): Promise<Route> {
+    const rows = await this.db.query<RouteRow>('SELECT * FROM route WHERE id = ?', [id]);
+    return routeRowToDto(rows[0]);
+  }
+
+  async listBoulderProblems(): Promise<BoulderProblem[]> {
+    const rows = await this.db.query<BoulderProblemRow>('SELECT * FROM boulder_problem WHERE deleted = 0 ORDER BY name COLLATE NOCASE');
+    return rows.map(boulderProblemRowToDto);
+  }
+
+  async upsertBoulderProblem(problem: BoulderProblem): Promise<BoulderProblem> {
+    const userId = this.requireUserId();
+    const existing = await this.db.query('SELECT 1 FROM boulder_problem WHERE id = ?', [problem.id]);
+    const isNew = existing.length === 0;
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: isNew ? 'POST' : 'PUT',
+      url: isNew ? '/api/climbing/boulder-problems' : `/api/climbing/boulder-problems/${problem.id}`,
+      payload: problem,
+      entityType: 'BoulderProblem',
+      targetEntityId: problem.id,
+      dependsOn: await this.findLocalOnlyIds('sector', [problem.sectorId]),
+    });
+    await this.db.executeTransaction([boulderProblemLocalWriteTask(problem), ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    return this.readBoulderProblem(problem.id);
+  }
+
+  async deleteBoulderProblem(id: string): Promise<BoulderProblem> {
+    const userId = this.requireUserId();
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: 'DELETE',
+      url: `/api/climbing/boulder-problems/${id}`,
+      payload: null,
+      entityType: 'BoulderProblem',
+      targetEntityId: id,
+    });
+    const entityTask: SqlTask = enqueue.hardRemoveLocalEntity
+      ? { statement: 'DELETE FROM boulder_problem WHERE id = ?', values: [id] }
+      : {
+          statement: 'UPDATE boulder_problem SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?',
+          values: [new Date().toISOString(), id],
+        };
+    await this.db.executeTransaction([entityTask, ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    if (enqueue.hardRemoveLocalEntity) {
+      return { id, sectorId: '', name: '', guidebookGrade: '', deleted: true };
+    }
+    return this.readBoulderProblem(id);
+  }
+
+  private async readBoulderProblem(id: string): Promise<BoulderProblem> {
+    const rows = await this.db.query<BoulderProblemRow>('SELECT * FROM boulder_problem WHERE id = ?', [id]);
+    return boulderProblemRowToDto(rows[0]);
   }
 
   async listExercises(): Promise<Exercise[]> {

@@ -1,0 +1,38 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/workout/climbing/admin"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ 'WORKOUT.CLIMBING.ADMIN_CRAGS' | translate }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="cta-row">
+    <ion-button expand="block" routerLink="new">{{ 'WORKOUT.CLIMBING.CRAG.NEW' | translate }}</ion-button>
+  </div>
+
+  @if (isEmpty()) {
+    <ion-list>
+      <ion-item>
+        <ion-label color="medium">{{ 'WORKOUT.CLIMBING.CRAG.EMPTY' | translate }}</ion-label>
+      </ion-item>
+    </ion-list>
+  } @else {
+    <ion-list>
+      @for (crag of crags(); track crag.id) {
+        <ion-item button [routerLink]="[crag.id]" detail="true">
+          <ion-label>
+            <h2>{{ crag.name }}</h2>
+            @if (crag.defaultRockType) {
+              <p>{{ crag.defaultRockType }}</p>
+            }
+          </ion-label>
+          @if (crag.latitude !== null && crag.latitude !== undefined && crag.longitude !== null && crag.longitude !== undefined) {
+            <ion-note slot="end">{{ crag.latitude }}, {{ crag.longitude }}</ion-note>
+          }
+        </ion-item>
+      }
+    </ion-list>
+  }
+</ion-content>

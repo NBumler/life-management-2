@@ -14,6 +14,10 @@ import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { Gym } from '../../api/model/gym';
 import { GymColorBand } from '../../api/model/gymColorBand';
 import { IndoorRoute } from '../../api/model/indoorRoute';
+import { Crag } from '../../api/model/crag';
+import { Sector } from '../../api/model/sector';
+import { Route } from '../../api/model/route';
+import { BoulderProblem } from '../../api/model/boulderProblem';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 import { normalizeName } from '../../shared/name-normalization';
@@ -38,6 +42,10 @@ import {
   GymRow,
   GymColorBandRow,
   IndoorRouteRow,
+  CragRow,
+  SectorRow,
+  RouteRow,
+  BoulderProblemRow,
   WeightHistoryRow,
   calendarEventLocalWriteTask,
   calendarEventRowToDto,
@@ -71,6 +79,14 @@ import {
   gymColorBandRowToDto,
   indoorRouteLocalWriteTask,
   indoorRouteRowToDto,
+  cragLocalWriteTask,
+  cragRowToDto,
+  sectorLocalWriteTask,
+  sectorRowToDto,
+  routeLocalWriteTask,
+  routeRowToDto,
+  boulderProblemLocalWriteTask,
+  boulderProblemRowToDto,
   weightHistoryLocalWriteTask,
   weightHistoryRowToDto,
 } from '../data/local-rows';
@@ -388,6 +404,31 @@ export class OutboxEntityRegistryService {
       currentPayload: rowLookup<IndoorRouteRow, unknown>('indoor_route', indoorRouteRowToDto),
       buildFixWriteTask: (payload) => indoorRouteLocalWriteTask(payload as unknown as IndoorRoute),
       // documentation/Subfeatures/Indoor köteles admin.md: the optional indoor-route catalogue has no uniqueness rule.
+      nameUniqueness: null,
+    },
+    Crag: {
+      table: 'crag',
+      currentPayload: rowLookup<CragRow, unknown>('crag', cragRowToDto),
+      buildFixWriteTask: (payload) => cragLocalWriteTask(payload as unknown as Crag),
+      // documentation/Subfeatures/Outdoor boulder admin.md: the location tree has no name-uniqueness rule.
+      nameUniqueness: null,
+    },
+    Sector: {
+      table: 'sector',
+      currentPayload: rowLookup<SectorRow, unknown>('sector', sectorRowToDto),
+      buildFixWriteTask: (payload) => sectorLocalWriteTask(payload as unknown as Sector),
+      nameUniqueness: null,
+    },
+    Route: {
+      table: 'route',
+      currentPayload: rowLookup<RouteRow, unknown>('route', routeRowToDto),
+      buildFixWriteTask: (payload) => routeLocalWriteTask(payload as unknown as Route),
+      nameUniqueness: null,
+    },
+    BoulderProblem: {
+      table: 'boulder_problem',
+      currentPayload: rowLookup<BoulderProblemRow, unknown>('boulder_problem', boulderProblemRowToDto),
+      buildFixWriteTask: (payload) => boulderProblemLocalWriteTask(payload as unknown as BoulderProblem),
       nameUniqueness: null,
     },
     ShoppingList: {

@@ -22,6 +22,10 @@ import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { Gym } from '../../api/model/gym';
 import { GymColorBand } from '../../api/model/gymColorBand';
 import { IndoorRoute } from '../../api/model/indoorRoute';
+import { Crag } from '../../api/model/crag';
+import { Sector } from '../../api/model/sector';
+import { Route } from '../../api/model/route';
+import { BoulderProblem } from '../../api/model/boulderProblem';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 import { WeeklyPlan } from '../../api/model/weeklyPlan';
@@ -2020,6 +2024,333 @@ export function indoorRouteTombstoneTask(id: string, deletedAt: string | null, u
     statement: `
       INSERT INTO indoor_route (id, gym_id, name, discipline, grade, absolute_difficulty_index, updated_at, deleted, deleted_at, _dirty, _local_only)
       VALUES (?, '', '', 'BOULDER', '', 0, ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+// ---------------------------------------------------------------------------
+// documentation/Subfeatures/Outdoor boulder admin.md + Outdoor köteles admin.md — outdoor venue
+// master (Mászónapló M3b): the shared location tree Crag → Sector → (Route | BoulderProblem), four
+// flat user-owned CRUD tables, no name-uniqueness.
+// ---------------------------------------------------------------------------
+
+export interface CragRow {
+  id: string;
+  name: string;
+  latitude: number | null;
+  longitude: number | null;
+  default_rock_type: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+export function cragRowToDto(row: CragRow): Crag {
+  return {
+    id: row.id,
+    name: row.name,
+    latitude: row.latitude,
+    longitude: row.longitude,
+    defaultRockType: row.default_rock_type,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+export function cragLocalWriteTask(dto: Crag): SqlTask {
+  return {
+    statement: `
+      INSERT INTO crag (id, name, latitude, longitude, default_rock_type, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET
+        name = excluded.name, latitude = excluded.latitude, longitude = excluded.longitude,
+        default_rock_type = excluded.default_rock_type, _dirty = 1`,
+    values: [dto.id, dto.name, dto.latitude ?? null, dto.longitude ?? null, dto.defaultRockType ?? null],
+  };
+}
+
+export function cragServerApplyTask(dto: Crag): SqlTask {
+  return {
+    statement: `
+      INSERT INTO crag (id, name, latitude, longitude, default_rock_type, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        name = excluded.name, latitude = excluded.latitude, longitude = excluded.longitude,
+        default_rock_type = excluded.default_rock_type, created_at = excluded.created_at, updated_at = excluded.updated_at,
+        deleted = excluded.deleted, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE crag._dirty = 0`,
+    values: [
+      dto.id,
+      dto.name,
+      dto.latitude ?? null,
+      dto.longitude ?? null,
+      dto.defaultRockType ?? null,
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function cragTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO crag (id, name, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '', ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+export interface SectorRow {
+  id: string;
+  crag_id: string;
+  name: string;
+  default_aspect: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+export function sectorRowToDto(row: SectorRow): Sector {
+  return {
+    id: row.id,
+    cragId: row.crag_id,
+    name: row.name,
+    defaultAspect: row.default_aspect,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+export function sectorLocalWriteTask(dto: Sector): SqlTask {
+  return {
+    statement: `
+      INSERT INTO sector (id, crag_id, name, default_aspect, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET
+        crag_id = excluded.crag_id, name = excluded.name, default_aspect = excluded.default_aspect, _dirty = 1`,
+    values: [dto.id, dto.cragId, dto.name, dto.defaultAspect ?? null],
+  };
+}
+
+export function sectorServerApplyTask(dto: Sector): SqlTask {
+  return {
+    statement: `
+      INSERT INTO sector (id, crag_id, name, default_aspect, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        crag_id = excluded.crag_id, name = excluded.name, default_aspect = excluded.default_aspect,
+        created_at = excluded.created_at, updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at,
+        _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE sector._dirty = 0`,
+    values: [
+      dto.id,
+      dto.cragId,
+      dto.name,
+      dto.defaultAspect ?? null,
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function sectorTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO sector (id, crag_id, name, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '', '', ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+export interface RouteRow {
+  id: string;
+  sector_id: string;
+  name: string;
+  guidebook_grade: string;
+  length_in_meters: number | null;
+  total_pitches: number | null;
+  rock_type: string | null;
+  aspect: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+export function routeRowToDto(row: RouteRow): Route {
+  return {
+    id: row.id,
+    sectorId: row.sector_id,
+    name: row.name,
+    guidebookGrade: row.guidebook_grade,
+    lengthInMeters: row.length_in_meters,
+    totalPitches: row.total_pitches,
+    rockType: row.rock_type,
+    aspect: row.aspect,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+export function routeLocalWriteTask(dto: Route): SqlTask {
+  return {
+    statement: `
+      INSERT INTO route (id, sector_id, name, guidebook_grade, length_in_meters, total_pitches, rock_type, aspect, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET
+        sector_id = excluded.sector_id, name = excluded.name, guidebook_grade = excluded.guidebook_grade,
+        length_in_meters = excluded.length_in_meters, total_pitches = excluded.total_pitches,
+        rock_type = excluded.rock_type, aspect = excluded.aspect, _dirty = 1`,
+    values: [
+      dto.id,
+      dto.sectorId,
+      dto.name,
+      dto.guidebookGrade,
+      dto.lengthInMeters ?? null,
+      dto.totalPitches ?? null,
+      dto.rockType ?? null,
+      dto.aspect ?? null,
+    ],
+  };
+}
+
+export function routeServerApplyTask(dto: Route): SqlTask {
+  return {
+    statement: `
+      INSERT INTO route (id, sector_id, name, guidebook_grade, length_in_meters, total_pitches, rock_type, aspect, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        sector_id = excluded.sector_id, name = excluded.name, guidebook_grade = excluded.guidebook_grade,
+        length_in_meters = excluded.length_in_meters, total_pitches = excluded.total_pitches,
+        rock_type = excluded.rock_type, aspect = excluded.aspect,
+        created_at = excluded.created_at, updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at,
+        _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE route._dirty = 0`,
+    values: [
+      dto.id,
+      dto.sectorId,
+      dto.name,
+      dto.guidebookGrade,
+      dto.lengthInMeters ?? null,
+      dto.totalPitches ?? null,
+      dto.rockType ?? null,
+      dto.aspect ?? null,
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function routeTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO route (id, sector_id, name, guidebook_grade, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '', '', '', ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+export interface BoulderProblemRow {
+  id: string;
+  sector_id: string;
+  name: string;
+  guidebook_grade: string;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+export function boulderProblemRowToDto(row: BoulderProblemRow): BoulderProblem {
+  return {
+    id: row.id,
+    sectorId: row.sector_id,
+    name: row.name,
+    guidebookGrade: row.guidebook_grade,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+export function boulderProblemLocalWriteTask(dto: BoulderProblem): SqlTask {
+  return {
+    statement: `
+      INSERT INTO boulder_problem (id, sector_id, name, guidebook_grade, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET
+        sector_id = excluded.sector_id, name = excluded.name, guidebook_grade = excluded.guidebook_grade, _dirty = 1`,
+    values: [dto.id, dto.sectorId, dto.name, dto.guidebookGrade],
+  };
+}
+
+export function boulderProblemServerApplyTask(dto: BoulderProblem): SqlTask {
+  return {
+    statement: `
+      INSERT INTO boulder_problem (id, sector_id, name, guidebook_grade, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        sector_id = excluded.sector_id, name = excluded.name, guidebook_grade = excluded.guidebook_grade,
+        created_at = excluded.created_at, updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at,
+        _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE boulder_problem._dirty = 0`,
+    values: [
+      dto.id,
+      dto.sectorId,
+      dto.name,
+      dto.guidebookGrade,
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function boulderProblemTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO boulder_problem (id, sector_id, name, guidebook_grade, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '', '', '', ?, 1, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
     values: [id, updatedAt, deletedAt],
   };

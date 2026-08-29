@@ -21,6 +21,10 @@ import { BikeRideLogsService } from '../../api/api/bikeRideLogs.service';
 import { ClimbingGymsService } from '../../api/api/climbingGyms.service';
 import { ClimbingGymColorBandsService } from '../../api/api/climbingGymColorBands.service';
 import { ClimbingIndoorRoutesService } from '../../api/api/climbingIndoorRoutes.service';
+import { ClimbingCragsService } from '../../api/api/climbingCrags.service';
+import { ClimbingSectorsService } from '../../api/api/climbingSectors.service';
+import { ClimbingRoutesService } from '../../api/api/climbingRoutes.service';
+import { ClimbingBoulderProblemsService } from '../../api/api/climbingBoulderProblems.service';
 import { WeeklyPlansService } from '../../api/api/weeklyPlans.service';
 import { WorkoutPlansService } from '../../api/api/workoutPlans.service';
 import { WorkoutSessionsService } from '../../api/api/workoutSessions.service';
@@ -45,6 +49,10 @@ import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { Gym } from '../../api/model/gym';
 import { GymColorBand } from '../../api/model/gymColorBand';
 import { IndoorRoute } from '../../api/model/indoorRoute';
+import { Crag } from '../../api/model/crag';
+import { Sector } from '../../api/model/sector';
+import { Route } from '../../api/model/route';
+import { BoulderProblem } from '../../api/model/boulderProblem';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeeklyPlan } from '../../api/model/weeklyPlan';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
@@ -97,6 +105,10 @@ export class HttpStorageBackend implements StorageBackend {
   private readonly gymsApi = inject(ClimbingGymsService);
   private readonly gymColorBandsApi = inject(ClimbingGymColorBandsService);
   private readonly indoorRoutesApi = inject(ClimbingIndoorRoutesService);
+  private readonly cragsApi = inject(ClimbingCragsService);
+  private readonly sectorsApi = inject(ClimbingSectorsService);
+  private readonly routesApi = inject(ClimbingRoutesService);
+  private readonly boulderProblemsApi = inject(ClimbingBoulderProblemsService);
   private readonly authSession = inject(AuthSessionService);
 
   async getProfile(): Promise<UserProfile | null> {
@@ -568,6 +580,54 @@ export class HttpStorageBackend implements StorageBackend {
 
   deleteIndoorRoute(id: string): Promise<IndoorRoute> {
     return firstValueFrom(this.indoorRoutesApi.deleteClimbingIndoorRoute(id));
+  }
+
+  listCrags(): Promise<Crag[]> {
+    return firstValueFrom(this.cragsApi.listClimbingCrags());
+  }
+
+  upsertCrag(crag: Crag): Promise<Crag> {
+    return firstValueFrom(this.cragsApi.createClimbingCrag(crag));
+  }
+
+  deleteCrag(id: string): Promise<Crag> {
+    return firstValueFrom(this.cragsApi.deleteClimbingCrag(id));
+  }
+
+  listSectors(): Promise<Sector[]> {
+    return firstValueFrom(this.sectorsApi.listClimbingSectors());
+  }
+
+  upsertSector(sector: Sector): Promise<Sector> {
+    return firstValueFrom(this.sectorsApi.createClimbingSector(sector));
+  }
+
+  deleteSector(id: string): Promise<Sector> {
+    return firstValueFrom(this.sectorsApi.deleteClimbingSector(id));
+  }
+
+  listRoutes(): Promise<Route[]> {
+    return firstValueFrom(this.routesApi.listClimbingRoutes());
+  }
+
+  upsertRoute(route: Route): Promise<Route> {
+    return firstValueFrom(this.routesApi.createClimbingRoute(route));
+  }
+
+  deleteRoute(id: string): Promise<Route> {
+    return firstValueFrom(this.routesApi.deleteClimbingRoute(id));
+  }
+
+  listBoulderProblems(): Promise<BoulderProblem[]> {
+    return firstValueFrom(this.boulderProblemsApi.listClimbingBoulderProblems());
+  }
+
+  upsertBoulderProblem(problem: BoulderProblem): Promise<BoulderProblem> {
+    return firstValueFrom(this.boulderProblemsApi.createClimbingBoulderProblem(problem));
+  }
+
+  deleteBoulderProblem(id: string): Promise<BoulderProblem> {
+    return firstValueFrom(this.boulderProblemsApi.deleteClimbingBoulderProblem(id));
   }
 
   listMeals(): Promise<Meal[]> {

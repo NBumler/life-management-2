@@ -1,0 +1,88 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button [defaultHref]="'/tabs/workout/climbing/admin/crags/' + cragId()"></ion-back-button>
+    </ion-buttons>
+    <ion-title>
+      {{ (sectorId() ? 'WORKOUT.CLIMBING.SECTOR.EDIT_TITLE' : 'WORKOUT.CLIMBING.SECTOR.NEW_TITLE') | translate }}
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button [strong]="true" (click)="save()">{{ 'COMMON.SAVE' | translate }}</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <form [formGroup]="form">
+    <ion-list>
+      <ion-item>
+        <ion-input
+          formControlName="name"
+          [label]="'WORKOUT.CLIMBING.SECTOR.FIELD_NAME' | translate"
+          label-placement="stacked"
+        ></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input
+          formControlName="defaultAspect"
+          [label]="'WORKOUT.CLIMBING.SECTOR.FIELD_ASPECT' | translate"
+          label-placement="stacked"
+        ></ion-input>
+      </ion-item>
+    </ion-list>
+
+    @if (sectorId()) {
+      <ion-list>
+        <ion-list-header>
+          {{ 'WORKOUT.CLIMBING.ROUTE.LIST_TITLE' | translate }}
+          <ion-button fill="clear" size="small" routerLink="routes/new">
+            <ion-icon slot="icon-only" name="add-outline"></ion-icon>
+          </ion-button>
+        </ion-list-header>
+        @for (r of routes(); track r.id) {
+          <ion-item button [routerLink]="['routes', r.id]" detail="true">
+            <ion-label>
+              <h2>{{ r.name }}</h2>
+              <p>
+                {{ r.guidebookGrade }}@if (r.lengthInMeters) { · {{ r.lengthInMeters }}m }@if (r.totalPitches) { · {{ r.totalPitches }}p }
+              </p>
+            </ion-label>
+          </ion-item>
+        }
+        @if (routes().length === 0) {
+          <ion-item lines="none">
+            <ion-note color="medium">{{ 'WORKOUT.CLIMBING.ROUTE.EMPTY' | translate }}</ion-note>
+          </ion-item>
+        }
+      </ion-list>
+
+      <ion-list>
+        <ion-list-header>
+          {{ 'WORKOUT.CLIMBING.PROBLEM.LIST_TITLE' | translate }}
+          <ion-button fill="clear" size="small" routerLink="problems/new">
+            <ion-icon slot="icon-only" name="add-outline"></ion-icon>
+          </ion-button>
+        </ion-list-header>
+        @for (p of problems(); track p.id) {
+          <ion-item button [routerLink]="['problems', p.id]" detail="true">
+            <ion-label>
+              <h2>{{ p.name }}</h2>
+              <p>{{ p.guidebookGrade }}</p>
+            </ion-label>
+          </ion-item>
+        }
+        @if (problems().length === 0) {
+          <ion-item lines="none">
+            <ion-note color="medium">{{ 'WORKOUT.CLIMBING.PROBLEM.EMPTY' | translate }}</ion-note>
+          </ion-item>
+        }
+      </ion-list>
+
+      <div class="cta-row">
+        <ion-button expand="block" color="danger" fill="outline" (click)="delete()">
+          {{ 'COMMON.DELETE' | translate }}
+        </ion-button>
+      </div>
+    }
+  </form>
+</ion-content>

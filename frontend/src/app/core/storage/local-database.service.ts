@@ -768,7 +768,80 @@ const SCHEMA_V20_STATEMENTS: string[] = [
   `CREATE INDEX IF NOT EXISTS idx_indoor_route_gym_id ON indoor_route (gym_id)`,
 ];
 
-const SCHEMA_VERSION = 20;
+/**
+ * documentation/Subfeatures/Outdoor boulder admin.md + Outdoor köteles admin.md — the outdoor venue
+ * master: the shared location tree `crag` → `sector` → (`route` | `boulder_problem`), all user-owned,
+ * no name-uniqueness (the same crag/route name may recur in different places).
+ */
+const SCHEMA_V21_STATEMENTS: string[] = [
+  `CREATE TABLE IF NOT EXISTS crag (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    latitude REAL,
+    longitude REAL,
+    default_rock_type TEXT,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_crag_name ON crag (name COLLATE NOCASE)`,
+  `CREATE TABLE IF NOT EXISTS sector (
+    id TEXT PRIMARY KEY,
+    crag_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    default_aspect TEXT,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_sector_crag_id ON sector (crag_id)`,
+  `CREATE TABLE IF NOT EXISTS route (
+    id TEXT PRIMARY KEY,
+    sector_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    guidebook_grade TEXT NOT NULL,
+    length_in_meters REAL,
+    total_pitches INTEGER,
+    rock_type TEXT,
+    aspect TEXT,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_route_sector_id ON route (sector_id)`,
+  `CREATE TABLE IF NOT EXISTS boulder_problem (
+    id TEXT PRIMARY KEY,
+    sector_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    guidebook_grade TEXT NOT NULL,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_boulder_problem_sector_id ON boulder_problem (sector_id)`,
+];
+
+const SCHEMA_VERSION = 21;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -791,7 +864,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 17, statements: SCHEMA_V17_STATEMENTS },
   { toVersion: 18, statements: SCHEMA_V18_STATEMENTS },
   { toVersion: 19, statements: SCHEMA_V19_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V20_STATEMENTS },
+  { toVersion: 20, statements: SCHEMA_V20_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V21_STATEMENTS },
 ];
 
 export interface SqlTask {

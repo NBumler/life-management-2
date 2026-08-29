@@ -1,0 +1,84 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/workout/climbing/admin/crags"></ion-back-button>
+    </ion-buttons>
+    <ion-title>
+      {{ (cragId() ? 'WORKOUT.CLIMBING.CRAG.EDIT_TITLE' : 'WORKOUT.CLIMBING.CRAG.NEW_TITLE') | translate }}
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button [strong]="true" (click)="save()">{{ 'COMMON.SAVE' | translate }}</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <form [formGroup]="form">
+    <ion-list>
+      <ion-item>
+        <ion-input
+          formControlName="name"
+          [label]="'WORKOUT.CLIMBING.CRAG.FIELD_NAME' | translate"
+          label-placement="stacked"
+        ></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input
+          type="number"
+          inputmode="decimal"
+          formControlName="latitude"
+          [label]="'WORKOUT.CLIMBING.CRAG.FIELD_LATITUDE' | translate"
+          label-placement="stacked"
+        ></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input
+          type="number"
+          inputmode="decimal"
+          formControlName="longitude"
+          [label]="'WORKOUT.CLIMBING.CRAG.FIELD_LONGITUDE' | translate"
+          label-placement="stacked"
+        ></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input
+          formControlName="defaultRockType"
+          [label]="'WORKOUT.CLIMBING.CRAG.FIELD_ROCK_TYPE' | translate"
+          label-placement="stacked"
+        ></ion-input>
+      </ion-item>
+    </ion-list>
+
+    @if (cragId()) {
+      <ion-list>
+        <ion-list-header>
+          {{ 'WORKOUT.CLIMBING.SECTOR.LIST_TITLE' | translate }}
+          <ion-button fill="clear" size="small" routerLink="sectors/new">
+            <ion-icon slot="icon-only" name="add-outline"></ion-icon>
+          </ion-button>
+        </ion-list-header>
+        @for (sector of sectors(); track sector.id) {
+          <ion-item button [routerLink]="['sectors', sector.id]" detail="true">
+            <ion-label>
+              <h2>{{ sector.name }}</h2>
+              @if (sector.defaultAspect) {
+                <p>{{ sector.defaultAspect }}</p>
+              }
+            </ion-label>
+          </ion-item>
+        }
+        @if (sectors().length === 0) {
+          <ion-item lines="none">
+            <ion-note color="medium">{{ 'WORKOUT.CLIMBING.SECTOR.EMPTY' | translate }}</ion-note>
+          </ion-item>
+        }
+      </ion-list>
+
+      <div class="cta-row">
+        <ion-button expand="block" color="danger" fill="outline" (click)="delete()">
+          {{ 'COMMON.DELETE' | translate }}
+        </ion-button>
+      </div>
+    }
+  </form>
+</ion-content>
