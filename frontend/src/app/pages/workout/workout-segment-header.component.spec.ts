@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Router, provideRouter } from '@angular/router';
+import { Event as RouterEvent, NavigationEnd, Router, provideRouter } from '@angular/router';
 import { provideTranslateService } from '@ngx-translate/core';
+import { Subject } from 'rxjs';
 
 import { FeatureFlagKey, FeatureFlagsService } from '../../core/config/feature-flags.service';
 import { WorkoutSegmentHeaderComponent } from './workout-segment-header.component';
@@ -43,5 +44,20 @@ describe('WorkoutSegmentHeaderComponent', () => {
 
     fixture.componentInstance.switchSection('swimming');
     expect(spy).toHaveBeenCalledWith('/tabs/workout/swimming');
+  });
+
+  it('re-asserts its own section on the segment when a cached page is re-entered', async () => {
+    await createFixture(['edzes.uszas']);
+    fixture.detectChanges();
+
+    const segment: HTMLIonSegmentElement = fixture.nativeElement.querySelector('ion-segment');
+    expect(segment.value).toBe('log');
+
+    // Ionic keeps the page alive and a prior button tap left the segment on another value.
+    segment.value = 'swimming';
+
+    (TestBed.inject(Router).events as Subject<RouterEvent>).next(new NavigationEnd(1, '/tabs/workout/log', '/tabs/workout/log'));
+
+    expect(segment.value).toBe('log');
   });
 });
