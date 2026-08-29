@@ -54,7 +54,11 @@ class WeeklyPlanService {
 		return toDto(entity);
 	}
 
-	/** Idempotent upsert on the client-supplied id; a tombstoned row for the same week is revived. */
+	/**
+	 * Idempotent upsert on the client-supplied id; a tombstoned row for the same week is revived —
+	 * required, not just convenient, because the id is a deterministic v5 of (userId, weekStartDate)
+	 * and so cannot be re-minted for a fresh row. Contrast {@link WorkoutSessionService#create}.
+	 */
 	@Transactional
 	WeeklyPlan create(UUID userId, WeeklyPlan dto) {
 		WeeklyPlanEntity entity = repository.findById(dto.getId()).map(existing -> requireOwner(existing, userId))

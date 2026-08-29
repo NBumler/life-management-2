@@ -66,7 +66,14 @@ class WorkoutSessionService {
 		return toDto(entity);
 	}
 
-	/** Idempotent upsert on the client-supplied id (documentation/Architektúra/Backend.md "Upsert"). */
+	/**
+	 * Idempotent upsert on the client-supplied id (documentation/Architektúra/Backend.md "Upsert"). A
+	 * tombstoned row is deliberately NOT revived here — same as {@link hu.bumler.lm2.food.MealService}:
+	 * a session is a point-in-time log entry, so a POST landing on a soft-deleted id re-applies the
+	 * fields but the tombstone still wins (row-level last-write-wins). Contrast {@link WorkoutPlanService}
+	 * / {@link WeeklyPlanService}, which undelete on POST because a plan / week is a long-lived row the
+	 * user re-opens (and WeeklyPlan's id is a deterministic natural key that can't be re-minted).
+	 */
 	@Transactional
 	WorkoutSession create(UUID userId, WorkoutSession dto) {
 		WorkoutSessionEntity entity = repository.findById(dto.getId()).map(existing -> requireOwner(existing, userId))

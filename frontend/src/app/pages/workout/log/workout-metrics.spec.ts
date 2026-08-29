@@ -156,6 +156,17 @@ describe('workout-metrics', () => {
       const current = exercise({ id: 'ne', sets: [set({ reps: 8, weightKg: 85 })] });
       expect(detectPrs([prior], current).newMaxWeight).toBe(false);
     });
+
+    it('does not flag a metric the history has no comparable value for (first measurable is not a PR)', () => {
+      // Prior entry exists but carries no weight/1RM/volume — a bodyweight set with weightKg 0.
+      const prior = session({
+        id: 'old',
+        date: '2026-08-20',
+        exercises: [exercise({ id: 'oe', sets: [set({ reps: 10, weightKg: 0 })] })],
+      });
+      const current = exercise({ id: 'ne', sets: [set({ reps: 8, weightKg: 60 })] });
+      expect(detectPrs([prior], current)).toEqual({ new1Rm: false, newMaxWeight: false, newMaxVolume: false });
+    });
   });
 
   describe('ghostForExercise', () => {

@@ -42,7 +42,19 @@ import { uuidV4 } from '../../../core/sync/uuid';
 import { WorkoutExerciseSaveItem, WorkoutSessionDraft } from '../../../core/storage/storage-backend';
 import { today } from '../../../shared/local-date';
 import { ExercisePickResult, ExercisePickerComponent } from '../../../shared/exercise-picker/exercise-picker.component';
-import { SET_TYPES, WORKOUT_TYPES, formatStopwatch, nextRestValue, visibleFields } from './workout-fields';
+import {
+  PLAN_TO_ENTRY_CATEGORY,
+  PLAN_TO_ENTRY_KIND,
+  PLAN_TO_ENTRY_SET_TYPE,
+  PLAN_TO_SESSION_TYPE,
+  SET_TYPES,
+  WORKOUT_TYPES,
+  formatStopwatch,
+  moveById,
+  nextRestValue,
+  sanitizeSessionTimes,
+  visibleFields,
+} from './workout-fields';
 import { detectPrs, effectiveDurationMinutes, sessionKcal } from './workout-metrics';
 
 interface SetRow {
@@ -126,6 +138,8 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
   private date = today();
   private planId: string | null = null;
   private tickHandle: ReturnType<typeof setInterval> | undefined;
+  /** One reused WebAudio context for the rest-timer beep — recreating it per expiry can exhaust the browser's hardware-context pool on a long session. */
+  private audioContext: AudioContext | null = null;
 
   readonly workoutType = signal<WorkoutSession.WorkoutTypeEnum>(WorkoutSession.WorkoutTypeEnum.GeneralWeights);
   readonly title = signal<string | null>(null);
@@ -183,8 +197,8 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
         const plan = this.planRepository.byId(planIdParam);
         if (plan !== undefined && !plan.deleted) {
           this.planId = plan.id;
-          if (plan.defaultWorkoutType != null && (WORKOUT_TYPES as string[]).includes(plan.defaultWorkoutType)) {
-            this.workoutType.set(plan.defaultWorkoutType as unknown as WorkoutSession.WorkoutTypeEnum);
+          if (plan.defaultWorkoutType != null) {
+            this.workoutType.set(PLAN_TO_SESSION_TYPE[plan.defaultWorkoutType]);
           }
           this.exercises.set(this.rowsFromPlan(plan));
         }
@@ -200,6 +214,8 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
     if (this.tickHandle !== undefined) {
       clearInterval(this.tickHandle);
     }
+    void this.audioContext?.close().catch(() => undefined);
+    this.audioContext = null;
   }
 
   private tick(): void {
@@ -269,6 +285,12 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
 
   removeExercise(row: ExerciseRow): void {
     this.exercises.update((rows) => rows.filter((entry) => entry.id !== row.id));
+    void this.persist();
+  }
+
+  /** documentation/Subfeatures/Edzésnapló.md `orderIndex` "drag & drop sorrend": manual up/down reorder; `orderIndex` is derived from array position on save. */
+  moveExercise(row: ExerciseRow, delta: -1 | 1): void {
+    this.exercises.update((rows) => moveById(rows, row.id, delta));
     void this.persist();
   }
 
@@ -354,7 +376,11 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
       if (Ctor === undefined) {
         return;
       }
-      const ctx = new Ctor();
+      if (this.audioContext === null || this.audioContext.state === 'closed') {
+        this.audioContext = new Ctor();
+      }
+      const ctx = this.audioContext;
+      void ctx.resume().catch(() => undefined);
       const oscillator = ctx.createOscillator();
       const gain = ctx.createGain();
       oscillator.frequency.value = 880;
@@ -362,7 +388,6 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
       oscillator.connect(gain).connect(ctx.destination);
       oscillator.start();
       oscillator.stop(ctx.currentTime + 0.15);
-      oscillator.onended = () => void ctx.close();
     } catch {
       // no audio in this environment — the haptic (native) is enough
     }
@@ -447,11 +472,12 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
 
   private buildFinishDraft(): WorkoutSessionDraft {
     const elapsedMinutes = Math.round(this.elapsedMs() / 60000);
+    const { startTime, endTime } = sanitizeSessionTimes(hhmm(this.startedAtMs), hhmm(Date.now()));
     return {
       id: this.sessionId,
       date: this.date,
-      startTime: hhmm(this.startedAtMs),
-      endTime: hhmm(Date.now()),
+      startTime,
+      endTime,
       durationMinutes: elapsedMinutes > 0 ? elapsedMinutes : null,
       workoutType: this.workoutType(),
       title: this.title(),
@@ -596,8 +622,8 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
         id: uuidV4(),
         exerciseId: exercise.exerciseId,
         exerciseName: exercise.exerciseName,
-        exerciseCategory: exercise.exerciseCategory as unknown as WorkoutExerciseEntry.ExerciseCategoryEnum,
-        exerciseKind: exercise.exerciseKind as unknown as WorkoutExerciseEntry.ExerciseKindEnum,
+        exerciseCategory: PLAN_TO_ENTRY_CATEGORY[exercise.exerciseCategory],
+        exerciseKind: PLAN_TO_ENTRY_KIND[exercise.exerciseKind],
         defaultRestTimeSeconds: this.catalogRestFor(exercise.exerciseId),
         supersetGroup: signal(exercise.supersetGroup ?? null),
         sets: signal(
@@ -606,7 +632,7 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
             .sort((a, b) => a.orderIndex - b.orderIndex)
             .map((set) => ({
               id: uuidV4(),
-              setType: signal(set.setType as unknown as WorkoutSetEntry.SetTypeEnum),
+              setType: signal(PLAN_TO_ENTRY_SET_TYPE[set.setType]),
               reps: signal(set.reps ?? null),
               weightKg: signal(set.weightKg ?? null),
               holdTimeSeconds: signal(set.holdTimeSeconds ?? null),

@@ -18,18 +18,18 @@ import {
   IonTextarea,
   IonTitle,
   IonToolbar,
+  ToastController,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 import { WorkoutPlan } from '../../../api/model/workoutPlan';
 import { WorkoutPlanExercise } from '../../../api/model/workoutPlanExercise';
 import { WorkoutPlanSet } from '../../../api/model/workoutPlanSet';
-import { WorkoutExerciseEntry } from '../../../api/model/workoutExerciseEntry';
 import { WorkoutPlanRepository } from '../../../core/data/workout-plan.repository';
 import { WorkoutPlanDraft, WorkoutPlanExerciseSaveItem } from '../../../core/storage/storage-backend';
 import { uuidV4 } from '../../../core/sync/uuid';
 import { ExercisePickResult, ExercisePickerComponent } from '../../../shared/exercise-picker/exercise-picker.component';
-import { SET_TYPES, VisibleSetFields, visibleFields } from '../log/workout-fields';
+import { PLAN_TO_ENTRY_KIND, SET_TYPES, VisibleSetFields, moveById, visibleFields } from '../log/workout-fields';
 
 interface TargetSetRow {
   id: string;
@@ -91,14 +91,15 @@ export class PlanEditPage implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly repository = inject(WorkoutPlanRepository);
   private readonly alertController = inject(AlertController);
+  private readonly toastController = inject(ToastController);
   private readonly translate = inject(TranslateService);
 
   readonly setTypes = SET_TYPES;
   readonly workoutTypes = WORKOUT_TYPE_VALUES;
 
-  /** Same `exerciseKind` → visible-field table as the workout log; the plan enum shares its string values. */
+  /** Same `exerciseKind` → visible-field table as the workout log, via the typed plan→entry enum map. */
   fieldsFor(row: PlanExerciseRow): VisibleSetFields {
-    return visibleFields(row.exerciseKind as unknown as WorkoutExerciseEntry.ExerciseKindEnum);
+    return visibleFields(PLAN_TO_ENTRY_KIND[row.exerciseKind]);
   }
 
   readonly planId = signal<string | null>(null);
@@ -142,14 +143,25 @@ export class PlanEditPage implements OnInit {
 
   onPicked(results: ExercisePickResult[]): void {
     this.pickerOpen.set(false);
-    const rows = results
-      .filter((result): result is ExercisePickResult & { exerciseId: string } => result.exerciseId !== null)
-      .map((result) => this.emptyExerciseRow(result));
+    // documentation/Subfeatures/Heti terv.md §47: a template exercise must reference a catalog row
+    // ("kötelező a sablonban") — ad-hoc picks are dropped, but tell the user rather than silently.
+    const withCatalogId = results.filter((result): result is ExercisePickResult & { exerciseId: string } => result.exerciseId !== null);
+    if (withCatalogId.length !== results.length) {
+      void this.toastController
+        .create({ message: this.translate.instant('WORKOUT.PLAN.ADHOC_NOT_ALLOWED'), duration: 3000, color: 'warning' })
+        .then((toast) => toast.present());
+    }
+    const rows = withCatalogId.map((result) => this.emptyExerciseRow(result));
     this.exercises.update((current) => [...current, ...rows]);
   }
 
   removeExercise(row: PlanExerciseRow): void {
     this.exercises.update((rows) => rows.filter((entry) => entry.id !== row.id));
+  }
+
+  /** documentation/Subfeatures/Edzésnapló.md `orderIndex` "drag & drop sorrend": manual up/down reorder; `orderIndex` is derived from array position on save. */
+  moveExercise(row: PlanExerciseRow, delta: -1 | 1): void {
+    this.exercises.update((rows) => moveById(rows, row.id, delta));
   }
 
   addSet(row: PlanExerciseRow): void {

@@ -27,6 +27,8 @@ import { WEEK_DAYS, addLocalDays, isSlotCompleted, mondayOf } from './weekly-pla
 interface DayCell {
   dayOfWeek: WeeklyPlanSlot.DayOfWeekEnum;
   date: string;
+  /** The existing slot's id for this day, or null when the day has no live slot yet. */
+  slotId: string | null;
   planId: string | null;
   planName: string | null;
   completed: boolean;
@@ -82,6 +84,7 @@ export class WeeklyPlanPage implements OnInit, ViewWillEnter {
       return {
         dayOfWeek,
         date: addLocalDays(start, index),
+        slotId: slot?.id ?? null,
         planId,
         planName: plan?.name ?? (planId !== null ? '—' : null),
         completed: planId !== null && isSlotCompleted(sessions, start, planId),
@@ -113,9 +116,15 @@ export class WeeklyPlanPage implements OnInit, ViewWillEnter {
     if (next === day.planId) {
       return;
     }
+    // Carry each day's existing slot id through so re-assigning a day updates the same row (and
+    // undeletes it if it was cleared before) instead of relying on the deterministic-id fallback.
     const slots = this.days()
-      .map((cell) => (cell.dayOfWeek === day.dayOfWeek ? { dayOfWeek: cell.dayOfWeek, planId: next } : { dayOfWeek: cell.dayOfWeek, planId: cell.planId }))
-      .filter((cell): cell is { dayOfWeek: WeeklyPlanSlot.DayOfWeekEnum; planId: string } => cell.planId !== null);
+      .map((cell) => ({
+        dayOfWeek: cell.dayOfWeek,
+        planId: cell.dayOfWeek === day.dayOfWeek ? next : cell.planId,
+        id: cell.slotId ?? undefined,
+      }))
+      .filter((cell): cell is { dayOfWeek: WeeklyPlanSlot.DayOfWeekEnum; planId: string; id: string | undefined } => cell.planId !== null);
     await this.weeklyRepository.saveWeek(this.weekStart(), slots);
   }
 

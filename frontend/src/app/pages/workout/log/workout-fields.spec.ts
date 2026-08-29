@@ -1,5 +1,17 @@
 import { WorkoutExerciseEntry } from '../../../api/model/workoutExerciseEntry';
-import { formatStopwatch, nextRestValue, visibleFields } from './workout-fields';
+import { WorkoutPlanExercise } from '../../../api/model/workoutPlanExercise';
+import { WorkoutPlanSet } from '../../../api/model/workoutPlanSet';
+import { WorkoutSetEntry } from '../../../api/model/workoutSetEntry';
+import {
+  PLAN_TO_ENTRY_CATEGORY,
+  PLAN_TO_ENTRY_KIND,
+  PLAN_TO_ENTRY_SET_TYPE,
+  formatStopwatch,
+  moveById,
+  nextRestValue,
+  sanitizeSessionTimes,
+  visibleFields,
+} from './workout-fields';
 
 describe('workout-fields', () => {
   describe('visibleFields', () => {
@@ -56,6 +68,52 @@ describe('workout-fields', () => {
 
     it('clamps negatives to zero', () => {
       expect(formatStopwatch(-5_000)).toBe('00:00');
+    });
+  });
+
+  describe('sanitizeSessionTimes', () => {
+    it('keeps both times when endTime is strictly after startTime', () => {
+      expect(sanitizeSessionTimes('10:00', '11:30')).toEqual({ startTime: '10:00', endTime: '11:30' });
+    });
+
+    it('drops endTime when it is not after startTime (session crossing midnight)', () => {
+      expect(sanitizeSessionTimes('23:30', '00:15')).toEqual({ startTime: '23:30', endTime: null });
+      expect(sanitizeSessionTimes('10:00', '10:00')).toEqual({ startTime: '10:00', endTime: null });
+    });
+
+    it('passes nulls through untouched', () => {
+      expect(sanitizeSessionTimes(null, '09:00')).toEqual({ startTime: null, endTime: '09:00' });
+      expect(sanitizeSessionTimes('09:00', null)).toEqual({ startTime: '09:00', endTime: null });
+    });
+  });
+
+  describe('moveById', () => {
+    const rows = () => [{ id: 'a' }, { id: 'b' }, { id: 'c' }];
+
+    it('moves an item up and down by one position', () => {
+      expect(moveById(rows(), 'b', -1).map((r) => r.id)).toEqual(['b', 'a', 'c']);
+      expect(moveById(rows(), 'b', 1).map((r) => r.id)).toEqual(['a', 'c', 'b']);
+    });
+
+    it('is a no-op (same reference) at the ends or for an unknown id', () => {
+      const start = rows();
+      expect(moveById(start, 'a', -1)).toBe(start);
+      expect(moveById(start, 'c', 1)).toBe(start);
+      expect(moveById(start, 'zzz', 1)).toBe(start);
+    });
+  });
+
+  describe('plan → entry enum maps', () => {
+    it('map every plan enum member to the identically-valued entry/session member', () => {
+      for (const value of Object.values(WorkoutPlanExercise.ExerciseCategoryEnum)) {
+        expect(PLAN_TO_ENTRY_CATEGORY[value]).toBe(value as unknown as WorkoutExerciseEntry.ExerciseCategoryEnum);
+      }
+      for (const value of Object.values(WorkoutPlanExercise.ExerciseKindEnum)) {
+        expect(PLAN_TO_ENTRY_KIND[value]).toBe(value as unknown as WorkoutExerciseEntry.ExerciseKindEnum);
+      }
+      for (const value of Object.values(WorkoutPlanSet.SetTypeEnum)) {
+        expect(PLAN_TO_ENTRY_SET_TYPE[value]).toBe(value as unknown as WorkoutSetEntry.SetTypeEnum);
+      }
     });
   });
 });

@@ -78,6 +78,8 @@
             <ion-note color="medium">{{ 'WORKOUT.SESSION.GHOST' | translate }} {{ ghost }}</ion-note>
           }
         </ion-label>
+        <ion-button slot="end" fill="clear" color="medium" size="small" [disabled]="$first" [attr.aria-label]="'COMMON.MOVE_UP' | translate" (click)="moveExercise(row, -1)">↑</ion-button>
+        <ion-button slot="end" fill="clear" color="medium" size="small" [disabled]="$last" [attr.aria-label]="'COMMON.MOVE_DOWN' | translate" (click)="moveExercise(row, 1)">↓</ion-button>
         <ion-button slot="end" fill="clear" color="medium" (click)="removeExercise(row)">
           {{ 'COMMON.REMOVE' | translate }}
         </ion-button>

@@ -8,7 +8,9 @@
     "CONFIRM": "Confirm",
     "DELETE": "Delete",
     "CLOSE": "Close",
-    "REMOVE": "Remove"
+    "REMOVE": "Remove",
+    "MOVE_UP": "Move up",
+    "MOVE_DOWN": "Move down"
   },
   "LOGIN": {
     "TITLE": "Log in",
@@ -667,6 +669,7 @@
       "DEFAULT_TYPE_NONE": "Not set",
       "FIELD_NOTES": "Notes",
       "FIELD_REST": "Target rest (s)",
+      "ADHOC_NOT_ALLOWED": "A template only takes catalog exercises; ad-hoc picks were skipped.",
       "DELETE": "Delete template",
       "DELETE_CONFIRM_TITLE": "Delete template",
       "DELETE_CONFIRM_MESSAGE": "Delete this template? Past workout logs and weekly assignments pointing at it are left untouched."

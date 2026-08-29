@@ -8,7 +8,9 @@
     "CONFIRM": "Megerősítés",
     "DELETE": "Törlés",
     "CLOSE": "Bezárás",
-    "REMOVE": "Eltávolítás"
+    "REMOVE": "Eltávolítás",
+    "MOVE_UP": "Mozgatás felfelé",
+    "MOVE_DOWN": "Mozgatás lefelé"
   },
   "LOGIN": {
     "TITLE": "Bejelentkezés",
@@ -667,6 +669,7 @@
       "DEFAULT_TYPE_NONE": "Nincs megadva",
       "FIELD_NOTES": "Megjegyzés",
       "FIELD_REST": "Cél pihenő (mp)",
+      "ADHOC_NOT_ALLOWED": "Sablonhoz csak katalógusban lévő gyakorlat adható hozzá; az ad-hoc gyakorlatok kimaradtak.",
       "DELETE": "Sablon törlése",
       "DELETE_CONFIRM_TITLE": "Sablon törlése",
       "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd ezt a sablont? A korábbi edzésnaplók és a rá mutató heti kiosztások érintetlenek maradnak."

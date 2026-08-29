@@ -65,7 +65,12 @@ class WorkoutPlanService {
 		return toDto(entity);
 	}
 
-	/** Idempotent upsert on the client-supplied id (documentation/Architektúra/Backend.md "Upsert"). */
+	/**
+	 * Idempotent upsert on the client-supplied id (documentation/Architektúra/Backend.md "Upsert"). A
+	 * tombstoned plan IS revived on POST (a template is a long-lived catalog row the user re-opens) —
+	 * deliberately different from {@link WorkoutSessionService#create}, which leaves a session's
+	 * tombstone in place.
+	 */
 	@Transactional
 	WorkoutPlan create(UUID userId, WorkoutPlan dto) {
 		WorkoutPlanEntity entity = repository.findById(dto.getId()).map(existing -> requireOwner(existing, userId))

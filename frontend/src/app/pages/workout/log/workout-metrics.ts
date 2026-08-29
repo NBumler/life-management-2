@@ -187,19 +187,27 @@ export function detectPrs(
     return { new1Rm: false, newMaxWeight: false, newMaxVolume: false };
   }
   const currentPrs = exercisePrValues(current);
-  let best1Rm = 0;
-  let bestWeight = 0;
-  let bestVolume = 0;
+  // Only a metric the history actually has a comparable value for can be "megdöntve" — a first-ever
+  // measurable 1RM / weight / volume is not a PR against a blank record.
+  let priorBest1Rm: number | null = null;
+  let priorBestWeight: number | null = null;
+  let priorBestVolume: number | null = null;
   for (const { entry } of history) {
     const prs = exercisePrValues(entry);
-    best1Rm = Math.max(best1Rm, prs.best1Rm ?? 0);
-    bestWeight = Math.max(bestWeight, prs.maxWeightKg ?? 0);
-    bestVolume = Math.max(bestVolume, prs.volume);
+    if (prs.best1Rm !== null) {
+      priorBest1Rm = Math.max(priorBest1Rm ?? 0, prs.best1Rm);
+    }
+    if (prs.maxWeightKg !== null) {
+      priorBestWeight = Math.max(priorBestWeight ?? 0, prs.maxWeightKg);
+    }
+    if (prs.volume > 0) {
+      priorBestVolume = Math.max(priorBestVolume ?? 0, prs.volume);
+    }
   }
   return {
-    new1Rm: currentPrs.best1Rm !== null && currentPrs.best1Rm > best1Rm,
-    newMaxWeight: currentPrs.maxWeightKg !== null && currentPrs.maxWeightKg > bestWeight,
-    newMaxVolume: currentPrs.volume > bestVolume && currentPrs.volume > 0,
+    new1Rm: priorBest1Rm !== null && currentPrs.best1Rm !== null && currentPrs.best1Rm > priorBest1Rm,
+    newMaxWeight: priorBestWeight !== null && currentPrs.maxWeightKg !== null && currentPrs.maxWeightKg > priorBestWeight,
+    newMaxVolume: priorBestVolume !== null && currentPrs.volume > priorBestVolume,
   };
 }
 

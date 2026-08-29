@@ -34,7 +34,7 @@ import { uuidV4 } from '../../../core/sync/uuid';
 import { WorkoutExerciseSaveItem, WorkoutSessionDraft } from '../../../core/storage/storage-backend';
 import { today } from '../../../shared/local-date';
 import { ExercisePickResult, ExercisePickerComponent } from '../../../shared/exercise-picker/exercise-picker.component';
-import { LOCATIONS, SET_TYPES, WORKOUT_TYPES, visibleFields } from './workout-fields';
+import { LOCATIONS, SET_TYPES, WORKOUT_TYPES, moveById, sanitizeSessionTimes, visibleFields } from './workout-fields';
 import { effectiveDurationMinutes, ghostForExercise, sessionKcal, sessionVolume } from './workout-metrics';
 
 interface SetRow {
@@ -219,6 +219,11 @@ export class WorkoutSessionEditPage implements OnInit {
     this.exercises.update((rows) => rows.filter((entry) => entry.id !== row.id));
   }
 
+  /** documentation/Subfeatures/Edzésnapló.md `orderIndex` "drag & drop sorrend": manual up/down reorder; `orderIndex` is derived from array position on save. */
+  moveExercise(row: ExerciseRow, delta: -1 | 1): void {
+    this.exercises.update((rows) => moveById(rows, row.id, delta));
+  }
+
   addSet(row: ExerciseRow): void {
     row.sets.update((sets) => [...sets, this.emptySetRow(sets[sets.length - 1])]);
   }
@@ -272,11 +277,17 @@ export class WorkoutSessionEditPage implements OnInit {
 
   private buildDraft(): WorkoutSessionDraft {
     const value = this.form.getRawValue();
+    // A session crossing midnight can't be stored as endTime > startTime (V18 CHECK); keep the start
+    // + durationMinutes and drop the out-of-order endTime.
+    const { startTime, endTime } = sanitizeSessionTimes(
+      value.startTime?.trim() ? value.startTime : null,
+      value.endTime?.trim() ? value.endTime : null,
+    );
     return {
       id: this.sessionId() ?? '',
       date: value.date,
-      startTime: value.startTime?.trim() ? value.startTime : null,
-      endTime: value.endTime?.trim() ? value.endTime : null,
+      startTime,
+      endTime,
       durationMinutes: value.durationMinutes,
       workoutType: value.workoutType,
       title: value.title?.trim() ? value.title.trim() : null,
