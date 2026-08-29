@@ -210,6 +210,44 @@ export const routes: Routes = [
             canActivate: [featureFlagGuard('edzes.maszonaplo')],
             children: [
               { path: '', loadComponent: () => import('./pages/workout/climbing/climbing-hub.page').then((m) => m.ClimbingHubPage) },
+              {
+                // documentation/Features/Mászónapló.md "Terem / Helyszín Admin" — venue master CRUD.
+                // M3a wires the Indoor tree (Gym + colour bands + optional indoor routes); the Outdoor
+                // tree (Crag → Sector → Route | BoulderProblem) is added by M3b.
+                path: 'admin',
+                children: [
+                  { path: '', loadComponent: () => import('./pages/workout/climbing/admin/climbing-admin.page').then((m) => m.ClimbingAdminPage) },
+                  {
+                    path: 'gyms',
+                    children: [
+                      { path: '', loadComponent: () => import('./pages/workout/climbing/admin/gym-list.page').then((m) => m.GymListPage) },
+                      { path: 'new', loadComponent: () => import('./pages/workout/climbing/admin/gym-edit.page').then((m) => m.GymEditPage) },
+                      {
+                        path: ':gymId',
+                        children: [
+                          { path: '', loadComponent: () => import('./pages/workout/climbing/admin/gym-edit.page').then((m) => m.GymEditPage) },
+                          {
+                            path: 'bands/new',
+                            loadComponent: () => import('./pages/workout/climbing/admin/gym-color-band-edit.page').then((m) => m.GymColorBandEditPage),
+                          },
+                          {
+                            path: 'bands/:id',
+                            loadComponent: () => import('./pages/workout/climbing/admin/gym-color-band-edit.page').then((m) => m.GymColorBandEditPage),
+                          },
+                          {
+                            path: 'routes/new',
+                            loadComponent: () => import('./pages/workout/climbing/admin/indoor-route-edit.page').then((m) => m.IndoorRouteEditPage),
+                          },
+                          {
+                            path: 'routes/:id',
+                            loadComponent: () => import('./pages/workout/climbing/admin/indoor-route-edit.page').then((m) => m.IndoorRouteEditPage),
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
             ],
           },
           {

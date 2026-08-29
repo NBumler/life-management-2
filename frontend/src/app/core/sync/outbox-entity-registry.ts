@@ -11,11 +11,15 @@ import { PackingSessionItem } from '../../api/model/packingSessionItem';
 import { StoredFood } from '../../api/model/storedFood';
 import { SwimLog } from '../../api/model/swimLog';
 import { BikeRideLog } from '../../api/model/bikeRideLog';
+import { Gym } from '../../api/model/gym';
+import { GymColorBand } from '../../api/model/gymColorBand';
+import { IndoorRoute } from '../../api/model/indoorRoute';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 import { normalizeName } from '../../shared/name-normalization';
 import { ExerciseRepository } from '../data/exercise.repository';
 import { GearItemRepository } from '../data/gear-item.repository';
+import { GymRepository } from '../data/gym.repository';
 import { HouseholdRoomRepository } from '../data/household-room.repository';
 import {
   CalendarEventRow,
@@ -31,6 +35,9 @@ import {
   StoredFoodRow,
   SwimLogRow,
   BikeRideLogRow,
+  GymRow,
+  GymColorBandRow,
+  IndoorRouteRow,
   WeightHistoryRow,
   calendarEventLocalWriteTask,
   calendarEventRowToDto,
@@ -58,6 +65,12 @@ import {
   swimLogRowToDto,
   bikeRideLogLocalWriteTask,
   bikeRideLogRowToDto,
+  gymLocalWriteTask,
+  gymRowToDto,
+  gymColorBandLocalWriteTask,
+  gymColorBandRowToDto,
+  indoorRouteLocalWriteTask,
+  indoorRouteRowToDto,
   weightHistoryLocalWriteTask,
   weightHistoryRowToDto,
 } from '../data/local-rows';
@@ -178,6 +191,7 @@ async function shoppingListCurrentPayload(ctx: OutboxEntityFixContext): Promise<
 export class OutboxEntityRegistryService {
   private readonly gearItems = inject(GearItemRepository);
   private readonly exercises = inject(ExerciseRepository);
+  private readonly gyms = inject(GymRepository);
   private readonly householdRooms = inject(HouseholdRoomRepository);
 
   private readonly registry: Record<OutboxEntityType, OutboxEntityDescriptor> = {
@@ -343,6 +357,37 @@ export class OutboxEntityRegistryService {
       currentPayload: rowLookup<BikeRideLogRow, unknown>('bike_ride_log', bikeRideLogRowToDto),
       buildFixWriteTask: (payload) => bikeRideLogLocalWriteTask(payload as unknown as BikeRideLog),
       // documentation/Features/Biciklizés napló.md: a bike ride log has no name — nothing to uniqueness-check.
+      nameUniqueness: null,
+    },
+    Gym: {
+      table: 'gym',
+      currentPayload: rowLookup<GymRow, unknown>('gym', gymRowToDto),
+      buildFixWriteTask: (payload) => gymLocalWriteTask(payload as unknown as Gym),
+      nameUniqueness: {
+        field: 'name',
+        findConflict: async (value, excludeId) => {
+          if (!this.gyms.loaded()) {
+            await this.gyms.load();
+          }
+          const normalized = normalizeName(value);
+          return this.gyms.items().find((gym) => gym.id !== excludeId && normalizeName(gym.name) === normalized)?.id ?? null;
+        },
+      },
+    },
+    GymColorBand: {
+      table: 'gym_color_band',
+      currentPayload: rowLookup<GymColorBandRow, unknown>('gym_color_band', gymColorBandRowToDto),
+      buildFixWriteTask: (payload) => gymColorBandLocalWriteTask(payload as unknown as GymColorBand),
+      // documentation/Subfeatures/Indoor boulder admin.md: hexColor is unique per *gym*, not per user —
+      // the Fix form can't resolve that scope from (value, excludeId) alone (same as HouseholdTask);
+      // the server's 409 UNIQUE_VIOLATION still guards it.
+      nameUniqueness: null,
+    },
+    IndoorRoute: {
+      table: 'indoor_route',
+      currentPayload: rowLookup<IndoorRouteRow, unknown>('indoor_route', indoorRouteRowToDto),
+      buildFixWriteTask: (payload) => indoorRouteLocalWriteTask(payload as unknown as IndoorRoute),
+      // documentation/Subfeatures/Indoor köteles admin.md: the optional indoor-route catalogue has no uniqueness rule.
       nameUniqueness: null,
     },
     ShoppingList: {

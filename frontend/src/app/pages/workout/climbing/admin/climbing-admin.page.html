@@ -1,0 +1,27 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/workout/climbing"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ 'WORKOUT.CLIMBING.ADMIN' | translate }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-list>
+    <ion-list-header>{{ 'WORKOUT.CLIMBING.ADMIN_INDOOR' | translate }}</ion-list-header>
+    <ion-item button routerLink="gyms" detail="true">
+      <ion-icon name="business-outline" slot="start" aria-hidden="true"></ion-icon>
+      <ion-label>{{ 'WORKOUT.CLIMBING.ADMIN_GYMS' | translate }}</ion-label>
+    </ion-item>
+  </ion-list>
+
+  <ion-list>
+    <ion-list-header>{{ 'WORKOUT.CLIMBING.ADMIN_OUTDOOR' | translate }}</ion-list-header>
+    <ion-item>
+      <ion-icon name="earth-outline" slot="start" aria-hidden="true"></ion-icon>
+      <ion-label>{{ 'WORKOUT.CLIMBING.ADMIN_CRAGS' | translate }}</ion-label>
+      <ion-note slot="end">{{ 'WORKOUT.CLIMBING.ADMIN_SOON' | translate }}</ion-note>
+    </ion-item>
+  </ion-list>
+</ion-content>

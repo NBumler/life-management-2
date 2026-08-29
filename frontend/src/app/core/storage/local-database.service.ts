@@ -703,7 +703,72 @@ const SCHEMA_V19_STATEMENTS: string[] = [
   `CREATE INDEX IF NOT EXISTS idx_bike_ride_log_ride_date ON bike_ride_log (ride_date DESC)`,
 ];
 
-const SCHEMA_VERSION = 19;
+/**
+ * documentation/Subfeatures/Indoor boulder admin.md + Indoor köteles admin.md — the indoor venue
+ * master: a `gym` (shared by the boulder and rope admin), its `gym_color_band` rows (boulder wall
+ * colours → grade ranges) and an optional `indoor_route` catalogue. `disciplines` /
+ * `available_safety_styles` are JSON string arrays in a TEXT column (same as
+ * `packing_session.source_template_ids`).
+ */
+const SCHEMA_V20_STATEMENTS: string[] = [
+  `CREATE TABLE IF NOT EXISTS gym (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    address TEXT,
+    disciplines TEXT NOT NULL DEFAULT '[]',
+    default_wall_height_meters REAL,
+    available_safety_styles TEXT,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_gym_name ON gym (name COLLATE NOCASE)`,
+  `CREATE TABLE IF NOT EXISTS gym_color_band (
+    id TEXT PRIMARY KEY,
+    gym_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    hex_color TEXT NOT NULL,
+    variant TEXT NOT NULL,
+    grade_lower TEXT NOT NULL,
+    grade_upper TEXT NOT NULL,
+    absolute_difficulty_index_lower INTEGER NOT NULL,
+    absolute_difficulty_index_upper INTEGER NOT NULL,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_gym_color_band_gym_id ON gym_color_band (gym_id)`,
+  `CREATE TABLE IF NOT EXISTS indoor_route (
+    id TEXT PRIMARY KEY,
+    gym_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    discipline TEXT NOT NULL,
+    grade TEXT NOT NULL,
+    absolute_difficulty_index INTEGER NOT NULL,
+    sector TEXT,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_indoor_route_gym_id ON indoor_route (gym_id)`,
+];
+
+const SCHEMA_VERSION = 20;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -725,7 +790,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 16, statements: SCHEMA_V16_STATEMENTS },
   { toVersion: 17, statements: SCHEMA_V17_STATEMENTS },
   { toVersion: 18, statements: SCHEMA_V18_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V19_STATEMENTS },
+  { toVersion: 19, statements: SCHEMA_V19_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V20_STATEMENTS },
 ];
 
 export interface SqlTask {

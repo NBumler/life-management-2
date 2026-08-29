@@ -18,6 +18,9 @@ import { ShoppingListsService } from '../../api/api/shoppingLists.service';
 import { StoredFoodsService } from '../../api/api/storedFoods.service';
 import { SwimLogsService } from '../../api/api/swimLogs.service';
 import { BikeRideLogsService } from '../../api/api/bikeRideLogs.service';
+import { ClimbingGymsService } from '../../api/api/climbingGyms.service';
+import { ClimbingGymColorBandsService } from '../../api/api/climbingGymColorBands.service';
+import { ClimbingIndoorRoutesService } from '../../api/api/climbingIndoorRoutes.service';
 import { WeeklyPlansService } from '../../api/api/weeklyPlans.service';
 import { WorkoutPlansService } from '../../api/api/workoutPlans.service';
 import { WorkoutSessionsService } from '../../api/api/workoutSessions.service';
@@ -39,6 +42,9 @@ import { ShoppingList } from '../../api/model/shoppingList';
 import { StoredFood } from '../../api/model/storedFood';
 import { SwimLog } from '../../api/model/swimLog';
 import { BikeRideLog } from '../../api/model/bikeRideLog';
+import { Gym } from '../../api/model/gym';
+import { GymColorBand } from '../../api/model/gymColorBand';
+import { IndoorRoute } from '../../api/model/indoorRoute';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeeklyPlan } from '../../api/model/weeklyPlan';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
@@ -88,6 +94,9 @@ export class HttpStorageBackend implements StorageBackend {
   private readonly weeklyPlansApi = inject(WeeklyPlansService);
   private readonly swimLogsApi = inject(SwimLogsService);
   private readonly bikeRideLogsApi = inject(BikeRideLogsService);
+  private readonly gymsApi = inject(ClimbingGymsService);
+  private readonly gymColorBandsApi = inject(ClimbingGymColorBandsService);
+  private readonly indoorRoutesApi = inject(ClimbingIndoorRoutesService);
   private readonly authSession = inject(AuthSessionService);
 
   async getProfile(): Promise<UserProfile | null> {
@@ -522,6 +531,43 @@ export class HttpStorageBackend implements StorageBackend {
 
   deleteBikeRideLog(id: string): Promise<BikeRideLog> {
     return firstValueFrom(this.bikeRideLogsApi.deleteBikeRideLog(id));
+  }
+
+  listGyms(): Promise<Gym[]> {
+    return firstValueFrom(this.gymsApi.listClimbingGyms());
+  }
+
+  /** POST with an existing id is an idempotent upsert server-side, so this covers both create and update. */
+  upsertGym(gym: Gym): Promise<Gym> {
+    return firstValueFrom(this.gymsApi.createClimbingGym(gym));
+  }
+
+  deleteGym(id: string): Promise<Gym> {
+    return firstValueFrom(this.gymsApi.deleteClimbingGym(id));
+  }
+
+  listGymColorBands(): Promise<GymColorBand[]> {
+    return firstValueFrom(this.gymColorBandsApi.listClimbingGymColorBands());
+  }
+
+  upsertGymColorBand(band: GymColorBand): Promise<GymColorBand> {
+    return firstValueFrom(this.gymColorBandsApi.createClimbingGymColorBand(band));
+  }
+
+  deleteGymColorBand(id: string): Promise<GymColorBand> {
+    return firstValueFrom(this.gymColorBandsApi.deleteClimbingGymColorBand(id));
+  }
+
+  listIndoorRoutes(): Promise<IndoorRoute[]> {
+    return firstValueFrom(this.indoorRoutesApi.listClimbingIndoorRoutes());
+  }
+
+  upsertIndoorRoute(route: IndoorRoute): Promise<IndoorRoute> {
+    return firstValueFrom(this.indoorRoutesApi.createClimbingIndoorRoute(route));
+  }
+
+  deleteIndoorRoute(id: string): Promise<IndoorRoute> {
+    return firstValueFrom(this.indoorRoutesApi.deleteClimbingIndoorRoute(id));
   }
 
   listMeals(): Promise<Meal[]> {

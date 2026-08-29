@@ -756,6 +756,68 @@
         "INDOOR_ROPE": "Indoor rope",
         "OUTDOOR_BOULDER": "Outdoor boulder",
         "OUTDOOR_ROPE": "Outdoor rope"
+      },
+      "ADMIN_INDOOR": "Indoor",
+      "ADMIN_OUTDOOR": "Outdoor",
+      "ADMIN_GYMS": "Gyms",
+      "ADMIN_CRAGS": "Crags (Crag → Sector → Route)",
+      "ADMIN_SOON": "coming soon",
+      "GRADE_UNPARSED": "Grade not recognised — check the scale help.",
+      "DISCIPLINE": {
+        "BOULDER": "Boulder",
+        "ROPE": "Rope"
+      },
+      "SAFETY": {
+        "TOPROPE": "Top rope",
+        "LEAD": "Lead"
+      },
+      "VARIANT": {
+        "PLUS": "Plus (+)",
+        "MINUS": "Minus (−)",
+        "NEUTRAL": "Neutral"
+      },
+      "GYM": {
+        "NEW": "New gym",
+        "EMPTY": "No gyms yet. Add one.",
+        "NEW_TITLE": "New gym",
+        "EDIT_TITLE": "Edit gym",
+        "FIELD_NAME": "Name",
+        "FIELD_ADDRESS": "Address",
+        "FIELD_DISCIPLINES": "Disciplines",
+        "DISCIPLINE_REQUIRED": "Pick at least one discipline.",
+        "NAME_CONFLICT": "You already have a gym with this name.",
+        "ROPE_SECTION": "Rope settings",
+        "FIELD_WALL_HEIGHT": "Average wall height (m)",
+        "DELETE_CONFIRM_TITLE": "Delete gym",
+        "DELETE_CONFIRM_MESSAGE": "Delete this gym? Its colour bands and indoor routes stay, but no longer reference a live gym."
+      },
+      "BAND": {
+        "LIST_TITLE": "Colour bands",
+        "EMPTY": "No colour bands yet.",
+        "NEW_TITLE": "New colour band",
+        "EDIT_TITLE": "Edit colour band",
+        "FIELD_NAME": "Name (e.g. Red)",
+        "FIELD_HEX": "Hex colour",
+        "HEX_INVALID": "Enter a 3- or 6-digit hex colour (e.g. #f0a or #ff00aa).",
+        "HEX_CONFLICT": "This gym already has a band with this colour.",
+        "FIELD_VARIANT": "Variant",
+        "FIELD_GRADE_LOWER": "Lower grade",
+        "FIELD_GRADE_UPPER": "Upper grade",
+        "INDEX_PREVIEW": "Difficulty index",
+        "DELETE_CONFIRM_TITLE": "Delete colour band",
+        "DELETE_CONFIRM_MESSAGE": "Delete this colour band?"
+      },
+      "INDOOR_ROUTE": {
+        "LIST_TITLE": "Indoor routes (optional)",
+        "EMPTY": "No fixed indoor routes.",
+        "NEW_TITLE": "New indoor route",
+        "EDIT_TITLE": "Edit indoor route",
+        "FIELD_NAME": "Name",
+        "FIELD_DISCIPLINE": "Discipline",
+        "FIELD_GRADE": "Grade",
+        "FIELD_SECTOR": "Sector / wall strip",
+        "DELETE_CONFIRM_TITLE": "Delete indoor route",
+        "DELETE_CONFIRM_MESSAGE": "Delete this indoor route?"
       }
     }
   }

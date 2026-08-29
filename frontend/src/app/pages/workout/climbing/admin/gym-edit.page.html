@@ -1,0 +1,128 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/workout/climbing/admin/gyms"></ion-back-button>
+    </ion-buttons>
+    <ion-title>
+      {{ (gymId() ? 'WORKOUT.CLIMBING.GYM.EDIT_TITLE' : 'WORKOUT.CLIMBING.GYM.NEW_TITLE') | translate }}
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button [strong]="true" (click)="save()">{{ 'COMMON.SAVE' | translate }}</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <form [formGroup]="form">
+    <ion-list>
+      <ion-item>
+        <ion-input
+          formControlName="name"
+          [label]="'WORKOUT.CLIMBING.GYM.FIELD_NAME' | translate"
+          label-placement="stacked"
+        ></ion-input>
+      </ion-item>
+      @if (nameConflict()) {
+        <ion-item lines="none">
+          <ion-note color="danger">{{ 'WORKOUT.CLIMBING.GYM.NAME_CONFLICT' | translate }}</ion-note>
+        </ion-item>
+      }
+      <ion-item>
+        <ion-input
+          formControlName="address"
+          [label]="'WORKOUT.CLIMBING.GYM.FIELD_ADDRESS' | translate"
+          label-placement="stacked"
+        ></ion-input>
+      </ion-item>
+    </ion-list>
+
+    <ion-list>
+      <ion-list-header>{{ 'WORKOUT.CLIMBING.GYM.FIELD_DISCIPLINES' | translate }}</ion-list-header>
+      <ion-item>
+        <ion-checkbox formControlName="boulder">{{ 'WORKOUT.CLIMBING.DISCIPLINE.BOULDER' | translate }}</ion-checkbox>
+      </ion-item>
+      <ion-item>
+        <ion-checkbox formControlName="rope">{{ 'WORKOUT.CLIMBING.DISCIPLINE.ROPE' | translate }}</ion-checkbox>
+      </ion-item>
+      @if (!hasDiscipline() && form.touched) {
+        <ion-item lines="none">
+          <ion-note color="danger">{{ 'WORKOUT.CLIMBING.GYM.DISCIPLINE_REQUIRED' | translate }}</ion-note>
+        </ion-item>
+      }
+    </ion-list>
+
+    @if (isRope()) {
+      <ion-list>
+        <ion-list-header>{{ 'WORKOUT.CLIMBING.GYM.ROPE_SECTION' | translate }}</ion-list-header>
+        <ion-item>
+          <ion-input
+            type="number"
+            inputmode="decimal"
+            formControlName="defaultWallHeightMeters"
+            [label]="'WORKOUT.CLIMBING.GYM.FIELD_WALL_HEIGHT' | translate"
+            label-placement="stacked"
+          ></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-checkbox formControlName="toprope">{{ 'WORKOUT.CLIMBING.SAFETY.TOPROPE' | translate }}</ion-checkbox>
+        </ion-item>
+        <ion-item>
+          <ion-checkbox formControlName="lead">{{ 'WORKOUT.CLIMBING.SAFETY.LEAD' | translate }}</ion-checkbox>
+        </ion-item>
+      </ion-list>
+    }
+
+    @if (gymId()) {
+      <ion-list>
+        <ion-list-header>
+          {{ 'WORKOUT.CLIMBING.BAND.LIST_TITLE' | translate }}
+          <ion-button fill="clear" size="small" routerLink="bands/new">
+            <ion-icon slot="icon-only" name="add-outline"></ion-icon>
+          </ion-button>
+        </ion-list-header>
+        @for (band of bands(); track band.id) {
+          <ion-item button [routerLink]="['bands', band.id]" detail="true">
+            <span class="swatch" [style.background]="band.hexColor" aria-hidden="true"></span>
+            <ion-label>
+              <h2>{{ band.name }}</h2>
+              <p>{{ band.gradeLower }}–{{ band.gradeUpper }} · {{ band.variant }}</p>
+            </ion-label>
+          </ion-item>
+        }
+        @if (bands().length === 0) {
+          <ion-item lines="none">
+            <ion-note color="medium">{{ 'WORKOUT.CLIMBING.BAND.EMPTY' | translate }}</ion-note>
+          </ion-item>
+        }
+      </ion-list>
+
+      <ion-list>
+        <ion-list-header>
+          {{ 'WORKOUT.CLIMBING.INDOOR_ROUTE.LIST_TITLE' | translate }}
+          <ion-button fill="clear" size="small" routerLink="routes/new">
+            <ion-icon slot="icon-only" name="add-outline"></ion-icon>
+          </ion-button>
+        </ion-list-header>
+        @for (route of indoorRoutes(); track route.id) {
+          <ion-item button [routerLink]="['routes', route.id]" detail="true">
+            <ion-label>
+              <h2>{{ route.name }}</h2>
+              <p>{{ route.discipline }} · {{ route.grade }}@if (route.sector) { · {{ route.sector }} }</p>
+            </ion-label>
+          </ion-item>
+        }
+        @if (indoorRoutes().length === 0) {
+          <ion-item lines="none">
+            <ion-note color="medium">{{ 'WORKOUT.CLIMBING.INDOOR_ROUTE.EMPTY' | translate }}</ion-note>
+          </ion-item>
+        }
+      </ion-list>
+
+      <div class="cta-row">
+        <ion-button expand="block" color="danger" fill="outline" (click)="delete()">
+          {{ 'COMMON.DELETE' | translate }}
+        </ion-button>
+      </div>
+    }
+  </form>
+</ion-content>

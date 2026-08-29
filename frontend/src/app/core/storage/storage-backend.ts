@@ -21,6 +21,9 @@ import { ShoppingListItem } from '../../api/model/shoppingListItem';
 import { StoredFood } from '../../api/model/storedFood';
 import { SwimLog } from '../../api/model/swimLog';
 import { BikeRideLog } from '../../api/model/bikeRideLog';
+import { Gym } from '../../api/model/gym';
+import { GymColorBand } from '../../api/model/gymColorBand';
+import { IndoorRoute } from '../../api/model/indoorRoute';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeeklyPlan } from '../../api/model/weeklyPlan';
 import { WeeklyPlanSlot } from '../../api/model/weeklyPlanSlot';
@@ -497,6 +500,20 @@ export interface StorageBackend {
   listBikeRideLogs(): Promise<BikeRideLog[]>;
   upsertBikeRideLog(log: BikeRideLog): Promise<BikeRideLog>;
   deleteBikeRideLog(id: string): Promise<BikeRideLog>;
+
+  /** documentation/Subfeatures/Indoor boulder admin.md + Indoor köteles admin.md: per-user indoor venue master — flat CRUD. */
+  listGyms(): Promise<Gym[]>;
+  upsertGym(gym: Gym): Promise<Gym>;
+  /** documentation/Subfeatures/Indoor boulder admin.md "Soft delete": no cascade — colour bands / indoor routes keep their own tombstones. */
+  deleteGym(id: string): Promise<Gym>;
+
+  listGymColorBands(): Promise<GymColorBand[]>;
+  upsertGymColorBand(band: GymColorBand): Promise<GymColorBand>;
+  deleteGymColorBand(id: string): Promise<GymColorBand>;
+
+  listIndoorRoutes(): Promise<IndoorRoute[]>;
+  upsertIndoorRoute(route: IndoorRoute): Promise<IndoorRoute>;
+  deleteIndoorRoute(id: string): Promise<IndoorRoute>;
 
   listHouseholdRooms(): Promise<HouseholdRoom[]>;
   upsertHouseholdRoom(room: HouseholdRoom): Promise<HouseholdRoom>;

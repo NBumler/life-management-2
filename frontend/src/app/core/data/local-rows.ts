@@ -19,6 +19,9 @@ import { ShoppingListItem } from '../../api/model/shoppingListItem';
 import { StoredFood } from '../../api/model/storedFood';
 import { SwimLog } from '../../api/model/swimLog';
 import { BikeRideLog } from '../../api/model/bikeRideLog';
+import { Gym } from '../../api/model/gym';
+import { GymColorBand } from '../../api/model/gymColorBand';
+import { IndoorRoute } from '../../api/model/indoorRoute';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 import { WeeklyPlan } from '../../api/model/weeklyPlan';
@@ -1733,6 +1736,290 @@ export function bikeRideLogTombstoneTask(id: string, deletedAt: string | null, u
     statement: `
       INSERT INTO bike_ride_log (id, ride_date, duration_minutes, intensity, updated_at, deleted, deleted_at, _dirty, _local_only)
       VALUES (?, '1970-01-01', 1, 'CITY', ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+// ---------------------------------------------------------------------------
+// documentation/Subfeatures/Indoor boulder admin.md + Indoor köteles admin.md — indoor venue master
+// (Mászónapló M3a): Gym + GymColorBand + IndoorRoute, three flat user-owned CRUD tables. `disciplines`
+// / `availableSafetyStyles` round-trip through a JSON string in a TEXT column.
+// ---------------------------------------------------------------------------
+
+export interface GymRow {
+  id: string;
+  name: string;
+  address: string | null;
+  disciplines: string;
+  default_wall_height_meters: number | null;
+  available_safety_styles: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+export function gymRowToDto(row: GymRow): Gym {
+  return {
+    id: row.id,
+    name: row.name,
+    address: row.address,
+    disciplines: JSON.parse(row.disciplines) as Gym.DisciplinesEnum[],
+    defaultWallHeightMeters: row.default_wall_height_meters,
+    availableSafetyStyles:
+      row.available_safety_styles === null ? null : (JSON.parse(row.available_safety_styles) as Gym.AvailableSafetyStylesEnum[]),
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+export function gymLocalWriteTask(dto: Gym): SqlTask {
+  return {
+    statement: `
+      INSERT INTO gym (id, name, address, disciplines, default_wall_height_meters, available_safety_styles, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET
+        name = excluded.name, address = excluded.address, disciplines = excluded.disciplines,
+        default_wall_height_meters = excluded.default_wall_height_meters, available_safety_styles = excluded.available_safety_styles,
+        _dirty = 1`,
+    values: [
+      dto.id,
+      dto.name,
+      dto.address ?? null,
+      JSON.stringify(dto.disciplines ?? []),
+      dto.defaultWallHeightMeters ?? null,
+      dto.availableSafetyStyles ? JSON.stringify(dto.availableSafetyStyles) : null,
+    ],
+  };
+}
+
+export function gymServerApplyTask(dto: Gym): SqlTask {
+  return {
+    statement: `
+      INSERT INTO gym (id, name, address, disciplines, default_wall_height_meters, available_safety_styles, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        name = excluded.name, address = excluded.address, disciplines = excluded.disciplines,
+        default_wall_height_meters = excluded.default_wall_height_meters, available_safety_styles = excluded.available_safety_styles,
+        created_at = excluded.created_at, updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at,
+        _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE gym._dirty = 0`,
+    values: [
+      dto.id,
+      dto.name,
+      dto.address ?? null,
+      JSON.stringify(dto.disciplines ?? []),
+      dto.defaultWallHeightMeters ?? null,
+      dto.availableSafetyStyles ? JSON.stringify(dto.availableSafetyStyles) : null,
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function gymTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO gym (id, name, disciplines, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '', '[]', ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+export interface GymColorBandRow {
+  id: string;
+  gym_id: string;
+  name: string;
+  hex_color: string;
+  variant: string;
+  grade_lower: string;
+  grade_upper: string;
+  absolute_difficulty_index_lower: number;
+  absolute_difficulty_index_upper: number;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+export function gymColorBandRowToDto(row: GymColorBandRow): GymColorBand {
+  return {
+    id: row.id,
+    gymId: row.gym_id,
+    name: row.name,
+    hexColor: row.hex_color,
+    variant: row.variant as GymColorBand.VariantEnum,
+    gradeLower: row.grade_lower,
+    gradeUpper: row.grade_upper,
+    absoluteDifficultyIndexLower: row.absolute_difficulty_index_lower,
+    absoluteDifficultyIndexUpper: row.absolute_difficulty_index_upper,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+export function gymColorBandLocalWriteTask(dto: GymColorBand): SqlTask {
+  return {
+    statement: `
+      INSERT INTO gym_color_band (id, gym_id, name, hex_color, variant, grade_lower, grade_upper, absolute_difficulty_index_lower, absolute_difficulty_index_upper, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET
+        gym_id = excluded.gym_id, name = excluded.name, hex_color = excluded.hex_color, variant = excluded.variant,
+        grade_lower = excluded.grade_lower, grade_upper = excluded.grade_upper,
+        absolute_difficulty_index_lower = excluded.absolute_difficulty_index_lower,
+        absolute_difficulty_index_upper = excluded.absolute_difficulty_index_upper, _dirty = 1`,
+    values: [
+      dto.id,
+      dto.gymId,
+      dto.name,
+      dto.hexColor,
+      dto.variant,
+      dto.gradeLower,
+      dto.gradeUpper,
+      dto.absoluteDifficultyIndexLower,
+      dto.absoluteDifficultyIndexUpper,
+    ],
+  };
+}
+
+export function gymColorBandServerApplyTask(dto: GymColorBand): SqlTask {
+  return {
+    statement: `
+      INSERT INTO gym_color_band (id, gym_id, name, hex_color, variant, grade_lower, grade_upper, absolute_difficulty_index_lower, absolute_difficulty_index_upper, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        gym_id = excluded.gym_id, name = excluded.name, hex_color = excluded.hex_color, variant = excluded.variant,
+        grade_lower = excluded.grade_lower, grade_upper = excluded.grade_upper,
+        absolute_difficulty_index_lower = excluded.absolute_difficulty_index_lower,
+        absolute_difficulty_index_upper = excluded.absolute_difficulty_index_upper,
+        created_at = excluded.created_at, updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at,
+        _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE gym_color_band._dirty = 0`,
+    values: [
+      dto.id,
+      dto.gymId,
+      dto.name,
+      dto.hexColor,
+      dto.variant,
+      dto.gradeLower,
+      dto.gradeUpper,
+      dto.absoluteDifficultyIndexLower,
+      dto.absoluteDifficultyIndexUpper,
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function gymColorBandTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO gym_color_band (id, gym_id, name, hex_color, variant, grade_lower, grade_upper, absolute_difficulty_index_lower, absolute_difficulty_index_upper, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '', '', '#000000', 'NEUTRAL', '', '', 0, 0, ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+export interface IndoorRouteRow {
+  id: string;
+  gym_id: string;
+  name: string;
+  discipline: string;
+  grade: string;
+  absolute_difficulty_index: number;
+  sector: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+export function indoorRouteRowToDto(row: IndoorRouteRow): IndoorRoute {
+  return {
+    id: row.id,
+    gymId: row.gym_id,
+    name: row.name,
+    discipline: row.discipline as IndoorRoute.DisciplineEnum,
+    grade: row.grade,
+    absoluteDifficultyIndex: row.absolute_difficulty_index,
+    sector: row.sector,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+export function indoorRouteLocalWriteTask(dto: IndoorRoute): SqlTask {
+  return {
+    statement: `
+      INSERT INTO indoor_route (id, gym_id, name, discipline, grade, absolute_difficulty_index, sector, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET
+        gym_id = excluded.gym_id, name = excluded.name, discipline = excluded.discipline, grade = excluded.grade,
+        absolute_difficulty_index = excluded.absolute_difficulty_index, sector = excluded.sector, _dirty = 1`,
+    values: [dto.id, dto.gymId, dto.name, dto.discipline, dto.grade, dto.absoluteDifficultyIndex, dto.sector ?? null],
+  };
+}
+
+export function indoorRouteServerApplyTask(dto: IndoorRoute): SqlTask {
+  return {
+    statement: `
+      INSERT INTO indoor_route (id, gym_id, name, discipline, grade, absolute_difficulty_index, sector, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        gym_id = excluded.gym_id, name = excluded.name, discipline = excluded.discipline, grade = excluded.grade,
+        absolute_difficulty_index = excluded.absolute_difficulty_index, sector = excluded.sector,
+        created_at = excluded.created_at, updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at,
+        _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE indoor_route._dirty = 0`,
+    values: [
+      dto.id,
+      dto.gymId,
+      dto.name,
+      dto.discipline,
+      dto.grade,
+      dto.absoluteDifficultyIndex,
+      dto.sector ?? null,
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function indoorRouteTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO indoor_route (id, gym_id, name, discipline, grade, absolute_difficulty_index, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '', '', 'BOULDER', '', 0, ?, 1, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
     values: [id, updatedAt, deletedAt],
   };

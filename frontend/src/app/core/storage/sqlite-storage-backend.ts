@@ -18,6 +18,9 @@ import { ShoppingList } from '../../api/model/shoppingList';
 import { StoredFood } from '../../api/model/storedFood';
 import { SwimLog } from '../../api/model/swimLog';
 import { BikeRideLog } from '../../api/model/bikeRideLog';
+import { Gym } from '../../api/model/gym';
+import { GymColorBand } from '../../api/model/gymColorBand';
+import { IndoorRoute } from '../../api/model/indoorRoute';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeeklyPlan } from '../../api/model/weeklyPlan';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
@@ -46,6 +49,9 @@ import {
   StoredFoodRow,
   SwimLogRow,
   BikeRideLogRow,
+  GymRow,
+  GymColorBandRow,
+  IndoorRouteRow,
   WeightHistoryRow,
   calendarEventLocalWriteTask,
   calendarEventRowToDto,
@@ -97,6 +103,12 @@ import {
   swimLogRowToDto,
   bikeRideLogLocalWriteTask,
   bikeRideLogRowToDto,
+  gymLocalWriteTask,
+  gymRowToDto,
+  gymColorBandLocalWriteTask,
+  gymColorBandRowToDto,
+  indoorRouteLocalWriteTask,
+  indoorRouteRowToDto,
   weightHistoryLocalWriteTask,
   weightHistoryRowToDto,
   WeeklyPlanRow,
@@ -405,7 +417,7 @@ export class SqliteStorageBackend implements StorageBackend {
 
   /** documentation/Architektúra/Backend-offline first.md §10 "Függőségi láncok": ids among `candidateIds` whose row hasn't reached the server yet. */
   private async findLocalOnlyIds(
-    table: 'gear_item' | 'household_room' | 'food' | 'recipe' | 'exercise_catalog' | 'workout_plan',
+    table: 'gear_item' | 'household_room' | 'food' | 'recipe' | 'exercise_catalog' | 'workout_plan' | 'gym',
     candidateIds: string[],
   ): Promise<string[]> {
     if (candidateIds.length === 0) {
@@ -755,6 +767,174 @@ export class SqliteStorageBackend implements StorageBackend {
   private async readBikeRideLog(id: string): Promise<BikeRideLog> {
     const rows = await this.db.query<BikeRideLogRow>('SELECT * FROM bike_ride_log WHERE id = ?', [id]);
     return bikeRideLogRowToDto(rows[0]);
+  }
+
+  async listGyms(): Promise<Gym[]> {
+    const rows = await this.db.query<GymRow>('SELECT * FROM gym WHERE deleted = 0 ORDER BY name COLLATE NOCASE');
+    return rows.map(gymRowToDto);
+  }
+
+  async upsertGym(gym: Gym): Promise<Gym> {
+    const userId = this.requireUserId();
+    const existing = await this.db.query('SELECT 1 FROM gym WHERE id = ?', [gym.id]);
+    const isNew = existing.length === 0;
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: isNew ? 'POST' : 'PUT',
+      url: isNew ? '/api/climbing/gyms' : `/api/climbing/gyms/${gym.id}`,
+      payload: gym,
+      entityType: 'Gym',
+      targetEntityId: gym.id,
+    });
+    await this.db.executeTransaction([gymLocalWriteTask(gym), ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    return this.readGym(gym.id);
+  }
+
+  async deleteGym(id: string): Promise<Gym> {
+    const userId = this.requireUserId();
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: 'DELETE',
+      url: `/api/climbing/gyms/${id}`,
+      payload: null,
+      entityType: 'Gym',
+      targetEntityId: id,
+    });
+    const entityTask: SqlTask = enqueue.hardRemoveLocalEntity
+      ? { statement: 'DELETE FROM gym WHERE id = ?', values: [id] }
+      : {
+          statement: 'UPDATE gym SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?',
+          values: [new Date().toISOString(), id],
+        };
+    await this.db.executeTransaction([entityTask, ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    if (enqueue.hardRemoveLocalEntity) {
+      return { id, name: '', disciplines: [], deleted: true };
+    }
+    return this.readGym(id);
+  }
+
+  private async readGym(id: string): Promise<Gym> {
+    const rows = await this.db.query<GymRow>('SELECT * FROM gym WHERE id = ?', [id]);
+    return gymRowToDto(rows[0]);
+  }
+
+  async listGymColorBands(): Promise<GymColorBand[]> {
+    const rows = await this.db.query<GymColorBandRow>('SELECT * FROM gym_color_band WHERE deleted = 0 ORDER BY absolute_difficulty_index_lower');
+    return rows.map(gymColorBandRowToDto);
+  }
+
+  async upsertGymColorBand(band: GymColorBand): Promise<GymColorBand> {
+    const userId = this.requireUserId();
+    const existing = await this.db.query('SELECT 1 FROM gym_color_band WHERE id = ?', [band.id]);
+    const isNew = existing.length === 0;
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: isNew ? 'POST' : 'PUT',
+      url: isNew ? '/api/climbing/gym-color-bands' : `/api/climbing/gym-color-bands/${band.id}`,
+      payload: band,
+      entityType: 'GymColorBand',
+      targetEntityId: band.id,
+      // documentation/Architektúra/Backend-offline first.md §10 "Függőségi láncok": a band created
+      // right after an inline new gym must wait for that gym's own POST to land first.
+      dependsOn: await this.findLocalOnlyIds('gym', [band.gymId]),
+    });
+    await this.db.executeTransaction([gymColorBandLocalWriteTask(band), ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    return this.readGymColorBand(band.id);
+  }
+
+  async deleteGymColorBand(id: string): Promise<GymColorBand> {
+    const userId = this.requireUserId();
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: 'DELETE',
+      url: `/api/climbing/gym-color-bands/${id}`,
+      payload: null,
+      entityType: 'GymColorBand',
+      targetEntityId: id,
+    });
+    const entityTask: SqlTask = enqueue.hardRemoveLocalEntity
+      ? { statement: 'DELETE FROM gym_color_band WHERE id = ?', values: [id] }
+      : {
+          statement: 'UPDATE gym_color_band SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?',
+          values: [new Date().toISOString(), id],
+        };
+    await this.db.executeTransaction([entityTask, ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    if (enqueue.hardRemoveLocalEntity) {
+      return {
+        id,
+        gymId: '',
+        name: '',
+        hexColor: '#000000',
+        variant: GymColorBand.VariantEnum.Neutral,
+        gradeLower: '',
+        gradeUpper: '',
+        absoluteDifficultyIndexLower: 0,
+        absoluteDifficultyIndexUpper: 0,
+        deleted: true,
+      };
+    }
+    return this.readGymColorBand(id);
+  }
+
+  private async readGymColorBand(id: string): Promise<GymColorBand> {
+    const rows = await this.db.query<GymColorBandRow>('SELECT * FROM gym_color_band WHERE id = ?', [id]);
+    return gymColorBandRowToDto(rows[0]);
+  }
+
+  async listIndoorRoutes(): Promise<IndoorRoute[]> {
+    const rows = await this.db.query<IndoorRouteRow>('SELECT * FROM indoor_route WHERE deleted = 0 ORDER BY name COLLATE NOCASE');
+    return rows.map(indoorRouteRowToDto);
+  }
+
+  async upsertIndoorRoute(route: IndoorRoute): Promise<IndoorRoute> {
+    const userId = this.requireUserId();
+    const existing = await this.db.query('SELECT 1 FROM indoor_route WHERE id = ?', [route.id]);
+    const isNew = existing.length === 0;
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: isNew ? 'POST' : 'PUT',
+      url: isNew ? '/api/climbing/indoor-routes' : `/api/climbing/indoor-routes/${route.id}`,
+      payload: route,
+      entityType: 'IndoorRoute',
+      targetEntityId: route.id,
+      dependsOn: await this.findLocalOnlyIds('gym', [route.gymId]),
+    });
+    await this.db.executeTransaction([indoorRouteLocalWriteTask(route), ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    return this.readIndoorRoute(route.id);
+  }
+
+  async deleteIndoorRoute(id: string): Promise<IndoorRoute> {
+    const userId = this.requireUserId();
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: 'DELETE',
+      url: `/api/climbing/indoor-routes/${id}`,
+      payload: null,
+      entityType: 'IndoorRoute',
+      targetEntityId: id,
+    });
+    const entityTask: SqlTask = enqueue.hardRemoveLocalEntity
+      ? { statement: 'DELETE FROM indoor_route WHERE id = ?', values: [id] }
+      : {
+          statement: 'UPDATE indoor_route SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?',
+          values: [new Date().toISOString(), id],
+        };
+    await this.db.executeTransaction([entityTask, ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    if (enqueue.hardRemoveLocalEntity) {
+      return { id, gymId: '', name: '', discipline: IndoorRoute.DisciplineEnum.Boulder, grade: '', absoluteDifficultyIndex: 0, deleted: true };
+    }
+    return this.readIndoorRoute(id);
+  }
+
+  private async readIndoorRoute(id: string): Promise<IndoorRoute> {
+    const rows = await this.db.query<IndoorRouteRow>('SELECT * FROM indoor_route WHERE id = ?', [id]);
+    return indoorRouteRowToDto(rows[0]);
   }
 
   async listExercises(): Promise<Exercise[]> {

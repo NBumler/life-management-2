@@ -1,0 +1,36 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/workout/climbing/admin"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ 'WORKOUT.CLIMBING.ADMIN_GYMS' | translate }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="cta-row">
+    <ion-button expand="block" routerLink="new">{{ 'WORKOUT.CLIMBING.GYM.NEW' | translate }}</ion-button>
+  </div>
+
+  @if (isEmpty()) {
+    <ion-list>
+      <ion-item>
+        <ion-label color="medium">{{ 'WORKOUT.CLIMBING.GYM.EMPTY' | translate }}</ion-label>
+      </ion-item>
+    </ion-list>
+  } @else {
+    <ion-list>
+      @for (gym of gyms(); track gym.id) {
+        <ion-item button [routerLink]="[gym.id]" detail="true">
+          <ion-label>
+            <h2>{{ gym.name }}</h2>
+            @if (gym.address) {
+              <p>{{ gym.address }}</p>
+            }
+          </ion-label>
+          <ion-note slot="end">{{ gym.disciplines.join(' · ') }}</ion-note>
+        </ion-item>
+      }
+    </ion-list>
+  }
+</ion-content>

@@ -756,6 +756,68 @@
         "INDOOR_ROPE": "Indoor köteles",
         "OUTDOOR_BOULDER": "Outdoor boulder",
         "OUTDOOR_ROPE": "Outdoor köteles"
+      },
+      "ADMIN_INDOOR": "Beltéri",
+      "ADMIN_OUTDOOR": "Kültéri",
+      "ADMIN_GYMS": "Termek",
+      "ADMIN_CRAGS": "Sziklák (Crag → Szektor → Út)",
+      "ADMIN_SOON": "hamarosan",
+      "GRADE_UNPARSED": "A nehézségi fokozat nem értelmezhető — nézd meg a skála súgót.",
+      "DISCIPLINE": {
+        "BOULDER": "Boulder",
+        "ROPE": "Köteles"
+      },
+      "SAFETY": {
+        "TOPROPE": "Toprope",
+        "LEAD": "Vezetett (lead)"
+      },
+      "VARIANT": {
+        "PLUS": "Plusz (+)",
+        "MINUS": "Mínusz (−)",
+        "NEUTRAL": "Semleges"
+      },
+      "GYM": {
+        "NEW": "Új terem",
+        "EMPTY": "Még nincs terem. Vegyél fel egyet.",
+        "NEW_TITLE": "Új terem",
+        "EDIT_TITLE": "Terem szerkesztése",
+        "FIELD_NAME": "Név",
+        "FIELD_ADDRESS": "Cím",
+        "FIELD_DISCIPLINES": "Ágazatok",
+        "DISCIPLINE_REQUIRED": "Legalább egy ágazatot válassz.",
+        "NAME_CONFLICT": "Már van ilyen nevű termed.",
+        "ROPE_SECTION": "Köteles beállítások",
+        "FIELD_WALL_HEIGHT": "Átlagos falmagasság (m)",
+        "DELETE_CONFIRM_TITLE": "Terem törlése",
+        "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd ezt a termet? A szín-sávok és a beltéri utak megmaradnak, de a termükre már nem hivatkoznak."
+      },
+      "BAND": {
+        "LIST_TITLE": "Szín-sávok",
+        "EMPTY": "Még nincs szín-sáv.",
+        "NEW_TITLE": "Új szín-sáv",
+        "EDIT_TITLE": "Szín-sáv szerkesztése",
+        "FIELD_NAME": "Név (pl. Piros)",
+        "FIELD_HEX": "Hex szín",
+        "HEX_INVALID": "3 vagy 6 jegyű hex szín kell (pl. #f0a vagy #ff00aa).",
+        "HEX_CONFLICT": "Ebben a teremben már van sáv ezzel a színnel.",
+        "FIELD_VARIANT": "Változat",
+        "FIELD_GRADE_LOWER": "Alsó fokozat",
+        "FIELD_GRADE_UPPER": "Felső fokozat",
+        "INDEX_PREVIEW": "Nehézségi index",
+        "DELETE_CONFIRM_TITLE": "Szín-sáv törlése",
+        "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd ezt a szín-sávot?"
+      },
+      "INDOOR_ROUTE": {
+        "LIST_TITLE": "Beltéri utak (opcionális)",
+        "EMPTY": "Nincs rögzített beltéri út.",
+        "NEW_TITLE": "Új beltéri út",
+        "EDIT_TITLE": "Beltéri út szerkesztése",
+        "FIELD_NAME": "Név",
+        "FIELD_DISCIPLINE": "Ágazat",
+        "FIELD_GRADE": "Fokozat",
+        "FIELD_SECTOR": "Szektor / falszakasz",
+        "DELETE_CONFIRM_TITLE": "Beltéri út törlése",
+        "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd ezt a beltéri utat?"
       }
     }
   }

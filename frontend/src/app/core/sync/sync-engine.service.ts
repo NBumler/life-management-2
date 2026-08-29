@@ -23,6 +23,9 @@ import { ShoppingListsService } from '../../api/api/shoppingLists.service';
 import { StoredFoodsService } from '../../api/api/storedFoods.service';
 import { SwimLogsService } from '../../api/api/swimLogs.service';
 import { BikeRideLogsService } from '../../api/api/bikeRideLogs.service';
+import { ClimbingGymsService } from '../../api/api/climbingGyms.service';
+import { ClimbingGymColorBandsService } from '../../api/api/climbingGymColorBands.service';
+import { ClimbingIndoorRoutesService } from '../../api/api/climbingIndoorRoutes.service';
 import { SyncService } from '../../api/api/sync.service';
 import { WeeklyPlansService } from '../../api/api/weeklyPlans.service';
 import { WorkoutPlansService } from '../../api/api/workoutPlans.service';
@@ -51,6 +54,9 @@ import { ShoppingListItem } from '../../api/model/shoppingListItem';
 import { StoredFood } from '../../api/model/storedFood';
 import { SwimLog } from '../../api/model/swimLog';
 import { BikeRideLog } from '../../api/model/bikeRideLog';
+import { Gym } from '../../api/model/gym';
+import { GymColorBand } from '../../api/model/gymColorBand';
+import { IndoorRoute } from '../../api/model/indoorRoute';
 import { SyncChangeItem } from '../../api/model/syncChangeItem';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeeklyPlan } from '../../api/model/weeklyPlan';
@@ -105,6 +111,12 @@ import {
   swimLogTombstoneTask,
   bikeRideLogServerApplyTask,
   bikeRideLogTombstoneTask,
+  gymServerApplyTask,
+  gymTombstoneTask,
+  gymColorBandServerApplyTask,
+  gymColorBandTombstoneTask,
+  indoorRouteServerApplyTask,
+  indoorRouteTombstoneTask,
   weeklyPlanServerApplyTask,
   weeklyPlanSlotServerApplyTask,
   weeklyPlanSlotTombstoneTask,
@@ -167,6 +179,9 @@ export class SyncEngineService {
   private readonly weeklyPlansApi = inject(WeeklyPlansService);
   private readonly swimLogsApi = inject(SwimLogsService);
   private readonly bikeRideLogsApi = inject(BikeRideLogsService);
+  private readonly gymsApi = inject(ClimbingGymsService);
+  private readonly gymColorBandsApi = inject(ClimbingGymColorBandsService);
+  private readonly indoorRoutesApi = inject(ClimbingIndoorRoutesService);
   private readonly syncApi = inject(SyncService);
   private readonly authSession = inject(AuthSessionService);
   private readonly offlineQueue = inject(OfflineQueueService);
@@ -349,6 +364,36 @@ export class SyncEngineService {
       try {
         const dto = await firstValueFrom(this.bikeRideLogsApi.getBikeRideLog(row.id));
         await this.db.executeTransaction([bikeRideLogServerApplyTask(dto)]);
+      } catch {
+        // same as above
+      }
+    }
+
+    const staleGyms = await this.db.query<{ id: string }>('SELECT id FROM gym WHERE _needs_refetch = 1');
+    for (const row of staleGyms) {
+      try {
+        const dto = await firstValueFrom(this.gymsApi.getClimbingGym(row.id));
+        await this.db.executeTransaction([gymServerApplyTask(dto)]);
+      } catch {
+        // same as above
+      }
+    }
+
+    const staleGymColorBands = await this.db.query<{ id: string }>('SELECT id FROM gym_color_band WHERE _needs_refetch = 1');
+    for (const row of staleGymColorBands) {
+      try {
+        const dto = await firstValueFrom(this.gymColorBandsApi.getClimbingGymColorBand(row.id));
+        await this.db.executeTransaction([gymColorBandServerApplyTask(dto)]);
+      } catch {
+        // same as above
+      }
+    }
+
+    const staleIndoorRoutes = await this.db.query<{ id: string }>('SELECT id FROM indoor_route WHERE _needs_refetch = 1');
+    for (const row of staleIndoorRoutes) {
+      try {
+        const dto = await firstValueFrom(this.indoorRoutesApi.getClimbingIndoorRoute(row.id));
+        await this.db.executeTransaction([indoorRouteServerApplyTask(dto)]);
       } catch {
         // same as above
       }
@@ -626,6 +671,15 @@ export class SyncEngineService {
     if (item.entityType === 'BikeRideLog') {
       return [bikeRideLogServerApplyTask(body as BikeRideLog)];
     }
+    if (item.entityType === 'Gym') {
+      return [gymServerApplyTask(body as Gym)];
+    }
+    if (item.entityType === 'GymColorBand') {
+      return [gymColorBandServerApplyTask(body as GymColorBand)];
+    }
+    if (item.entityType === 'IndoorRoute') {
+      return [indoorRouteServerApplyTask(body as IndoorRoute)];
+    }
     if (item.entityType === 'Exercise') {
       return [exerciseServerApplyTask(body as Exercise)];
     }
@@ -834,6 +888,14 @@ export class SyncEngineService {
       await this.db.executeTransaction([swimLogTombstoneTask(item.targetEntityId, null, now)]);
     } else if (item.entityType === 'BikeRideLog') {
       await this.db.executeTransaction([bikeRideLogTombstoneTask(item.targetEntityId, null, now)]);
+    } else if (item.entityType === 'Gym') {
+      // documentation/Subfeatures/Indoor boulder admin.md "Soft delete": no cascade — a deleted gym's
+      // colour bands / indoor routes keep their own rows and tombstones.
+      await this.db.executeTransaction([gymTombstoneTask(item.targetEntityId, null, now)]);
+    } else if (item.entityType === 'GymColorBand') {
+      await this.db.executeTransaction([gymColorBandTombstoneTask(item.targetEntityId, null, now)]);
+    } else if (item.entityType === 'IndoorRoute') {
+      await this.db.executeTransaction([indoorRouteTombstoneTask(item.targetEntityId, null, now)]);
     } else if (item.entityType === 'Exercise') {
       await this.db.executeTransaction([exerciseTombstoneTask(item.targetEntityId, null, now)]);
     } else if (item.entityType === 'HouseholdRoom') {
@@ -1088,6 +1150,24 @@ export class SyncEngineService {
         return [bikeRideLogServerApplyTask(change.data as BikeRideLog)];
       }
       return [bikeRideLogTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
+    }
+    if (change.entityType === 'Gym') {
+      if (!change.deleted) {
+        return [gymServerApplyTask(change.data as Gym)];
+      }
+      return [gymTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
+    }
+    if (change.entityType === 'GymColorBand') {
+      if (!change.deleted) {
+        return [gymColorBandServerApplyTask(change.data as GymColorBand)];
+      }
+      return [gymColorBandTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
+    }
+    if (change.entityType === 'IndoorRoute') {
+      if (!change.deleted) {
+        return [indoorRouteServerApplyTask(change.data as IndoorRoute)];
+      }
+      return [indoorRouteTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
     }
     if (change.entityType === 'Exercise') {
       if (!change.deleted) {
