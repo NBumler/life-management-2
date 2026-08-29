@@ -1,0 +1,51 @@
+type: object
+description: >-
+  documentation/Subfeatures/Outdoor boulder admin.md — a user-owned outdoor crag, the root of the
+  location tree (Crag -> Sector -> Route | BoulderProblem). The same row is shared by the outdoor
+  boulder and rope admin within one user. `latitude` / `longitude` are the only map data stored
+  (map/photo UI is out of 2.0 scope). `defaultRockType` is a free-text default the outdoor napló
+  inherits at session level.
+required:
+  - id
+  - name
+  - deleted
+properties:
+  id:
+    type: string
+    format: uuid
+  name:
+    type: string
+    minLength: 1
+  latitude:
+    type: number
+    format: double
+    minimum: -90
+    maximum: 90
+    nullable: true
+    description: Optional GPS latitude.
+  longitude:
+    type: number
+    format: double
+    minimum: -180
+    maximum: 180
+    nullable: true
+    description: Optional GPS longitude.
+  defaultRockType:
+    type: string
+    nullable: true
+    description: Free-text default rock type, inherited (overridable) by the outdoor napló.
+  deleted:
+    type: boolean
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

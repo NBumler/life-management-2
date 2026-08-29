@@ -1,0 +1,30 @@
+get:
+  operationId: listClimbingSectors
+  tags:
+    - climbing-sectors
+  summary: The caller's outdoor sectors, live rows only (deleted = false).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/SectorList.yaml'
+post:
+  operationId: createClimbingSector
+  tags:
+    - climbing-sectors
+  summary: Create a sector — idempotent upsert on the client-supplied id.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/Sector.yaml'
+  responses:
+    '200':
+      description: Created or, on retry with the same id, the existing row.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/Sector.yaml'

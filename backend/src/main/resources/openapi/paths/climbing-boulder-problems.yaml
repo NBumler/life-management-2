@@ -1,0 +1,30 @@
+get:
+  operationId: listClimbingBoulderProblems
+  tags:
+    - climbing-boulder-problems
+  summary: The caller's outdoor boulder problems, live rows only (deleted = false).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/BoulderProblemList.yaml'
+post:
+  operationId: createClimbingBoulderProblem
+  tags:
+    - climbing-boulder-problems
+  summary: Create a boulder problem — idempotent upsert on the client-supplied id.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/BoulderProblem.yaml'
+  responses:
+    '200':
+      description: Created or, on retry with the same id, the existing row.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/BoulderProblem.yaml'

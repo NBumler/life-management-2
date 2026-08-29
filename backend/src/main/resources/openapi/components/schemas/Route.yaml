@@ -1,0 +1,61 @@
+type: object
+description: >-
+  documentation/Subfeatures/Outdoor köteles admin.md — a user-owned rope route under a Sector.
+  `guidebookGrade` is the raw guidebook string; the napló parses it, the server stores it verbatim
+  (no matrix index column). `lengthInMeters` / `totalPitches` / `rockType` / `aspect` are optional
+  prefill values for the rope napló — when `rockType` / `aspect` are set they win over the
+  Sector/Crag default. The sector link is fixed at create time.
+required:
+  - id
+  - sectorId
+  - name
+  - guidebookGrade
+  - deleted
+properties:
+  id:
+    type: string
+    format: uuid
+  sectorId:
+    type: string
+    format: uuid
+  name:
+    type: string
+    minLength: 1
+  guidebookGrade:
+    type: string
+    minLength: 1
+  lengthInMeters:
+    type: number
+    format: double
+    minimum: 0
+    exclusiveMinimum: true
+    nullable: true
+    description: Optional route length, prefills the napló's lengthInMeters.
+  totalPitches:
+    type: integer
+    minimum: 1
+    nullable: true
+    description: Optional pitch count, prefills the napló.
+  rockType:
+    type: string
+    nullable: true
+    description: Optional per-route rock type; when set it wins over the Sector/Crag default.
+  aspect:
+    type: string
+    nullable: true
+    description: Optional per-route aspect; when set it wins over the Sector default.
+  deleted:
+    type: boolean
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

@@ -1,0 +1,40 @@
+type: object
+description: >-
+  documentation/Subfeatures/Outdoor boulder admin.md — an optional user-owned boulder problem master
+  under a Sector ("Opcionális master"); the napló can also create ad-hoc problems without one.
+  `guidebookGrade` is the raw guidebook string, parsed client-side (no matrix index column). The
+  sector link is fixed at create time.
+required:
+  - id
+  - sectorId
+  - name
+  - guidebookGrade
+  - deleted
+properties:
+  id:
+    type: string
+    format: uuid
+  sectorId:
+    type: string
+    format: uuid
+  name:
+    type: string
+    minLength: 1
+  guidebookGrade:
+    type: string
+    minLength: 1
+  deleted:
+    type: boolean
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

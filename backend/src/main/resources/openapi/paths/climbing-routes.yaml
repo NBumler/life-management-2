@@ -1,0 +1,30 @@
+get:
+  operationId: listClimbingRoutes
+  tags:
+    - climbing-routes
+  summary: The caller's outdoor rope routes, live rows only (deleted = false).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/RouteList.yaml'
+post:
+  operationId: createClimbingRoute
+  tags:
+    - climbing-routes
+  summary: Create a route — idempotent upsert on the client-supplied id.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/Route.yaml'
+  responses:
+    '200':
+      description: Created or, on retry with the same id, the existing row.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/Route.yaml'

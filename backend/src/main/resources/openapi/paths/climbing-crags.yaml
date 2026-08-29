@@ -1,0 +1,30 @@
+get:
+  operationId: listClimbingCrags
+  tags:
+    - climbing-crags
+  summary: The caller's outdoor crags, live rows only (deleted = false).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/CragList.yaml'
+post:
+  operationId: createClimbingCrag
+  tags:
+    - climbing-crags
+  summary: Create a crag — idempotent upsert on the client-supplied id.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/Crag.yaml'
+  responses:
+    '200':
+      description: Created or, on retry with the same id, the existing row.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/Crag.yaml'

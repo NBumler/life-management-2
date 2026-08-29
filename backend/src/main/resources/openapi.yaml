@@ -115,6 +115,22 @@ paths:
     $ref: 'openapi/paths/climbing-indoor-routes.yaml'
   /api/climbing/indoor-routes/{id}:
     $ref: 'openapi/paths/climbing-indoor-routes-item.yaml'
+  /api/climbing/crags:
+    $ref: 'openapi/paths/climbing-crags.yaml'
+  /api/climbing/crags/{id}:
+    $ref: 'openapi/paths/climbing-crags-item.yaml'
+  /api/climbing/sectors:
+    $ref: 'openapi/paths/climbing-sectors.yaml'
+  /api/climbing/sectors/{id}:
+    $ref: 'openapi/paths/climbing-sectors-item.yaml'
+  /api/climbing/routes:
+    $ref: 'openapi/paths/climbing-routes.yaml'
+  /api/climbing/routes/{id}:
+    $ref: 'openapi/paths/climbing-routes-item.yaml'
+  /api/climbing/boulder-problems:
+    $ref: 'openapi/paths/climbing-boulder-problems.yaml'
+  /api/climbing/boulder-problems/{id}:
+    $ref: 'openapi/paths/climbing-boulder-problems-item.yaml'
 components:
   securitySchemes:
     bearerAuth:
@@ -268,3 +284,19 @@ components:
       $ref: 'openapi/components/schemas/IndoorRoute.yaml'
     IndoorRouteList:
       $ref: 'openapi/components/schemas/IndoorRouteList.yaml'
+    Crag:
+      $ref: 'openapi/components/schemas/Crag.yaml'
+    CragList:
+      $ref: 'openapi/components/schemas/CragList.yaml'
+    Sector:
+      $ref: 'openapi/components/schemas/Sector.yaml'
+    SectorList:
+      $ref: 'openapi/components/schemas/SectorList.yaml'
+    Route:
+      $ref: 'openapi/components/schemas/Route.yaml'
+    RouteList:
+      $ref: 'openapi/components/schemas/RouteList.yaml'
+    BoulderProblem:
+      $ref: 'openapi/components/schemas/BoulderProblem.yaml'
+    BoulderProblemList:
+      $ref: 'openapi/components/schemas/BoulderProblemList.yaml'
