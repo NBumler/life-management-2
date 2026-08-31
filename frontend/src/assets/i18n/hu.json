@@ -864,6 +864,46 @@
         "FIELD_GRADE": "Kalauz-fokozat",
         "DELETE_CONFIRM_TITLE": "Boulder törlése",
         "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd ezt a bouldert?"
+      },
+      "SOON": "Hamarosan",
+      "SESSION": {
+        "NEW": "Új session",
+        "EMPTY": "Még nincs beltéri boulder session.",
+        "NO_GYM": "Nincs terem",
+        "SENDS_SHORT": "sikeres",
+        "NEW_TITLE": "Új beltéri boulder session",
+        "EDIT_TITLE": "Session szerkesztése",
+        "FIELD_DATE": "Dátum",
+        "FIELD_GYM": "Terem",
+        "GYM_PLACEHOLDER": "Válassz termet",
+        "GYM_REQUIRED": "Válassz termet.",
+        "NO_BOULDER_GYM": "Nincs boulder termed. Vegyél fel egyet a terem adminban.",
+        "FIELD_DURATION": "Session hossz (perc)",
+        "FIELD_PUMP": "Pump (1–5)",
+        "FIELD_HEADSPACE": "Fejben (1–5)",
+        "FIELD_PARTNERS": "Mászótársak",
+        "PARTNERS_PLACEHOLDER": "Vesszővel elválasztva",
+        "FIELD_NOTES": "Jegyzet",
+        "ATTEMPTS": "Kísérletek",
+        "ADD_ATTEMPT": "Új kísérlet",
+        "NO_ATTEMPTS": "Még nincs kísérlet. Add hozzá élőben vagy utólag.",
+        "ATTEMPT_N": "{{n}}. kísérlet",
+        "SUCCESS": "Sikeres",
+        "FIELD_BAND": "Szín-sáv",
+        "FIELD_GRADE": "Fokozat (Font / V)",
+        "GRADE_PLACEHOLDER": "pl. 6B vagy V4",
+        "FIELD_ATTEMPT_COUNT": "Próbák száma",
+        "FIELD_STYLE": "Stílus",
+        "FIELD_ATTEMPT_NOTES": "Jegyzet",
+        "REMOVE_ATTEMPT": "Kísérlet törlése",
+        "NO_BODY_WEIGHT": "Adj meg testsúlyt a kalóriához",
+        "DELETE_CONFIRM_TITLE": "Session törlése",
+        "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd ezt a sessiont a kísérleteivel együtt?"
+      },
+      "ASCENT_STYLE": {
+        "FLASH": "Flash",
+        "REDPOINT": "Redpoint",
+        "ONSIGHT": "Onsight"
       }
     }
   }

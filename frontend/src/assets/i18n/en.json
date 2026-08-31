@@ -864,6 +864,46 @@
         "FIELD_GRADE": "Guidebook grade",
         "DELETE_CONFIRM_TITLE": "Delete boulder problem",
         "DELETE_CONFIRM_MESSAGE": "Delete this boulder problem?"
+      },
+      "SOON": "Soon",
+      "SESSION": {
+        "NEW": "New session",
+        "EMPTY": "No indoor boulder sessions yet.",
+        "NO_GYM": "No gym",
+        "SENDS_SHORT": "sent",
+        "NEW_TITLE": "New indoor boulder session",
+        "EDIT_TITLE": "Edit session",
+        "FIELD_DATE": "Date",
+        "FIELD_GYM": "Gym",
+        "GYM_PLACEHOLDER": "Choose a gym",
+        "GYM_REQUIRED": "Choose a gym.",
+        "NO_BOULDER_GYM": "You have no boulder gym. Add one in the venue admin.",
+        "FIELD_DURATION": "Session length (min)",
+        "FIELD_PUMP": "Pump (1–5)",
+        "FIELD_HEADSPACE": "Headspace (1–5)",
+        "FIELD_PARTNERS": "Climbing partners",
+        "PARTNERS_PLACEHOLDER": "Comma separated",
+        "FIELD_NOTES": "Notes",
+        "ATTEMPTS": "Attempts",
+        "ADD_ATTEMPT": "Add attempt",
+        "NO_ATTEMPTS": "No attempts yet. Add them live or afterwards.",
+        "ATTEMPT_N": "Attempt {{n}}",
+        "SUCCESS": "Sent",
+        "FIELD_BAND": "Colour band",
+        "FIELD_GRADE": "Grade (Font / V)",
+        "GRADE_PLACEHOLDER": "e.g. 6B or V4",
+        "FIELD_ATTEMPT_COUNT": "Number of tries",
+        "FIELD_STYLE": "Style",
+        "FIELD_ATTEMPT_NOTES": "Notes",
+        "REMOVE_ATTEMPT": "Remove attempt",
+        "NO_BODY_WEIGHT": "Set a body weight for kcal",
+        "DELETE_CONFIRM_TITLE": "Delete session",
+        "DELETE_CONFIRM_MESSAGE": "Delete this session and all its attempts?"
+      },
+      "ASCENT_STYLE": {
+        "FLASH": "Flash",
+        "REDPOINT": "Redpoint",
+        "ONSIGHT": "Onsight"
       }
     }
   }

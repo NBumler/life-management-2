@@ -26,6 +26,9 @@ import { Crag } from '../../api/model/crag';
 import { Sector } from '../../api/model/sector';
 import { Route } from '../../api/model/route';
 import { BoulderProblem } from '../../api/model/boulderProblem';
+import { ClimbingSession } from '../../api/model/climbingSession';
+import { AscentAttempt } from '../../api/model/ascentAttempt';
+import { PitchLog } from '../../api/model/pitchLog';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 import { WeeklyPlan } from '../../api/model/weeklyPlan';
@@ -2351,6 +2354,435 @@ export function boulderProblemTombstoneTask(id: string, deletedAt: string | null
     statement: `
       INSERT INTO boulder_problem (id, sector_id, name, guidebook_grade, updated_at, deleted, deleted_at, _dirty, _local_only)
       VALUES (?, '', '', '', ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+// ---------------------------------------------------------------------------
+// documentation/Features/Mászónapló.md — the climbing log (Mászónapló M4): ClimbingSession →
+// AscentAttempt → PitchLog, a three-level nested aggregate mirroring workout_session. The two child
+// tables have no user scope (ownership flows through session_id). `climbing_partners` round-trips
+// through a JSON string in a TEXT column. Child rows never get their own outbox entry — the whole
+// tree goes out under the `ClimbingSession` entity type.
+// ---------------------------------------------------------------------------
+
+export interface ClimbingSessionRow {
+  id: string;
+  session_date: string;
+  location_type: string;
+  discipline: string;
+  total_session_duration_minutes: number | null;
+  pump_rating: number | null;
+  headspace_rating: number | null;
+  notes: string | null;
+  climbing_partners: string | null;
+  weather_conditions: string | null;
+  gym_id: string | null;
+  gym_name: string | null;
+  crag_id: string | null;
+  crag_name: string | null;
+  sector_id: string | null;
+  sector_name: string | null;
+  rock_type: string | null;
+  aspect: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+/** Omits `attempts` — a ClimbingSession row alone never carries them, see readClimbingSession in SqliteStorageBackend. */
+export function climbingSessionRowToDto(row: ClimbingSessionRow): Omit<ClimbingSession, 'attempts'> {
+  return {
+    id: row.id,
+    date: row.session_date,
+    locationType: row.location_type as ClimbingSession.LocationTypeEnum,
+    discipline: row.discipline as ClimbingSession.DisciplineEnum,
+    totalSessionDurationMinutes: row.total_session_duration_minutes,
+    pumpRating: row.pump_rating,
+    headspaceRating: row.headspace_rating,
+    notes: row.notes,
+    climbingPartners: row.climbing_partners === null ? null : (JSON.parse(row.climbing_partners) as string[]),
+    weatherConditions: (row.weather_conditions as ClimbingSession.WeatherConditionsEnum | null) ?? null,
+    gymId: row.gym_id,
+    gymName: row.gym_name,
+    cragId: row.crag_id,
+    cragName: row.crag_name,
+    sectorId: row.sector_id,
+    sectorName: row.sector_name,
+    rockType: row.rock_type,
+    aspect: row.aspect,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+export type ClimbingSessionWriteInput = Omit<ClimbingSession, 'attempts' | 'deleted' | 'deletedAt' | 'createdAt' | 'updatedAt'>;
+
+function climbingPartnersJson(partners: Array<string> | null | undefined): string | null {
+  return partners && partners.length > 0 ? JSON.stringify(partners) : null;
+}
+
+export function climbingSessionLocalWriteTask(dto: ClimbingSessionWriteInput): SqlTask {
+  return {
+    statement: `
+      INSERT INTO climbing_session (id, session_date, location_type, discipline, total_session_duration_minutes, pump_rating, headspace_rating, notes, climbing_partners, weather_conditions, gym_id, gym_name, crag_id, crag_name, sector_id, sector_name, rock_type, aspect, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET
+        session_date = excluded.session_date, location_type = excluded.location_type, discipline = excluded.discipline,
+        total_session_duration_minutes = excluded.total_session_duration_minutes, pump_rating = excluded.pump_rating,
+        headspace_rating = excluded.headspace_rating, notes = excluded.notes, climbing_partners = excluded.climbing_partners,
+        weather_conditions = excluded.weather_conditions, gym_id = excluded.gym_id, gym_name = excluded.gym_name,
+        crag_id = excluded.crag_id, crag_name = excluded.crag_name, sector_id = excluded.sector_id, sector_name = excluded.sector_name,
+        rock_type = excluded.rock_type, aspect = excluded.aspect, deleted = 0, deleted_at = NULL, _dirty = 1`,
+    values: [
+      dto.id,
+      dto.date,
+      dto.locationType,
+      dto.discipline,
+      dto.totalSessionDurationMinutes ?? null,
+      dto.pumpRating ?? null,
+      dto.headspaceRating ?? null,
+      dto.notes ?? null,
+      climbingPartnersJson(dto.climbingPartners),
+      dto.weatherConditions ?? null,
+      dto.gymId ?? null,
+      dto.gymName ?? null,
+      dto.cragId ?? null,
+      dto.cragName ?? null,
+      dto.sectorId ?? null,
+      dto.sectorName ?? null,
+      dto.rockType ?? null,
+      dto.aspect ?? null,
+    ],
+  };
+}
+
+export function climbingSessionServerApplyTask(dto: Omit<ClimbingSession, 'attempts'>): SqlTask {
+  return {
+    statement: `
+      INSERT INTO climbing_session (id, session_date, location_type, discipline, total_session_duration_minutes, pump_rating, headspace_rating, notes, climbing_partners, weather_conditions, gym_id, gym_name, crag_id, crag_name, sector_id, sector_name, rock_type, aspect, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        session_date = excluded.session_date, location_type = excluded.location_type, discipline = excluded.discipline,
+        total_session_duration_minutes = excluded.total_session_duration_minutes, pump_rating = excluded.pump_rating,
+        headspace_rating = excluded.headspace_rating, notes = excluded.notes, climbing_partners = excluded.climbing_partners,
+        weather_conditions = excluded.weather_conditions, gym_id = excluded.gym_id, gym_name = excluded.gym_name,
+        crag_id = excluded.crag_id, crag_name = excluded.crag_name, sector_id = excluded.sector_id, sector_name = excluded.sector_name,
+        rock_type = excluded.rock_type, aspect = excluded.aspect, created_at = excluded.created_at, updated_at = excluded.updated_at,
+        deleted = excluded.deleted, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE climbing_session._dirty = 0`,
+    values: [
+      dto.id,
+      dto.date,
+      dto.locationType,
+      dto.discipline,
+      dto.totalSessionDurationMinutes ?? null,
+      dto.pumpRating ?? null,
+      dto.headspaceRating ?? null,
+      dto.notes ?? null,
+      climbingPartnersJson(dto.climbingPartners),
+      dto.weatherConditions ?? null,
+      dto.gymId ?? null,
+      dto.gymName ?? null,
+      dto.cragId ?? null,
+      dto.cragName ?? null,
+      dto.sectorId ?? null,
+      dto.sectorName ?? null,
+      dto.rockType ?? null,
+      dto.aspect ?? null,
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function climbingSessionTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO climbing_session (id, session_date, location_type, discipline, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '1970-01-01', 'INDOOR', 'BOULDER', ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+export interface AscentAttemptRow {
+  id: string;
+  session_id: string;
+  is_success: number;
+  user_raw_input: string | null;
+  absolute_difficulty_index: number | null;
+  ascent_style: string | null;
+  safety_style: string | null;
+  failure_point: string | null;
+  attempt_count: number | null;
+  color_band_id: string | null;
+  color_name: string | null;
+  hex_color: string | null;
+  grade_range: string | null;
+  indoor_route_id: string | null;
+  route_id: string | null;
+  boulder_problem_id: string | null;
+  route_name: string | null;
+  length_in_meters: number | null;
+  notes: string | null;
+  order_index: number;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+/** Omits `pitches` — an AscentAttempt row alone never carries them. */
+export function ascentAttemptRowToDto(row: AscentAttemptRow): Omit<AscentAttempt, 'pitches'> {
+  return {
+    id: row.id,
+    sessionId: row.session_id,
+    isSuccess: row.is_success === 1,
+    userRawInput: row.user_raw_input,
+    absoluteDifficultyIndex: row.absolute_difficulty_index,
+    ascentStyle: (row.ascent_style as AscentAttempt.AscentStyleEnum | null) ?? null,
+    safetyStyle: (row.safety_style as AscentAttempt.SafetyStyleEnum | null) ?? null,
+    failurePoint: row.failure_point,
+    attemptCount: row.attempt_count,
+    colorBandId: row.color_band_id,
+    colorName: row.color_name,
+    hexColor: row.hex_color,
+    gradeRange: row.grade_range,
+    indoorRouteId: row.indoor_route_id,
+    routeId: row.route_id,
+    boulderProblemId: row.boulder_problem_id,
+    routeName: row.route_name,
+    lengthInMeters: row.length_in_meters,
+    notes: row.notes,
+    orderIndex: row.order_index,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+export type AscentAttemptWriteInput = Omit<AscentAttempt, 'pitches' | 'deleted' | 'deletedAt' | 'createdAt' | 'updatedAt'>;
+
+export function ascentAttemptLocalWriteTask(dto: AscentAttemptWriteInput): SqlTask {
+  return {
+    statement: `
+      INSERT INTO ascent_attempt (id, session_id, is_success, user_raw_input, absolute_difficulty_index, ascent_style, safety_style, failure_point, attempt_count, color_band_id, color_name, hex_color, grade_range, indoor_route_id, route_id, boulder_problem_id, route_name, length_in_meters, notes, order_index, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET
+        session_id = excluded.session_id, is_success = excluded.is_success, user_raw_input = excluded.user_raw_input,
+        absolute_difficulty_index = excluded.absolute_difficulty_index, ascent_style = excluded.ascent_style,
+        safety_style = excluded.safety_style, failure_point = excluded.failure_point, attempt_count = excluded.attempt_count,
+        color_band_id = excluded.color_band_id, color_name = excluded.color_name, hex_color = excluded.hex_color,
+        grade_range = excluded.grade_range, indoor_route_id = excluded.indoor_route_id, route_id = excluded.route_id,
+        boulder_problem_id = excluded.boulder_problem_id, route_name = excluded.route_name, length_in_meters = excluded.length_in_meters,
+        notes = excluded.notes, order_index = excluded.order_index, deleted = 0, deleted_at = NULL, _dirty = 1`,
+    values: [
+      dto.id,
+      dto.sessionId,
+      dto.isSuccess ? 1 : 0,
+      dto.userRawInput ?? null,
+      dto.absoluteDifficultyIndex ?? null,
+      dto.ascentStyle ?? null,
+      dto.safetyStyle ?? null,
+      dto.failurePoint ?? null,
+      dto.attemptCount ?? null,
+      dto.colorBandId ?? null,
+      dto.colorName ?? null,
+      dto.hexColor ?? null,
+      dto.gradeRange ?? null,
+      dto.indoorRouteId ?? null,
+      dto.routeId ?? null,
+      dto.boulderProblemId ?? null,
+      dto.routeName ?? null,
+      dto.lengthInMeters ?? null,
+      dto.notes ?? null,
+      dto.orderIndex,
+    ],
+  };
+}
+
+/** Local-only removal — an attempt dropped from a session during an edit (not a standalone outbox entry — see SqliteStorageBackend.saveClimbingSession). */
+export function ascentAttemptLocalRemoveTask(id: string): SqlTask {
+  return {
+    statement: `UPDATE ascent_attempt SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?`,
+    values: [new Date().toISOString(), id],
+  };
+}
+
+export function ascentAttemptServerApplyTask(dto: Omit<AscentAttempt, 'pitches'>): SqlTask {
+  return {
+    statement: `
+      INSERT INTO ascent_attempt (id, session_id, is_success, user_raw_input, absolute_difficulty_index, ascent_style, safety_style, failure_point, attempt_count, color_band_id, color_name, hex_color, grade_range, indoor_route_id, route_id, boulder_problem_id, route_name, length_in_meters, notes, order_index, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        session_id = excluded.session_id, is_success = excluded.is_success, user_raw_input = excluded.user_raw_input,
+        absolute_difficulty_index = excluded.absolute_difficulty_index, ascent_style = excluded.ascent_style,
+        safety_style = excluded.safety_style, failure_point = excluded.failure_point, attempt_count = excluded.attempt_count,
+        color_band_id = excluded.color_band_id, color_name = excluded.color_name, hex_color = excluded.hex_color,
+        grade_range = excluded.grade_range, indoor_route_id = excluded.indoor_route_id, route_id = excluded.route_id,
+        boulder_problem_id = excluded.boulder_problem_id, route_name = excluded.route_name, length_in_meters = excluded.length_in_meters,
+        notes = excluded.notes, order_index = excluded.order_index, created_at = excluded.created_at, updated_at = excluded.updated_at,
+        deleted = excluded.deleted, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE ascent_attempt._dirty = 0`,
+    values: [
+      dto.id,
+      dto.sessionId,
+      dto.isSuccess ? 1 : 0,
+      dto.userRawInput ?? null,
+      dto.absoluteDifficultyIndex ?? null,
+      dto.ascentStyle ?? null,
+      dto.safetyStyle ?? null,
+      dto.failurePoint ?? null,
+      dto.attemptCount ?? null,
+      dto.colorBandId ?? null,
+      dto.colorName ?? null,
+      dto.hexColor ?? null,
+      dto.gradeRange ?? null,
+      dto.indoorRouteId ?? null,
+      dto.routeId ?? null,
+      dto.boulderProblemId ?? null,
+      dto.routeName ?? null,
+      dto.lengthInMeters ?? null,
+      dto.notes ?? null,
+      dto.orderIndex,
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function ascentAttemptTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO ascent_attempt (id, session_id, is_success, order_index, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '', 0, 0, ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+export interface PitchLogRow {
+  id: string;
+  attempt_id: string;
+  pitch_number: number;
+  is_lead: number;
+  raw_grade: string | null;
+  absolute_difficulty_index: number | null;
+  length_in_meters: number | null;
+  order_index: number;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+export function pitchLogRowToDto(row: PitchLogRow): PitchLog {
+  return {
+    id: row.id,
+    attemptId: row.attempt_id,
+    pitchNumber: row.pitch_number,
+    isLead: row.is_lead === 1,
+    rawGrade: row.raw_grade,
+    absoluteDifficultyIndex: row.absolute_difficulty_index,
+    lengthInMeters: row.length_in_meters,
+    orderIndex: row.order_index,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+export type PitchLogWriteInput = Omit<PitchLog, 'deleted' | 'deletedAt' | 'createdAt' | 'updatedAt'>;
+
+export function pitchLogLocalWriteTask(dto: PitchLogWriteInput): SqlTask {
+  return {
+    statement: `
+      INSERT INTO pitch_log (id, attempt_id, pitch_number, is_lead, raw_grade, absolute_difficulty_index, length_in_meters, order_index, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET
+        attempt_id = excluded.attempt_id, pitch_number = excluded.pitch_number, is_lead = excluded.is_lead,
+        raw_grade = excluded.raw_grade, absolute_difficulty_index = excluded.absolute_difficulty_index,
+        length_in_meters = excluded.length_in_meters, order_index = excluded.order_index, deleted = 0, deleted_at = NULL, _dirty = 1`,
+    values: [
+      dto.id,
+      dto.attemptId,
+      dto.pitchNumber,
+      dto.isLead ? 1 : 0,
+      dto.rawGrade ?? null,
+      dto.absoluteDifficultyIndex ?? null,
+      dto.lengthInMeters ?? null,
+      dto.orderIndex,
+    ],
+  };
+}
+
+/** Local-only removal — a pitch dropped from an attempt during an edit (not a standalone outbox entry). */
+export function pitchLogLocalRemoveTask(id: string): SqlTask {
+  return {
+    statement: `UPDATE pitch_log SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?`,
+    values: [new Date().toISOString(), id],
+  };
+}
+
+export function pitchLogServerApplyTask(dto: PitchLog): SqlTask {
+  return {
+    statement: `
+      INSERT INTO pitch_log (id, attempt_id, pitch_number, is_lead, raw_grade, absolute_difficulty_index, length_in_meters, order_index, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        attempt_id = excluded.attempt_id, pitch_number = excluded.pitch_number, is_lead = excluded.is_lead,
+        raw_grade = excluded.raw_grade, absolute_difficulty_index = excluded.absolute_difficulty_index,
+        length_in_meters = excluded.length_in_meters, order_index = excluded.order_index, created_at = excluded.created_at,
+        updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE pitch_log._dirty = 0`,
+    values: [
+      dto.id,
+      dto.attemptId,
+      dto.pitchNumber,
+      dto.isLead ? 1 : 0,
+      dto.rawGrade ?? null,
+      dto.absoluteDifficultyIndex ?? null,
+      dto.lengthInMeters ?? null,
+      dto.orderIndex,
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function pitchLogTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO pitch_log (id, attempt_id, pitch_number, is_lead, order_index, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '', 1, 1, 0, ?, 1, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
     values: [id, updatedAt, deletedAt],
   };

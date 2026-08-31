@@ -28,6 +28,8 @@ import { Crag } from '../../api/model/crag';
 import { Sector } from '../../api/model/sector';
 import { Route } from '../../api/model/route';
 import { BoulderProblem } from '../../api/model/boulderProblem';
+import { ClimbingSession } from '../../api/model/climbingSession';
+import { AscentAttempt } from '../../api/model/ascentAttempt';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeeklyPlan } from '../../api/model/weeklyPlan';
 import { WeeklyPlanSlot } from '../../api/model/weeklyPlanSlot';
@@ -131,6 +133,67 @@ export interface WorkoutSessionDraft {
   planId: string | null;
   roundsCount: number | null;
   exercises: WorkoutExerciseSaveItem[];
+}
+
+/**
+ * documentation/Features/Mászónapló.md — the desired live tree for a climbing session save
+ * (ClimbingSession + AscentAttempt + PitchLog). Ids are client-generated for a new row, reused for a
+ * kept one, at all three levels. `locationType` + `discipline` come from the dashboard tile, not a
+ * form field; the context-specific fields are all optional and enforced by the calling page.
+ */
+export interface PitchLogSaveItem {
+  id: string;
+  pitchNumber: number;
+  isLead: boolean;
+  rawGrade: string | null;
+  absoluteDifficultyIndex: number | null;
+  lengthInMeters: number | null;
+  orderIndex: number;
+}
+
+export interface AscentAttemptSaveItem {
+  id: string;
+  isSuccess: boolean;
+  userRawInput: string | null;
+  absoluteDifficultyIndex: number | null;
+  ascentStyle: AscentAttempt.AscentStyleEnum | null;
+  safetyStyle: AscentAttempt.SafetyStyleEnum | null;
+  failurePoint: string | null;
+  attemptCount: number | null;
+  colorBandId: string | null;
+  colorName: string | null;
+  hexColor: string | null;
+  gradeRange: string | null;
+  indoorRouteId: string | null;
+  routeId: string | null;
+  boulderProblemId: string | null;
+  routeName: string | null;
+  lengthInMeters: number | null;
+  notes: string | null;
+  orderIndex: number;
+  pitches: PitchLogSaveItem[];
+}
+
+export interface ClimbingSessionDraft {
+  id: string;
+  date: string;
+  locationType: ClimbingSession.LocationTypeEnum;
+  discipline: ClimbingSession.DisciplineEnum;
+  totalSessionDurationMinutes: number | null;
+  pumpRating: number | null;
+  headspaceRating: number | null;
+  notes: string | null;
+  climbingPartners: string[] | null;
+  weatherConditions: ClimbingSession.WeatherConditionsEnum | null;
+  gymId: string | null;
+  gymName: string | null;
+  cragId: string | null;
+  cragName: string | null;
+  sectorId: string | null;
+  sectorName: string | null;
+  rockType: string | null;
+  aspect: string | null;
+  attempts: AscentAttemptSaveItem[];
 }
 
 /**
@@ -478,6 +541,14 @@ export interface StorageBackend {
   saveWorkoutSession(draft: WorkoutSessionDraft): Promise<WorkoutSession>;
   /** documentation/Subfeatures/Edzésnapló.md "Törlés": cascades to every live exercise entry and set on this session. */
   deleteWorkoutSession(id: string): Promise<WorkoutSession>;
+
+  /** documentation/Features/Mászónapló.md: per-user climbing log. Every row (incl. list entries) embeds its full live+tombstoned attempt/pitch tree. */
+  listClimbingSessions(): Promise<ClimbingSession[]>;
+  getClimbingSession(id: string): Promise<ClimbingSession>;
+  /** documentation/Architektúra/Backend.md "Nested aggregate PUT": session + attempts + pitches saved as one outbox entry. */
+  saveClimbingSession(draft: ClimbingSessionDraft): Promise<ClimbingSession>;
+  /** documentation/Features/Mászónapló.md "Soft delete / offline": cascades to every live attempt and pitch on this session. */
+  deleteClimbingSession(id: string): Promise<ClimbingSession>;
 
   /** documentation/Subfeatures/Heti terv.md: per-user static training templates. Every row (incl. list entries) embeds its full live+tombstoned exercise/target-set tree. */
   listWorkoutPlans(): Promise<WorkoutPlan[]>;

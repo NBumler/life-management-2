@@ -841,7 +841,101 @@ const SCHEMA_V21_STATEMENTS: string[] = [
   `CREATE INDEX IF NOT EXISTS idx_boulder_problem_sector_id ON boulder_problem (sector_id)`,
 ];
 
-const SCHEMA_VERSION = 21;
+/**
+ * documentation/Features/Mászónapló.md + the four kontextus-napló subfeatures (Mászónapló M4) — one
+ * logged climbing session with its ascent attempts and (outdoor multi-pitch only) pitch logs. A
+ * three-level nested aggregate exactly like `workout_session` → `workout_exercise_entry` →
+ * `workout_set_entry`: saved / read as one tree, the two child tables carry no user scope (ownership
+ * flows through `session_id`). One flat `climbing_session` table — `location_type` + `discipline` are
+ * discriminator columns and the context-specific fields (gym vs crag/sector refs, weather,
+ * rock_type/aspect, safety_style, pitches) are all nullable; which combination applies to which
+ * context is enforced client-side. `climbing_partners` round-trips through a JSON string in a TEXT
+ * column (as `gym.disciplines`). No kcal / volume column: it is a pure client calculation
+ * (documentation/Features/Tápérték kalkulátor.md).
+ */
+const SCHEMA_V22_STATEMENTS: string[] = [
+  `CREATE TABLE IF NOT EXISTS climbing_session (
+    id TEXT PRIMARY KEY,
+    session_date TEXT NOT NULL,
+    location_type TEXT NOT NULL,
+    discipline TEXT NOT NULL,
+    total_session_duration_minutes INTEGER,
+    pump_rating INTEGER,
+    headspace_rating INTEGER,
+    notes TEXT,
+    climbing_partners TEXT,
+    weather_conditions TEXT,
+    gym_id TEXT,
+    gym_name TEXT,
+    crag_id TEXT,
+    crag_name TEXT,
+    sector_id TEXT,
+    sector_name TEXT,
+    rock_type TEXT,
+    aspect TEXT,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_climbing_session_session_date ON climbing_session (session_date DESC)`,
+  `CREATE TABLE IF NOT EXISTS ascent_attempt (
+    id TEXT PRIMARY KEY,
+    session_id TEXT NOT NULL,
+    is_success INTEGER NOT NULL DEFAULT 0,
+    user_raw_input TEXT,
+    absolute_difficulty_index INTEGER,
+    ascent_style TEXT,
+    safety_style TEXT,
+    failure_point TEXT,
+    attempt_count INTEGER,
+    color_band_id TEXT,
+    color_name TEXT,
+    hex_color TEXT,
+    grade_range TEXT,
+    indoor_route_id TEXT,
+    route_id TEXT,
+    boulder_problem_id TEXT,
+    route_name TEXT,
+    length_in_meters REAL,
+    notes TEXT,
+    order_index INTEGER NOT NULL,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_ascent_attempt_session_id ON ascent_attempt (session_id, order_index)`,
+  `CREATE TABLE IF NOT EXISTS pitch_log (
+    id TEXT PRIMARY KEY,
+    attempt_id TEXT NOT NULL,
+    pitch_number INTEGER NOT NULL,
+    is_lead INTEGER NOT NULL DEFAULT 1,
+    raw_grade TEXT,
+    absolute_difficulty_index INTEGER,
+    length_in_meters REAL,
+    order_index INTEGER NOT NULL,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_pitch_log_attempt_id ON pitch_log (attempt_id, order_index)`,
+];
+
+const SCHEMA_VERSION = 22;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -865,7 +959,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 18, statements: SCHEMA_V18_STATEMENTS },
   { toVersion: 19, statements: SCHEMA_V19_STATEMENTS },
   { toVersion: 20, statements: SCHEMA_V20_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V21_STATEMENTS },
+  { toVersion: 21, statements: SCHEMA_V21_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V22_STATEMENTS },
 ];
 
 export interface SqlTask {

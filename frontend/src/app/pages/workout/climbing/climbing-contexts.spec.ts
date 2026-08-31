@@ -18,6 +18,10 @@ describe('climbing-contexts', () => {
     }
   });
 
+  it('marks only indoor-boulder as wired (M4 — the reference context flow)', () => {
+    expect(CLIMBING_CONTEXTS.filter((c) => c.wired).map((c) => c.key)).toEqual(['indoor-boulder']);
+  });
+
   it('gives every context a distinct route and label key', () => {
     const routes = CLIMBING_CONTEXTS.map((c) => c.route);
     const labels = CLIMBING_CONTEXTS.map((c) => c.labelKey);

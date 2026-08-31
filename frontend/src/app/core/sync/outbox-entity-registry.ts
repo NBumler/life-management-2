@@ -90,6 +90,8 @@ import {
   weightHistoryLocalWriteTask,
   weightHistoryRowToDto,
 } from '../data/local-rows';
+// ClimbingSession is a nested aggregate (session + attempts + pitches, one body) — like Recipe /
+// WorkoutSession it is excluded from Fix and its current payload is read through the storage backend.
 import { LocalDatabaseService, SqlTask } from '../storage/local-database.service';
 import { StorageBackend } from '../storage/storage-backend';
 import { OutboxEntityType, OutboxItem, OutboxMethod } from './outbox-item';
@@ -184,6 +186,11 @@ async function workoutSessionCurrentPayload(ctx: OutboxEntityFixContext): Promis
 /** documentation/Subfeatures/Heti terv.md: plan + exercises + target sets are always saved together, POST and PUT alike. */
 async function workoutPlanCurrentPayload(ctx: OutboxEntityFixContext): Promise<unknown> {
   return ctx.storage.getWorkoutPlan(ctx.targetEntityId);
+}
+
+/** documentation/Features/Mászónapló.md: session + attempts + pitches are always saved together, POST and PUT alike. */
+async function climbingSessionCurrentPayload(ctx: OutboxEntityFixContext): Promise<unknown> {
+  return ctx.storage.getClimbingSession(ctx.targetEntityId);
 }
 
 /** documentation/Subfeatures/Heti terv.md: week + slots are always saved together, POST and PUT alike. */
@@ -429,6 +436,14 @@ export class OutboxEntityRegistryService {
       table: 'boulder_problem',
       currentPayload: rowLookup<BoulderProblemRow, unknown>('boulder_problem', boulderProblemRowToDto),
       buildFixWriteTask: (payload) => boulderProblemLocalWriteTask(payload as unknown as BoulderProblem),
+      nameUniqueness: null,
+    },
+    ClimbingSession: {
+      table: 'climbing_session',
+      currentPayload: climbingSessionCurrentPayload,
+      // Nested aggregate (session + attempts + pitches, one body) — excluded from Fix per spec, see buildFixWriteTask doc above.
+      buildFixWriteTask: null,
+      // documentation/Features/Mászónapló.md: a climbing session has no unique name.
       nameUniqueness: null,
     },
     ShoppingList: {

@@ -30,6 +30,7 @@ import { ClimbingCragsService } from '../../api/api/climbingCrags.service';
 import { ClimbingSectorsService } from '../../api/api/climbingSectors.service';
 import { ClimbingRoutesService } from '../../api/api/climbingRoutes.service';
 import { ClimbingBoulderProblemsService } from '../../api/api/climbingBoulderProblems.service';
+import { ClimbingSessionsService } from '../../api/api/climbingSessions.service';
 import { SyncService } from '../../api/api/sync.service';
 import { WeeklyPlansService } from '../../api/api/weeklyPlans.service';
 import { WorkoutPlansService } from '../../api/api/workoutPlans.service';
@@ -65,6 +66,9 @@ import { Crag } from '../../api/model/crag';
 import { Sector } from '../../api/model/sector';
 import { Route } from '../../api/model/route';
 import { BoulderProblem } from '../../api/model/boulderProblem';
+import { ClimbingSession } from '../../api/model/climbingSession';
+import { AscentAttempt } from '../../api/model/ascentAttempt';
+import { PitchLog } from '../../api/model/pitchLog';
 import { SyncChangeItem } from '../../api/model/syncChangeItem';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeeklyPlan } from '../../api/model/weeklyPlan';
@@ -133,6 +137,12 @@ import {
   routeTombstoneTask,
   boulderProblemServerApplyTask,
   boulderProblemTombstoneTask,
+  climbingSessionServerApplyTask,
+  climbingSessionTombstoneTask,
+  ascentAttemptServerApplyTask,
+  ascentAttemptTombstoneTask,
+  pitchLogServerApplyTask,
+  pitchLogTombstoneTask,
   weeklyPlanServerApplyTask,
   weeklyPlanSlotServerApplyTask,
   weeklyPlanSlotTombstoneTask,
@@ -202,6 +212,7 @@ export class SyncEngineService {
   private readonly sectorsApi = inject(ClimbingSectorsService);
   private readonly routesApi = inject(ClimbingRoutesService);
   private readonly boulderProblemsApi = inject(ClimbingBoulderProblemsService);
+  private readonly climbingSessionsApi = inject(ClimbingSessionsService);
   private readonly syncApi = inject(SyncService);
   private readonly authSession = inject(AuthSessionService);
   private readonly offlineQueue = inject(OfflineQueueService);
@@ -559,6 +570,16 @@ export class SyncEngineService {
       }
     }
 
+    const staleClimbingSessions = await this.db.query<{ id: string }>('SELECT id FROM climbing_session WHERE _needs_refetch = 1');
+    for (const row of staleClimbingSessions) {
+      try {
+        const dto = await firstValueFrom(this.climbingSessionsApi.getClimbingSession(row.id));
+        await this.db.executeTransaction(this.climbingSessionApplyTasks(dto));
+      } catch {
+        // same as above
+      }
+    }
+
     const staleWorkoutPlans = await this.db.query<{ id: string }>('SELECT id FROM workout_plan WHERE _needs_refetch = 1');
     for (const row of staleWorkoutPlans) {
       try {
@@ -782,6 +803,9 @@ export class SyncEngineService {
     if (item.entityType === 'WorkoutSession') {
       return this.workoutSessionApplyTasks(body as WorkoutSession);
     }
+    if (item.entityType === 'ClimbingSession') {
+      return this.climbingSessionApplyTasks(body as ClimbingSession);
+    }
     if (item.entityType === 'WorkoutPlan') {
       return this.workoutPlanApplyTasks(body as WorkoutPlan);
     }
@@ -866,6 +890,24 @@ export class SyncEngineService {
       tasks.push(workoutExerciseEntryServerApplyTask(exercise));
       for (const set of exercise.sets as WorkoutSetEntry[]) {
         tasks.push(workoutSetEntryServerApplyTask(set));
+      }
+    }
+    return tasks;
+  }
+
+  /**
+   * documentation/Architektúra/Backend.md "Nested aggregate PUT": the response lists every ascent
+   * attempt and pitch row (live or tombstoned — ClimbingSession.yaml), applied as authoritative so
+   * each one's local `_dirty`/`_local_only` flags clear too — the child rows never get their own
+   * outbox entry, so nothing else would ever clear them (§8's `_dirty=1` apply rule otherwise keeps
+   * the pending value forever). The mandatory post-drain pull (§6 point 9) still independently confirms.
+   */
+  private climbingSessionApplyTasks(dto: ClimbingSession): SqlTask[] {
+    const tasks: SqlTask[] = [climbingSessionServerApplyTask(dto)];
+    for (const attempt of dto.attempts as AscentAttempt[]) {
+      tasks.push(ascentAttemptServerApplyTask(attempt));
+      for (const pitch of attempt.pitches as PitchLog[]) {
+        tasks.push(pitchLogServerApplyTask(pitch));
       }
     }
     return tasks;
@@ -1049,6 +1091,18 @@ export class SyncEngineService {
         workoutSessionTombstoneTask(item.targetEntityId, null, now),
         ...exerciseRows.map((row) => workoutExerciseEntryTombstoneTask(row.id, null, now)),
         ...setRows.map((row) => workoutSetEntryTombstoneTask(row.id, null, now)),
+      ]);
+    } else if (item.entityType === 'ClimbingSession') {
+      // documentation/Features/Mászónapló.md: session delete cascades to its own attempts and pitches locally too.
+      const attemptRows = await this.db.query<{ id: string }>('SELECT id FROM ascent_attempt WHERE session_id = ?', [item.targetEntityId]);
+      const pitchRows = await this.db.query<{ id: string }>(
+        'SELECT p.id FROM pitch_log p JOIN ascent_attempt a ON p.attempt_id = a.id WHERE a.session_id = ?',
+        [item.targetEntityId],
+      );
+      await this.db.executeTransaction([
+        climbingSessionTombstoneTask(item.targetEntityId, null, now),
+        ...attemptRows.map((row) => ascentAttemptTombstoneTask(row.id, null, now)),
+        ...pitchRows.map((row) => pitchLogTombstoneTask(row.id, null, now)),
       ]);
     } else if (item.entityType === 'WorkoutPlan') {
       // documentation/Subfeatures/Heti terv.md: plan delete cascades to its own exercise lines and target sets locally too.
@@ -1404,6 +1458,35 @@ export class SyncEngineService {
         return [workoutSetEntryServerApplyTask(change.data as WorkoutSetEntry)];
       }
       return [workoutSetEntryTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
+    }
+    if (change.entityType === 'ClimbingSession') {
+      if (!change.deleted) {
+        return [climbingSessionServerApplyTask(change.data as ClimbingSession)];
+      }
+      // documentation/Features/Mászónapló.md: session delete cascades to this device's own attempts and pitches too.
+      const attemptRows = await this.db.query<{ id: string }>('SELECT id FROM ascent_attempt WHERE session_id = ?', [change.id]);
+      const pitchRows = await this.db.query<{ id: string }>(
+        'SELECT p.id FROM pitch_log p JOIN ascent_attempt a ON p.attempt_id = a.id WHERE a.session_id = ?',
+        [change.id],
+      );
+      return [
+        climbingSessionTombstoneTask(change.id, null, change.updatedAt),
+        discardPendingWritesTask(change.id),
+        ...attemptRows.map((row) => ascentAttemptTombstoneTask(row.id, null, change.updatedAt)),
+        ...pitchRows.map((row) => pitchLogTombstoneTask(row.id, null, change.updatedAt)),
+      ];
+    }
+    if (change.entityType === 'AscentAttempt') {
+      if (!change.deleted) {
+        return [ascentAttemptServerApplyTask(change.data as AscentAttempt)];
+      }
+      return [ascentAttemptTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
+    }
+    if (change.entityType === 'PitchLog') {
+      if (!change.deleted) {
+        return [pitchLogServerApplyTask(change.data as PitchLog)];
+      }
+      return [pitchLogTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
     }
     if (change.entityType === 'WorkoutPlan') {
       if (!change.deleted) {

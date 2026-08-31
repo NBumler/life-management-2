@@ -32,6 +32,7 @@ export type OutboxEntityType =
   | 'Sector'
   | 'Route'
   | 'BoulderProblem'
+  | 'ClimbingSession'
   | 'HouseholdRoom'
   | 'HouseholdTask'
   | 'CalendarEvent'

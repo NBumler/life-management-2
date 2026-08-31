@@ -25,6 +25,7 @@ import { Crag } from '../../api/model/crag';
 import { Sector } from '../../api/model/sector';
 import { Route } from '../../api/model/route';
 import { BoulderProblem } from '../../api/model/boulderProblem';
+import { ClimbingSession } from '../../api/model/climbingSession';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeeklyPlan } from '../../api/model/weeklyPlan';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
@@ -125,6 +126,17 @@ import {
   routeRowToDto,
   boulderProblemLocalWriteTask,
   boulderProblemRowToDto,
+  AscentAttemptRow,
+  ClimbingSessionRow,
+  PitchLogRow,
+  ascentAttemptLocalRemoveTask,
+  ascentAttemptLocalWriteTask,
+  ascentAttemptRowToDto,
+  climbingSessionLocalWriteTask,
+  climbingSessionRowToDto,
+  pitchLogLocalRemoveTask,
+  pitchLogLocalWriteTask,
+  pitchLogRowToDto,
   weightHistoryLocalWriteTask,
   weightHistoryRowToDto,
   WeeklyPlanRow,
@@ -174,6 +186,7 @@ import {
   WeeklyPlanDraft,
   WorkoutPlanDraft,
   WorkoutSessionDraft,
+  ClimbingSessionDraft,
   buildShoppingListCompleteRequestPayload,
   expandMealItemSaveItem,
   expandShoppingListItemSaveItem,
@@ -433,7 +446,20 @@ export class SqliteStorageBackend implements StorageBackend {
 
   /** documentation/Architektúra/Backend-offline first.md §10 "Függőségi láncok": ids among `candidateIds` whose row hasn't reached the server yet. */
   private async findLocalOnlyIds(
-    table: 'gear_item' | 'household_room' | 'food' | 'recipe' | 'exercise_catalog' | 'workout_plan' | 'gym' | 'crag' | 'sector',
+    table:
+      | 'gear_item'
+      | 'household_room'
+      | 'food'
+      | 'recipe'
+      | 'exercise_catalog'
+      | 'workout_plan'
+      | 'gym'
+      | 'gym_color_band'
+      | 'indoor_route'
+      | 'crag'
+      | 'sector'
+      | 'route'
+      | 'boulder_problem',
     candidateIds: string[],
   ): Promise<string[]> {
     if (candidateIds.length === 0) {
@@ -1787,6 +1813,168 @@ export class SqliteStorageBackend implements StorageBackend {
     return assembleWorkoutSession(sessionRows[0], exerciseRows, setRows);
   }
 
+  // --- Mászónapló: ClimbingSession -> AscentAttempt -> PitchLog (3-level nested aggregate, M4) ----
+
+  async listClimbingSessions(): Promise<ClimbingSession[]> {
+    const sessionRows = await this.db.query<ClimbingSessionRow>(
+      'SELECT * FROM climbing_session WHERE deleted = 0 ORDER BY session_date DESC, created_at DESC',
+    );
+    // ClimbingSession.attempts / attempt.pitches contract: every row, live or tombstoned — matches
+    // HttpStorageBackend / the backend's own toDto. Callers filter `!deleted` themselves.
+    const attemptRows = await this.db.query<AscentAttemptRow>('SELECT * FROM ascent_attempt ORDER BY order_index');
+    const pitchRows = await this.db.query<PitchLogRow>('SELECT * FROM pitch_log ORDER BY order_index');
+    return sessionRows.map((row) => assembleClimbingSession(row, attemptRows, pitchRows));
+  }
+
+  getClimbingSession(id: string): Promise<ClimbingSession> {
+    return this.readClimbingSession(id);
+  }
+
+  /** documentation/Architektúra/Backend.md "Nested aggregate PUT": session + attempts + pitches in one local transaction and one outbox entry. */
+  async saveClimbingSession(draft: ClimbingSessionDraft): Promise<ClimbingSession> {
+    const userId = this.requireUserId();
+    const existingSessionRows = await this.db.query('SELECT 1 FROM climbing_session WHERE id = ?', [draft.id]);
+    const isNew = existingSessionRows.length === 0;
+
+    const existingAttemptRows = await this.db.query<AscentAttemptRow>(
+      'SELECT * FROM ascent_attempt WHERE session_id = ?',
+      [draft.id],
+    );
+    const existingPitchRows = await this.db.query<PitchLogRow>(
+      `SELECT p.* FROM pitch_log p JOIN ascent_attempt a ON p.attempt_id = a.id WHERE a.session_id = ?`,
+      [draft.id],
+    );
+    const incomingAttemptIds = new Set(draft.attempts.map((attempt) => attempt.id));
+
+    const localTasks: SqlTask[] = [climbingSessionLocalWriteTask(draft)];
+    for (const attempt of draft.attempts) {
+      localTasks.push(ascentAttemptLocalWriteTask({ ...attempt, sessionId: draft.id }));
+      const incomingPitchIds = new Set(attempt.pitches.map((pitch) => pitch.id));
+      for (const pitch of attempt.pitches) {
+        localTasks.push(pitchLogLocalWriteTask({ ...pitch, attemptId: attempt.id }));
+      }
+      for (const existingPitch of existingPitchRows) {
+        if (existingPitch.attempt_id === attempt.id && existingPitch.deleted === 0 && !incomingPitchIds.has(existingPitch.id)) {
+          localTasks.push(pitchLogLocalRemoveTask(existingPitch.id));
+        }
+      }
+    }
+    for (const existingAttempt of existingAttemptRows) {
+      if (existingAttempt.deleted === 0 && !incomingAttemptIds.has(existingAttempt.id)) {
+        localTasks.push(ascentAttemptLocalRemoveTask(existingAttempt.id));
+        for (const existingPitch of existingPitchRows) {
+          if (existingPitch.attempt_id === existingAttempt.id && existingPitch.deleted === 0) {
+            localTasks.push(pitchLogLocalRemoveTask(existingPitch.id));
+          }
+        }
+      }
+    }
+
+    // documentation/Architektúra/Backend-offline first.md §10 "Függőségi láncok": a session / attempt
+    // that references a venue-master row created in the same offline session must wait for that row's
+    // own POST first (the gym_id / *_id soft-link FKs).
+    const dependsOn = [
+      ...(await this.findLocalOnlyIds('gym', draft.gymId ? [draft.gymId] : [])),
+      ...(await this.findLocalOnlyIds('crag', draft.cragId ? [draft.cragId] : [])),
+      ...(await this.findLocalOnlyIds('sector', draft.sectorId ? [draft.sectorId] : [])),
+      ...(await this.findLocalOnlyIds(
+        'gym_color_band',
+        draft.attempts.map((a) => a.colorBandId).filter((id): id is string => id !== null),
+      )),
+      ...(await this.findLocalOnlyIds(
+        'indoor_route',
+        draft.attempts.map((a) => a.indoorRouteId).filter((id): id is string => id !== null),
+      )),
+      ...(await this.findLocalOnlyIds(
+        'route',
+        draft.attempts.map((a) => a.routeId).filter((id): id is string => id !== null),
+      )),
+      ...(await this.findLocalOnlyIds(
+        'boulder_problem',
+        draft.attempts.map((a) => a.boulderProblemId).filter((id): id is string => id !== null),
+      )),
+    ];
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: isNew ? 'POST' : 'PUT',
+      url: isNew ? '/api/climbing/sessions' : `/api/climbing/sessions/${draft.id}`,
+      payload: buildClimbingSessionPayload(draft),
+      entityType: 'ClimbingSession',
+      targetEntityId: draft.id,
+      dependsOn,
+    });
+    await this.db.executeTransaction([...localTasks, ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    return this.readClimbingSession(draft.id);
+  }
+
+  async deleteClimbingSession(id: string): Promise<ClimbingSession> {
+    const userId = this.requireUserId();
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: 'DELETE',
+      url: `/api/climbing/sessions/${id}`,
+      payload: null,
+      entityType: 'ClimbingSession',
+      targetEntityId: id,
+    });
+    const liveAttemptRows = await this.db.query<{ id: string }>(
+      'SELECT id FROM ascent_attempt WHERE session_id = ? AND deleted = 0',
+      [id],
+    );
+    const livePitchRows = await this.db.query<{ id: string }>(
+      `SELECT p.id FROM pitch_log p JOIN ascent_attempt a ON p.attempt_id = a.id WHERE a.session_id = ? AND p.deleted = 0`,
+      [id],
+    );
+    const tasks: SqlTask[] = [];
+    if (enqueue.hardRemoveLocalEntity) {
+      for (const row of livePitchRows) {
+        tasks.push({ statement: 'DELETE FROM pitch_log WHERE id = ?', values: [row.id] });
+      }
+      for (const row of liveAttemptRows) {
+        tasks.push({ statement: 'DELETE FROM ascent_attempt WHERE id = ?', values: [row.id] });
+      }
+      tasks.push({ statement: 'DELETE FROM climbing_session WHERE id = ?', values: [id] });
+    } else {
+      tasks.push({
+        statement: 'UPDATE climbing_session SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?',
+        values: [new Date().toISOString(), id],
+      });
+      for (const row of liveAttemptRows) {
+        tasks.push(ascentAttemptLocalRemoveTask(row.id));
+      }
+      for (const row of livePitchRows) {
+        tasks.push(pitchLogLocalRemoveTask(row.id));
+      }
+    }
+    await this.db.executeTransaction([...tasks, ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    if (enqueue.hardRemoveLocalEntity) {
+      return {
+        id,
+        date: '1970-01-01',
+        locationType: ClimbingSession.LocationTypeEnum.Indoor,
+        discipline: ClimbingSession.DisciplineEnum.Boulder,
+        deleted: true,
+        attempts: [],
+      };
+    }
+    return this.readClimbingSession(id);
+  }
+
+  private async readClimbingSession(id: string): Promise<ClimbingSession> {
+    const sessionRows = await this.db.query<ClimbingSessionRow>('SELECT * FROM climbing_session WHERE id = ?', [id]);
+    const attemptRows = await this.db.query<AscentAttemptRow>(
+      'SELECT * FROM ascent_attempt WHERE session_id = ? ORDER BY order_index',
+      [id],
+    );
+    const pitchRows = await this.db.query<PitchLogRow>(
+      `SELECT p.* FROM pitch_log p JOIN ascent_attempt a ON p.attempt_id = a.id WHERE a.session_id = ? ORDER BY p.order_index`,
+      [id],
+    );
+    return assembleClimbingSession(sessionRows[0], attemptRows, pitchRows);
+  }
+
   // --- Heti terv: WorkoutPlan (3-level nested aggregate) + WeeklyPlan (2-level) ------------------
 
   async listWorkoutPlans(): Promise<WorkoutPlan[]> {
@@ -2431,6 +2619,86 @@ function buildWorkoutSessionPayload(draft: WorkoutSessionDraft): WorkoutSession 
         restTimeSeconds: set.restTimeSeconds,
         isCompleted: set.isCompleted,
         orderIndex: set.orderIndex,
+        deleted: false,
+      })),
+    })),
+  };
+}
+
+/** Stitches flat session/attempt/pitch row lists back into one nested `ClimbingSession` tree (every row, live or tombstoned). */
+function assembleClimbingSession(
+  sessionRow: ClimbingSessionRow,
+  attemptRows: AscentAttemptRow[],
+  pitchRows: PitchLogRow[],
+): ClimbingSession {
+  const pitchesByAttempt = new Map<string, PitchLogRow[]>();
+  for (const row of pitchRows) {
+    const list = pitchesByAttempt.get(row.attempt_id) ?? [];
+    list.push(row);
+    pitchesByAttempt.set(row.attempt_id, list);
+  }
+  const attempts = attemptRows
+    .filter((row) => row.session_id === sessionRow.id)
+    .map((row) => ({
+      ...ascentAttemptRowToDto(row),
+      pitches: (pitchesByAttempt.get(row.id) ?? []).map(pitchLogRowToDto),
+    }));
+  return { ...climbingSessionRowToDto(sessionRow), attempts };
+}
+
+/** The full `ClimbingSession` wire body for the outbox — mirrors HttpStorageBackend.saveClimbingSession. */
+function buildClimbingSessionPayload(draft: ClimbingSessionDraft): ClimbingSession {
+  return {
+    id: draft.id,
+    date: draft.date,
+    locationType: draft.locationType,
+    discipline: draft.discipline,
+    totalSessionDurationMinutes: draft.totalSessionDurationMinutes,
+    pumpRating: draft.pumpRating,
+    headspaceRating: draft.headspaceRating,
+    notes: draft.notes,
+    climbingPartners: draft.climbingPartners,
+    weatherConditions: draft.weatherConditions,
+    gymId: draft.gymId,
+    gymName: draft.gymName,
+    cragId: draft.cragId,
+    cragName: draft.cragName,
+    sectorId: draft.sectorId,
+    sectorName: draft.sectorName,
+    rockType: draft.rockType,
+    aspect: draft.aspect,
+    deleted: false,
+    attempts: draft.attempts.map((attempt) => ({
+      id: attempt.id,
+      sessionId: draft.id,
+      isSuccess: attempt.isSuccess,
+      userRawInput: attempt.userRawInput,
+      absoluteDifficultyIndex: attempt.absoluteDifficultyIndex,
+      ascentStyle: attempt.ascentStyle,
+      safetyStyle: attempt.safetyStyle,
+      failurePoint: attempt.failurePoint,
+      attemptCount: attempt.attemptCount,
+      colorBandId: attempt.colorBandId,
+      colorName: attempt.colorName,
+      hexColor: attempt.hexColor,
+      gradeRange: attempt.gradeRange,
+      indoorRouteId: attempt.indoorRouteId,
+      routeId: attempt.routeId,
+      boulderProblemId: attempt.boulderProblemId,
+      routeName: attempt.routeName,
+      lengthInMeters: attempt.lengthInMeters,
+      notes: attempt.notes,
+      orderIndex: attempt.orderIndex,
+      deleted: false,
+      pitches: attempt.pitches.map((pitch) => ({
+        id: pitch.id,
+        attemptId: attempt.id,
+        pitchNumber: pitch.pitchNumber,
+        isLead: pitch.isLead,
+        rawGrade: pitch.rawGrade,
+        absoluteDifficultyIndex: pitch.absoluteDifficultyIndex,
+        lengthInMeters: pitch.lengthInMeters,
+        orderIndex: pitch.orderIndex,
         deleted: false,
       })),
     })),

@@ -1,0 +1,50 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/workout/climbing" />
+    </ion-buttons>
+    <ion-title>{{ context.labelKey | translate }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button routerLink="/tabs/workout/climbing/admin">
+        <ion-icon slot="icon-only" name="settings-outline" />
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="cta-row">
+    <ion-button expand="block" routerLink="new">{{ 'WORKOUT.CLIMBING.SESSION.NEW' | translate }}</ion-button>
+  </div>
+
+  @if (isEmpty()) {
+    <ion-list>
+      <ion-item>
+        <ion-label color="medium">{{ 'WORKOUT.CLIMBING.SESSION.EMPTY' | translate }}</ion-label>
+      </ion-item>
+    </ion-list>
+  } @else {
+    <ion-list>
+      @for (card of cards(); track card.session.id) {
+        <ion-item button [routerLink]="[card.session.id]" detail="true">
+          <ion-label>
+            <h2>{{ card.session.date }}</h2>
+            <p>
+              {{ card.session.gymName || ('WORKOUT.CLIMBING.SESSION.NO_GYM' | translate) }}
+              · {{ card.successCount }}/{{ card.attemptCount }}
+              {{ 'WORKOUT.CLIMBING.SESSION.SENDS_SHORT' | translate }}
+            </p>
+          </ion-label>
+          <ion-note slot="end">
+            @if (card.kcal > 0) {
+              ~{{ card.kcal | number: '1.0-0' }} {{ 'WORKOUT.SESSION.KCAL_SHORT' | translate }}
+            }
+            @if (card.volume > 0) {
+              · V {{ card.volume | number: '1.0-0' }}
+            }
+          </ion-note>
+        </ion-item>
+      }
+    </ion-list>
+  }
+</ion-content>

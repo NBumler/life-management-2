@@ -25,6 +25,7 @@ import { ClimbingCragsService } from '../../api/api/climbingCrags.service';
 import { ClimbingSectorsService } from '../../api/api/climbingSectors.service';
 import { ClimbingRoutesService } from '../../api/api/climbingRoutes.service';
 import { ClimbingBoulderProblemsService } from '../../api/api/climbingBoulderProblems.service';
+import { ClimbingSessionsService } from '../../api/api/climbingSessions.service';
 import { WeeklyPlansService } from '../../api/api/weeklyPlans.service';
 import { WorkoutPlansService } from '../../api/api/workoutPlans.service';
 import { WorkoutSessionsService } from '../../api/api/workoutSessions.service';
@@ -53,6 +54,7 @@ import { Crag } from '../../api/model/crag';
 import { Sector } from '../../api/model/sector';
 import { Route } from '../../api/model/route';
 import { BoulderProblem } from '../../api/model/boulderProblem';
+import { ClimbingSession } from '../../api/model/climbingSession';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeeklyPlan } from '../../api/model/weeklyPlan';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
@@ -74,6 +76,7 @@ import {
   WeeklyPlanDraft,
   WorkoutPlanDraft,
   WorkoutSessionDraft,
+  ClimbingSessionDraft,
   buildShoppingListCompleteRequestPayload,
   expandMealItemSaveItem,
   expandShoppingListItemSaveItem,
@@ -109,6 +112,7 @@ export class HttpStorageBackend implements StorageBackend {
   private readonly sectorsApi = inject(ClimbingSectorsService);
   private readonly routesApi = inject(ClimbingRoutesService);
   private readonly boulderProblemsApi = inject(ClimbingBoulderProblemsService);
+  private readonly climbingSessionsApi = inject(ClimbingSessionsService);
   private readonly authSession = inject(AuthSessionService);
 
   async getProfile(): Promise<UserProfile | null> {
@@ -438,6 +442,78 @@ export class HttpStorageBackend implements StorageBackend {
 
   deleteWorkoutSession(id: string): Promise<WorkoutSession> {
     return firstValueFrom(this.workoutSessionsApi.deleteWorkoutSession(id));
+  }
+
+  listClimbingSessions(): Promise<ClimbingSession[]> {
+    return firstValueFrom(this.climbingSessionsApi.listClimbingSessions());
+  }
+
+  getClimbingSession(id: string): Promise<ClimbingSession> {
+    return firstValueFrom(this.climbingSessionsApi.getClimbingSession(id));
+  }
+
+  /** POST with an existing id is an idempotent upsert server-side, so this covers both create and update. */
+  saveClimbingSession(draft: ClimbingSessionDraft): Promise<ClimbingSession> {
+    const dto: ClimbingSession = {
+      id: draft.id,
+      date: draft.date,
+      locationType: draft.locationType,
+      discipline: draft.discipline,
+      totalSessionDurationMinutes: draft.totalSessionDurationMinutes,
+      pumpRating: draft.pumpRating,
+      headspaceRating: draft.headspaceRating,
+      notes: draft.notes,
+      climbingPartners: draft.climbingPartners,
+      weatherConditions: draft.weatherConditions,
+      gymId: draft.gymId,
+      gymName: draft.gymName,
+      cragId: draft.cragId,
+      cragName: draft.cragName,
+      sectorId: draft.sectorId,
+      sectorName: draft.sectorName,
+      rockType: draft.rockType,
+      aspect: draft.aspect,
+      deleted: false,
+      attempts: draft.attempts.map((attempt) => ({
+        id: attempt.id,
+        sessionId: draft.id,
+        isSuccess: attempt.isSuccess,
+        userRawInput: attempt.userRawInput,
+        absoluteDifficultyIndex: attempt.absoluteDifficultyIndex,
+        ascentStyle: attempt.ascentStyle,
+        safetyStyle: attempt.safetyStyle,
+        failurePoint: attempt.failurePoint,
+        attemptCount: attempt.attemptCount,
+        colorBandId: attempt.colorBandId,
+        colorName: attempt.colorName,
+        hexColor: attempt.hexColor,
+        gradeRange: attempt.gradeRange,
+        indoorRouteId: attempt.indoorRouteId,
+        routeId: attempt.routeId,
+        boulderProblemId: attempt.boulderProblemId,
+        routeName: attempt.routeName,
+        lengthInMeters: attempt.lengthInMeters,
+        notes: attempt.notes,
+        orderIndex: attempt.orderIndex,
+        deleted: false,
+        pitches: attempt.pitches.map((pitch) => ({
+          id: pitch.id,
+          attemptId: attempt.id,
+          pitchNumber: pitch.pitchNumber,
+          isLead: pitch.isLead,
+          rawGrade: pitch.rawGrade,
+          absoluteDifficultyIndex: pitch.absoluteDifficultyIndex,
+          lengthInMeters: pitch.lengthInMeters,
+          orderIndex: pitch.orderIndex,
+          deleted: false,
+        })),
+      })),
+    };
+    return firstValueFrom(this.climbingSessionsApi.createClimbingSession(dto));
+  }
+
+  deleteClimbingSession(id: string): Promise<ClimbingSession> {
+    return firstValueFrom(this.climbingSessionsApi.deleteClimbingSession(id));
   }
 
   listWorkoutPlans(): Promise<WorkoutPlan[]> {

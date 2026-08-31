@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonToolbar } from '@ionic/angular/standalone';
+import { IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonNote, IonToolbar } from '@ionic/angular/standalone';
 import { TranslatePipe } from '@ngx-translate/core';
 
 import { WorkoutSegmentHeaderComponent } from '../workout-segment-header.component';
@@ -27,6 +27,7 @@ import { CLIMBING_CONTEXTS } from './climbing-contexts';
     IonList,
     IonItem,
     IonLabel,
+    IonNote,
     WorkoutSegmentHeaderComponent,
     TranslatePipe,
   ],
