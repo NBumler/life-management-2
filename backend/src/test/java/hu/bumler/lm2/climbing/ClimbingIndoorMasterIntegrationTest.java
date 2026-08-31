@@ -134,6 +134,48 @@ class ClimbingIndoorMasterIntegrationTest {
 				.andExpect(jsonPath("$.conflictingId").value(firstBandId.toString()));
 	}
 
+	@Test
+	void colorBand_allowsTheSameHexInADifferentGym() throws Exception {
+		String token = registerAndLogin("band-hex-scope");
+		UUID gymA = UUID.randomUUID();
+		UUID gymB = UUID.randomUUID();
+		createGym(token, gym(gymA, "A terem")).andExpect(status().isOk());
+		createGym(token, gym(gymB, "B terem")).andExpect(status().isOk());
+
+		createBand(token, band(UUID.randomUUID(), gymA, "#123456")).andExpect(status().isOk());
+		// Same canonical hex, different gym -> allowed (uniqueness is scoped to the gym's live bands).
+		createBand(token, band(UUID.randomUUID(), gymB, "#123456")).andExpect(status().isOk());
+	}
+
+	@Test
+	void colorBand_update_returnsEntityDeleted_afterDelete() throws Exception {
+		String token = registerAndLogin("band-entity-deleted");
+		UUID gymId = UUID.randomUUID();
+		createGym(token, gym(gymId, "Sáv terem")).andExpect(status().isOk());
+		UUID bandId = UUID.randomUUID();
+		createBand(token, band(bandId, gymId, "#abcdef")).andExpect(status().isOk());
+		mockMvc.perform(delete("/api/climbing/gym-color-bands/" + bandId).header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+				.andExpect(status().isOk());
+
+		mockMvc.perform(put("/api/climbing/gym-color-bands/" + bandId).contentType(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + token).content(json(band(bandId, gymId, "#abcdef"))))
+				.andExpect(status().isConflict())
+				.andExpect(jsonPath("$.code").value("ENTITY_DELETED"));
+	}
+
+	@Test
+	void colorBand_get_returnsNotFound_whenBandBelongsToAnotherUser() throws Exception {
+		String tokenA = registerAndLogin("band-owner");
+		String tokenB = registerAndLogin("band-attacker");
+		UUID gymId = UUID.randomUUID();
+		UUID bandId = UUID.randomUUID();
+		createGym(tokenA, gym(gymId, "Privát terem")).andExpect(status().isOk());
+		createBand(tokenA, band(bandId, gymId, "#0f0f0f")).andExpect(status().isOk());
+
+		mockMvc.perform(get("/api/climbing/gym-color-bands/" + bandId).header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenB))
+				.andExpect(status().isNotFound());
+	}
+
 	// --- IndoorRoute ---
 
 	@Test
@@ -146,6 +188,35 @@ class ClimbingIndoorMasterIntegrationTest {
 
 		createRoute(token, route).andExpect(status().isOk()).andExpect(jsonPath("$.name").value("Sárga 12"));
 		createRoute(token, route).andExpect(status().isOk()).andExpect(jsonPath("$.name").value("Sárga 12"));
+	}
+
+	@Test
+	void indoorRoute_update_returnsEntityDeleted_afterDelete() throws Exception {
+		String token = registerAndLogin("route-entity-deleted");
+		UUID gymId = UUID.randomUUID();
+		createGym(token, gym(gymId, "Út terem")).andExpect(status().isOk());
+		UUID id = UUID.randomUUID();
+		createRoute(token, route(id, gymId, "Bontandó út")).andExpect(status().isOk());
+		mockMvc.perform(delete("/api/climbing/indoor-routes/" + id).header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+				.andExpect(status().isOk());
+
+		mockMvc.perform(put("/api/climbing/indoor-routes/" + id).contentType(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + token).content(json(route(id, gymId, "Bontandó út"))))
+				.andExpect(status().isConflict())
+				.andExpect(jsonPath("$.code").value("ENTITY_DELETED"));
+	}
+
+	@Test
+	void indoorRoute_get_returnsNotFound_whenRouteBelongsToAnotherUser() throws Exception {
+		String tokenA = registerAndLogin("route-owner");
+		String tokenB = registerAndLogin("route-attacker");
+		UUID gymId = UUID.randomUUID();
+		UUID id = UUID.randomUUID();
+		createGym(tokenA, gym(gymId, "Privát út terem")).andExpect(status().isOk());
+		createRoute(tokenA, route(id, gymId, "Privát út")).andExpect(status().isOk());
+
+		mockMvc.perform(get("/api/climbing/indoor-routes/" + id).header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenB))
+				.andExpect(status().isNotFound());
 	}
 
 	// --- delta pull ---

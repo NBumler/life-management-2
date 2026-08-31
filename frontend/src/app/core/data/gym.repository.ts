@@ -20,7 +20,7 @@ export interface GymSaveInput {
   availableSafetyStyles: Gym.AvailableSafetyStylesEnum[] | null;
 }
 
-/** documentation/Subfeatures/Indoor boulder admin.md "Egyedi hex validáció": thrown by save() before any write when another live gym already has this name. */
+/** documentation/Architektúra/Névegyediség.md: thrown by save() before any write when another live gym already has this (normalized) name. Mirrors the backend GymService.applyName pre-check. */
 export class GymNameConflictError extends Error {
   constructor(readonly conflictingId: string) {
     super('A gym with this name already exists');

@@ -82,6 +82,20 @@ describe('grade-scale', () => {
       );
     });
 
+    // Nehézségi szint skálája.md §2 spells out 4 / 5 as the letterless-valid steps; a bare 3 is
+    // accepted on the same rule (French / Font 1–3 have no sub-letter form, so `3` is already a
+    // complete grade — see the matrix rows FRENCH '3' and FONT '3'). 1 / 2 have no matrix row and
+    // stay AMBIGUOUS.
+    it('treats a bare 3 as valid with a discipline default (letterless French / Font step)', () => {
+      expect(parseGrade('3', 'ROPE')).toEqual(
+        jasmine.objectContaining({ status: 'VALID', scale: 'FRENCH', absoluteDifficultyIndex: 2 }),
+      );
+      expect(parseGrade('3', 'BOULDER')).toEqual(
+        jasmine.objectContaining({ status: 'VALID', scale: 'FONT', absoluteDifficultyIndex: 10 }),
+      );
+      expect(parseGrade('2', 'ROPE').status).toBe('AMBIGUOUS');
+    });
+
     it('treats a bare number >= 6 as AMBIGUOUS until a chip is chosen', () => {
       const rope = parseGrade('6', 'ROPE');
       expect(rope.status).toBe('AMBIGUOUS');

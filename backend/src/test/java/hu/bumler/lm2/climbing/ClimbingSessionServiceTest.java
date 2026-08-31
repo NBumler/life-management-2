@@ -151,6 +151,30 @@ class ClimbingSessionServiceTest {
 	}
 
 	@Test
+	void update_keepsAttemptLive_butSoftDeletesAPitchMissingFromItsIncomingPitchList() {
+		UUID userId = UUID.randomUUID();
+		UUID sessionId = UUID.randomUUID();
+		UUID attemptId = UUID.randomUUID();
+		ClimbingSessionEntity existing = sessionEntity(sessionId, userId);
+		AscentAttemptEntity keptAttempt = attemptEntity(attemptId, sessionId);
+		PitchLogEntity keptPitch = pitchEntity(UUID.randomUUID(), attemptId);
+		PitchLogEntity droppedPitch = pitchEntity(UUID.randomUUID(), attemptId);
+
+		when(repository.findByIdAndUserId(sessionId, userId)).thenReturn(Optional.of(existing));
+		when(attemptRepository.findBySessionId(sessionId)).thenReturn(List.of(keptAttempt));
+		when(pitchRepository.findByAttemptId(attemptId)).thenReturn(List.of(keptPitch, droppedPitch));
+
+		ClimbingSession dto = session(sessionId,
+				List.of(attempt(attemptId, sessionId, 0, List.of(pitch(keptPitch.getId(), attemptId, 1)))));
+		service.update(userId, sessionId, dto);
+
+		assertThat(keptAttempt.isDeleted()).isFalse();
+		assertThat(keptPitch.isDeleted()).isFalse();
+		assertThat(droppedPitch.isDeleted()).isTrue();
+		verify(pitchRepository).save(droppedPitch);
+	}
+
+	@Test
 	void update_revivesTombstonedPitch_whenItsIdReappearsInIncomingLiveList() {
 		UUID userId = UUID.randomUUID();
 		UUID sessionId = UUID.randomUUID();

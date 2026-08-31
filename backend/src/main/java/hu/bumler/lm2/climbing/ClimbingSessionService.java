@@ -68,9 +68,17 @@ class ClimbingSessionService {
 
 	/**
 	 * Idempotent upsert on the client-supplied id (documentation/Architektúra/Backend.md "Upsert"). A
-	 * tombstoned row is deliberately NOT revived here — same as {@link hu.bumler.lm2.workout.WorkoutSessionService}:
-	 * a session is a point-in-time log entry, so a POST landing on a soft-deleted id re-applies the
-	 * fields but the tombstone still wins (row-level last-write-wins).
+	 * tombstoned row is deliberately NOT revived here — same as {@link hu.bumler.lm2.workout.WorkoutSessionService}
+	 * and {@link hu.bumler.lm2.food.MealService}: a session is a point-in-time log entry, so a POST
+	 * landing on a soft-deleted id re-applies the fields but the tombstone still wins (row-level
+	 * last-write-wins). {@code applySessionFields} likewise never reads {@code dto.getDeleted()}.
+	 * <p>
+	 * Consequence (accepted, matches the two sibling services): the tombstone win does NOT cascade into
+	 * the incoming {@code attempts}/{@code pitches} — a POST onto a dead session's id writes its child
+	 * rows live under a dead parent. This is a rare path (outbox coalescing on a delete + re-edit race)
+	 * with no independent consumer of {@code AscentAttempt}/{@code PitchLog}, and the child rows still
+	 * converge by row-level LWW once a later delete cascades. If a future consumer reads attempts
+	 * without joining the session's {@code deleted} flag, revisit this across all three services.
 	 */
 	@Transactional
 	ClimbingSession create(UUID userId, ClimbingSession dto) {

@@ -15,9 +15,13 @@
  *  - Every label within a scale gets a unique, strictly increasing integer; steps are deliberately
  *    non-uniform (grade difficulty is not linear).
  *
- * If server-side grade-index / kcal parity is added later (Mászónapló.md Backend "opcionális"),
- * promote this table to `shared/fixtures/climbing-grade-matrix.json` and read it from both sides —
- * for now the client is the only consumer, like `swim-metrics.ts` / `bike-metrics.ts`.
+ * Kept as a client-only TS constant on purpose (not `shared/fixtures/*.json`): the M2a/M2a-o/M2b
+ * backend deliberately never computes a grade index — `RouteService` stores `guidebookGrade`
+ * verbatim and `AscentAttempt.absoluteDifficultyIndex` is client-supplied — so there is no Java
+ * consumer to keep in parity, and a shared fixture would be an empty ceremony. If server-side
+ * grade-index / kcal parity is ever added (Mászónapló.md Backend "opcionális"), promote this table
+ * to `shared/fixtures/climbing-grade-matrix.json` and read it from both sides. Until then the client
+ * is the only consumer, like `swim-metrics.ts` / `bike-metrics.ts`.
  */
 
 export type ClimbingScale = 'FRENCH' | 'YDS' | 'UIAA' | 'FONT' | 'V_SCALE';

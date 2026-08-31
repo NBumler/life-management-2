@@ -292,7 +292,7 @@ kalóriamodell. Külön commit-sorozatban (M0–M8), az Edzés A0–A6 ritmusát
   (3 tábla + trigger + delta-pull indexek + a `sync_changes` view teljes újraírása a
   `ClimbingSession`/`AscentAttempt`/`PitchLog` sorokkal — a két gyerektábla `user_id` nélkül,
   a session-ön keresztül joinolva), hand-written OpenAPI (2 path + 4 schema), 3 `*SyncDataLoader`.
-  Tesztek: `ClimbingSessionServiceTest` (7 Mockito unit), `ClimbingSessionIntegrationTest`
+  Tesztek: `ClimbingSessionServiceTest` (10 Mockito unit), `ClimbingSessionIntegrationTest`
   (idempotens POST, diszkriminátor + outdoor mezők verbatim round-trip, PUT fa-csere attempt +
   pitch szinten, 409 `ENTITY_DELETED`, cascade delete + own-deleted 200 GET, cross-user 404,
   delta pull mind a 3 entityType-ra). Se frontend, se offline-wiring, `edzes.maszonaplo` marad
@@ -322,7 +322,10 @@ kalóriamodell. Külön commit-sorozatban (M0–M8), az Edzés A0–A6 ritmusát
   `WORKOUT.CLIMBING.{ADMIN_*,DISCIPLINE,SAFETY,VARIANT,GYM,BAND,INDOOR_ROUTE,GRADE_UNPARSED}` i18n (hu + en).
   Regenerált Angular kliens is a commitban (a teljes climbing tag-halmaz — outdoor + session modellek/
   service-ek is bekerülnek, M3b/M4-ig használatlanul). `edzes.maszonaplo` marad `false` — az admin fa a
-  flag bekapcsolásáig elérhetetlen.
+  flag bekapcsolásáig elérhetetlen. Kliens-tesztek (review-10commits.md E-02, 2026-08-31 pótolva):
+  `gym` / `gym-color-band` / `indoor-route` `*.repository.spec.ts` (név- ill. terem-scope-olt hex-ütközés,
+  `forGym`, drain-ágak, `DataChangeNotifier` invalidálás) + `gym-edit` / `gym-color-band-edit` /
+  `indoor-route-edit` `*.page.spec.ts` (form → `save()` továbbítás, ütközés-jelzés, grade-parse gate).
 - **M3b — outdoor törzsadat admin frontend** (ebben a commitban): a `Crag` + `Sector` + `Route` +
   `BoulderProblem` backend (M2a-o) teljes frontend + offline-sync bekötése, az M3a mintáját tükrözve.
   4 flat repository (`core/data/{crag,sector,route,boulder-problem}.repository.ts`) — egyik sem
@@ -342,7 +345,10 @@ kalóriamodell. Külön commit-sorozatban (M0–M8), az Edzés A0–A6 ritmusát
   + `lengthInMeters`/`totalPitches`/`rockType`/`aspect` napló-előtöltés), `boulder-problem-edit.page`
   (`guidebookGrade`). `climbing-admin.page` Kültéri belépője most élő `routerLink`. `app.routes.ts`
   `climbing/admin/crags` mélyen ágyazott fa, `WORKOUT.CLIMBING.{CRAG,SECTOR,ROUTE,PROBLEM}` i18n (hu + en).
-  `edzes.maszonaplo` marad `false`.
+  `edzes.maszonaplo` marad `false`. Kliens-tesztek (review-10commits.md E-02, 2026-08-31 pótolva):
+  `crag` / `sector` / `route` / `boulder-problem` `*.repository.spec.ts` (nincs névegyediség, `forCrag`/
+  `forSector`, drain-ágak, `DataChangeNotifier` invalidálás) + a 4 `*-edit.page.spec.ts` (form → `save()`
+  továbbítás, `guidebookGrade` verbatim, GPS-tartomány gate).
 
 Hátra a Mászónapló-alkörből: M4–M7 (a 4 kontextus-napló), M8 (mászó statisztikák +
 `edzes.maszonaplo` aktiválás + `climbingKcalForDay` a Kaja dashboardba).
