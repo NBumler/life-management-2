@@ -866,7 +866,6 @@
         "DELETE_CONFIRM_TITLE": "Delete boulder problem",
         "DELETE_CONFIRM_MESSAGE": "Delete this boulder problem?"
       },
-      "SOON": "Soon",
       "SESSION": {
         "NEW": "New session",
         "EMPTY": "No sessions logged yet.",
@@ -888,6 +887,7 @@
         "ATTEMPTS": "Attempts",
         "ADD_ATTEMPT": "Add attempt",
         "NO_ATTEMPTS": "No attempts yet. Add them live or afterwards.",
+        "MIN_FIELDS": "Add at least a session length or one attempt.",
         "ATTEMPT_N": "Attempt {{n}}",
         "SUCCESS": "Sent",
         "FIELD_BAND": "Colour band",

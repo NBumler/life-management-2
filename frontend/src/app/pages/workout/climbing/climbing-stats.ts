@@ -15,8 +15,9 @@
  */
 import { ClimbingSession } from '../../../api/model/climbingSession';
 
+import { climbingAttemptInput } from './climbing-attempt-input';
 import { CLIMBING_CONTEXTS, ClimbingContextKey } from './climbing-contexts';
-import { ClimbingAttemptInput, climbingVolume } from './climbing-metrics';
+import { climbingVolume } from './climbing-metrics';
 
 /** The three windows offered by the stats screen's period selector, in render order. */
 export const CLIMBING_STATS_PERIODS = [30, 90, 365] as const;
@@ -74,25 +75,6 @@ function daysBefore(dateStr: string, days: number): string {
   return `${y}-${m}-${d}`;
 }
 
-/** A session's live attempts as `climbing-metrics` inputs (pitch lengths win when a pitch list exists). */
-function attemptInputs(session: ClimbingSession): ClimbingAttemptInput[] {
-  return session.attempts
-    .filter((attempt) => !attempt.deleted)
-    .map((attempt) => {
-      const pitches = attempt.pitches.filter((pitch) => !pitch.deleted);
-      return {
-        isSuccess: attempt.isSuccess,
-        absoluteDifficultyIndex: attempt.absoluteDifficultyIndex ?? null,
-        safetyStyle: attempt.safetyStyle ?? null,
-        lengthInMeters: attempt.lengthInMeters ?? null,
-        pitches:
-          pitches.length > 0
-            ? pitches.map((pitch) => ({ isLead: pitch.isLead, lengthInMeters: pitch.lengthInMeters ?? null }))
-            : null,
-      };
-    });
-}
-
 function representativeLabel(freq: Map<string, number> | undefined, index: number): string {
   if (freq && freq.size > 0) {
     let best = '';
@@ -135,7 +117,10 @@ export function computeClimbingStats(
     const pyramidCount = new Map<number, number>();
 
     for (const session of ctxSessions) {
-      totalVolume += climbingVolume({ discipline: ctx.discipline, attempts: attemptInputs(session) });
+      totalVolume += climbingVolume({
+        discipline: ctx.discipline,
+        attempts: session.attempts.filter((attempt) => !attempt.deleted).map(climbingAttemptInput),
+      });
       const inPeriod = session.date >= since && session.date <= todayStr;
 
       for (const attempt of session.attempts) {

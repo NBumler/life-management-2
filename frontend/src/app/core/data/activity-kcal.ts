@@ -14,7 +14,8 @@ import { ClimbingSession } from '../../api/model/climbingSession';
 import { SwimLog } from '../../api/model/swimLog';
 import { WorkoutSession } from '../../api/model/workoutSession';
 import { bikeKcal } from '../../pages/workout/cycling/bike-metrics';
-import { ClimbingAttemptInput, climbingKcal } from '../../pages/workout/climbing/climbing-metrics';
+import { climbingAttemptInput } from '../../pages/workout/climbing/climbing-attempt-input';
+import { climbingKcal } from '../../pages/workout/climbing/climbing-metrics';
 import { sessionKcal } from '../../pages/workout/log/workout-metrics';
 import { swimKcal } from '../../pages/workout/swimming/swim-metrics';
 
@@ -63,25 +64,6 @@ export function bikeKcalForDay(
     .reduce((sum, log) => sum + bikeKcal(log, bodyWeightKg), 0);
 }
 
-/** A climbing session's live attempts as `climbingKcal` inputs (pitch lengths win when a pitch list exists). */
-function climbingAttemptInputs(session: ClimbingSession): ClimbingAttemptInput[] {
-  return session.attempts
-    .filter((attempt) => !attempt.deleted)
-    .map((attempt) => {
-      const pitches = attempt.pitches.filter((pitch) => !pitch.deleted);
-      return {
-        isSuccess: attempt.isSuccess,
-        absoluteDifficultyIndex: attempt.absoluteDifficultyIndex ?? null,
-        safetyStyle: attempt.safetyStyle ?? null,
-        lengthInMeters: attempt.lengthInMeters ?? null,
-        pitches:
-          pitches.length > 0
-            ? pitches.map((pitch) => ({ isLead: pitch.isLead, lengthInMeters: pitch.lengthInMeters ?? null }))
-            : null,
-      };
-    });
-}
-
 /**
  * documentation/Features/Mászónapló.md "Kalória (kanonikus)": same shape as {@link bikeKcalForDay} —
  * Σ `climbingKcal()` over every live `ClimbingSession` whose `date` is `day`, using the session's own
@@ -103,7 +85,7 @@ export function climbingKcalForDay(
             discipline: session.discipline,
             totalSessionDurationMinutes: session.totalSessionDurationMinutes ?? null,
             pumpRating: session.pumpRating ?? null,
-            attempts: climbingAttemptInputs(session),
+            attempts: session.attempts.filter((attempt) => !attempt.deleted).map(climbingAttemptInput),
           },
           bodyWeightKg,
         ),

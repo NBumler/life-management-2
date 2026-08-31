@@ -67,7 +67,7 @@ Egy napon **több** session megengedett (akár ugyanarra a kontextusra is). Egy 
 | `ascentStyle` | Opcionális, ha `isSuccess`: `ONSIGHT` \| `FLASH` \| `REDPOINT` (kontextus szerinti whitelist) |
 | `safetyStyle` | Csak kötél: `TOPROPE` \| `LEAD` \| `TRAD` (indoor: TRAD rejtve) |
 | `failurePoint` | Opcionális; sikertelennél |
-| `attemptCount` | Opcionális egész `≥ 1` — próbák száma az adott mászáson / úton, **kontextustól függetlenül** (indoor/outdoor, boulder/kötél egyaránt; pl. redpoint próbák száma egy köteles úton) |
+| `attemptCount` | Opcionális egész `≥ 1` — próbák száma az adott mászáson / úton, **kontextustól függetlenül** (indoor/outdoor, boulder/kötél egyaránt; pl. redpoint próbák száma egy köteles úton). Tájékoztató mező: a Volumen- és a sikerarány-képlet **attempt-soronként** számol, egyikük sem szoroz vele; a statisztikai nézetek megjeleníthetik |
 | `colorBandId` / `routeId` / `boulderProblemId` | Opcionális FK + **snapshot** mezők (gyerek specek) |
 | `lengthInMeters` | Kötél; opcionális (default: terem / route) |
 | `pitches` | `PitchLog[]` — csak outdoor multi-pitch |
@@ -121,7 +121,7 @@ Testsúly \(m\): [[Profile]] aktuális kg — **nem** fagyasztódik. TRAD: \(m_{
 - A session **nem tárol** SSOT `calculatedCalories` mezőt (mint [[Úszás napló]] / [[Edzésnapló]]); a [[Tápérték kalkulátor]] utility számol.
 - UI élő előnézet ugyanazzal a pure TS képlettel; szerver opcionális paritás.
 
-**Duration fallback** (ha hiányzik / érvénytelen `totalSessionDurationMinutes`). A „kísérletek száma" itt a **naplózott `AscentAttempt` sorok darabszáma** a sessionben (**nem** a `Σ attemptCount`, ami az egyes problémákon/utakon belüli próbákat számolja — az `attemptCount` csak a volumen- és sikerarány-statisztikába megy, a duration fallbackba nem):
+**Duration fallback** (ha hiányzik / érvénytelen `totalSessionDurationMinutes`). A „kísérletek száma" itt a **naplózott `AscentAttempt` sorok darabszáma** a sessionben (**nem** a `Σ attemptCount`, ami az egyes problémákon/utakon belüli próbákat számolja). Az `attemptCount` önálló, tájékoztató mező az attempt-soron: a Volumen- és a sikerarány-statisztika is **attempt-soronként** számol és **nem szoroz** vele, és a duration fallbackba sem megy — de a statisztikai nézetek megjeleníthetik (pl. „N redpoint-próba"):
 
 - Boulder: \(\text{naplózott attempt sorok száma} \times 5\) perc  
 - Kötél: \(\text{naplózott attempt sorok száma} \times 15\) perc  
@@ -135,7 +135,7 @@ Testsúly \(m\): [[Profile]] aktuális kg — **nem** fagyasztódik. TRAD: \(m_{
 
 #### Statisztikák (2.0 scope)
 
-Max grade kontextusonként; összes Volume; sikerarány (Flash / Redpoint / sikertelen); grade piramis (30 / 90 / 365 nap).
+Max grade kontextusonként; összes Volume; sikerarány-bontás (Onsight / Flash / Redpoint / sikertelen — a rögzített `ascentStyle` nélküli sikeres kísérlet redpointként számít); grade piramis (30 / 90 / 365 nap).
 
 #### Soft delete / offline
 

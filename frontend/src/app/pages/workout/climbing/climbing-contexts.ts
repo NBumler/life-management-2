@@ -15,12 +15,10 @@ export interface ClimbingContextDef {
   readonly key: ClimbingContextKey;
   readonly locationType: ClimbingLocationType;
   readonly discipline: ClimbingDiscipline;
-  /** Route relative to `/tabs/workout/climbing` (added per-context by M4–M7). */
+  /** Route relative to `/tabs/workout/climbing` (all four wired: M4 indoor boulder, M5 indoor rope, M6 outdoor boulder, M7 outdoor rope). */
   readonly route: string;
   readonly labelKey: string;
   readonly icon: string;
-  /** Whether the per-context napló route exists yet — M4–M7 wire all four tiles (M4 indoor boulder, M5 indoor rope, M6 outdoor boulder, M7 outdoor rope). */
-  readonly wired: boolean;
 }
 
 export const CLIMBING_CONTEXTS: readonly ClimbingContextDef[] = [
@@ -31,7 +29,6 @@ export const CLIMBING_CONTEXTS: readonly ClimbingContextDef[] = [
     route: 'indoor-boulder',
     labelKey: 'WORKOUT.CLIMBING.CONTEXT.INDOOR_BOULDER',
     icon: 'home-outline',
-    wired: true,
   },
   {
     key: 'indoor-rope',
@@ -40,7 +37,6 @@ export const CLIMBING_CONTEXTS: readonly ClimbingContextDef[] = [
     route: 'indoor-rope',
     labelKey: 'WORKOUT.CLIMBING.CONTEXT.INDOOR_ROPE',
     icon: 'home-outline',
-    wired: true,
   },
   {
     key: 'outdoor-boulder',
@@ -49,7 +45,6 @@ export const CLIMBING_CONTEXTS: readonly ClimbingContextDef[] = [
     route: 'outdoor-boulder',
     labelKey: 'WORKOUT.CLIMBING.CONTEXT.OUTDOOR_BOULDER',
     icon: 'earth-outline',
-    wired: true,
   },
   {
     key: 'outdoor-rope',
@@ -58,6 +53,5 @@ export const CLIMBING_CONTEXTS: readonly ClimbingContextDef[] = [
     route: 'outdoor-rope',
     labelKey: 'WORKOUT.CLIMBING.CONTEXT.OUTDOOR_ROPE',
     icon: 'earth-outline',
-    wired: true,
   },
 ];

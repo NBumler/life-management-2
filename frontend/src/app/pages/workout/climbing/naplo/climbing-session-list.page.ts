@@ -20,6 +20,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { ClimbingSession } from '../../../../api/model/climbingSession';
 import { ClimbingSessionRepository } from '../../../../core/data/climbing-session.repository';
 import { ProfileRepository } from '../../../../core/data/profile.repository';
+import { climbingAttemptInput } from '../climbing-attempt-input';
 import { climbingKcal, climbingVolume } from '../climbing-metrics';
 import { CLIMBING_CONTEXTS, ClimbingContextKey } from '../climbing-contexts';
 
@@ -75,12 +76,9 @@ export class ClimbingSessionListPage implements OnInit {
       .forContext(this.context.locationType, this.context.discipline)
       .map((session) => {
         const attempts = session.attempts.filter((a) => !a.deleted);
-        const metricAttempts = attempts.map((a) => ({
-          isSuccess: a.isSuccess,
-          absoluteDifficultyIndex: a.absoluteDifficultyIndex ?? null,
-          safetyStyle: a.safetyStyle ?? null,
-          lengthInMeters: a.lengthInMeters ?? null,
-        }));
+        // Shared adapter so the card's kcal / volume preview matches the edit form, the stats screen
+        // and the Étkezés dashboard total — including multi-pitch pitch-length sums.
+        const metricAttempts = attempts.map(climbingAttemptInput);
         return {
           session,
           attemptCount: attempts.length,

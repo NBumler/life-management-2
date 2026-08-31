@@ -866,7 +866,6 @@
         "DELETE_CONFIRM_TITLE": "Boulder törlése",
         "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd ezt a bouldert?"
       },
-      "SOON": "Hamarosan",
       "SESSION": {
         "NEW": "Új session",
         "EMPTY": "Még nincs rögzített session.",
@@ -888,6 +887,7 @@
         "ATTEMPTS": "Kísérletek",
         "ADD_ATTEMPT": "Új kísérlet",
         "NO_ATTEMPTS": "Még nincs kísérlet. Add hozzá élőben vagy utólag.",
+        "MIN_FIELDS": "Adj meg legalább egy session hosszt vagy egy kísérletet.",
         "ATTEMPT_N": "{{n}}. kísérlet",
         "SUCCESS": "Sikeres",
         "FIELD_BAND": "Szín-sáv",

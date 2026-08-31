@@ -156,6 +156,9 @@
     @if (attempts().length === 0) {
       <ion-note color="medium" class="field-error">{{ 'WORKOUT.CLIMBING.SESSION.NO_ATTEMPTS' | translate }}</ion-note>
     }
+    @if (!minFieldsMet()) {
+      <ion-note color="danger" class="field-error">{{ 'WORKOUT.CLIMBING.SESSION.MIN_FIELDS' | translate }}</ion-note>
+    }
 
     @for (row of attempts(); track row.id; let i = $index) {
       <ion-list class="attempt-card">
@@ -203,6 +206,9 @@
             (ionInput)="row.userRawInput.set($any($event.target).value); touchAttempts()"
           />
         </ion-item>
+        @if (gradeUnparsed(row)) {
+          <ion-note color="warning" class="field-error">{{ 'WORKOUT.CLIMBING.GRADE_UNPARSED' | translate }}</ion-note>
+        }
 
         <ion-item>
           <ion-input
@@ -269,6 +275,6 @@
       }
       <span>· V {{ previewVolume() | number: '1.0-0' }}</span>
     </div>
-    <ion-button slot="end" (click)="save()" [disabled]="form.invalid">{{ 'COMMON.SAVE' | translate }}</ion-button>
+    <ion-button slot="end" (click)="save()" [disabled]="form.invalid || !minFieldsMet()">{{ 'COMMON.SAVE' | translate }}</ion-button>
   </ion-toolbar>
 </ion-footer>

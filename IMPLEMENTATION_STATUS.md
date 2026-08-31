@@ -463,8 +463,40 @@ kalóriamodell. Külön commit-sorozatban (M0–M8), az Edzés A0–A6 ritmusát
   `climbing-stats.page.spec.ts` (3, view-model) + `activity-kcal.spec.ts` `climbingKcalForDay`
   blokk (2).
 
-Mászónapló-alkör: **kész (M0–M8)**. Ezzel az [[Edzés]] feature is lezárult
-(Edzésnapló + Heti terv + Úszás + Bicikli + Mászónapló mind kész és élő).
+- **M8 után — review-fixek (7 finding, ebben a commitban):** a lezárt alkör
+  kód-review-jának észrevételei, korrektségi hiba / tárolt-adat- vagy sync-törés
+  nélkül. **(1)** A közös `climbing-session-list.page` kcal/volumen most a
+  `pitches`-t is átadja — multi-pitch outdoor-köteles session a lista-kártyán is a
+  pitch-hosszak összegével számol, egyezésben a szerkesztő élő előnézetével, a
+  statokkal és a Kaja dashboard `climbingKcalForDay` összegével. **(6)** Új
+  `pages/workout/climbing/climbing-attempt-input.ts` (`climbingAttemptInput`):
+  egyetlen `AscentAttempt → ClimbingAttemptInput` adapter, amit a lista, a
+  `climbing-stats.ts` és az `activity-kcal.ts` is használ (a korábbi három
+  külön másolat helyett; a `climbing-metrics.ts` API-model-mentes marad). **(3)**
+  A 4 kontextus-napló form „nem értelmezhető fokozat" figyelmeztetést mutat
+  (`WORKOUT.CLIMBING.GRADE_UNPARSED`, `gradeUnparsed()` / az outdoor-köteles
+  pitch-soron `pitchGradeUnparsed()`), ha a beírt grade nem `VALID` — a teljes
+  shared grade-beviteli komponens (chipek / kétértelműség-blokk / súgó modal,
+  [[Nehézségi szint skálája]]) továbbra is külön, jövőbeli slice. **(4)** „Legalább
+  idő vagy kísérlet" kereszt-mező validáció mind a 4 formban (`minFieldsMet`
+  computed, gate-eli a `save()`-et és a Mentés gombot, `WORKOUT.CLIMBING.SESSION.MIN_FIELDS`
+  jelzés) — a spec (`Indoor boulder napló.md`) „minimális kötelező: dátum + terem +
+  legalább idő vagy kísérletek" elvárása. **(5)** Halott „SOON" ág törölve:
+  `ClimbingContextDef.wired` mező, a `climbing-hub` `@else` disabled-csempéje +
+  `IonNote` import, a `WORKOUT.CLIMBING.SOON` kulcs (hu + en), a
+  `climbing-contexts.spec.ts` `wired` állítása (a tab-registry + feature flag
+  routing szinten kezeli a „nincs kontextus" esetet, a `wired` M4–M7 alatti
+  állványzat volt). **(2 + 7)** `Mászónapló.md` pontosítva: az `attemptCount`
+  tájékoztató mező — sem a Volumen-, sem a sikerarány-képlet **nem szoroz vele**
+  (mindkettő attempt-soronként számol), csak a statisztikai nézetek jeleníthetik
+  meg; a „Statisztikák" sor szövege a tényleges Onsight / Flash / Redpoint /
+  Sikertelen bontásra igazítva (a `Edzés.md` spec-commit hash nem mozdul, csak a
+  `Mászónapló.md` al-spec). Új teszt: `climbing-attempt-input.spec.ts` (4). Nincs
+  backend / Flyway / SQLite séma / offline-sync változás; `lint` tiszta, `test:ci`
+  1110/1110.
+
+Mászónapló-alkör: **kész (M0–M8 + review-fixek)**. Ezzel az [[Edzés]] feature is
+lezárult (Edzésnapló + Heti terv + Úszás + Bicikli + Mászónapló mind kész és élő).
 
 ## Következő javasolt feature: **Pénzügyek**
 

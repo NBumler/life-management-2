@@ -160,6 +160,16 @@ export class IndoorBoulderSessionEditPage implements OnInit {
 
   readonly hasBodyWeight = computed(() => (this.profileRepository.profile()?.currentWeightKg ?? null) !== null);
 
+  /**
+   * documentation/Subfeatures/Indoor boulder napló.md — "minimális kötelező: dátum + terem + legalább
+   * idő vagy kísérletek". `date` + `gymId` are `Validators.required`; this covers the "duration OR
+   * ≥1 attempt" half the form controls can't express on their own.
+   */
+  readonly minFieldsMet = computed(() => {
+    const duration = this.durationValue();
+    return (duration != null && duration > 0) || this.attempts().length > 0;
+  });
+
   async ngOnInit(): Promise<void> {
     await Promise.all([
       this.repository.load(),
@@ -234,8 +244,18 @@ export class IndoorBoulderSessionEditPage implements OnInit {
     this.attemptsRevision.update((value) => value + 1);
   }
 
+  /**
+   * documentation/Subfeatures/Nehézségi szint skálája.md — the shared grade-input component (chips,
+   * help modal, ambiguity blocking) is a later slice; until then at least surface that a typed grade
+   * the parser can't resolve won't feed the volume / max-grade / pyramid stats.
+   */
+  gradeUnparsed(row: AttemptRow): boolean {
+    const raw = row.userRawInput()?.trim();
+    return !!raw && parseGrade(raw, 'BOULDER').status !== 'VALID';
+  }
+
   async save(): Promise<void> {
-    if (this.form.invalid) {
+    if (this.form.invalid || !this.minFieldsMet()) {
       this.form.markAllAsTouched();
       return;
     }
