@@ -84,6 +84,10 @@ export class NetPayPage implements OnInit {
   });
 
   async ngOnInit(): Promise<void> {
-    await this.profileRepository.load();
+    // `ProfileRepository` is a `providedIn: 'root'` singleton — skip the re-query/re-fetch when a
+    // sibling finance screen already loaded it (same guard as recurring-expense-edit.page.ts).
+    if (!this.profileRepository.loaded()) {
+      await this.profileRepository.load();
+    }
   }
 }

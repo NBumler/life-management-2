@@ -92,6 +92,39 @@ describe('RecurringExpenseListPage', () => {
     expect(allRowIds(component)).toEqual(['a']);
   });
 
+  it('hides the "Új kiadás" CTA on the filtered-empty state but keeps it on the global-empty state', () => {
+    // documentation/Subfeatures/Rendszeres kiadások.md "UI/UX: Lista/Szűrő": filtered-empty shows
+    // "nincs találat" with no create CTA; global-empty still offers the add affordance.
+    const addCta = () => fixture.nativeElement.querySelector('ion-icon[name="add-outline"]');
+
+    fixture.detectChanges();
+    expect(component.isGlobalEmpty()).toBe(true);
+    expect(addCta()).not.toBeNull();
+
+    repository.items.set([row({ name: 'Netflix' })]);
+    component.query.set('nothing-matches');
+    fixture.detectChanges();
+    expect(component.isFilteredEmpty()).toBe(true);
+    expect(addCta()).toBeNull();
+  });
+
+  it('ionViewWillEnter re-reads "today" so classification survives past midnight', () => {
+    repository.items.set([row({ id: 'due', nextBillingDate: today() })]);
+    expect(component.groups().find((g) => g.rows.some((r) => r.id === 'due'))?.section).toBe('TODAY');
+
+    // Simulate the page being resumed on a later calendar day.
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    jasmine.clock().install();
+    jasmine.clock().mockDate(tomorrow);
+    try {
+      component.ionViewWillEnter();
+      expect(component.groups().find((g) => g.rows.some((r) => r.id === 'due'))?.section).toBe('OVERDUE');
+    } finally {
+      jasmine.clock().uninstall();
+    }
+  });
+
   it('groups rows into Overdue / Today / Later / Paused sections', () => {
     repository.items.set([
       row({ id: 'past', nextBillingDate: '2000-01-01' }),

@@ -21,6 +21,7 @@ import {
   IonSearchbar,
   IonTitle,
   IonToolbar,
+  ViewWillEnter,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
@@ -84,7 +85,7 @@ const SECTION_ORDER: readonly { section: ExpenseSection; titleKey: string }[] = 
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class RecurringExpenseListPage implements OnInit {
+export class RecurringExpenseListPage implements OnInit, ViewWillEnter {
   private readonly repository = inject(RecurringExpenseRepository);
   private readonly alertController = inject(AlertController);
   private readonly translate = inject(TranslateService);
@@ -97,7 +98,12 @@ export class RecurringExpenseListPage implements OnInit {
   /** documentation/Subfeatures/Rendszeres kiadások.md: all five chips on by default; OR union. */
   readonly activeCategories = signal<ReadonlySet<RecurringExpense.CategoryEnum>>(new Set(EXPENSE_CATEGORIES));
 
-  private readonly todayIso = today();
+  /**
+   * Captured reactively (and re-read in `ionViewWillEnter`) so the Lejárt/Ma/Később split and the
+   * overdue lag stay correct when the page outlives midnight — Ionic keeps it alive across tab
+   * switches, so `ngOnInit` runs only once.
+   */
+  private readonly todayIso = signal(today());
 
   private readonly liveRows = computed(() => this.repository.items().filter((row) => !row.deleted));
 
@@ -116,7 +122,7 @@ export class RecurringExpenseListPage implements OnInit {
       section,
       titleKey,
       rows: rows
-        .filter((row) => classifyExpenseSection(row, this.todayIso) === section)
+        .filter((row) => classifyExpenseSection(row, this.todayIso()) === section)
         .sort((a, b) => this.sortWithinSection(section, a, b)),
     })).filter((group) => group.rows.length > 0);
   });
@@ -130,12 +136,16 @@ export class RecurringExpenseListPage implements OnInit {
     await this.repository.load();
   }
 
+  ionViewWillEnter(): void {
+    this.todayIso.set(today());
+  }
+
   monthlyEquivalent(row: RecurringExpense): number {
     return monthlyEquivalentHuf(row);
   }
 
   lagDays(row: RecurringExpense): number {
-    return dayLag(row.nextBillingDate, this.todayIso);
+    return dayLag(row.nextBillingDate, this.todayIso());
   }
 
   isCategoryActive(category: RecurringExpense.CategoryEnum): boolean {

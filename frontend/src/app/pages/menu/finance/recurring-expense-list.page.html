@@ -30,10 +30,14 @@
 
 <ion-content>
   <ion-list>
-    <ion-item button routerLink="new">
-      <ion-icon name="add-outline" slot="start" aria-hidden="true"></ion-icon>
-      <ion-label>{{ 'FINANCE.EXPENSES.ADD' | translate }}</ion-label>
-    </ion-item>
+    <!-- documentation/Subfeatures/Rendszeres kiadások.md "UI/UX: Lista/Szűrő": a szűrt-üres állapot
+         csak "nincs találat", create CTA nélkül — a globális-üres viszont felkínálja a hozzáadást. -->
+    @if (!isFilteredEmpty()) {
+      <ion-item button routerLink="new">
+        <ion-icon name="add-outline" slot="start" aria-hidden="true"></ion-icon>
+        <ion-label>{{ 'FINANCE.EXPENSES.ADD' | translate }}</ion-label>
+      </ion-item>
+    }
 
     @if (isGlobalEmpty()) {
       <ion-item lines="none">

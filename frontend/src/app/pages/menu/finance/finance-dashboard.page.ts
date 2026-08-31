@@ -80,6 +80,15 @@ export class FinanceDashboardPage implements OnInit {
   });
 
   async ngOnInit(): Promise<void> {
-    await Promise.all([this.profileRepository.load(), this.recurringExpenseRepository.load()]);
+    // Both are `providedIn: 'root'` singletons — skip the re-query/re-fetch when a sibling finance
+    // screen already loaded them (same guard as recurring-expense-edit.page.ts).
+    const loads: Promise<void>[] = [];
+    if (!this.profileRepository.loaded()) {
+      loads.push(this.profileRepository.load());
+    }
+    if (!this.recurringExpenseRepository.loaded()) {
+      loads.push(this.recurringExpenseRepository.load());
+    }
+    await Promise.all(loads);
   }
 }
