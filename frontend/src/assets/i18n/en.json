@@ -37,6 +37,7 @@
     "GEARCHECK": "GearCheck",
     "BEVASARLAS": "Shopping",
     "PENZUGYEK": "Finance",
+    "AYCM": "AYCM",
     "LOGOUT": "Log out",
     "LOGOUT_CONFIRM_TITLE": "Log out",
     "LOGOUT_CONFIRM_MESSAGE": "Are you sure you want to log out?",
@@ -107,6 +108,25 @@
     }
   },
   "AYCM": {
+    "DASHBOARD": {
+      "TITLE": "AYCM",
+      "THIS_MONTH": "This month",
+      "AMOUNT": "{{amount}} Ft",
+      "PER_MONTH": "/ mo",
+      "VISITS": "Visits",
+      "VALUE": "Value",
+      "WORTH_IT": "Worth it?",
+      "PASS": "Pass",
+      "PASS_CTA": "Tap to change the linked pass",
+      "PASS_NO_FINANCE": "Enable the Finance module to compute the payback.",
+      "PARTNERS_LINK": "Venues",
+      "STATS_LINK": "Statistics",
+      "CHECK_IN_CTA": "New Check-In",
+      "PICKER_HEADER": "Pick a pass",
+      "PICKER_OPTION": "{{name}} — {{amount}} Ft/mo",
+      "PICKER_CLEAR": "Remove the linked pass",
+      "PICKER_NEW_EXPENSE": "New recurring expense"
+    },
     "PARTNERS": {
       "TITLE": "Venues",
       "ADD": "New venue",

@@ -37,6 +37,7 @@
     "GEARCHECK": "GearCheck",
     "BEVASARLAS": "Bevásárlás",
     "PENZUGYEK": "Pénzügyek",
+    "AYCM": "AYCM",
     "LOGOUT": "Kijelentkezés",
     "LOGOUT_CONFIRM_TITLE": "Kijelentkezés",
     "LOGOUT_CONFIRM_MESSAGE": "Biztosan kijelentkezel?",
@@ -107,6 +108,25 @@
     }
   },
   "AYCM": {
+    "DASHBOARD": {
+      "TITLE": "AYCM",
+      "THIS_MONTH": "Ez a hónap",
+      "AMOUNT": "{{amount}} Ft",
+      "PER_MONTH": "/ hó",
+      "VISITS": "Látogatások",
+      "VALUE": "Érték",
+      "WORTH_IT": "Megéri-e",
+      "PASS": "Bérlet",
+      "PASS_CTA": "Koppints a bérlet módosításához",
+      "PASS_NO_FINANCE": "Kapcsold be a Pénzügyek modult a megtérülés számításához.",
+      "PARTNERS_LINK": "Elfogadóhelyek",
+      "STATS_LINK": "Statisztika",
+      "CHECK_IN_CTA": "Új Check-In",
+      "PICKER_HEADER": "Bérlet kiválasztása",
+      "PICKER_OPTION": "{{name}} — {{amount}} Ft/hó",
+      "PICKER_CLEAR": "Belinkelt bérlet törlése",
+      "PICKER_NEW_EXPENSE": "Új rendszeres kiadás"
+    },
     "PARTNERS": {
       "TITLE": "Elfogadóhelyek",
       "ADD": "Új elfogadóhely",

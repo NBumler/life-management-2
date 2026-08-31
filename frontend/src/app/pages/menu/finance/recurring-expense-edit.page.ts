@@ -69,6 +69,12 @@ export class RecurringExpenseEditPage implements OnInit {
 
   readonly expenseId = signal<string | null>(null);
   private original: RecurringExpense | null = null;
+  /**
+   * documentation/Features/AYCM tracker.md "Visszatérés mechanizmusa": when a caller (the AYCM hub's
+   * Bérlet picker) opens create with `?returnTo=<url>`, a successful save navigates there instead of
+   * the list, handing back the new row's id as `?createdExpenseId=`. Cancel / delete ignore it.
+   */
+  private returnTo: string | null = null;
 
   readonly form = this.fb.nonNullable.group({
     name: this.fb.nonNullable.control('', [Validators.required]),
@@ -84,6 +90,7 @@ export class RecurringExpenseEditPage implements OnInit {
     if (!this.repository.loaded()) {
       await this.repository.load();
     }
+    this.returnTo = this.route.snapshot.queryParamMap.get('returnTo');
     const idParam = this.route.snapshot.paramMap.get('id');
     if (idParam !== null && idParam !== 'new') {
       const existing = this.repository.items().find((row) => row.id === idParam && !row.deleted);
@@ -119,7 +126,7 @@ export class RecurringExpenseEditPage implements OnInit {
     const billingDayOfMonth = dateChanged ? dayOfMonth(value.nextBillingDate) : this.original!.billingDayOfMonth;
     const notes = value.notes.trim();
 
-    await this.repository.save({
+    const saved = await this.repository.save({
       id: this.expenseId() ?? undefined,
       name: value.name,
       amountHuf: value.amountHuf ?? 0,
@@ -130,6 +137,10 @@ export class RecurringExpenseEditPage implements OnInit {
       active: value.active,
       notes: notes.length > 0 ? notes : null,
     });
+    if (this.returnTo !== null) {
+      await this.router.navigate([this.returnTo], { queryParams: { createdExpenseId: saved.id } });
+      return;
+    }
     await this.router.navigateByUrl(LIST_URL);
   }
 

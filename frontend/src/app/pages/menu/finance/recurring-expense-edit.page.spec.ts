@@ -30,7 +30,7 @@ describe('RecurringExpenseEditPage', () => {
   let saveSpy: jasmine.Spy<(input: RecurringExpenseSaveInput) => Promise<RecurringExpense>>;
   let items: RecurringExpense[];
 
-  async function setup(idParam = 'new'): Promise<void> {
+  async function setup(idParam = 'new', returnTo: string | null = null): Promise<void> {
     saveSpy = jasmine.createSpy('save').and.resolveTo(row());
     await TestBed.configureTestingModule({
       imports: [RecurringExpenseEditPage],
@@ -47,12 +47,21 @@ describe('RecurringExpenseEditPage', () => {
             remove: () => Promise.resolve(),
           },
         },
-        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: idParam }) } } },
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: {
+              paramMap: convertToParamMap({ id: idParam }),
+              queryParamMap: convertToParamMap(returnTo === null ? {} : { returnTo }),
+            },
+          },
+        },
         { provide: AlertController, useValue: { create: () => Promise.resolve({ present: () => Promise.resolve() }) } },
       ],
     }).compileComponents();
 
     spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
+    spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
     fixture = TestBed.createComponent(RecurringExpenseEditPage);
     component = fixture.componentInstance;
     await component.ngOnInit();
@@ -111,5 +120,25 @@ describe('RecurringExpenseEditPage', () => {
     component.form.patchValue({ name: 'Insurance', amountHuf: 30000, notes: '   ' });
     await component.save();
     expect(saveSpy).toHaveBeenCalledWith(jasmine.objectContaining({ notes: null }));
+  });
+
+  it('with ?returnTo, a successful create navigates there handing back the new id', async () => {
+    await setup('new', '/tabs/menu/aycm');
+    saveSpy.and.resolveTo(row({ id: 'brand-new' }));
+    component.form.patchValue({ name: 'Gym', amountHuf: 12000, nextBillingDate: '2026-10-05' });
+    await component.save();
+    const router = TestBed.inject(Router);
+    expect(router.navigate).toHaveBeenCalledWith(['/tabs/menu/aycm'], {
+      queryParams: { createdExpenseId: 'brand-new' },
+    });
+    expect(router.navigateByUrl).not.toHaveBeenCalled();
+  });
+
+  it('without ?returnTo, a successful create falls back to the list', async () => {
+    await setup('new');
+    component.form.patchValue({ name: 'Gym', amountHuf: 12000, nextBillingDate: '2026-10-05' });
+    await component.save();
+    const router = TestBed.inject(Router);
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/tabs/menu/finance/recurring-expenses');
   });
 });

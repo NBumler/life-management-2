@@ -65,4 +65,11 @@ describe('MenuPage', () => {
     const financeLink = (fixture.nativeElement as HTMLElement).querySelector('ion-item[routerLink="finance"]');
     expect(financeLink).not.toBeNull();
   });
+
+  it('renders the AYCM entry when menu.aycm is enabled (it is, in features.json)', () => {
+    fixture.detectChanges();
+    expect(fixture.componentInstance.aycmEnabled).toBe(true);
+    const aycmLink = (fixture.nativeElement as HTMLElement).querySelector('ion-item[routerLink="aycm"]');
+    expect(aycmLink).not.toBeNull();
+  });
 });

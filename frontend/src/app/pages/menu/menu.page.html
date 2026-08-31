@@ -31,6 +31,12 @@
         <ion-label>{{ 'MENU.PENZUGYEK' | translate }}</ion-label>
       </ion-item>
     }
+    @if (aycmEnabled) {
+      <ion-item button routerLink="aycm">
+        <ion-icon name="barbell-outline" slot="start" aria-hidden="true"></ion-icon>
+        <ion-label>{{ 'MENU.AYCM' | translate }}</ion-label>
+      </ion-item>
+    }
     @if (gearCheckEnabled) {
       <ion-item button routerLink="gear">
         <ion-icon name="bag-handle-outline" slot="start" aria-hidden="true"></ion-icon>

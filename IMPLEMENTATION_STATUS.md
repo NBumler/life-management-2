@@ -87,6 +87,10 @@ Ha implementálsz egy új feature-t: vedd fel a sort, `Kész`-re állítva, a
 | [Pénzügyek](documentation/Features/Pénzügyek.md) | `d1950b4` (2026-08-19) | — | `pages/menu/finance/finance-dashboard.page` (3 kártya: Nettó / Havi kiadások / Maradék, mind szám vagy `~` a [[Profile]]/[[Tápérték kalkulátor]] „hiányos → `~`" mintája szerint; tap → gyerek route), `menu.page` Pénzügyek-pont (`menu.penzugyek` flag), `finance` index route `featureFlagGuard('menu.penzugyek')`-kel. | **Kész (P1+P2+P3).** Menü → Pénzügyek hub + két gyerek, három slice-ban (P1 Rendszeres kiadások → P2 Nettó fizetés kalkulátor → P3 hub + Menü-pont). A hubnak **nincs** saját entitása / OpenAPI-ja / offline-wiringje; tisztán fogyasztó: Nettó = `computeNetPay` `net` (vagy `~` üres bruttónál), Havi kiadások = `sumMonthlyEquivalentHuf` a beszámított sorokra (üres → `0 Ft`, sosem `~`), Maradék = `net − havi` előjeles, 0-ra nem clampelve (vagy `~`, ha a nettó `~`). Képlet nem másolódik — import a gyerek utility-kből. `menu.penzugyek` flag `true`. Lásd „Lezárt kör: Pénzügyek". |
 | ↳ [Rendszeres kiadások](documentation/Subfeatures/Rendszeres%20kiadások.md) | `7801d47` (2026-08-19) | `hu.bumler.lm2.finance` (`RecurringExpense` — Controller/Service/Mapper/Repository/SyncDataLoader, `recurring_expense` tábla V25; első `finance` csomag) | `pages/menu/finance/` (`recurring-expense-list.page` szekciók Lejárt/Ma/Később/Szüneteltetett + kategória-chip szűrő + kereső + sliding törlés/szünet + „Fizetve"; `recurring-expense-edit.page` create/edit; `recurring-expense-math.ts` pure TS: `monthlyEquivalentHuf` / `addPeriod` / `countsInMonthlyEquivalent` / `classifyExpenseSection` / `dayLag` + spec; `finance-labels.ts`), `core/data/recurring-expense.repository.ts`, teljes offline-sync bekötés (`RecurringExpense` outbox entityType, `local-rows`, `SyncEngine` drain/pull/tombstone/`_needs_refetch` ágak, SQLite séma v23), `finance/recurring-expenses` route-fa `featureFlagGuard('menu.penzugyek')`-kel. | **Kész (P1).** Lapos, user-owned CRUD az [[Úszás napló]] / [[Biciklizés napló]] mintáját tükrözve: idempotens upsert kliens id-ra, `409 ENTITY_DELETED` PUT-after-delete-re, cross-user 404, soft delete, `name` trim-non-empty a service-ben (nem egyedi). „Fizetve" = sima `PUT` kliens-számolt `addPeriod`-dátummal (a szerver **nem** rollol, **nem** számol havi ekvivalenst); `billingDayOfMonth` csak create-en / kézi dátum-szerkesztésen szinkronizál a dátum napjához. `monthlyEquivalentHuf` (MONTHLY→amount, QUARTERLY→/3, YEARLY→/12, `Math.round`) az SSOT — a [[Pénzügyek]] hub (P3) és a jövőbeli [[AYCM tracker]] „megéri-e" ezt importálja. Beszámított sor = `deleted = false ∧ active = true`. Nincs Fix-kizárás a sync központban (lapos entitás → van `buildFixWriteTask`). |
 | ↳ [Nettó fizetés kalkulátor](documentation/Subfeatures/Nettó%20fizetés%20kalkulátor.md) | `b2ddad4` (2026-08-19) | — (tisztán kliens, nincs OpenAPI / szerver-számítás) | `shared/net-pay-calculator.ts` (`TB_RATE` 0.185 / `SZJA_RATE` 0.15 / `UNDER_25_AGE_LIMIT` 25 / `UNDER_25_SZJA_EXEMPTION_CAP_HUF` 715 765 konstansok + `computeNetPay` + spec), `shared/local-date.ts` `ageInYears` (kiemelve a `tdee-calculator.ts`-ből, közös „teljes évek, floor period" — a `computeTdee` most importálja), `pages/menu/finance/net-pay.page` (Bruttó/TB/SZJA/Nettó sorok, `~` csak üres bruttónál, 25-alatti badge, disclaimer, CTA → Profile), `finance/net-pay` route. | **Kész (P2).** Ugyanaz a „kliens gördíti tovább" minta, mint a [[Tápérték kalkulátor]] (`shared/tdee-calculator.ts`): pure TS, nincs backend/store, hiányzó bruttó → `computable: false` (`~`), sosem dob. Egyszerűsített **munkavállalói** becslés: `tb = round(gross × 0.185)`; `szja = round(0.15 × gross)` vagy 25 alatt `round(0.15 × max(0, gross − 715 765))`; `net = gross − tb − szja`. `under25ExemptionApplied` = `birthDate` kitöltve ∧ `age < 25` (a plafon felett is true). Kitöltött 0 bruttó érvényes. Nincs saját séma/offline-wiring változás. |
+| [AYCM tracker](documentation/Features/AYCM%20tracker.md) | `d1950b4` (2026-08-19) | `hu.bumler.lm2.aycm` (`AycmSettings` singleton — Entity/Mapper/Repository/Service/Controller/SyncDataLoader, `aycm_settings` tábla V28; `common/DeterministicUuid`), a gyerekek entitásai külön sorokban | `pages/menu/aycm/aycm-dashboard.page` (4 kártya: E havi látogatások / E havi érték / Megéri-e / Bérlet — mind szám, `0 Ft`, vagy `~` a [[Pénzügyek]] „hiányos → `~`" mintája szerint; FAB → Check-In; Bérlet-picker action-sheet + deep-link a Rendszeres kiadás create-re), `core/data/aycm-settings.repository.ts` (determinisztikus v5 id `AycmSettings:<userId>`, `ProfileRepository` minta), `pages/menu/aycm/aycm-pass-cost.ts` (`passCostComputable` / `passCostHuf` / `worthItHuf` — `monthlyEquivalentHuf` import a [[Rendszeres kiadások]]ból, nem másolat), teljes offline-sync bekötés (`AycmSettings` singleton ág a `UserProfile` tükreként — `_needs_refetch` re-pull, 2-arg tombstone, SQLite séma v26), `menu.page` AYCM-pont (`menu.aycm` flag), `aycm` index route `featureFlagGuard('menu.aycm')`-kel. | **Kész (AY1–AY4).** Menü → AYCM hub + három gyerek, négy slice-ban (AY1 elfogadóhely+árszabály → AY2 Check-In → AY3 `AycmSettings`+Statisztikák → AY4 hub+Menü-pont). A hub tisztán fogyasztó — `passCostHuf` / `worthItHuf` a gyerek utility-kből importál, képletet nem másol; `visitValueHuf = listPriceHuf`, a `coPaymentHuf` sehol nem adódik hozzá. `AycmSettings` 1:1-user singleton: `GET` üresen lazy `{ id: v5(userId), linkedRecurringExpenseId: null }` (200, nem 404), `PUT` upsert a determinisztikus id-ra `userId`-scope-pal. `linked_recurring_expense_id` **nincs DB-FK** a `recurring_expense` táblára (laza csatolás; a kliens ellenőrzi a beszámítást). Deep-link: `recurring-expense-edit.page` mostantól honorálja a `?returnTo` query paramot (mentés után oda navigál a friss `RecurringExpense.id`-t `createdExpenseId` paraméterben átadva); a hub `?createdExpenseId=` esetén auto-`linkExpense` + param-strip `replaceUrl`-lel. `menu.aycm` flag `true`. Lásd „Lezárt kör: AYCM". |
+| ↳ [AYCM elfogadóhely hozzáadása](documentation/Subfeatures/AYCM%20elfogadóhely%20hozzáadása.md) | `56923be` (2026-08-19) | `hu.bumler.lm2.aycm` (`AycmPartner` + `AycmPriceRule` — Controller/Service/Mapper/Repository/2 SyncDataLoader, `aycm_partner` + `aycm_price_rule` táblák V26) | `pages/menu/aycm/` (`aycm-partner-list.page` kereső + élő-sávszám; `aycm-partner-edit.page` név/notes + inline ársáv-lista idő-picker + 7 nap-checkbox + egész Ft mezők + kliens overlap-check; `aycm-price-rule.ts` pure TS: `minutesOfDay` / `displayLabel` / `rulesOverlap` / `matchPriceRule`), `core/data/aycm-partner.repository.ts` (partner+szabály közös flow, `dependsOn` a még nem szinkronizált partnerre), teljes offline-sync bekötés (`AycmPartner` + `AycmPriceRule` outbox entityType, SQLite séma v24), `aycm/partners` route-fa. | **Kész (AY1).** Partner: user-owned CRUD `NameNormalizer` egyediséggel → `409 UNIQUE_VIOLATION` + `conflictingId`; `DELETE` = soft delete + cascade a partner élő szabályaira (a Check-In sorokra **nem** — snapshot marad). Szabály: `[startTime, endTime)` félig zárt, `24:00` engedélyezett end-en; nincs éjfél-átlépés; overlap-check kliensen (`rulesOverlap`, barátságos üzenet) **és** szerveren (`ValidationException`). `co_payment_huf` metaadat, sosem a `visitValueHuf`-ban. |
+| ↳ [AYCM Check-In](documentation/Subfeatures/AYCM%20Check-In.md) | `d1950b4` (2026-08-19) | `hu.bumler.lm2.aycm` (`AycmCheckIn` — Controller/Service/Mapper/Repository/SyncDataLoader, `aycm_check_in` tábla V27) | `pages/menu/aycm/aycm-check-in.page` (egy űrlap, nincs lista: partner-picker + dátum (múlt/jövő szabad) + percpontos idő + **Most** gomb + notes; reaktív előnézet `matchPriceRule`-lal — zöld illeszkedő sávnál, sárga + 0 Ft résnél, mentés így is; `?date=YYYY-MM-DD` → adott nap edit/create), `core/data/aycm-check-in.repository.ts` (kész snapshot bemenet — a szerver nem re-matchel), teljes offline-sync bekötés (`AycmCheckIn` outbox entityType, `nameUniqueness: null` — `(userId, checkInDate)` scope nem fejezhető ki, a szerver 409-e véd, `HouseholdTask` precedens; SQLite séma v25), `aycm/check-in` route. | **Kész (AY2).** Lapos user-owned CRUD (RecurringExpense minta) + napi egyediség: `(user_id, check_in_date) WHERE deleted = false` partial unique → create-en és dátum-átíráson `409 UNIQUE_VIOLATION`. Snapshot oszlopok (`partner_name` / `rule_id` nullable / `rule_label` / `list_price_huf` / `co_payment_huf` / `visit_value_huf`), mind integer `>= 0`; `visitValueHuf = listPriceHuf`. Múlt **és jövő** dátum szabad, max 1 / naptári nap (kliens TZ). |
+| ↳ [AYCM Statisztikák](documentation/Subfeatures/AYCM%20Statisztikák.md) | `d1950b4` (2026-08-19) | — (tisztán frontend, nincs backend érintettség) | `pages/menu/aycm/aycm-stats.page` (read-only: 3-preset `ion-segment` THIS_MONTH/PREV_MONTH/LAST_3_MONTHS + 3 kártya darab/Σ érték/megéri-e + helyszín-bontás + látogatáslista, sor tap → `check-in?date=`), `pages/menu/aycm/aycm-stats.ts` pure TS (`windowRange` / `filterCheckIns` élő+zárt intervallum jövővel / `summarize` / `groupByPartner` élő-név vagy törölt→lexikálisan első snapshot-név / `visitList` dátum-idő csökkenő) + spec | **Kész (AY3).** Nincs saját séma / OpenAPI / offline-wiring — a live `AycmCheckIn` snapshotokból számol. „Megéri-e" = `worthItHuf(Σ visitValueHuf, passCostHuf(..., monthCount))` vagy `~` ha `!passCostComputable` (Pénzügyek flag ki / nincs beszámított link). `passCostHuf` a `monthlyEquivalentHuf` SSOT-ot importálja, a `/1 /3 /12` képletet nem másolja. |
 | [Mennyiség mező](documentation/Architektúra/Mennyiség%20mező.md) (architektúra SSOT) | `d1950b4` (2026-08-19) | `hu.bumler.lm2.common.QuantityConverter` (kanonikus egyenlőség) | `shared/quantity.ts`, `shared/quantity-input/`, `shared/help-input/` | **Kész** — parser + `QuantityInputComponent` (`quantity`/`duration` mód), kanonikus bázisegység-tábla mindkét oldalon a közös `shared/fixtures/quantity-conversion.json`-nal paritásban tesztelve. A helper-ikon + inline hiba-note kiemelve a közös `HelpInputComponent`-be (`shared/help-input/`), amin a `GradeInputComponent` is osztozik. |
 | [Névegyediség](documentation/Architektúra/Névegyediség.md) (architektúra SSOT) | `56923be` (2026-08-19) | `hu.bumler.lm2.common.BarcodeNormalizer` (a `NameNormalizer` már megvolt) | `shared/barcode-normalization.ts` (a `name-normalization.ts` már megvolt) | **Kész** a Food mezőhalmaz-egyediséghez szükséges rész (barcode normalizálás); a hex szín normalizálás ([[Indoor boulder admin]]) még nem kellett, nincs implementálva. |
 
@@ -94,13 +98,12 @@ Ha implementálsz egy új feature-t: vedd fel a sort, `Kész`-re állítva, a
 
 Nincs backend package, nincs frontend page/repository ezekhez — teljes egészében
 hátravan. Sorrend a specek mérete / függőségei alapján (lásd "Következő javasolt
-feature" lent), nem prioritás. (Az **Edzés** kör lezárult — A0–A6 + a Mászónapló-
-alkör M0–M8 mind kész és élő; lásd a "Lezárt kör: Edzés" szakaszt lent. Hátralévő
-feature-ek az alábbi táblában.)
+feature" lent), nem prioritás. (Az **Edzés** és a **Pénzügyek** kör, valamint az
+**AYCM tracker** lezárult; lásd a megfelelő "Lezárt kör" szakaszokat lent.
+Hátralévő feature-ek az alábbi táblában.)
 
 | Feature | Subfeature-ök | Fő függőségek |
 |---|---|---|
-| [AYCM tracker](documentation/Features/AYCM%20tracker.md) | AYCM Check-In, AYCM elfogadóhely hozzáadása, AYCM Statisztikák | Nincs |
 | [Lépésszám követés](documentation/Features/Lépésszám%20követés.md) | Kézzel bevitel, Samsung Health szinkron | Samsung Health natív integráció |
 | [Értesítések](documentation/Features/Értesítések.md) | — | Több más feature helyi notification-hookjait szolgálja ki (Háztartási feladatok, Élet tervek stb.) |
 
@@ -563,30 +566,72 @@ undelete, naptár-producer, AYCM mező / FK ezen a táblán (a `linkedRecurringE
 kötés az [[AYCM tracker]] spechen él, nem itt), NAV-pontos adó, családi / egyéb
 kedvezmény, what-if bruttó, szerveroldali nettó vagy havi ekvivalens.
 
-## Következő javasolt feature: **AYCM tracker**
+## Lezárt kör: **AYCM tracker** (2026-08-31)
 
-A [[Pénzügyek]] kör lezárultával a maradék három feature közül (lásd "Nincs
-elkezdve") méret szerint az **AYCM tracker** a következő; közepes, nincs hard
-függősége, és a Pénzügyek kész „megéri-e" forrás miatt a megtérülés-kártya is
-teljes lehet.
+A teljes AYCM tracker feature (hub + AYCM elfogadóhely hozzáadása + AYCM Check-In
++ AYCM Statisztikák) elkészült a jóváhagyott terv szerinti sorrendben, négy
+slice-ban, mindegyik saját commitban, minden lépés után backend (Testcontainers,
+ahol van backend) + frontend (`npm run build` + `test:ci`) + `lint` zöld:
+
+- **AY1 — elfogadóhely + árszabály** (`2fd4d09`): `hu.bumler.lm2.aycm` csomag,
+  `AycmPartner` + `AycmPriceRule` (Flyway `V26`), kézzel írt OpenAPI (4 path +
+  4 schema), `aycm-price-rule.ts` pure TS (`minutesOfDay` / `displayLabel` /
+  `rulesOverlap` / `matchPriceRule`), partner-lista + szerkesztő (inline
+  ársáv-lista, kliens+szerver overlap-check), teljes offline-sync bekötés
+  (SQLite séma v24), `aycm/partners` route-fa. Regenerált Angular kliens is
+  a commitban.
+- **AY2 — Check-In** (`781b40c`): `AycmCheckIn` lapos user-owned CRUD (Flyway
+  `V27`), napi egyediség `(user_id, check_in_date) WHERE deleted = false`
+  partial unique → `409 UNIQUE_VIOLATION`, snapshot oszlopok. Egy űrlap (nincs
+  lista): partner-picker + dátum (múlt/jövő szabad) + **Most** gomb, reaktív
+  `matchPriceRule` előnézet (zöld/sárga+0 Ft), `?date=` deep-link. Teljes
+  offline-sync bekötés (`nameUniqueness: null`, SQLite séma v25). Regenerált
+  Angular kliens is a commitban.
+- **AY3 — `AycmSettings` singleton + Statisztikák** (`749f81b`): `AycmSettings`
+  1:1-user singleton (Flyway `V28`) a `UserProfile` mintájára — `GET` lazy
+  `{ id: v5(userId), linkedRecurringExpenseId: null }` (200, nem 404), `PUT`
+  upsert a determinisztikus id-ra; új `common/DeterministicUuid.v5` a frontend
+  `uuid.ts` byte-pontos tükre. `aycm-pass-cost.ts` (`passCostComputable` /
+  `passCostHuf` / `worthItHuf` — `monthlyEquivalentHuf` import, nem másolat),
+  `aycm-stats.ts` (3-preset ablak + `filterCheckIns` / `summarize` /
+  `groupByPartner` / `visitList`), `aycm-stats.page` read-only képernyő.
+  `AycmSettings` singleton offline-ág (`_needs_refetch` re-pull, 2-arg
+  tombstone, SQLite séma v26). Regenerált Angular kliens is a commitban.
+- **AY4 — hub + Menü-pont** (ebben a commitban): `aycm-dashboard.page` (4 kártya:
+  E havi látogatások / E havi érték / Megéri-e / Bérlet, mind szám, `0 Ft`, vagy
+  `~`; FAB → Check-In; Bérlet-picker action-sheet), `aycm` index route,
+  `menu.page` AYCM-pont (`menu.aycm` flag). `recurring-expense-edit.page`
+  bővítése: `?returnTo` query param → mentés után oda navigál a friss
+  `RecurringExpense.id`-t `createdExpenseId`-ként átadva; a hub `?createdExpenseId=`
+  esetén auto-`linkExpense` + param-strip. A hub tisztán fogyasztó — nincs új
+  entitás / OpenAPI / offline-wiring.
+
+**Tudatosan kihagyva ebből a körből** (a specek "Nem scope" szerint): hivatalos
+AYCM-import / partner-API / térkép / cím-mező; éjfélen átnyúló ársáv; több
+belinkelt kiadás; több Check-In / naptári nap; naptár-producer; értesítés;
+4. gyerek; diagram a statisztikában; custom dátumtartomány / YTD / all-time;
+partner `active`; szabály-duplikálás; seed; undelete; inline partner-create a
+Check-Inről.
+
+## Következő javasolt feature: **Lépésszám követés**
+
+Az [[AYCM tracker]] kör lezárultával a "Nincs elkezdve" táblában két feature
+maradt. Méret szerint a **Lépésszám követés** a következő — legalábbis a manuális
+fele, ami natív integráció nélkül önállóan szállítható.
 
 **Javasolt sorrend innen:**
 
-1. **AYCM tracker** — 3 gyerek (`AycmSettings` singleton `GET`/`PUT` +
-   elfogadóhely / árszabály + Check-In snapshot + statisztika-ablakok);
-   közepes méret, a Pénzügyek kész „megéri-e" forrás miatt a megtérülés-kártya
-   is teljes lehet (enélkül is szállítható lenne, csak `~`-val).
-2. **Lépésszám követés** — a [[Lépésszám kézzel manuálisan megadása]] gyerek egy
+1. **Lépésszám követés** — a [[Lépésszám kézzel manuálisan megadása]] gyerek egy
    determinisztikus v5 id-jű (`user` + `date`) lapos upsert (`DailyStepLog`),
    plusz az `activity-kcal.ts` lépéskalória-ág bekötése (ma fix 0). A
    [[Lépésszám átszinkronizálása a Samsung Health-ből]] gyerek natív
    integrációt (Health Connect) igényel — ez az egyetlen hard blokkoló a
    maradék listán; a manuális fele önállóan is szállítható.
-3. **Értesítések** — tisztán kliensoldali, 6 aktív típusból 5 forrása már
+2. **Értesítések** — tisztán kliensoldali, 6 aktív típusból 5 forrása már
    `Kész` (Élelmiszer tárolás, Étkezés, Háztartási feladatok, Események); csak
    a `STEPS_LOW` vár a Lépésszám követésre, ezért érdemes utána, hogy mind a 6
    típus egy menetben éljen.
 
-Mind a három jóval kisebb, mint az Edzés kör volt. Érdemes ismét egy
-jóváhagyott plan-nal, subfeature-önkénti bontásban nekifutni, ahogy az eddigi
-körök is mentek.
+Mindkettő jóval kisebb, mint az Edzés kör volt. Érdemes ismét egy jóváhagyott
+plan-nal, subfeature-önkénti bontásban nekifutni, ahogy az eddigi körök is
+mentek.
