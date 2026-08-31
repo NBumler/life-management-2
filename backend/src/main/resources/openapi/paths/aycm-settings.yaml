@@ -1,0 +1,33 @@
+get:
+  operationId: getAycmSettings
+  tags:
+    - aycm-settings
+  summary: >-
+    The caller's AYCM settings singleton. Never 404s — an empty user gets a lazy
+    { id, linkedRecurringExpenseId: null } at 200 (id is the deterministic UUID v5 of
+    "AycmSettings:<userId>", the same id the client mints on its first PUT).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/AycmSettings.yaml'
+put:
+  operationId: putAycmSettings
+  tags:
+    - aycm-settings
+  summary: Upsert the caller's AYCM settings (id is a deterministic UUID v5 from the userId).
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/AycmSettings.yaml'
+  responses:
+    '200':
+      description: Saved.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/AycmSettings.yaml'

@@ -1,0 +1,89 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/menu/aycm"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ 'AYCM.STATS.TITLE' | translate }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-segment [value]="window()" (ionChange)="setWindow($any($event.detail.value))">
+    @for (w of windows; track w) {
+      <ion-segment-button [value]="w">
+        <ion-label>{{ 'AYCM.STATS.WINDOW.' + w | translate }}</ion-label>
+      </ion-segment-button>
+    }
+  </ion-segment>
+
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>{{ 'AYCM.STATS.CARD_VISITS' | translate }}</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>{{ summary().visitCount }}</ion-card-content>
+  </ion-card>
+
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>{{ 'AYCM.STATS.CARD_VALUE' | translate }}</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      {{ 'AYCM.STATS.AMOUNT' | translate: { amount: (summary().visitValueSumHuf | number: '1.0-0') } }}
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>{{ 'AYCM.STATS.CARD_WORTH_IT' | translate }}</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      @if (worthItHuf() !== null) {
+        {{ 'AYCM.STATS.AMOUNT' | translate: { amount: (worthItHuf() | number: '1.0-0') } }}
+      } @else {
+        <ion-text color="medium">{{ 'AYCM.STATS.NOT_COMPUTABLE' | translate }}</ion-text>
+      }
+    </ion-card-content>
+  </ion-card>
+
+  <ion-list>
+    <ion-list-header>{{ 'AYCM.STATS.BREAKDOWN_TITLE' | translate }}</ion-list-header>
+    @if (breakdown().length === 0) {
+      <ion-item lines="none">
+        <ion-label color="medium">{{ 'AYCM.STATS.EMPTY' | translate }}</ion-label>
+      </ion-item>
+    } @else {
+      @for (row of breakdown(); track row.partnerId) {
+        <ion-item lines="full">
+          <ion-label>
+            {{ row.displayName }}
+            <p>{{ 'AYCM.STATS.VISIT_COUNT' | translate: { count: row.visitCount } }}</p>
+          </ion-label>
+          <ion-note slot="end">
+            {{ 'AYCM.STATS.AMOUNT' | translate: { amount: (row.visitValueSumHuf | number: '1.0-0') } }}
+          </ion-note>
+        </ion-item>
+      }
+    }
+  </ion-list>
+
+  <ion-list>
+    <ion-list-header>{{ 'AYCM.STATS.VISITS_TITLE' | translate }}</ion-list-header>
+    @if (visits().length === 0) {
+      <ion-item lines="none">
+        <ion-label color="medium">{{ 'AYCM.STATS.EMPTY' | translate }}</ion-label>
+      </ion-item>
+    } @else {
+      @for (visit of visits(); track visit.id) {
+        <ion-item button detail="false" lines="full" (click)="openVisit(visit.checkInDate)">
+          <ion-label>
+            {{ visit.displayName }}
+            <p>{{ visit.checkInDate }} · {{ visit.checkInTime }}</p>
+          </ion-label>
+          <ion-note slot="end">
+            {{ 'AYCM.STATS.AMOUNT' | translate: { amount: (visit.visitValueHuf | number: '1.0-0') } }}
+          </ion-note>
+        </ion-item>
+      }
+    }
+  </ion-list>
+</ion-content>

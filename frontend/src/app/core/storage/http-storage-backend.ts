@@ -22,6 +22,7 @@ import { RecurringExpensesService } from '../../api/api/recurringExpenses.servic
 import { AycmPartnersService } from '../../api/api/aycmPartners.service';
 import { AycmPriceRulesService } from '../../api/api/aycmPriceRules.service';
 import { AycmCheckInsService } from '../../api/api/aycmCheckIns.service';
+import { AycmSettingsService } from '../../api/api/aycmSettings.service';
 import { ClimbingGymsService } from '../../api/api/climbingGyms.service';
 import { ClimbingGymColorBandsService } from '../../api/api/climbingGymColorBands.service';
 import { ClimbingIndoorRoutesService } from '../../api/api/climbingIndoorRoutes.service';
@@ -55,6 +56,7 @@ import { RecurringExpense } from '../../api/model/recurringExpense';
 import { AycmPartner } from '../../api/model/aycmPartner';
 import { AycmPriceRule } from '../../api/model/aycmPriceRule';
 import { AycmCheckIn } from '../../api/model/aycmCheckIn';
+import { AycmSettings } from '../../api/model/aycmSettings';
 import { Gym } from '../../api/model/gym';
 import { GymColorBand } from '../../api/model/gymColorBand';
 import { IndoorRoute } from '../../api/model/indoorRoute';
@@ -117,6 +119,7 @@ export class HttpStorageBackend implements StorageBackend {
   private readonly aycmPartnersApi = inject(AycmPartnersService);
   private readonly aycmPriceRulesApi = inject(AycmPriceRulesService);
   private readonly aycmCheckInsApi = inject(AycmCheckInsService);
+  private readonly aycmSettingsApi = inject(AycmSettingsService);
   private readonly gymsApi = inject(ClimbingGymsService);
   private readonly gymColorBandsApi = inject(ClimbingGymColorBandsService);
   private readonly indoorRoutesApi = inject(ClimbingIndoorRoutesService);
@@ -683,6 +686,15 @@ export class HttpStorageBackend implements StorageBackend {
 
   deleteAycmCheckIn(id: string): Promise<AycmCheckIn> {
     return firstValueFrom(this.aycmCheckInsApi.deleteAycmCheckIn(id));
+  }
+
+  /** The server never 404s here — an empty user gets a lazy default at 200. */
+  getAycmSettings(): Promise<AycmSettings | null> {
+    return firstValueFrom(this.aycmSettingsApi.getAycmSettings());
+  }
+
+  upsertAycmSettings(settings: AycmSettings): Promise<AycmSettings> {
+    return firstValueFrom(this.aycmSettingsApi.putAycmSettings(settings));
   }
 
   listGyms(): Promise<Gym[]> {

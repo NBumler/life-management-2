@@ -166,6 +166,23 @@
       "DELETE": "Delete Check-In",
       "DELETE_CONFIRM_TITLE": "Delete Check-In",
       "DELETE_CONFIRM_MESSAGE": "Delete the {{date}} — {{name}} entry? The day becomes free again."
+    },
+    "STATS": {
+      "TITLE": "Statistics",
+      "AMOUNT": "{{amount}} Ft",
+      "NOT_COMPUTABLE": "~",
+      "WINDOW": {
+        "THIS_MONTH": "This month",
+        "PREV_MONTH": "Previous month",
+        "LAST_3_MONTHS": "Last 3 months"
+      },
+      "CARD_VISITS": "Visits",
+      "CARD_VALUE": "Total value",
+      "CARD_WORTH_IT": "Worth it?",
+      "BREAKDOWN_TITLE": "Venues",
+      "VISITS_TITLE": "Visits",
+      "VISIT_COUNT": "{{count}} visits",
+      "EMPTY": "No visits in this window."
     }
   },
   "THEME": {

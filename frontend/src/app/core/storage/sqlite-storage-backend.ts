@@ -22,6 +22,7 @@ import { RecurringExpense } from '../../api/model/recurringExpense';
 import { AycmPartner } from '../../api/model/aycmPartner';
 import { AycmPriceRule } from '../../api/model/aycmPriceRule';
 import { AycmCheckIn } from '../../api/model/aycmCheckIn';
+import { AycmSettings } from '../../api/model/aycmSettings';
 import { Gym } from '../../api/model/gym';
 import { GymColorBand } from '../../api/model/gymColorBand';
 import { IndoorRoute } from '../../api/model/indoorRoute';
@@ -62,6 +63,7 @@ import {
   AycmPartnerRow,
   AycmPriceRuleRow,
   AycmCheckInRow,
+  AycmSettingsRow,
   GymRow,
   GymColorBandRow,
   IndoorRouteRow,
@@ -128,6 +130,8 @@ import {
   aycmPriceRuleRowToDto,
   aycmCheckInLocalWriteTask,
   aycmCheckInRowToDto,
+  aycmSettingsLocalWriteTask,
+  aycmSettingsRowToDto,
   gymLocalWriteTask,
   gymRowToDto,
   gymColorBandLocalWriteTask,
@@ -1090,6 +1094,26 @@ export class SqliteStorageBackend implements StorageBackend {
   private async readAycmCheckIn(id: string): Promise<AycmCheckIn> {
     const rows = await this.db.query<AycmCheckInRow>('SELECT * FROM aycm_check_in WHERE id = ?', [id]);
     return aycmCheckInRowToDto(rows[0]);
+  }
+
+  async getAycmSettings(): Promise<AycmSettings | null> {
+    const rows = await this.db.query<AycmSettingsRow>('SELECT * FROM aycm_settings WHERE deleted = 0 LIMIT 1');
+    return rows.length > 0 ? aycmSettingsRowToDto(rows[0]) : null;
+  }
+
+  async upsertAycmSettings(settings: AycmSettings): Promise<AycmSettings> {
+    const userId = this.requireUserId();
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: 'PUT',
+      url: '/api/aycm-settings',
+      payload: settings,
+      entityType: 'AycmSettings',
+      targetEntityId: settings.id,
+    });
+    await this.db.executeTransaction([aycmSettingsLocalWriteTask(settings), ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    return (await this.getAycmSettings()) as AycmSettings;
   }
 
   async listGyms(): Promise<Gym[]> {

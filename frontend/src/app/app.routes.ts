@@ -145,6 +145,11 @@ export const routes: Routes = [
                 loadComponent: () =>
                   import('./pages/menu/aycm/aycm-check-in.page').then((m) => m.AycmCheckInPage),
               },
+              {
+                path: 'stats',
+                loadComponent: () =>
+                  import('./pages/menu/aycm/aycm-stats.page').then((m) => m.AycmStatsPage),
+              },
             ],
           },
         ],

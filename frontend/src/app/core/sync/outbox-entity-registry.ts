@@ -15,6 +15,7 @@ import { RecurringExpense } from '../../api/model/recurringExpense';
 import { AycmPartner } from '../../api/model/aycmPartner';
 import { AycmPriceRule } from '../../api/model/aycmPriceRule';
 import { AycmCheckIn } from '../../api/model/aycmCheckIn';
+import { AycmSettings } from '../../api/model/aycmSettings';
 import { Gym } from '../../api/model/gym';
 import { GymColorBand } from '../../api/model/gymColorBand';
 import { IndoorRoute } from '../../api/model/indoorRoute';
@@ -48,6 +49,7 @@ import {
   AycmPartnerRow,
   AycmPriceRuleRow,
   AycmCheckInRow,
+  AycmSettingsRow,
   GymRow,
   GymColorBandRow,
   IndoorRouteRow,
@@ -90,6 +92,8 @@ import {
   aycmPriceRuleRowToDto,
   aycmCheckInLocalWriteTask,
   aycmCheckInRowToDto,
+  aycmSettingsLocalWriteTask,
+  aycmSettingsRowToDto,
   gymLocalWriteTask,
   gymRowToDto,
   gymColorBandLocalWriteTask,
@@ -442,6 +446,12 @@ export class OutboxEntityRegistryService {
       // documentation/Subfeatures/AYCM Check-In.md: uniqueness is (userId, checkInDate), a scope the
       // Fix form can't resolve from (value, excludeId) alone — same as HouseholdTask. The server's
       // 409 UNIQUE_VIOLATION still guards it.
+      nameUniqueness: null,
+    },
+    AycmSettings: {
+      table: 'aycm_settings',
+      currentPayload: rowLookup<AycmSettingsRow, unknown>('aycm_settings', aycmSettingsRowToDto),
+      buildFixWriteTask: (payload) => aycmSettingsLocalWriteTask(payload as unknown as AycmSettings),
       nameUniqueness: null,
     },
     Gym: {

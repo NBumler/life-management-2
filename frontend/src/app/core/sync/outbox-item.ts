@@ -29,6 +29,7 @@ export type OutboxEntityType =
   | 'AycmPartner'
   | 'AycmPriceRule'
   | 'AycmCheckIn'
+  | 'AycmSettings'
   | 'Gym'
   | 'GymColorBand'
   | 'IndoorRoute'

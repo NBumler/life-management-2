@@ -1,0 +1,24 @@
+type: object
+description: >-
+  documentation/Features/AYCM tracker.md — the 1:1-per-user AYCM settings singleton. Holds only the
+  optional link to a RecurringExpense (the monthly pass). No amount of its own; no FK to
+  recurring_expense (loose coupling — the client checks whether the linked row still counts).
+required:
+  - id
+properties:
+  id:
+    type: string
+    format: uuid
+  linkedRecurringExpenseId:
+    type: string
+    format: uuid
+    nullable: true
+    description: The linked RecurringExpense (the monthly pass), or null when nothing is linked.
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

@@ -7,6 +7,7 @@ export * from './authTokens';
 export * from './aycmCheckIn';
 export * from './aycmPartner';
 export * from './aycmPriceRule';
+export * from './aycmSettings';
 export * from './bikeRideLog';
 export * from './boulderProblem';
 export * from './calendarEvent';

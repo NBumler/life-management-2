@@ -151,6 +151,8 @@ paths:
     $ref: 'openapi/paths/aycm-check-ins.yaml'
   /api/aycm-check-ins/{id}:
     $ref: 'openapi/paths/aycm-check-ins-item.yaml'
+  /api/aycm-settings:
+    $ref: 'openapi/paths/aycm-settings.yaml'
 components:
   securitySchemes:
     bearerAuth:
@@ -344,3 +346,5 @@ components:
       $ref: 'openapi/components/schemas/AycmCheckIn.yaml'
     AycmCheckInList:
       $ref: 'openapi/components/schemas/AycmCheckInList.yaml'
+    AycmSettings:
+      $ref: 'openapi/components/schemas/AycmSettings.yaml'

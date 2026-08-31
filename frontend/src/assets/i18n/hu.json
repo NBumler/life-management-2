@@ -166,6 +166,23 @@
       "DELETE": "Check-In törlése",
       "DELETE_CONFIRM_TITLE": "Check-In törlése",
       "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd a(z) {{date}} — {{name}} bejegyzést? A nap újra szabaddá válik."
+    },
+    "STATS": {
+      "TITLE": "Statisztika",
+      "AMOUNT": "{{amount}} Ft",
+      "NOT_COMPUTABLE": "~",
+      "WINDOW": {
+        "THIS_MONTH": "Ez a hónap",
+        "PREV_MONTH": "Előző hónap",
+        "LAST_3_MONTHS": "Utolsó 3 hónap"
+      },
+      "CARD_VISITS": "Látogatások",
+      "CARD_VALUE": "Érték összesen",
+      "CARD_WORTH_IT": "Megéri-e",
+      "BREAKDOWN_TITLE": "Helyszínek",
+      "VISITS_TITLE": "Látogatások",
+      "VISIT_COUNT": "{{count}} látogatás",
+      "EMPTY": "Ebben az ablakban nincs látogatás."
     }
   },
   "THEME": {

@@ -25,6 +25,7 @@ import { RecurringExpense } from '../../api/model/recurringExpense';
 import { AycmPartner } from '../../api/model/aycmPartner';
 import { AycmPriceRule } from '../../api/model/aycmPriceRule';
 import { AycmCheckIn } from '../../api/model/aycmCheckIn';
+import { AycmSettings } from '../../api/model/aycmSettings';
 import { Gym } from '../../api/model/gym';
 import { GymColorBand } from '../../api/model/gymColorBand';
 import { IndoorRoute } from '../../api/model/indoorRoute';
@@ -598,6 +599,10 @@ export interface StorageBackend {
   listAycmCheckIns(): Promise<AycmCheckIn[]>;
   upsertAycmCheckIn(checkIn: AycmCheckIn): Promise<AycmCheckIn>;
   deleteAycmCheckIn(id: string): Promise<AycmCheckIn>;
+
+  /** documentation/Features/AYCM tracker.md: the 1:1-per-user AYCM settings singleton — GET never 404s, PUT-only. */
+  getAycmSettings(): Promise<AycmSettings | null>;
+  upsertAycmSettings(settings: AycmSettings): Promise<AycmSettings>;
 
   /** documentation/Subfeatures/Indoor boulder admin.md + Indoor köteles admin.md: per-user indoor venue master — flat CRUD. */
   listGyms(): Promise<Gym[]>;

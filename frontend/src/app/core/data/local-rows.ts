@@ -23,6 +23,7 @@ import { RecurringExpense } from '../../api/model/recurringExpense';
 import { AycmPartner } from '../../api/model/aycmPartner';
 import { AycmPriceRule } from '../../api/model/aycmPriceRule';
 import { AycmCheckIn } from '../../api/model/aycmCheckIn';
+import { AycmSettings } from '../../api/model/aycmSettings';
 import { Gym } from '../../api/model/gym';
 import { GymColorBand } from '../../api/model/gymColorBand';
 import { IndoorRoute } from '../../api/model/indoorRoute';
@@ -4381,5 +4382,67 @@ export function aycmCheckInTombstoneTask(id: string, deletedAt: string | null, u
       VALUES (?, '1970-01-01', '00:00', '', '', '', 0, 0, 0, ?, 1, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
     values: [id, updatedAt, deletedAt],
+  };
+}
+
+// --- AYCM settings (AycmSettings) ---
+// documentation/Features/AYCM tracker.md — the 1:1-per-user singleton, a mirror of UserProfile's
+// wiring: deterministic v5 id, PUT-only, `_needs_refetch` re-pull. Only field is the optional link.
+
+export interface AycmSettingsRow {
+  id: string;
+  linked_recurring_expense_id: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+export function aycmSettingsRowToDto(row: AycmSettingsRow): AycmSettings {
+  return {
+    id: row.id,
+    linkedRecurringExpenseId: row.linked_recurring_expense_id,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+/** Local-first edit: marks `_dirty = 1`; `_local_only` is set on first insert only. */
+export function aycmSettingsLocalWriteTask(dto: AycmSettings): SqlTask {
+  return {
+    statement: `
+      INSERT INTO aycm_settings (id, linked_recurring_expense_id, _dirty, _local_only)
+      VALUES (?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET linked_recurring_expense_id = excluded.linked_recurring_expense_id, _dirty = 1`,
+    values: [dto.id, dto.linkedRecurringExpenseId ?? null],
+  };
+}
+
+/** Authoritative server row (drain success, or pull when not `_dirty`): full overwrite, clears dirty/local-only. */
+export function aycmSettingsServerApplyTask(dto: AycmSettings): SqlTask {
+  return {
+    statement: `
+      INSERT INTO aycm_settings (id, linked_recurring_expense_id, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, 0, NULL, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        linked_recurring_expense_id = excluded.linked_recurring_expense_id, created_at = excluded.created_at,
+        updated_at = excluded.updated_at, deleted = 0, deleted_at = NULL, _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE aycm_settings._dirty = 0`,
+    values: [dto.id, dto.linkedRecurringExpenseId ?? null, dto.createdAt ?? null, dto.updatedAt ?? null],
+  };
+}
+
+/** §8: no local row + tombstone from server → still recorded, so the row can never "come back". */
+export function aycmSettingsTombstoneTask(id: string, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO aycm_settings (id, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, updatedAt],
   };
 }

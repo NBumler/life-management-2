@@ -1034,7 +1034,22 @@ const SCHEMA_V25_STATEMENTS: string[] = [
   `CREATE INDEX IF NOT EXISTS idx_aycm_check_in_date ON aycm_check_in (check_in_date DESC)`,
 ];
 
-const SCHEMA_VERSION = 25;
+const SCHEMA_V26_STATEMENTS: string[] = [
+  `CREATE TABLE IF NOT EXISTS aycm_settings (
+    id TEXT PRIMARY KEY,
+    linked_recurring_expense_id TEXT,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+];
+
+const SCHEMA_VERSION = 26;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -1062,7 +1077,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 22, statements: SCHEMA_V22_STATEMENTS },
   { toVersion: 23, statements: SCHEMA_V23_STATEMENTS },
   { toVersion: 24, statements: SCHEMA_V24_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V25_STATEMENTS },
+  { toVersion: 25, statements: SCHEMA_V25_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V26_STATEMENTS },
 ];
 
 export interface SqlTask {
