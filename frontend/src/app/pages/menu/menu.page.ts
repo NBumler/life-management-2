@@ -38,6 +38,7 @@ export class MenuPage {
   readonly pendingCount = this.offlineQueue.pendingCount;
   readonly gearCheckEnabled = this.featureFlags.isEnabled('menu.gearcheck');
   readonly bevasarlasEnabled = this.featureFlags.isEnabled('menu.bevasarlas');
+  readonly penzugyekEnabled = this.featureFlags.isEnabled('menu.penzugyek');
 
   async logout(): Promise<void> {
     const pending = this.pendingCount();

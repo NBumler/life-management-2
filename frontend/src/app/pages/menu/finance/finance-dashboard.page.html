@@ -1,0 +1,51 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/menu"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ 'FINANCE.DASHBOARD.TITLE' | translate }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-card button routerLink="net-pay">
+    <ion-card-header>
+      <ion-card-title>{{ 'FINANCE.DASHBOARD.NET' | translate }}</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <span class="value">
+        @if (netHuf() !== null) {
+          {{ 'FINANCE.DASHBOARD.AMOUNT' | translate: { amount: (netHuf() | number: '1.0-0') } }}
+        } @else {
+          ~
+        }
+      </span>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card button routerLink="recurring-expenses">
+    <ion-card-header>
+      <ion-card-title>{{ 'FINANCE.DASHBOARD.MONTHLY_EXPENSES' | translate }}</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <span class="value">
+        {{ 'FINANCE.DASHBOARD.AMOUNT' | translate: { amount: (monthlyExpensesHuf() | number: '1.0-0') } }}
+      </span>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card button routerLink="recurring-expenses">
+    <ion-card-header>
+      <ion-card-title>{{ 'FINANCE.DASHBOARD.REMAINDER' | translate }}</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <span class="value" [class.negative]="remainderHuf() !== null && remainderHuf()! < 0">
+        @if (remainderHuf() !== null) {
+          {{ 'FINANCE.DASHBOARD.AMOUNT' | translate: { amount: (remainderHuf() | number: '1.0-0') } }}
+        } @else {
+          ~
+        }
+      </span>
+    </ion-card-content>
+  </ion-card>
+</ion-content>

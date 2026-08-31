@@ -25,6 +25,12 @@
         <ion-label>{{ 'MENU.BEVASARLAS' | translate }}</ion-label>
       </ion-item>
     }
+    @if (penzugyekEnabled) {
+      <ion-item button routerLink="finance">
+        <ion-icon name="wallet-outline" slot="start" aria-hidden="true"></ion-icon>
+        <ion-label>{{ 'MENU.PENZUGYEK' | translate }}</ion-label>
+      </ion-item>
+    }
     @if (gearCheckEnabled) {
       <ion-item button routerLink="gear">
         <ion-icon name="bag-handle-outline" slot="start" aria-hidden="true"></ion-icon>

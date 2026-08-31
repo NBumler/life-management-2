@@ -43,6 +43,13 @@
     "LOGOUT_CONFIRM_PENDING": "You have {{count}} unsynced change(s). They will stay on this device and go up on your next login. Log out anyway?"
   },
   "FINANCE": {
+    "DASHBOARD": {
+      "TITLE": "Finance",
+      "NET": "Net salary",
+      "MONTHLY_EXPENSES": "Monthly expenses",
+      "REMAINDER": "Remainder",
+      "AMOUNT": "{{amount}} Ft"
+    },
     "EXPENSES": {
       "TITLE": "Recurring expenses",
       "ADD": "New expense",

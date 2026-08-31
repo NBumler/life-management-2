@@ -1,0 +1,8 @@
+.value {
+  font-size: 1.6rem;
+  font-weight: 600;
+
+  &.negative {
+    color: var(--ion-color-danger);
+  }
+}

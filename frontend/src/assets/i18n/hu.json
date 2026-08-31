@@ -43,6 +43,13 @@
     "LOGOUT_CONFIRM_PENDING": "{{count}} szinkronizálatlan változás van. A kijelentkezés után is megmaradnak, és a következő bejelentkezéskor felmennek. Biztosan kijelentkezel?"
   },
   "FINANCE": {
+    "DASHBOARD": {
+      "TITLE": "Pénzügyek",
+      "NET": "Nettó fizetés",
+      "MONTHLY_EXPENSES": "Havi kiadások",
+      "REMAINDER": "Maradék",
+      "AMOUNT": "{{amount}} Ft"
+    },
     "EXPENSES": {
       "TITLE": "Rendszeres kiadások",
       "ADD": "Új kiadás",

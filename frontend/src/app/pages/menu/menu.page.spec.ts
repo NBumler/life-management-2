@@ -58,4 +58,11 @@ describe('MenuPage', () => {
     expect(fixture.componentInstance.pendingCount()).toBe(0);
     expect(typeof fixture.componentInstance.offlineCapable).toBe('boolean');
   });
+
+  it('renders the Pénzügyek entry when menu.penzugyek is enabled (it is, in features.json)', () => {
+    fixture.detectChanges();
+    expect(fixture.componentInstance.penzugyekEnabled).toBe(true);
+    const financeLink = (fixture.nativeElement as HTMLElement).querySelector('ion-item[routerLink="finance"]');
+    expect(financeLink).not.toBeNull();
+  });
 });

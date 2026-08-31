@@ -84,6 +84,11 @@ export const routes: Routes = [
             canActivate: [featureFlagGuard('menu.penzugyek')],
             children: [
               {
+                path: '',
+                loadComponent: () =>
+                  import('./pages/menu/finance/finance-dashboard.page').then((m) => m.FinanceDashboardPage),
+              },
+              {
                 path: 'net-pay',
                 loadComponent: () => import('./pages/menu/finance/net-pay.page').then((m) => m.NetPayPage),
               },

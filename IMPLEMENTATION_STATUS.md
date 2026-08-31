@@ -84,7 +84,7 @@ Ha implementálsz egy új feature-t: vedd fel a sort, `Kész`-re állítva, a
 | ↳ [Úszás napló](documentation/Features/Úszás%20napló.md) | `8a2d452` (2026-07-27) | `hu.bumler.lm2.workout` (`SwimLog` — Controller/Service/Mapper/Repository/SyncDataLoader, `swim_log` tábla V20) | `pages/workout/swimming/` (lista: időrendi úszáskártyák + kcal; `swim-log-edit.page.ts` create/edit űrlap; `swim-metrics.ts` pure TS: `SWIM_MET` / `swimKcal` / `swimDistanceMeters`) + spec, `core/data/swim-log.repository.ts`, `core/data/activity-kcal.ts` `swimKcalForDay` (Kaja dashboard-ba kötve), teljes offline-sync bekötés (`SwimLog` outbox entityType, `local-rows`, `SyncEngine` drain/pull/tombstone/`_needs_refetch` ágak, SQLite séma v18) | **Kész (A5).** Lapos, user-owned CRUD a `LifePlan` mintájára (nincs nested aggregate, nincs névegyediség): idempotens upsert kliens id-ra, `409 ENTITY_DELETED` PUT-after-delete-re, cross-user 404, soft delete. `distanceMeters` = `poolLengthMeters × lapCount` amikor mindkettő megvan (szerver felülírja a küldött értéket); `OPEN_WATER`-nél a medence mezők tiltva (400), a táv kézi. Nincs szerveroldali kcal — `swimKcal()` (MET × Profile testsúly × perc/60) tisztán kliens, `swimKcalForDay` a `workoutKcalForDay` mellé adódik az `activityExtraKcal`-ban. `edzes.uszas` flag **bekapcsolva**. |
 | ↳ [Biciklizés napló](documentation/Features/Bicikliz%C3%A9s%20napl%C3%B3.md) | `8a2d452` (2026-07-27) | `hu.bumler.lm2.workout` (`BikeRideLog` — Controller/Service/Mapper/Repository/SyncDataLoader, `bike_ride_log` tábla V21) | `pages/workout/cycling/` (lista: időrendi kerékpárkártyák + táv/szint/kcal; `bike-ride-log-edit.page.ts` create/edit űrlap átlagsebesség + soft MET-kategória javaslattal; `bike-metrics.ts` pure TS: `BIKE_MET` / `bikeKcal` / `avgSpeedKmH` / `suggestedIntensity`) + spec, `core/data/bike-ride-log.repository.ts`, `core/data/activity-kcal.ts` `bikeKcalForDay` (Kaja dashboard-ba kötve), teljes offline-sync bekötés (`BikeRideLog` outbox entityType, `local-rows`, `SyncEngine` drain/pull/tombstone/`_needs_refetch` ágak, SQLite séma v19) | **Kész (A6).** Lapos, user-owned CRUD az [[Úszás napló]] mintáját tükrözve, de a medence-mező párosítási szabály **nélkül**: `distanceKm` és `elevationGainMeters` opcionális, független mezők (`≥ 0`, per-oszlop domain a OpenAPI + DB check-en). Idempotens upsert kliens id-ra, `409 ENTITY_DELETED` PUT-after-delete-re, cross-user 404, soft delete. Nincs szerveroldali kcal — `bikeKcal()` (MET × Profile testsúly × perc/60) tisztán kliens; `distanceKm`/`elevationGainMeters` sosincs a képletben, csak napló + UI átlagsebesség-hint (`avgSpeedKmH` → `suggestedIntensity`, sosem írja felül a user választását). `edzes.bicikli` flag **bekapcsolva**. |
 | ↳ [Heti terv](documentation/Subfeatures/Heti%20terv.md) | `2cced0f` (2026-08-28) | `hu.bumler.lm2.workout` (`WorkoutPlan` + `WorkoutPlanExercise` + `WorkoutPlanSet` háromszintű nested aggregate `saveTree`; `WeeklyPlan` + `WeeklyPlanSlot` kétszintű; Controller/Service/5 Mapper/5 Repository/5 SyncDataLoader, `workout_plan`/`workout_plan_exercise`/`workout_plan_set`/`weekly_plan`/`weekly_plan_slot` táblák V19; FK `workout_session.plan_id → workout_plan.id` is V19-ben) | `pages/workout/plan/` (sablon lista Aktív/Inaktív/Mind szűrő + soronkénti aktív toggle + `goalLabel` csoport-fejléc; `plan-edit.page.ts` nested gyakorlat/cél-szett szerkesztő a `shared/exercise-picker` + `workout-fields.ts` `visibleFields` újrahasználásával), `pages/workout/weekly-plan/` (7 napos dashboard: nap→sablon kiosztás action-sheet, „Teljesítve" jelvény adherence szerint, „Edzés indítása" CTA `?planId=`-del az élő nézetbe, prev/next hét nav, „Másolás következő hétre"), `pages/workout/weekly-plan/weekly-plan-adherence.ts` (pure: `mondayOf`/`weekDates`/`isSlotCompleted`) + spec, `core/data/workout-plan.repository.ts` + `core/data/weekly-plan.repository.ts` (read-cache; `WeeklyPlan.id` determinisztikus v5 `(userId, weekStartDate)`-ből), teljes offline-sync bekötés (`WorkoutPlan` + `WeeklyPlan` outbox entityType, `local-rows` 5 tábla, `SyncEngine` drain/pull/tombstone/`_needs_refetch` ágak mind az 5 entitásra, SQLite séma v17) | **Kész (A3a + A3b).** A2 mintáit követi: háromszintű `saveTree` `NestedChildResolver`-rel (`WorkoutPlan`), kétszintű (`WeeklyPlan`), user-owned szülő + `user_id` nélküli gyerektáblák a `sync_changes` view-ig visszajoinolva. `active` sima mező a nested PUT-on (nincs külön endpoint); kikapcsolása csak a pickerekből rejt el, a múltbeli `planId` / slot érintetlen. `WorkoutPlanExercise.exercise_id` **NOT NULL** (kötelező a sablonban, ellentétben a naplóval), `dependsOn` a még nem szinkronizált katalógus-sorra; `WeeklyPlanSlot.plan_id` `dependsOn` a még nem szinkronizált sablonra. `WeeklyPlan.id` = determinisztikus v5, POST egy létező/törölt hétre feléleszti. Adherence: nem törölt `WorkoutSession` a hét `[weekStart, weekStart+6]` tartományában `planId` egyezéssel, tartalmi vizsgálat nélkül. Nested aggregate → nincs Fix a sync központban (csak Skip/Drop/payload-nézet). `edzes.hetiTerv` flag **bekapcsolva** az A4-ben. |
-| [Pénzügyek](documentation/Features/Pénzügyek.md) | `d1950b4` (2026-08-19) | — | — | **Folyamatban (P1 + P2 kész).** Menü → Pénzügyek hub + két gyerek, subfeature-önkénti bontásban (Rendszeres kiadások → Nettó fizetés kalkulátor → hub + `menu.penzugyek` élővé tétele). A hubnak nincs saját entitása / OpenAPI-ja; fogyasztó. **P1:** [[Rendszeres kiadások]] kész. **P2:** [[Nettó fizetés kalkulátor]] kész — lásd külön sorok lent. Hátra: `FinanceDashboardPage` hub (3 kártya: Nettó / Havi kiadások / Maradék) + `finance` index route + Menü-pont (P3). A `menu.penzugyek` flag már `true` a `features.json`-ban, de a menüpont + `finance` index route csak P3-ban kerül be, így a köztes commitok érvényesek. |
+| [Pénzügyek](documentation/Features/Pénzügyek.md) | `d1950b4` (2026-08-19) | — | `pages/menu/finance/finance-dashboard.page` (3 kártya: Nettó / Havi kiadások / Maradék, mind szám vagy `~` a [[Profile]]/[[Tápérték kalkulátor]] „hiányos → `~`" mintája szerint; tap → gyerek route), `menu.page` Pénzügyek-pont (`menu.penzugyek` flag), `finance` index route `featureFlagGuard('menu.penzugyek')`-kel. | **Kész (P1+P2+P3).** Menü → Pénzügyek hub + két gyerek, három slice-ban (P1 Rendszeres kiadások → P2 Nettó fizetés kalkulátor → P3 hub + Menü-pont). A hubnak **nincs** saját entitása / OpenAPI-ja / offline-wiringje; tisztán fogyasztó: Nettó = `computeNetPay` `net` (vagy `~` üres bruttónál), Havi kiadások = `sumMonthlyEquivalentHuf` a beszámított sorokra (üres → `0 Ft`, sosem `~`), Maradék = `net − havi` előjeles, 0-ra nem clampelve (vagy `~`, ha a nettó `~`). Képlet nem másolódik — import a gyerek utility-kből. `menu.penzugyek` flag `true`. Lásd „Lezárt kör: Pénzügyek". |
 | ↳ [Rendszeres kiadások](documentation/Subfeatures/Rendszeres%20kiadások.md) | `7801d47` (2026-08-19) | `hu.bumler.lm2.finance` (`RecurringExpense` — Controller/Service/Mapper/Repository/SyncDataLoader, `recurring_expense` tábla V25; első `finance` csomag) | `pages/menu/finance/` (`recurring-expense-list.page` szekciók Lejárt/Ma/Később/Szüneteltetett + kategória-chip szűrő + kereső + sliding törlés/szünet + „Fizetve"; `recurring-expense-edit.page` create/edit; `recurring-expense-math.ts` pure TS: `monthlyEquivalentHuf` / `addPeriod` / `countsInMonthlyEquivalent` / `classifyExpenseSection` / `dayLag` + spec; `finance-labels.ts`), `core/data/recurring-expense.repository.ts`, teljes offline-sync bekötés (`RecurringExpense` outbox entityType, `local-rows`, `SyncEngine` drain/pull/tombstone/`_needs_refetch` ágak, SQLite séma v23), `finance/recurring-expenses` route-fa `featureFlagGuard('menu.penzugyek')`-kel. | **Kész (P1).** Lapos, user-owned CRUD az [[Úszás napló]] / [[Biciklizés napló]] mintáját tükrözve: idempotens upsert kliens id-ra, `409 ENTITY_DELETED` PUT-after-delete-re, cross-user 404, soft delete, `name` trim-non-empty a service-ben (nem egyedi). „Fizetve" = sima `PUT` kliens-számolt `addPeriod`-dátummal (a szerver **nem** rollol, **nem** számol havi ekvivalenst); `billingDayOfMonth` csak create-en / kézi dátum-szerkesztésen szinkronizál a dátum napjához. `monthlyEquivalentHuf` (MONTHLY→amount, QUARTERLY→/3, YEARLY→/12, `Math.round`) az SSOT — a [[Pénzügyek]] hub (P3) és a jövőbeli [[AYCM tracker]] „megéri-e" ezt importálja. Beszámított sor = `deleted = false ∧ active = true`. Nincs Fix-kizárás a sync központban (lapos entitás → van `buildFixWriteTask`). |
 | ↳ [Nettó fizetés kalkulátor](documentation/Subfeatures/Nettó%20fizetés%20kalkulátor.md) | `b2ddad4` (2026-08-19) | — (tisztán kliens, nincs OpenAPI / szerver-számítás) | `shared/net-pay-calculator.ts` (`TB_RATE` 0.185 / `SZJA_RATE` 0.15 / `UNDER_25_AGE_LIMIT` 25 / `UNDER_25_SZJA_EXEMPTION_CAP_HUF` 715 765 konstansok + `computeNetPay` + spec), `shared/local-date.ts` `ageInYears` (kiemelve a `tdee-calculator.ts`-ből, közös „teljes évek, floor period" — a `computeTdee` most importálja), `pages/menu/finance/net-pay.page` (Bruttó/TB/SZJA/Nettó sorok, `~` csak üres bruttónál, 25-alatti badge, disclaimer, CTA → Profile), `finance/net-pay` route. | **Kész (P2).** Ugyanaz a „kliens gördíti tovább" minta, mint a [[Tápérték kalkulátor]] (`shared/tdee-calculator.ts`): pure TS, nincs backend/store, hiányzó bruttó → `computable: false` (`~`), sosem dob. Egyszerűsített **munkavállalói** becslés: `tb = round(gross × 0.185)`; `szja = round(0.15 × gross)` vagy 25 alatt `round(0.15 × max(0, gross − 715 765))`; `net = gross − tb − szja`. `under25ExemptionApplied` = `birthDate` kitöltve ∧ `age < 25` (a plafon felett is true). Kitöltött 0 bruttó érvényes. Nincs saját séma/offline-wiring változás. |
 | [Mennyiség mező](documentation/Architektúra/Mennyiség%20mező.md) (architektúra SSOT) | `d1950b4` (2026-08-19) | `hu.bumler.lm2.common.QuantityConverter` (kanonikus egyenlőség) | `shared/quantity.ts`, `shared/quantity-input/`, `shared/help-input/` | **Kész** — parser + `QuantityInputComponent` (`quantity`/`duration` mód), kanonikus bázisegység-tábla mindkét oldalon a közös `shared/fixtures/quantity-conversion.json`-nal paritásban tesztelve. A helper-ikon + inline hiba-note kiemelve a közös `HelpInputComponent`-be (`shared/help-input/`), amin a `GradeInputComponent` is osztozik. |
@@ -530,48 +530,63 @@ megvalósítva, a korábbi ad-hoc `GRADE_UNPARSED` note helyett:
   tesztek: `help-input.component.spec.ts`, `grade-input.component.spec.ts`;
   `lint` tiszta, `test:ci` 1125/1125.
 
-## Következő javasolt feature: **Pénzügyek**
+## Lezárt kör: **Pénzügyek** (2026-08-31)
 
-Az **Edzés** kör lezárultával a "gyors győzelem" feature-ökből ismét van
-választék. A maradék négy feature közül (lásd "Nincs elkezdve") méret és
-függőség szerint a **Pénzügyek** a legkisebb, tisztán a már bejáratott
-mintákból áll, és nincs függősége:
+A teljes Pénzügyek feature elkészült a jóváhagyott terv szerinti sorrendben,
+három slice-ban, mindegyik saját commitban, minden lépés után backend
+(Testcontainers, ahol van backend) + frontend (`npm run build` + `test:ci`) +
+`lint` zöld:
 
-- **Pénzügyek** (ajánlott) — két gyerek + fogyasztó hub, a hubnak saját
-  entitása nincs.
-  - [[Rendszeres kiadások]]: egyetlen lapos, user-owned CRUD entitás
-    (`RecurringExpense`) az [[Úszás napló]] / [[Élet tervek]] mintájára
-    (`active` mező a nested PUT nélkül, havi ekvivalens pure TS utility),
-    teljes offline-sync bekötés — a legjobban begyakorolt slice-típus a
-    repóban.
-  - [[Nettó fizetés kalkulátor]]: tisztán kliensoldali pure TS számítómodul a
-    `shared/tdee-calculator.ts` / `shelf-life.ts` mintájára (nincs backend
-    endpoint), opcionális saját képernyővel.
-  - Hub (`FinanceDashboardPage`): pure fogyasztó, saját entitás / OpenAPI
-    nélkül, három kártya `~` / homokóra hiányjelzéssel a [[Profile]] /
-    [[Tápérték kalkulátor]] mintájára — pontosan a Kaja / AYCM dashboard-minta.
-  - Mellékhaszon: bekötné az [[AYCM tracker]] "megéri-e" kártyájának
-    `linkedRecurringExpenseId` forrását (addig ott `~`).
+- **P1 — Rendszeres kiadások** (`a97f08f`): új `hu.bumler.lm2.finance` csomag
+  (első `finance` package), `RecurringExpense` lapos user-owned CRUD az [[Úszás
+  napló]] / [[Biciklizés napló]] mintájára, Flyway `V25`, kézzel írt OpenAPI
+  (2 path + 2 schema), regenerált Angular kliens. `recurring-expense-math.ts`
+  pure TS SSOT (`monthlyEquivalentHuf` / `addPeriod` / `countsInMonthlyEquivalent`
+  / `classifyExpenseSection` / `dayLag`), lista + szerkesztő oldal, teljes
+  offline-sync bekötés (`RecurringExpense` outbox entityType, SQLite séma v23),
+  `finance/recurring-expenses` route `featureFlagGuard('menu.penzugyek')`-kel.
+- **P2 — Nettó fizetés kalkulátor** (`d2341b5`): tisztán kliens, nincs backend /
+  OpenAPI / offline-wiring. `shared/net-pay-calculator.ts` (`TB_RATE` 0.185 /
+  `SZJA_RATE` 0.15 / 25-alatti SZJA-plafon `715_765` + `computeNetPay`),
+  `ageInYears` kiemelve a `tdee-calculator.ts`-ből közös `shared/local-date.ts`
+  helperré, `net-pay.page` read-only bontás, `finance/net-pay` route.
+- **P3 — hub + Menü-pont** (ebben a commitban): `finance-dashboard.page` (3 kártya:
+  Nettó / Havi kiadások / Maradék, mind szám vagy `~`), `finance` index route,
+  `menu.page` Pénzügyek-pont (`menu.penzugyek` flag). A hub tisztán fogyasztó —
+  a képleteket a gyerek utility-kből importálja, nem másolja. `menu.penzugyek`
+  már eddig is `true` volt a `features.json`-ban.
+
+**Tudatosan kihagyva ebből a körből** (a specek "Nem scope" szerint): közelgő
+fizetés-értesítés ([[Értesítések]] későbbi típus, forrás: [[Rendszeres kiadások]]),
+`WEEKLY` / tetszőleges interval, auto-roll app-nyitáskor, `endDate`, duplikálás,
+undelete, naptár-producer, AYCM mező / FK ezen a táblán (a `linkedRecurringExpenseId`
+kötés az [[AYCM tracker]] spechen él, nem itt), NAV-pontos adó, családi / egyéb
+kedvezmény, what-if bruttó, szerveroldali nettó vagy havi ekvivalens.
+
+## Következő javasolt feature: **AYCM tracker**
+
+A [[Pénzügyek]] kör lezárultával a maradék három feature közül (lásd "Nincs
+elkezdve") méret szerint az **AYCM tracker** a következő; közepes, nincs hard
+függősége, és a Pénzügyek kész „megéri-e" forrás miatt a megtérülés-kártya is
+teljes lehet.
 
 **Javasolt sorrend innen:**
 
-1. **Pénzügyek** — Rendszeres kiadások → Nettó fizetés kalkulátor → hub +
-   `menu.penzugyek` flag.
-2. **AYCM tracker** — 3 gyerek (`AycmSettings` singleton `GET`/`PUT` +
+1. **AYCM tracker** — 3 gyerek (`AycmSettings` singleton `GET`/`PUT` +
    elfogadóhely / árszabály + Check-In snapshot + statisztika-ablakok);
-   közepes méret, a Pénzügyek után a "megéri-e" kártya is teljes (enélkül is
-   szállítható, csak `~`-val).
-3. **Lépésszám követés** — a [[Lépésszám kézzel manuálisan megadása]] gyerek egy
+   közepes méret, a Pénzügyek kész „megéri-e" forrás miatt a megtérülés-kártya
+   is teljes lehet (enélkül is szállítható lenne, csak `~`-val).
+2. **Lépésszám követés** — a [[Lépésszám kézzel manuálisan megadása]] gyerek egy
    determinisztikus v5 id-jű (`user` + `date`) lapos upsert (`DailyStepLog`),
    plusz az `activity-kcal.ts` lépéskalória-ág bekötése (ma fix 0). A
    [[Lépésszám átszinkronizálása a Samsung Health-ből]] gyerek natív
    integrációt (Health Connect) igényel — ez az egyetlen hard blokkoló a
    maradék listán; a manuális fele önállóan is szállítható.
-4. **Értesítések** — tisztán kliensoldali, 6 aktív típusból 5 forrása már
+3. **Értesítések** — tisztán kliensoldali, 6 aktív típusból 5 forrása már
    `Kész` (Élelmiszer tárolás, Étkezés, Háztartási feladatok, Események); csak
    a `STEPS_LOW` vár a Lépésszám követésre, ezért érdemes utána, hogy mind a 6
    típus egy menetben éljen.
 
-Mind a négy jóval kisebb, mint az Edzés kör volt — a Pénzügyek különösen.
-Érdemes ismét egy jóváhagyott plan-nal, subfeature-önkénti bontásban
-nekifutni, ahogy az eddigi körök is mentek.
+Mind a három jóval kisebb, mint az Edzés kör volt. Érdemes ismét egy
+jóváhagyott plan-nal, subfeature-önkénti bontásban nekifutni, ahogy az eddigi
+körök is mentek.
