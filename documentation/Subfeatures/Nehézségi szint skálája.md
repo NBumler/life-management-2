@@ -64,7 +64,17 @@ Nincs nyitott kérdés.
 
 ### Frontend
 
-Shared Angular/Ionic komponens + pure TS parser utility; offline mindig.
+Megvalósítva:
+
+- **Pure TS parser** — `shared/climbing/grade-scale.ts` (`parseGrade`, `normalizeGradeInput`, `scalePostfix`, a négyállapotú `EMPTY`/`VALID`/`AMBIGUOUS`/`UNKNOWN` gép) + `shared/climbing/climbing-grade-matrix.ts` (a [[Nehézségi szint skálája (konverziós mátrix)]] SSOT tábla, `gradeToIndex` / `colorBandMidIndex`). Se DOM, se Angular.
+- **Shared komponens** — `shared/grade-input/` (`app-grade-input`), a közös `shared/help-input/` (`app-help-input`: `ion-input` + záró súgó-ikon gomb + opcionális badge + inline hiba-note) fölé építve, ugyanúgy, mint a [[Mennyiség mező]] `app-quantity-input`. Kettős API: `ControlValueAccessor` a reaktív-formos hívóknak (`formControlName`), és sima `[value]` / `(valueChange)` a signal-alapú napló-soroknak. `@Input() discipline` = `BOULDER` \| `ROPE` (a parent adja át a dashboard kontextusból).
+  - Záró **badge**: `VALID` → `FRA` / `YDS` / `UIAA` / `FONT` / `V`; `UNKNOWN` → `?`.
+  - **Chip-sor** kétértelműségre (`AMBIGUOUS`, ill. bare `4`/`5` az alternatívákkal): a `candidates` lista `ion-chip`-ként; koppintásra a mező a `candidate.label`-re áll és újraparse-ol.
+  - **Súgó modal** (`SHARED.GRADE_INPUT.HELP_*`, `AlertController`) a skálákkal + példákkal; az `UNKNOWN` / `AMBIGUOUS` állapot inline hibaüzenetet is ad (`SHARED.GRADE_INPUT.ERROR_*`).
+  - **250 ms debounce** csak a vizuális deriváción (badge / chip / hiba / `parseChange`); a form-érték minden leütésre propagál, így a szülő `save()` gate szinkron `parseGrade`-je pontos marad.
+- **Hívási helyek**: `admin/gym-color-band-edit` (alsó/felső fokozat), `admin/indoor-route-edit` (ágazatfüggő), és mind a 4 kontextus-napló szerkesztő (`naplo/*-session-edit`, kísérletenkénti + outdoor köteles per-pitch grade).
+
+Offline mindig (pure client).
 
 #### Backend-offline
 

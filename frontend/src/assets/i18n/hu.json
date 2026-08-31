@@ -302,6 +302,13 @@
       "HELP_DURATION": "Írj számot és időegységet. Példa: 14nap, 2 hét, 3hó.",
       "ERROR_QUANTITY": "Ismeretlen mennyiség vagy egység.",
       "ERROR_DURATION": "Ismeretlen időtartam vagy időegység."
+    },
+    "GRADE_INPUT": {
+      "HELP_TITLE": "Hogyan add meg a fokozatot",
+      "HELP_BOULDER": "Font: szám + betű (A–C), opcionális +. Példa: 6A, 6B+, 7C. V-skála: V + szám. Példa: V0–V17. A 3, 4, 5 betű nélkül is jó; 6-tól kötelező a betű.",
+      "HELP_ROPE": "Francia: szám + betű (a–c), opcionális +. Példa: 6a, 6a+, 7b. YDS: 5. + fok, 5.10 felett a–d. Példa: 5.9, 5.10a. UIAA: római szám, opcionális +/−. Példa: VI-, VII+. A 3, 4, 5 betű nélkül is jó; 6-tól kötelező a betű.",
+      "ERROR_UNKNOWN": "A fokozat nem ismerhető fel. Nézd meg a súgót a példákért.",
+      "ERROR_AMBIGUOUS": "Egészítsd ki a fokozatot (pl. 6 → 6a), vagy válassz a javaslatokból."
     }
   },
   "FOOD": {
@@ -761,7 +768,6 @@
       "ADMIN_OUTDOOR": "Kültéri",
       "ADMIN_GYMS": "Termek",
       "ADMIN_CRAGS": "Sziklák (Crag → Szektor → Út)",
-      "GRADE_UNPARSED": "A nehézségi fokozat nem értelmezhető — nézd meg a skála súgót.",
       "DISCIPLINE": {
         "BOULDER": "Boulder",
         "ROPE": "Köteles"

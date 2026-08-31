@@ -65,7 +65,7 @@ A négy felső szintű mappa (`pages/`, `shared/`, `core/`, `api/`) a repóban l
 | `core/session/` | `AuthSession`, auth guard, token interceptor | Token életciklus, secure storage — [[Bejelentkezés]]. |
 | `core/config/` | `FeatureFlags`, `NetworkStatus`, `AppConfig`, `LanguageService`, `ThemeService` | Build / futásidejű asset + platform képességek + device-local preferenciák ([[Nyelv választás]], [[Dark&Light mode]]). |
 | `pages/<oldal>/` | Képernyők; a gyerek komponensek a szülő mappájában | Lazy route; csak repositoryt és shared komponenst használ. Névkonvenció: `{név}.page.ts`, `{név}.component.ts`, `{név}.service.ts`, `{név}.guard.ts`, `{név}.repository.ts`. |
-| `shared/` | Közös komponensek és pure TS utility-k | [[Mennyiség mező]], [[Szöveges keresés]], [[Névegyediség]], nehézségi skála, DateTime modul, `SyncStatusButton`. |
+| `shared/` | Közös komponensek és pure TS utility-k | [[Mennyiség mező]] (`app-quantity-input` + közös `app-help-input`), [[Nehézségi szint skálája]] (`app-grade-input` + `shared/climbing/` parser), [[Szöveges keresés]], [[Névegyediség]], DateTime modul, `SyncStatusButton`. |
 
 - A **repository homlokzat** miatt a feature kód nem tud a platformról: ugyanaz a hívás natívon local-first outboxot ír, weben HTTP-t hív. A web így nem külön kódág, hanem egy backend-implementáció.
 - **Számítási utility-k** pure TypeScriptben, framework-függetlenül (MET-ek, BMR / TDEE, nettó bér, `nextDue`, naptár-vetítés, nehézségi index) — [[Backend-offline first]] §14, [[Tápérték kalkulátor]].

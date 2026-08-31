@@ -302,6 +302,13 @@
       "HELP_DURATION": "Type a number and a time unit. Example: 14nap, 2 hét, 3hó.",
       "ERROR_QUANTITY": "Unrecognized amount or unit.",
       "ERROR_DURATION": "Unrecognized amount or time unit."
+    },
+    "GRADE_INPUT": {
+      "HELP_TITLE": "How to enter the grade",
+      "HELP_BOULDER": "Font: number + letter (A–C), optional +. Example: 6A, 6B+, 7C. V-scale: V + number. Example: V0–V17. Bare 3, 4, 5 are fine; from 6 the letter is required.",
+      "HELP_ROPE": "French: number + letter (a–c), optional +. Example: 6a, 6a+, 7b. YDS: 5. + grade, a–d above 5.10. Example: 5.9, 5.10a. UIAA: roman numeral, optional +/−. Example: VI-, VII+. Bare 3, 4, 5 are fine; from 6 the letter is required.",
+      "ERROR_UNKNOWN": "Grade not recognised. Check the help for examples.",
+      "ERROR_AMBIGUOUS": "Complete the grade (e.g. 6 → 6a), or pick one of the suggestions."
     }
   },
   "FOOD": {
@@ -761,7 +768,6 @@
       "ADMIN_OUTDOOR": "Outdoor",
       "ADMIN_GYMS": "Gyms",
       "ADMIN_CRAGS": "Crags (Crag → Sector → Route)",
-      "GRADE_UNPARSED": "Grade not recognised — check the scale help.",
       "DISCIPLINE": {
         "BOULDER": "Boulder",
         "ROPE": "Rope"

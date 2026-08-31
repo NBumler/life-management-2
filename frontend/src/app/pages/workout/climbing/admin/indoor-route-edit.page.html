@@ -36,17 +36,12 @@
       </ion-item>
 
       <ion-item>
-        <ion-input
+        <app-grade-input
           formControlName="grade"
+          [discipline]="disciplineValue()"
           [label]="'WORKOUT.CLIMBING.INDOOR_ROUTE.FIELD_GRADE' | translate"
-          label-placement="stacked"
-        ></ion-input>
+        />
       </ion-item>
-      @if (form.controls.grade.touched && gradeIndex() === null) {
-        <ion-item lines="none">
-          <ion-note color="danger">{{ 'WORKOUT.CLIMBING.GRADE_UNPARSED' | translate }}</ion-note>
-        </ion-item>
-      }
       @if (gradeIndex() !== null) {
         <ion-item lines="none">
           <ion-note>{{ 'WORKOUT.CLIMBING.BAND.INDEX_PREVIEW' | translate }}: {{ gradeIndex() }}</ion-note>

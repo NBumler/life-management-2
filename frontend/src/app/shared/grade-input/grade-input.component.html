@@ -1,0 +1,23 @@
+<app-help-input
+  [label]="label"
+  [value]="text()"
+  [placeholder]="placeholder"
+  [disabled]="disabled()"
+  helpTitleKey="SHARED.GRADE_INPUT.HELP_TITLE"
+  [helpTextKey]="helpTextKey"
+  [errorKey]="errorKey"
+  [badge]="badge"
+  (valueChange)="onInput($event)"
+  (blurred)="onBlur()"
+>
+  @if (chips.length > 0) {
+    <div chips class="grade-input-chips">
+      @for (candidate of chips; track candidate.scale + candidate.label) {
+        <ion-chip (click)="pickCandidate(candidate)">
+          {{ candidate.label }}
+          <span class="grade-input-chip-scale">{{ scaleBadge(candidate.scale) }}</span>
+        </ion-chip>
+      }
+    </div>
+  }
+</app-help-input>

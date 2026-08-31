@@ -84,7 +84,7 @@ Ha implementálsz egy új feature-t: vedd fel a sort, `Kész`-re állítva, a
 | ↳ [Úszás napló](documentation/Features/Úszás%20napló.md) | `8a2d452` (2026-07-27) | `hu.bumler.lm2.workout` (`SwimLog` — Controller/Service/Mapper/Repository/SyncDataLoader, `swim_log` tábla V20) | `pages/workout/swimming/` (lista: időrendi úszáskártyák + kcal; `swim-log-edit.page.ts` create/edit űrlap; `swim-metrics.ts` pure TS: `SWIM_MET` / `swimKcal` / `swimDistanceMeters`) + spec, `core/data/swim-log.repository.ts`, `core/data/activity-kcal.ts` `swimKcalForDay` (Kaja dashboard-ba kötve), teljes offline-sync bekötés (`SwimLog` outbox entityType, `local-rows`, `SyncEngine` drain/pull/tombstone/`_needs_refetch` ágak, SQLite séma v18) | **Kész (A5).** Lapos, user-owned CRUD a `LifePlan` mintájára (nincs nested aggregate, nincs névegyediség): idempotens upsert kliens id-ra, `409 ENTITY_DELETED` PUT-after-delete-re, cross-user 404, soft delete. `distanceMeters` = `poolLengthMeters × lapCount` amikor mindkettő megvan (szerver felülírja a küldött értéket); `OPEN_WATER`-nél a medence mezők tiltva (400), a táv kézi. Nincs szerveroldali kcal — `swimKcal()` (MET × Profile testsúly × perc/60) tisztán kliens, `swimKcalForDay` a `workoutKcalForDay` mellé adódik az `activityExtraKcal`-ban. `edzes.uszas` flag **bekapcsolva**. |
 | ↳ [Biciklizés napló](documentation/Features/Bicikliz%C3%A9s%20napl%C3%B3.md) | `8a2d452` (2026-07-27) | `hu.bumler.lm2.workout` (`BikeRideLog` — Controller/Service/Mapper/Repository/SyncDataLoader, `bike_ride_log` tábla V21) | `pages/workout/cycling/` (lista: időrendi kerékpárkártyák + táv/szint/kcal; `bike-ride-log-edit.page.ts` create/edit űrlap átlagsebesség + soft MET-kategória javaslattal; `bike-metrics.ts` pure TS: `BIKE_MET` / `bikeKcal` / `avgSpeedKmH` / `suggestedIntensity`) + spec, `core/data/bike-ride-log.repository.ts`, `core/data/activity-kcal.ts` `bikeKcalForDay` (Kaja dashboard-ba kötve), teljes offline-sync bekötés (`BikeRideLog` outbox entityType, `local-rows`, `SyncEngine` drain/pull/tombstone/`_needs_refetch` ágak, SQLite séma v19) | **Kész (A6).** Lapos, user-owned CRUD az [[Úszás napló]] mintáját tükrözve, de a medence-mező párosítási szabály **nélkül**: `distanceKm` és `elevationGainMeters` opcionális, független mezők (`≥ 0`, per-oszlop domain a OpenAPI + DB check-en). Idempotens upsert kliens id-ra, `409 ENTITY_DELETED` PUT-after-delete-re, cross-user 404, soft delete. Nincs szerveroldali kcal — `bikeKcal()` (MET × Profile testsúly × perc/60) tisztán kliens; `distanceKm`/`elevationGainMeters` sosincs a képletben, csak napló + UI átlagsebesség-hint (`avgSpeedKmH` → `suggestedIntensity`, sosem írja felül a user választását). `edzes.bicikli` flag **bekapcsolva**. |
 | ↳ [Heti terv](documentation/Subfeatures/Heti%20terv.md) | `2cced0f` (2026-08-28) | `hu.bumler.lm2.workout` (`WorkoutPlan` + `WorkoutPlanExercise` + `WorkoutPlanSet` háromszintű nested aggregate `saveTree`; `WeeklyPlan` + `WeeklyPlanSlot` kétszintű; Controller/Service/5 Mapper/5 Repository/5 SyncDataLoader, `workout_plan`/`workout_plan_exercise`/`workout_plan_set`/`weekly_plan`/`weekly_plan_slot` táblák V19; FK `workout_session.plan_id → workout_plan.id` is V19-ben) | `pages/workout/plan/` (sablon lista Aktív/Inaktív/Mind szűrő + soronkénti aktív toggle + `goalLabel` csoport-fejléc; `plan-edit.page.ts` nested gyakorlat/cél-szett szerkesztő a `shared/exercise-picker` + `workout-fields.ts` `visibleFields` újrahasználásával), `pages/workout/weekly-plan/` (7 napos dashboard: nap→sablon kiosztás action-sheet, „Teljesítve" jelvény adherence szerint, „Edzés indítása" CTA `?planId=`-del az élő nézetbe, prev/next hét nav, „Másolás következő hétre"), `pages/workout/weekly-plan/weekly-plan-adherence.ts` (pure: `mondayOf`/`weekDates`/`isSlotCompleted`) + spec, `core/data/workout-plan.repository.ts` + `core/data/weekly-plan.repository.ts` (read-cache; `WeeklyPlan.id` determinisztikus v5 `(userId, weekStartDate)`-ből), teljes offline-sync bekötés (`WorkoutPlan` + `WeeklyPlan` outbox entityType, `local-rows` 5 tábla, `SyncEngine` drain/pull/tombstone/`_needs_refetch` ágak mind az 5 entitásra, SQLite séma v17) | **Kész (A3a + A3b).** A2 mintáit követi: háromszintű `saveTree` `NestedChildResolver`-rel (`WorkoutPlan`), kétszintű (`WeeklyPlan`), user-owned szülő + `user_id` nélküli gyerektáblák a `sync_changes` view-ig visszajoinolva. `active` sima mező a nested PUT-on (nincs külön endpoint); kikapcsolása csak a pickerekből rejt el, a múltbeli `planId` / slot érintetlen. `WorkoutPlanExercise.exercise_id` **NOT NULL** (kötelező a sablonban, ellentétben a naplóval), `dependsOn` a még nem szinkronizált katalógus-sorra; `WeeklyPlanSlot.plan_id` `dependsOn` a még nem szinkronizált sablonra. `WeeklyPlan.id` = determinisztikus v5, POST egy létező/törölt hétre feléleszti. Adherence: nem törölt `WorkoutSession` a hét `[weekStart, weekStart+6]` tartományában `planId` egyezéssel, tartalmi vizsgálat nélkül. Nested aggregate → nincs Fix a sync központban (csak Skip/Drop/payload-nézet). `edzes.hetiTerv` flag **bekapcsolva** az A4-ben. |
-| [Mennyiség mező](documentation/Architektúra/Mennyiség%20mező.md) (architektúra SSOT) | `d1950b4` (2026-08-19) | `hu.bumler.lm2.common.QuantityConverter` (kanonikus egyenlőség) | `shared/quantity.ts`, `shared/quantity-input/` | **Kész** — parser + `QuantityInputComponent` (`quantity`/`duration` mód), kanonikus bázisegység-tábla mindkét oldalon a közös `shared/fixtures/quantity-conversion.json`-nal paritásban tesztelve. |
+| [Mennyiség mező](documentation/Architektúra/Mennyiség%20mező.md) (architektúra SSOT) | `d1950b4` (2026-08-19) | `hu.bumler.lm2.common.QuantityConverter` (kanonikus egyenlőség) | `shared/quantity.ts`, `shared/quantity-input/`, `shared/help-input/` | **Kész** — parser + `QuantityInputComponent` (`quantity`/`duration` mód), kanonikus bázisegység-tábla mindkét oldalon a közös `shared/fixtures/quantity-conversion.json`-nal paritásban tesztelve. A helper-ikon + inline hiba-note kiemelve a közös `HelpInputComponent`-be (`shared/help-input/`), amin a `GradeInputComponent` is osztozik. |
 | [Névegyediség](documentation/Architektúra/Névegyediség.md) (architektúra SSOT) | `56923be` (2026-08-19) | `hu.bumler.lm2.common.BarcodeNormalizer` (a `NameNormalizer` már megvolt) | `shared/barcode-normalization.ts` (a `name-normalization.ts` már megvolt) | **Kész** a Food mezőhalmaz-egyediséghez szükséges rész (barcode normalizálás); a hex szín normalizálás ([[Indoor boulder admin]]) még nem kellett, nincs implementálva. |
 
 ## Nincs elkezdve
@@ -473,11 +473,11 @@ kalóriamodell. Külön commit-sorozatban (M0–M8), az Edzés A0–A6 ritmusát
   egyetlen `AscentAttempt → ClimbingAttemptInput` adapter, amit a lista, a
   `climbing-stats.ts` és az `activity-kcal.ts` is használ (a korábbi három
   külön másolat helyett; a `climbing-metrics.ts` API-model-mentes marad). **(3)**
-  A 4 kontextus-napló form „nem értelmezhető fokozat" figyelmeztetést mutat
-  (`WORKOUT.CLIMBING.GRADE_UNPARSED`, `gradeUnparsed()` / az outdoor-köteles
-  pitch-soron `pitchGradeUnparsed()`), ha a beírt grade nem `VALID` — a teljes
-  shared grade-beviteli komponens (chipek / kétértelműség-blokk / súgó modal,
-  [[Nehézségi szint skálája]]) továbbra is külön, jövőbeli slice. **(4)** „Legalább
+  A „nem értelmezhető fokozat" ad-hoc figyelmeztetés (`WORKOUT.CLIMBING.GRADE_UNPARSED`,
+  `gradeUnparsed()` / `pitchGradeUnparsed()`) helyét átvette a teljes shared
+  grade-beviteli komponens — lásd a **Szín-sáv / fokozat input kör** szakaszt lent
+  ([[Nehézségi szint skálája]] `GradeInputComponent`: badge + kétértelműség-chipek +
+  súgó modal + inline hiba, a közös `HelpInputComponent` fölött). **(4)** „Legalább
   idő vagy kísérlet" kereszt-mező validáció mind a 4 formban (`minFieldsMet`
   computed, gate-eli a `save()`-et és a Mentés gombot, `WORKOUT.CLIMBING.SESSION.MIN_FIELDS`
   jelzés) — a spec (`Indoor boulder napló.md`) „minimális kötelező: dátum + terem +
@@ -497,6 +497,36 @@ kalóriamodell. Külön commit-sorozatban (M0–M8), az Edzés A0–A6 ritmusát
 
 Mászónapló-alkör: **kész (M0–M8 + review-fixek)**. Ezzel az [[Edzés]] feature is
 lezárult (Edzésnapló + Heti terv + Úszás + Bicikli + Mászónapló mind kész és élő).
+
+### Szín-sáv / fokozat input kör (2026-08-31): kész
+
+A [[Nehézségi szint skálája]] „egységes nehézség-beviteli komponens" célállapota
+megvalósítva, a korábbi ad-hoc `GRADE_UNPARSED` note helyett:
+
+- **Új közös `HelpInputComponent`** (`shared/help-input/`, `app-help-input`) — buta
+  prezentációs héj: `ion-input` + záró badge + súgó-ikon gomb (`AlertController`,
+  i18n kulcs) + inline hiba-`ion-note`, `[value]` / `(valueChange)` + `[chips]`
+  projekció. Kompozíció, nem ősosztály.
+- **`QuantityInputComponent` refaktor** — a saját `ion-input` + súgó markup helyett
+  `app-help-input`-ot komponál; viselkedés bitre azonos, a spec zöld.
+- **Új `GradeInputComponent`** (`shared/grade-input/`, `app-grade-input`) — CVA +
+  `[value]`/`(valueChange)` kettős API, `@Input() discipline`. Badge (`FRA`/`YDS`/
+  `UIAA`/`FONT`/`V`, ill. `?`), kétértelműség-chipek (`candidates` → koppintásra
+  feloldás), súgó modal (`SHARED.GRADE_INPUT.HELP_*`), inline hiba
+  (`SHARED.GRADE_INPUT.ERROR_UNKNOWN` / `_AMBIGUOUS`), 250 ms debounce csak a
+  vizuális deriváción (a form-érték minden leütésre propagál).
+- **Parser áthelyezés** — `grade-scale.ts` + `climbing-grade-matrix.ts` (+ specek)
+  `pages/workout/climbing/` → `shared/climbing/` (a `shared/` nem függhet
+  `pages/`-től); importfix `climbing-contexts` / `climbing-metrics` / 6 page.
+- **Bevezetés** — `admin/gym-color-band-edit` (alsó/felső fokozat),
+  `admin/indoor-route-edit` (ágazatfüggő `disciplineValue()`), mind a 4
+  `naplo/*-session-edit` (kísérlet + outdoor-köteles per-pitch). A `parseGrade`
+  a `save()` gate-ekben / index-feloldásban marad; a `gradeUnparsed()` /
+  `pitchGradeUnparsed()` helperek törölve, `WORKOUT.CLIMBING.GRADE_UNPARSED` i18n
+  kulcs törölve (hu + en), `SHARED.GRADE_INPUT.*` hozzáadva.
+- Nincs backend / Flyway / SQLite séma / OpenAPI / offline-sync változás. Új
+  tesztek: `help-input.component.spec.ts`, `grade-input.component.spec.ts`;
+  `lint` tiszta, `test:ci` 1125/1125.
 
 ## Következő javasolt feature: **Pénzügyek**
 

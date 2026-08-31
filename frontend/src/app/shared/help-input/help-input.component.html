@@ -1,0 +1,21 @@
+<ion-input
+  [value]="value"
+  [label]="label"
+  labelPlacement="stacked"
+  [placeholder]="placeholder"
+  [disabled]="disabled"
+  style="font-size: 16px"
+  (ionInput)="valueChange.emit($any($event.target).value ?? '')"
+  (ionBlur)="blurred.emit()"
+>
+  @if (badge) {
+    <ion-note slot="end" class="help-input-badge">{{ badge }}</ion-note>
+  }
+  <ion-button slot="end" fill="clear" (click)="showHelp()" [attr.aria-label]="helpTitleKey | translate">
+    <ion-icon slot="icon-only" name="help-circle-outline"></ion-icon>
+  </ion-button>
+</ion-input>
+<ng-content select="[chips]"></ng-content>
+@if (errorKey) {
+  <ion-note color="danger">{{ errorKey | translate }}</ion-note>
+}

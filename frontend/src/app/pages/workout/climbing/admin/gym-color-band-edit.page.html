@@ -55,24 +55,19 @@
       </ion-item>
 
       <ion-item>
-        <ion-input
+        <app-grade-input
           formControlName="gradeLower"
+          discipline="BOULDER"
           [label]="'WORKOUT.CLIMBING.BAND.FIELD_GRADE_LOWER' | translate"
-          label-placement="stacked"
-        ></ion-input>
+        />
       </ion-item>
       <ion-item>
-        <ion-input
+        <app-grade-input
           formControlName="gradeUpper"
+          discipline="BOULDER"
           [label]="'WORKOUT.CLIMBING.BAND.FIELD_GRADE_UPPER' | translate"
-          label-placement="stacked"
-        ></ion-input>
+        />
       </ion-item>
-      @if ((form.controls.gradeLower.touched || form.controls.gradeUpper.touched) && !gradesValid()) {
-        <ion-item lines="none">
-          <ion-note color="danger">{{ 'WORKOUT.CLIMBING.GRADE_UNPARSED' | translate }}</ion-note>
-        </ion-item>
-      }
       @if (gradesValid()) {
         <ion-item lines="none">
           <ion-note>{{ 'WORKOUT.CLIMBING.BAND.INDEX_PREVIEW' | translate }}: {{ lowerIndex() }} – {{ upperIndex() }}</ion-note>

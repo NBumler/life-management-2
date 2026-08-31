@@ -95,4 +95,20 @@ describe('QuantityInputComponent', () => {
     fixture.componentInstance.setDisabledState(true);
     expect(fixture.componentInstance.disabled()).toBe(true);
   });
+
+  it('onInput() error and helpTextKey track the mode', () => {
+    expect(fixture.componentInstance.helpTextKey).toBe('SHARED.QUANTITY_INPUT.HELP_QUANTITY');
+
+    fixture.componentInstance.onInput('not a quantity');
+    expect(fixture.componentInstance.errorMessage()).toBe('SHARED.QUANTITY_INPUT.ERROR_QUANTITY');
+
+    fixture.componentInstance.mode = 'duration';
+    expect(fixture.componentInstance.helpTextKey).toBe('SHARED.QUANTITY_INPUT.HELP_DURATION');
+    fixture.componentInstance.onInput('not a duration');
+    expect(fixture.componentInstance.errorMessage()).toBe('SHARED.QUANTITY_INPUT.ERROR_DURATION');
+  });
+
+  it('renders the composed help-input shell', () => {
+    expect((fixture.nativeElement as HTMLElement).querySelector('app-help-input')).not.toBeNull();
+  });
 });

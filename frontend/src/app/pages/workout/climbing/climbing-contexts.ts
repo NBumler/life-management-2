@@ -1,4 +1,4 @@
-import { ClimbingDiscipline } from './grade-scale';
+import { ClimbingDiscipline } from '../../../shared/climbing/grade-scale';
 
 /**
  * documentation/Features/Mászónapló.md "Dashboard (Hub)" — the 4 dashboard entry points

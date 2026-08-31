@@ -1,14 +1,13 @@
-import { ChangeDetectionStrategy, Component, Input, forwardRef, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, forwardRef, signal } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { AlertController, IonButton, IonIcon, IonInput, IonNote } from '@ionic/angular/standalone';
-import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
+import { HelpInputComponent } from '../help-input/help-input.component';
 import { ParsedQuantity, QuantityMode, QuantityParseError, formatQuantityValue, parseQuantityInput } from '../quantity';
 
 /**
  * documentation/Architektúra/Mennyiség mező.md — single free-text input for a `quantity` or
- * `duration` value, parsed into `{amount, unit}`. Mirrors the "password-reveal" pattern for its
- * trailing helper-icon button (a short usage hint), not a real value toggle.
+ * `duration` value, parsed into `{amount, unit}`. Composes the shared `HelpInputComponent` for the
+ * trailing helper-icon button (a short usage hint) and the inline error note.
  *
  * Invalid input never commits a partial value to the parent form — the last successfully parsed
  * value (or null) is preserved in the control's value until the text becomes parseable again.
@@ -16,7 +15,7 @@ import { ParsedQuantity, QuantityMode, QuantityParseError, formatQuantityValue, 
 @Component({
   selector: 'app-quantity-input',
   templateUrl: 'quantity-input.component.html',
-  imports: [IonInput, IonButton, IonIcon, IonNote, TranslatePipe],
+  imports: [HelpInputComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [
     {
@@ -30,15 +29,17 @@ export class QuantityInputComponent implements ControlValueAccessor {
   @Input() mode: QuantityMode = 'quantity';
   @Input() label = '';
 
-  private readonly alertController = inject(AlertController);
-  private readonly translate = inject(TranslateService);
-
   readonly text = signal('');
+  /** i18n key of the current inline error, or `null`. */
   readonly errorMessage = signal<string | null>(null);
   disabled = signal(false);
 
   private onChange: (value: ParsedQuantity | null) => void = () => {};
   private onTouched: () => void = () => {};
+
+  get helpTextKey(): string {
+    return this.mode === 'quantity' ? 'SHARED.QUANTITY_INPUT.HELP_QUANTITY' : 'SHARED.QUANTITY_INPUT.HELP_DURATION';
+  }
 
   writeValue(value: ParsedQuantity | null): void {
     this.text.set(value === null ? '' : formatQuantityValue(value));
@@ -66,7 +67,7 @@ export class QuantityInputComponent implements ControlValueAccessor {
     } catch (error) {
       if (error instanceof QuantityParseError) {
         this.errorMessage.set(
-          this.translate.instant(this.mode === 'quantity' ? 'SHARED.QUANTITY_INPUT.ERROR_QUANTITY' : 'SHARED.QUANTITY_INPUT.ERROR_DURATION'),
+          this.mode === 'quantity' ? 'SHARED.QUANTITY_INPUT.ERROR_QUANTITY' : 'SHARED.QUANTITY_INPUT.ERROR_DURATION',
         );
         return;
       }
@@ -76,14 +77,5 @@ export class QuantityInputComponent implements ControlValueAccessor {
 
   onBlur(): void {
     this.onTouched();
-  }
-
-  async showHelp(): Promise<void> {
-    const alert = await this.alertController.create({
-      header: this.translate.instant('SHARED.QUANTITY_INPUT.HELP_TITLE'),
-      message: this.translate.instant(this.mode === 'quantity' ? 'SHARED.QUANTITY_INPUT.HELP_QUANTITY' : 'SHARED.QUANTITY_INPUT.HELP_DURATION'),
-      buttons: [this.translate.instant('COMMON.CLOSE')],
-    });
-    await alert.present();
   }
 }

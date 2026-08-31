@@ -35,9 +35,10 @@ import { ProfileRepository } from '../../../../core/data/profile.repository';
 import { SectorRepository } from '../../../../core/data/sector.repository';
 import { AscentAttemptSaveItem, ClimbingSessionDraft } from '../../../../core/storage/storage-backend';
 import { uuidV4 } from '../../../../core/sync/uuid';
+import { parseGrade } from '../../../../shared/climbing/grade-scale';
+import { GradeInputComponent } from '../../../../shared/grade-input/grade-input.component';
 import { today } from '../../../../shared/local-date';
 import { climbingKcal, climbingVolume } from '../climbing-metrics';
-import { parseGrade } from '../grade-scale';
 
 /** One editable ascent-attempt row (mutable signals, mirrors the indoor-boulder edit page's AttemptRow). */
 interface AttemptRow {
@@ -101,6 +102,7 @@ const WEATHER_CONDITIONS: readonly ClimbingSession.WeatherConditionsEnum[] = [
     IonSelectOption,
     IonToggle,
     TranslatePipe,
+    GradeInputComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -312,16 +314,6 @@ export class OutdoorBoulderSessionEditPage implements OnInit {
 
   touchAttempts(): void {
     this.attemptsRevision.update((value) => value + 1);
-  }
-
-  /**
-   * documentation/Subfeatures/Nehézségi szint skálája.md — the shared grade-input component (chips,
-   * help modal, ambiguity blocking) is a later slice; until then at least surface that a typed grade
-   * the parser can't resolve won't feed the volume / max-grade / pyramid stats.
-   */
-  gradeUnparsed(row: AttemptRow): boolean {
-    const raw = row.userRawInput()?.trim();
-    return !!raw && parseGrade(raw, 'BOULDER').status !== 'VALID';
   }
 
   async save(): Promise<void> {

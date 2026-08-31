@@ -9,7 +9,7 @@
  * a *rest* zone at MET 2.0. `totalSessionDurationMinutes`, when missing or non-positive, is replaced
  * by a per-discipline fallback derived from the number of logged attempt rows.
  */
-import { ClimbingDiscipline } from './grade-scale';
+import { ClimbingDiscipline } from '../../../shared/climbing/grade-scale';
 
 export type { ClimbingDiscipline };
 export type ClimbingSafetyStyle = 'TOPROPE' | 'LEAD' | 'TRAD';

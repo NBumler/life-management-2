@@ -22,7 +22,8 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 import { GymColorBand } from '../../../../api/model/gymColorBand';
 import { GymColorBandHexConflictError, GymColorBandRepository, GymColorBandSaveInput } from '../../../../core/data/gym-color-band.repository';
-import { parseGrade } from '../grade-scale';
+import { parseGrade } from '../../../../shared/climbing/grade-scale';
+import { GradeInputComponent } from '../../../../shared/grade-input/grade-input.component';
 
 const HEX_PATTERN = /^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
 
@@ -52,6 +53,7 @@ const HEX_PATTERN = /^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
     IonSelect,
     IonSelectOption,
     TranslatePipe,
+    GradeInputComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

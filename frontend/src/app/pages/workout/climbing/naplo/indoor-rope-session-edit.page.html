@@ -154,17 +154,14 @@
         </ion-item>
 
         <ion-item>
-          <ion-input
+          <app-grade-input
+            discipline="ROPE"
             [label]="'WORKOUT.CLIMBING.SESSION.FIELD_GRADE_ROPE' | translate"
-            labelPlacement="stacked"
             [placeholder]="'WORKOUT.CLIMBING.SESSION.GRADE_PLACEHOLDER_ROPE' | translate"
-            [value]="row.userRawInput()"
-            (ionInput)="row.userRawInput.set($any($event.target).value); touchAttempts()"
+            [value]="row.userRawInput() ?? ''"
+            (valueChange)="row.userRawInput.set($event); touchAttempts()"
           />
         </ion-item>
-        @if (gradeUnparsed(row)) {
-          <ion-note color="warning" class="field-error">{{ 'WORKOUT.CLIMBING.GRADE_UNPARSED' | translate }}</ion-note>
-        }
 
         <ion-item>
           <ion-input

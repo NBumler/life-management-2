@@ -22,7 +22,8 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 import { IndoorRoute } from '../../../../api/model/indoorRoute';
 import { IndoorRouteRepository, IndoorRouteSaveInput } from '../../../../core/data/indoor-route.repository';
-import { ClimbingDiscipline, parseGrade } from '../grade-scale';
+import { ClimbingDiscipline, parseGrade } from '../../../../shared/climbing/grade-scale';
+import { GradeInputComponent } from '../../../../shared/grade-input/grade-input.component';
 
 /**
  * documentation/Subfeatures/Indoor köteles admin.md "IndoorRoute (opcionális)" — the fixed
@@ -49,6 +50,7 @@ import { ClimbingDiscipline, parseGrade } from '../grade-scale';
     IonSelect,
     IonSelectOption,
     TranslatePipe,
+    GradeInputComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -74,9 +76,11 @@ export class IndoorRouteEditPage implements OnInit {
 
   private readonly value = toSignal(this.form.valueChanges, { initialValue: this.form.getRawValue() });
 
-  readonly gradeParse = computed(() =>
-    parseGrade(this.value().grade ?? '', (this.value().discipline ?? IndoorRoute.DisciplineEnum.Rope) as ClimbingDiscipline),
+  readonly disciplineValue = computed(
+    () => (this.value().discipline ?? IndoorRoute.DisciplineEnum.Rope) as ClimbingDiscipline,
   );
+
+  readonly gradeParse = computed(() => parseGrade(this.value().grade ?? '', this.disciplineValue()));
   readonly gradeIndex = computed(() => (this.gradeParse().status === 'VALID' ? this.gradeParse().absoluteDifficultyIndex : null));
 
   async ngOnInit(): Promise<void> {

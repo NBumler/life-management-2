@@ -108,7 +108,8 @@ Nincs nyitott kérdés.
 
 ### Frontend
 
-- Megosztott Angular / Ionic komponens (pl. `QuantityInputComponent`) + pure TypeScript parser utility (egységlista mode szerint + parse / format) + kanonikus egységre váltó utility (fent, a [[Névegyediség]] egyenlőség-összehasonlításhoz).
+- Megosztott Angular / Ionic komponens (`QuantityInputComponent`, `shared/quantity-input/`) + pure TypeScript parser utility (egységlista mode szerint + parse / format) + kanonikus egységre váltó utility (fent, a [[Névegyediség]] egyenlőség-összehasonlításhoz).
+- A **helper ikon gomb + inline hiba-note** nem itt él, hanem a közös `HelpInputComponent`-ben (`shared/help-input/`, `app-help-input`): buta prezentációs héj — `ion-input` + záró badge + súgó gomb (`AlertController`, i18n kulccsal) + hiba-`ion-note`, `[value]` / `(valueChange)` be/ki. A `QuantityInputComponent` és a [[Nehézségi szint skálája]] `GradeInputComponent` egyaránt ezt komponálja, saját parserrel + `ControlValueAccessor`-ral — kompozíció, nem ősosztály.
 - Public API:
   - `@Input() mode: 'quantity' | 'duration'` (default: `quantity`)
   - `amount: number | null`, `unit: QuantityUnit | DurationUnit | null` (vagy együttes value object)
