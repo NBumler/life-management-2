@@ -26,6 +26,7 @@ const EMPTY_PARSE: GradeParseResult = { status: 'EMPTY', normalized: '', scale: 
 @Component({
   selector: 'app-grade-input',
   templateUrl: 'grade-input.component.html',
+  styleUrls: ['grade-input.component.scss'],
   imports: [HelpInputComponent, IonChip],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [

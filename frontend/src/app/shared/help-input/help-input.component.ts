@@ -16,6 +16,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'app-help-input',
   templateUrl: 'help-input.component.html',
+  styleUrls: ['help-input.component.scss'],
   imports: [IonInput, IonButton, IonIcon, IonNote, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

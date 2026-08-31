@@ -1,0 +1,7 @@
+// Fill the containing `ion-item` — an unstyled custom element is `display: inline` and
+// shrink-wraps inside the item's flex row, which pulls the field (and its trailing help
+// button) in from the screen edge. `HelpInputComponent` does the same for its own host.
+:host {
+  display: block;
+  width: 100%;
+}

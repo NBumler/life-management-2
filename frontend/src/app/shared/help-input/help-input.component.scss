@@ -1,0 +1,17 @@
+// The host is a form field: it must fill its container (an `ion-item`'s flex row shrink-wraps
+// an unstyled custom element, which left the whole control — and its trailing help button —
+// floating in from the right edge).
+:host {
+  display: block;
+  width: 100%;
+}
+
+// Pull the trailing help button (and optional scale badge) out to the field's edge; Ionic's
+// default clear-button inset otherwise leaves it sitting noticeably inside the field.
+ion-button[slot='end'] {
+  margin-inline-end: -8px;
+}
+
+.help-input-badge {
+  margin-inline-end: 2px;
+}

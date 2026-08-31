@@ -15,6 +15,7 @@ import { ParsedQuantity, QuantityMode, QuantityParseError, formatQuantityValue, 
 @Component({
   selector: 'app-quantity-input',
   templateUrl: 'quantity-input.component.html',
+  styleUrls: ['quantity-input.component.scss'],
   imports: [HelpInputComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [
