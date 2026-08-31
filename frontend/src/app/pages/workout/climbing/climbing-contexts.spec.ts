@@ -18,11 +18,12 @@ describe('climbing-contexts', () => {
     }
   });
 
-  it('marks the wired contexts (M4 indoor boulder + M5 indoor rope + M6 outdoor boulder); outdoor rope still pending', () => {
+  it('marks every context wired (M4 indoor boulder, M5 indoor rope, M6 outdoor boulder, M7 outdoor rope)', () => {
     expect(CLIMBING_CONTEXTS.filter((c) => c.wired).map((c) => c.key)).toEqual([
       'indoor-boulder',
       'indoor-rope',
       'outdoor-boulder',
+      'outdoor-rope',
     ]);
   });
 

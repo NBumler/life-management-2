@@ -289,7 +289,7 @@ export const routes: Routes = [
                 // documentation/Subfeatures/Indoor boulder napló.md (Mászónapló M4) — the reference
                 // kontextus-napló: a per-context session list + create/edit form. Context is fixed
                 // by the route (`data.contextKey`), not a form field. M5 adds indoor-rope, M6
-                // outdoor-boulder; M7 the last outdoor tile.
+                // outdoor-boulder, M7 outdoor-rope.
                 path: 'indoor-boulder',
                 children: [
                   {
@@ -357,6 +357,33 @@ export const routes: Routes = [
                     path: ':id',
                     loadComponent: () =>
                       import('./pages/workout/climbing/naplo/outdoor-boulder-session-edit.page').then((m) => m.OutdoorBoulderSessionEditPage),
+                  },
+                ],
+              },
+              {
+                // documentation/Subfeatures/Outdoor köteles napló.md (Mászónapló M7) — the OUTDOOR +
+                // ROPE kontextus-napló, the last of the four. Same shared list page
+                // (`data.contextKey`), its own edit form: the outdoor crag + sector picker (snapshot
+                // names, session-level rockType / aspect, weather chip, optional master Route or
+                // ad-hoc name with "save to catalog") + the rope grade parser, TOPROPE|LEAD|TRAD
+                // safety chip, length + failure point, and an optional per-attempt PitchLog editor.
+                path: 'outdoor-rope',
+                children: [
+                  {
+                    path: '',
+                    data: { contextKey: 'outdoor-rope' },
+                    loadComponent: () =>
+                      import('./pages/workout/climbing/naplo/climbing-session-list.page').then((m) => m.ClimbingSessionListPage),
+                  },
+                  {
+                    path: 'new',
+                    loadComponent: () =>
+                      import('./pages/workout/climbing/naplo/outdoor-rope-session-edit.page').then((m) => m.OutdoorRopeSessionEditPage),
+                  },
+                  {
+                    path: ':id',
+                    loadComponent: () =>
+                      import('./pages/workout/climbing/naplo/outdoor-rope-session-edit.page').then((m) => m.OutdoorRopeSessionEditPage),
                   },
                 ],
               },

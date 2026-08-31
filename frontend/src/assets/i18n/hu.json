@@ -768,7 +768,8 @@
       },
       "SAFETY": {
         "TOPROPE": "Toprope",
-        "LEAD": "Vezetett (lead)"
+        "LEAD": "Vezetett (lead)",
+        "TRAD": "Trad (mobil biztosítás)"
       },
       "VARIANT": {
         "PLUS": "Plusz (+)",
@@ -920,7 +921,16 @@
         "FIELD_PROBLEM": "Boulder probléma",
         "PROBLEM_PLACEHOLDER": "Válassz, vagy hagyd üresen",
         "FIELD_PROBLEM_NAME": "Probléma neve",
-        "SAVE_TO_CATALOG": "Mentés a katalógusba"
+        "SAVE_TO_CATALOG": "Mentés a katalógusba",
+        "FIELD_OUTDOOR_ROUTE": "Út",
+        "OUTDOOR_ROUTE_PLACEHOLDER": "Válassz utat, vagy hagyd üresen",
+        "PITCHES": "Kötélhosszak (opcionális)",
+        "ADD_PITCH": "Új kötélhossz",
+        "PITCH_N": "{{n}}. kötélhossz",
+        "PITCH_LEAD": "Vezetve",
+        "PITCH_GRADE": "Fokozat",
+        "PITCH_LENGTH": "Hossz (m)",
+        "REMOVE_PITCH": "Kötélhossz törlése"
       },
       "ASCENT_STYLE": {
         "FLASH": "Flash",

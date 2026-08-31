@@ -768,7 +768,8 @@
       },
       "SAFETY": {
         "TOPROPE": "Top rope",
-        "LEAD": "Lead"
+        "LEAD": "Lead",
+        "TRAD": "Trad"
       },
       "VARIANT": {
         "PLUS": "Plus (+)",
@@ -920,7 +921,16 @@
         "FIELD_PROBLEM": "Boulder problem",
         "PROBLEM_PLACEHOLDER": "Pick one or leave empty",
         "FIELD_PROBLEM_NAME": "Problem name",
-        "SAVE_TO_CATALOG": "Save to catalog"
+        "SAVE_TO_CATALOG": "Save to catalog",
+        "FIELD_OUTDOOR_ROUTE": "Route",
+        "OUTDOOR_ROUTE_PLACEHOLDER": "Pick a route or leave empty",
+        "PITCHES": "Pitches (optional)",
+        "ADD_PITCH": "Add pitch",
+        "PITCH_N": "Pitch {{n}}",
+        "PITCH_LEAD": "Led",
+        "PITCH_GRADE": "Grade",
+        "PITCH_LENGTH": "Length (m)",
+        "REMOVE_PITCH": "Remove pitch"
       },
       "ASCENT_STYLE": {
         "FLASH": "Flash",
