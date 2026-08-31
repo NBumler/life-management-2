@@ -1,0 +1,69 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/menu/finance"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ 'FINANCE.NET_PAY.TITLE' | translate }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-list>
+    <ion-item>
+      <ion-label>{{ 'FINANCE.NET_PAY.GROSS' | translate }}</ion-label>
+      <ion-note slot="end">
+        @if (vm().computable) {
+          {{ 'FINANCE.NET_PAY.AMOUNT' | translate: { amount: (vm().gross | number: '1.0-0') } }}
+        } @else {
+          {{ 'FINANCE.NET_PAY.NOT_SET' | translate }}
+        }
+      </ion-note>
+    </ion-item>
+
+    <ion-item>
+      <ion-label>{{ 'FINANCE.NET_PAY.TB' | translate }}</ion-label>
+      <ion-note slot="end">
+        @if (vm().computable) {
+          {{ 'FINANCE.NET_PAY.AMOUNT' | translate: { amount: (vm().tb | number: '1.0-0') } }}
+        } @else {
+          ~
+        }
+      </ion-note>
+    </ion-item>
+
+    <ion-item>
+      <ion-label>
+        {{ 'FINANCE.NET_PAY.SZJA' | translate }}
+        @if (vm().computable && vm().under25ExemptionApplied) {
+          <ion-text color="success"><p>{{ 'FINANCE.NET_PAY.UNDER_25_BADGE' | translate }}</p></ion-text>
+        }
+      </ion-label>
+      <ion-note slot="end">
+        @if (vm().computable) {
+          {{ 'FINANCE.NET_PAY.AMOUNT' | translate: { amount: (vm().szja | number: '1.0-0') } }}
+        } @else {
+          ~
+        }
+      </ion-note>
+    </ion-item>
+
+    <ion-item>
+      <ion-label><strong>{{ 'FINANCE.NET_PAY.NET' | translate }}</strong></ion-label>
+      <ion-note slot="end">
+        @if (vm().computable) {
+          <strong>{{ 'FINANCE.NET_PAY.AMOUNT' | translate: { amount: (vm().net | number: '1.0-0') } }}</strong>
+        } @else {
+          ~
+        }
+      </ion-note>
+    </ion-item>
+  </ion-list>
+
+  <p class="disclaimer ion-padding">{{ 'FINANCE.NET_PAY.DISCLAIMER' | translate }}</p>
+
+  <div class="ion-padding">
+    <ion-button expand="block" fill="outline" routerLink="/tabs/menu/profile">
+      {{ 'FINANCE.NET_PAY.EDIT_PROFILE_CTA' | translate }}
+    </ion-button>
+  </div>
+</ion-content>

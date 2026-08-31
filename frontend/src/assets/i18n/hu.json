@@ -85,6 +85,18 @@
       "FIELD_NEXT_BILLING_DATE": "Következő terhelés",
       "FIELD_NOTES": "Megjegyzés",
       "FIELD_ACTIVE": "Aktív"
+    },
+    "NET_PAY": {
+      "TITLE": "Nettó fizetés",
+      "GROSS": "Bruttó",
+      "TB": "TB-járulék",
+      "SZJA": "SZJA",
+      "NET": "Nettó",
+      "AMOUNT": "{{amount}} Ft",
+      "NOT_SET": "nincs megadva",
+      "UNDER_25_BADGE": "25 év alatti SZJA-kedvezmény",
+      "DISCLAIMER": "Egyszerűsített munkavállalói becslés. Nem adótanácsadás.",
+      "EDIT_PROFILE_CTA": "Bruttó / születési dátum szerkesztése"
     }
   },
   "THEME": {

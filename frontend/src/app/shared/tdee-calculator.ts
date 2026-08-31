@@ -9,6 +9,7 @@
  * exists yet in this codebase. Callers just start passing a non-zero value once those land — this
  * file needs no changes.
  */
+import { ageInYears } from './local-date';
 
 export type TdeeSex = 'MALE' | 'FEMALE';
 export type TdeeGoal = 'FAT_LOSS' | 'MAINTENANCE' | 'WEIGHT_GAIN';
@@ -82,17 +83,6 @@ export function computeTdee(input: TdeeProfileInput, todayIso: string, activityE
     maintenanceWithActivityKcal: maintenanceKcal + activityExtraKcal,
     macros: computeMacroGoals(dailyAllowanceKcal, currentWeightKg),
   };
-}
-
-/** documentation/Features/Tápérték kalkulátor.md "Kanonikus napi mezők": teljes évek, floor period. */
-function ageInYears(birthDateIso: string, todayIso: string): number {
-  const [birthYear, birthMonth, birthDay] = birthDateIso.split('-').map(Number);
-  const [todayYear, todayMonth, todayDay] = todayIso.split('-').map(Number);
-  let age = todayYear - birthYear;
-  if (todayMonth < birthMonth || (todayMonth === birthMonth && todayDay < birthDay)) {
-    age -= 1;
-  }
-  return age;
 }
 
 function goalDeltaKcal(goal: TdeeGoal, kgPerWeek: number | null): number {

@@ -1,4 +1,4 @@
-import { today } from './local-date';
+import { ageInYears, today } from './local-date';
 
 describe('today()', () => {
   afterEach(() => {
@@ -37,5 +37,18 @@ describe('today()', () => {
 
     expect(today()).toBe(localExpected);
     expect(instant.toISOString().slice(0, 10)).not.toBe(localExpected);
+  });
+});
+
+describe('ageInYears()', () => {
+  it('counts only completed years (floor period)', () => {
+    expect(ageInYears('2000-06-15', '2026-06-15')).toBe(26);
+    expect(ageInYears('2000-06-15', '2026-06-14')).toBe(25);
+    expect(ageInYears('2000-06-15', '2026-12-31')).toBe(26);
+  });
+
+  it('handles the birthday-month day boundary', () => {
+    expect(ageInYears('2001-03-10', '2026-03-09')).toBe(24);
+    expect(ageInYears('2001-03-10', '2026-03-10')).toBe(25);
   });
 });

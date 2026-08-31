@@ -85,6 +85,18 @@
       "FIELD_NEXT_BILLING_DATE": "Next billing date",
       "FIELD_NOTES": "Notes",
       "FIELD_ACTIVE": "Active"
+    },
+    "NET_PAY": {
+      "TITLE": "Net salary",
+      "GROSS": "Gross",
+      "TB": "Social security",
+      "SZJA": "Income tax",
+      "NET": "Net",
+      "AMOUNT": "{{amount}} Ft",
+      "NOT_SET": "not set",
+      "UNDER_25_BADGE": "Under-25 income-tax allowance",
+      "DISCLAIMER": "Simplified employee estimate. Not tax advice.",
+      "EDIT_PROFILE_CTA": "Edit gross / date of birth"
     }
   },
   "THEME": {
