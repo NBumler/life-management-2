@@ -20,6 +20,8 @@ import { StoredFood } from '../../api/model/storedFood';
 import { SwimLog } from '../../api/model/swimLog';
 import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { RecurringExpense } from '../../api/model/recurringExpense';
+import { AycmPartner } from '../../api/model/aycmPartner';
+import { AycmPriceRule } from '../../api/model/aycmPriceRule';
 import { Gym } from '../../api/model/gym';
 import { GymColorBand } from '../../api/model/gymColorBand';
 import { IndoorRoute } from '../../api/model/indoorRoute';
@@ -4072,6 +4074,198 @@ export function recurringExpenseTombstoneTask(id: string, deletedAt: string | nu
     statement: `
       INSERT INTO recurring_expense (id, name, amount_huf, frequency, category, next_billing_date, billing_day_of_month, active, updated_at, deleted, deleted_at, _dirty, _local_only)
       VALUES (?, '', 1, 'MONTHLY', 'OTHER', '1970-01-01', 1, 1, ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+// --- AYCM elfogadóhely hozzáadása (AycmPartner + AycmPriceRule) ---
+// documentation/Subfeatures/AYCM elfogadóhely hozzáadása.md — flat, user-owned mirrors of the two
+// tables. name_normalized is not stored (the repository normalizes in memory for its uniqueness
+// pre-check, same as gear_item).
+
+export interface AycmPartnerRow {
+  id: string;
+  name: string;
+  notes: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+export function aycmPartnerRowToDto(row: AycmPartnerRow): AycmPartner {
+  return {
+    id: row.id,
+    name: row.name,
+    notes: row.notes,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+export function aycmPartnerLocalWriteTask(dto: AycmPartner): SqlTask {
+  return {
+    statement: `
+      INSERT INTO aycm_partner (id, name, notes, _dirty, _local_only)
+      VALUES (?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET name = excluded.name, notes = excluded.notes, _dirty = 1`,
+    values: [dto.id, dto.name, dto.notes ?? null],
+  };
+}
+
+export function aycmPartnerServerApplyTask(dto: AycmPartner): SqlTask {
+  return {
+    statement: `
+      INSERT INTO aycm_partner (id, name, notes, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        name = excluded.name, notes = excluded.notes,
+        created_at = excluded.created_at, updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at,
+        _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE aycm_partner._dirty = 0`,
+    values: [
+      dto.id,
+      dto.name,
+      dto.notes ?? null,
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function aycmPartnerTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO aycm_partner (id, name, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '', ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+export interface AycmPriceRuleRow {
+  id: string;
+  partner_id: string;
+  label: string | null;
+  applies_mon: number;
+  applies_tue: number;
+  applies_wed: number;
+  applies_thu: number;
+  applies_fri: number;
+  applies_sat: number;
+  applies_sun: number;
+  start_time: string;
+  end_time: string;
+  list_price_huf: number;
+  co_payment_huf: number;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+export function aycmPriceRuleRowToDto(row: AycmPriceRuleRow): AycmPriceRule {
+  return {
+    id: row.id,
+    partnerId: row.partner_id,
+    label: row.label,
+    appliesMon: row.applies_mon === 1,
+    appliesTue: row.applies_tue === 1,
+    appliesWed: row.applies_wed === 1,
+    appliesThu: row.applies_thu === 1,
+    appliesFri: row.applies_fri === 1,
+    appliesSat: row.applies_sat === 1,
+    appliesSun: row.applies_sun === 1,
+    startTime: row.start_time,
+    endTime: row.end_time,
+    listPriceHuf: row.list_price_huf,
+    coPaymentHuf: row.co_payment_huf,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+const AYCM_PRICE_RULE_COLUMNS =
+  'id, partner_id, label, applies_mon, applies_tue, applies_wed, applies_thu, applies_fri, applies_sat, applies_sun, start_time, end_time, list_price_huf, co_payment_huf';
+
+function aycmPriceRuleValues(dto: AycmPriceRule): (string | number | null)[] {
+  return [
+    dto.id,
+    dto.partnerId,
+    dto.label ?? null,
+    dto.appliesMon ? 1 : 0,
+    dto.appliesTue ? 1 : 0,
+    dto.appliesWed ? 1 : 0,
+    dto.appliesThu ? 1 : 0,
+    dto.appliesFri ? 1 : 0,
+    dto.appliesSat ? 1 : 0,
+    dto.appliesSun ? 1 : 0,
+    dto.startTime,
+    dto.endTime,
+    dto.listPriceHuf,
+    dto.coPaymentHuf,
+  ];
+}
+
+const AYCM_PRICE_RULE_UPSERT_SET = `
+  partner_id = excluded.partner_id, label = excluded.label,
+  applies_mon = excluded.applies_mon, applies_tue = excluded.applies_tue, applies_wed = excluded.applies_wed,
+  applies_thu = excluded.applies_thu, applies_fri = excluded.applies_fri, applies_sat = excluded.applies_sat,
+  applies_sun = excluded.applies_sun, start_time = excluded.start_time, end_time = excluded.end_time,
+  list_price_huf = excluded.list_price_huf, co_payment_huf = excluded.co_payment_huf`;
+
+export function aycmPriceRuleLocalWriteTask(dto: AycmPriceRule): SqlTask {
+  return {
+    statement: `
+      INSERT INTO aycm_price_rule (${AYCM_PRICE_RULE_COLUMNS}, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET ${AYCM_PRICE_RULE_UPSERT_SET}, _dirty = 1`,
+    values: aycmPriceRuleValues(dto),
+  };
+}
+
+export function aycmPriceRuleServerApplyTask(dto: AycmPriceRule): SqlTask {
+  return {
+    statement: `
+      INSERT INTO aycm_price_rule (${AYCM_PRICE_RULE_COLUMNS}, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        ${AYCM_PRICE_RULE_UPSERT_SET},
+        created_at = excluded.created_at, updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at,
+        _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE aycm_price_rule._dirty = 0`,
+    values: [
+      ...aycmPriceRuleValues(dto),
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function aycmPriceRuleTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO aycm_price_rule (id, partner_id, start_time, end_time, list_price_huf, co_payment_huf, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '', '00:00', '00:00', 0, 0, ?, 1, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
     values: [id, updatedAt, deletedAt],
   };

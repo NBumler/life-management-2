@@ -12,6 +12,8 @@ import { StoredFood } from '../../api/model/storedFood';
 import { SwimLog } from '../../api/model/swimLog';
 import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { RecurringExpense } from '../../api/model/recurringExpense';
+import { AycmPartner } from '../../api/model/aycmPartner';
+import { AycmPriceRule } from '../../api/model/aycmPriceRule';
 import { Gym } from '../../api/model/gym';
 import { GymColorBand } from '../../api/model/gymColorBand';
 import { IndoorRoute } from '../../api/model/indoorRoute';
@@ -25,6 +27,7 @@ import { normalizeName } from '../../shared/name-normalization';
 import { ExerciseRepository } from '../data/exercise.repository';
 import { GearItemRepository } from '../data/gear-item.repository';
 import { GymRepository } from '../data/gym.repository';
+import { AycmPartnerRepository } from '../data/aycm-partner.repository';
 import { HouseholdRoomRepository } from '../data/household-room.repository';
 import {
   CalendarEventRow,
@@ -41,6 +44,8 @@ import {
   SwimLogRow,
   BikeRideLogRow,
   RecurringExpenseRow,
+  AycmPartnerRow,
+  AycmPriceRuleRow,
   GymRow,
   GymColorBandRow,
   IndoorRouteRow,
@@ -77,6 +82,10 @@ import {
   bikeRideLogRowToDto,
   recurringExpenseLocalWriteTask,
   recurringExpenseRowToDto,
+  aycmPartnerLocalWriteTask,
+  aycmPartnerRowToDto,
+  aycmPriceRuleLocalWriteTask,
+  aycmPriceRuleRowToDto,
   gymLocalWriteTask,
   gymRowToDto,
   gymColorBandLocalWriteTask,
@@ -219,6 +228,7 @@ export class OutboxEntityRegistryService {
   private readonly gearItems = inject(GearItemRepository);
   private readonly exercises = inject(ExerciseRepository);
   private readonly gyms = inject(GymRepository);
+  private readonly aycmPartners = inject(AycmPartnerRepository);
   private readonly householdRooms = inject(HouseholdRoomRepository);
 
   private readonly registry: Record<OutboxEntityType, OutboxEntityDescriptor> = {
@@ -391,6 +401,34 @@ export class OutboxEntityRegistryService {
       currentPayload: rowLookup<RecurringExpenseRow, unknown>('recurring_expense', recurringExpenseRowToDto),
       buildFixWriteTask: (payload) => recurringExpenseLocalWriteTask(payload as unknown as RecurringExpense),
       // documentation/Subfeatures/Rendszeres kiadások.md: name is explicitly NOT unique — nothing to check.
+      nameUniqueness: null,
+    },
+    AycmPartner: {
+      table: 'aycm_partner',
+      currentPayload: rowLookup<AycmPartnerRow, unknown>('aycm_partner', aycmPartnerRowToDto),
+      buildFixWriteTask: (payload) => aycmPartnerLocalWriteTask(payload as unknown as AycmPartner),
+      nameUniqueness: {
+        field: 'name',
+        findConflict: async (value, excludeId) => {
+          if (!this.aycmPartners.loaded()) {
+            await this.aycmPartners.load();
+          }
+          const normalized = normalizeName(value);
+          return (
+            this.aycmPartners
+              .partners()
+              .find((partner) => partner.id !== excludeId && normalizeName(partner.name) === normalized)?.id ?? null
+          );
+        },
+      },
+    },
+    AycmPriceRule: {
+      table: 'aycm_price_rule',
+      currentPayload: rowLookup<AycmPriceRuleRow, unknown>('aycm_price_rule', aycmPriceRuleRowToDto),
+      buildFixWriteTask: (payload) => aycmPriceRuleLocalWriteTask(payload as unknown as AycmPriceRule),
+      // documentation/Subfeatures/AYCM elfogadóhely hozzáadása.md: overlap is scoped to the partner +
+      // shared weekday, not a single value — can't be expressed as (value, excludeId), same reasoning
+      // as HouseholdTask. The server's 400 still guards it.
       nameUniqueness: null,
     },
     Gym: {

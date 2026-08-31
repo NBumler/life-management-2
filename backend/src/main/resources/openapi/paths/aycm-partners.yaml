@@ -1,0 +1,42 @@
+get:
+  operationId: listAycmPartners
+  tags:
+    - aycm-partners
+  summary: The caller's AYCM partners, live rows only (deleted = false).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/AycmPartnerList.yaml'
+post:
+  operationId: createAycmPartner
+  tags:
+    - aycm-partners
+  summary: Create a partner — idempotent upsert on the client-supplied id.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/AycmPartner.yaml'
+  responses:
+    '200':
+      description: Created or, on retry with the same id, the existing row.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/AycmPartner.yaml'
+    '400':
+      description: Blank name (documentation/Subfeatures/AYCM elfogadóhely hozzáadása.md "Entitás").
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+    '409':
+      description: UNIQUE_VIOLATION — another live partner already uses this name (conflictingId set).
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'

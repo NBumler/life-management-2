@@ -1,0 +1,37 @@
+type: object
+description: >-
+  documentation/Subfeatures/AYCM elfogadóhely hozzáadása.md — a user-owned AYCM acceptance venue.
+  Flat, user-owned CRUD. name is required, non-blank after trim, and unique among the user's live
+  partners (documentation/Architektúra/Névegyediség.md). Price rules are a separate sub-resource
+  (/api/aycm-partners/{id}/price-rules), not embedded here. DELETE soft-deletes the partner and
+  cascades to its live price rules; AycmCheckIn snapshots are left untouched.
+required:
+  - id
+  - name
+  - deleted
+properties:
+  id:
+    type: string
+    format: uuid
+  name:
+    type: string
+    minLength: 1
+    description: Required, non-blank after trim. Unique among the user's live partners.
+  notes:
+    type: string
+    nullable: true
+  deleted:
+    type: boolean
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

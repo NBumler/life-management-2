@@ -19,6 +19,8 @@ import { StoredFood } from '../../api/model/storedFood';
 import { SwimLog } from '../../api/model/swimLog';
 import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { RecurringExpense } from '../../api/model/recurringExpense';
+import { AycmPartner } from '../../api/model/aycmPartner';
+import { AycmPriceRule } from '../../api/model/aycmPriceRule';
 import { Gym } from '../../api/model/gym';
 import { GymColorBand } from '../../api/model/gymColorBand';
 import { IndoorRoute } from '../../api/model/indoorRoute';
@@ -56,6 +58,8 @@ import {
   SwimLogRow,
   BikeRideLogRow,
   RecurringExpenseRow,
+  AycmPartnerRow,
+  AycmPriceRuleRow,
   GymRow,
   GymColorBandRow,
   IndoorRouteRow,
@@ -116,6 +120,10 @@ import {
   bikeRideLogRowToDto,
   recurringExpenseLocalWriteTask,
   recurringExpenseRowToDto,
+  aycmPartnerLocalWriteTask,
+  aycmPartnerRowToDto,
+  aycmPriceRuleLocalWriteTask,
+  aycmPriceRuleRowToDto,
   gymLocalWriteTask,
   gymRowToDto,
   gymColorBandLocalWriteTask,
@@ -463,7 +471,8 @@ export class SqliteStorageBackend implements StorageBackend {
       | 'crag'
       | 'sector'
       | 'route'
-      | 'boulder_problem',
+      | 'boulder_problem'
+      | 'aycm_partner',
     candidateIds: string[],
   ): Promise<string[]> {
     if (candidateIds.length === 0) {
@@ -876,6 +885,143 @@ export class SqliteStorageBackend implements StorageBackend {
   private async readRecurringExpense(id: string): Promise<RecurringExpense> {
     const rows = await this.db.query<RecurringExpenseRow>('SELECT * FROM recurring_expense WHERE id = ?', [id]);
     return recurringExpenseRowToDto(rows[0]);
+  }
+
+  async listAycmPartners(): Promise<AycmPartner[]> {
+    const rows = await this.db.query<AycmPartnerRow>(
+      'SELECT * FROM aycm_partner WHERE deleted = 0 ORDER BY name COLLATE NOCASE',
+    );
+    return rows.map(aycmPartnerRowToDto);
+  }
+
+  async upsertAycmPartner(partner: AycmPartner): Promise<AycmPartner> {
+    const userId = this.requireUserId();
+    const existing = await this.db.query('SELECT 1 FROM aycm_partner WHERE id = ?', [partner.id]);
+    const isNew = existing.length === 0;
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: isNew ? 'POST' : 'PUT',
+      url: isNew ? '/api/aycm-partners' : `/api/aycm-partners/${partner.id}`,
+      payload: partner,
+      entityType: 'AycmPartner',
+      targetEntityId: partner.id,
+    });
+    await this.db.executeTransaction([aycmPartnerLocalWriteTask(partner), ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    return this.readAycmPartner(partner.id);
+  }
+
+  async deleteAycmPartner(id: string): Promise<AycmPartner> {
+    const userId = this.requireUserId();
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: 'DELETE',
+      url: `/api/aycm-partners/${id}`,
+      payload: null,
+      entityType: 'AycmPartner',
+      targetEntityId: id,
+    });
+    const entityTask: SqlTask = enqueue.hardRemoveLocalEntity
+      ? { statement: 'DELETE FROM aycm_partner WHERE id = ?', values: [id] }
+      : {
+          statement: 'UPDATE aycm_partner SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?',
+          values: [new Date().toISOString(), id],
+        };
+    // documentation/Subfeatures/AYCM elfogadóhely hozzáadása.md: local cascade `deleted` onto the
+    // partner's live price rules — the server cascades too, so no separate outbox DELETE per rule.
+    const cascadeTask: SqlTask = enqueue.hardRemoveLocalEntity
+      ? { statement: 'DELETE FROM aycm_price_rule WHERE partner_id = ?', values: [id] }
+      : {
+          statement:
+            'UPDATE aycm_price_rule SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE partner_id = ? AND deleted = 0',
+          values: [new Date().toISOString(), id],
+        };
+    await this.db.executeTransaction([entityTask, cascadeTask, ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    if (enqueue.hardRemoveLocalEntity) {
+      return { id, name: '', deleted: true };
+    }
+    return this.readAycmPartner(id);
+  }
+
+  private async readAycmPartner(id: string): Promise<AycmPartner> {
+    const rows = await this.db.query<AycmPartnerRow>('SELECT * FROM aycm_partner WHERE id = ?', [id]);
+    return aycmPartnerRowToDto(rows[0]);
+  }
+
+  async listAycmPriceRules(partnerId: string): Promise<AycmPriceRule[]> {
+    const rows = await this.db.query<AycmPriceRuleRow>(
+      'SELECT * FROM aycm_price_rule WHERE partner_id = ? AND deleted = 0 ORDER BY start_time ASC',
+      [partnerId],
+    );
+    return rows.map(aycmPriceRuleRowToDto);
+  }
+
+  async upsertAycmPriceRule(rule: AycmPriceRule): Promise<AycmPriceRule> {
+    const userId = this.requireUserId();
+    const existing = await this.db.query('SELECT 1 FROM aycm_price_rule WHERE id = ?', [rule.id]);
+    const isNew = existing.length === 0;
+    // documentation/…/AYCM elfogadóhely hozzáadása.md "Frontend": a rule created in the same flow as
+    // its (not-yet-synced) partner must wait for the partner's POST first.
+    const dependsOn = await this.findLocalOnlyIds('aycm_partner', [rule.partnerId]);
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: isNew ? 'POST' : 'PUT',
+      url: isNew
+        ? `/api/aycm-partners/${rule.partnerId}/price-rules`
+        : `/api/aycm-partners/${rule.partnerId}/price-rules/${rule.id}`,
+      payload: rule,
+      entityType: 'AycmPriceRule',
+      targetEntityId: rule.id,
+      dependsOn,
+    });
+    await this.db.executeTransaction([aycmPriceRuleLocalWriteTask(rule), ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    return this.readAycmPriceRule(rule.id);
+  }
+
+  async deleteAycmPriceRule(partnerId: string, id: string): Promise<AycmPriceRule> {
+    const userId = this.requireUserId();
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: 'DELETE',
+      url: `/api/aycm-partners/${partnerId}/price-rules/${id}`,
+      payload: null,
+      entityType: 'AycmPriceRule',
+      targetEntityId: id,
+    });
+    const entityTask: SqlTask = enqueue.hardRemoveLocalEntity
+      ? { statement: 'DELETE FROM aycm_price_rule WHERE id = ?', values: [id] }
+      : {
+          statement: 'UPDATE aycm_price_rule SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?',
+          values: [new Date().toISOString(), id],
+        };
+    await this.db.executeTransaction([entityTask, ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    if (enqueue.hardRemoveLocalEntity) {
+      return {
+        id,
+        partnerId,
+        appliesMon: false,
+        appliesTue: false,
+        appliesWed: false,
+        appliesThu: false,
+        appliesFri: false,
+        appliesSat: false,
+        appliesSun: false,
+        startTime: '00:00',
+        endTime: '00:00',
+        listPriceHuf: 0,
+        coPaymentHuf: 0,
+        deleted: true,
+      };
+    }
+    return this.readAycmPriceRule(id);
+  }
+
+  private async readAycmPriceRule(id: string): Promise<AycmPriceRule> {
+    const rows = await this.db.query<AycmPriceRuleRow>('SELECT * FROM aycm_price_rule WHERE id = ?', [id]);
+    return aycmPriceRuleRowToDto(rows[0]);
   }
 
   async listGyms(): Promise<Gym[]> {

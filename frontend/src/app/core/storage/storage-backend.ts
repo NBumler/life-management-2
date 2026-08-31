@@ -22,6 +22,8 @@ import { StoredFood } from '../../api/model/storedFood';
 import { SwimLog } from '../../api/model/swimLog';
 import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { RecurringExpense } from '../../api/model/recurringExpense';
+import { AycmPartner } from '../../api/model/aycmPartner';
+import { AycmPriceRule } from '../../api/model/aycmPriceRule';
 import { Gym } from '../../api/model/gym';
 import { GymColorBand } from '../../api/model/gymColorBand';
 import { IndoorRoute } from '../../api/model/indoorRoute';
@@ -581,6 +583,15 @@ export interface StorageBackend {
   listRecurringExpenses(): Promise<RecurringExpense[]>;
   upsertRecurringExpense(expense: RecurringExpense): Promise<RecurringExpense>;
   deleteRecurringExpense(id: string): Promise<RecurringExpense>;
+
+  /** documentation/Subfeatures/AYCM elfogadóhely hozzáadása.md: per-user AYCM partners + their price rules — flat CRUD. */
+  listAycmPartners(): Promise<AycmPartner[]>;
+  upsertAycmPartner(partner: AycmPartner): Promise<AycmPartner>;
+  /** Soft delete + cascade `deleted` onto the partner's live price rules (Check-Ins untouched). */
+  deleteAycmPartner(id: string): Promise<AycmPartner>;
+  listAycmPriceRules(partnerId: string): Promise<AycmPriceRule[]>;
+  upsertAycmPriceRule(rule: AycmPriceRule): Promise<AycmPriceRule>;
+  deleteAycmPriceRule(partnerId: string, id: string): Promise<AycmPriceRule>;
 
   /** documentation/Subfeatures/Indoor boulder admin.md + Indoor köteles admin.md: per-user indoor venue master — flat CRUD. */
   listGyms(): Promise<Gym[]>;

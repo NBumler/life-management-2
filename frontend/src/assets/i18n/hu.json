@@ -106,6 +106,53 @@
       "EDIT_PROFILE_CTA": "Bruttó / születési dátum szerkesztése"
     }
   },
+  "AYCM": {
+    "PARTNERS": {
+      "TITLE": "Elfogadóhelyek",
+      "ADD": "Új elfogadóhely",
+      "SEARCH_PLACEHOLDER": "Keresés név vagy megjegyzés szerint",
+      "EMPTY": "Még nincs elfogadóhelyed. Vedd fel az elsőt.",
+      "NO_RESULTS": "Nincs találat.",
+      "RULE_COUNT": "{{count}} ársáv",
+      "NEW_TITLE": "Új elfogadóhely",
+      "EDIT_TITLE": "Elfogadóhely szerkesztése",
+      "FIELD_NAME": "Név",
+      "FIELD_NAME_PLACEHOLDER": "pl. Life1 Kondi",
+      "FIELD_NOTES": "Megjegyzés",
+      "NAME_TAKEN": "Már van ilyen nevű elfogadóhelyed.",
+      "SAVE_FIRST_HINT": "Mentsd el az elfogadóhelyet, utána vehetsz fel hozzá ársávokat.",
+      "DELETE_PARTNER": "Elfogadóhely törlése",
+      "DELETE_CONFIRM_TITLE": "Elfogadóhely törlése",
+      "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd ezt: {{name}}? {{count}} ársáv is törlődik.",
+      "RULES_TITLE": "Ársávok",
+      "RULES_EMPTY": "Nincs ársáv. Rés esetén a Check-In 0 Ft-tal mentődik.",
+      "RULE_ADD": "Új ársáv",
+      "RULE_NEW": "Új ársáv",
+      "RULE_EDIT": "Ársáv szerkesztése",
+      "RULE_FIELD_LABEL": "Címke (opcionális)",
+      "RULE_FIELD_START": "Kezdés",
+      "RULE_FIELD_END": "Vége",
+      "RULE_FIELD_END_OF_DAY": "Nap vége (24:00)",
+      "RULE_FIELD_LIST_PRICE": "Listaár (Ft)",
+      "RULE_FIELD_COPAY": "Önrész (Ft)",
+      "RULE_PRICE_LINE": "Listaár {{price}} Ft · önrész {{copay}} Ft",
+      "RULE_ERROR_NO_DAY": "Legalább egy napot ki kell választani.",
+      "RULE_ERROR_TIME_ORDER": "A vége legyen későbbi, mint a kezdés.",
+      "RULE_ERROR_PRICE": "Az árak nem lehetnek negatívak.",
+      "RULE_ERROR_OVERLAP": "Átfedés ezzel: {{label}}.",
+      "RULE_DELETE_CONFIRM_TITLE": "Ársáv törlése",
+      "RULE_DELETE_CONFIRM_MESSAGE": "Biztosan törlöd ezt: {{label}}?",
+      "DAY": {
+        "appliesMon": "Hétfő",
+        "appliesTue": "Kedd",
+        "appliesWed": "Szerda",
+        "appliesThu": "Csütörtök",
+        "appliesFri": "Péntek",
+        "appliesSat": "Szombat",
+        "appliesSun": "Vasárnap"
+      }
+    }
+  },
   "THEME": {
     "TITLE": "Téma",
     "SYSTEM": "Rendszer",

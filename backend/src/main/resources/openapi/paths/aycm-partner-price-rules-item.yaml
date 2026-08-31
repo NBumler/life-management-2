@@ -1,0 +1,80 @@
+parameters:
+  - name: id
+    in: path
+    required: true
+    description: Partner id.
+    schema:
+      type: string
+      format: uuid
+  - name: ruleId
+    in: path
+    required: true
+    schema:
+      type: string
+      format: uuid
+get:
+  operationId: getAycmPriceRule
+  tags:
+    - aycm-price-rules
+  summary: A single price rule. Own deleted row returns 200 with deleted=true (not 404).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/AycmPriceRule.yaml'
+    '404':
+      description: No such rule / partner (or it belongs to another user).
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+put:
+  operationId: updateAycmPriceRule
+  tags:
+    - aycm-price-rules
+  summary: Full update (last-write-wins). Re-checks overlap against the partner's other live rules.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/AycmPriceRule.yaml'
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/AycmPriceRule.yaml'
+    '400':
+      description: No weekday flag, endTime not after startTime, negative price, or overlap.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+    '404':
+      description: No such rule / partner.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+    '409':
+      description: Entity already deleted.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+delete:
+  operationId: deleteAycmPriceRule
+  tags:
+    - aycm-price-rules
+  summary: Soft delete, idempotent. Past Check-In snapshots are untouched.
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/AycmPriceRule.yaml'

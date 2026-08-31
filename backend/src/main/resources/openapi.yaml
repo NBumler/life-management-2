@@ -139,6 +139,14 @@ paths:
     $ref: 'openapi/paths/recurring-expenses.yaml'
   /api/recurring-expenses/{id}:
     $ref: 'openapi/paths/recurring-expenses-item.yaml'
+  /api/aycm-partners:
+    $ref: 'openapi/paths/aycm-partners.yaml'
+  /api/aycm-partners/{id}:
+    $ref: 'openapi/paths/aycm-partners-item.yaml'
+  /api/aycm-partners/{id}/price-rules:
+    $ref: 'openapi/paths/aycm-partner-price-rules.yaml'
+  /api/aycm-partners/{id}/price-rules/{ruleId}:
+    $ref: 'openapi/paths/aycm-partner-price-rules-item.yaml'
 components:
   securitySchemes:
     bearerAuth:
@@ -320,3 +328,11 @@ components:
       $ref: 'openapi/components/schemas/RecurringExpense.yaml'
     RecurringExpenseList:
       $ref: 'openapi/components/schemas/RecurringExpenseList.yaml'
+    AycmPartner:
+      $ref: 'openapi/components/schemas/AycmPartner.yaml'
+    AycmPartnerList:
+      $ref: 'openapi/components/schemas/AycmPartnerList.yaml'
+    AycmPriceRule:
+      $ref: 'openapi/components/schemas/AycmPriceRule.yaml'
+    AycmPriceRuleList:
+      $ref: 'openapi/components/schemas/AycmPriceRuleList.yaml'

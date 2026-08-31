@@ -1,0 +1,67 @@
+parameters:
+  - name: id
+    in: path
+    required: true
+    schema:
+      type: string
+      format: uuid
+get:
+  operationId: getAycmPartner
+  tags:
+    - aycm-partners
+  summary: A single partner. Own deleted row returns 200 with deleted=true (not 404).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/AycmPartner.yaml'
+    '404':
+      description: No such partner (or it belongs to another user).
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+put:
+  operationId: updateAycmPartner
+  tags:
+    - aycm-partners
+  summary: Full update (last-write-wins).
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/AycmPartner.yaml'
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/AycmPartner.yaml'
+    '400':
+      description: Blank name.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+    '409':
+      description: Entity already deleted, or UNIQUE_VIOLATION on the name (conflictingId set).
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+delete:
+  operationId: deleteAycmPartner
+  tags:
+    - aycm-partners
+  summary: Soft delete, idempotent. Cascades to the partner's live price rules; Check-Ins untouched.
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/AycmPartner.yaml'

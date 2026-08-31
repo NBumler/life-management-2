@@ -1,0 +1,145 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/menu/aycm/partners"></ion-back-button>
+    </ion-buttons>
+    <ion-title>
+      {{ (isEdit ? 'AYCM.PARTNERS.EDIT_TITLE' : 'AYCM.PARTNERS.NEW_TITLE') | translate }}
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="savePartner()" strong="true">{{ 'COMMON.SAVE' | translate }}</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <form [formGroup]="partnerForm" (ngSubmit)="savePartner()">
+    <ion-list>
+      <ion-item>
+        <ion-input
+          formControlName="name"
+          labelPlacement="stacked"
+          [label]="'AYCM.PARTNERS.FIELD_NAME' | translate"
+          [placeholder]="'AYCM.PARTNERS.FIELD_NAME_PLACEHOLDER' | translate"
+          autocapitalize="sentences"
+        ></ion-input>
+      </ion-item>
+      @if (nameError()) {
+        <ion-note color="danger" class="ion-margin-start">{{ nameError() }}</ion-note>
+      }
+      <ion-item>
+        <ion-input
+          formControlName="notes"
+          labelPlacement="stacked"
+          [label]="'AYCM.PARTNERS.FIELD_NOTES' | translate"
+        ></ion-input>
+      </ion-item>
+    </ion-list>
+  </form>
+
+  @if (isEdit) {
+    <ion-list>
+      <ion-list-header>
+        <ion-label>{{ 'AYCM.PARTNERS.RULES_TITLE' | translate }}</ion-label>
+        <ion-button fill="clear" size="small" (click)="startNewRule()">
+          {{ 'AYCM.PARTNERS.RULE_ADD' | translate }}
+        </ion-button>
+      </ion-list-header>
+
+      @for (rule of rules(); track rule.id) {
+        <ion-item button (click)="editRule(rule)">
+          <ion-label>
+            <h3>{{ ruleLabel(rule) }}</h3>
+            <p>{{ 'AYCM.PARTNERS.RULE_PRICE_LINE' | translate: { price: rule.listPriceHuf, copay: rule.coPaymentHuf } }}</p>
+          </ion-label>
+          <ion-button slot="end" fill="clear" color="danger" (click)="confirmDeleteRule(rule); $event.stopPropagation()">
+            {{ 'COMMON.DELETE' | translate }}
+          </ion-button>
+        </ion-item>
+      } @empty {
+        <ion-item lines="none">
+          <ion-label color="medium">{{ 'AYCM.PARTNERS.RULES_EMPTY' | translate }}</ion-label>
+        </ion-item>
+      }
+
+      @if (editingRuleId() !== undefined) {
+        <form [formGroup]="ruleForm" (ngSubmit)="saveRule()">
+          <ion-list-header>
+            <ion-label>
+              {{ (editingRuleId() === null ? 'AYCM.PARTNERS.RULE_NEW' : 'AYCM.PARTNERS.RULE_EDIT') | translate }}
+            </ion-label>
+          </ion-list-header>
+          <ion-item>
+            <ion-input
+              formControlName="label"
+              labelPlacement="stacked"
+              [label]="'AYCM.PARTNERS.RULE_FIELD_LABEL' | translate"
+            ></ion-input>
+          </ion-item>
+          @for (day of dayKeys; track day) {
+            <ion-item>
+              <ion-toggle [formControlName]="day">{{ ('AYCM.PARTNERS.DAY.' + day) | translate }}</ion-toggle>
+            </ion-item>
+          }
+          <ion-item>
+            <ion-input
+              type="time"
+              formControlName="startTime"
+              labelPlacement="stacked"
+              [label]="'AYCM.PARTNERS.RULE_FIELD_START' | translate"
+            ></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-input
+              type="time"
+              formControlName="endTime"
+              labelPlacement="stacked"
+              [label]="'AYCM.PARTNERS.RULE_FIELD_END' | translate"
+              [disabled]="ruleForm.controls.endOfDay.value"
+            ></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-checkbox formControlName="endOfDay">{{ 'AYCM.PARTNERS.RULE_FIELD_END_OF_DAY' | translate }}</ion-checkbox>
+          </ion-item>
+          <ion-item>
+            <ion-input
+              type="number"
+              inputmode="numeric"
+              formControlName="listPriceHuf"
+              labelPlacement="stacked"
+              [label]="'AYCM.PARTNERS.RULE_FIELD_LIST_PRICE' | translate"
+            ></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-input
+              type="number"
+              inputmode="numeric"
+              formControlName="coPaymentHuf"
+              labelPlacement="stacked"
+              [label]="'AYCM.PARTNERS.RULE_FIELD_COPAY' | translate"
+            ></ion-input>
+          </ion-item>
+          @if (ruleError()) {
+            <ion-item lines="none">
+              <ion-note color="danger">{{ ruleError() }}</ion-note>
+            </ion-item>
+          }
+          <ion-item lines="none">
+            <ion-button slot="start" fill="clear" (click)="cancelRule()">{{ 'COMMON.CANCEL' | translate }}</ion-button>
+            <ion-button slot="end" (click)="saveRule()">{{ 'COMMON.SAVE' | translate }}</ion-button>
+          </ion-item>
+        </form>
+      }
+    </ion-list>
+
+    <div class="ion-padding">
+      <ion-button expand="block" color="danger" fill="outline" (click)="deletePartner()">
+        {{ 'AYCM.PARTNERS.DELETE_PARTNER' | translate }}
+      </ion-button>
+    </div>
+  } @else {
+    <p class="ion-padding" style="color: var(--ion-color-medium)">
+      {{ 'AYCM.PARTNERS.SAVE_FIRST_HINT' | translate }}
+    </p>
+  }
+</ion-content>

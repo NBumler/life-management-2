@@ -1,0 +1,59 @@
+parameters:
+  - name: id
+    in: path
+    required: true
+    description: Partner id.
+    schema:
+      type: string
+      format: uuid
+get:
+  operationId: listAycmPriceRules
+  tags:
+    - aycm-price-rules
+  summary: The partner's live price rules (deleted = false).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/AycmPriceRuleList.yaml'
+    '404':
+      description: No such partner (or it belongs to another user).
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+post:
+  operationId: createAycmPriceRule
+  tags:
+    - aycm-price-rules
+  summary: Create a price rule — idempotent upsert on the client-supplied id.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/AycmPriceRule.yaml'
+  responses:
+    '200':
+      description: Created or, on retry with the same id, the existing row.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/AycmPriceRule.yaml'
+    '400':
+      description: >-
+        No weekday flag, endTime not after startTime, negative price, or the interval overlaps
+        another live rule of the same partner on a shared weekday
+        (documentation/Subfeatures/AYCM elfogadóhely hozzáadása.md "Átfedés").
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+    '404':
+      description: No such partner.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'

@@ -24,6 +24,8 @@ import { StoredFoodsService } from '../../api/api/storedFoods.service';
 import { SwimLogsService } from '../../api/api/swimLogs.service';
 import { BikeRideLogsService } from '../../api/api/bikeRideLogs.service';
 import { RecurringExpensesService } from '../../api/api/recurringExpenses.service';
+import { AycmPartnersService } from '../../api/api/aycmPartners.service';
+import { AycmPriceRulesService } from '../../api/api/aycmPriceRules.service';
 import { ClimbingGymsService } from '../../api/api/climbingGyms.service';
 import { ClimbingGymColorBandsService } from '../../api/api/climbingGymColorBands.service';
 import { ClimbingIndoorRoutesService } from '../../api/api/climbingIndoorRoutes.service';
@@ -61,6 +63,8 @@ import { StoredFood } from '../../api/model/storedFood';
 import { SwimLog } from '../../api/model/swimLog';
 import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { RecurringExpense } from '../../api/model/recurringExpense';
+import { AycmPartner } from '../../api/model/aycmPartner';
+import { AycmPriceRule } from '../../api/model/aycmPriceRule';
 import { Gym } from '../../api/model/gym';
 import { GymColorBand } from '../../api/model/gymColorBand';
 import { IndoorRoute } from '../../api/model/indoorRoute';
@@ -127,6 +131,10 @@ import {
   bikeRideLogTombstoneTask,
   recurringExpenseServerApplyTask,
   recurringExpenseTombstoneTask,
+  aycmPartnerServerApplyTask,
+  aycmPartnerTombstoneTask,
+  aycmPriceRuleServerApplyTask,
+  aycmPriceRuleTombstoneTask,
   gymServerApplyTask,
   gymTombstoneTask,
   gymColorBandServerApplyTask,
@@ -210,6 +218,8 @@ export class SyncEngineService {
   private readonly swimLogsApi = inject(SwimLogsService);
   private readonly bikeRideLogsApi = inject(BikeRideLogsService);
   private readonly recurringExpensesApi = inject(RecurringExpensesService);
+  private readonly aycmPartnersApi = inject(AycmPartnersService);
+  private readonly aycmPriceRulesApi = inject(AycmPriceRulesService);
   private readonly gymsApi = inject(ClimbingGymsService);
   private readonly gymColorBandsApi = inject(ClimbingGymColorBandsService);
   private readonly indoorRoutesApi = inject(ClimbingIndoorRoutesService);
@@ -412,6 +422,30 @@ export class SyncEngineService {
       try {
         const dto = await firstValueFrom(this.recurringExpensesApi.getRecurringExpense(row.id));
         await this.db.executeTransaction([recurringExpenseServerApplyTask(dto)]);
+      } catch {
+        // same as above
+      }
+    }
+
+    const staleAycmPartners = await this.db.query<{ id: string }>(
+      'SELECT id FROM aycm_partner WHERE _needs_refetch = 1',
+    );
+    for (const row of staleAycmPartners) {
+      try {
+        const dto = await firstValueFrom(this.aycmPartnersApi.getAycmPartner(row.id));
+        await this.db.executeTransaction([aycmPartnerServerApplyTask(dto)]);
+      } catch {
+        // same as above
+      }
+    }
+
+    const staleAycmPriceRules = await this.db.query<{ id: string; partner_id: string }>(
+      'SELECT id, partner_id FROM aycm_price_rule WHERE _needs_refetch = 1',
+    );
+    for (const row of staleAycmPriceRules) {
+      try {
+        const dto = await firstValueFrom(this.aycmPriceRulesApi.getAycmPriceRule(row.partner_id, row.id));
+        await this.db.executeTransaction([aycmPriceRuleServerApplyTask(dto)]);
       } catch {
         // same as above
       }
@@ -772,6 +806,12 @@ export class SyncEngineService {
     if (item.entityType === 'RecurringExpense') {
       return [recurringExpenseServerApplyTask(body as RecurringExpense)];
     }
+    if (item.entityType === 'AycmPartner') {
+      return [aycmPartnerServerApplyTask(body as AycmPartner)];
+    }
+    if (item.entityType === 'AycmPriceRule') {
+      return [aycmPriceRuleServerApplyTask(body as AycmPriceRule)];
+    }
     if (item.entityType === 'Gym') {
       return [gymServerApplyTask(body as Gym)];
     }
@@ -1024,6 +1064,12 @@ export class SyncEngineService {
       await this.db.executeTransaction([bikeRideLogTombstoneTask(item.targetEntityId, null, now)]);
     } else if (item.entityType === 'RecurringExpense') {
       await this.db.executeTransaction([recurringExpenseTombstoneTask(item.targetEntityId, null, now)]);
+    } else if (item.entityType === 'AycmPartner') {
+      // documentation/Subfeatures/AYCM elfogadóhely hozzáadása.md: the server cascades to live price
+      // rules; the pull delivers their own tombstones, so nothing extra here.
+      await this.db.executeTransaction([aycmPartnerTombstoneTask(item.targetEntityId, null, now)]);
+    } else if (item.entityType === 'AycmPriceRule') {
+      await this.db.executeTransaction([aycmPriceRuleTombstoneTask(item.targetEntityId, null, now)]);
     } else if (item.entityType === 'Gym') {
       // documentation/Subfeatures/Indoor boulder admin.md "Soft delete": no cascade — a deleted gym's
       // colour bands / indoor routes keep their own rows and tombstones.
@@ -1314,6 +1360,18 @@ export class SyncEngineService {
         return [recurringExpenseServerApplyTask(change.data as RecurringExpense)];
       }
       return [recurringExpenseTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
+    }
+    if (change.entityType === 'AycmPartner') {
+      if (!change.deleted) {
+        return [aycmPartnerServerApplyTask(change.data as AycmPartner)];
+      }
+      return [aycmPartnerTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
+    }
+    if (change.entityType === 'AycmPriceRule') {
+      if (!change.deleted) {
+        return [aycmPriceRuleServerApplyTask(change.data as AycmPriceRule)];
+      }
+      return [aycmPriceRuleTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
     }
     if (change.entityType === 'Gym') {
       if (!change.deleted) {

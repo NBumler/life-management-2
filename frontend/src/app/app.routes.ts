@@ -114,6 +114,34 @@ export const routes: Routes = [
               },
             ],
           },
+          {
+            // documentation/Features/AYCM tracker.md — Menü → AYCM hub + three children. One flag;
+            // the child routes are guarded too (the hub index route arrives with slice AY4).
+            path: 'aycm',
+            canActivate: [featureFlagGuard('menu.aycm')],
+            children: [
+              {
+                path: 'partners',
+                children: [
+                  {
+                    path: '',
+                    loadComponent: () =>
+                      import('./pages/menu/aycm/aycm-partner-list.page').then((m) => m.AycmPartnerListPage),
+                  },
+                  {
+                    path: 'new',
+                    loadComponent: () =>
+                      import('./pages/menu/aycm/aycm-partner-edit.page').then((m) => m.AycmPartnerEditPage),
+                  },
+                  {
+                    path: ':id',
+                    loadComponent: () =>
+                      import('./pages/menu/aycm/aycm-partner-edit.page').then((m) => m.AycmPartnerEditPage),
+                  },
+                ],
+              },
+            ],
+          },
         ],
       },
       {

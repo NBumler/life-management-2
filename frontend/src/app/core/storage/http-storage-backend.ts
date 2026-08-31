@@ -19,6 +19,8 @@ import { StoredFoodsService } from '../../api/api/storedFoods.service';
 import { SwimLogsService } from '../../api/api/swimLogs.service';
 import { BikeRideLogsService } from '../../api/api/bikeRideLogs.service';
 import { RecurringExpensesService } from '../../api/api/recurringExpenses.service';
+import { AycmPartnersService } from '../../api/api/aycmPartners.service';
+import { AycmPriceRulesService } from '../../api/api/aycmPriceRules.service';
 import { ClimbingGymsService } from '../../api/api/climbingGyms.service';
 import { ClimbingGymColorBandsService } from '../../api/api/climbingGymColorBands.service';
 import { ClimbingIndoorRoutesService } from '../../api/api/climbingIndoorRoutes.service';
@@ -49,6 +51,8 @@ import { StoredFood } from '../../api/model/storedFood';
 import { SwimLog } from '../../api/model/swimLog';
 import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { RecurringExpense } from '../../api/model/recurringExpense';
+import { AycmPartner } from '../../api/model/aycmPartner';
+import { AycmPriceRule } from '../../api/model/aycmPriceRule';
 import { Gym } from '../../api/model/gym';
 import { GymColorBand } from '../../api/model/gymColorBand';
 import { IndoorRoute } from '../../api/model/indoorRoute';
@@ -108,6 +112,8 @@ export class HttpStorageBackend implements StorageBackend {
   private readonly swimLogsApi = inject(SwimLogsService);
   private readonly bikeRideLogsApi = inject(BikeRideLogsService);
   private readonly recurringExpensesApi = inject(RecurringExpensesService);
+  private readonly aycmPartnersApi = inject(AycmPartnersService);
+  private readonly aycmPriceRulesApi = inject(AycmPriceRulesService);
   private readonly gymsApi = inject(ClimbingGymsService);
   private readonly gymColorBandsApi = inject(ClimbingGymColorBandsService);
   private readonly indoorRoutesApi = inject(ClimbingIndoorRoutesService);
@@ -635,6 +641,32 @@ export class HttpStorageBackend implements StorageBackend {
 
   deleteRecurringExpense(id: string): Promise<RecurringExpense> {
     return firstValueFrom(this.recurringExpensesApi.deleteRecurringExpense(id));
+  }
+
+  listAycmPartners(): Promise<AycmPartner[]> {
+    return firstValueFrom(this.aycmPartnersApi.listAycmPartners());
+  }
+
+  /** POST with an existing id is an idempotent upsert server-side, so this covers both create and update. */
+  upsertAycmPartner(partner: AycmPartner): Promise<AycmPartner> {
+    return firstValueFrom(this.aycmPartnersApi.createAycmPartner(partner));
+  }
+
+  deleteAycmPartner(id: string): Promise<AycmPartner> {
+    return firstValueFrom(this.aycmPartnersApi.deleteAycmPartner(id));
+  }
+
+  listAycmPriceRules(partnerId: string): Promise<AycmPriceRule[]> {
+    return firstValueFrom(this.aycmPriceRulesApi.listAycmPriceRules(partnerId));
+  }
+
+  /** POST with an existing id is an idempotent upsert server-side, so this covers both create and update. */
+  upsertAycmPriceRule(rule: AycmPriceRule): Promise<AycmPriceRule> {
+    return firstValueFrom(this.aycmPriceRulesApi.createAycmPriceRule(rule.partnerId, rule));
+  }
+
+  deleteAycmPriceRule(partnerId: string, id: string): Promise<AycmPriceRule> {
+    return firstValueFrom(this.aycmPriceRulesApi.deleteAycmPriceRule(partnerId, id));
   }
 
   listGyms(): Promise<Gym[]> {

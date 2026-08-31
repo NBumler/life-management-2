@@ -106,6 +106,53 @@
       "EDIT_PROFILE_CTA": "Edit gross / date of birth"
     }
   },
+  "AYCM": {
+    "PARTNERS": {
+      "TITLE": "Venues",
+      "ADD": "New venue",
+      "SEARCH_PLACEHOLDER": "Search by name or notes",
+      "EMPTY": "No venues yet. Add the first one.",
+      "NO_RESULTS": "No results.",
+      "RULE_COUNT": "{{count}} price rule(s)",
+      "NEW_TITLE": "New venue",
+      "EDIT_TITLE": "Edit venue",
+      "FIELD_NAME": "Name",
+      "FIELD_NAME_PLACEHOLDER": "e.g. Life1 Gym",
+      "FIELD_NOTES": "Notes",
+      "NAME_TAKEN": "You already have a venue with this name.",
+      "SAVE_FIRST_HINT": "Save the venue first, then you can add price rules to it.",
+      "DELETE_PARTNER": "Delete venue",
+      "DELETE_CONFIRM_TITLE": "Delete venue",
+      "DELETE_CONFIRM_MESSAGE": "Delete {{name}}? Its {{count}} price rule(s) will be deleted too.",
+      "RULES_TITLE": "Price rules",
+      "RULES_EMPTY": "No price rules. A gap means a Check-In saves at 0 Ft.",
+      "RULE_ADD": "New rule",
+      "RULE_NEW": "New price rule",
+      "RULE_EDIT": "Edit price rule",
+      "RULE_FIELD_LABEL": "Label (optional)",
+      "RULE_FIELD_START": "Start",
+      "RULE_FIELD_END": "End",
+      "RULE_FIELD_END_OF_DAY": "End of day (24:00)",
+      "RULE_FIELD_LIST_PRICE": "List price (Ft)",
+      "RULE_FIELD_COPAY": "Co-payment (Ft)",
+      "RULE_PRICE_LINE": "List price {{price}} Ft · co-payment {{copay}} Ft",
+      "RULE_ERROR_NO_DAY": "Select at least one day.",
+      "RULE_ERROR_TIME_ORDER": "End must be later than start.",
+      "RULE_ERROR_PRICE": "Prices must not be negative.",
+      "RULE_ERROR_OVERLAP": "Overlaps with {{label}}.",
+      "RULE_DELETE_CONFIRM_TITLE": "Delete price rule",
+      "RULE_DELETE_CONFIRM_MESSAGE": "Delete {{label}}?",
+      "DAY": {
+        "appliesMon": "Monday",
+        "appliesTue": "Tuesday",
+        "appliesWed": "Wednesday",
+        "appliesThu": "Thursday",
+        "appliesFri": "Friday",
+        "appliesSat": "Saturday",
+        "appliesSun": "Sunday"
+      }
+    }
+  },
   "THEME": {
     "TITLE": "Theme",
     "SYSTEM": "System",

@@ -964,7 +964,51 @@ const SCHEMA_V23_STATEMENTS: string[] = [
   `CREATE INDEX IF NOT EXISTS idx_recurring_expense_next_billing_date ON recurring_expense (next_billing_date ASC)`,
 ];
 
-const SCHEMA_VERSION = 23;
+// documentation/Subfeatures/AYCM elfogadóhely hozzáadása.md — user-owned AYCM partners + their
+// time-band price rules. Flat mirrors; name_normalized is not stored (in-memory uniqueness pre-check).
+const SCHEMA_V24_STATEMENTS: string[] = [
+  `CREATE TABLE IF NOT EXISTS aycm_partner (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    notes TEXT,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_aycm_partner_name ON aycm_partner (name)`,
+  `CREATE TABLE IF NOT EXISTS aycm_price_rule (
+    id TEXT PRIMARY KEY,
+    partner_id TEXT NOT NULL,
+    label TEXT,
+    applies_mon INTEGER NOT NULL DEFAULT 0,
+    applies_tue INTEGER NOT NULL DEFAULT 0,
+    applies_wed INTEGER NOT NULL DEFAULT 0,
+    applies_thu INTEGER NOT NULL DEFAULT 0,
+    applies_fri INTEGER NOT NULL DEFAULT 0,
+    applies_sat INTEGER NOT NULL DEFAULT 0,
+    applies_sun INTEGER NOT NULL DEFAULT 0,
+    start_time TEXT NOT NULL,
+    end_time TEXT NOT NULL,
+    list_price_huf INTEGER NOT NULL DEFAULT 0,
+    co_payment_huf INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_aycm_price_rule_partner_id ON aycm_price_rule (partner_id)`,
+];
+
+const SCHEMA_VERSION = 24;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -990,7 +1034,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 20, statements: SCHEMA_V20_STATEMENTS },
   { toVersion: 21, statements: SCHEMA_V21_STATEMENTS },
   { toVersion: 22, statements: SCHEMA_V22_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V23_STATEMENTS },
+  { toVersion: 23, statements: SCHEMA_V23_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V24_STATEMENTS },
 ];
 
 export interface SqlTask {

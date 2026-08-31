@@ -26,6 +26,8 @@ export type OutboxEntityType =
   | 'SwimLog'
   | 'BikeRideLog'
   | 'RecurringExpense'
+  | 'AycmPartner'
+  | 'AycmPriceRule'
   | 'Gym'
   | 'GymColorBand'
   | 'IndoorRoute'
