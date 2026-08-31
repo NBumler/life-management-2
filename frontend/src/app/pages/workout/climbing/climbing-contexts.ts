@@ -19,7 +19,7 @@ export interface ClimbingContextDef {
   readonly route: string;
   readonly labelKey: string;
   readonly icon: string;
-  /** Whether the per-context napló route exists yet — M4 wires only `indoor-boulder`; the hub shows the rest as disabled tiles. */
+  /** Whether the per-context napló route exists yet — M4–M5 wire `indoor-boulder` + `indoor-rope`; the hub shows the rest as disabled tiles. */
   readonly wired: boolean;
 }
 
@@ -40,7 +40,7 @@ export const CLIMBING_CONTEXTS: readonly ClimbingContextDef[] = [
     route: 'indoor-rope',
     labelKey: 'WORKOUT.CLIMBING.CONTEXT.INDOOR_ROPE',
     icon: 'home-outline',
-    wired: false,
+    wired: true,
   },
   {
     key: 'outdoor-boulder',

@@ -288,7 +288,8 @@ export const routes: Routes = [
               {
                 // documentation/Subfeatures/Indoor boulder napló.md (Mászónapló M4) — the reference
                 // kontextus-napló: a per-context session list + create/edit form. Context is fixed
-                // by the route (`data.contextKey`), not a form field. M5–M7 add the other 3 tiles.
+                // by the route (`data.contextKey`), not a form field. M5 adds indoor-rope; M6–M7 the
+                // two outdoor tiles.
                 path: 'indoor-boulder',
                 children: [
                   {
@@ -306,6 +307,30 @@ export const routes: Routes = [
                     path: ':id',
                     loadComponent: () =>
                       import('./pages/workout/climbing/naplo/indoor-boulder-session-edit.page').then((m) => m.IndoorBoulderSessionEditPage),
+                  },
+                ],
+              },
+              {
+                // documentation/Subfeatures/Indoor köteles napló.md (Mászónapló M5) — the INDOOR + ROPE
+                // kontextus-napló. Same shared list page (`data.contextKey`), its own edit form
+                // (safety chip, grade parser, wall-height length default, no colour bands, no pitches).
+                path: 'indoor-rope',
+                children: [
+                  {
+                    path: '',
+                    data: { contextKey: 'indoor-rope' },
+                    loadComponent: () =>
+                      import('./pages/workout/climbing/naplo/climbing-session-list.page').then((m) => m.ClimbingSessionListPage),
+                  },
+                  {
+                    path: 'new',
+                    loadComponent: () =>
+                      import('./pages/workout/climbing/naplo/indoor-rope-session-edit.page').then((m) => m.IndoorRopeSessionEditPage),
+                  },
+                  {
+                    path: ':id',
+                    loadComponent: () =>
+                      import('./pages/workout/climbing/naplo/indoor-rope-session-edit.page').then((m) => m.IndoorRopeSessionEditPage),
                   },
                 ],
               },

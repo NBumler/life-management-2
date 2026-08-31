@@ -1,0 +1,255 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/workout/climbing/indoor-rope" />
+    </ion-buttons>
+    <ion-title>
+      {{ (sessionId() ? 'WORKOUT.CLIMBING.SESSION.EDIT_TITLE' : 'WORKOUT.CLIMBING.SESSION.NEW_TITLE') | translate }}
+    </ion-title>
+    <ion-buttons slot="end">
+      @if (sessionId()) {
+        <ion-button color="danger" (click)="delete()">{{ 'COMMON.DELETE' | translate }}</ion-button>
+      }
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <form [formGroup]="form">
+    <ion-list>
+      <ion-item>
+        <ion-input
+          type="date"
+          formControlName="date"
+          [label]="'WORKOUT.CLIMBING.SESSION.FIELD_DATE' | translate"
+          labelPlacement="stacked"
+        />
+      </ion-item>
+
+      <ion-item>
+        <ion-select
+          formControlName="gymId"
+          [label]="'WORKOUT.CLIMBING.SESSION.FIELD_GYM' | translate"
+          labelPlacement="stacked"
+          [placeholder]="'WORKOUT.CLIMBING.SESSION.GYM_PLACEHOLDER' | translate"
+        >
+          @for (gym of ropeGyms(); track gym.id) {
+            <ion-select-option [value]="gym.id">{{ gym.name }}</ion-select-option>
+          }
+        </ion-select>
+      </ion-item>
+      @if (form.controls.gymId.touched && form.controls.gymId.invalid) {
+        <ion-note color="danger" class="field-error">{{ 'WORKOUT.CLIMBING.SESSION.GYM_REQUIRED' | translate }}</ion-note>
+      }
+      @if (ropeGyms().length === 0) {
+        <ion-note color="medium" class="field-error">
+          {{ 'WORKOUT.CLIMBING.SESSION.NO_ROPE_GYM' | translate }}
+        </ion-note>
+      }
+
+      <ion-item>
+        <ion-input
+          type="number"
+          inputmode="numeric"
+          formControlName="totalSessionDurationMinutes"
+          [label]="'WORKOUT.CLIMBING.SESSION.FIELD_DURATION' | translate"
+          labelPlacement="stacked"
+        />
+      </ion-item>
+
+      <ion-item>
+        <ion-select
+          formControlName="pumpRating"
+          [label]="'WORKOUT.CLIMBING.SESSION.FIELD_PUMP' | translate"
+          labelPlacement="stacked"
+        >
+          <ion-select-option [value]="null">—</ion-select-option>
+          @for (r of ratings; track r) {
+            <ion-select-option [value]="r">{{ r }}</ion-select-option>
+          }
+        </ion-select>
+      </ion-item>
+
+      <ion-item>
+        <ion-select
+          formControlName="headspaceRating"
+          [label]="'WORKOUT.CLIMBING.SESSION.FIELD_HEADSPACE' | translate"
+          labelPlacement="stacked"
+        >
+          <ion-select-option [value]="null">—</ion-select-option>
+          @for (r of ratings; track r) {
+            <ion-select-option [value]="r">{{ r }}</ion-select-option>
+          }
+        </ion-select>
+      </ion-item>
+
+      <ion-item>
+        <ion-input
+          formControlName="climbingPartners"
+          [label]="'WORKOUT.CLIMBING.SESSION.FIELD_PARTNERS' | translate"
+          labelPlacement="stacked"
+          [placeholder]="'WORKOUT.CLIMBING.SESSION.PARTNERS_PLACEHOLDER' | translate"
+        />
+      </ion-item>
+
+      <ion-item>
+        <ion-textarea
+          formControlName="notes"
+          [label]="'WORKOUT.CLIMBING.SESSION.FIELD_NOTES' | translate"
+          labelPlacement="stacked"
+          [autoGrow]="true"
+        />
+      </ion-item>
+    </ion-list>
+
+    <div class="attempts-header">
+      <h2>{{ 'WORKOUT.CLIMBING.SESSION.ATTEMPTS' | translate }}</h2>
+      <ion-button size="small" fill="outline" (click)="addAttempt()">
+        {{ 'WORKOUT.CLIMBING.SESSION.ADD_ATTEMPT' | translate }}
+      </ion-button>
+    </div>
+
+    @if (attempts().length === 0) {
+      <ion-note color="medium" class="field-error">{{ 'WORKOUT.CLIMBING.SESSION.NO_ATTEMPTS' | translate }}</ion-note>
+    }
+
+    @for (row of attempts(); track row.id; let i = $index) {
+      <ion-list class="attempt-card">
+        <ion-item>
+          <ion-label>{{ 'WORKOUT.CLIMBING.SESSION.ATTEMPT_N' | translate: { n: i + 1 } }}</ion-label>
+          <ion-toggle
+            slot="end"
+            [checked]="row.isSuccess()"
+            (ionChange)="toggleSuccess(row)"
+          >{{ 'WORKOUT.CLIMBING.SESSION.SUCCESS' | translate }}</ion-toggle>
+        </ion-item>
+
+        @if (indoorRoutes().length > 0) {
+          <ion-item>
+            <ion-select
+              [label]="'WORKOUT.CLIMBING.SESSION.FIELD_ROUTE' | translate"
+              labelPlacement="stacked"
+              [placeholder]="'WORKOUT.CLIMBING.SESSION.ROUTE_PLACEHOLDER' | translate"
+              [value]="row.indoorRouteId()"
+              (ionChange)="pickRoute(row, $any($event.target).value)"
+            >
+              <ion-select-option [value]="null">—</ion-select-option>
+              @for (route of indoorRoutes(); track route.id) {
+                <ion-select-option [value]="route.id">{{ route.name }} ({{ route.grade }})</ion-select-option>
+              }
+            </ion-select>
+          </ion-item>
+        }
+
+        <ion-item>
+          <ion-input
+            [label]="'WORKOUT.CLIMBING.SESSION.FIELD_ROUTE_NAME' | translate"
+            labelPlacement="stacked"
+            [value]="row.routeName()"
+            (ionInput)="row.routeName.set($any($event.target).value)"
+          />
+        </ion-item>
+
+        <ion-item>
+          <ion-input
+            [label]="'WORKOUT.CLIMBING.SESSION.FIELD_GRADE_ROPE' | translate"
+            labelPlacement="stacked"
+            [placeholder]="'WORKOUT.CLIMBING.SESSION.GRADE_PLACEHOLDER_ROPE' | translate"
+            [value]="row.userRawInput()"
+            (ionInput)="row.userRawInput.set($any($event.target).value); touchAttempts()"
+          />
+        </ion-item>
+
+        <ion-item>
+          <ion-input
+            type="number"
+            inputmode="decimal"
+            [label]="'WORKOUT.CLIMBING.SESSION.FIELD_LENGTH' | translate"
+            labelPlacement="stacked"
+            [placeholder]="wallHeightPlaceholder()"
+            [value]="row.lengthInMeters()"
+            (ionInput)="row.lengthInMeters.set($any($event.target).value ? +$any($event.target).value : null); touchAttempts()"
+          />
+        </ion-item>
+
+        <ion-item>
+          <ion-select
+            [label]="'WORKOUT.CLIMBING.SESSION.FIELD_SAFETY' | translate"
+            labelPlacement="stacked"
+            [value]="row.safetyStyle()"
+            (ionChange)="setSafetyStyle(row, $any($event.target).value)"
+          >
+            @for (style of safetyStyleOptions(); track style) {
+              <ion-select-option [value]="style">{{ 'WORKOUT.CLIMBING.SAFETY.' + style | translate }}</ion-select-option>
+            }
+          </ion-select>
+        </ion-item>
+
+        <ion-item>
+          <ion-input
+            type="number"
+            inputmode="numeric"
+            [label]="'WORKOUT.CLIMBING.SESSION.FIELD_ATTEMPT_COUNT' | translate"
+            labelPlacement="stacked"
+            [value]="row.attemptCount()"
+            (ionInput)="row.attemptCount.set($any($event.target).value ? +$any($event.target).value : null)"
+          />
+        </ion-item>
+
+        @if (row.isSuccess()) {
+          <ion-item>
+            <ion-select
+              [label]="'WORKOUT.CLIMBING.SESSION.FIELD_STYLE' | translate"
+              labelPlacement="stacked"
+              [value]="row.ascentStyle()"
+              (ionChange)="row.ascentStyle.set($any($event.target).value); touchAttempts()"
+            >
+              <ion-select-option [value]="null">—</ion-select-option>
+              @for (style of ascentStyles; track style) {
+                <ion-select-option [value]="style">{{ 'WORKOUT.CLIMBING.ASCENT_STYLE.' + style | translate }}</ion-select-option>
+              }
+            </ion-select>
+          </ion-item>
+        } @else {
+          <ion-item>
+            <ion-input
+              [label]="'WORKOUT.CLIMBING.SESSION.FIELD_FAILURE_POINT' | translate"
+              labelPlacement="stacked"
+              [value]="row.failurePoint()"
+              (ionInput)="row.failurePoint.set($any($event.target).value)"
+            />
+          </ion-item>
+        }
+
+        <ion-item>
+          <ion-input
+            [label]="'WORKOUT.CLIMBING.SESSION.FIELD_ATTEMPT_NOTES' | translate"
+            labelPlacement="stacked"
+            [value]="row.notes()"
+            (ionInput)="row.notes.set($any($event.target).value)"
+          />
+        </ion-item>
+
+        <ion-item>
+          <ion-button fill="clear" color="danger" size="small" (click)="removeAttempt(row)">
+            {{ 'WORKOUT.CLIMBING.SESSION.REMOVE_ATTEMPT' | translate }}
+          </ion-button>
+        </ion-item>
+      </ion-list>
+    }
+  </form>
+</ion-content>
+
+<ion-footer>
+  <ion-toolbar>
+    <div class="preview">
+      @if (hasBodyWeight()) {
+        <span>~{{ previewKcal() | number: '1.0-0' }} {{ 'WORKOUT.SESSION.KCAL_SHORT' | translate }}</span>
+      } @else {
+        <span>{{ 'WORKOUT.CLIMBING.SESSION.NO_BODY_WEIGHT' | translate }}</span>
+      }
+      <span>· V {{ previewVolume() | number: '1.0-0' }}</span>
+    </div>
+    <ion-button slot="end" (click)="save()" [disabled]="form.invalid">{{ 'COMMON.SAVE' | translate }}</ion-button>
+  </ion-toolbar>
+</ion-footer>

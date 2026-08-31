@@ -18,8 +18,8 @@ describe('climbing-contexts', () => {
     }
   });
 
-  it('marks only indoor-boulder as wired (M4 — the reference context flow)', () => {
-    expect(CLIMBING_CONTEXTS.filter((c) => c.wired).map((c) => c.key)).toEqual(['indoor-boulder']);
+  it('marks the wired indoor contexts (M4 boulder + M5 rope); outdoor still pending', () => {
+    expect(CLIMBING_CONTEXTS.filter((c) => c.wired).map((c) => c.key)).toEqual(['indoor-boulder', 'indoor-rope']);
   });
 
   it('gives every context a distinct route and label key', () => {

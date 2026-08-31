@@ -868,10 +868,10 @@
       "SOON": "Soon",
       "SESSION": {
         "NEW": "New session",
-        "EMPTY": "No indoor boulder sessions yet.",
+        "EMPTY": "No sessions logged yet.",
         "NO_GYM": "No gym",
         "SENDS_SHORT": "sent",
-        "NEW_TITLE": "New indoor boulder session",
+        "NEW_TITLE": "New session",
         "EDIT_TITLE": "Edit session",
         "FIELD_DATE": "Date",
         "FIELD_GYM": "Gym",
@@ -898,7 +898,16 @@
         "REMOVE_ATTEMPT": "Remove attempt",
         "NO_BODY_WEIGHT": "Set a body weight for kcal",
         "DELETE_CONFIRM_TITLE": "Delete session",
-        "DELETE_CONFIRM_MESSAGE": "Delete this session and all its attempts?"
+        "DELETE_CONFIRM_MESSAGE": "Delete this session and all its attempts?",
+        "NO_ROPE_GYM": "You have no rope gym. Add one in the venue admin.",
+        "FIELD_ROUTE": "Indoor route",
+        "ROUTE_PLACEHOLDER": "Pick a route or leave empty",
+        "FIELD_ROUTE_NAME": "Route name",
+        "FIELD_GRADE_ROPE": "Grade (French / YDS)",
+        "GRADE_PLACEHOLDER_ROPE": "e.g. 6a+ or 5.11c",
+        "FIELD_LENGTH": "Length (m)",
+        "FIELD_SAFETY": "Belay style",
+        "FIELD_FAILURE_POINT": "Where it failed"
       },
       "ASCENT_STYLE": {
         "FLASH": "Flash",

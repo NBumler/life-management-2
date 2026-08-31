@@ -868,10 +868,10 @@
       "SOON": "Hamarosan",
       "SESSION": {
         "NEW": "Új session",
-        "EMPTY": "Még nincs beltéri boulder session.",
+        "EMPTY": "Még nincs rögzített session.",
         "NO_GYM": "Nincs terem",
         "SENDS_SHORT": "sikeres",
-        "NEW_TITLE": "Új beltéri boulder session",
+        "NEW_TITLE": "Új session",
         "EDIT_TITLE": "Session szerkesztése",
         "FIELD_DATE": "Dátum",
         "FIELD_GYM": "Terem",
@@ -898,7 +898,16 @@
         "REMOVE_ATTEMPT": "Kísérlet törlése",
         "NO_BODY_WEIGHT": "Adj meg testsúlyt a kalóriához",
         "DELETE_CONFIRM_TITLE": "Session törlése",
-        "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd ezt a sessiont a kísérleteivel együtt?"
+        "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd ezt a sessiont a kísérleteivel együtt?",
+        "NO_ROPE_GYM": "Nincs köteles termed. Vegyél fel egyet a terem adminban.",
+        "FIELD_ROUTE": "Beltéri út",
+        "ROUTE_PLACEHOLDER": "Válassz utat, vagy hagyd üresen",
+        "FIELD_ROUTE_NAME": "Út neve",
+        "FIELD_GRADE_ROPE": "Fokozat (francia / YDS)",
+        "GRADE_PLACEHOLDER_ROPE": "pl. 6a+ vagy 5.11c",
+        "FIELD_LENGTH": "Hossz (m)",
+        "FIELD_SAFETY": "Biztosítás",
+        "FIELD_FAILURE_POINT": "Hol akadt el"
       },
       "ASCENT_STYLE": {
         "FLASH": "Flash",
