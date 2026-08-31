@@ -30,7 +30,7 @@
           <ion-label>
             <h2>{{ card.session.date }}</h2>
             <p>
-              {{ card.session.gymName || ('WORKOUT.CLIMBING.SESSION.NO_GYM' | translate) }}
+              {{ card.session.gymName || card.session.cragName || ('WORKOUT.CLIMBING.SESSION.NO_VENUE' | translate) }}
               · {{ card.successCount }}/{{ card.attemptCount }}
               {{ 'WORKOUT.CLIMBING.SESSION.SENDS_SHORT' | translate }}
             </p>

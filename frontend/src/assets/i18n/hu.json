@@ -907,12 +907,31 @@
         "GRADE_PLACEHOLDER_ROPE": "pl. 6a+ vagy 5.11c",
         "FIELD_LENGTH": "Hossz (m)",
         "FIELD_SAFETY": "Biztosítás",
-        "FIELD_FAILURE_POINT": "Hol akadt el"
+        "FIELD_FAILURE_POINT": "Hol akadt el",
+        "NO_VENUE": "Nincs helyszín",
+        "NO_CRAG": "Nincs sziklád. Vegyél fel egyet a helyszín adminban.",
+        "FIELD_CRAG": "Szikla",
+        "CRAG_PLACEHOLDER": "Válassz sziklát",
+        "CRAG_REQUIRED": "Válassz sziklát.",
+        "FIELD_SECTOR": "Szektor",
+        "FIELD_ROCK_TYPE": "Kőzet",
+        "FIELD_ASPECT": "Fekvés",
+        "FIELD_WEATHER": "Időjárás",
+        "FIELD_PROBLEM": "Boulder probléma",
+        "PROBLEM_PLACEHOLDER": "Válassz, vagy hagyd üresen",
+        "FIELD_PROBLEM_NAME": "Probléma neve",
+        "SAVE_TO_CATALOG": "Mentés a katalógusba"
       },
       "ASCENT_STYLE": {
         "FLASH": "Flash",
         "REDPOINT": "Redpoint",
         "ONSIGHT": "Onsight"
+      },
+      "WEATHER": {
+        "COLD_DRY": "Hideg, száraz",
+        "HOT_HUMID": "Meleg, párás",
+        "WINDY": "Szeles",
+        "WET": "Nedves"
       }
     }
   }

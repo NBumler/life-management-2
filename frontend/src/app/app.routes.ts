@@ -288,8 +288,8 @@ export const routes: Routes = [
               {
                 // documentation/Subfeatures/Indoor boulder napló.md (Mászónapló M4) — the reference
                 // kontextus-napló: a per-context session list + create/edit form. Context is fixed
-                // by the route (`data.contextKey`), not a form field. M5 adds indoor-rope; M6–M7 the
-                // two outdoor tiles.
+                // by the route (`data.contextKey`), not a form field. M5 adds indoor-rope, M6
+                // outdoor-boulder; M7 the last outdoor tile.
                 path: 'indoor-boulder',
                 children: [
                   {
@@ -331,6 +331,32 @@ export const routes: Routes = [
                     path: ':id',
                     loadComponent: () =>
                       import('./pages/workout/climbing/naplo/indoor-rope-session-edit.page').then((m) => m.IndoorRopeSessionEditPage),
+                  },
+                ],
+              },
+              {
+                // documentation/Subfeatures/Outdoor boulder napló.md (Mászónapló M6) — the OUTDOOR +
+                // BOULDER kontextus-napló. Same shared list page (`data.contextKey`), its own edit
+                // form (crag + sector location picker, optional master BoulderProblem or ad-hoc name
+                // with "save to catalog", session-level rockType, sector-inherited aspect, weather
+                // chip; no colour bands, no pitches).
+                path: 'outdoor-boulder',
+                children: [
+                  {
+                    path: '',
+                    data: { contextKey: 'outdoor-boulder' },
+                    loadComponent: () =>
+                      import('./pages/workout/climbing/naplo/climbing-session-list.page').then((m) => m.ClimbingSessionListPage),
+                  },
+                  {
+                    path: 'new',
+                    loadComponent: () =>
+                      import('./pages/workout/climbing/naplo/outdoor-boulder-session-edit.page').then((m) => m.OutdoorBoulderSessionEditPage),
+                  },
+                  {
+                    path: ':id',
+                    loadComponent: () =>
+                      import('./pages/workout/climbing/naplo/outdoor-boulder-session-edit.page').then((m) => m.OutdoorBoulderSessionEditPage),
                   },
                 ],
               },

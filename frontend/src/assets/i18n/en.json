@@ -907,12 +907,31 @@
         "GRADE_PLACEHOLDER_ROPE": "e.g. 6a+ or 5.11c",
         "FIELD_LENGTH": "Length (m)",
         "FIELD_SAFETY": "Belay style",
-        "FIELD_FAILURE_POINT": "Where it failed"
+        "FIELD_FAILURE_POINT": "Where it failed",
+        "NO_VENUE": "No venue",
+        "NO_CRAG": "You have no crag. Add one in the venue admin.",
+        "FIELD_CRAG": "Crag",
+        "CRAG_PLACEHOLDER": "Pick a crag",
+        "CRAG_REQUIRED": "Pick a crag.",
+        "FIELD_SECTOR": "Sector",
+        "FIELD_ROCK_TYPE": "Rock type",
+        "FIELD_ASPECT": "Aspect",
+        "FIELD_WEATHER": "Weather",
+        "FIELD_PROBLEM": "Boulder problem",
+        "PROBLEM_PLACEHOLDER": "Pick one or leave empty",
+        "FIELD_PROBLEM_NAME": "Problem name",
+        "SAVE_TO_CATALOG": "Save to catalog"
       },
       "ASCENT_STYLE": {
         "FLASH": "Flash",
         "REDPOINT": "Redpoint",
         "ONSIGHT": "Onsight"
+      },
+      "WEATHER": {
+        "COLD_DRY": "Cold, dry",
+        "HOT_HUMID": "Hot, humid",
+        "WINDY": "Windy",
+        "WET": "Wet"
       }
     }
   }

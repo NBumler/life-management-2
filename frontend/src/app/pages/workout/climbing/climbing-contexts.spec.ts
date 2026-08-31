@@ -18,8 +18,12 @@ describe('climbing-contexts', () => {
     }
   });
 
-  it('marks the wired indoor contexts (M4 boulder + M5 rope); outdoor still pending', () => {
-    expect(CLIMBING_CONTEXTS.filter((c) => c.wired).map((c) => c.key)).toEqual(['indoor-boulder', 'indoor-rope']);
+  it('marks the wired contexts (M4 indoor boulder + M5 indoor rope + M6 outdoor boulder); outdoor rope still pending', () => {
+    expect(CLIMBING_CONTEXTS.filter((c) => c.wired).map((c) => c.key)).toEqual([
+      'indoor-boulder',
+      'indoor-rope',
+      'outdoor-boulder',
+    ]);
   });
 
   it('gives every context a distinct route and label key', () => {
