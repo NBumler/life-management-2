@@ -7,6 +7,8 @@ api/admin.serviceInterface.ts
 api/api.ts
 api/auth.service.ts
 api/auth.serviceInterface.ts
+api/aycmCheckIns.service.ts
+api/aycmCheckIns.serviceInterface.ts
 api/aycmPartners.service.ts
 api/aycmPartners.serviceInterface.ts
 api/aycmPriceRules.service.ts
@@ -83,6 +85,7 @@ model/adminUser.ts
 model/apiError.ts
 model/ascentAttempt.ts
 model/authTokens.ts
+model/aycmCheckIn.ts
 model/aycmPartner.ts
 model/aycmPriceRule.ts
 model/bikeRideLog.ts

@@ -26,6 +26,7 @@ import { BikeRideLogsService } from '../../api/api/bikeRideLogs.service';
 import { RecurringExpensesService } from '../../api/api/recurringExpenses.service';
 import { AycmPartnersService } from '../../api/api/aycmPartners.service';
 import { AycmPriceRulesService } from '../../api/api/aycmPriceRules.service';
+import { AycmCheckInsService } from '../../api/api/aycmCheckIns.service';
 import { ClimbingGymsService } from '../../api/api/climbingGyms.service';
 import { ClimbingGymColorBandsService } from '../../api/api/climbingGymColorBands.service';
 import { ClimbingIndoorRoutesService } from '../../api/api/climbingIndoorRoutes.service';
@@ -65,6 +66,7 @@ import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { RecurringExpense } from '../../api/model/recurringExpense';
 import { AycmPartner } from '../../api/model/aycmPartner';
 import { AycmPriceRule } from '../../api/model/aycmPriceRule';
+import { AycmCheckIn } from '../../api/model/aycmCheckIn';
 import { Gym } from '../../api/model/gym';
 import { GymColorBand } from '../../api/model/gymColorBand';
 import { IndoorRoute } from '../../api/model/indoorRoute';
@@ -135,6 +137,8 @@ import {
   aycmPartnerTombstoneTask,
   aycmPriceRuleServerApplyTask,
   aycmPriceRuleTombstoneTask,
+  aycmCheckInServerApplyTask,
+  aycmCheckInTombstoneTask,
   gymServerApplyTask,
   gymTombstoneTask,
   gymColorBandServerApplyTask,
@@ -220,6 +224,7 @@ export class SyncEngineService {
   private readonly recurringExpensesApi = inject(RecurringExpensesService);
   private readonly aycmPartnersApi = inject(AycmPartnersService);
   private readonly aycmPriceRulesApi = inject(AycmPriceRulesService);
+  private readonly aycmCheckInsApi = inject(AycmCheckInsService);
   private readonly gymsApi = inject(ClimbingGymsService);
   private readonly gymColorBandsApi = inject(ClimbingGymColorBandsService);
   private readonly indoorRoutesApi = inject(ClimbingIndoorRoutesService);
@@ -446,6 +451,18 @@ export class SyncEngineService {
       try {
         const dto = await firstValueFrom(this.aycmPriceRulesApi.getAycmPriceRule(row.partner_id, row.id));
         await this.db.executeTransaction([aycmPriceRuleServerApplyTask(dto)]);
+      } catch {
+        // same as above
+      }
+    }
+
+    const staleAycmCheckIns = await this.db.query<{ id: string }>(
+      'SELECT id FROM aycm_check_in WHERE _needs_refetch = 1',
+    );
+    for (const row of staleAycmCheckIns) {
+      try {
+        const dto = await firstValueFrom(this.aycmCheckInsApi.getAycmCheckIn(row.id));
+        await this.db.executeTransaction([aycmCheckInServerApplyTask(dto)]);
       } catch {
         // same as above
       }
@@ -812,6 +829,9 @@ export class SyncEngineService {
     if (item.entityType === 'AycmPriceRule') {
       return [aycmPriceRuleServerApplyTask(body as AycmPriceRule)];
     }
+    if (item.entityType === 'AycmCheckIn') {
+      return [aycmCheckInServerApplyTask(body as AycmCheckIn)];
+    }
     if (item.entityType === 'Gym') {
       return [gymServerApplyTask(body as Gym)];
     }
@@ -1070,6 +1090,8 @@ export class SyncEngineService {
       await this.db.executeTransaction([aycmPartnerTombstoneTask(item.targetEntityId, null, now)]);
     } else if (item.entityType === 'AycmPriceRule') {
       await this.db.executeTransaction([aycmPriceRuleTombstoneTask(item.targetEntityId, null, now)]);
+    } else if (item.entityType === 'AycmCheckIn') {
+      await this.db.executeTransaction([aycmCheckInTombstoneTask(item.targetEntityId, null, now)]);
     } else if (item.entityType === 'Gym') {
       // documentation/Subfeatures/Indoor boulder admin.md "Soft delete": no cascade — a deleted gym's
       // colour bands / indoor routes keep their own rows and tombstones.
@@ -1372,6 +1394,12 @@ export class SyncEngineService {
         return [aycmPriceRuleServerApplyTask(change.data as AycmPriceRule)];
       }
       return [aycmPriceRuleTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
+    }
+    if (change.entityType === 'AycmCheckIn') {
+      if (!change.deleted) {
+        return [aycmCheckInServerApplyTask(change.data as AycmCheckIn)];
+      }
+      return [aycmCheckInTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
     }
     if (change.entityType === 'Gym') {
       if (!change.deleted) {

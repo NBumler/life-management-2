@@ -14,6 +14,7 @@ import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { RecurringExpense } from '../../api/model/recurringExpense';
 import { AycmPartner } from '../../api/model/aycmPartner';
 import { AycmPriceRule } from '../../api/model/aycmPriceRule';
+import { AycmCheckIn } from '../../api/model/aycmCheckIn';
 import { Gym } from '../../api/model/gym';
 import { GymColorBand } from '../../api/model/gymColorBand';
 import { IndoorRoute } from '../../api/model/indoorRoute';
@@ -46,6 +47,7 @@ import {
   RecurringExpenseRow,
   AycmPartnerRow,
   AycmPriceRuleRow,
+  AycmCheckInRow,
   GymRow,
   GymColorBandRow,
   IndoorRouteRow,
@@ -86,6 +88,8 @@ import {
   aycmPartnerRowToDto,
   aycmPriceRuleLocalWriteTask,
   aycmPriceRuleRowToDto,
+  aycmCheckInLocalWriteTask,
+  aycmCheckInRowToDto,
   gymLocalWriteTask,
   gymRowToDto,
   gymColorBandLocalWriteTask,
@@ -429,6 +433,15 @@ export class OutboxEntityRegistryService {
       // documentation/Subfeatures/AYCM elfogadóhely hozzáadása.md: overlap is scoped to the partner +
       // shared weekday, not a single value — can't be expressed as (value, excludeId), same reasoning
       // as HouseholdTask. The server's 400 still guards it.
+      nameUniqueness: null,
+    },
+    AycmCheckIn: {
+      table: 'aycm_check_in',
+      currentPayload: rowLookup<AycmCheckInRow, unknown>('aycm_check_in', aycmCheckInRowToDto),
+      buildFixWriteTask: (payload) => aycmCheckInLocalWriteTask(payload as unknown as AycmCheckIn),
+      // documentation/Subfeatures/AYCM Check-In.md: uniqueness is (userId, checkInDate), a scope the
+      // Fix form can't resolve from (value, excludeId) alone — same as HouseholdTask. The server's
+      // 409 UNIQUE_VIOLATION still guards it.
       nameUniqueness: null,
     },
     Gym: {

@@ -147,6 +147,10 @@ paths:
     $ref: 'openapi/paths/aycm-partner-price-rules.yaml'
   /api/aycm-partners/{id}/price-rules/{ruleId}:
     $ref: 'openapi/paths/aycm-partner-price-rules-item.yaml'
+  /api/aycm-check-ins:
+    $ref: 'openapi/paths/aycm-check-ins.yaml'
+  /api/aycm-check-ins/{id}:
+    $ref: 'openapi/paths/aycm-check-ins-item.yaml'
 components:
   securitySchemes:
     bearerAuth:
@@ -336,3 +340,7 @@ components:
       $ref: 'openapi/components/schemas/AycmPriceRule.yaml'
     AycmPriceRuleList:
       $ref: 'openapi/components/schemas/AycmPriceRuleList.yaml'
+    AycmCheckIn:
+      $ref: 'openapi/components/schemas/AycmCheckIn.yaml'
+    AycmCheckInList:
+      $ref: 'openapi/components/schemas/AycmCheckInList.yaml'

@@ -1,0 +1,92 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/menu/aycm"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ 'AYCM.CHECK_IN.TITLE' | translate }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button strong="true" [disabled]="!canSave" (click)="save()">{{ 'COMMON.SAVE' | translate }}</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  @if (hasNoPartners()) {
+    <ion-list>
+      <ion-item lines="none">
+        <ion-label class="ion-text-wrap" color="medium">{{ 'AYCM.CHECK_IN.NO_PARTNERS' | translate }}</ion-label>
+      </ion-item>
+      <ion-item button routerLink="/tabs/menu/aycm/partners">
+        <ion-label>{{ 'AYCM.CHECK_IN.GO_TO_PARTNERS' | translate }}</ion-label>
+      </ion-item>
+    </ion-list>
+  } @else {
+    <ion-list>
+      <ion-item>
+        <ion-select
+          [label]="'AYCM.CHECK_IN.FIELD_PARTNER' | translate"
+          labelPlacement="stacked"
+          interface="action-sheet"
+          [value]="partnerId()"
+          (ionChange)="onPartnerChange($any($event.detail.value))"
+        >
+          @for (partner of livePartners(); track partner.id) {
+            <ion-select-option [value]="partner.id">{{ partner.name }}</ion-select-option>
+          }
+        </ion-select>
+      </ion-item>
+
+      <ion-item>
+        <ion-input
+          type="date"
+          labelPlacement="stacked"
+          [label]="'AYCM.CHECK_IN.FIELD_DATE' | translate"
+          [value]="date()"
+          (ionChange)="onDateChange($any($event.detail.value))"
+        ></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-input
+          type="time"
+          labelPlacement="stacked"
+          [label]="'AYCM.CHECK_IN.FIELD_TIME' | translate"
+          [value]="time()"
+          (ionInput)="time.set($any($event.target).value ?? '')"
+        ></ion-input>
+        <ion-button slot="end" fill="clear" (click)="now()">{{ 'AYCM.CHECK_IN.NOW' | translate }}</ion-button>
+      </ion-item>
+
+      <ion-item>
+        <ion-input
+          labelPlacement="stacked"
+          [label]="'AYCM.CHECK_IN.FIELD_NOTES' | translate"
+          [value]="notes()"
+          (ionInput)="notes.set($any($event.target).value ?? '')"
+        ></ion-input>
+      </ion-item>
+    </ion-list>
+
+    <div class="ion-padding">
+      @if (matchedRule()) {
+        <ion-text color="success">
+          <p>
+            {{ 'AYCM.CHECK_IN.PREVIEW_MATCH' | translate: { label: previewLabel(), price: previewListPrice() } }}
+          </p>
+        </ion-text>
+      } @else {
+        <ion-text color="warning">
+          <p>{{ 'AYCM.CHECK_IN.PREVIEW_NO_MATCH' | translate }}</p>
+        </ion-text>
+      }
+    </div>
+
+    @if (isEdit) {
+      <div class="ion-padding">
+        <ion-button expand="block" color="danger" fill="outline" (click)="delete()">
+          {{ 'AYCM.CHECK_IN.DELETE' | translate }}
+        </ion-button>
+      </div>
+    }
+  }
+</ion-content>

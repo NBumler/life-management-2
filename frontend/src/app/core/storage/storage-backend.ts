@@ -24,6 +24,7 @@ import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { RecurringExpense } from '../../api/model/recurringExpense';
 import { AycmPartner } from '../../api/model/aycmPartner';
 import { AycmPriceRule } from '../../api/model/aycmPriceRule';
+import { AycmCheckIn } from '../../api/model/aycmCheckIn';
 import { Gym } from '../../api/model/gym';
 import { GymColorBand } from '../../api/model/gymColorBand';
 import { IndoorRoute } from '../../api/model/indoorRoute';
@@ -592,6 +593,11 @@ export interface StorageBackend {
   listAycmPriceRules(partnerId: string): Promise<AycmPriceRule[]>;
   upsertAycmPriceRule(rule: AycmPriceRule): Promise<AycmPriceRule>;
   deleteAycmPriceRule(partnerId: string, id: string): Promise<AycmPriceRule>;
+
+  /** documentation/Subfeatures/AYCM Check-In.md: per-user Check-Ins — flat CRUD, one live row per calendar day. */
+  listAycmCheckIns(): Promise<AycmCheckIn[]>;
+  upsertAycmCheckIn(checkIn: AycmCheckIn): Promise<AycmCheckIn>;
+  deleteAycmCheckIn(id: string): Promise<AycmCheckIn>;
 
   /** documentation/Subfeatures/Indoor boulder admin.md + Indoor köteles admin.md: per-user indoor venue master — flat CRUD. */
   listGyms(): Promise<Gym[]>;

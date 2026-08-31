@@ -1,0 +1,59 @@
+get:
+  operationId: listAycmCheckIns
+  tags:
+    - aycm-check-ins
+  summary: >-
+    The caller's Check-Ins, live rows only (deleted = false). Optional from/to narrows by checkInDate
+    (inclusive) for the hub / stats; the Check-In screen itself loads everything and filters locally.
+  parameters:
+    - name: from
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+    - name: to
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/AycmCheckInList.yaml'
+post:
+  operationId: createAycmCheckIn
+  tags:
+    - aycm-check-ins
+  summary: Create a Check-In — idempotent upsert on the client-supplied id.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/AycmCheckIn.yaml'
+  responses:
+    '200':
+      description: Created or, on retry with the same id, the existing row.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/AycmCheckIn.yaml'
+    '400':
+      description: Malformed time / negative snapshot amount (documentation/Subfeatures/AYCM Check-In.md).
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+    '409':
+      description: >-
+        UNIQUE_VIOLATION — another live Check-In already exists for this checkInDate (conflictingId
+        is that row's id, so the client can open it for editing instead).
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'

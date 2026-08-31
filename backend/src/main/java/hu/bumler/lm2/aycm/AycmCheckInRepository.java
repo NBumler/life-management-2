@@ -1,0 +1,20 @@
+package hu.bumler.lm2.aycm;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+interface AycmCheckInRepository extends JpaRepository<AycmCheckInEntity, UUID> {
+
+	List<AycmCheckInEntity> findByUserIdAndDeletedFalseOrderByCheckInDateDescCheckInTimeDesc(UUID userId);
+
+	List<AycmCheckInEntity> findByUserIdAndDeletedFalseAndCheckInDateBetweenOrderByCheckInDateDescCheckInTimeDesc(
+			UUID userId, LocalDate from, LocalDate to);
+
+	Optional<AycmCheckInEntity> findByIdAndUserId(UUID id, UUID userId);
+
+	Optional<AycmCheckInEntity> findByUserIdAndCheckInDateAndDeletedFalse(UUID userId, LocalDate checkInDate);
+}

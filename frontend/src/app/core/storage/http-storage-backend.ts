@@ -21,6 +21,7 @@ import { BikeRideLogsService } from '../../api/api/bikeRideLogs.service';
 import { RecurringExpensesService } from '../../api/api/recurringExpenses.service';
 import { AycmPartnersService } from '../../api/api/aycmPartners.service';
 import { AycmPriceRulesService } from '../../api/api/aycmPriceRules.service';
+import { AycmCheckInsService } from '../../api/api/aycmCheckIns.service';
 import { ClimbingGymsService } from '../../api/api/climbingGyms.service';
 import { ClimbingGymColorBandsService } from '../../api/api/climbingGymColorBands.service';
 import { ClimbingIndoorRoutesService } from '../../api/api/climbingIndoorRoutes.service';
@@ -53,6 +54,7 @@ import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { RecurringExpense } from '../../api/model/recurringExpense';
 import { AycmPartner } from '../../api/model/aycmPartner';
 import { AycmPriceRule } from '../../api/model/aycmPriceRule';
+import { AycmCheckIn } from '../../api/model/aycmCheckIn';
 import { Gym } from '../../api/model/gym';
 import { GymColorBand } from '../../api/model/gymColorBand';
 import { IndoorRoute } from '../../api/model/indoorRoute';
@@ -114,6 +116,7 @@ export class HttpStorageBackend implements StorageBackend {
   private readonly recurringExpensesApi = inject(RecurringExpensesService);
   private readonly aycmPartnersApi = inject(AycmPartnersService);
   private readonly aycmPriceRulesApi = inject(AycmPriceRulesService);
+  private readonly aycmCheckInsApi = inject(AycmCheckInsService);
   private readonly gymsApi = inject(ClimbingGymsService);
   private readonly gymColorBandsApi = inject(ClimbingGymColorBandsService);
   private readonly indoorRoutesApi = inject(ClimbingIndoorRoutesService);
@@ -667,6 +670,19 @@ export class HttpStorageBackend implements StorageBackend {
 
   deleteAycmPriceRule(partnerId: string, id: string): Promise<AycmPriceRule> {
     return firstValueFrom(this.aycmPriceRulesApi.deleteAycmPriceRule(partnerId, id));
+  }
+
+  listAycmCheckIns(): Promise<AycmCheckIn[]> {
+    return firstValueFrom(this.aycmCheckInsApi.listAycmCheckIns());
+  }
+
+  /** POST with an existing id is an idempotent upsert server-side, so this covers both create and update. */
+  upsertAycmCheckIn(checkIn: AycmCheckIn): Promise<AycmCheckIn> {
+    return firstValueFrom(this.aycmCheckInsApi.createAycmCheckIn(checkIn));
+  }
+
+  deleteAycmCheckIn(id: string): Promise<AycmCheckIn> {
+    return firstValueFrom(this.aycmCheckInsApi.deleteAycmCheckIn(id));
   }
 
   listGyms(): Promise<Gym[]> {

@@ -4,6 +4,7 @@ export * from './adminUser';
 export * from './apiError';
 export * from './ascentAttempt';
 export * from './authTokens';
+export * from './aycmCheckIn';
 export * from './aycmPartner';
 export * from './aycmPriceRule';
 export * from './bikeRideLog';

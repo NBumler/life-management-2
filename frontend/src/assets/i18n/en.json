@@ -151,6 +151,21 @@
         "appliesSat": "Saturday",
         "appliesSun": "Sunday"
       }
+    },
+    "CHECK_IN": {
+      "TITLE": "Check-In",
+      "FIELD_PARTNER": "Venue",
+      "FIELD_DATE": "Date",
+      "FIELD_TIME": "Time",
+      "FIELD_NOTES": "Notes",
+      "NOW": "Now",
+      "PREVIEW_MATCH": "{{label}} · {{price}} Ft",
+      "PREVIEW_NO_MATCH": "No matching price rule — visit value is 0 Ft. You can still save.",
+      "NO_PARTNERS": "No venues yet. Add one before checking in.",
+      "GO_TO_PARTNERS": "Open venues",
+      "DELETE": "Delete Check-In",
+      "DELETE_CONFIRM_TITLE": "Delete Check-In",
+      "DELETE_CONFIRM_MESSAGE": "Delete the {{date}} — {{name}} entry? The day becomes free again."
     }
   },
   "THEME": {

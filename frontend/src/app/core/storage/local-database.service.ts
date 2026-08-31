@@ -1008,7 +1008,33 @@ const SCHEMA_V24_STATEMENTS: string[] = [
   `CREATE INDEX IF NOT EXISTS idx_aycm_price_rule_partner_id ON aycm_price_rule (partner_id)`,
 ];
 
-const SCHEMA_VERSION = 24;
+// documentation/Subfeatures/AYCM Check-In.md — one snapshot row per calendar day. Flat mirror.
+const SCHEMA_V25_STATEMENTS: string[] = [
+  `CREATE TABLE IF NOT EXISTS aycm_check_in (
+    id TEXT PRIMARY KEY,
+    check_in_date TEXT NOT NULL,
+    check_in_time TEXT NOT NULL,
+    partner_id TEXT NOT NULL,
+    partner_name TEXT NOT NULL,
+    rule_id TEXT,
+    rule_label TEXT NOT NULL DEFAULT '',
+    list_price_huf INTEGER NOT NULL DEFAULT 0,
+    co_payment_huf INTEGER NOT NULL DEFAULT 0,
+    visit_value_huf INTEGER NOT NULL DEFAULT 0,
+    notes TEXT,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_aycm_check_in_date ON aycm_check_in (check_in_date DESC)`,
+];
+
+const SCHEMA_VERSION = 25;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -1035,7 +1061,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 21, statements: SCHEMA_V21_STATEMENTS },
   { toVersion: 22, statements: SCHEMA_V22_STATEMENTS },
   { toVersion: 23, statements: SCHEMA_V23_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V24_STATEMENTS },
+  { toVersion: 24, statements: SCHEMA_V24_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V25_STATEMENTS },
 ];
 
 export interface SqlTask {

@@ -1,0 +1,76 @@
+type: object
+description: >-
+  documentation/Subfeatures/AYCM Check-In.md — one AYCM entry for a calendar day. Flat, user-owned.
+  The row is a snapshot taken at save time: the server stores partnerName / ruleId / ruleLabel /
+  listPriceHuf / coPaymentHuf / visitValueHuf exactly as the client sends them and never re-runs the
+  price-rule match. visitValueHuf equals listPriceHuf; coPaymentHuf is metadata only. At most one
+  live row per user per checkInDate (409 UNIQUE_VIOLATION otherwise). Past, today and future dates
+  are all allowed.
+required:
+  - id
+  - checkInDate
+  - checkInTime
+  - partnerId
+  - partnerName
+  - ruleLabel
+  - listPriceHuf
+  - coPaymentHuf
+  - visitValueHuf
+  - deleted
+properties:
+  id:
+    type: string
+    format: uuid
+  checkInDate:
+    type: string
+    format: date
+    description: Client calendar day (YYYY-MM-DD). Past, today and future are all valid.
+  checkInTime:
+    type: string
+    pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$'
+    description: '"HH:mm", minute 0..1439 — never "24:00".'
+  partnerId:
+    type: string
+    format: uuid
+    description: The chosen partner. No FK to a live partner — a deleted partner's uuid stays for stats.
+  partnerName:
+    type: string
+    description: Snapshot of the partner's live name at save time.
+  ruleId:
+    type: string
+    format: uuid
+    nullable: true
+    description: Snapshot; the matched price rule's id, or null when no band covered the time.
+  ruleLabel:
+    type: string
+    description: Snapshot; displayLabel of the matched rule, or "" / "—" when there was no match.
+  listPriceHuf:
+    type: integer
+    minimum: 0
+    description: Snapshot; 0 when no band matched.
+  coPaymentHuf:
+    type: integer
+    minimum: 0
+    description: Snapshot metadata; never added to visitValueHuf.
+  visitValueHuf:
+    type: integer
+    minimum: 0
+    description: Snapshot; equals listPriceHuf (AYCM tracker.md).
+  notes:
+    type: string
+    nullable: true
+  deleted:
+    type: boolean
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

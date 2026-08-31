@@ -151,6 +151,21 @@
         "appliesSat": "Szombat",
         "appliesSun": "Vasárnap"
       }
+    },
+    "CHECK_IN": {
+      "TITLE": "Check-In",
+      "FIELD_PARTNER": "Elfogadóhely",
+      "FIELD_DATE": "Dátum",
+      "FIELD_TIME": "Időpont",
+      "FIELD_NOTES": "Megjegyzés",
+      "NOW": "Most",
+      "PREVIEW_MATCH": "{{label}} · {{price}} Ft",
+      "PREVIEW_NO_MATCH": "Nincs illeszkedő ársáv — a látogatás értéke 0 Ft. Mentés így is lehetséges.",
+      "NO_PARTNERS": "Még nincs elfogadóhelyed. Vegyél fel egyet a Check-In előtt.",
+      "GO_TO_PARTNERS": "Elfogadóhelyek megnyitása",
+      "DELETE": "Check-In törlése",
+      "DELETE_CONFIRM_TITLE": "Check-In törlése",
+      "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd a(z) {{date}} — {{name}} bejegyzést? A nap újra szabaddá válik."
     }
   },
   "THEME": {

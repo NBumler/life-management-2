@@ -63,7 +63,13 @@ public class GlobalExceptionHandler {
 			Map.entry("idx_household_room_user_id_name_normalized", "name"),
 			Map.entry("idx_household_task_room_id_name_normalized", "name"),
 			Map.entry("idx_recipe_name_normalized", "name"),
-			Map.entry("idx_recipe_ingredient_recipe_food", "foodId"));
+			Map.entry("idx_recipe_ingredient_recipe_food", "foodId"),
+			// idx_aycm_partner_user_id_name_normalized (V26): AYCM venue name unique per user
+			// (Névegyediség) — pre-checked in AycmPartnerService.applyFields.
+			Map.entry("idx_aycm_partner_user_id_name_normalized", "name"),
+			// idx_aycm_check_in_user_id_check_in_date (V27): at most one live Check-In per user per
+			// calendar day — pre-checked in AycmCheckInService.applyFields.
+			Map.entry("idx_aycm_check_in_user_id_check_in_date", "checkInDate"));
 
 	@ExceptionHandler(DataIntegrityViolationException.class)
 	ResponseEntity<ApiError> handleUniqueConstraint(DataIntegrityViolationException ex) {

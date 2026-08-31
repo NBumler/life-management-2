@@ -1,0 +1,69 @@
+parameters:
+  - name: id
+    in: path
+    required: true
+    schema:
+      type: string
+      format: uuid
+get:
+  operationId: getAycmCheckIn
+  tags:
+    - aycm-check-ins
+  summary: A single Check-In. Own deleted row returns 200 with deleted=true (not 404).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/AycmCheckIn.yaml'
+    '404':
+      description: No such Check-In (or it belongs to another user).
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+put:
+  operationId: updateAycmCheckIn
+  tags:
+    - aycm-check-ins
+  summary: >-
+    Full update (last-write-wins) — the client sends the whole row with a fresh snapshot. Rewriting
+    checkInDate onto a day that already has a live Check-In returns 409 UNIQUE_VIOLATION, same as create.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/AycmCheckIn.yaml'
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/AycmCheckIn.yaml'
+    '400':
+      description: Malformed time / negative snapshot amount.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+    '409':
+      description: Entity already deleted, or UNIQUE_VIOLATION on checkInDate (conflictingId set).
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+delete:
+  operationId: deleteAycmCheckIn
+  tags:
+    - aycm-check-ins
+  summary: Soft delete, idempotent. The day becomes free again.
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/AycmCheckIn.yaml'

@@ -21,6 +21,7 @@ import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { RecurringExpense } from '../../api/model/recurringExpense';
 import { AycmPartner } from '../../api/model/aycmPartner';
 import { AycmPriceRule } from '../../api/model/aycmPriceRule';
+import { AycmCheckIn } from '../../api/model/aycmCheckIn';
 import { Gym } from '../../api/model/gym';
 import { GymColorBand } from '../../api/model/gymColorBand';
 import { IndoorRoute } from '../../api/model/indoorRoute';
@@ -60,6 +61,7 @@ import {
   RecurringExpenseRow,
   AycmPartnerRow,
   AycmPriceRuleRow,
+  AycmCheckInRow,
   GymRow,
   GymColorBandRow,
   IndoorRouteRow,
@@ -124,6 +126,8 @@ import {
   aycmPartnerRowToDto,
   aycmPriceRuleLocalWriteTask,
   aycmPriceRuleRowToDto,
+  aycmCheckInLocalWriteTask,
+  aycmCheckInRowToDto,
   gymLocalWriteTask,
   gymRowToDto,
   gymColorBandLocalWriteTask,
@@ -1022,6 +1026,70 @@ export class SqliteStorageBackend implements StorageBackend {
   private async readAycmPriceRule(id: string): Promise<AycmPriceRule> {
     const rows = await this.db.query<AycmPriceRuleRow>('SELECT * FROM aycm_price_rule WHERE id = ?', [id]);
     return aycmPriceRuleRowToDto(rows[0]);
+  }
+
+  async listAycmCheckIns(): Promise<AycmCheckIn[]> {
+    const rows = await this.db.query<AycmCheckInRow>(
+      'SELECT * FROM aycm_check_in WHERE deleted = 0 ORDER BY check_in_date DESC, check_in_time DESC',
+    );
+    return rows.map(aycmCheckInRowToDto);
+  }
+
+  async upsertAycmCheckIn(checkIn: AycmCheckIn): Promise<AycmCheckIn> {
+    const userId = this.requireUserId();
+    const existing = await this.db.query('SELECT 1 FROM aycm_check_in WHERE id = ?', [checkIn.id]);
+    const isNew = existing.length === 0;
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: isNew ? 'POST' : 'PUT',
+      url: isNew ? '/api/aycm-check-ins' : `/api/aycm-check-ins/${checkIn.id}`,
+      payload: checkIn,
+      entityType: 'AycmCheckIn',
+      targetEntityId: checkIn.id,
+    });
+    await this.db.executeTransaction([aycmCheckInLocalWriteTask(checkIn), ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    return this.readAycmCheckIn(checkIn.id);
+  }
+
+  async deleteAycmCheckIn(id: string): Promise<AycmCheckIn> {
+    const userId = this.requireUserId();
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: 'DELETE',
+      url: `/api/aycm-check-ins/${id}`,
+      payload: null,
+      entityType: 'AycmCheckIn',
+      targetEntityId: id,
+    });
+    const entityTask: SqlTask = enqueue.hardRemoveLocalEntity
+      ? { statement: 'DELETE FROM aycm_check_in WHERE id = ?', values: [id] }
+      : {
+          statement: 'UPDATE aycm_check_in SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?',
+          values: [new Date().toISOString(), id],
+        };
+    await this.db.executeTransaction([entityTask, ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    if (enqueue.hardRemoveLocalEntity) {
+      return {
+        id,
+        checkInDate: '1970-01-01',
+        checkInTime: '00:00',
+        partnerId: '',
+        partnerName: '',
+        ruleLabel: '',
+        listPriceHuf: 0,
+        coPaymentHuf: 0,
+        visitValueHuf: 0,
+        deleted: true,
+      };
+    }
+    return this.readAycmCheckIn(id);
+  }
+
+  private async readAycmCheckIn(id: string): Promise<AycmCheckIn> {
+    const rows = await this.db.query<AycmCheckInRow>('SELECT * FROM aycm_check_in WHERE id = ?', [id]);
+    return aycmCheckInRowToDto(rows[0]);
   }
 
   async listGyms(): Promise<Gym[]> {

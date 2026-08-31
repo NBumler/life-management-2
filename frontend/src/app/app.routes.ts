@@ -140,6 +140,11 @@ export const routes: Routes = [
                   },
                 ],
               },
+              {
+                path: 'check-in',
+                loadComponent: () =>
+                  import('./pages/menu/aycm/aycm-check-in.page').then((m) => m.AycmCheckInPage),
+              },
             ],
           },
         ],

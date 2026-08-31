@@ -28,6 +28,7 @@ export type OutboxEntityType =
   | 'RecurringExpense'
   | 'AycmPartner'
   | 'AycmPriceRule'
+  | 'AycmCheckIn'
   | 'Gym'
   | 'GymColorBand'
   | 'IndoorRoute'

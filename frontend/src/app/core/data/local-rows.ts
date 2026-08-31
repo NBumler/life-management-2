@@ -22,6 +22,7 @@ import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { RecurringExpense } from '../../api/model/recurringExpense';
 import { AycmPartner } from '../../api/model/aycmPartner';
 import { AycmPriceRule } from '../../api/model/aycmPriceRule';
+import { AycmCheckIn } from '../../api/model/aycmCheckIn';
 import { Gym } from '../../api/model/gym';
 import { GymColorBand } from '../../api/model/gymColorBand';
 import { IndoorRoute } from '../../api/model/indoorRoute';
@@ -4266,6 +4267,118 @@ export function aycmPriceRuleTombstoneTask(id: string, deletedAt: string | null,
     statement: `
       INSERT INTO aycm_price_rule (id, partner_id, start_time, end_time, list_price_huf, co_payment_huf, updated_at, deleted, deleted_at, _dirty, _local_only)
       VALUES (?, '', '00:00', '00:00', 0, 0, ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+// --- AYCM Check-In (AycmCheckIn) ---
+// documentation/Subfeatures/AYCM Check-In.md — flat, user-owned mirror of the snapshot row.
+
+export interface AycmCheckInRow {
+  id: string;
+  check_in_date: string;
+  check_in_time: string;
+  partner_id: string;
+  partner_name: string;
+  rule_id: string | null;
+  rule_label: string;
+  list_price_huf: number;
+  co_payment_huf: number;
+  visit_value_huf: number;
+  notes: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+export function aycmCheckInRowToDto(row: AycmCheckInRow): AycmCheckIn {
+  return {
+    id: row.id,
+    checkInDate: row.check_in_date,
+    checkInTime: row.check_in_time,
+    partnerId: row.partner_id,
+    partnerName: row.partner_name,
+    ruleId: row.rule_id,
+    ruleLabel: row.rule_label,
+    listPriceHuf: row.list_price_huf,
+    coPaymentHuf: row.co_payment_huf,
+    visitValueHuf: row.visit_value_huf,
+    notes: row.notes,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+const AYCM_CHECK_IN_COLUMNS =
+  'id, check_in_date, check_in_time, partner_id, partner_name, rule_id, rule_label, list_price_huf, co_payment_huf, visit_value_huf, notes';
+
+function aycmCheckInValues(dto: AycmCheckIn): (string | number | null)[] {
+  return [
+    dto.id,
+    dto.checkInDate,
+    dto.checkInTime,
+    dto.partnerId,
+    dto.partnerName,
+    dto.ruleId ?? null,
+    dto.ruleLabel,
+    dto.listPriceHuf,
+    dto.coPaymentHuf,
+    dto.visitValueHuf,
+    dto.notes ?? null,
+  ];
+}
+
+const AYCM_CHECK_IN_UPSERT_SET = `
+  check_in_date = excluded.check_in_date, check_in_time = excluded.check_in_time,
+  partner_id = excluded.partner_id, partner_name = excluded.partner_name,
+  rule_id = excluded.rule_id, rule_label = excluded.rule_label,
+  list_price_huf = excluded.list_price_huf, co_payment_huf = excluded.co_payment_huf,
+  visit_value_huf = excluded.visit_value_huf, notes = excluded.notes`;
+
+export function aycmCheckInLocalWriteTask(dto: AycmCheckIn): SqlTask {
+  return {
+    statement: `
+      INSERT INTO aycm_check_in (${AYCM_CHECK_IN_COLUMNS}, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET ${AYCM_CHECK_IN_UPSERT_SET}, _dirty = 1`,
+    values: aycmCheckInValues(dto),
+  };
+}
+
+export function aycmCheckInServerApplyTask(dto: AycmCheckIn): SqlTask {
+  return {
+    statement: `
+      INSERT INTO aycm_check_in (${AYCM_CHECK_IN_COLUMNS}, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        ${AYCM_CHECK_IN_UPSERT_SET},
+        created_at = excluded.created_at, updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at,
+        _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE aycm_check_in._dirty = 0`,
+    values: [
+      ...aycmCheckInValues(dto),
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function aycmCheckInTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO aycm_check_in (id, check_in_date, check_in_time, partner_id, partner_name, rule_label, list_price_huf, co_payment_huf, visit_value_huf, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '1970-01-01', '00:00', '', '', '', 0, 0, 0, ?, 1, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
     values: [id, updatedAt, deletedAt],
   };
