@@ -1,0 +1,24 @@
+.outcome-row {
+  --min-height: 34px;
+  font-size: 0.9rem;
+}
+
+.pyramid-header ion-label {
+  font-weight: 600;
+}
+
+.pyramid-row {
+  .pyramid-grade {
+    display: inline-block;
+    min-width: 3.5rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  ion-progress-bar {
+    display: inline-block;
+    width: calc(100% - 4rem);
+    vertical-align: middle;
+    height: 8px;
+    border-radius: 4px;
+  }
+}

@@ -942,6 +942,19 @@
         "HOT_HUMID": "Hot, humid",
         "WINDY": "Windy",
         "WET": "Wet"
+      },
+      "STATS_PAGE": {
+        "PERIOD_DAYS": "{{days}} days",
+        "PERIOD_HINT": "The grade pyramid covers the last {{days}} days; the other figures are all-time.",
+        "OVERALL_VOLUME": "Total volume (all 4 contexts)",
+        "SESSIONS_COUNT": "{{count}} sessions",
+        "NO_DATA": "No climbing logged in this context yet.",
+        "MAX_GRADE": "Max grade",
+        "TOTAL_VOLUME": "Total volume",
+        "SUCCESS_RATE": "Success rate",
+        "OUTCOME_FAILED": "Failed",
+        "PYRAMID": "Grade pyramid",
+        "PYRAMID_EMPTY": "No sends in this period."
       }
     }
   }

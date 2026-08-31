@@ -942,6 +942,19 @@
         "HOT_HUMID": "Meleg, párás",
         "WINDY": "Szeles",
         "WET": "Nedves"
+      },
+      "STATS_PAGE": {
+        "PERIOD_DAYS": "{{days}} nap",
+        "PERIOD_HINT": "A grade-piramis az utóbbi {{days}} napot fedi le; a többi mutató összesített.",
+        "OVERALL_VOLUME": "Teljes volumen (mind a 4 kontextus)",
+        "SESSIONS_COUNT": "{{count}} session",
+        "NO_DATA": "Még nincs naplózott mászás ebben a kontextusban.",
+        "MAX_GRADE": "Max fokozat",
+        "TOTAL_VOLUME": "Összes volumen",
+        "SUCCESS_RATE": "Sikerarány",
+        "OUTCOME_FAILED": "Sikertelen",
+        "PYRAMID": "Grade-piramis",
+        "PYRAMID_EMPTY": "Nincs sikeres mászás az időszakban."
       }
     }
   }

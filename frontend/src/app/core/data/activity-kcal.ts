@@ -10,9 +10,11 @@
  * frozen into the session, so `bodyWeightKg` is passed through from the live profile.
  */
 import { BikeRideLog } from '../../api/model/bikeRideLog';
+import { ClimbingSession } from '../../api/model/climbingSession';
 import { SwimLog } from '../../api/model/swimLog';
 import { WorkoutSession } from '../../api/model/workoutSession';
 import { bikeKcal } from '../../pages/workout/cycling/bike-metrics';
+import { ClimbingAttemptInput, climbingKcal } from '../../pages/workout/climbing/climbing-metrics';
 import { sessionKcal } from '../../pages/workout/log/workout-metrics';
 import { swimKcal } from '../../pages/workout/swimming/swim-metrics';
 
@@ -59,4 +61,52 @@ export function bikeKcalForDay(
   return logs
     .filter((log) => !log.deleted && log.date === day)
     .reduce((sum, log) => sum + bikeKcal(log, bodyWeightKg), 0);
+}
+
+/** A climbing session's live attempts as `climbingKcal` inputs (pitch lengths win when a pitch list exists). */
+function climbingAttemptInputs(session: ClimbingSession): ClimbingAttemptInput[] {
+  return session.attempts
+    .filter((attempt) => !attempt.deleted)
+    .map((attempt) => {
+      const pitches = attempt.pitches.filter((pitch) => !pitch.deleted);
+      return {
+        isSuccess: attempt.isSuccess,
+        absoluteDifficultyIndex: attempt.absoluteDifficultyIndex ?? null,
+        safetyStyle: attempt.safetyStyle ?? null,
+        lengthInMeters: attempt.lengthInMeters ?? null,
+        pitches:
+          pitches.length > 0
+            ? pitches.map((pitch) => ({ isLead: pitch.isLead, lengthInMeters: pitch.lengthInMeters ?? null }))
+            : null,
+      };
+    });
+}
+
+/**
+ * documentation/Features/Mászónapló.md "Kalória (kanonikus)": same shape as {@link bikeKcalForDay} —
+ * Σ `climbingKcal()` over every live `ClimbingSession` whose `date` is `day`, using the session's own
+ * `discipline` (the active/passive MET model, not `duration × MET`). The Étkezés dashboard adds this
+ * to the workout + swim + bike totals for `activityExtraKcal`.
+ */
+export function climbingKcalForDay(
+  sessions: readonly ClimbingSession[],
+  day: string,
+  bodyWeightKg: number | null,
+): number {
+  return sessions
+    .filter((session) => !session.deleted && session.date === day)
+    .reduce(
+      (sum, session) =>
+        sum +
+        climbingKcal(
+          {
+            discipline: session.discipline,
+            totalSessionDurationMinutes: session.totalSessionDurationMinutes ?? null,
+            pumpRating: session.pumpRating ?? null,
+            attempts: climbingAttemptInputs(session),
+          },
+          bodyWeightKg,
+        ),
+      0,
+    );
 }

@@ -211,6 +211,13 @@ export const routes: Routes = [
             children: [
               { path: '', loadComponent: () => import('./pages/workout/climbing/climbing-hub.page').then((m) => m.ClimbingHubPage) },
               {
+                // documentation/Features/Mászónapló.md "Statisztikák (2.0 scope)" (Mászónapló M8) —
+                // per-context max grade / total volume / success-rate breakdown (all-time) plus a
+                // 30 / 90 / 365-day grade pyramid. Reached from the hub header chart button.
+                path: 'stats',
+                loadComponent: () => import('./pages/workout/climbing/stats/climbing-stats.page').then((m) => m.ClimbingStatsPage),
+              },
+              {
                 // documentation/Features/Mászónapló.md "Terem / Helyszín Admin" — venue master CRUD.
                 // M3a wires the Indoor tree (Gym + colour bands + optional indoor routes); the Outdoor
                 // tree (Crag → Sector → Route | BoulderProblem) is added by M3b.

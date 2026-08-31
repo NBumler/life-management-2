@@ -1,0 +1,86 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/workout/climbing"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ 'WORKOUT.CLIMBING.STATS' | translate }}</ion-title>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-segment [value]="period()" (ionChange)="setPeriod($any($event.target).value)">
+      @for (p of periods; track p) {
+        <ion-segment-button [value]="p">
+          <ion-label>{{ 'WORKOUT.CLIMBING.STATS_PAGE.PERIOD_DAYS' | translate: { days: p } }}</ion-label>
+        </ion-segment-button>
+      }
+    </ion-segment>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-list>
+    <ion-item lines="none">
+      <ion-label>{{ 'WORKOUT.CLIMBING.STATS_PAGE.OVERALL_VOLUME' | translate }}</ion-label>
+      <ion-note slot="end">{{ totalVolume() | number: '1.0-0' }}</ion-note>
+    </ion-item>
+    <ion-item lines="none">
+      <ion-note>{{ 'WORKOUT.CLIMBING.STATS_PAGE.PERIOD_HINT' | translate: { days: period() } }}</ion-note>
+    </ion-item>
+  </ion-list>
+
+  @for (ctx of contexts(); track ctx.key) {
+    <ion-list>
+      <ion-list-header>
+        <ion-label>{{ ctx.labelKey | translate }}</ion-label>
+        @if (ctx.hasData) {
+          <ion-note>{{ 'WORKOUT.CLIMBING.STATS_PAGE.SESSIONS_COUNT' | translate: { count: ctx.sessionCount } }}</ion-note>
+        }
+      </ion-list-header>
+
+      @if (!ctx.hasData) {
+        <ion-item lines="none">
+          <ion-note>{{ 'WORKOUT.CLIMBING.STATS_PAGE.NO_DATA' | translate }}</ion-note>
+        </ion-item>
+      } @else {
+        <ion-item>
+          <ion-label>{{ 'WORKOUT.CLIMBING.STATS_PAGE.MAX_GRADE' | translate }}</ion-label>
+          <ion-note slot="end">{{ ctx.maxGradeLabel ?? '—' }}</ion-note>
+        </ion-item>
+        <ion-item>
+          <ion-label>{{ 'WORKOUT.CLIMBING.STATS_PAGE.TOTAL_VOLUME' | translate }}</ion-label>
+          <ion-note slot="end">{{ ctx.totalVolume | number: '1.0-0' }}</ion-note>
+        </ion-item>
+        <ion-item>
+          <ion-label>
+            {{ 'WORKOUT.CLIMBING.STATS_PAGE.SUCCESS_RATE' | translate }}
+            <p>{{ ctx.attemptCount }} · {{ ctx.successPct | number: '1.0-0' }}%</p>
+          </ion-label>
+        </ion-item>
+        @for (slice of ctx.outcomes; track slice.labelKey) {
+          <ion-item class="outcome-row">
+            <ion-label>{{ slice.labelKey | translate }}</ion-label>
+            <ion-note slot="end">{{ slice.count }} · {{ slice.pct | number: '1.0-0' }}%</ion-note>
+          </ion-item>
+        }
+
+        <ion-item lines="none" class="pyramid-header">
+          <ion-label>{{ 'WORKOUT.CLIMBING.STATS_PAGE.PYRAMID' | translate }}</ion-label>
+        </ion-item>
+        @if (ctx.pyramid.length === 0) {
+          <ion-item lines="none">
+            <ion-note>{{ 'WORKOUT.CLIMBING.STATS_PAGE.PYRAMID_EMPTY' | translate }}</ion-note>
+          </ion-item>
+        } @else {
+          @for (bar of ctx.pyramid; track bar.label) {
+            <ion-item class="pyramid-row">
+              <ion-label>
+                <span class="pyramid-grade">{{ bar.label }}</span>
+                <ion-progress-bar [value]="bar.ratio"></ion-progress-bar>
+              </ion-label>
+              <ion-note slot="end">{{ bar.sends }}</ion-note>
+            </ion-item>
+          }
+        }
+      }
+    </ion-list>
+  }
+</ion-content>

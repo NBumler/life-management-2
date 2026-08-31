@@ -4,7 +4,7 @@
   "kaja.statisztika": true,
   "tab.edzes": true,
   "edzes.hetiTerv": true,
-  "edzes.maszonaplo": false,
+  "edzes.maszonaplo": true,
   "edzes.uszas": true,
   "edzes.bicikli": true,
   "tab.feladatok": true,

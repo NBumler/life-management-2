@@ -24,8 +24,9 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 import { Meal } from '../../../api/model/meal';
 import { UserProfile } from '../../../api/model/userProfile';
-import { bikeKcalForDay, swimKcalForDay, workoutKcalForDay } from '../../../core/data/activity-kcal';
+import { bikeKcalForDay, climbingKcalForDay, swimKcalForDay, workoutKcalForDay } from '../../../core/data/activity-kcal';
 import { BikeRideLogRepository } from '../../../core/data/bike-ride-log.repository';
+import { ClimbingSessionRepository } from '../../../core/data/climbing-session.repository';
 import { FoodRepository } from '../../../core/data/food.repository';
 import { MealRepository } from '../../../core/data/meal.repository';
 import { ProfileRepository } from '../../../core/data/profile.repository';
@@ -103,6 +104,7 @@ export class MealDashboardPage implements OnInit, ViewWillEnter {
   private readonly workoutRepository = inject(WorkoutSessionRepository);
   private readonly swimRepository = inject(SwimLogRepository);
   private readonly bikeRepository = inject(BikeRideLogRepository);
+  private readonly climbingRepository = inject(ClimbingSessionRepository);
   private readonly alertController = inject(AlertController);
   private readonly translate = inject(TranslateService);
   private readonly router = inject(Router);
@@ -122,7 +124,8 @@ export class MealDashboardPage implements OnInit, ViewWillEnter {
    * documentation/Features/Tápérték kalkulátor.md: `activityExtraKcal` = lépéskalória + Σ
    * edzéskalóriák. Lépésszám ([[Lépésszám követés]]) still 0; the training half is Σ `sessionKcal()`
    * over the day's strength/HIIT sessions plus Σ `swimKcal()` over the day's swim logs plus
-   * Σ `bikeKcal()` over the day's bike rides, at the current profile weight.
+   * Σ `bikeKcal()` over the day's bike rides plus Σ `climbingKcal()` over the day's climbing
+   * sessions, at the current profile weight.
    */
   readonly workoutExtraKcal = computed(() => {
     const day = this.selectedDate();
@@ -130,7 +133,8 @@ export class MealDashboardPage implements OnInit, ViewWillEnter {
     return (
       workoutKcalForDay(this.workoutRepository.items(), day, weight) +
       swimKcalForDay(this.swimRepository.items(), day, weight) +
-      bikeKcalForDay(this.bikeRepository.items(), day, weight)
+      bikeKcalForDay(this.bikeRepository.items(), day, weight) +
+      climbingKcalForDay(this.climbingRepository.items(), day, weight)
     );
   });
 
@@ -170,6 +174,7 @@ export class MealDashboardPage implements OnInit, ViewWillEnter {
       this.workoutRepository.load(),
       this.swimRepository.load(),
       this.bikeRepository.load(),
+      this.climbingRepository.load(),
     ]);
   }
 
