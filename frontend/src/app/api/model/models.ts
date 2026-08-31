@@ -31,6 +31,7 @@ export * from './packingTemplateItem';
 export * from './pitchLog';
 export * from './recipe';
 export * from './recipeIngredient';
+export * from './recurringExpense';
 export * from './refreshRequest';
 export * from './route';
 export * from './sector';

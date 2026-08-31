@@ -25,6 +25,7 @@ export type OutboxEntityType =
   | 'WeeklyPlan'
   | 'SwimLog'
   | 'BikeRideLog'
+  | 'RecurringExpense'
   | 'Gym'
   | 'GymColorBand'
   | 'IndoorRoute'

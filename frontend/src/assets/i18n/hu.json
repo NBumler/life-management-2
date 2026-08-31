@@ -36,10 +36,56 @@
     "SYNC": "Szinkronizációs központ",
     "GEARCHECK": "GearCheck",
     "BEVASARLAS": "Bevásárlás",
+    "PENZUGYEK": "Pénzügyek",
     "LOGOUT": "Kijelentkezés",
     "LOGOUT_CONFIRM_TITLE": "Kijelentkezés",
     "LOGOUT_CONFIRM_MESSAGE": "Biztosan kijelentkezel?",
     "LOGOUT_CONFIRM_PENDING": "{{count}} szinkronizálatlan változás van. A kijelentkezés után is megmaradnak, és a következő bejelentkezéskor felmennek. Biztosan kijelentkezel?"
+  },
+  "FINANCE": {
+    "EXPENSES": {
+      "TITLE": "Rendszeres kiadások",
+      "ADD": "Új kiadás",
+      "SEARCH_PLACEHOLDER": "Keresés név vagy megjegyzés szerint",
+      "EMPTY": "Még nincs rendszeres kiadásod. Vedd fel az elsőt.",
+      "NO_RESULTS": "Nincs találat.",
+      "SECTION": {
+        "OVERDUE": "Lejárt",
+        "TODAY": "Ma",
+        "LATER": "Később",
+        "PAUSED": "Szüneteltetett"
+      },
+      "CATEGORY": {
+        "ENTERTAINMENT": "Szórakozás",
+        "SPORT": "Sport",
+        "UTILITIES": "Rezsi",
+        "INSURANCE": "Biztosítás",
+        "OTHER": "Egyéb"
+      },
+      "FREQUENCY": {
+        "MONTHLY": "havi",
+        "QUARTERLY": "negyedéves",
+        "YEARLY": "éves"
+      },
+      "AMOUNT_WITH_FREQUENCY": "{{amount}} Ft / {{frequency}}",
+      "MONTHLY_EQUIVALENT": "{{amount}} Ft/hó",
+      "OVERDUE_LAG": "{{days}} napja",
+      "MARK_PAID": "Fizetve",
+      "PAUSE": "Szüneteltetés",
+      "RESUME": "Élesítés",
+      "DELETE_CONFIRM_TITLE": "Kiadás törlése",
+      "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd ezt: {{name}}?",
+      "NEW_TITLE": "Új kiadás",
+      "EDIT_TITLE": "Kiadás szerkesztése",
+      "FIELD_NAME": "Név",
+      "FIELD_NAME_PLACEHOLDER": "pl. Netflix",
+      "FIELD_AMOUNT": "Összeg (Ft)",
+      "FIELD_FREQUENCY": "Gyakoriság",
+      "FIELD_CATEGORY": "Kategória",
+      "FIELD_NEXT_BILLING_DATE": "Következő terhelés",
+      "FIELD_NOTES": "Megjegyzés",
+      "FIELD_ACTIVE": "Aktív"
+    }
   },
   "THEME": {
     "TITLE": "Téma",

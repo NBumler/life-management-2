@@ -53,6 +53,8 @@ api/profile.service.ts
 api/profile.serviceInterface.ts
 api/recipes.service.ts
 api/recipes.serviceInterface.ts
+api/recurringExpenses.service.ts
+api/recurringExpenses.serviceInterface.ts
 api/shoppingLists.service.ts
 api/shoppingLists.serviceInterface.ts
 api/storedFoods.service.ts
@@ -105,6 +107,7 @@ model/packingTemplateItem.ts
 model/pitchLog.ts
 model/recipe.ts
 model/recipeIngredient.ts
+model/recurringExpense.ts
 model/refreshRequest.ts
 model/route.ts
 model/sector.ts

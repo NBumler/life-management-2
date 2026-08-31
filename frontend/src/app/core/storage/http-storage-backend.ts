@@ -18,6 +18,7 @@ import { ShoppingListsService } from '../../api/api/shoppingLists.service';
 import { StoredFoodsService } from '../../api/api/storedFoods.service';
 import { SwimLogsService } from '../../api/api/swimLogs.service';
 import { BikeRideLogsService } from '../../api/api/bikeRideLogs.service';
+import { RecurringExpensesService } from '../../api/api/recurringExpenses.service';
 import { ClimbingGymsService } from '../../api/api/climbingGyms.service';
 import { ClimbingGymColorBandsService } from '../../api/api/climbingGymColorBands.service';
 import { ClimbingIndoorRoutesService } from '../../api/api/climbingIndoorRoutes.service';
@@ -47,6 +48,7 @@ import { ShoppingList } from '../../api/model/shoppingList';
 import { StoredFood } from '../../api/model/storedFood';
 import { SwimLog } from '../../api/model/swimLog';
 import { BikeRideLog } from '../../api/model/bikeRideLog';
+import { RecurringExpense } from '../../api/model/recurringExpense';
 import { Gym } from '../../api/model/gym';
 import { GymColorBand } from '../../api/model/gymColorBand';
 import { IndoorRoute } from '../../api/model/indoorRoute';
@@ -105,6 +107,7 @@ export class HttpStorageBackend implements StorageBackend {
   private readonly weeklyPlansApi = inject(WeeklyPlansService);
   private readonly swimLogsApi = inject(SwimLogsService);
   private readonly bikeRideLogsApi = inject(BikeRideLogsService);
+  private readonly recurringExpensesApi = inject(RecurringExpensesService);
   private readonly gymsApi = inject(ClimbingGymsService);
   private readonly gymColorBandsApi = inject(ClimbingGymColorBandsService);
   private readonly indoorRoutesApi = inject(ClimbingIndoorRoutesService);
@@ -619,6 +622,19 @@ export class HttpStorageBackend implements StorageBackend {
 
   deleteBikeRideLog(id: string): Promise<BikeRideLog> {
     return firstValueFrom(this.bikeRideLogsApi.deleteBikeRideLog(id));
+  }
+
+  listRecurringExpenses(): Promise<RecurringExpense[]> {
+    return firstValueFrom(this.recurringExpensesApi.listRecurringExpenses());
+  }
+
+  /** POST with an existing id is an idempotent upsert server-side, so this covers both create and update. */
+  upsertRecurringExpense(expense: RecurringExpense): Promise<RecurringExpense> {
+    return firstValueFrom(this.recurringExpensesApi.createRecurringExpense(expense));
+  }
+
+  deleteRecurringExpense(id: string): Promise<RecurringExpense> {
+    return firstValueFrom(this.recurringExpensesApi.deleteRecurringExpense(id));
   }
 
   listGyms(): Promise<Gym[]> {

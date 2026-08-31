@@ -36,10 +36,56 @@
     "SYNC": "Sync center",
     "GEARCHECK": "GearCheck",
     "BEVASARLAS": "Shopping",
+    "PENZUGYEK": "Finance",
     "LOGOUT": "Log out",
     "LOGOUT_CONFIRM_TITLE": "Log out",
     "LOGOUT_CONFIRM_MESSAGE": "Are you sure you want to log out?",
     "LOGOUT_CONFIRM_PENDING": "You have {{count}} unsynced change(s). They will stay on this device and go up on your next login. Log out anyway?"
+  },
+  "FINANCE": {
+    "EXPENSES": {
+      "TITLE": "Recurring expenses",
+      "ADD": "New expense",
+      "SEARCH_PLACEHOLDER": "Search by name or notes",
+      "EMPTY": "No recurring expenses yet. Add your first one.",
+      "NO_RESULTS": "No matches.",
+      "SECTION": {
+        "OVERDUE": "Overdue",
+        "TODAY": "Today",
+        "LATER": "Later",
+        "PAUSED": "Paused"
+      },
+      "CATEGORY": {
+        "ENTERTAINMENT": "Entertainment",
+        "SPORT": "Sport",
+        "UTILITIES": "Utilities",
+        "INSURANCE": "Insurance",
+        "OTHER": "Other"
+      },
+      "FREQUENCY": {
+        "MONTHLY": "monthly",
+        "QUARTERLY": "quarterly",
+        "YEARLY": "yearly"
+      },
+      "AMOUNT_WITH_FREQUENCY": "{{amount}} Ft / {{frequency}}",
+      "MONTHLY_EQUIVALENT": "{{amount}} Ft/mo",
+      "OVERDUE_LAG": "{{days}} days ago",
+      "MARK_PAID": "Mark paid",
+      "PAUSE": "Pause",
+      "RESUME": "Resume",
+      "DELETE_CONFIRM_TITLE": "Delete expense",
+      "DELETE_CONFIRM_MESSAGE": "Delete {{name}}?",
+      "NEW_TITLE": "New expense",
+      "EDIT_TITLE": "Edit expense",
+      "FIELD_NAME": "Name",
+      "FIELD_NAME_PLACEHOLDER": "e.g. Netflix",
+      "FIELD_AMOUNT": "Amount (Ft)",
+      "FIELD_FREQUENCY": "Frequency",
+      "FIELD_CATEGORY": "Category",
+      "FIELD_NEXT_BILLING_DATE": "Next billing date",
+      "FIELD_NOTES": "Notes",
+      "FIELD_ACTIVE": "Active"
+    }
   },
   "THEME": {
     "TITLE": "Theme",

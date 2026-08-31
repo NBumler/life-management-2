@@ -1,0 +1,100 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/menu/finance/recurring-expenses"></ion-back-button>
+    </ion-buttons>
+    <ion-title>
+      {{ (isEdit ? 'FINANCE.EXPENSES.EDIT_TITLE' : 'FINANCE.EXPENSES.NEW_TITLE') | translate }}
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button strong="true" [disabled]="form.invalid" (click)="save()">
+        {{ 'COMMON.SAVE' | translate }}
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <form [formGroup]="form" (ngSubmit)="save()">
+    <ion-list>
+      <ion-item>
+        <ion-input
+          formControlName="name"
+          type="text"
+          autocapitalize="sentences"
+          [autofocus]="!isEdit"
+          [label]="'FINANCE.EXPENSES.FIELD_NAME' | translate"
+          labelPlacement="stacked"
+          [placeholder]="'FINANCE.EXPENSES.FIELD_NAME_PLACEHOLDER' | translate"
+        ></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-input
+          formControlName="amountHuf"
+          type="number"
+          inputmode="numeric"
+          min="1"
+          [label]="'FINANCE.EXPENSES.FIELD_AMOUNT' | translate"
+          labelPlacement="stacked"
+        ></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-select
+          formControlName="frequency"
+          [label]="'FINANCE.EXPENSES.FIELD_FREQUENCY' | translate"
+          labelPlacement="stacked"
+        >
+          @for (frequency of frequencies; track frequency) {
+            <ion-select-option [value]="frequency">{{ frequencyLabelKeys[frequency] | translate }}</ion-select-option>
+          }
+        </ion-select>
+      </ion-item>
+
+      <ion-item>
+        <ion-select
+          formControlName="category"
+          [label]="'FINANCE.EXPENSES.FIELD_CATEGORY' | translate"
+          labelPlacement="stacked"
+        >
+          @for (category of categories; track category) {
+            <ion-select-option [value]="category">{{ categoryLabelKeys[category] | translate }}</ion-select-option>
+          }
+        </ion-select>
+      </ion-item>
+
+      <ion-item>
+        <ion-input
+          formControlName="nextBillingDate"
+          type="date"
+          [label]="'FINANCE.EXPENSES.FIELD_NEXT_BILLING_DATE' | translate"
+          labelPlacement="stacked"
+        ></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-input
+          formControlName="notes"
+          type="text"
+          [label]="'FINANCE.EXPENSES.FIELD_NOTES' | translate"
+          labelPlacement="stacked"
+        ></ion-input>
+      </ion-item>
+
+      @if (isEdit) {
+        <ion-item>
+          <ion-toggle formControlName="active">{{ 'FINANCE.EXPENSES.FIELD_ACTIVE' | translate }}</ion-toggle>
+        </ion-item>
+      }
+    </ion-list>
+
+    @if (isEdit) {
+      <div class="ion-padding">
+        <ion-button expand="block" color="danger" fill="outline" (click)="delete()">
+          {{ 'COMMON.DELETE' | translate }}
+        </ion-button>
+      </div>
+    }
+  </form>
+</ion-content>

@@ -1,0 +1,21 @@
+.filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px 12px 8px;
+}
+
+.paused-row {
+  opacity: 0.55;
+}
+
+.billing-note {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+
+  .lag {
+    font-size: 0.75rem;
+  }
+}

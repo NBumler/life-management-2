@@ -1,0 +1,80 @@
+type: object
+description: >-
+  documentation/Subfeatures/Rendszeres kiadások.md — one recurring, fixed-amount expense
+  (subscription, pass, insurance). Flat, user-owned CRUD; the name is NOT unique. The monthly
+  equivalent that the Pénzügyek dashboard and the AYCM "megéri-e" card read is a pure client
+  utility (monthlyEquivalentHuf) — the server never computes it. The server also never auto-rolls
+  nextBillingDate: "Fizetve" is a plain PUT with a client-computed date.
+required:
+  - id
+  - name
+  - amountHuf
+  - frequency
+  - category
+  - nextBillingDate
+  - billingDayOfMonth
+  - active
+  - deleted
+properties:
+  id:
+    type: string
+    format: uuid
+  name:
+    type: string
+    minLength: 1
+    description: Required, non-blank after trim. Not unique (two "Internet" rows are fine).
+  amountHuf:
+    type: integer
+    minimum: 1
+    description: Whole HUF, no decimals. The charged amount per billing period (not per month).
+  frequency:
+    type: string
+    enum:
+      - MONTHLY
+      - QUARTERLY
+      - YEARLY
+    description: Billing period. monthlyEquivalentHuf divides by 1 / 3 / 12 respectively.
+  category:
+    type: string
+    enum:
+      - ENTERTAINMENT
+      - SPORT
+      - UTILITIES
+      - INSURANCE
+      - OTHER
+  nextBillingDate:
+    type: string
+    format: date
+    description: >-
+      Client calendar day (YYYY-MM-DD) of the next expected charge. No auto-roll — a past date stays
+      past until the user taps "Fizetve" or edits it.
+  billingDayOfMonth:
+    type: integer
+    minimum: 1
+    maximum: 31
+    description: >-
+      The intended day-of-period (so the 12th stays the 12th; the 31st clamps in short months then
+      restores). Kept in sync with nextBillingDate's day on create and on a manual date edit; never
+      touched by "Fizetve" / frequency / amount / name / category / notes / active changes.
+  active:
+    type: boolean
+    description: >-
+      false = paused: the row stays in the list but drops out of the dashboard / AYCM monthly total.
+  notes:
+    type: string
+    nullable: true
+  deleted:
+    type: boolean
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

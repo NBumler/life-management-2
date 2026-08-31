@@ -135,6 +135,10 @@ paths:
     $ref: 'openapi/paths/climbing-sessions.yaml'
   /api/climbing/sessions/{id}:
     $ref: 'openapi/paths/climbing-sessions-item.yaml'
+  /api/recurring-expenses:
+    $ref: 'openapi/paths/recurring-expenses.yaml'
+  /api/recurring-expenses/{id}:
+    $ref: 'openapi/paths/recurring-expenses-item.yaml'
 components:
   securitySchemes:
     bearerAuth:
@@ -312,3 +316,7 @@ components:
       $ref: 'openapi/components/schemas/AscentAttempt.yaml'
     PitchLog:
       $ref: 'openapi/components/schemas/PitchLog.yaml'
+    RecurringExpense:
+      $ref: 'openapi/components/schemas/RecurringExpense.yaml'
+    RecurringExpenseList:
+      $ref: 'openapi/components/schemas/RecurringExpenseList.yaml'

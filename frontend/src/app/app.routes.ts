@@ -77,6 +77,34 @@ export const routes: Routes = [
               },
             ],
           },
+          {
+            // documentation/Features/Pénzügyek.md — Menü → Pénzügyek hub + két gyerek. Egy flag; a
+            // gyerek route-ok is guardoltak (a spec "gyerek route-ok nem elérhetők" elvárása szerint).
+            path: 'finance',
+            canActivate: [featureFlagGuard('menu.penzugyek')],
+            children: [
+              {
+                path: 'recurring-expenses',
+                children: [
+                  {
+                    path: '',
+                    loadComponent: () =>
+                      import('./pages/menu/finance/recurring-expense-list.page').then((m) => m.RecurringExpenseListPage),
+                  },
+                  {
+                    path: 'new',
+                    loadComponent: () =>
+                      import('./pages/menu/finance/recurring-expense-edit.page').then((m) => m.RecurringExpenseEditPage),
+                  },
+                  {
+                    path: ':id',
+                    loadComponent: () =>
+                      import('./pages/menu/finance/recurring-expense-edit.page').then((m) => m.RecurringExpenseEditPage),
+                  },
+                ],
+              },
+            ],
+          },
         ],
       },
       {

@@ -11,6 +11,7 @@ import { PackingSessionItem } from '../../api/model/packingSessionItem';
 import { StoredFood } from '../../api/model/storedFood';
 import { SwimLog } from '../../api/model/swimLog';
 import { BikeRideLog } from '../../api/model/bikeRideLog';
+import { RecurringExpense } from '../../api/model/recurringExpense';
 import { Gym } from '../../api/model/gym';
 import { GymColorBand } from '../../api/model/gymColorBand';
 import { IndoorRoute } from '../../api/model/indoorRoute';
@@ -39,6 +40,7 @@ import {
   StoredFoodRow,
   SwimLogRow,
   BikeRideLogRow,
+  RecurringExpenseRow,
   GymRow,
   GymColorBandRow,
   IndoorRouteRow,
@@ -73,6 +75,8 @@ import {
   swimLogRowToDto,
   bikeRideLogLocalWriteTask,
   bikeRideLogRowToDto,
+  recurringExpenseLocalWriteTask,
+  recurringExpenseRowToDto,
   gymLocalWriteTask,
   gymRowToDto,
   gymColorBandLocalWriteTask,
@@ -380,6 +384,13 @@ export class OutboxEntityRegistryService {
       currentPayload: rowLookup<BikeRideLogRow, unknown>('bike_ride_log', bikeRideLogRowToDto),
       buildFixWriteTask: (payload) => bikeRideLogLocalWriteTask(payload as unknown as BikeRideLog),
       // documentation/Features/Biciklizés napló.md: a bike ride log has no name — nothing to uniqueness-check.
+      nameUniqueness: null,
+    },
+    RecurringExpense: {
+      table: 'recurring_expense',
+      currentPayload: rowLookup<RecurringExpenseRow, unknown>('recurring_expense', recurringExpenseRowToDto),
+      buildFixWriteTask: (payload) => recurringExpenseLocalWriteTask(payload as unknown as RecurringExpense),
+      // documentation/Subfeatures/Rendszeres kiadások.md: name is explicitly NOT unique — nothing to check.
       nameUniqueness: null,
     },
     Gym: {

@@ -1,0 +1,92 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/menu/finance"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ 'FINANCE.EXPENSES.TITLE' | translate }}</ion-title>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-searchbar
+      [value]="query()"
+      (ionInput)="query.set($any($event.target).value ?? '')"
+      [placeholder]="'FINANCE.EXPENSES.SEARCH_PLACEHOLDER' | translate"
+      [debounce]="200"
+    ></ion-searchbar>
+  </ion-toolbar>
+  <ion-toolbar>
+    <div class="filter-chips">
+      @for (category of categories; track category) {
+        <ion-chip
+          [outline]="!isCategoryActive(category)"
+          [color]="isCategoryActive(category) ? 'primary' : undefined"
+          (click)="toggleCategory(category)"
+        >
+          <ion-label>{{ categoryLabelKeys[category] | translate }}</ion-label>
+        </ion-chip>
+      }
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-list>
+    <ion-item button routerLink="new">
+      <ion-icon name="add-outline" slot="start" aria-hidden="true"></ion-icon>
+      <ion-label>{{ 'FINANCE.EXPENSES.ADD' | translate }}</ion-label>
+    </ion-item>
+
+    @if (isGlobalEmpty()) {
+      <ion-item lines="none">
+        <ion-label class="ion-text-wrap" color="medium">{{ 'FINANCE.EXPENSES.EMPTY' | translate }}</ion-label>
+      </ion-item>
+    } @else if (isFilteredEmpty()) {
+      <ion-item lines="none">
+        <ion-label color="medium">{{ 'FINANCE.EXPENSES.NO_RESULTS' | translate }}</ion-label>
+      </ion-item>
+    }
+
+    @for (group of groups(); track group.section) {
+      <ion-list-header>{{ group.titleKey | translate }}</ion-list-header>
+      @for (row of group.rows; track row.id) {
+        <ion-item-sliding #sliding [class.paused-row]="!row.active">
+          <ion-item button [routerLink]="[row.id]" [detail]="true">
+            @if (row.active) {
+              <ion-button
+                slot="start"
+                fill="clear"
+                [attr.aria-label]="'FINANCE.EXPENSES.MARK_PAID' | translate"
+                (click)="markPaid(row, sliding); $event.stopPropagation(); $event.preventDefault()"
+              >
+                <ion-icon slot="icon-only" name="checkmark-circle-outline"></ion-icon>
+              </ion-button>
+            }
+            <ion-label>
+              <h3>{{ row.name }}</h3>
+              <p>
+                {{ 'FINANCE.EXPENSES.AMOUNT_WITH_FREQUENCY' | translate: { amount: (row.amountHuf | number: '1.0-0'), frequency: (frequencyLabelKeys[row.frequency] | translate) } }}
+                · {{ categoryLabelKeys[row.category] | translate }}
+              </p>
+              <p>
+                {{ 'FINANCE.EXPENSES.MONTHLY_EQUIVALENT' | translate: { amount: (monthlyEquivalent(row) | number: '1.0-0') } }}
+              </p>
+            </ion-label>
+            <ion-note slot="end" class="billing-note" [color]="group.section === 'OVERDUE' ? 'danger' : 'medium'">
+              {{ row.nextBillingDate }}
+              @if (group.section === 'OVERDUE') {
+                <span class="lag">{{ 'FINANCE.EXPENSES.OVERDUE_LAG' | translate: { days: lagDays(row) } }}</span>
+              }
+            </ion-note>
+          </ion-item>
+          <ion-item-options side="end">
+            <ion-item-option (click)="togglePause(row, sliding)">
+              {{ (row.active ? 'FINANCE.EXPENSES.PAUSE' : 'FINANCE.EXPENSES.RESUME') | translate }}
+            </ion-item-option>
+            <ion-item-option color="danger" (click)="confirmDelete(row, sliding)">
+              {{ 'COMMON.DELETE' | translate }}
+            </ion-item-option>
+          </ion-item-options>
+        </ion-item-sliding>
+      }
+    }
+  </ion-list>
+</ion-content>

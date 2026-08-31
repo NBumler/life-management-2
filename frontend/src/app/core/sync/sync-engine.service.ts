@@ -23,6 +23,7 @@ import { ShoppingListsService } from '../../api/api/shoppingLists.service';
 import { StoredFoodsService } from '../../api/api/storedFoods.service';
 import { SwimLogsService } from '../../api/api/swimLogs.service';
 import { BikeRideLogsService } from '../../api/api/bikeRideLogs.service';
+import { RecurringExpensesService } from '../../api/api/recurringExpenses.service';
 import { ClimbingGymsService } from '../../api/api/climbingGyms.service';
 import { ClimbingGymColorBandsService } from '../../api/api/climbingGymColorBands.service';
 import { ClimbingIndoorRoutesService } from '../../api/api/climbingIndoorRoutes.service';
@@ -59,6 +60,7 @@ import { ShoppingListItem } from '../../api/model/shoppingListItem';
 import { StoredFood } from '../../api/model/storedFood';
 import { SwimLog } from '../../api/model/swimLog';
 import { BikeRideLog } from '../../api/model/bikeRideLog';
+import { RecurringExpense } from '../../api/model/recurringExpense';
 import { Gym } from '../../api/model/gym';
 import { GymColorBand } from '../../api/model/gymColorBand';
 import { IndoorRoute } from '../../api/model/indoorRoute';
@@ -123,6 +125,8 @@ import {
   swimLogTombstoneTask,
   bikeRideLogServerApplyTask,
   bikeRideLogTombstoneTask,
+  recurringExpenseServerApplyTask,
+  recurringExpenseTombstoneTask,
   gymServerApplyTask,
   gymTombstoneTask,
   gymColorBandServerApplyTask,
@@ -205,6 +209,7 @@ export class SyncEngineService {
   private readonly weeklyPlansApi = inject(WeeklyPlansService);
   private readonly swimLogsApi = inject(SwimLogsService);
   private readonly bikeRideLogsApi = inject(BikeRideLogsService);
+  private readonly recurringExpensesApi = inject(RecurringExpensesService);
   private readonly gymsApi = inject(ClimbingGymsService);
   private readonly gymColorBandsApi = inject(ClimbingGymColorBandsService);
   private readonly indoorRoutesApi = inject(ClimbingIndoorRoutesService);
@@ -395,6 +400,18 @@ export class SyncEngineService {
       try {
         const dto = await firstValueFrom(this.bikeRideLogsApi.getBikeRideLog(row.id));
         await this.db.executeTransaction([bikeRideLogServerApplyTask(dto)]);
+      } catch {
+        // same as above
+      }
+    }
+
+    const staleRecurringExpenses = await this.db.query<{ id: string }>(
+      'SELECT id FROM recurring_expense WHERE _needs_refetch = 1',
+    );
+    for (const row of staleRecurringExpenses) {
+      try {
+        const dto = await firstValueFrom(this.recurringExpensesApi.getRecurringExpense(row.id));
+        await this.db.executeTransaction([recurringExpenseServerApplyTask(dto)]);
       } catch {
         // same as above
       }
@@ -752,6 +769,9 @@ export class SyncEngineService {
     if (item.entityType === 'BikeRideLog') {
       return [bikeRideLogServerApplyTask(body as BikeRideLog)];
     }
+    if (item.entityType === 'RecurringExpense') {
+      return [recurringExpenseServerApplyTask(body as RecurringExpense)];
+    }
     if (item.entityType === 'Gym') {
       return [gymServerApplyTask(body as Gym)];
     }
@@ -1002,6 +1022,8 @@ export class SyncEngineService {
       await this.db.executeTransaction([swimLogTombstoneTask(item.targetEntityId, null, now)]);
     } else if (item.entityType === 'BikeRideLog') {
       await this.db.executeTransaction([bikeRideLogTombstoneTask(item.targetEntityId, null, now)]);
+    } else if (item.entityType === 'RecurringExpense') {
+      await this.db.executeTransaction([recurringExpenseTombstoneTask(item.targetEntityId, null, now)]);
     } else if (item.entityType === 'Gym') {
       // documentation/Subfeatures/Indoor boulder admin.md "Soft delete": no cascade — a deleted gym's
       // colour bands / indoor routes keep their own rows and tombstones.
@@ -1286,6 +1308,12 @@ export class SyncEngineService {
         return [bikeRideLogServerApplyTask(change.data as BikeRideLog)];
       }
       return [bikeRideLogTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
+    }
+    if (change.entityType === 'RecurringExpense') {
+      if (!change.deleted) {
+        return [recurringExpenseServerApplyTask(change.data as RecurringExpense)];
+      }
+      return [recurringExpenseTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
     }
     if (change.entityType === 'Gym') {
       if (!change.deleted) {

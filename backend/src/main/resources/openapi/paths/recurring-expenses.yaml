@@ -1,0 +1,38 @@
+get:
+  operationId: listRecurringExpenses
+  tags:
+    - recurring-expenses
+  summary: The caller's recurring expenses, live rows only (deleted = false); inactive rows included.
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/RecurringExpenseList.yaml'
+post:
+  operationId: createRecurringExpense
+  tags:
+    - recurring-expenses
+  summary: Create a recurring expense — idempotent upsert on the client-supplied id.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/RecurringExpense.yaml'
+  responses:
+    '200':
+      description: Created or, on retry with the same id, the existing row.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/RecurringExpense.yaml'
+    '400':
+      description: >-
+        Blank name, amountHuf < 1, or billingDayOfMonth out of 1..31
+        (documentation/Subfeatures/Rendszeres kiadások.md "Entitás").
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'

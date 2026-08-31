@@ -1,0 +1,69 @@
+parameters:
+  - name: id
+    in: path
+    required: true
+    schema:
+      type: string
+      format: uuid
+get:
+  operationId: getRecurringExpense
+  tags:
+    - recurring-expenses
+  summary: A single recurring expense. Own deleted row returns 200 with deleted=true (not 404).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/RecurringExpense.yaml'
+    '404':
+      description: No such recurring expense (or it belongs to another user).
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+put:
+  operationId: updateRecurringExpense
+  tags:
+    - recurring-expenses
+  summary: >-
+    Full update (last-write-wins). Also the "Fizetve" and pause/resume operations — the client sends
+    the whole row with the new nextBillingDate / active. The server does not auto-roll dates.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/RecurringExpense.yaml'
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/RecurringExpense.yaml'
+    '400':
+      description: Blank name, amountHuf < 1, or billingDayOfMonth out of 1..31 (see POST).
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+    '409':
+      description: Entity already deleted.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+delete:
+  operationId: deleteRecurringExpense
+  tags:
+    - recurring-expenses
+  summary: Soft delete, idempotent.
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/RecurringExpense.yaml'

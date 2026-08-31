@@ -935,7 +935,36 @@ const SCHEMA_V22_STATEMENTS: string[] = [
   `CREATE INDEX IF NOT EXISTS idx_pitch_log_attempt_id ON pitch_log (attempt_id, order_index)`,
 ];
 
-const SCHEMA_VERSION = 22;
+/**
+ * documentation/Subfeatures/Rendszeres kiadások.md — flat, user-owned recurring-expense CRUD under
+ * Menü → Pénzügyek (one row = one subscription / pass / insurance). No nested aggregate, no name
+ * uniqueness. `billing_day_of_month` is the intended day-of-period; the monthly equivalent the
+ * Pénzügyek dashboard reads is a pure client utility, never stored.
+ */
+const SCHEMA_V23_STATEMENTS: string[] = [
+  `CREATE TABLE IF NOT EXISTS recurring_expense (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    amount_huf INTEGER NOT NULL,
+    frequency TEXT NOT NULL,
+    category TEXT NOT NULL,
+    next_billing_date TEXT NOT NULL,
+    billing_day_of_month INTEGER NOT NULL,
+    active INTEGER NOT NULL DEFAULT 1,
+    notes TEXT,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_recurring_expense_next_billing_date ON recurring_expense (next_billing_date ASC)`,
+];
+
+const SCHEMA_VERSION = 23;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -960,7 +989,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 19, statements: SCHEMA_V19_STATEMENTS },
   { toVersion: 20, statements: SCHEMA_V20_STATEMENTS },
   { toVersion: 21, statements: SCHEMA_V21_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V22_STATEMENTS },
+  { toVersion: 22, statements: SCHEMA_V22_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V23_STATEMENTS },
 ];
 
 export interface SqlTask {

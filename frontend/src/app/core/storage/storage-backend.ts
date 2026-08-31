@@ -21,6 +21,7 @@ import { ShoppingListItem } from '../../api/model/shoppingListItem';
 import { StoredFood } from '../../api/model/storedFood';
 import { SwimLog } from '../../api/model/swimLog';
 import { BikeRideLog } from '../../api/model/bikeRideLog';
+import { RecurringExpense } from '../../api/model/recurringExpense';
 import { Gym } from '../../api/model/gym';
 import { GymColorBand } from '../../api/model/gymColorBand';
 import { IndoorRoute } from '../../api/model/indoorRoute';
@@ -575,6 +576,11 @@ export interface StorageBackend {
   listBikeRideLogs(): Promise<BikeRideLog[]>;
   upsertBikeRideLog(log: BikeRideLog): Promise<BikeRideLog>;
   deleteBikeRideLog(id: string): Promise<BikeRideLog>;
+
+  /** documentation/Subfeatures/Rendszeres kiadások.md: per-user recurring expenses — flat CRUD, no nested rows. */
+  listRecurringExpenses(): Promise<RecurringExpense[]>;
+  upsertRecurringExpense(expense: RecurringExpense): Promise<RecurringExpense>;
+  deleteRecurringExpense(id: string): Promise<RecurringExpense>;
 
   /** documentation/Subfeatures/Indoor boulder admin.md + Indoor köteles admin.md: per-user indoor venue master — flat CRUD. */
   listGyms(): Promise<Gym[]>;

@@ -18,6 +18,7 @@ import { ShoppingList } from '../../api/model/shoppingList';
 import { StoredFood } from '../../api/model/storedFood';
 import { SwimLog } from '../../api/model/swimLog';
 import { BikeRideLog } from '../../api/model/bikeRideLog';
+import { RecurringExpense } from '../../api/model/recurringExpense';
 import { Gym } from '../../api/model/gym';
 import { GymColorBand } from '../../api/model/gymColorBand';
 import { IndoorRoute } from '../../api/model/indoorRoute';
@@ -54,6 +55,7 @@ import {
   StoredFoodRow,
   SwimLogRow,
   BikeRideLogRow,
+  RecurringExpenseRow,
   GymRow,
   GymColorBandRow,
   IndoorRouteRow,
@@ -112,6 +114,8 @@ import {
   swimLogRowToDto,
   bikeRideLogLocalWriteTask,
   bikeRideLogRowToDto,
+  recurringExpenseLocalWriteTask,
+  recurringExpenseRowToDto,
   gymLocalWriteTask,
   gymRowToDto,
   gymColorBandLocalWriteTask,
@@ -809,6 +813,69 @@ export class SqliteStorageBackend implements StorageBackend {
   private async readBikeRideLog(id: string): Promise<BikeRideLog> {
     const rows = await this.db.query<BikeRideLogRow>('SELECT * FROM bike_ride_log WHERE id = ?', [id]);
     return bikeRideLogRowToDto(rows[0]);
+  }
+
+  async listRecurringExpenses(): Promise<RecurringExpense[]> {
+    const rows = await this.db.query<RecurringExpenseRow>(
+      'SELECT * FROM recurring_expense WHERE deleted = 0 ORDER BY next_billing_date ASC, name COLLATE NOCASE',
+    );
+    return rows.map(recurringExpenseRowToDto);
+  }
+
+  async upsertRecurringExpense(expense: RecurringExpense): Promise<RecurringExpense> {
+    const userId = this.requireUserId();
+    const existing = await this.db.query('SELECT 1 FROM recurring_expense WHERE id = ?', [expense.id]);
+    const isNew = existing.length === 0;
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: isNew ? 'POST' : 'PUT',
+      url: isNew ? '/api/recurring-expenses' : `/api/recurring-expenses/${expense.id}`,
+      payload: expense,
+      entityType: 'RecurringExpense',
+      targetEntityId: expense.id,
+    });
+    await this.db.executeTransaction([recurringExpenseLocalWriteTask(expense), ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    return this.readRecurringExpense(expense.id);
+  }
+
+  async deleteRecurringExpense(id: string): Promise<RecurringExpense> {
+    const userId = this.requireUserId();
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: 'DELETE',
+      url: `/api/recurring-expenses/${id}`,
+      payload: null,
+      entityType: 'RecurringExpense',
+      targetEntityId: id,
+    });
+    const entityTask: SqlTask = enqueue.hardRemoveLocalEntity
+      ? { statement: 'DELETE FROM recurring_expense WHERE id = ?', values: [id] }
+      : {
+          statement: 'UPDATE recurring_expense SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?',
+          values: [new Date().toISOString(), id],
+        };
+    await this.db.executeTransaction([entityTask, ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    if (enqueue.hardRemoveLocalEntity) {
+      return {
+        id,
+        name: '',
+        amountHuf: 1,
+        frequency: RecurringExpense.FrequencyEnum.Monthly,
+        category: RecurringExpense.CategoryEnum.Other,
+        nextBillingDate: '1970-01-01',
+        billingDayOfMonth: 1,
+        active: true,
+        deleted: true,
+      };
+    }
+    return this.readRecurringExpense(id);
+  }
+
+  private async readRecurringExpense(id: string): Promise<RecurringExpense> {
+    const rows = await this.db.query<RecurringExpenseRow>('SELECT * FROM recurring_expense WHERE id = ?', [id]);
+    return recurringExpenseRowToDto(rows[0]);
   }
 
   async listGyms(): Promise<Gym[]> {
