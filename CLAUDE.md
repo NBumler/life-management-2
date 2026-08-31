@@ -216,6 +216,9 @@ This is an **Obsidian vault**, and it's under active governance:
 
 ## Notes
 
+- **Git workflow: work directly on `master`.** This is a solo repo — do **not** create feature
+  branches. Commit each finished, green (tests + lint + build) slice straight to `master` with a
+  descriptive message. This overrides the default "if on the default branch, branch first" behavior.
 - Repo is mid-implementation: the spec (`documentation/`) is fully closed (`Kész`), and the backend
   and frontend are being built out feature by feature (auth, profile, and the GearCheck slice — gear
   items, packing templates, packing sessions — exist so far). Check a feature's own spec under
