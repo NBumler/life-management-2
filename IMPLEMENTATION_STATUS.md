@@ -466,5 +466,48 @@ kalóriamodell. Külön commit-sorozatban (M0–M8), az Edzés A0–A6 ritmusát
 Mászónapló-alkör: **kész (M0–M8)**. Ezzel az [[Edzés]] feature is lezárult
 (Edzésnapló + Heti terv + Úszás + Bicikli + Mászónapló mind kész és élő).
 
-(Pénzügyek és AYCM tracker is hátravan a repo szintjén, de azok kisebbek és
-külön feature-ek.)
+## Következő javasolt feature: **Pénzügyek**
+
+Az **Edzés** kör lezárultával a "gyors győzelem" feature-ökből ismét van
+választék. A maradék négy feature közül (lásd "Nincs elkezdve") méret és
+függőség szerint a **Pénzügyek** a legkisebb, tisztán a már bejáratott
+mintákból áll, és nincs függősége:
+
+- **Pénzügyek** (ajánlott) — két gyerek + fogyasztó hub, a hubnak saját
+  entitása nincs.
+  - [[Rendszeres kiadások]]: egyetlen lapos, user-owned CRUD entitás
+    (`RecurringExpense`) az [[Úszás napló]] / [[Élet tervek]] mintájára
+    (`active` mező a nested PUT nélkül, havi ekvivalens pure TS utility),
+    teljes offline-sync bekötés — a legjobban begyakorolt slice-típus a
+    repóban.
+  - [[Nettó fizetés kalkulátor]]: tisztán kliensoldali pure TS számítómodul a
+    `shared/tdee-calculator.ts` / `shelf-life.ts` mintájára (nincs backend
+    endpoint), opcionális saját képernyővel.
+  - Hub (`FinanceDashboardPage`): pure fogyasztó, saját entitás / OpenAPI
+    nélkül, három kártya `~` / homokóra hiányjelzéssel a [[Profile]] /
+    [[Tápérték kalkulátor]] mintájára — pontosan a Kaja / AYCM dashboard-minta.
+  - Mellékhaszon: bekötné az [[AYCM tracker]] "megéri-e" kártyájának
+    `linkedRecurringExpenseId` forrását (addig ott `~`).
+
+**Javasolt sorrend innen:**
+
+1. **Pénzügyek** — Rendszeres kiadások → Nettó fizetés kalkulátor → hub +
+   `menu.penzugyek` flag.
+2. **AYCM tracker** — 3 gyerek (`AycmSettings` singleton `GET`/`PUT` +
+   elfogadóhely / árszabály + Check-In snapshot + statisztika-ablakok);
+   közepes méret, a Pénzügyek után a "megéri-e" kártya is teljes (enélkül is
+   szállítható, csak `~`-val).
+3. **Lépésszám követés** — a [[Lépésszám kézzel manuálisan megadása]] gyerek egy
+   determinisztikus v5 id-jű (`user` + `date`) lapos upsert (`DailyStepLog`),
+   plusz az `activity-kcal.ts` lépéskalória-ág bekötése (ma fix 0). A
+   [[Lépésszám átszinkronizálása a Samsung Health-ből]] gyerek natív
+   integrációt (Health Connect) igényel — ez az egyetlen hard blokkoló a
+   maradék listán; a manuális fele önállóan is szállítható.
+4. **Értesítések** — tisztán kliensoldali, 6 aktív típusból 5 forrása már
+   `Kész` (Élelmiszer tárolás, Étkezés, Háztartási feladatok, Események); csak
+   a `STEPS_LOW` vár a Lépésszám követésre, ezért érdemes utána, hogy mind a 6
+   típus egy menetben éljen.
+
+Mind a négy jóval kisebb, mint az Edzés kör volt — a Pénzügyek különösen.
+Érdemes ismét egy jóváhagyott plan-nal, subfeature-önkénti bontásban
+nekifutni, ahogy az eddigi körök is mentek.
