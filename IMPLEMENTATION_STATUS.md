@@ -98,15 +98,41 @@ Ha implementálsz egy új feature-t: vedd fel a sort, `Kész`-re állítva, a
 
 ## Nincs elkezdve
 
-**A spec-vault minden feature-je implementálva.** Az [[Értesítések]] volt az utolsó
-önálló feature (2026-09-01), a 08:00 / 20:00 háttér-értesítés worker pedig a
-megerősítő kör rá (2026-09-01, lásd „Lezárt kör: Háttér-értesítés worker"). Ami
-hátravan, az on-device megerősítés:
+**A spec-vault minden feature-je implementálva, az MVP kész.** Az [[Értesítések]]
+volt az utolsó önálló feature (2026-09-01), a 08:00 / 20:00 háttér-értesítés worker
+pedig a megerősítő kör rá (2026-09-01, lásd „Lezárt kör: Háttér-értesítés worker").
 
-- **On-device funkcionális próbák** — Health Connect lépés-sync valós Samsung Health
-  adattal (foreground + `READ_HEALTH_DATA_IN_BACKGROUND` grant); helyi értesítések
-  valós telefonon (engedélykérés, 09:00/20:00 fire, tap → route); a háttér-worker
-  (`ReminderWorker`) tényleges tüzelése app-nyitás nélkül, OEM Doze mellett.
+**Irány-döntés (2026-09-01):** mivel az MVP kész, a további fejlesztés a korábbi
+„Lezárt kör" szakaszok **„Tudatosan kihagyva"** listáiból indul — a spec-lefedett,
+de MVP-n kívülre tolt **extrákkal**. Lásd „Következő kör: post-MVP extrák" lent.
+
+**On-device funkcionális próbák — lezárva mint külön nyitott tétel (2026-09-01):**
+az app folyamatos on-device tesztelés alatt van/lesz (Health Connect lépés-sync
+valós adattal, helyi értesítések + `ReminderWorker` tüzelése valós telefonon Doze
+mellett). Ez már nem blokkoló backlog-sor; ha a tesztelés konkrét hibát talál, az
+külön sorként kerül ide.
+
+## Következő kör: post-MVP extrák
+
+A „Tudatosan kihagyva" listákból az a részhalmaz, ami tényleges, spec-lefedett
+funkció-bővítés — **nem** architektúra-döntés (`@capacitor/background-runner`,
+remote push / FCM-APNs) és **nem** elfogadott korlát (row-level last-write-wins
+következményei, OEM-Doze riasztás-csúszás, dedupe-verseny). Kb. növekvő méret
+szerint:
+
+| Extra | Forrás | Flag | Vázlat |
+|---|---|---|---|
+| **Naptár hónapváltó swipe gesztus** | [[Naptár]] | — | Ionic Gesture API a hónap-rácson; ma csak chevron. Kicsi, tisztán frontend. |
+| **„Frissítés most" gomb** | [[Lépésszám követés]] | `menu.lepesszam` | Manuális `ActivityStepSyncService.syncNow()` trigger a Lépésszám képernyőn. Kicsi, tisztán frontend. |
+| **Értesítés-előzmény lista** | [[Értesítések]] | `menu.ertesitesek` | A kiment bannerek read-only naplója (a `NotificationDedupeStore` már tárol elég adatot). Kicsi–közepes, tisztán frontend. |
+| **Lead-time szerkesztő** | [[Értesítések]] | `menu.ertesitesek` | A `notification-rules` ma fix lead-window-jai (3/2 nap, `< 2000` lépés, stb.) device-local, szerkeszthető beállításokká. Közepes, tisztán frontend. |
+| **Google Calendar export** | [[Események]] | `feladatok.googleExport` | Esemény-előfordulások kiírása Google Calendarba; a flag megvan, a spec MVP-n kívülinek jelöli. Közepes–nagy: OAuth + backend vagy natív calendar API. |
+| **iOS Health lépés-forrás** | [[Lépésszám követés]] | `menu.lepesszam` | HealthKit step source az Android Health Connect natív modul mellé. Nagy: iOS build + natív modul. |
+
+A Pénzügyek / AYCM „Tudatosan kihagyva" listái (`WEEKLY` interval, undelete,
+naptár-producer, hivatalos AYCM-import, statisztika-diagram, custom
+dátumtartomány, stb.) a specek saját „Nem scope" jelölését követik — csak külön
+spec-bővítés után indíthatók, nem részei ennek a körnek.
 
 ## Lezárt kör: Tennivalók (2026-08-25)
 
