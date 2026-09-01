@@ -299,6 +299,63 @@ describe('NotificationSchedulerService', () => {
     expect(arg.notifications[0].isExactNotification).toBeFalse();
   });
 
+  it('writes a background plan for the native worker, pre-rendered in the current language', async () => {
+    const service = build();
+    service.permission.set('granted');
+    householdItems = [{ id: 't1', name: 'Porszívózás', nextDue: today(), deleted: false }];
+
+    await service.reevaluate('test', false);
+
+    const plan = JSON.parse((await Preferences.get({ key: 'lm2_notifBgPlan' })).value!);
+    expect(plan.entries.length).toBeGreaterThan(0);
+    const digest = plan.entries.find((e: { type: string }) => e.type === 'HOUSEHOLD_TASK_DUE');
+    expect(digest.title).toBe('NOTIFICATIONS.HOUSEHOLD_TASK_DUE.TITLE');
+    expect(typeof digest.fireAtEpochMs).toBe('number');
+    // The stub TranslateService echoes the key, so assert the sentinel the worker substitutes on.
+    expect(plan.stepsLow.stepsPlaceholder).toBe('__STEPS__');
+  });
+
+  it('clears the background plan when the feature is off / permission missing', async () => {
+    const service = build();
+    service.permission.set('denied');
+
+    await service.reevaluate('test', false);
+
+    const plan = JSON.parse((await Preferences.get({ key: 'lm2_notifBgPlan' })).value!);
+    expect(plan.entries).toEqual([]);
+    expect(plan.stepsLow).toBeNull();
+  });
+
+  it('folds the native worker dedupe ledger into the dedupe store and clears it', async () => {
+    const service = build();
+    service.permission.set('granted');
+    await Preferences.set({
+      key: 'lm2_notifBgDedupe',
+      value: JSON.stringify([{ type: 'STEPS_LOW', key: today(), day: today() }]),
+    });
+
+    await service.reevaluate('test', false);
+
+    expect(dedupeRecord).toHaveBeenCalledWith('STEPS_LOW', today(), today());
+    expect((await Preferences.get({ key: 'lm2_notifBgDedupe' })).value).toBe('[]');
+  });
+
+  it('does not re-fire a past-due notification the native worker already recorded', async () => {
+    const service = build();
+    service.permission.set('granted');
+    householdItems = [{ id: 't1', name: 'Porszívózás', nextDue: today(), deleted: false }];
+    await Preferences.set({
+      key: 'lm2_notifBgDedupe',
+      value: JSON.stringify([{ type: 'HOUSEHOLD_TASK_DUE', key: today(), day: today() }]),
+    });
+    // After the merge the dedupe store must report this key as seen.
+    dedupeHas.and.callFake((type: string, key: string) => Promise.resolve(type === 'HOUSEHOLD_TASK_DUE' && key === today()));
+
+    await service.reevaluate('test', false);
+
+    expect(gateway.schedule).not.toHaveBeenCalled();
+  });
+
   it('syncPermission stays recoverable after a transient checkPermissions failure', async () => {
     const service = build();
     gateway.checkPermissions.and.rejectWith(new Error('plugin not ready'));

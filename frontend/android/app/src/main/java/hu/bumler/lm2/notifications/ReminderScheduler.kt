@@ -11,10 +11,13 @@ import java.time.ZonedDateTime
 
 /**
  * documentation/Features/Értesítések.md "08:00 / 20:00 háttér-értesítés worker" — arms two inexact
- * daily alarms (~08:00 and ~20:00, device-local). Deliberately NOT exact: the spec accepts drift
- * (the local notifications are already scheduled `isExactNotification: false`, and the app-open
- * reconcile is the safety net), so we use `setAndAllowWhileIdle` and skip the Android 12+
- * SCHEDULE_EXACT_ALARM permission and its "Alarms & reminders" settings redirect.
+ * daily alarms, device-local: a **morning** one at 09:00 (the fixed notification time for
+ * FOOD_* / CALORIE_STREAK / HOUSEHOLD_TASK_DUE, and also when yesterday's step total is stashed —
+ * the spec's separate "08:00 step worker" is folded into this one 09:00 run) and an **evening** one
+ * at 20:00 (STEPS_LOW). Deliberately NOT exact: the spec accepts drift (the local notifications are
+ * already scheduled `isExactNotification: false`, and the app-open reconcile is the safety net), so
+ * we use `setAndAllowWhileIdle` and skip the Android 12+ SCHEDULE_EXACT_ALARM permission and its
+ * "Alarms & reminders" settings redirect.
  *
  * Each alarm broadcasts to [ReminderAlarmReceiver], which enqueues [ReminderWorker] and re-arms the
  * next occurrence of that slot (an inexact one-shot alarm does not repeat on its own). Also re-armed
@@ -28,8 +31,11 @@ object ReminderScheduler {
     const val SLOT_MORNING = "morning"
     const val SLOT_EVENING = "evening"
 
+    /** Matches NotificationSchedulerService `CHANNEL_ID` — worker-posted banners share the app's channel. */
+    const val CHANNEL_ID = "lm2-default"
+
     private const val TAG = "ReminderScheduler"
-    private const val MORNING_HOUR = 8
+    private const val MORNING_HOUR = 9
     private const val EVENING_HOUR = 20
     private const val REQ_MORNING = 4101
     private const val REQ_EVENING = 4102

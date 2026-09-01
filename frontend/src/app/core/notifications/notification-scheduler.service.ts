@@ -26,6 +26,7 @@ import { calendarDayInZone, deviceTimeZoneId } from '../../shared/timezone';
 import { computeDailyNutrition } from '../../pages/food/meal/daily-nutrition';
 import { DataChangeNotifier } from '../sync/data-change-notifier';
 import { BackgroundReminders } from './background-reminders.plugin';
+import { buildBackgroundPlan } from './notification-background-plan';
 import { LocalNotificationsGateway } from './local-notifications.gateway';
 import { NotificationDedupeStore } from './notification-dedupe.store';
 import { notificationNumericId } from './notification-ids';
@@ -45,6 +46,12 @@ export type NotificationPermission = 'unknown' | 'granted' | 'denied' | 'unavail
 
 const CHANNEL_ID = 'lm2-default';
 const REGISTRY_KEY = 'lm2_notifScheduled';
+/** documentation/Features/Értesítések.md "08:00 / 20:00 háttér-értesítés worker" — the JS↔worker bridge. */
+const BG_PLAN_KEY = 'lm2_notifBgPlan';
+const BG_DEDUPE_KEY = 'lm2_notifBgDedupe';
+const PENDING_ROUTE_KEY = 'lm2_notifPendingRoute';
+/** Placeholder the worker replaces with the live step count in the STEPS_LOW body template. */
+const STEPS_SENTINEL = '__STEPS__';
 const REEVALUATE_DEBOUNCE_MS = 600;
 /** Fixed-time (09:00 / 20:00) types only schedule their next occurrence; events project this far. */
 const EVENT_HORIZON_DAYS = 30;
@@ -135,6 +142,7 @@ export class NotificationSchedulerService {
       await this.syncPermission();
       await this.reevaluate('reinit', true);
       this.armBackgroundWorker();
+      await this.drainPendingRoute();
       return;
     }
     this.started = true;
@@ -189,6 +197,24 @@ export class NotificationSchedulerService {
 
     await this.reevaluate('cold-start', true);
     this.armBackgroundWorker();
+    await this.drainPendingRoute();
+  }
+
+  /**
+   * documentation/Features/Értesítések.md "08:00 / 20:00 háttér-értesítés worker" — a notification the
+   * native `ReminderWorker` posted directly (not via `@capacitor/local-notifications`) can't reach the
+   * `localNotificationActionPerformed` listener, so its tap target writes the route to
+   * `PENDING_ROUTE_KEY` and launches the app. Consume it here on cold start / reinit / resume.
+   */
+  private async drainPendingRoute(): Promise<void> {
+    if (!Capacitor.isNativePlatform()) {
+      return;
+    }
+    const route = (await Preferences.get({ key: PENDING_ROUTE_KEY })).value;
+    if (route !== null && route.length > 0) {
+      await Preferences.remove({ key: PENDING_ROUTE_KEY });
+      void this.router.navigateByUrl(route);
+    }
   }
 
   /**
@@ -207,6 +233,7 @@ export class NotificationSchedulerService {
   private async onResume(): Promise<void> {
     await this.syncPermission();
     await this.reevaluate('resume', true);
+    await this.drainPendingRoute();
   }
 
   /**
@@ -316,12 +343,17 @@ export class NotificationSchedulerService {
     const todayIso = today();
     const now = new Date();
 
+    // Fold in whatever the native ReminderWorker fired while the app was closed, so the immediate-fire
+    // path below doesn't re-deliver it.
+    await this.mergeNativeDedupe(todayIso);
+
     const registry = await this.loadRegistry();
 
     const featureOn = this.featureFlags.isEnabled('menu.ertesitesek');
     if (!featureOn || this.permission() !== 'granted') {
       await this.cancelIds(Object.keys(registry).map(Number));
       await this.saveRegistry({});
+      await this.clearBackgroundPlan();
       return;
     }
 
@@ -386,6 +418,96 @@ export class NotificationSchedulerService {
 
     await this.saveRegistry(nextRegistry);
     await this.dedupe.prune(todayIso);
+    await this.writeBackgroundPlan(todayIso);
+  }
+
+  /**
+   * documentation/Features/Értesítések.md "08:00 / 20:00 háttér-értesítés worker" — serialize the
+   * next few days of fixed-time notifications (pre-rendered in the current language) plus tonight's
+   * STEPS_LOW template into `BG_PLAN_KEY`, for the native `ReminderWorker` to fire on days the app is
+   * never opened. Rebuilt on every reconcile, so it only goes stale for days with zero app opens.
+   */
+  private async writeBackgroundPlan(todayIso: string): Promise<void> {
+    const plan = buildBackgroundPlan(
+      new Set(this.activeTypes()),
+      {
+        storedFoods: this.storedFood.items(),
+        foods: this.food.items(),
+        householdTasks: this.householdTask.items(),
+        calorieStreakToday: this.calorieStreakDays(todayIso),
+      },
+      todayIso,
+    );
+
+    const file = {
+      version: 1,
+      writtenAt: Date.now(),
+      channelId: CHANNEL_ID,
+      channelName: this.translate.instant('NOTIFICATIONS.CHANNEL_NAME'),
+      entries: plan.entries.map((n) => ({
+        id: notificationNumericId(n.type, n.key),
+        type: n.type,
+        key: n.key,
+        fireAtEpochMs: new Date(n.fireAt).getTime(),
+        title: this.translate.instant(n.titleKey, n.params),
+        body: this.translate.instant(n.bodyKey, n.params),
+        route: n.route,
+      })),
+      stepsLow: plan.stepsLow
+        ? {
+            id: notificationNumericId('STEPS_LOW', plan.stepsLow.key),
+            key: plan.stepsLow.key,
+            fireAtEpochMs: new Date(plan.stepsLow.fireAt).getTime(),
+            threshold: plan.stepsLow.threshold,
+            title: this.translate.instant(plan.stepsLow.titleKey),
+            // The worker substitutes the live count for STEPS_SENTINEL after its 20:00 Health Connect read.
+            bodyTemplate: this.translate.instant(plan.stepsLow.bodyKey, { steps: STEPS_SENTINEL }),
+            stepsPlaceholder: STEPS_SENTINEL,
+            route: plan.stepsLow.route,
+          }
+        : null,
+    };
+    await Preferences.set({ key: BG_PLAN_KEY, value: JSON.stringify(file) });
+  }
+
+  private async clearBackgroundPlan(): Promise<void> {
+    await Preferences.set({
+      key: BG_PLAN_KEY,
+      value: JSON.stringify({ version: 1, writtenAt: Date.now(), entries: [], stepsLow: null }),
+    });
+  }
+
+  /**
+   * Merge the native worker's "already fired" ledger ({@link BG_DEDUPE_KEY}) into the shared
+   * {@link NotificationDedupeStore}, then clear it. The worker appends `{type,key,day}` rows; a rare
+   * clear-vs-append race just means one banner could be re-shown, which the spec already tolerates.
+   */
+  private async mergeNativeDedupe(todayIso: string): Promise<void> {
+    const raw = (await Preferences.get({ key: BG_DEDUPE_KEY })).value;
+    if (raw === null || raw === '' || raw === '[]') {
+      return;
+    }
+    let rows: unknown;
+    try {
+      rows = JSON.parse(raw);
+    } catch {
+      await Preferences.set({ key: BG_DEDUPE_KEY, value: '[]' });
+      return;
+    }
+    if (Array.isArray(rows)) {
+      for (const row of rows) {
+        if (
+          row !== null &&
+          typeof row === 'object' &&
+          typeof (row as { type?: unknown }).type === 'string' &&
+          typeof (row as { key?: unknown }).key === 'string'
+        ) {
+          const r = row as { type: NotificationType; key: string; day?: unknown };
+          await this.dedupe.record(r.type, r.key, typeof r.day === 'string' ? r.day : todayIso);
+        }
+      }
+    }
+    await Preferences.set({ key: BG_DEDUPE_KEY, value: '[]' });
   }
 
   /** Types whose source feature flag is on AND whose device-local switch is on. */
