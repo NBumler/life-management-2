@@ -3,6 +3,7 @@ import { Router, provideRouter } from '@angular/router';
 import { provideTranslateService } from '@ngx-translate/core';
 
 import { ActivityStepSyncService } from '../../core/health/activity-step-sync.service';
+import { NotificationSchedulerService } from '../../core/notifications/notification-scheduler.service';
 import { AuthSessionService } from '../../core/session/auth-session.service';
 import { LocalDatabaseService } from '../../core/storage/local-database.service';
 import { SyncEngineService } from '../../core/sync/sync-engine.service';
@@ -29,6 +30,7 @@ describe('LoginPage', () => {
         { provide: LocalDatabaseService, useValue: jasmine.createSpyObj('LocalDatabaseService', ['open']) },
         { provide: SyncEngineService, useValue: jasmine.createSpyObj('SyncEngineService', ['requestDrain']) },
         { provide: ActivityStepSyncService, useValue: jasmine.createSpyObj('ActivityStepSyncService', ['init']) },
+        { provide: NotificationSchedulerService, useValue: jasmine.createSpyObj('NotificationSchedulerService', ['init']) },
       ],
     }).compileComponents();
 

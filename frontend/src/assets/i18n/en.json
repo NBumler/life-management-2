@@ -39,10 +39,71 @@
     "PENZUGYEK": "Finance",
     "AYCM": "AYCM",
     "LEPESSZAM": "Step count",
+    "ERTESITESEK": "Notifications",
     "LOGOUT": "Log out",
     "LOGOUT_CONFIRM_TITLE": "Log out",
     "LOGOUT_CONFIRM_MESSAGE": "Are you sure you want to log out?",
     "LOGOUT_CONFIRM_PENDING": "You have {{count}} unsynced change(s). They will stay on this device and go up on your next login. Log out anyway?"
+  },
+  "NOTIFICATIONS": {
+    "TITLE": "Notifications",
+    "LIST_HEADER": "Types",
+    "CHANNEL_NAME": "Reminders",
+    "WEB_UNAVAILABLE": "Local notifications only work in the mobile app.",
+    "PERMISSION_DENIED": "Notifications need permission. Without it the switches stay on but nothing is delivered.",
+    "PERMISSION_GRANT": "Allow",
+    "TYPE": {
+      "FOOD_EXPIRING_DAILY": {
+        "LABEL": "Food expiring soon",
+        "HINT": "Every day at 9am while the item is still in storage, starting 2–3 days before its expiry."
+      },
+      "FOOD_SPOILED_ONCE": {
+        "LABEL": "Food spoiled",
+        "HINT": "Once, when an item goes past its expiry date."
+      },
+      "STEPS_LOW": {
+        "LABEL": "Low step count",
+        "HINT": "At 8pm if today's step count is below 2000."
+      },
+      "CALORIE_STREAK": {
+        "LABEL": "Calorie overshoot streak",
+        "HINT": "At 9am if you've gone well over your daily budget 5 days running."
+      },
+      "HOUSEHOLD_TASK_DUE": {
+        "LABEL": "Household task due",
+        "HINT": "At 9am, one daily digest of due and overdue tasks."
+      },
+      "EVENT_OCCURRENCE": {
+        "LABEL": "Event reminder",
+        "HINT": "At the event's start time, or 9am for an all-day event."
+      }
+    },
+    "FOOD_EXPIRING": {
+      "TITLE": "Food expiring soon",
+      "BODY": "{{name}} expires on {{date}} and is still in storage."
+    },
+    "FOOD_SPOILED": {
+      "TITLE": "Food spoiled",
+      "BODY": "{{name}} is past its date ({{date}}). Time to use it or bin it."
+    },
+    "STEPS_LOW": {
+      "TITLE": "Low step count today",
+      "BODY": "{{steps}} steps so far today. A short walk still fits."
+    },
+    "CALORIE_STREAK": {
+      "TITLE": "Calorie overshoot streak",
+      "BODY": "You've been over your daily calorie budget {{days}} days running."
+    },
+    "HOUSEHOLD_TASK_DUE": {
+      "TITLE": "Household task due",
+      "BODY_ONE": "Due: {{name}}",
+      "BODY_MANY": "{{count}} household tasks due"
+    },
+    "EVENT_OCCURRENCE": {
+      "TITLE": "Event reminder",
+      "BODY": "{{title}}",
+      "BODY_LOCATION": "{{title}} — {{location}}"
+    }
   },
   "STEPS": {
     "TITLE": "Step count",

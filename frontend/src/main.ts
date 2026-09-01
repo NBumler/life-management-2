@@ -18,6 +18,8 @@ import { apiBaseUrlInterceptor } from './app/core/api/api-base-url.interceptor';
 import { AuthSessionService } from './app/core/session/auth-session.service';
 import { authInterceptor } from './app/core/session/auth.interceptor';
 import { ActivityStepSyncService } from './app/core/health/activity-step-sync.service';
+import { NotificationSchedulerService } from './app/core/notifications/notification-scheduler.service';
+import { NotificationSettingsService } from './app/core/notifications/notification-settings.service';
 import { LocalDatabaseService } from './app/core/storage/local-database.service';
 import { provideStorageBackend } from './app/core/storage/storage-backend.provider';
 import { SyncEngineService } from './app/core/sync/sync-engine.service';
@@ -54,8 +56,15 @@ bootstrapApplication(AppComponent, {
       const localDb = inject(LocalDatabaseService);
       const syncEngine = inject(SyncEngineService);
       const stepSync = inject(ActivityStepSyncService);
+      const notificationSettings = inject(NotificationSettingsService);
+      const notificationScheduler = inject(NotificationSchedulerService);
 
-      await Promise.all([languageService.init(), themeService.init(), authSession.restore()]);
+      await Promise.all([
+        languageService.init(),
+        themeService.init(),
+        authSession.restore(),
+        notificationSettings.init(),
+      ]);
 
       const userId = authSession.userId();
       if (userId !== null && Capacitor.isNativePlatform()) {
@@ -69,6 +78,10 @@ bootstrapApplication(AppComponent, {
       // Connect is unavailable, syncNow() bails while logged out, and LoginPage re-invokes it after
       // an in-session login so a logged-out cold start still gets step sync without an app restart.
       void stepSync.init();
+      // documentation/Features/Értesítések.md — cold-start step 6: re-schedule local notifications
+      // from the local store. Not awaited. init() is a no-op on web; reconcile bails while logged
+      // out / without notification permission, and LoginPage re-invokes it after an in-session login.
+      void notificationScheduler.init();
     }),
   ],
 })

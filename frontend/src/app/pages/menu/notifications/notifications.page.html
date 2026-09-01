@@ -1,0 +1,42 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/menu"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ 'NOTIFICATIONS.TITLE' | translate }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  @if (!isNative) {
+    <ion-text color="medium">
+      <p class="ion-padding">{{ 'NOTIFICATIONS.WEB_UNAVAILABLE' | translate }}</p>
+    </ion-text>
+  } @else {
+    @if (permission() === 'denied') {
+      <ion-item lines="full" color="warning">
+        <ion-label class="ion-text-wrap">{{ 'NOTIFICATIONS.PERMISSION_DENIED' | translate }}</ion-label>
+        <ion-button slot="end" fill="clear" (click)="requestPermission()">
+          {{ 'NOTIFICATIONS.PERMISSION_GRANT' | translate }}
+        </ion-button>
+      </ion-item>
+    }
+
+    <ion-list>
+      <ion-list-header>{{ 'NOTIFICATIONS.LIST_HEADER' | translate }}</ion-list-header>
+      @for (row of rows(); track row.type) {
+        <ion-item>
+          <ion-toggle
+            [checked]="row.enabled"
+            (ionChange)="toggle(row.type, $event.detail.checked)"
+          >
+            <ion-label class="ion-text-wrap">
+              {{ 'NOTIFICATIONS.TYPE.' + row.type + '.LABEL' | translate }}
+              <ion-note class="notification-hint">{{ 'NOTIFICATIONS.TYPE.' + row.type + '.HINT' | translate }}</ion-note>
+            </ion-label>
+          </ion-toggle>
+        </ion-item>
+      }
+    </ion-list>
+  }
+</ion-content>

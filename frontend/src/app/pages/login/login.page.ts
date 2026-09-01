@@ -16,6 +16,7 @@ import {
 import { TranslatePipe } from '@ngx-translate/core';
 
 import { ActivityStepSyncService } from '../../core/health/activity-step-sync.service';
+import { NotificationSchedulerService } from '../../core/notifications/notification-scheduler.service';
 import { AuthSessionService } from '../../core/session/auth-session.service';
 import { LocalDatabaseService } from '../../core/storage/local-database.service';
 import { SyncEngineService } from '../../core/sync/sync-engine.service';
@@ -34,6 +35,7 @@ export class LoginPage {
   private readonly localDb = inject(LocalDatabaseService);
   private readonly syncEngine = inject(SyncEngineService);
   private readonly stepSync = inject(ActivityStepSyncService);
+  private readonly notificationScheduler = inject(NotificationSchedulerService);
   private readonly router = inject(Router);
 
   readonly form = this.fb.nonNullable.group({
@@ -75,6 +77,9 @@ export class LoginPage {
       // provideAppInitializer already ran stepSync.init() while logged out (a no-op then); re-invoke
       // it now so Health Connect auto-sync starts without an app restart. Idempotent, not awaited.
       void this.stepSync.init();
+      // Same pattern: provideAppInitializer ran this while logged out. Re-invoke so the local
+      // notification scheduler picks up this user's store without an app restart.
+      void this.notificationScheduler.init();
       await this.router.navigateByUrl('/tabs');
     } catch (error) {
       const isNetworkError = error instanceof HttpErrorResponse && error.status === 0;

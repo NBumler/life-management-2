@@ -74,6 +74,11 @@
     <!-- documentation/Subfeatures/Lépésszám átszinkronizálása a Samsung Health-ből.md: read-only
          daily step totals from Android Health Connect (Samsung Health data source). -->
     <uses-permission android:name="android.permission.health.READ_STEPS" />
+    <!-- documentation/Features/Értesítések.md: local (device-scheduled) notifications, no server push.
+         POST_NOTIFICATIONS is the Android 13+ runtime prompt; the exact-alarm permissions let the
+         09:00 / 20:00 / event-start schedules fire on time. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
 
     <queries>
         <package android:name="com.google.android.apps.healthdata" />

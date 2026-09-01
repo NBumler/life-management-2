@@ -39,10 +39,71 @@
     "PENZUGYEK": "Pénzügyek",
     "AYCM": "AYCM",
     "LEPESSZAM": "Lépésszám",
+    "ERTESITESEK": "Értesítések",
     "LOGOUT": "Kijelentkezés",
     "LOGOUT_CONFIRM_TITLE": "Kijelentkezés",
     "LOGOUT_CONFIRM_MESSAGE": "Biztosan kijelentkezel?",
     "LOGOUT_CONFIRM_PENDING": "{{count}} szinkronizálatlan változás van. A kijelentkezés után is megmaradnak, és a következő bejelentkezéskor felmennek. Biztosan kijelentkezel?"
+  },
+  "NOTIFICATIONS": {
+    "TITLE": "Értesítések",
+    "LIST_HEADER": "Típusok",
+    "CHANNEL_NAME": "Emlékeztetők",
+    "WEB_UNAVAILABLE": "A helyi értesítések csak a mobilalkalmazásban működnek.",
+    "PERMISSION_DENIED": "Az értesítésekhez engedély szükséges. Enélkül a kapcsolók bekapcsolva maradnak, de nem érkezik értesítés.",
+    "PERMISSION_GRANT": "Engedélyezés",
+    "TYPE": {
+      "FOOD_EXPIRING_DAILY": {
+        "LABEL": "Élelmiszer hamarosan lejár",
+        "HINT": "Minden reggel 9-kor, amíg a tétel a tárolóban van, a lejárat előtti 2–3 naptól kezdve."
+      },
+      "FOOD_SPOILED_ONCE": {
+        "LABEL": "Élelmiszer megromlott",
+        "HINT": "Egyszer, amikor egy tétel a lejárati nap után megromlik."
+      },
+      "STEPS_LOW": {
+        "LABEL": "Kevés lépés",
+        "HINT": "Este 8-kor, ha a mai lépésszám 2000 alatt van."
+      },
+      "CALORIE_STREAK": {
+        "LABEL": "Kalória-túllépés sorozat",
+        "HINT": "Reggel 9-kor, ha 5 egymást követő napon jelentősen túllépted a napi keretet."
+      },
+      "HOUSEHOLD_TASK_DUE": {
+        "LABEL": "Esedékes háztartási feladat",
+        "HINT": "Reggel 9-kor, napi egy összesítő az esedékes és lejárt feladatokról."
+      },
+      "EVENT_OCCURRENCE": {
+        "LABEL": "Esemény emlékeztető",
+        "HINT": "Az esemény kezdetekor, egész napos eseménynél reggel 9-kor."
+      }
+    },
+    "FOOD_EXPIRING": {
+      "TITLE": "Élelmiszer hamarosan lejár",
+      "BODY": "{{name}} lejárata: {{date}}. Még a tárolóban van."
+    },
+    "FOOD_SPOILED": {
+      "TITLE": "Élelmiszer megromlott",
+      "BODY": "{{name}} lejárt ({{date}}). Ideje kidobni vagy felhasználni."
+    },
+    "STEPS_LOW": {
+      "TITLE": "Kevés lépés ma",
+      "BODY": "Ma eddig {{steps}} lépés. Egy rövid séta még belefér."
+    },
+    "CALORIE_STREAK": {
+      "TITLE": "Kalória-túllépés sorozat",
+      "BODY": "Már {{days}} egymást követő napon túllépted a napi kalóriakeretet."
+    },
+    "HOUSEHOLD_TASK_DUE": {
+      "TITLE": "Esedékes háztartási feladat",
+      "BODY_ONE": "Esedékes: {{name}}",
+      "BODY_MANY": "{{count}} háztartási feladat esedékes"
+    },
+    "EVENT_OCCURRENCE": {
+      "TITLE": "Esemény emlékeztető",
+      "BODY": "{{title}}",
+      "BODY_LOCATION": "{{title}} — {{location}}"
+    }
   },
   "STEPS": {
     "TITLE": "Lépésszám",

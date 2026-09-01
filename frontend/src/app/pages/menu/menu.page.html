@@ -19,6 +19,12 @@
       <ion-icon name="language-outline" slot="start" aria-hidden="true"></ion-icon>
       <ion-label>{{ 'MENU.LANGUAGE' | translate }}</ion-label>
     </ion-item>
+    @if (ertesitesekEnabled) {
+      <ion-item button routerLink="notifications">
+        <ion-icon name="notifications-outline" slot="start" aria-hidden="true"></ion-icon>
+        <ion-label>{{ 'MENU.ERTESITESEK' | translate }}</ion-label>
+      </ion-item>
+    }
     @if (bevasarlasEnabled) {
       <ion-item button routerLink="shopping">
         <ion-icon name="cart-outline" slot="start" aria-hidden="true"></ion-icon>

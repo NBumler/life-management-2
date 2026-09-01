@@ -20,6 +20,11 @@ export const routes: Routes = [
           { path: 'profile', loadComponent: () => import('./pages/menu/profile/profile.page').then((m) => m.ProfilePage) },
           { path: 'theme', loadComponent: () => import('./pages/menu/theme/theme.page').then((m) => m.ThemePage) },
           { path: 'language', loadComponent: () => import('./pages/menu/language/language.page').then((m) => m.LanguagePage) },
+          {
+            path: 'notifications',
+            canActivate: [featureFlagGuard('menu.ertesitesek')],
+            loadComponent: () => import('./pages/menu/notifications/notifications.page').then((m) => m.NotificationsPage),
+          },
           { path: 'sync', loadComponent: () => import('./pages/menu/sync/sync.page').then((m) => m.SyncPage) },
           {
             path: 'shopping',
