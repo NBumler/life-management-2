@@ -23,6 +23,7 @@ import { Crag } from '../../api/model/crag';
 import { Sector } from '../../api/model/sector';
 import { Route } from '../../api/model/route';
 import { BoulderProblem } from '../../api/model/boulderProblem';
+import { DailyStepLog } from '../../api/model/dailyStepLog';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 import { normalizeName } from '../../shared/name-normalization';
@@ -110,6 +111,9 @@ import {
   boulderProblemRowToDto,
   weightHistoryLocalWriteTask,
   weightHistoryRowToDto,
+  DailyStepLogRow,
+  dailyStepLogLocalWriteTask,
+  dailyStepLogRowToDto,
 } from '../data/local-rows';
 // ClimbingSession is a nested aggregate (session + attempts + pitches, one body) — like Recipe /
 // WorkoutSession it is excluded from Fix and its current payload is read through the storage backend.
@@ -533,6 +537,13 @@ export class OutboxEntityRegistryService {
       buildFixWriteTask: null,
       nameUniqueness: null,
       keepPayloadOnUnskip: true,
+    },
+    DailyStepLog: {
+      table: 'daily_step_log',
+      currentPayload: rowLookup<DailyStepLogRow, unknown>('daily_step_log', dailyStepLogRowToDto),
+      buildFixWriteTask: (payload) => dailyStepLogLocalWriteTask(payload as unknown as DailyStepLog),
+      // documentation/Features/Lépésszám követés.md: a daily step log has no name — nothing to uniqueness-check.
+      nameUniqueness: null,
     },
   };
 

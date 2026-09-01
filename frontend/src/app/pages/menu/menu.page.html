@@ -37,6 +37,12 @@
         <ion-label>{{ 'MENU.AYCM' | translate }}</ion-label>
       </ion-item>
     }
+    @if (lepesszamEnabled) {
+      <ion-item button routerLink="steps">
+        <ion-icon name="footsteps-outline" slot="start" aria-hidden="true"></ion-icon>
+        <ion-label>{{ 'MENU.LEPESSZAM' | translate }}</ion-label>
+      </ion-item>
+    }
     @if (gearCheckEnabled) {
       <ion-item button routerLink="gear">
         <ion-icon name="bag-handle-outline" slot="start" aria-hidden="true"></ion-icon>

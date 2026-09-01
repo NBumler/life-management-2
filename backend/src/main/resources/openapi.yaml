@@ -153,6 +153,10 @@ paths:
     $ref: 'openapi/paths/aycm-check-ins-item.yaml'
   /api/aycm-settings:
     $ref: 'openapi/paths/aycm-settings.yaml'
+  /api/daily-step-logs:
+    $ref: 'openapi/paths/daily-step-logs.yaml'
+  /api/daily-step-logs/{id}:
+    $ref: 'openapi/paths/daily-step-logs-item.yaml'
 components:
   securitySchemes:
     bearerAuth:
@@ -348,3 +352,7 @@ components:
       $ref: 'openapi/components/schemas/AycmCheckInList.yaml'
     AycmSettings:
       $ref: 'openapi/components/schemas/AycmSettings.yaml'
+    DailyStepLog:
+      $ref: 'openapi/components/schemas/DailyStepLog.yaml'
+    DailyStepLogList:
+      $ref: 'openapi/components/schemas/DailyStepLogList.yaml'

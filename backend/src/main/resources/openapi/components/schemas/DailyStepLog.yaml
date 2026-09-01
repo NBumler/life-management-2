@@ -1,0 +1,42 @@
+type: object
+description: >-
+  documentation/Features/Lépésszám követés.md — one step-count record per user per calendar day
+  ("1 nap = 1 rekord / user"). No time-of-day. No kcal / body-weight field: the aznapi
+  activityExtraKcal step contribution is a pure client calculation with the canonical formula
+  max(0, stepCount - 3000) * m * 0.00045 (documentation/Features/Tápérték kalkulátor.md). id is a
+  deterministic client UUID v5 of "DailyStepLog:<userId>:<date>", so a POST for an existing /
+  soft-deleted day resolves to / revives that row. The overwrite policy (manual always wins, Health
+  Connect sync only when strictly greater) is applied on the client — the server does plain
+  last-write-wins.
+required:
+  - id
+  - date
+  - stepCount
+  - deleted
+properties:
+  id:
+    type: string
+    format: uuid
+  date:
+    type: string
+    format: date
+    description: Calendar date in the client's TZ — the aznapi activityExtraKcal bucket. No time-of-day.
+  stepCount:
+    type: integer
+    minimum: 0
+    description: Whole steps for the day, >= 0. A missing day counts as 0 everywhere.
+  deleted:
+    type: boolean
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

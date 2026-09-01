@@ -15,6 +15,7 @@ import { ProfileRepository } from '../../../core/data/profile.repository';
 import { RecipeRepository } from '../../../core/data/recipe.repository';
 import { BikeRideLogRepository } from '../../../core/data/bike-ride-log.repository';
 import { ClimbingSessionRepository } from '../../../core/data/climbing-session.repository';
+import { DailyStepLogRepository } from '../../../core/data/daily-step-log.repository';
 import { SwimLogRepository } from '../../../core/data/swim-log.repository';
 import { WorkoutSessionRepository } from '../../../core/data/workout-session.repository';
 import { today } from '../../../shared/local-date';
@@ -69,6 +70,7 @@ describe('MealDashboardPage', () => {
         { provide: SwimLogRepository, useValue: { load: () => Promise.resolve(), items: signal([]) } },
         { provide: BikeRideLogRepository, useValue: { load: () => Promise.resolve(), items: signal([]) } },
         { provide: ClimbingSessionRepository, useValue: { load: () => Promise.resolve(), items: signal([]) } },
+        { provide: DailyStepLogRepository, useValue: { load: () => Promise.resolve(), items: signal([]) } },
         { provide: AlertController, useValue: alertController },
       ],
     }).compileComponents();

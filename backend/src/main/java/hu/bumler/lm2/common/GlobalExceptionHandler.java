@@ -73,7 +73,11 @@ public class GlobalExceptionHandler {
 			// idx_aycm_settings_user_id (V28): the 1-settings-row-per-user singleton invariant, same
 			// as idx_user_profile_user_id above — AycmSettingsService.upsert's findByUserId pre-check
 			// cannot stop two overlapping first-write upserts from both attempting an INSERT.
-			Map.entry("idx_aycm_settings_user_id", "userId"));
+			Map.entry("idx_aycm_settings_user_id", "userId"),
+			// idx_daily_step_log_user_id_log_date (V29): at most one live step log per user per
+			// calendar day. Defense-in-depth behind the deterministic v5 id — two overlapping
+			// first-write upserts for the same day can still both attempt an INSERT.
+			Map.entry("idx_daily_step_log_user_id_log_date", "date"));
 
 	@ExceptionHandler(DataIntegrityViolationException.class)
 	ResponseEntity<ApiError> handleUniqueConstraint(DataIntegrityViolationException ex) {

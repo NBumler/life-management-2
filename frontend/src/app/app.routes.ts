@@ -157,6 +157,24 @@ export const routes: Routes = [
               },
             ],
           },
+          {
+            // documentation/Features/Lépésszám követés.md — Menü → Lépésszám shell + per-day editor.
+            // One flag on the tree top guards the index route and the child (the `finance` pattern).
+            path: 'steps',
+            canActivate: [featureFlagGuard('menu.lepesszam')],
+            children: [
+              {
+                path: '',
+                loadComponent: () =>
+                  import('./pages/menu/steps/step-tracker.page').then((m) => m.StepTrackerPage),
+              },
+              {
+                path: 'edit',
+                loadComponent: () =>
+                  import('./pages/menu/steps/step-log-edit.page').then((m) => m.StepLogEditPage),
+              },
+            ],
+          },
         ],
       },
       {

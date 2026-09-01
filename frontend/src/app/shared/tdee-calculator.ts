@@ -5,9 +5,9 @@
  * ("Saját magyarázó / debug UI később opcionális").
  *
  * `activityExtraKcal` is a plain input (default 0), not computed here: the step-count and MET
- * workout formulas that feed it belong to [[Lépésszám követés]] / [[Edzés]], neither of which
- * exists yet in this codebase. Callers just start passing a non-zero value once those land — this
- * file needs no changes.
+ * workout formulas that feed it live in `core/data/activity-kcal.ts` ([[Lépésszám követés]] /
+ * [[Edzés]]) and are summed by the caller (the Étkezés dashboard). The fixed PAL 1.2 below already
+ * covers the first `STEP_BASELINE` steps, which is why the step term subtracts that baseline.
  */
 import { ageInYears } from './local-date';
 

@@ -45,6 +45,7 @@ import { WorkoutPlanExercise } from '../../api/model/workoutPlanExercise';
 import { WorkoutPlanSet } from '../../api/model/workoutPlanSet';
 import { WorkoutSession } from '../../api/model/workoutSession';
 import { WorkoutSetEntry } from '../../api/model/workoutSetEntry';
+import { DailyStepLog } from '../../api/model/dailyStepLog';
 
 /** documentation/Subfeatures/Sablonok.md: the desired live item list for a template save — id is client-generated for a new item, reused for a kept one. */
 export interface PackingTemplateSaveItem {
@@ -685,6 +686,11 @@ export interface StorageBackend {
   deleteShoppingList(id: string): Promise<ShoppingList>;
   /** documentation/Subfeatures/Bevásárlás teljesítve.md — atomic multi-entity completion: StoredFood rows + list archive + optional spun-off active list, as one outbox entry. */
   completeShoppingList(draft: ShoppingListCompleteDraft): Promise<ShoppingListCompleteResult>;
+
+  /** documentation/Features/Lépésszám követés.md: per-user daily step logs — flat CRUD, one live row per calendar day (deterministic v5 id). */
+  listDailyStepLogs(): Promise<DailyStepLog[]>;
+  upsertDailyStepLog(log: DailyStepLog): Promise<DailyStepLog>;
+  deleteDailyStepLog(id: string): Promise<DailyStepLog>;
 }
 
 export const STORAGE_BACKEND = new InjectionToken<StorageBackend>('STORAGE_BACKEND');

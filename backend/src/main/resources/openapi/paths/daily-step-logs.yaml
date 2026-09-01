@@ -1,0 +1,32 @@
+get:
+  operationId: listDailyStepLogs
+  tags:
+    - daily-step-logs
+  summary: The caller's daily step logs, live rows only (deleted = false).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/DailyStepLogList.yaml'
+post:
+  operationId: createDailyStepLog
+  tags:
+    - daily-step-logs
+  summary: >-
+    Create a daily step log — idempotent upsert on the client-supplied (deterministic v5) id. A POST
+    for an already-existing or soft-deleted day resolves to / revives that day's row.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/DailyStepLog.yaml'
+  responses:
+    '200':
+      description: Created or, on retry with the same id, the existing (possibly revived) row.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/DailyStepLog.yaml'

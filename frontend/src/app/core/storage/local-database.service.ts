@@ -1049,7 +1049,26 @@ const SCHEMA_V26_STATEMENTS: string[] = [
   )`,
 ];
 
-const SCHEMA_VERSION = 26;
+// documentation/Features/Lépésszám követés.md — one step-count row per user per calendar day.
+// Flat, mirrors swim_log. id is a deterministic v5 of (userId, date).
+const SCHEMA_V27_STATEMENTS: string[] = [
+  `CREATE TABLE IF NOT EXISTS daily_step_log (
+    id TEXT PRIMARY KEY,
+    log_date TEXT NOT NULL,
+    step_count INTEGER NOT NULL,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_daily_step_log_log_date ON daily_step_log (log_date DESC)`,
+];
+
+const SCHEMA_VERSION = 27;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -1078,7 +1097,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 23, statements: SCHEMA_V23_STATEMENTS },
   { toVersion: 24, statements: SCHEMA_V24_STATEMENTS },
   { toVersion: 25, statements: SCHEMA_V25_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V26_STATEMENTS },
+  { toVersion: 26, statements: SCHEMA_V26_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V27_STATEMENTS },
 ];
 
 export interface SqlTask {

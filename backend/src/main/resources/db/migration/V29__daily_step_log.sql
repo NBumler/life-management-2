@@ -1,0 +1,142 @@
+-- documentation/Features/Lépésszám követés.md — one step-count record per user per calendar day
+-- ("1 nap = 1 rekord / user"). Flat, user-owned, plain CRUD. No kcal / body-weight column: the
+-- aznapi activityExtraKcal step contribution is a pure client calculation with the canonical formula
+-- max(0, stepCount - 3000) * m * 0.00045 (documentation/Features/Tápérték kalkulátor.md). id is a
+-- deterministic client UUID v5 of "DailyStepLog:<userId>:<date>" (Backend-offline first.md §9), so
+-- two offline devices converge on the same row instead of conflicting; a POST for an already-existing
+-- (or soft-deleted) day resolves to / revives that day's row (mirrors weekly_plan V19). The overwrite
+-- policy (manual always wins, Health Connect sync only when strictly greater) is applied entirely on
+-- the client — the server does a plain last-write-wins upsert.
+
+CREATE TABLE daily_step_log (
+    id         uuid PRIMARY KEY,
+    user_id    uuid NOT NULL REFERENCES users (id),
+    -- calendar date in the client's TZ; the aznapi activityExtraKcal bucket. No time-of-day.
+    log_date   date NOT NULL,
+    step_count integer NOT NULL CHECK (step_count >= 0),
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now(),
+    deleted    boolean NOT NULL DEFAULT false,
+    deleted_at timestamptz
+);
+
+-- documentation/Features/Lépésszám követés.md "egyedi kulcs user+date": at most one live row per
+-- user per calendar day. Redundant with the deterministic v5 id on the happy path, kept as
+-- defense-in-depth (mirrors idx_weekly_plan_user_id_week_start_date, V19).
+CREATE UNIQUE INDEX idx_daily_step_log_user_id_log_date
+    ON daily_step_log (user_id, log_date) WHERE deleted = false;
+-- documentation/Architektúra/Backend.md "Indexek": delta pull filter, scoped per user.
+CREATE INDEX idx_daily_step_log_user_id_updated_at ON daily_step_log (user_id, updated_at);
+
+CREATE TRIGGER daily_step_log_set_updated_at
+    BEFORE INSERT OR UPDATE ON daily_step_log
+    FOR EACH ROW
+    EXECUTE FUNCTION set_updated_at();
+
+-- documentation/Architektúra/Backend.md "GET /api/sync/changes": every synced table must appear
+-- here, so the view is fully replaced (V4 comment: a forgotten table silently drops out of sync).
+CREATE OR REPLACE VIEW sync_changes AS
+    SELECT 'UserProfile' AS entity_type, id, user_id, updated_at, deleted FROM user_profile
+    UNION ALL
+    SELECT 'WeightHistoryEntry' AS entity_type, id, user_id, updated_at, deleted FROM weight_history_entry
+    UNION ALL
+    SELECT 'GearItem' AS entity_type, id, user_id, updated_at, deleted FROM gear_item
+    UNION ALL
+    SELECT 'PackingTemplate' AS entity_type, id, user_id, updated_at, deleted FROM packing_template
+    UNION ALL
+    SELECT 'PackingTemplateItem' AS entity_type, id, user_id, updated_at, deleted FROM packing_template_item
+    UNION ALL
+    SELECT 'PackingSession' AS entity_type, id, user_id, updated_at, deleted FROM packing_session
+    UNION ALL
+    SELECT 'PackingSessionItem' AS entity_type, id, user_id, updated_at, deleted FROM packing_session_item
+    UNION ALL
+    SELECT 'LifePlan' AS entity_type, id, user_id, updated_at, deleted FROM life_plan
+    UNION ALL
+    SELECT 'HouseholdRoom' AS entity_type, id, user_id, updated_at, deleted FROM household_room
+    UNION ALL
+    SELECT 'HouseholdTask' AS entity_type, id, user_id, updated_at, deleted FROM household_task
+    UNION ALL
+    SELECT 'CalendarEvent' AS entity_type, id, user_id, updated_at, deleted FROM calendar_event
+    UNION ALL
+    SELECT 'Food' AS entity_type, id, NULL::uuid AS user_id, updated_at, deleted FROM food
+    UNION ALL
+    SELECT 'StoredFood' AS entity_type, id, user_id, updated_at, deleted FROM stored_food
+    UNION ALL
+    SELECT 'Recipe' AS entity_type, id, NULL::uuid AS user_id, updated_at, deleted FROM recipe
+    UNION ALL
+    SELECT 'RecipeIngredient' AS entity_type, id, NULL::uuid AS user_id, updated_at, deleted FROM recipe_ingredient
+    UNION ALL
+    SELECT 'Meal' AS entity_type, id, user_id, updated_at, deleted FROM meal
+    UNION ALL
+    SELECT 'MealItem' AS entity_type, mi.id, m.user_id, mi.updated_at, mi.deleted FROM meal_item mi JOIN meal m ON mi.meal_id = m.id
+    UNION ALL
+    SELECT 'ShoppingList' AS entity_type, id, user_id, updated_at, deleted FROM shopping_list
+    UNION ALL
+    SELECT 'ShoppingListItem' AS entity_type, sli.id, sl.user_id, sli.updated_at, sli.deleted FROM shopping_list_item sli JOIN shopping_list sl ON sli.shopping_list_id = sl.id
+    UNION ALL
+    SELECT 'Exercise' AS entity_type, id, user_id, updated_at, deleted FROM exercise_catalog
+    UNION ALL
+    SELECT 'WorkoutSession' AS entity_type, id, user_id, updated_at, deleted FROM workout_session
+    UNION ALL
+    SELECT 'WorkoutExerciseEntry' AS entity_type, wee.id, ws.user_id, wee.updated_at, wee.deleted
+        FROM workout_exercise_entry wee JOIN workout_session ws ON wee.session_id = ws.id
+    UNION ALL
+    SELECT 'WorkoutSetEntry' AS entity_type, wse.id, ws.user_id, wse.updated_at, wse.deleted
+        FROM workout_set_entry wse
+        JOIN workout_exercise_entry wee ON wse.exercise_entry_id = wee.id
+        JOIN workout_session ws ON wee.session_id = ws.id
+    UNION ALL
+    SELECT 'WorkoutPlan' AS entity_type, id, user_id, updated_at, deleted FROM workout_plan
+    UNION ALL
+    SELECT 'WorkoutPlanExercise' AS entity_type, wpe.id, wp.user_id, wpe.updated_at, wpe.deleted
+        FROM workout_plan_exercise wpe JOIN workout_plan wp ON wpe.plan_id = wp.id
+    UNION ALL
+    SELECT 'WorkoutPlanSet' AS entity_type, wps.id, wp.user_id, wps.updated_at, wps.deleted
+        FROM workout_plan_set wps
+        JOIN workout_plan_exercise wpe ON wps.plan_exercise_id = wpe.id
+        JOIN workout_plan wp ON wpe.plan_id = wp.id
+    UNION ALL
+    SELECT 'WeeklyPlan' AS entity_type, id, user_id, updated_at, deleted FROM weekly_plan
+    UNION ALL
+    SELECT 'WeeklyPlanSlot' AS entity_type, wps.id, wp.user_id, wps.updated_at, wps.deleted
+        FROM weekly_plan_slot wps JOIN weekly_plan wp ON wps.weekly_plan_id = wp.id
+    UNION ALL
+    SELECT 'SwimLog' AS entity_type, id, user_id, updated_at, deleted FROM swim_log
+    UNION ALL
+    SELECT 'BikeRideLog' AS entity_type, id, user_id, updated_at, deleted FROM bike_ride_log
+    UNION ALL
+    SELECT 'Gym' AS entity_type, id, user_id, updated_at, deleted FROM gym
+    UNION ALL
+    SELECT 'GymColorBand' AS entity_type, id, user_id, updated_at, deleted FROM gym_color_band
+    UNION ALL
+    SELECT 'IndoorRoute' AS entity_type, id, user_id, updated_at, deleted FROM indoor_route
+    UNION ALL
+    SELECT 'Crag' AS entity_type, id, user_id, updated_at, deleted FROM crag
+    UNION ALL
+    SELECT 'Sector' AS entity_type, id, user_id, updated_at, deleted FROM sector
+    UNION ALL
+    SELECT 'Route' AS entity_type, id, user_id, updated_at, deleted FROM route
+    UNION ALL
+    SELECT 'BoulderProblem' AS entity_type, id, user_id, updated_at, deleted FROM boulder_problem
+    UNION ALL
+    SELECT 'ClimbingSession' AS entity_type, id, user_id, updated_at, deleted FROM climbing_session
+    UNION ALL
+    SELECT 'AscentAttempt' AS entity_type, aa.id, cs.user_id, aa.updated_at, aa.deleted
+        FROM ascent_attempt aa JOIN climbing_session cs ON aa.session_id = cs.id
+    UNION ALL
+    SELECT 'PitchLog' AS entity_type, pl.id, cs.user_id, pl.updated_at, pl.deleted
+        FROM pitch_log pl
+        JOIN ascent_attempt aa ON pl.attempt_id = aa.id
+        JOIN climbing_session cs ON aa.session_id = cs.id
+    UNION ALL
+    SELECT 'RecurringExpense' AS entity_type, id, user_id, updated_at, deleted FROM recurring_expense
+    UNION ALL
+    SELECT 'AycmPartner' AS entity_type, id, user_id, updated_at, deleted FROM aycm_partner
+    UNION ALL
+    SELECT 'AycmPriceRule' AS entity_type, id, user_id, updated_at, deleted FROM aycm_price_rule
+    UNION ALL
+    SELECT 'AycmCheckIn' AS entity_type, id, user_id, updated_at, deleted FROM aycm_check_in
+    UNION ALL
+    SELECT 'AycmSettings' AS entity_type, id, user_id, updated_at, deleted FROM aycm_settings
+    UNION ALL
+    SELECT 'DailyStepLog' AS entity_type, id, user_id, updated_at, deleted FROM daily_step_log;

@@ -23,6 +23,7 @@ import { ShoppingListsService } from '../../api/api/shoppingLists.service';
 import { StoredFoodsService } from '../../api/api/storedFoods.service';
 import { SwimLogsService } from '../../api/api/swimLogs.service';
 import { BikeRideLogsService } from '../../api/api/bikeRideLogs.service';
+import { DailyStepLogsService } from '../../api/api/dailyStepLogs.service';
 import { RecurringExpensesService } from '../../api/api/recurringExpenses.service';
 import { AycmPartnersService } from '../../api/api/aycmPartners.service';
 import { AycmPriceRulesService } from '../../api/api/aycmPriceRules.service';
@@ -64,6 +65,7 @@ import { ShoppingListItem } from '../../api/model/shoppingListItem';
 import { StoredFood } from '../../api/model/storedFood';
 import { SwimLog } from '../../api/model/swimLog';
 import { BikeRideLog } from '../../api/model/bikeRideLog';
+import { DailyStepLog } from '../../api/model/dailyStepLog';
 import { RecurringExpense } from '../../api/model/recurringExpense';
 import { AycmPartner } from '../../api/model/aycmPartner';
 import { AycmPriceRule } from '../../api/model/aycmPriceRule';
@@ -133,6 +135,8 @@ import {
   swimLogTombstoneTask,
   bikeRideLogServerApplyTask,
   bikeRideLogTombstoneTask,
+  dailyStepLogServerApplyTask,
+  dailyStepLogTombstoneTask,
   recurringExpenseServerApplyTask,
   recurringExpenseTombstoneTask,
   aycmPartnerServerApplyTask,
@@ -225,6 +229,7 @@ export class SyncEngineService {
   private readonly weeklyPlansApi = inject(WeeklyPlansService);
   private readonly swimLogsApi = inject(SwimLogsService);
   private readonly bikeRideLogsApi = inject(BikeRideLogsService);
+  private readonly dailyStepLogsApi = inject(DailyStepLogsService);
   private readonly recurringExpensesApi = inject(RecurringExpensesService);
   private readonly aycmPartnersApi = inject(AycmPartnersService);
   private readonly aycmPriceRulesApi = inject(AycmPriceRulesService);
@@ -684,6 +689,16 @@ export class SyncEngineService {
         // same as above
       }
     }
+
+    const staleDailyStepLogs = await this.db.query<{ id: string }>('SELECT id FROM daily_step_log WHERE _needs_refetch = 1');
+    for (const row of staleDailyStepLogs) {
+      try {
+        const dto = await firstValueFrom(this.dailyStepLogsApi.getDailyStepLog(row.id));
+        await this.db.executeTransaction([dailyStepLogServerApplyTask(dto)]);
+      } catch {
+        // same as above
+      }
+    }
   }
 
   private async probeBackend(): Promise<boolean> {
@@ -836,6 +851,9 @@ export class SyncEngineService {
     }
     if (item.entityType === 'BikeRideLog') {
       return [bikeRideLogServerApplyTask(body as BikeRideLog)];
+    }
+    if (item.entityType === 'DailyStepLog') {
+      return [dailyStepLogServerApplyTask(body as DailyStepLog)];
     }
     if (item.entityType === 'RecurringExpense') {
       return [recurringExpenseServerApplyTask(body as RecurringExpense)];
@@ -1102,6 +1120,8 @@ export class SyncEngineService {
       await this.db.executeTransaction([swimLogTombstoneTask(item.targetEntityId, null, now)]);
     } else if (item.entityType === 'BikeRideLog') {
       await this.db.executeTransaction([bikeRideLogTombstoneTask(item.targetEntityId, null, now)]);
+    } else if (item.entityType === 'DailyStepLog') {
+      await this.db.executeTransaction([dailyStepLogTombstoneTask(item.targetEntityId, null, now)]);
     } else if (item.entityType === 'RecurringExpense') {
       await this.db.executeTransaction([recurringExpenseTombstoneTask(item.targetEntityId, null, now)]);
     } else if (item.entityType === 'AycmPartner') {
@@ -1405,6 +1425,12 @@ export class SyncEngineService {
         return [bikeRideLogServerApplyTask(change.data as BikeRideLog)];
       }
       return [bikeRideLogTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
+    }
+    if (change.entityType === 'DailyStepLog') {
+      if (!change.deleted) {
+        return [dailyStepLogServerApplyTask(change.data as DailyStepLog)];
+      }
+      return [dailyStepLogTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
     }
     if (change.entityType === 'RecurringExpense') {
       if (!change.deleted) {

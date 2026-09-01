@@ -1,16 +1,17 @@
 /**
  * documentation/Features/Tápérték kalkulátor.md "Edzéskalória — univerzális MET":
- * `activityExtraKcal` = lépéskalória + Σ edzéskalóriák az napra. This module produces the workout
- * half — the Σ of `sessionKcal()` over a single client-local calendar day. The step-calorie half
- * belongs to [[Lépésszám követés]], which does not exist yet; until it lands the caller adds only
- * this.
+ * `activityExtraKcal` = lépéskalória + Σ edzéskalóriák az napra. This module produces both halves for
+ * a single client-local calendar day: the Σ of `sessionKcal()` / `swimKcal()` / `bikeKcal()` /
+ * `climbingKcal()` over the day's workout logs ({@link workoutKcalForDay} etc.), and the step-calorie
+ * term ({@link stepKcalForDay}, [[Lépésszám követés]]).
  *
  * Pure TS, no Angular — the same "kliens gördíti tovább" shape as `pages/food/storage/shelf-life.ts`
- * consumed from `meal.repository.ts`. `sessionKcal` uses the CURRENT body weight, never a value
- * frozen into the session, so `bodyWeightKg` is passed through from the live profile.
+ * consumed from `meal.repository.ts`. Every term uses the CURRENT body weight, never a value frozen
+ * into the log, so `bodyWeightKg` is passed through from the live profile.
  */
 import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { ClimbingSession } from '../../api/model/climbingSession';
+import { DailyStepLog } from '../../api/model/dailyStepLog';
 import { SwimLog } from '../../api/model/swimLog';
 import { WorkoutSession } from '../../api/model/workoutSession';
 import { bikeKcal } from '../../pages/workout/cycling/bike-metrics';
@@ -70,6 +71,31 @@ export function bikeKcalForDay(
  * `discipline` (the active/passive MET model, not `duration × MET`). The Étkezés dashboard adds this
  * to the workout + swim + bike totals for `activityExtraKcal`.
  */
+/**
+ * documentation/Features/Lépésszám követés.md "Kapcsolat a Tápérték kalkulátorral (SSOT)": the
+ * step-calorie term of `activityExtraKcal`.
+ *
+ *   max(0, stepCount - STEP_BASELINE) * bodyWeightKg * STEP_KCAL_PER_STEP
+ *
+ * `STEP_BASELINE = 3000` is fixed — the first 3000 steps are already covered by the fixed PAL 1.2 in
+ * `computeTdee`. A missing day counts as 0 steps → 0 kcal. 0 when `bodyWeightKg` is missing /
+ * non-positive.
+ */
+export const STEP_BASELINE = 3000;
+export const STEP_KCAL_PER_STEP = 0.00045;
+
+export function stepKcalForDay(
+  logs: readonly DailyStepLog[],
+  day: string,
+  bodyWeightKg: number | null,
+): number {
+  if (bodyWeightKg === null || bodyWeightKg <= 0) {
+    return 0;
+  }
+  const stepCount = logs.find((log) => !log.deleted && log.date === day)?.stepCount ?? 0;
+  return Math.max(0, stepCount - STEP_BASELINE) * bodyWeightKg * STEP_KCAL_PER_STEP;
+}
+
 export function climbingKcalForDay(
   sessions: readonly ClimbingSession[],
   day: string,

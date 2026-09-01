@@ -1,0 +1,60 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/menu"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ 'STEPS.TITLE' | translate }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-list>
+    <ion-list-header>
+      <ion-label>{{ 'STEPS.TODAY' | translate }}</ion-label>
+    </ion-list-header>
+
+    <ion-item>
+      <ion-input
+        type="number"
+        inputmode="numeric"
+        min="0"
+        label="{{ 'STEPS.STEP_COUNT' | translate }}"
+        labelPlacement="stacked"
+        [ngModel]="todayInput()"
+        (ngModelChange)="setTodayInput($event)"
+        [ngModelOptions]="{ standalone: true }"
+        [placeholder]="'STEPS.STEP_COUNT_PLACEHOLDER' | translate"
+      ></ion-input>
+    </ion-item>
+
+    @if (todayKcal() !== null) {
+      <ion-item lines="none">
+        <ion-note>{{ 'STEPS.TODAY_KCAL' | translate: { kcal: todayKcal() } }}</ion-note>
+      </ion-item>
+    }
+
+    <div class="ion-padding">
+      <ion-button expand="block" [disabled]="!canSaveToday || saving()" (click)="saveToday()">
+        {{ 'STEPS.SAVE' | translate }}
+      </ion-button>
+    </div>
+  </ion-list>
+
+  <ion-list>
+    <ion-list-header>
+      <ion-label>{{ 'STEPS.PAST_DAYS' | translate }}</ion-label>
+      <ion-button fill="clear" (click)="addOtherDay()">{{ 'STEPS.ADD_DAY' | translate }}</ion-button>
+    </ion-list-header>
+
+    @for (log of pastDays(); track log.id) {
+      <ion-item button (click)="editDay(log.date)">
+        <ion-label>{{ log.date }}</ion-label>
+        <ion-note slot="end">{{ 'STEPS.STEP_COUNT_VALUE' | translate: { count: log.stepCount } }}</ion-note>
+      </ion-item>
+    } @empty {
+      <ion-item lines="none">
+        <ion-text color="medium"><p>{{ 'STEPS.NO_PAST_DAYS' | translate }}</p></ion-text>
+      </ion-item>
+    }
+  </ion-list>
+</ion-content>

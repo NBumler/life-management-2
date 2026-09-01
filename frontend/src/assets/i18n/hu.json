@@ -38,10 +38,28 @@
     "BEVASARLAS": "Bevásárlás",
     "PENZUGYEK": "Pénzügyek",
     "AYCM": "AYCM",
+    "LEPESSZAM": "Lépésszám",
     "LOGOUT": "Kijelentkezés",
     "LOGOUT_CONFIRM_TITLE": "Kijelentkezés",
     "LOGOUT_CONFIRM_MESSAGE": "Biztosan kijelentkezel?",
     "LOGOUT_CONFIRM_PENDING": "{{count}} szinkronizálatlan változás van. A kijelentkezés után is megmaradnak, és a következő bejelentkezéskor felmennek. Biztosan kijelentkezel?"
+  },
+  "STEPS": {
+    "TITLE": "Lépésszám",
+    "EDIT_TITLE": "Nap szerkesztése",
+    "TODAY": "Ma",
+    "PAST_DAYS": "Korábbi napok",
+    "DATE": "Dátum",
+    "STEP_COUNT": "Lépésszám",
+    "STEP_COUNT_PLACEHOLDER": "pl. 8000",
+    "STEP_COUNT_VALUE": "{{count}} lépés",
+    "TODAY_KCAL": "+{{kcal}} kcal a napi kerethez",
+    "SAVE": "Mentés",
+    "DELETE": "Törlés",
+    "ADD_DAY": "Nap hozzáadása",
+    "NO_PAST_DAYS": "Még nincs korábbi rögzített nap.",
+    "DELETE_CONFIRM_TITLE": "Lépésszám törlése",
+    "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd a(z) {{date}} napi lépésszámot?"
   },
   "FINANCE": {
     "DASHBOARD": {

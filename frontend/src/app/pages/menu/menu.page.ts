@@ -40,6 +40,7 @@ export class MenuPage {
   readonly bevasarlasEnabled = this.featureFlags.isEnabled('menu.bevasarlas');
   readonly penzugyekEnabled = this.featureFlags.isEnabled('menu.penzugyek');
   readonly aycmEnabled = this.featureFlags.isEnabled('menu.aycm');
+  readonly lepesszamEnabled = this.featureFlags.isEnabled('menu.lepesszam');
 
   async logout(): Promise<void> {
     const pending = this.pendingCount();

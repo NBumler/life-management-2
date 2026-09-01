@@ -38,10 +38,28 @@
     "BEVASARLAS": "Shopping",
     "PENZUGYEK": "Finance",
     "AYCM": "AYCM",
+    "LEPESSZAM": "Step count",
     "LOGOUT": "Log out",
     "LOGOUT_CONFIRM_TITLE": "Log out",
     "LOGOUT_CONFIRM_MESSAGE": "Are you sure you want to log out?",
     "LOGOUT_CONFIRM_PENDING": "You have {{count}} unsynced change(s). They will stay on this device and go up on your next login. Log out anyway?"
+  },
+  "STEPS": {
+    "TITLE": "Step count",
+    "EDIT_TITLE": "Edit day",
+    "TODAY": "Today",
+    "PAST_DAYS": "Past days",
+    "DATE": "Date",
+    "STEP_COUNT": "Step count",
+    "STEP_COUNT_PLACEHOLDER": "e.g. 8000",
+    "STEP_COUNT_VALUE": "{{count}} steps",
+    "TODAY_KCAL": "+{{kcal}} kcal toward today's allowance",
+    "SAVE": "Save",
+    "DELETE": "Delete",
+    "ADD_DAY": "Add day",
+    "NO_PAST_DAYS": "No past days recorded yet.",
+    "DELETE_CONFIRM_TITLE": "Delete step count",
+    "DELETE_CONFIRM_MESSAGE": "Delete the step count for {{date}}?"
   },
   "FINANCE": {
     "DASHBOARD": {

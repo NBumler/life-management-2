@@ -36,6 +36,7 @@ import { WeeklyPlan } from '../../api/model/weeklyPlan';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 import { WorkoutPlan } from '../../api/model/workoutPlan';
 import { WorkoutSession } from '../../api/model/workoutSession';
+import { DailyStepLog } from '../../api/model/dailyStepLog';
 import { buildSeedExercises } from '../data/exercise-seed';
 import {
   CalendarEventRow,
@@ -188,6 +189,9 @@ import {
   workoutSetEntryLocalRemoveTask,
   workoutSetEntryLocalWriteTask,
   workoutSetEntryRowToDto,
+  DailyStepLogRow,
+  dailyStepLogLocalWriteTask,
+  dailyStepLogRowToDto,
 } from '../data/local-rows';
 import { AuthSessionService } from '../session/auth-session.service';
 import { OfflineQueueService } from '../sync/offline-queue.service';
@@ -2780,6 +2784,59 @@ export class SqliteStorageBackend implements StorageBackend {
       createdStorageEntryIds: draft.storageEntries.map((entry) => entry.id),
       newActiveListId: draft.newActiveList?.id ?? null,
     };
+  }
+
+  async listDailyStepLogs(): Promise<DailyStepLog[]> {
+    const rows = await this.db.query<DailyStepLogRow>(
+      'SELECT * FROM daily_step_log WHERE deleted = 0 ORDER BY log_date DESC',
+    );
+    return rows.map(dailyStepLogRowToDto);
+  }
+
+  async upsertDailyStepLog(log: DailyStepLog): Promise<DailyStepLog> {
+    const userId = this.requireUserId();
+    const existing = await this.db.query('SELECT 1 FROM daily_step_log WHERE id = ?', [log.id]);
+    const isNew = existing.length === 0;
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: isNew ? 'POST' : 'PUT',
+      url: isNew ? '/api/daily-step-logs' : `/api/daily-step-logs/${log.id}`,
+      payload: log,
+      entityType: 'DailyStepLog',
+      targetEntityId: log.id,
+    });
+    await this.db.executeTransaction([dailyStepLogLocalWriteTask(log), ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    return this.readDailyStepLog(log.id);
+  }
+
+  async deleteDailyStepLog(id: string): Promise<DailyStepLog> {
+    const userId = this.requireUserId();
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: 'DELETE',
+      url: `/api/daily-step-logs/${id}`,
+      payload: null,
+      entityType: 'DailyStepLog',
+      targetEntityId: id,
+    });
+    const entityTask: SqlTask = enqueue.hardRemoveLocalEntity
+      ? { statement: 'DELETE FROM daily_step_log WHERE id = ?', values: [id] }
+      : {
+          statement: 'UPDATE daily_step_log SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?',
+          values: [new Date().toISOString(), id],
+        };
+    await this.db.executeTransaction([entityTask, ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    if (enqueue.hardRemoveLocalEntity) {
+      return { id, date: '1970-01-01', stepCount: 0, deleted: true };
+    }
+    return this.readDailyStepLog(id);
+  }
+
+  private async readDailyStepLog(id: string): Promise<DailyStepLog> {
+    const rows = await this.db.query<DailyStepLogRow>('SELECT * FROM daily_step_log WHERE id = ?', [id]);
+    return dailyStepLogRowToDto(rows[0]);
   }
 
   private requireUserId(): string {

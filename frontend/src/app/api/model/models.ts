@@ -13,6 +13,7 @@ export * from './boulderProblem';
 export * from './calendarEvent';
 export * from './climbingSession';
 export * from './crag';
+export * from './dailyStepLog';
 export * from './exercise';
 export * from './food';
 export * from './gearItem';

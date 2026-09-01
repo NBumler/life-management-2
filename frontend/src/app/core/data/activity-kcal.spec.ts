@@ -1,8 +1,9 @@
 import { AscentAttempt } from '../../api/model/ascentAttempt';
 import { ClimbingSession } from '../../api/model/climbingSession';
+import { DailyStepLog } from '../../api/model/dailyStepLog';
 import { WorkoutSession } from '../../api/model/workoutSession';
 import { climbingKcal } from '../../pages/workout/climbing/climbing-metrics';
-import { climbingKcalForDay, workoutKcalForDay } from './activity-kcal';
+import { climbingKcalForDay, stepKcalForDay, workoutKcalForDay } from './activity-kcal';
 
 function session(overrides: Partial<WorkoutSession> = {}): WorkoutSession {
   return {
@@ -104,6 +105,33 @@ function climb(overrides: Partial<ClimbingSession> = {}): ClimbingSession {
     ...overrides,
   };
 }
+
+function stepLog(overrides: Partial<DailyStepLog> = {}): DailyStepLog {
+  return { id: 'd1', date: '2026-08-28', stepCount: 10000, deleted: false, ...overrides };
+}
+
+describe('stepKcalForDay', () => {
+  // max(0, 10000 - 3000) × 80 kg × 0.00045 = 7000 × 0.036 = 252 kcal.
+  it('applies max(0, steps - 3000) × weight × 0.00045 for the matching day', () => {
+    expect(stepKcalForDay([stepLog({ stepCount: 10000 })], '2026-08-28', 80)).toBeCloseTo(252, 6);
+  });
+
+  it('is 0 at or below the 3000 baseline', () => {
+    expect(stepKcalForDay([stepLog({ stepCount: 3000 })], '2026-08-28', 80)).toBe(0);
+    expect(stepKcalForDay([stepLog({ stepCount: 1200 })], '2026-08-28', 80)).toBe(0);
+  });
+
+  it('treats a missing day as 0 steps', () => {
+    expect(stepKcalForDay([stepLog({ date: '2026-08-27' })], '2026-08-28', 80)).toBe(0);
+    expect(stepKcalForDay([], '2026-08-28', 80)).toBe(0);
+  });
+
+  it('ignores soft-deleted rows and a missing body weight', () => {
+    expect(stepKcalForDay([stepLog({ deleted: true })], '2026-08-28', 80)).toBe(0);
+    expect(stepKcalForDay([stepLog()], '2026-08-28', null)).toBe(0);
+    expect(stepKcalForDay([stepLog()], '2026-08-28', 0)).toBe(0);
+  });
+});
 
 describe('climbingKcalForDay', () => {
   it('sums climbingKcal over live sessions whose date matches the day', () => {
