@@ -23,7 +23,19 @@ export const routes: Routes = [
           {
             path: 'notifications',
             canActivate: [featureFlagGuard('menu.ertesitesek')],
-            loadComponent: () => import('./pages/menu/notifications/notifications.page').then((m) => m.NotificationsPage),
+            children: [
+              { path: '', loadComponent: () => import('./pages/menu/notifications/notifications.page').then((m) => m.NotificationsPage) },
+              {
+                path: 'history',
+                loadComponent: () =>
+                  import('./pages/menu/notifications/notification-history.page').then((m) => m.NotificationHistoryPage),
+              },
+              {
+                path: 'tuning',
+                loadComponent: () =>
+                  import('./pages/menu/notifications/notification-tuning.page').then((m) => m.NotificationTuningPage),
+              },
+            ],
           },
           { path: 'sync', loadComponent: () => import('./pages/menu/sync/sync.page').then((m) => m.SyncPage) },
           {

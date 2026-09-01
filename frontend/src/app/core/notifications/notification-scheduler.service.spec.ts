@@ -23,9 +23,11 @@ import { addDaysIso, today } from '../../shared/local-date';
 import { DataChangeNotifier } from '../sync/data-change-notifier';
 import { LocalNotificationsGateway } from './local-notifications.gateway';
 import { NotificationDedupeStore } from './notification-dedupe.store';
+import { NotificationHistoryStore } from './notification-history.store';
 import { notificationNumericId } from './notification-ids';
 import { NotificationSchedulerService } from './notification-scheduler.service';
 import { NotificationSettingsService } from './notification-settings.service';
+import { DEFAULT_TUNING, NotificationTuningService } from './notification-tuning.service';
 import { NotificationType } from './notification-types';
 
 function repoStub(extra: Record<string, unknown> = {}): unknown {
@@ -36,6 +38,7 @@ describe('NotificationSchedulerService', () => {
   let gateway: jasmine.SpyObj<LocalNotificationsGateway>;
   let dedupeHas: jasmine.Spy;
   let dedupeRecord: jasmine.Spy;
+  let historyRecord: jasmine.Spy;
   let settingsEnabled: Record<NotificationType, boolean>;
   let flagOn: (key: string) => boolean;
 
@@ -70,6 +73,11 @@ describe('NotificationSchedulerService', () => {
             prune: jasmine.createSpy('prune').and.resolveTo(),
           },
         },
+        {
+          provide: NotificationHistoryStore,
+          useValue: { record: (historyRecord = jasmine.createSpy('historyRecord').and.resolveTo()) },
+        },
+        { provide: NotificationTuningService, useValue: { tuning: signal({ ...DEFAULT_TUNING }) } },
         { provide: FeatureFlagsService, useValue: { isEnabled: (k: string) => flagOn(k) } },
         { provide: TranslateService, useValue: { instant: (k: string) => k } },
         { provide: LanguageService, useValue: { activeLanguage: () => 'hu' } },
@@ -162,7 +170,7 @@ describe('NotificationSchedulerService', () => {
     expect(Object.values(registry)[0]).toEqual(jasmine.objectContaining({ type: 'EVENT_OCCURRENCE', lang: 'hu' }));
   });
 
-  it('fires a past-due notification immediately (no schedule.at) and records dedupe', async () => {
+  it('fires a past-due notification immediately (no schedule.at) and records dedupe + history', async () => {
     const service = build();
     service.permission.set('granted');
     householdItems = [{ id: 't1', name: 'Porszívózás', nextDue: today(), deleted: false }];
@@ -172,6 +180,9 @@ describe('NotificationSchedulerService', () => {
     const arg = gateway.schedule.calls.mostRecent().args[0] as { notifications: { schedule?: unknown }[] };
     expect(arg.notifications[0].schedule).toBeUndefined();
     expect(dedupeRecord).toHaveBeenCalledWith('HOUSEHOLD_TASK_DUE', today(), today());
+    expect(historyRecord).toHaveBeenCalledWith(
+      jasmine.objectContaining({ type: 'HOUSEHOLD_TASK_DUE', key: today(), route: '/tabs/tasks/household' }),
+    );
   });
 
   it('does not re-fire a past-due notification that is already in the dedupe log', async () => {

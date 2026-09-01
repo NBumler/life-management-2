@@ -23,6 +23,15 @@
     }
 
     <ion-list>
+      <ion-item button detail routerLink="history">
+        <ion-label>{{ 'NOTIFICATIONS.HISTORY.TITLE' | translate }}</ion-label>
+      </ion-item>
+      <ion-item button detail routerLink="tuning">
+        <ion-label>{{ 'NOTIFICATIONS.TUNING.TITLE' | translate }}</ion-label>
+      </ion-item>
+    </ion-list>
+
+    <ion-list>
       <ion-list-header>{{ 'NOTIFICATIONS.LIST_HEADER' | translate }}</ion-list-header>
       @for (row of rows(); track row.type) {
         <ion-item>

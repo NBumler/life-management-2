@@ -4,12 +4,14 @@ import { StoredFood } from '../../api/model/storedFood';
 import { addDaysIso } from '../../shared/local-date';
 import {
   CalorieStreakDay,
+  FoodExpiringLead,
   HouseholdTaskDue,
   calorieStreakRule,
   foodExpiringDailyRules,
   foodSpoiledOnceRules,
   householdTaskDueRule,
 } from './notification-rules';
+import { DEFAULT_TUNING, NotificationTuning } from './notification-tuning.service';
 import { DesiredNotification, NotificationType } from './notification-types';
 
 /**
@@ -46,7 +48,7 @@ export interface StepsLowTemplate {
   key: string;
   /** `${today}T20:00:00` local wall clock. */
   fireAt: string;
-  /** Below this many steps → fire (2000, per spec §3). */
+  /** Below this many steps → fire (spec §3 default 2000; overridable via the Lead-time szerkesztő). */
   threshold: number;
   titleKey: string;
   bodyKey: string;
@@ -65,20 +67,21 @@ export interface BackgroundPlanSources {
 
 /** How many days of 09:00 daily notifications to pre-compute. */
 export const FIXED_HORIZON_DAYS = 3;
-const STEPS_LOW_THRESHOLD = 2000;
 const STEPS_ROUTE = '/tabs/menu/steps';
 
 export function buildBackgroundPlan(
   activeTypes: ReadonlySet<NotificationType>,
   sources: BackgroundPlanSources,
   todayIso: string,
+  tuning: NotificationTuning = DEFAULT_TUNING,
 ): BackgroundPlan {
   const collected: DesiredNotification[] = [];
+  const lead: FoodExpiringLead = { long: tuning.foodExpiringLeadDaysLong, short: tuning.foodExpiringLeadDaysShort };
 
   for (let offset = 0; offset < FIXED_HORIZON_DAYS; offset += 1) {
     const date = addDaysIso(todayIso, offset);
     if (activeTypes.has('FOOD_EXPIRING_DAILY')) {
-      collected.push(...foodExpiringDailyRules(sources.storedFoods, sources.foods, date));
+      collected.push(...foodExpiringDailyRules(sources.storedFoods, sources.foods, date, lead));
     }
     if (activeTypes.has('FOOD_SPOILED_ONCE')) {
       collected.push(...foodSpoiledOnceRules(sources.storedFoods, sources.foods, date));
@@ -89,14 +92,14 @@ export function buildBackgroundPlan(
   }
 
   if (activeTypes.has('CALORIE_STREAK')) {
-    collected.push(...calorieStreakRule(sources.calorieStreakToday, todayIso));
+    collected.push(...calorieStreakRule(sources.calorieStreakToday, todayIso, tuning.calorieStreakMarginKcal));
   }
 
   const stepsLow: StepsLowTemplate | null = activeTypes.has('STEPS_LOW')
     ? {
         key: todayIso,
         fireAt: `${todayIso}T20:00:00`,
-        threshold: STEPS_LOW_THRESHOLD,
+        threshold: tuning.stepsLowThreshold,
         titleKey: 'NOTIFICATIONS.STEPS_LOW.TITLE',
         bodyKey: 'NOTIFICATIONS.STEPS_LOW.BODY',
         route: STEPS_ROUTE,

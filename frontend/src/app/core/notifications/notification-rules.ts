@@ -25,20 +25,39 @@ const MEAL_ROUTE = '/tabs/food/meal';
 const HOUSEHOLD_ROUTE = '/tabs/tasks/household';
 
 /**
- * documentation/Features/Értesítések.md §1 `FOOD_EXPIRING_DAILY`. Lead window starts 3 days before
- * expiry when the catalog shelf-life for that storage location is **> 5 days**, otherwise 2 days
- * (also 2 when the catalog has no time for that location). One per item per calendar day, at 09:00,
- * for as long as the item is still in storage (not deleted) — spoiled or not.
+ * `FOOD_EXPIRING_DAILY` lead window, in days: `long` when the catalog shelf-life for the location is
+ * `> 5 days`, `short` otherwise (and when the catalog has no time for that location). Spec defaults
+ * 3 / 2; the "Lead-time szerkesztő" makes them device-local overrides.
  */
-export function foodExpiringDailyRules(storedFoods: readonly StoredFood[], foods: readonly Food[], todayIso: string): DesiredNotification[] {
+export interface FoodExpiringLead {
+  long: number;
+  short: number;
+}
+
+const DEFAULT_FOOD_EXPIRING_LEAD: FoodExpiringLead = { long: 3, short: 2 };
+const DEFAULT_STEPS_LOW_THRESHOLD = 2000;
+const DEFAULT_CALORIE_STREAK_MARGIN = 750;
+
+/**
+ * documentation/Features/Értesítések.md §1 `FOOD_EXPIRING_DAILY`. Lead window starts `lead.long` days
+ * before expiry when the catalog shelf-life for that storage location is **> 5 days**, otherwise
+ * `lead.short` days (also `short` when the catalog has no time for that location). One per item per
+ * calendar day, at 09:00, for as long as the item is still in storage (not deleted) — spoiled or not.
+ */
+export function foodExpiringDailyRules(
+  storedFoods: readonly StoredFood[],
+  foods: readonly Food[],
+  todayIso: string,
+  lead: FoodExpiringLead = DEFAULT_FOOD_EXPIRING_LEAD,
+): DesiredNotification[] {
   const out: DesiredNotification[] = [];
   for (const item of storedFoods) {
     if (item.deleted) {
       continue;
     }
     const food = foods.find((f) => f.id === item.foodId && !f.deleted);
-    const lead = leadDays(food, item.storageLocation, todayIso);
-    const windowStart = addDaysIso(item.expiresOn, -lead);
+    const leadDaysValue = leadDays(food, item.storageLocation, todayIso, lead);
+    const windowStart = addDaysIso(item.expiresOn, -leadDaysValue);
     if (todayIso < windowStart) {
       continue;
     }
@@ -85,8 +104,12 @@ export function foodSpoiledOnceRules(storedFoods: readonly StoredFood[], foods: 
  * (a missing day counts as 0). One per day; a later sync raising the count above 2000 does not
  * retract an already-sent banner (handled by the scheduler cancelling the still-pending 20:00 one).
  */
-export function stepsLowRule(todaySteps: number, todayIso: string): DesiredNotification[] {
-  if (todaySteps >= 2000) {
+export function stepsLowRule(
+  todaySteps: number,
+  todayIso: string,
+  threshold: number = DEFAULT_STEPS_LOW_THRESHOLD,
+): DesiredNotification[] {
+  if (todaySteps >= threshold) {
     return [];
   }
   return [
@@ -109,20 +132,24 @@ export interface CalorieStreakDay {
   allowanceKcal: number | null;
 }
 
-const CALORIE_STREAK_MARGIN = 750;
 const CALORIE_STREAK_LENGTH = 5;
 
 /**
  * documentation/Features/Értesítések.md §4 `CALORIE_STREAK`. Evaluated at 09:00 over the 5 whole days
  * that close yesterday (`D-5 … D-1`). Fires once when every one of those days had
- * `intake > allowance + 750` (only overshoot counts). `days` must be exactly those 5, ascending; the
+ * `intake > allowance + marginKcal` (default 750; only overshoot counts). `days` must be exactly
+ * those 5, ascending; the
  * key is the window end (`D-1`) so the next day re-evaluates a fresh window.
  */
-export function calorieStreakRule(days: readonly CalorieStreakDay[], todayIso: string): DesiredNotification[] {
+export function calorieStreakRule(
+  days: readonly CalorieStreakDay[],
+  todayIso: string,
+  marginKcal: number = DEFAULT_CALORIE_STREAK_MARGIN,
+): DesiredNotification[] {
   if (days.length !== CALORIE_STREAK_LENGTH) {
     return [];
   }
-  const allOver = days.every((day) => day.allowanceKcal !== null && day.intakeKcal > day.allowanceKcal + CALORIE_STREAK_MARGIN);
+  const allOver = days.every((day) => day.allowanceKcal !== null && day.intakeKcal > day.allowanceKcal + marginKcal);
   if (!allOver) {
     return [];
   }
@@ -209,15 +236,21 @@ export function eventOccurrenceRules(
   return out;
 }
 
-/** documentation/Features/Értesítések.md §1 lead-time table. */
-function leadDays(food: Food | undefined, location: StoredFood.StorageLocationEnum, todayIso: string): number {
+/** documentation/Features/Értesítések.md §1 lead-time table (the `> 5 nap` split is structural; the
+ *  two day counts are the "Lead-time szerkesztő" overrides). */
+function leadDays(
+  food: Food | undefined,
+  location: StoredFood.StorageLocationEnum,
+  todayIso: string,
+  lead: FoodExpiringLead,
+): number {
   if (!food) {
-    return 2;
+    return lead.short;
   }
   const duration = catalogDurationFor(food, location);
   if (duration.amount === null || duration.unit === null) {
-    return 2;
+    return lead.short;
   }
   const shelfEnd = addDurationToDate(todayIso, duration.amount, duration.unit);
-  return shelfEnd > addDaysIso(todayIso, 5) ? 3 : 2;
+  return shelfEnd > addDaysIso(todayIso, 5) ? lead.long : lead.short;
 }

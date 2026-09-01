@@ -1,0 +1,99 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/menu/notifications"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ 'NOTIFICATIONS.TUNING.TITLE' | translate }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  @if (!isNative) {
+    <ion-text color="medium">
+      <p class="ion-padding">{{ 'NOTIFICATIONS.WEB_UNAVAILABLE' | translate }}</p>
+    </ion-text>
+  } @else {
+    <ion-list>
+      <ion-list-header>{{ 'NOTIFICATIONS.TUNING.FOOD_HEADER' | translate }}</ion-list-header>
+
+      <ion-item>
+        <ion-input
+          type="number"
+          inputmode="numeric"
+          [min]="bounds.foodExpiringLeadDaysLong.min"
+          [max]="bounds.foodExpiringLeadDaysLong.max"
+          label="{{ 'NOTIFICATIONS.TUNING.FOOD_LEAD_LONG' | translate }}"
+          labelPlacement="stacked"
+          [ngModel]="draft().foodExpiringLeadDaysLong"
+          (ngModelChange)="setField('foodExpiringLeadDaysLong', $event)"
+          [ngModelOptions]="{ standalone: true }"
+        ></ion-input>
+      </ion-item>
+      <ion-item lines="none">
+        <ion-note class="tuning-hint">{{ 'NOTIFICATIONS.TUNING.FOOD_LEAD_LONG_HINT' | translate }}</ion-note>
+      </ion-item>
+
+      <ion-item>
+        <ion-input
+          type="number"
+          inputmode="numeric"
+          [min]="bounds.foodExpiringLeadDaysShort.min"
+          [max]="bounds.foodExpiringLeadDaysShort.max"
+          label="{{ 'NOTIFICATIONS.TUNING.FOOD_LEAD_SHORT' | translate }}"
+          labelPlacement="stacked"
+          [ngModel]="draft().foodExpiringLeadDaysShort"
+          (ngModelChange)="setField('foodExpiringLeadDaysShort', $event)"
+          [ngModelOptions]="{ standalone: true }"
+        ></ion-input>
+      </ion-item>
+      <ion-item lines="none">
+        <ion-note class="tuning-hint">{{ 'NOTIFICATIONS.TUNING.FOOD_LEAD_SHORT_HINT' | translate }}</ion-note>
+      </ion-item>
+
+      <ion-list-header>{{ 'NOTIFICATIONS.TUNING.OTHER_HEADER' | translate }}</ion-list-header>
+
+      <ion-item>
+        <ion-input
+          type="number"
+          inputmode="numeric"
+          [min]="bounds.stepsLowThreshold.min"
+          [max]="bounds.stepsLowThreshold.max"
+          label="{{ 'NOTIFICATIONS.TUNING.STEPS_LOW_THRESHOLD' | translate }}"
+          labelPlacement="stacked"
+          [ngModel]="draft().stepsLowThreshold"
+          (ngModelChange)="setField('stepsLowThreshold', $event)"
+          [ngModelOptions]="{ standalone: true }"
+        ></ion-input>
+      </ion-item>
+      <ion-item lines="none">
+        <ion-note class="tuning-hint">{{ 'NOTIFICATIONS.TUNING.STEPS_LOW_THRESHOLD_HINT' | translate }}</ion-note>
+      </ion-item>
+
+      <ion-item>
+        <ion-input
+          type="number"
+          inputmode="numeric"
+          [min]="bounds.calorieStreakMarginKcal.min"
+          [max]="bounds.calorieStreakMarginKcal.max"
+          label="{{ 'NOTIFICATIONS.TUNING.CALORIE_MARGIN' | translate }}"
+          labelPlacement="stacked"
+          [ngModel]="draft().calorieStreakMarginKcal"
+          (ngModelChange)="setField('calorieStreakMarginKcal', $event)"
+          [ngModelOptions]="{ standalone: true }"
+        ></ion-input>
+      </ion-item>
+      <ion-item lines="none">
+        <ion-note class="tuning-hint">{{ 'NOTIFICATIONS.TUNING.CALORIE_MARGIN_HINT' | translate }}</ion-note>
+      </ion-item>
+    </ion-list>
+
+    <div class="ion-padding">
+      <ion-button expand="block" [disabled]="!dirty()" (click)="save()">
+        {{ 'NOTIFICATIONS.TUNING.SAVE' | translate }}
+      </ion-button>
+      <ion-button expand="block" fill="clear" (click)="resetToDefaults()">
+        {{ 'NOTIFICATIONS.TUNING.RESET' | translate }}
+      </ion-button>
+    </div>
+  }
+</ion-content>

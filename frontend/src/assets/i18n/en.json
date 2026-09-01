@@ -103,6 +103,28 @@
       "TITLE": "Event reminder",
       "BODY": "{{title}}",
       "BODY_LOCATION": "{{title}} — {{location}}"
+    },
+    "HISTORY": {
+      "TITLE": "History",
+      "EMPTY": "No notifications have been sent yet.",
+      "CLEAR": "Clear",
+      "CLEAR_CONFIRM_TITLE": "Clear history",
+      "CLEAR_CONFIRM_MESSAGE": "Clear the whole notification history? This only empties the log, not the switches."
+    },
+    "TUNING": {
+      "TITLE": "Lead-time editor",
+      "FOOD_HEADER": "Food expiry",
+      "OTHER_HEADER": "Other thresholds",
+      "FOOD_LEAD_LONG": "Warning lead for long shelf-life (days)",
+      "FOOD_LEAD_LONG_HINT": "The daily reminder starts this many days before expiry when the catalog shelf-life for the location is more than 5 days. Default: 3.",
+      "FOOD_LEAD_SHORT": "Warning lead for short shelf-life (days)",
+      "FOOD_LEAD_SHORT_HINT": "Same, when the shelf-life is 5 days or less, or there is no catalog data. Default: 2.",
+      "STEPS_LOW_THRESHOLD": "Low step count threshold",
+      "STEPS_LOW_THRESHOLD_HINT": "Fires at 8pm when today's step count is below this. Default: 2000.",
+      "CALORIE_MARGIN": "Calorie overshoot margin (kcal)",
+      "CALORIE_MARGIN_HINT": "A day only counts toward the streak when intake exceeds the daily budget by at least this. Default: 750.",
+      "SAVE": "Save",
+      "RESET": "Reset to defaults"
     }
   },
   "STEPS": {

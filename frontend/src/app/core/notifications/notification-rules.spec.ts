@@ -90,6 +90,17 @@ describe('foodExpiringDailyRules', () => {
     const deleted = storedFood({ expiresOn: '2026-09-02', deleted: true });
     expect(foodExpiringDailyRules([deleted], [], today)).toEqual([]);
   });
+
+  it('honours an overridden lead window (Lead-time szerkesztő)', () => {
+    const catalog = [food({ shelfFridgeAmount: 10, shelfFridgeUnit: 'nap' })];
+    const item = storedFood({ expiresOn: '2026-09-06' }); // expiry-5
+
+    // default long lead is 3 → still outside the window today
+    expect(foodExpiringDailyRules([item], catalog, today)).toEqual([]);
+    // widen the long lead to 5 → today (expiry-5) is now inside
+    const out = foodExpiringDailyRules([item], catalog, today, { long: 5, short: 2 });
+    expect(out.map((n) => n.key)).toEqual(['sf-1:2026-09-01']);
+  });
 });
 
 describe('foodSpoiledOnceRules', () => {
@@ -126,6 +137,11 @@ describe('stepsLowRule', () => {
     expect(stepsLowRule(2000, '2026-09-01')).toEqual([]);
     expect(stepsLowRule(9000, '2026-09-01')).toEqual([]);
   });
+
+  it('uses an overridden threshold (Lead-time szerkesztő)', () => {
+    expect(stepsLowRule(3500, '2026-09-01', 5000).length).toBe(1);
+    expect(stepsLowRule(5000, '2026-09-01', 5000)).toEqual([]);
+  });
 });
 
 describe('calorieStreakRule', () => {
@@ -154,6 +170,13 @@ describe('calorieStreakRule', () => {
 
   it('does not fire when the window is not exactly 5 days', () => {
     expect(calorieStreakRule(['2026-09-02', '2026-09-03', '2026-09-04', '2026-09-05'].map(over), today)).toEqual([]);
+  });
+
+  it('uses an overridden overshoot margin (Lead-time szerkesztő)', () => {
+    // every day is intake 3000 vs allowance 2000 → +1000 overshoot
+    const days = ['2026-09-01', '2026-09-02', '2026-09-03', '2026-09-04', '2026-09-05'].map(over);
+    expect(calorieStreakRule(days, today, 1500)).toEqual([]); // needs > +1500, only +1000
+    expect(calorieStreakRule(days, today, 500).length).toBe(1); // > +500, fires
   });
 });
 

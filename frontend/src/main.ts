@@ -18,8 +18,10 @@ import { apiBaseUrlInterceptor } from './app/core/api/api-base-url.interceptor';
 import { AuthSessionService } from './app/core/session/auth-session.service';
 import { authInterceptor } from './app/core/session/auth.interceptor';
 import { ActivityStepSyncService } from './app/core/health/activity-step-sync.service';
+import { NotificationHistoryStore } from './app/core/notifications/notification-history.store';
 import { NotificationSchedulerService } from './app/core/notifications/notification-scheduler.service';
 import { NotificationSettingsService } from './app/core/notifications/notification-settings.service';
+import { NotificationTuningService } from './app/core/notifications/notification-tuning.service';
 import { LocalDatabaseService } from './app/core/storage/local-database.service';
 import { provideStorageBackend } from './app/core/storage/storage-backend.provider';
 import { SyncEngineService } from './app/core/sync/sync-engine.service';
@@ -57,6 +59,8 @@ bootstrapApplication(AppComponent, {
       const syncEngine = inject(SyncEngineService);
       const stepSync = inject(ActivityStepSyncService);
       const notificationSettings = inject(NotificationSettingsService);
+      const notificationTuning = inject(NotificationTuningService);
+      const notificationHistory = inject(NotificationHistoryStore);
       const notificationScheduler = inject(NotificationSchedulerService);
 
       await Promise.all([
@@ -64,6 +68,8 @@ bootstrapApplication(AppComponent, {
         themeService.init(),
         authSession.restore(),
         notificationSettings.init(),
+        notificationTuning.init(),
+        notificationHistory.init(),
       ]);
 
       const userId = authSession.userId();

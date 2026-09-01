@@ -29,6 +29,7 @@ import { BackgroundReminders } from './background-reminders.plugin';
 import { buildBackgroundPlan } from './notification-background-plan';
 import { LocalNotificationsGateway } from './local-notifications.gateway';
 import { NotificationDedupeStore } from './notification-dedupe.store';
+import { NotificationHistoryStore } from './notification-history.store';
 import { notificationNumericId } from './notification-ids';
 import {
   CalorieStreakDay,
@@ -40,6 +41,7 @@ import {
   stepsLowRule,
 } from './notification-rules';
 import { NotificationSettingsService } from './notification-settings.service';
+import { NotificationTuningService } from './notification-tuning.service';
 import { NOTIFICATION_SOURCE_FLAG, NOTIFICATION_TYPES, DesiredNotification, NotificationType } from './notification-types';
 
 export type NotificationPermission = 'unknown' | 'granted' | 'denied' | 'unavailable';
@@ -64,6 +66,11 @@ interface RegistryEntry {
   fireAt: string;
   /** Active language when the text was baked in — a language change forces a reschedule. */
   lang: string;
+  /** Rendered text + tap target, carried so the notification-history log can be written from the
+   *  reconcile that infers this notification's delivery (params aren't available there). */
+  title?: string;
+  body?: string;
+  route?: string;
 }
 
 type Registry = Record<string, RegistryEntry>;
@@ -101,7 +108,9 @@ export class NotificationSchedulerService {
   private readonly injector = inject(Injector);
   private readonly gateway = inject(LocalNotificationsGateway);
   private readonly settings = inject(NotificationSettingsService);
+  private readonly tuning = inject(NotificationTuningService);
   private readonly dedupe = inject(NotificationDedupeStore);
+  private readonly history = inject(NotificationHistoryStore);
   private readonly featureFlags = inject(FeatureFlagsService);
   private readonly translate = inject(TranslateService);
   private readonly language = inject(LanguageService);
@@ -173,6 +182,7 @@ export class NotificationSchedulerService {
       () => {
         const tick = this.dataChange.tick();
         this.settings.enabled();
+        this.tuning.tuning();
         this.language.activeLanguage();
         this.storedFood.items();
         this.food.items();
@@ -393,6 +403,7 @@ export class NotificationSchedulerService {
           pendingIds.delete(id);
         } else {
           await this.dedupe.record(entry.type, entry.key, entry.fireAt.slice(0, 10));
+          await this.recordHistory(entry.type, entry.key, entry, new Date(entry.fireAt).getTime());
         }
       } else if (stillPending && desiredById.has(id) && entry.lang === lang) {
         nextRegistry[idStr] = entry;
@@ -408,15 +419,17 @@ export class NotificationSchedulerService {
         continue;
       }
       const fireDate = new Date(n.fireAt);
+      const text = this.render(n);
       if (fireDate <= now) {
         if ((await this.dedupe.has(n.type, n.key)) || pendingIds.has(id)) {
           continue;
         }
-        await this.fire(id, n, null);
+        await this.fire(id, n, null, text);
         await this.dedupe.record(n.type, n.key, todayIso);
+        await this.history.record({ type: n.type, key: n.key, ...text, route: n.route, firedAt: now.getTime() });
       } else {
-        await this.fire(id, n, fireDate);
-        nextRegistry[id] = { type: n.type, key: n.key, fireAt: n.fireAt, lang };
+        await this.fire(id, n, fireDate, text);
+        nextRegistry[id] = { type: n.type, key: n.key, fireAt: n.fireAt, lang, ...text, route: n.route };
       }
     }
 
@@ -441,6 +454,7 @@ export class NotificationSchedulerService {
         calorieStreakToday: this.calorieStreakDays(todayIso),
       },
       todayIso,
+      this.tuning.tuning(),
     );
 
     // Drop anything the live scheduler already fired today: an immediate fire is recorded **only** in
@@ -495,8 +509,11 @@ export class NotificationSchedulerService {
 
   /**
    * Merge the native worker's "already fired" ledger ({@link BG_DEDUPE_KEY}) into the shared
-   * {@link NotificationDedupeStore}, then clear it. The worker appends `{type,key,day}` rows; a rare
-   * clear-vs-append race just means one banner could be re-shown, which the spec already tolerates.
+   * {@link NotificationDedupeStore} and the {@link NotificationHistoryStore}, then clear it. The
+   * worker appends `{type,key,day}` rows; a rare clear-vs-append race just means one banner could be
+   * re-shown, which the spec already tolerates. The rendered text for the history row is recovered
+   * from the last background plan the app itself wrote ({@link BG_PLAN_KEY}); if that plan has since
+   * been rebuilt without the entry, the row is logged route-only.
    */
   private async mergeNativeDedupe(todayIso: string): Promise<void> {
     const raw = (await Preferences.get({ key: BG_DEDUPE_KEY })).value;
@@ -511,6 +528,7 @@ export class NotificationSchedulerService {
       return;
     }
     if (Array.isArray(rows)) {
+      const planText = await this.loadBackgroundPlanText();
       for (const row of rows) {
         if (
           row !== null &&
@@ -519,11 +537,45 @@ export class NotificationSchedulerService {
           typeof (row as { key?: unknown }).key === 'string'
         ) {
           const r = row as { type: NotificationType; key: string; day?: unknown };
-          await this.dedupe.record(r.type, r.key, typeof r.day === 'string' ? r.day : todayIso);
+          const day = typeof r.day === 'string' ? r.day : todayIso;
+          await this.dedupe.record(r.type, r.key, day);
+          const firedAt = new Date(`${day}T09:00:00`).getTime();
+          await this.recordHistory(r.type, r.key, planText.get(`${r.type}|${r.key}`) ?? {}, firedAt);
         }
       }
     }
     await Preferences.set({ key: BG_DEDUPE_KEY, value: '[]' });
+  }
+
+  /** `type|key` → rendered text/route, read back from the background plan file for history recovery. */
+  private async loadBackgroundPlanText(): Promise<Map<string, { title?: string; body?: string; route?: string }>> {
+    const map = new Map<string, { title?: string; body?: string; route?: string }>();
+    const raw = (await Preferences.get({ key: BG_PLAN_KEY })).value;
+    if (raw === null) {
+      return map;
+    }
+    try {
+      const plan = JSON.parse(raw) as {
+        entries?: { type?: string; key?: string; title?: string; body?: string; route?: string }[];
+        stepsLow?: { key?: string; title?: string; bodyTemplate?: string; route?: string } | null;
+      };
+      for (const e of plan.entries ?? []) {
+        if (typeof e.type === 'string' && typeof e.key === 'string') {
+          map.set(`${e.type}|${e.key}`, { title: e.title, body: e.body, route: e.route });
+        }
+      }
+      if (plan.stepsLow && typeof plan.stepsLow.key === 'string') {
+        map.set(`STEPS_LOW|${plan.stepsLow.key}`, {
+          title: plan.stepsLow.title,
+          // The template still carries the __STEPS__ placeholder — good enough for a log row.
+          body: plan.stepsLow.bodyTemplate,
+          route: plan.stepsLow.route,
+        });
+      }
+    } catch {
+      // Corrupt plan — history rows for the native fires fall back to route-only.
+    }
+    return map;
   }
 
   /** Types whose source feature flag is on AND whose device-local switch is on. */
@@ -534,15 +586,19 @@ export class NotificationSchedulerService {
   }
 
   private computeDesired(type: NotificationType, todayIso: string, now: Date): DesiredNotification[] {
+    const tuning = this.tuning.tuning();
     switch (type) {
       case 'FOOD_EXPIRING_DAILY':
-        return foodExpiringDailyRules(this.storedFood.items(), this.food.items(), todayIso);
+        return foodExpiringDailyRules(this.storedFood.items(), this.food.items(), todayIso, {
+          long: tuning.foodExpiringLeadDaysLong,
+          short: tuning.foodExpiringLeadDaysShort,
+        });
       case 'FOOD_SPOILED_ONCE':
         return foodSpoiledOnceRules(this.storedFood.items(), this.food.items(), todayIso);
       case 'STEPS_LOW':
-        return stepsLowRule(this.stepLog.stepsForDay(todayIso), todayIso);
+        return stepsLowRule(this.stepLog.stepsForDay(todayIso), todayIso, tuning.stepsLowThreshold);
       case 'CALORIE_STREAK':
-        return calorieStreakRule(this.calorieStreakDays(todayIso), todayIso);
+        return calorieStreakRule(this.calorieStreakDays(todayIso), todayIso, tuning.calorieStreakMarginKcal);
       case 'HOUSEHOLD_TASK_DUE':
         return householdTaskDueRule(this.householdTask.items(), todayIso);
       case 'EVENT_OCCURRENCE':
@@ -590,14 +646,44 @@ export class NotificationSchedulerService {
     return days;
   }
 
-  private async fire(id: number, n: DesiredNotification, at: Date | null): Promise<void> {
+  /** Translate a desired notification's title/body once so the same strings feed the OS call, the
+   *  registry entry and the notification-history log. */
+  private render(n: DesiredNotification): { title: string; body: string } {
+    return {
+      title: this.translate.instant(n.titleKey, n.params),
+      body: this.translate.instant(n.bodyKey, n.params),
+    };
+  }
+
+  /**
+   * documentation/Features/Értesítések.md "Értesítés-előzmény lista" — append a delivered banner to
+   * {@link NotificationHistoryStore}. `source` carries the rendered text (a registry entry, or a
+   * plain object built from the background plan); a missing title just yields a route-only row.
+   */
+  private async recordHistory(
+    type: NotificationType,
+    key: string,
+    source: { title?: string; body?: string; route?: string },
+    firedAt: number,
+  ): Promise<void> {
+    await this.history.record({
+      type,
+      key,
+      title: source.title ?? '',
+      body: source.body ?? '',
+      route: source.route ?? '',
+      firedAt,
+    });
+  }
+
+  private async fire(id: number, n: DesiredNotification, at: Date | null, text: { title: string; body: string }): Promise<void> {
     await this.gateway.schedule({
       notifications: [
         {
           id,
           channelId: CHANNEL_ID,
-          title: this.translate.instant(n.titleKey, n.params),
-          body: this.translate.instant(n.bodyKey, n.params),
+          title: text.title,
+          body: text.body,
           // Inexact: daily 09:00 / 20:00 / event reminders tolerate a few minutes' drift and the
           // app-open reconcile catches misses — so we skip the exact-alarm permission entirely (no
           // "Alarms & reminders" settings redirect on first schedule, no Play-review friction).

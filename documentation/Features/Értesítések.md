@@ -23,7 +23,7 @@ Lokális (készüléken ütemezett) értesítések a fontos küszöbökről. Az 
 #### Beállítások UI
 
 - Belépés: **Menü → Értesítések**.
-- Típusonként ki/be kapcsoló az alábbi **aktív** típusokra. Nincs lead-time szerkesztő az első körben (a szabályok fixek a specekben).
+- Típusonként ki/be kapcsoló az alábbi **aktív** típusokra. Az első kör szabályai a specben rögzített **alapértékekkel** szállítanak; a **Lead-time szerkesztő** (post-MVP, Menü → Értesítések → Lead-time szerkesztő) négy küszöböt tesz device-local, szerkeszthető beállítássá — lásd lent, „Lead-time szerkesztő".
 
 #### Aktív típusok (első kör)
 
@@ -80,6 +80,19 @@ Lokális (készüléken ütemezett) értesítések a fontos küszöbökről. Az 
 - Törlés / sorozat-szerkesztés után a jövőbeli ütemezés újraszámolódik. A már kiment banner **nem** vonódik vissza.
 - Nincs eseményenkénti lead time (15 perc / 1 óra előtte nincs).
 
+#### Lead-time szerkesztő (post-MVP)
+
+Menü → Értesítések → Lead-time szerkesztő. A fenti szabályok **négy** küszöbét teszi device-local, szerkeszthető beállítássá (nem syncel, nem feature flag; ugyanaz a `@capacitor/preferences` minta, mint a típus-kapcsolóké). Minden mező tartományhoz vágott egész, „Mentés" és „Alapértékek visszaállítása" gombbal:
+
+| Beállítás | Alap | Hat |
+|---|---|---|
+| Figyelmeztetés hosszú szavatosságnál (nap) | 3 | §1 lead-window, ha a katalógus-tárolhatóság a helyre **> 5 nap** |
+| Figyelmeztetés rövid szavatosságnál (nap) | 2 | §1 lead-window egyébként (vagy nincs katalógus-adat) |
+| Kevés lépés küszöb | 2000 | §3 `STEPS_LOW` — este 20:00 szól, ha a mai lépés ez alatt |
+| Kalória-túllépés ráhagyás (kcal) | 750 | §4 `CALORIE_STREAK` — egy nap csak `bevitt > keret + ráhagyás` esetén számít |
+
+**Fixen marad:** a 09:00 / 20:00 fix idők (a natív `AlarmManager` slotokhoz drótozva), a §1 `> 5 nap` katalógus-küszöb (strukturális elágazás), és a §4 5 napos sorozat-hossz. A háttér-worker terve (`lm2_notifBgPlan`) minden reconcile-kor a friss küszöbökkel épül újra, így a `STEPS_LOW` küszöb és az étel-lead a zárt app melletti tüzelésnél is érvényes.
+
 #### Későbbi típusok (nem implementálandó az első körben)
 
 Hook / placeholder — lead time és szöveg a forrás-spec készültekor:
@@ -110,7 +123,7 @@ Az ütemezett értesítés szövege az **ütemezés pillanatában** dől el, teh
 
 - Menü → Értesítések: típus kapcsolók + rövid magyarázat (mikor szól).
 - Értesítés tap → releváns képernyő (készlet / lépésszám / étkezés / háztartási lista Lejárt+Ma / esemény szerkesztő), ha az app megnyílik.
-- Nincs külön „értesítés előzmények” lista az első körben.
+- **Értesítés-előzmény lista** (post-MVP): Menü → Értesítések → Előzmények — a ténylegesen kiment bannerek read-only, legfrissebb-elöl naplója (típus, cím, szöveg, időpont), soronként a banner eredeti route-jára navigálva. Device-local (`@capacitor/preferences`), nem syncel, korlátozott hosszúságú (a legrégebbi sorok kiesnek). „Előzmények törlése" csak a naplót üríti, a kapcsolókat és a dedup-naplót nem.
 
 ### Megjegyzések
 
@@ -135,6 +148,8 @@ Nincs nyitott kérdés.
 - A `STEPS_LOW` esti Health Connect olvasásához az `android.permission.health.READ_HEALTH_DATA_IN_BACKGROUND` engedély kell (a Lépésszám képernyőn külön „háttér-hozzáférés" prompt, csak a foreground `READ_STEPS` után kérhető). Megtagadva a `STEPS_LOW` marad app-nyitáskor értékelődő. Az agresszív OEM-akkumulátor-optimalizálás (Samsung/Xiaomi) a riasztást órákkal késleltetheti vagy kilőheti — a végső védőháló továbbra is az app-open reconcile.
 - `EVENT_OCCURRENCE` előre-ütemzési horizont: **+30 nap** (a [[Események]] ±1 éves vetítési horizontjánál szűkebb). Egy távolabbi előfordulás az első olyan app-nyitáskor kap értesítést, amikor már 30 napon belülre esik — háttér-worker hiányában ez az elfogadott kompromisszum.
 - Beállítások page a Menü alatt; flag-ek **device-local** store ([[Bejelentkezés]] — nincs profil-sync az első körben).
+- **Értesítés-előzmény napló** (`NotificationHistoryStore`, post-MVP): a `NotificationScheduler` egyetlen íróként ugyanazon a három ponton fűz hozzá, ahol a dedup-naplóba is ír — azonnali (múltbeli) fire, egy ütemezett értesítés kézbesítésének a következő reconcile-nál történő kikövetkeztetése, és a natív háttér-worker által zárt app mellett kiküldött banner (a szöveget ilyenkor az utolsó `lm2_notifBgPlan` tervből nyeri vissza). `(type,key)` páronként max egyszer naplóz. A megjelenített szöveg az ütemezéskori nyelven marad (a napló nem renderel újra nyelvváltáskor).
+- **Lead-time szerkesztő** (`NotificationTuningService`, post-MVP): a `notification-rules` négy küszöbe (`foodExpiringLeadDaysLong/Short`, `stepsLowThreshold`, `calorieStreakMarginKcal`) device-local `@capacitor/preferences` blob, tartományhoz vágott egészek. A `notification-rules` függvények opcionális paraméterként veszik (alapérték = spec-konstans, így a régi hívások és a tesztek nem törnek), a `NotificationScheduler` mindig a `tuning()` signalból adja át, és egy `effect`- olvasás miatt a küszöb-változás azonnal újraértékel + a háttér-tervet is újraírja.
 - Újraértékelés kiváltói: app indulás / előtérbe jövés, forrás-entitás mutáció, típus-kapcsoló váltás és **nyelvváltás** ([[Nyelv választás]]). A szövegek i18n kulcsokból készülnek, nem hardcode stringből.
 
 #### Backend-offline
@@ -142,6 +157,7 @@ Nincs nyitott kérdés.
 - Teljes első kör **kliensoldali**: Backend-offline és Full-offline is működik (helyi store + helyi ütemező).
 - A 08:00 / 20:00 háttér-worker szintén teljesen kliensoldali: `AlarmManager` + `WorkManager` + a `@capacitor/preferences` fájlon átvezetett terv/dedupe híd, saját backend nélkül. A `STEPS_LOW` esti értékeléséhez lokális Health Connect olvasás (nincs backend proxy).
 - Nincs értesítés-outbox a saját backend felé.
+- Az értesítés-előzmény napló és a Lead-time szerkesztő beállításai szintén device-local `@capacitor/preferences` blobok — nem syncelnek, Full-offline is olvashatók/írhatók.
 - Lásd [[Backend-offline first]].
 
 ### Backend

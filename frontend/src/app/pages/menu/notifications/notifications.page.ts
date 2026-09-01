@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
 import {
   IonBackButton,
@@ -30,8 +31,9 @@ interface NotificationRow {
 
 /**
  * documentation/Features/Értesítések.md "Beállítások UI": Menü → Értesítések. Per-type on/off
- * switches with a short "when it fires" explainer. No lead-time editor, no history list (round one).
- * A type is shown only when its source feature flag is on (documentation/Architektúra/Frontend.md).
+ * switches with a short "when it fires" explainer, plus links to the read-only history log and the
+ * lead-time editor. A type is shown only when its source feature flag is on
+ * (documentation/Architektúra/Frontend.md).
  */
 @Component({
   selector: 'app-notifications',
@@ -60,6 +62,7 @@ interface NotificationRow {
     IonText,
     IonButton,
     IonToggle,
+    RouterLink,
     TranslatePipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,

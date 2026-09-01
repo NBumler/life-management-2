@@ -109,6 +109,23 @@ describe('buildBackgroundPlan', () => {
     expect(off.stepsLow).toBeNull();
   });
 
+  it('threads the Lead-time szerkesztő tuning into the STEPS_LOW threshold and the food lead window', () => {
+    const item = storedFood({ expiresOn: '2026-09-06' }); // expiry-5 from TODAY
+    const catalog = [food({ shelfFridgeAmount: 10, shelfFridgeUnit: 'nap' })];
+    const tuning = {
+      foodExpiringLeadDaysLong: 5,
+      foodExpiringLeadDaysShort: 2,
+      stepsLowThreshold: 4000,
+      calorieStreakMarginKcal: 750,
+    };
+
+    const plan = buildBackgroundPlan(ALL_TYPES, sources({ storedFoods: [item], foods: catalog }), TODAY, tuning);
+
+    expect(plan.stepsLow?.threshold).toBe(4000);
+    // long lead widened to 5 → an expiry-5 item is already in the window on TODAY
+    expect(plan.entries.some((e) => e.type === 'FOOD_EXPIRING_DAILY' && e.fireAt.startsWith(TODAY))).toBeTrue();
+  });
+
   it('skips a type whose switch is off', () => {
     const item = storedFood({ expiresOn: '2026-09-02' });
     const only = new Set<NotificationType>(['HOUSEHOLD_TASK_DUE']);

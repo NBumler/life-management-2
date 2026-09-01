@@ -103,6 +103,28 @@
       "TITLE": "Esemény emlékeztető",
       "BODY": "{{title}}",
       "BODY_LOCATION": "{{title}} — {{location}}"
+    },
+    "HISTORY": {
+      "TITLE": "Előzmények",
+      "EMPTY": "Még nem ment ki értesítés.",
+      "CLEAR": "Törlés",
+      "CLEAR_CONFIRM_TITLE": "Előzmények törlése",
+      "CLEAR_CONFIRM_MESSAGE": "Biztosan törlöd a teljes értesítés-előzményt? Ez csak a naplót üríti, a kapcsolókat nem."
+    },
+    "TUNING": {
+      "TITLE": "Lead-time szerkesztő",
+      "FOOD_HEADER": "Élelmiszer lejárat",
+      "OTHER_HEADER": "Egyéb küszöbök",
+      "FOOD_LEAD_LONG": "Figyelmeztetés hosszú szavatosságnál (nap)",
+      "FOOD_LEAD_LONG_HINT": "Ennyi nappal a lejárat előtt kezdődik a napi emlékeztető, ha a katalógus szerinti tárolhatóság a helyre több mint 5 nap. Alap: 3.",
+      "FOOD_LEAD_SHORT": "Figyelmeztetés rövid szavatosságnál (nap)",
+      "FOOD_LEAD_SHORT_HINT": "Ugyanez, ha a tárolhatóság legfeljebb 5 nap, vagy nincs katalógus-adat. Alap: 2.",
+      "STEPS_LOW_THRESHOLD": "Kevés lépés küszöb",
+      "STEPS_LOW_THRESHOLD_HINT": "Este 8-kor szól, ha a mai lépésszám ez alatt van. Alap: 2000.",
+      "CALORIE_MARGIN": "Kalória-túllépés ráhagyás (kcal)",
+      "CALORIE_MARGIN_HINT": "Egy nap csak akkor számít a sorozatba, ha a bevitt kalória a napi keretet ennyivel meghaladja. Alap: 750.",
+      "SAVE": "Mentés",
+      "RESET": "Alapértékek visszaállítása"
     }
   },
   "STEPS": {

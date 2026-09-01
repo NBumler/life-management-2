@@ -1,0 +1,39 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/menu/notifications"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ 'NOTIFICATIONS.HISTORY.TITLE' | translate }}</ion-title>
+    @if (rows().length > 0) {
+      <ion-buttons slot="end">
+        <ion-button (click)="confirmClear()">{{ 'NOTIFICATIONS.HISTORY.CLEAR' | translate }}</ion-button>
+      </ion-buttons>
+    }
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  @if (!isNative) {
+    <ion-text color="medium">
+      <p class="ion-padding">{{ 'NOTIFICATIONS.WEB_UNAVAILABLE' | translate }}</p>
+    </ion-text>
+  } @else if (rows().length === 0) {
+    <ion-text color="medium">
+      <p class="ion-padding">{{ 'NOTIFICATIONS.HISTORY.EMPTY' | translate }}</p>
+    </ion-text>
+  } @else {
+    <ion-list>
+      @for (row of rows(); track row.type + '|' + row.key) {
+        <ion-item [button]="row.route.length > 0" [detail]="row.route.length > 0" (click)="open(row)">
+          <ion-label class="ion-text-wrap">
+            {{ row.displayTitle }}
+            @if (row.body) {
+              <ion-note class="history-body">{{ row.body }}</ion-note>
+            }
+            <ion-note class="history-body">{{ row.firedAt | date: 'short' }}</ion-note>
+          </ion-label>
+        </ion-item>
+      }
+    </ion-list>
+  }
+</ion-content>
