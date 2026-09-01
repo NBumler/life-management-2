@@ -149,6 +149,33 @@ class AycmPartnerIntegrationTest {
 				.andExpect(jsonPath("$.deleted").value(true));
 	}
 
+	@Test
+	void priceRuleEndpoints_404_whenTheRuleBelongsToAnotherPartnerInThePath() throws Exception {
+		String token = registerAndLogin("aycm-rule-partner");
+		UUID partnerA = UUID.randomUUID();
+		UUID partnerB = UUID.randomUUID();
+		UUID ruleId = UUID.randomUUID();
+		createPartner(token, partner(partnerA, "Gym A")).andExpect(status().isOk());
+		createPartner(token, partner(partnerB, "Gym B")).andExpect(status().isOk());
+		createRule(token, partnerA, rule(ruleId, partnerA, "08:00", "12:00")).andExpect(status().isOk());
+
+		String wrongPath = "/api/aycm-partners/" + partnerB + "/price-rules/" + ruleId;
+		mockMvc.perform(get(wrongPath).header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+				.andExpect(status().isNotFound());
+		mockMvc.perform(put(wrongPath).contentType(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+				.content(json(rule(ruleId, partnerB, "08:00", "12:00"))))
+				.andExpect(status().isNotFound());
+		mockMvc.perform(delete(wrongPath).header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+				.andExpect(status().isNotFound());
+
+		// The rule is untouched under its real partner.
+		mockMvc.perform(get("/api/aycm-partners/" + partnerA + "/price-rules/" + ruleId)
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.deleted").value(false));
+	}
+
 	private ResultActions createPartner(String token, AycmPartner body) throws Exception {
 		return mockMvc.perform(post("/api/aycm-partners").contentType(MediaType.APPLICATION_JSON)
 				.header(HttpHeaders.AUTHORIZATION, "Bearer " + token).content(json(body)));

@@ -34,7 +34,7 @@ class AycmPriceRuleController implements AycmPriceRulesApi {
 
 	@Override
 	public ResponseEntity<AycmPriceRule> getAycmPriceRule(UUID id, UUID ruleId) {
-		return ResponseEntity.ok(service.get(currentUser.id(), ruleId));
+		return ResponseEntity.ok(service.get(currentUser.id(), id, ruleId));
 	}
 
 	@Override
@@ -44,6 +44,6 @@ class AycmPriceRuleController implements AycmPriceRulesApi {
 
 	@Override
 	public ResponseEntity<AycmPriceRule> deleteAycmPriceRule(UUID id, UUID ruleId) {
-		return ResponseEntity.ok(service.delete(currentUser.id(), ruleId));
+		return ResponseEntity.ok(service.delete(currentUser.id(), id, ruleId));
 	}
 }

@@ -605,6 +605,25 @@ ahol van backend) + frontend (`npm run build` + `test:ci`) + `lint` zöld:
   `RecurringExpense.id`-t `createdExpenseId`-ként átadva; a hub `?createdExpenseId=`
   esetén auto-`linkExpense` + param-strip. A hub tisztán fogyasztó — nincs új
   entitás / OpenAPI / offline-wiring.
+- **Code-review follow** (ebben a commitban): a 4 AYCM commit `/code-review`-ja
+  után 9 észrevétel javítva. Frontend: (1) törölt-partneres Check-In szerkesztése
+  már nem építi újra a snapshotot élő-only adatból — `snapshotFrozen` állapot, a
+  sor fagyott (csak `notes`), a picker élő partnerre válthat; (2) `ensureRulesLoaded`
+  feltétel nélkül tölt (stale ársáv-cache → rossz 0 Ft snapshot); (3) `now()` nem
+  írja felül a mai sor idejét, ha már azon állunk; (4) AYCM hub / statisztika /
+  Check-In `ionViewWillEnter` minden belépéskor újratölti a repókat (sync-pull
+  után frissül); (5) `SyncEngine.applyTombstone` `AycmPartner`-DELETE drain után
+  lokálisan is tombstone-olja a cascade árszabály-sorokat (`_dirty` clear, mint
+  `HouseholdRoom`→task); (6) `recurring-expense-edit` `?returnTo` csak create
+  módban él. Backend: (7) `AycmPriceRuleService` `get`/`update`/`delete`/`create`
+  ellenőrzi, hogy a szabály a path `{id}` partnerhez tartozik → 404 (OpenAPI
+  szerződés); (8) `idx_aycm_settings_user_id` (`V28`) bekötve a
+  `GlobalExceptionHandler` unique-index → mező map-jébe (409 `UNIQUE_VIOLATION`,
+  nem 500) + race-teszt; (9) `AycmPriceRule.yaml` `endTime` regex zárójelezve
+  (`^(…|24:00)$`). Backend + frontend + lint zöld. Nyitva hagyva: a web
+  `HttpStorageBackend` mindig POST-tal upsertel (nem PUT edit-re) — ez az egész
+  online-only web build ~25 entitáson egységes, dokumentált viselkedése
+  (`POST` létező id-ra idempotens upsert, sosem 409), nem AYCM-regresszió.
 
 **Tudatosan kihagyva ebből a körből** (a specek "Nem scope" szerint): hivatalos
 AYCM-import / partner-API / térkép / cím-mező; éjfélen átnyúló ársáv; több

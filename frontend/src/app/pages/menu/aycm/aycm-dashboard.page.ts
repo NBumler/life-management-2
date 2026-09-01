@@ -130,15 +130,14 @@ export class AycmDashboardPage implements OnInit, ViewWillEnter {
     void this.ngOnInit();
   }
 
+  /**
+   * Reload unconditionally on every entry (not `!loaded()`-guarded): Ionic keeps the page alive
+   * across tab switches, so `ngOnInit` runs once — without this a Check-In / pass change that landed
+   * via a background sync pull (SQLite updated, repository signals not) would never reach the cards.
+   */
   private async loadAll(): Promise<void> {
-    const loads: Promise<void>[] = [];
-    if (!this.checkInRepo.loaded()) {
-      loads.push(this.checkInRepo.load());
-    }
-    if (!this.settingsRepo.loaded()) {
-      loads.push(this.settingsRepo.load());
-    }
-    if (this.financeEnabled && !this.expenseRepo.loaded()) {
+    const loads: Promise<void>[] = [this.checkInRepo.load(), this.settingsRepo.load()];
+    if (this.financeEnabled) {
       loads.push(this.expenseRepo.load());
     }
     await Promise.all(loads);

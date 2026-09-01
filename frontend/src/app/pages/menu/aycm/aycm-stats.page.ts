@@ -103,18 +103,19 @@ export class AycmStatsPage implements OnInit, ViewWillEnter {
     return worthItHuf(this.summary().visitValueSumHuf, cost);
   });
 
+  /**
+   * Reload unconditionally on every entry (not `!loaded()`-guarded): Ionic keeps the page alive
+   * across tab switches, so `ngOnInit` runs once — without this a Check-In / partner rename that
+   * landed via a background sync pull (SQLite updated, repository signals not) would never reach the
+   * windows. The re-entry hook is `ionViewWillEnter`.
+   */
   async ngOnInit(): Promise<void> {
-    const loads: Promise<void>[] = [];
-    if (!this.checkInRepo.loaded()) {
-      loads.push(this.checkInRepo.load());
-    }
-    if (!this.partnerRepo.loaded()) {
-      loads.push(this.partnerRepo.load());
-    }
-    if (!this.settingsRepo.loaded()) {
-      loads.push(this.settingsRepo.load());
-    }
-    if (this.financeEnabled && !this.expenseRepo.loaded()) {
+    const loads: Promise<void>[] = [
+      this.checkInRepo.load(),
+      this.partnerRepo.load(),
+      this.settingsRepo.load(),
+    ];
+    if (this.financeEnabled) {
       loads.push(this.expenseRepo.load());
     }
     await Promise.all(loads);

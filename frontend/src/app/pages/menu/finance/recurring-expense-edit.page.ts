@@ -90,8 +90,11 @@ export class RecurringExpenseEditPage implements OnInit {
     if (!this.repository.loaded()) {
       await this.repository.load();
     }
-    this.returnTo = this.route.snapshot.queryParamMap.get('returnTo');
     const idParam = this.route.snapshot.paramMap.get('id');
+    // documentation/Features/AYCM tracker.md "Visszatérés mechanizmusa": the `?returnTo` round-trip
+    // is create-only. Ignore it in edit mode so a stale/hand-crafted param can't bounce an existing
+    // row back to the caller as if it were freshly created.
+    this.returnTo = idParam === null || idParam === 'new' ? this.route.snapshot.queryParamMap.get('returnTo') : null;
     if (idParam !== null && idParam !== 'new') {
       const existing = this.repository.items().find((row) => row.id === idParam && !row.deleted);
       if (existing === undefined) {

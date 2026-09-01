@@ -21,6 +21,7 @@ import {
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
+import { AycmCheckIn } from '../../../api/model/aycmCheckIn';
 import { AycmCheckInRepository } from '../../../core/data/aycm-check-in.repository';
 import { AycmPartnerRepository } from '../../../core/data/aycm-partner.repository';
 import { today } from '../../../shared/local-date';
@@ -77,9 +78,25 @@ export class AycmCheckInPage implements OnInit, ViewWillEnter {
   readonly partnerId = signal<string | null>(null);
   readonly notes = signal('');
   readonly editingId = signal<string | null>(null);
+  /** The live row currently being edited (its stored snapshot), or null for a fresh create. */
+  readonly editingRow = signal<AycmCheckIn | null>(null);
 
   readonly livePartners = computed(() => this.partnerRepo.partners().filter((p) => !p.deleted));
   readonly hasNoPartners = computed(() => this.partnerRepo.loaded() && this.livePartners().length === 0);
+
+  /** The currently selected partner is a live one (i.e. it appears in the picker). */
+  readonly selectedPartnerLive = computed(() => this.livePartners().some((p) => p.id === this.partnerId()));
+
+  /**
+   * documentation/Subfeatures/AYCM Check-In.md: a Check-In whose partner was later deleted stays
+   * readable / deletable and its notes editable, but partner + date + time are frozen and the stored
+   * snapshot must survive untouched — no re-match against live-only data. True only while the stored
+   * (deleted) partner is still selected; picking a live partner un-freezes and re-matches.
+   */
+  readonly snapshotFrozen = computed(() => {
+    const row = this.editingRow();
+    return row !== null && row.partnerId === this.partnerId() && !this.selectedPartnerLive();
+  });
 
   /** The at-most-one live rule covering the current partner/date/time, or null (gap → yellow, 0 Ft). */
   readonly matchedRule = computed(() => {
@@ -97,10 +114,10 @@ export class AycmCheckInPage implements OnInit, ViewWillEnter {
   readonly previewListPrice = computed(() => this.matchedRule()?.listPriceHuf ?? 0);
 
   async ngOnInit(): Promise<void> {
-    await Promise.all([
-      this.partnerRepo.loaded() ? Promise.resolve() : this.partnerRepo.load(),
-      this.checkInRepo.loaded() ? Promise.resolve() : this.checkInRepo.load(),
-    ]);
+    // Reload unconditionally on every entry (Ionic keeps the page alive across tab switches, so
+    // `ngOnInit` runs once): a partner / Check-In change from a background sync pull updates SQLite
+    // but not the repository signals, and this screen must match against the current live rows.
+    await Promise.all([this.partnerRepo.load(), this.checkInRepo.load()]);
     const dateParam = this.route.snapshot.queryParamMap.get('date');
     await this.loadForDate(dateParam ?? this.resolveInitialDate());
   }
@@ -118,11 +135,13 @@ export class AycmCheckInPage implements OnInit, ViewWillEnter {
     this.date.set(date);
     const existing = this.checkInRepo.checkInForDate(date);
     if (existing) {
+      this.editingRow.set(existing);
       this.editingId.set(existing.id);
       this.partnerId.set(existing.partnerId);
       this.time.set(existing.checkInTime);
       this.notes.set(existing.notes ?? '');
     } else {
+      this.editingRow.set(null);
       this.editingId.set(null);
       this.notes.set('');
       if (this.editingId() === null && this.partnerId() === null && this.livePartners().length === 1) {
@@ -134,13 +153,17 @@ export class AycmCheckInPage implements OnInit, ViewWillEnter {
 
   private async ensureRulesLoaded(): Promise<void> {
     const id = this.partnerId();
-    if (id && this.partnerRepo.rulesFor(id).length === 0) {
+    // Reload unconditionally (like the partner editor / list): a cached-but-stale rule list — e.g.
+    // a price-rule change delivered by a background sync pull, which updates SQLite but not the
+    // repository signal — would otherwise be matched against and produce a wrong 0 Ft snapshot.
+    if (id && this.selectedPartnerLive()) {
       await this.partnerRepo.loadRules(id);
     }
   }
 
   async onDateChange(value: string): Promise<void> {
-    if (value) {
+    // A frozen (deleted-partner) row's date is not editable — ignore stray change events.
+    if (value && !this.snapshotFrozen()) {
       await this.loadForDate(value);
     }
   }
@@ -151,6 +174,12 @@ export class AycmCheckInPage implements OnInit, ViewWillEnter {
   }
 
   now(): void {
+    // Already editing today's row → just stamp the time; reloading would discard an in-progress
+    // notes/partner edit. Only jump (and reload that day's row) when we're on a different date.
+    if (this.date() === today()) {
+      this.time.set(nowLocalTime());
+      return;
+    }
     void this.loadForDate(today()).then(() => this.time.set(nowLocalTime()));
   }
 
@@ -167,6 +196,30 @@ export class AycmCheckInPage implements OnInit, ViewWillEnter {
     if (!partnerId || !this.canSave) {
       return;
     }
+
+    // documentation/Subfeatures/AYCM Check-In.md: editing a Check-In whose partner was later deleted
+    // may only touch `notes` — the historical snapshot (partnerName, rule, prices, date, time) is
+    // preserved verbatim, never rebuilt from live-only data.
+    const frozenRow = this.snapshotFrozen() ? this.editingRow() : null;
+    if (frozenRow) {
+      const frozenNotes = this.notes().trim();
+      await this.checkInRepo.save({
+        id: frozenRow.id,
+        checkInDate: frozenRow.checkInDate,
+        checkInTime: frozenRow.checkInTime,
+        partnerId: frozenRow.partnerId,
+        partnerName: frozenRow.partnerName,
+        ruleId: frozenRow.ruleId ?? null,
+        ruleLabel: frozenRow.ruleLabel,
+        listPriceHuf: frozenRow.listPriceHuf,
+        coPaymentHuf: frozenRow.coPaymentHuf,
+        visitValueHuf: frozenRow.visitValueHuf,
+        notes: frozenNotes.length > 0 ? frozenNotes : null,
+      });
+      await this.router.navigateByUrl(LIST_URL);
+      return;
+    }
+
     // Guard against a stale editingId: if the target day already has a different live row, edit it.
     const existing = this.checkInRepo.checkInForDate(this.date());
     const targetId = this.editingId() ?? existing?.id;

@@ -22,12 +22,17 @@
     </ion-list>
   } @else {
     <ion-list>
+      @if (snapshotFrozen()) {
+        <ion-item lines="none">
+          <ion-label class="ion-text-wrap" color="warning">{{ 'AYCM.CHECK_IN.DELETED_PARTNER_HINT' | translate }}</ion-label>
+        </ion-item>
+      }
       <ion-item>
         <ion-select
           [label]="'AYCM.CHECK_IN.FIELD_PARTNER' | translate"
           labelPlacement="stacked"
           interface="action-sheet"
-          [value]="partnerId()"
+          [value]="selectedPartnerLive() ? partnerId() : null"
           (ionChange)="onPartnerChange($any($event.detail.value))"
         >
           @for (partner of livePartners(); track partner.id) {
@@ -42,6 +47,7 @@
           labelPlacement="stacked"
           [label]="'AYCM.CHECK_IN.FIELD_DATE' | translate"
           [value]="date()"
+          [disabled]="snapshotFrozen()"
           (ionChange)="onDateChange($any($event.detail.value))"
         ></ion-input>
       </ion-item>
@@ -52,9 +58,12 @@
           labelPlacement="stacked"
           [label]="'AYCM.CHECK_IN.FIELD_TIME' | translate"
           [value]="time()"
+          [disabled]="snapshotFrozen()"
           (ionInput)="time.set($any($event.target).value ?? '')"
         ></ion-input>
-        <ion-button slot="end" fill="clear" (click)="now()">{{ 'AYCM.CHECK_IN.NOW' | translate }}</ion-button>
+        @if (!snapshotFrozen()) {
+          <ion-button slot="end" fill="clear" (click)="now()">{{ 'AYCM.CHECK_IN.NOW' | translate }}</ion-button>
+        }
       </ion-item>
 
       <ion-item>
@@ -67,19 +76,21 @@
       </ion-item>
     </ion-list>
 
-    <div class="ion-padding">
-      @if (matchedRule()) {
-        <ion-text color="success">
-          <p>
-            {{ 'AYCM.CHECK_IN.PREVIEW_MATCH' | translate: { label: previewLabel(), price: previewListPrice() } }}
-          </p>
-        </ion-text>
-      } @else {
-        <ion-text color="warning">
-          <p>{{ 'AYCM.CHECK_IN.PREVIEW_NO_MATCH' | translate }}</p>
-        </ion-text>
-      }
-    </div>
+    @if (!snapshotFrozen()) {
+      <div class="ion-padding">
+        @if (matchedRule()) {
+          <ion-text color="success">
+            <p>
+              {{ 'AYCM.CHECK_IN.PREVIEW_MATCH' | translate: { label: previewLabel(), price: previewListPrice() } }}
+            </p>
+          </ion-text>
+        } @else {
+          <ion-text color="warning">
+            <p>{{ 'AYCM.CHECK_IN.PREVIEW_NO_MATCH' | translate }}</p>
+          </ion-text>
+        }
+      </div>
+    }
 
     @if (isEdit) {
       <div class="ion-padding">

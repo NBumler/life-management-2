@@ -1105,9 +1105,16 @@ export class SyncEngineService {
     } else if (item.entityType === 'RecurringExpense') {
       await this.db.executeTransaction([recurringExpenseTombstoneTask(item.targetEntityId, null, now)]);
     } else if (item.entityType === 'AycmPartner') {
-      // documentation/Subfeatures/AYCM elfogadóhely hozzáadása.md: the server cascades to live price
-      // rules; the pull delivers their own tombstones, so nothing extra here.
-      await this.db.executeTransaction([aycmPartnerTombstoneTask(item.targetEntityId, null, now)]);
+      // documentation/Subfeatures/AYCM elfogadóhely hozzáadása.md: partner delete cascades to its own
+      // price rules locally too (the server cascades server-side). Those rows carry no outbox entry,
+      // so — like HouseholdRoom→tasks — their `_dirty` must be cleared here; otherwise a `Drop` in
+      // the sync center (no follow-up pull) leaves them `_dirty=1` forever and `aycmPriceRule`
+      // server-apply's `WHERE _dirty = 0` guard blocks every future update to them.
+      const ruleRows = await this.db.query<{ id: string }>('SELECT id FROM aycm_price_rule WHERE partner_id = ?', [item.targetEntityId]);
+      await this.db.executeTransaction([
+        aycmPartnerTombstoneTask(item.targetEntityId, null, now),
+        ...ruleRows.map((row) => aycmPriceRuleTombstoneTask(row.id, null, now)),
+      ]);
     } else if (item.entityType === 'AycmPriceRule') {
       await this.db.executeTransaction([aycmPriceRuleTombstoneTask(item.targetEntityId, null, now)]);
     } else if (item.entityType === 'AycmCheckIn') {

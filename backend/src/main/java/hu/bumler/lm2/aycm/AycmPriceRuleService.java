@@ -41,8 +41,9 @@ class AycmPriceRuleService {
 	}
 
 	@Transactional(readOnly = true)
-	AycmPriceRule get(UUID userId, UUID ruleId) {
+	AycmPriceRule get(UUID userId, UUID partnerId, UUID ruleId) {
 		AycmPriceRuleEntity entity = repository.findByIdAndUserId(ruleId, userId)
+				.map(existing -> requirePartner(existing, partnerId))
 				.orElseThrow(() -> new EntityNotFoundException("No such price rule"));
 		return mapper.toDto(entity);
 	}
@@ -53,6 +54,7 @@ class AycmPriceRuleService {
 		requireLivePartner(userId, partnerId);
 		AycmPriceRuleEntity entity = repository.findById(dto.getId())
 				.map(existing -> requireOwner(existing, userId))
+				.map(existing -> requirePartner(existing, partnerId))
 				.orElseGet(() -> new AycmPriceRuleEntity(dto.getId(), userId, partnerId));
 		applyFields(entity, userId, partnerId, dto);
 		return mapper.toDto(repository.saveAndFlush(entity));
@@ -62,6 +64,7 @@ class AycmPriceRuleService {
 	AycmPriceRule update(UUID userId, UUID partnerId, UUID ruleId, AycmPriceRule dto) {
 		requireLivePartner(userId, partnerId);
 		AycmPriceRuleEntity entity = repository.findByIdAndUserId(ruleId, userId)
+				.map(existing -> requirePartner(existing, partnerId))
 				.orElseThrow(() -> new EntityNotFoundException("No such price rule"));
 		if (entity.isDeleted()) {
 			throw new EntityDeletedException("Price rule already deleted");
@@ -72,8 +75,9 @@ class AycmPriceRuleService {
 
 	/** Soft delete, idempotent. Past Check-In snapshots are untouched. */
 	@Transactional
-	AycmPriceRule delete(UUID userId, UUID ruleId) {
+	AycmPriceRule delete(UUID userId, UUID partnerId, UUID ruleId) {
 		AycmPriceRuleEntity entity = repository.findByIdAndUserId(ruleId, userId)
+				.map(existing -> requirePartner(existing, partnerId))
 				.orElseThrow(() -> new EntityNotFoundException("No such price rule"));
 		if (!entity.isDeleted()) {
 			entity.softDelete();
@@ -168,6 +172,18 @@ class AycmPriceRuleService {
 
 	private static AycmPriceRuleEntity requireOwner(AycmPriceRuleEntity entity, UUID userId) {
 		if (!entity.getUserId().equals(userId)) {
+			throw new EntityNotFoundException("No such price rule");
+		}
+		return entity;
+	}
+
+	/**
+	 * The rule must live under the partner named in the path ({@code /aycm-partners/{id}/price-rules/...}).
+	 * Without this a rule could be read, edited (against the wrong partner's overlap set) or deleted
+	 * through any other partner's path — the OpenAPI contract promises 404 there.
+	 */
+	private static AycmPriceRuleEntity requirePartner(AycmPriceRuleEntity entity, UUID partnerId) {
+		if (!entity.getPartnerId().equals(partnerId)) {
 			throw new EntityNotFoundException("No such price rule");
 		}
 		return entity;

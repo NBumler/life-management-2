@@ -183,6 +183,7 @@
       "PREVIEW_NO_MATCH": "Nincs illeszkedő ársáv — a látogatás értéke 0 Ft. Mentés így is lehetséges.",
       "NO_PARTNERS": "Még nincs elfogadóhelyed. Vegyél fel egyet a Check-In előtt.",
       "GO_TO_PARTNERS": "Elfogadóhelyek megnyitása",
+      "DELETED_PARTNER_HINT": "Ennek a bejegyzésnek az elfogadóhelye törölve lett. Az érték és az időpont változatlan marad; csak a megjegyzés szerkeszthető, vagy válassz élő elfogadóhelyet.",
       "DELETE": "Check-In törlése",
       "DELETE_CONFIRM_TITLE": "Check-In törlése",
       "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd a(z) {{date}} — {{name}} bejegyzést? A nap újra szabaddá válik."

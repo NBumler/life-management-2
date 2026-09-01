@@ -69,7 +69,11 @@ public class GlobalExceptionHandler {
 			Map.entry("idx_aycm_partner_user_id_name_normalized", "name"),
 			// idx_aycm_check_in_user_id_check_in_date (V27): at most one live Check-In per user per
 			// calendar day — pre-checked in AycmCheckInService.applyFields.
-			Map.entry("idx_aycm_check_in_user_id_check_in_date", "checkInDate"));
+			Map.entry("idx_aycm_check_in_user_id_check_in_date", "checkInDate"),
+			// idx_aycm_settings_user_id (V28): the 1-settings-row-per-user singleton invariant, same
+			// as idx_user_profile_user_id above — AycmSettingsService.upsert's findByUserId pre-check
+			// cannot stop two overlapping first-write upserts from both attempting an INSERT.
+			Map.entry("idx_aycm_settings_user_id", "userId"));
 
 	@ExceptionHandler(DataIntegrityViolationException.class)
 	ResponseEntity<ApiError> handleUniqueConstraint(DataIntegrityViolationException ex) {

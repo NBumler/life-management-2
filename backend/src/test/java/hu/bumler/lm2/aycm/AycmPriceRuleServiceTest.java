@@ -152,7 +152,56 @@ class AycmPriceRuleServiceTest {
 		rule.softDelete();
 		when(repository.findByIdAndUserId(rule.getId(), userId)).thenReturn(Optional.of(rule));
 
-		assertThat(service.delete(userId, rule.getId()).getDeleted()).isTrue();
+		assertThat(service.delete(userId, partnerId, rule.getId()).getDeleted()).isTrue();
+		verify(repository, never()).saveAndFlush(any());
+	}
+
+	@Test
+	void get_returnsRule_whenItLivesUnderThePathPartner() {
+		AycmPriceRuleEntity rule = liveRule("08:00", "12:00", weekdays());
+		when(repository.findByIdAndUserId(rule.getId(), userId)).thenReturn(Optional.of(rule));
+
+		assertThat(service.get(userId, partnerId, rule.getId()).getStartTime()).isEqualTo("08:00");
+	}
+
+	@Test
+	void get_throwsNotFound_whenRuleBelongsToAnotherPartner() {
+		AycmPriceRuleEntity rule = new AycmPriceRuleEntity(UUID.randomUUID(), userId, UUID.randomUUID());
+		when(repository.findByIdAndUserId(rule.getId(), userId)).thenReturn(Optional.of(rule));
+
+		assertThatThrownBy(() -> service.get(userId, partnerId, rule.getId()))
+				.isInstanceOf(EntityNotFoundException.class);
+	}
+
+	@Test
+	void update_throwsNotFound_whenRuleBelongsToAnotherPartner() {
+		AycmPriceRuleEntity rule = new AycmPriceRuleEntity(UUID.randomUUID(), userId, UUID.randomUUID());
+		when(repository.findByIdAndUserId(rule.getId(), userId)).thenReturn(Optional.of(rule));
+
+		assertThatThrownBy(
+				() -> service.update(userId, partnerId, rule.getId(), dto(rule.getId(), weekdays(), "08:00", "12:00")))
+				.isInstanceOf(EntityNotFoundException.class);
+		verify(repository, never()).saveAndFlush(any());
+	}
+
+	@Test
+	void delete_throwsNotFound_whenRuleBelongsToAnotherPartner() {
+		AycmPriceRuleEntity rule = new AycmPriceRuleEntity(UUID.randomUUID(), userId, UUID.randomUUID());
+		when(repository.findByIdAndUserId(rule.getId(), userId)).thenReturn(Optional.of(rule));
+
+		assertThatThrownBy(() -> service.delete(userId, partnerId, rule.getId()))
+				.isInstanceOf(EntityNotFoundException.class);
+		verify(repository, never()).saveAndFlush(any());
+	}
+
+	@Test
+	void create_throwsNotFound_whenExistingRuleBelongsToAnotherPartner() {
+		AycmPriceRuleEntity rule = new AycmPriceRuleEntity(UUID.randomUUID(), userId, UUID.randomUUID());
+		when(repository.findById(rule.getId())).thenReturn(Optional.of(rule));
+
+		assertThatThrownBy(
+				() -> service.create(userId, partnerId, dto(rule.getId(), weekdays(), "08:00", "12:00")))
+				.isInstanceOf(EntityNotFoundException.class);
 		verify(repository, never()).saveAndFlush(any());
 	}
 }

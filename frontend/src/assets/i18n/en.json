@@ -183,6 +183,7 @@
       "PREVIEW_NO_MATCH": "No matching price rule — visit value is 0 Ft. You can still save.",
       "NO_PARTNERS": "No venues yet. Add one before checking in.",
       "GO_TO_PARTNERS": "Open venues",
+      "DELETED_PARTNER_HINT": "This entry's venue was deleted. Its value and time stay unchanged; you can only edit the notes, or pick a live venue.",
       "DELETE": "Delete Check-In",
       "DELETE_CONFIRM_TITLE": "Delete Check-In",
       "DELETE_CONFIRM_MESSAGE": "Delete the {{date}} — {{name}} entry? The day becomes free again."
