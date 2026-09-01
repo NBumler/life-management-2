@@ -10,7 +10,7 @@ import { HealthConnectStepSource } from './health-connect-step-source.service';
 describe('ActivityStepSyncService', () => {
   let service: ActivityStepSyncService;
   let source: jasmine.SpyObj<HealthConnectStepSource>;
-  let repo: jasmine.SpyObj<Pick<DailyStepLogRepository, 'load' | 'maxWinsUpsert' | 'allKnownDates'>>;
+  let repo: jasmine.SpyObj<Pick<DailyStepLogRepository, 'load' | 'maxWinsUpsert' | 'allKnownDates' | 'storedStepsForDay'>>;
   let userId: string | null;
 
   beforeEach(async () => {
@@ -28,10 +28,11 @@ describe('ActivityStepSyncService', () => {
     ]);
     source.hasBackgroundPermission.and.resolveTo(false);
     source.requestBackgroundPermission.and.resolveTo(false);
-    repo = jasmine.createSpyObj('DailyStepLogRepository', ['load', 'maxWinsUpsert', 'allKnownDates']);
+    repo = jasmine.createSpyObj('DailyStepLogRepository', ['load', 'maxWinsUpsert', 'allKnownDates', 'storedStepsForDay']);
     repo.load.and.resolveTo();
     repo.maxWinsUpsert.and.resolveTo(null);
     repo.allKnownDates.and.resolveTo([]);
+    repo.storedStepsForDay.and.returnValue(null);
     userId = 'user-1';
 
     TestBed.configureTestingModule({
@@ -194,5 +195,47 @@ describe('ActivityStepSyncService', () => {
     expect(repo.maxWinsUpsert).toHaveBeenCalledWith('2026-08-31', 4200);
     expect((await Preferences.get({ key: 'steps.pendingHealthConnect.2026-08-31' })).value).toBeNull();
     expect((await Preferences.get({ key: 'steps.pendingHealthConnect.bad' })).value).toBeNull();
+  });
+
+  it('syncNow(): drains the worker stashes even when the foreground grant is currently missing', async () => {
+    service.permission.set('denied');
+    await Preferences.set({ key: 'steps.pendingHealthConnect.2026-08-31', value: '4200' });
+
+    await service.syncNow();
+
+    // The worker already did the reading — only a signed-in user is needed to fold it in.
+    expect(repo.maxWinsUpsert).toHaveBeenCalledWith('2026-08-31', 4200);
+    expect((await Preferences.get({ key: 'steps.pendingHealthConnect.2026-08-31' })).value).toBeNull();
+    // ...but nothing that needs the grant runs.
+    expect(source.readDailySteps).not.toHaveBeenCalled();
+  });
+
+  it('syncNow(): a worker stash for a deliberately deleted day is dropped, not folded back in', async () => {
+    service.permission.set('granted');
+    const deletedDay = '2026-08-30';
+    await Preferences.set({ key: `steps.pendingHealthConnect.${deletedDay}`, value: '5000' });
+    // A row exists for the date (allKnownDates) but no live one (storedStepsForDay === null) → tombstone.
+    repo.allKnownDates.and.resolveTo([deletedDay]);
+    repo.storedStepsForDay.and.callFake((date: string) => (date === deletedDay ? null : 0));
+    source.readDailySteps.and.resolveTo(0);
+
+    await service.syncNow();
+
+    expect(repo.maxWinsUpsert).not.toHaveBeenCalledWith(deletedDay, jasmine.anything());
+    // The stale key is still cleared so it can't accumulate.
+    expect((await Preferences.get({ key: `steps.pendingHealthConnect.${deletedDay}` })).value).toBeNull();
+  });
+
+  it('syncNow(): a worker stash for a day with a live row is still folded in (max-wins)', async () => {
+    service.permission.set('granted');
+    const loggedDay = '2026-08-29';
+    await Preferences.set({ key: `steps.pendingHealthConnect.${loggedDay}`, value: '5000' });
+    repo.allKnownDates.and.resolveTo([loggedDay]);
+    repo.storedStepsForDay.and.callFake((date: string) => (date === loggedDay ? 1200 : 0));
+    source.readDailySteps.and.resolveTo(0);
+
+    await service.syncNow();
+
+    expect(repo.maxWinsUpsert).toHaveBeenCalledWith(loggedDay, 5000);
   });
 });

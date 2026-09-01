@@ -121,7 +121,9 @@ export class CalendarMonthPage implements OnInit, AfterViewInit, OnDestroy {
         el: this.monthGrid().nativeElement,
         gestureName: 'calendar-month-swipe',
         direction: 'x',
-        threshold: 10,
+        // Match the action distance: a shorter horizontal drag must not capture the gesture, because
+        // the browser then suppresses the trailing click and the day-cell tap is silently lost.
+        threshold: SWIPE_DISTANCE_PX,
         onEnd: (detail) => this.onSwipeEnd(detail),
       },
       true,

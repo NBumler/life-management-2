@@ -233,6 +233,10 @@ export class NotificationSchedulerService {
   private async onResume(): Promise<void> {
     await this.syncPermission();
     await this.reevaluate('resume', true);
+    // A force-stop or aggressive OEM app-standby drops the two AlarmManager alarms; re-arm them on
+    // every foreground so a user who only ever resumes the app (never a cold start) isn't left with
+    // the background worker permanently disarmed. `ensureScheduled` is idempotent.
+    this.armBackgroundWorker();
     await this.drainPendingRoute();
   }
 
@@ -439,12 +443,24 @@ export class NotificationSchedulerService {
       todayIso,
     );
 
+    // Drop anything the live scheduler already fired today: an immediate fire is recorded **only** in
+    // the shared dedupe store, never in the registry the native worker reads (`osScheduledIds`), and
+    // the worker's own `lm2_notifBgDedupe` ledger can't see the shared store either — so without this
+    // filter the 20:00 run re-delivers every 09:00 banner on a day whose first app open was after 09:00.
+    const entries: DesiredNotification[] = [];
+    for (const n of plan.entries) {
+      if (!(await this.dedupe.has(n.type, n.key))) {
+        entries.push(n);
+      }
+    }
+    const stepsLow = plan.stepsLow && !(await this.dedupe.has('STEPS_LOW', plan.stepsLow.key)) ? plan.stepsLow : null;
+
     const file = {
       version: 1,
       writtenAt: Date.now(),
       channelId: CHANNEL_ID,
       channelName: this.translate.instant('NOTIFICATIONS.CHANNEL_NAME'),
-      entries: plan.entries.map((n) => ({
+      entries: entries.map((n) => ({
         id: notificationNumericId(n.type, n.key),
         type: n.type,
         key: n.key,
@@ -453,17 +469,17 @@ export class NotificationSchedulerService {
         body: this.translate.instant(n.bodyKey, n.params),
         route: n.route,
       })),
-      stepsLow: plan.stepsLow
+      stepsLow: stepsLow
         ? {
-            id: notificationNumericId('STEPS_LOW', plan.stepsLow.key),
-            key: plan.stepsLow.key,
-            fireAtEpochMs: new Date(plan.stepsLow.fireAt).getTime(),
-            threshold: plan.stepsLow.threshold,
-            title: this.translate.instant(plan.stepsLow.titleKey),
+            id: notificationNumericId('STEPS_LOW', stepsLow.key),
+            key: stepsLow.key,
+            fireAtEpochMs: new Date(stepsLow.fireAt).getTime(),
+            threshold: stepsLow.threshold,
+            title: this.translate.instant(stepsLow.titleKey),
             // The worker substitutes the live count for STEPS_SENTINEL after its 20:00 Health Connect read.
-            bodyTemplate: this.translate.instant(plan.stepsLow.bodyKey, { steps: STEPS_SENTINEL }),
+            bodyTemplate: this.translate.instant(stepsLow.bodyKey, { steps: STEPS_SENTINEL }),
             stepsPlaceholder: STEPS_SENTINEL,
-            route: plan.stepsLow.route,
+            route: stepsLow.route,
           }
         : null,
     };

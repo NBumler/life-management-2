@@ -315,6 +315,33 @@ describe('NotificationSchedulerService', () => {
     expect(plan.stepsLow.stepsPlaceholder).toBe('__STEPS__');
   });
 
+  it('omits from the background plan an entry the live scheduler already fired today', async () => {
+    const service = build();
+    service.permission.set('granted');
+    householdItems = [{ id: 't1', name: 'Porszívózás', nextDue: today(), deleted: false }];
+    // Immediate fires are recorded only in the shared dedupe store (never the registry the worker
+    // reads), so the plan must consult it or the 20:00 worker re-delivers the 09:00 banner.
+    dedupeHas.and.callFake((type: string, key: string) =>
+      Promise.resolve(type === 'HOUSEHOLD_TASK_DUE' && key === today()),
+    );
+
+    await service.reevaluate('test', false);
+
+    const plan = JSON.parse((await Preferences.get({ key: 'lm2_notifBgPlan' })).value!);
+    expect(plan.entries.some((e: { type: string; key: string }) => e.type === 'HOUSEHOLD_TASK_DUE' && e.key === today())).toBeFalse();
+  });
+
+  it('omits the STEPS_LOW template from the background plan once it has fired today', async () => {
+    const service = build();
+    service.permission.set('granted');
+    dedupeHas.and.callFake((type: string, key: string) => Promise.resolve(type === 'STEPS_LOW' && key === today()));
+
+    await service.reevaluate('test', false);
+
+    const plan = JSON.parse((await Preferences.get({ key: 'lm2_notifBgPlan' })).value!);
+    expect(plan.stepsLow).toBeNull();
+  });
+
   it('clears the background plan when the feature is off / permission missing', async () => {
     const service = build();
     service.permission.set('denied');

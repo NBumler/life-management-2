@@ -129,9 +129,14 @@ export class ActivityStepSyncService {
     this.backgroundPermission.set(granted ? 'granted' : 'denied');
   }
 
-  /** Today + 7-day gap backfill. Safe to call repeatedly; a no-op unless permission is granted and a user is signed in. */
+  /**
+   * Today + 7-day gap backfill. Safe to call repeatedly. Needs a signed-in user; the live Health
+   * Connect read + backfill additionally need the foreground READ_STEPS grant, but folding in the
+   * background worker's stashes does not (the worker already did the reading) — so that runs first,
+   * before the permission gate, or a logged-in-but-not-granted device would let stashes pile up.
+   */
   async syncNow(): Promise<void> {
-    if (this.permission() !== 'granted' || this.authSession.userId() === null || this.running) {
+    if (this.authSession.userId() === null || this.running) {
       return;
     }
     this.running = true;
@@ -139,9 +144,13 @@ export class ActivityStepSyncService {
       await this.repository.load();
       const todayIso = today();
 
-      // Fold in anything the 09:00 native worker stashed (it can't write the store itself) before the
-      // live read below, which can still raise those values further.
+      // Fold in anything the 09:00 native worker stashed (it can't write the store itself). Runs even
+      // when the foreground grant is missing; the live read below can still raise those values further.
       await this.drainPendingNativeReadings();
+
+      if (this.permission() !== 'granted') {
+        return;
+      }
 
       const todaySteps = await this.source.readDailySteps(todayIso);
       if (todaySteps !== null) {
@@ -189,7 +198,14 @@ export class ActivityStepSyncService {
       pendingKeys.map(async (key) => ({ key, value: (await Preferences.get({ key })).value })),
     );
     const { readings, keysToClear } = drainPendingNativeStepReadings(entries);
+    // A date that has a row but no *live* row is a deliberate tombstone — `maxWinsUpsert` would
+    // resurrect it (`upsert` reuses the tombstoned (userId,date) v5 id and writes `deleted:false`).
+    // Mirror the backfill's `allKnownDates()` guard; the 09:00 worker's stash has no tombstone knowledge.
+    const knownDates = new Set(await this.repository.allKnownDates());
     for (const { date, steps } of readings) {
+      if (knownDates.has(date) && this.repository.storedStepsForDay(date) === null) {
+        continue;
+      }
       await this.repository.maxWinsUpsert(date, steps);
     }
     await Promise.all(keysToClear.map((key) => Preferences.remove({ key })));

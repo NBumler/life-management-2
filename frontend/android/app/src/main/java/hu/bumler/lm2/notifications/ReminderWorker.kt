@@ -272,15 +272,15 @@ class ReminderWorker(context: Context, params: WorkerParameters) : CoroutineWork
                 val type = row.optString("type")
                 val key = row.optString("key")
                 if (type.isNotEmpty() && key.isNotEmpty()) {
-                    keys.add("$type $key")
+                    keys.add("$type|$key")
                 }
             }
         }
 
-        fun contains(type: String, key: String): Boolean = keys.contains("$type $key")
+        fun contains(type: String, key: String): Boolean = keys.contains("$type|$key")
 
         fun record(type: String, key: String, day: String) {
-            if (keys.add("$type $key")) {
+            if (keys.add("$type|$key")) {
                 array.put(JSONObject().put("type", type).put("key", key).put("day", day))
                 dirty = true
             }
