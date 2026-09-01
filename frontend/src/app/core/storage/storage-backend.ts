@@ -689,6 +689,8 @@ export interface StorageBackend {
 
   /** documentation/Features/Lépésszám követés.md: per-user daily step logs — flat CRUD, one live row per calendar day (deterministic v5 id). */
   listDailyStepLogs(): Promise<DailyStepLog[]>;
+  /** Every calendar date with a row, tombstoned included — the Health Connect backfill's gap detection uses this so a deleted day is not re-pulled. */
+  listDailyStepLogDates(): Promise<string[]>;
   upsertDailyStepLog(log: DailyStepLog): Promise<DailyStepLog>;
   deleteDailyStepLog(id: string): Promise<DailyStepLog>;
 }

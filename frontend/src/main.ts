@@ -65,9 +65,10 @@ bootstrapApplication(AppComponent, {
       void syncEngine.init();
       // documentation/Subfeatures/Lépésszám átszinkronizálása a Samsung Health-ből.md: app-open
       // Health Connect pull + 7-day gap backfill. Not awaited — no blocking work at cold start.
-      if (userId !== null) {
-        void stepSync.init();
-      }
+      // Called unconditionally like syncEngine.init(): init() is a no-op on web / when Health
+      // Connect is unavailable, syncNow() bails while logged out, and LoginPage re-invokes it after
+      // an in-session login so a logged-out cold start still gets step sync without an app restart.
+      void stepSync.init();
     }),
   ],
 })

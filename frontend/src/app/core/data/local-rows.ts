@@ -4451,7 +4451,9 @@ export function aycmSettingsTombstoneTask(id: string, updatedAt: string): SqlTas
 // --- Daily step log (DailyStepLog) ---
 // documentation/Features/Lépésszám követés.md — one step-count row per user per calendar day, flat
 // user-owned CRUD like SwimLog. The id is a deterministic v5 of (userId, date); the max-wins
-// overwrite policy lives in DailyStepLogRepository, not here.
+// overwrite policy lives in DailyStepLogRepository, not here. Because that id is reused after a
+// delete (unlike a v4-id entity), the local write clears deleted/deleted_at like weeklyPlan does —
+// re-adding steps to a previously deleted calendar day must revive the row, not leave it tombstoned.
 
 export interface DailyStepLogRow {
   id: string;
@@ -4484,7 +4486,8 @@ export function dailyStepLogLocalWriteTask(dto: DailyStepLog): SqlTask {
     statement: `
       INSERT INTO daily_step_log (id, log_date, step_count, _dirty, _local_only)
       VALUES (?, ?, ?, 1, 1)
-      ON CONFLICT(id) DO UPDATE SET log_date = excluded.log_date, step_count = excluded.step_count, _dirty = 1`,
+      ON CONFLICT(id) DO UPDATE SET
+        log_date = excluded.log_date, step_count = excluded.step_count, deleted = 0, deleted_at = NULL, _dirty = 1`,
     values: [dto.id, dto.date, dto.stepCount],
   };
 }

@@ -17,7 +17,12 @@ describe('DailyStepLogRepository', () => {
   let syncEngine: jasmine.SpyObj<Pick<SyncEngineService, 'requestDrainDebounced'>>;
 
   beforeEach(() => {
-    storage = jasmine.createSpyObj('StorageBackend', ['listDailyStepLogs', 'upsertDailyStepLog', 'deleteDailyStepLog']);
+    storage = jasmine.createSpyObj('StorageBackend', [
+      'listDailyStepLogs',
+      'listDailyStepLogDates',
+      'upsertDailyStepLog',
+      'deleteDailyStepLog',
+    ]);
     syncEngine = jasmine.createSpyObj('SyncEngineService', ['requestDrainDebounced']);
     storage.upsertDailyStepLog.and.callFake(async (dto) => dto);
 
@@ -41,6 +46,20 @@ describe('DailyStepLogRepository', () => {
     expect(repository.stepsForDay('2026-09-01')).toBe(8000);
     expect(repository.stepsForDay('2026-08-31')).toBe(0);
     expect(repository.stepsForDay('2026-08-30')).toBe(0);
+  });
+
+  it('storedStepsForDay(): distinguishes a stored 0 from "no entry"', async () => {
+    storage.listDailyStepLogs.and.resolveTo([log({ id: 'a', date: '2026-09-01', stepCount: 0 })]);
+    await repository.load();
+
+    expect(repository.storedStepsForDay('2026-09-01')).toBe(0);
+    expect(repository.storedStepsForDay('2026-09-02')).toBeNull();
+  });
+
+  it('allKnownDates(): passes through the storage list of every date, tombstoned included', async () => {
+    storage.listDailyStepLogDates.and.resolveTo(['2026-09-01', '2026-08-31']);
+
+    await expectAsync(repository.allKnownDates()).toBeResolvedTo(['2026-09-01', '2026-08-31']);
   });
 
   it('saveManual(): overwrites the stored value for the day, larger or smaller, reusing the row id', async () => {

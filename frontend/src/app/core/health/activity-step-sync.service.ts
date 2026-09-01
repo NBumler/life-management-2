@@ -5,6 +5,7 @@ import { Preferences } from '@capacitor/preferences';
 
 import { today } from '../../shared/local-date';
 import { DailyStepLogRepository } from '../data/daily-step-log.repository';
+import { AuthSessionService } from '../session/auth-session.service';
 import { HealthConnectStepSource } from './health-connect-step-source.service';
 import { datesNeedingBackfill } from './step-sync-plan';
 
@@ -31,12 +32,18 @@ export type StepSyncPermission = 'unknown' | 'unavailable' | 'granted' | 'denied
 export class ActivityStepSyncService {
   private readonly source = inject(HealthConnectStepSource);
   private readonly repository = inject(DailyStepLogRepository);
+  private readonly authSession = inject(AuthSessionService);
 
   readonly permission = signal<StepSyncPermission>('unknown');
   readonly lastSyncAt = signal<string | null>(null);
   private running = false;
+  private resumeListenerBound = false;
 
-  /** Cold-start hook (fire-and-forget from main.ts, like SyncEngine.init). Never blocks first render. */
+  /**
+   * Cold-start hook (fire-and-forget from main.ts, like SyncEngine.init) **and** post-login hook
+   * (LoginPage) — so Health Connect sync starts for a user who logged in after a logged-out cold
+   * start. Idempotent: the `resume` listener is registered at most once. Never blocks first render.
+   */
   async init(): Promise<void> {
     if (!Capacitor.isNativePlatform()) {
       this.permission.set('unavailable');
@@ -48,9 +55,12 @@ export class ActivityStepSyncService {
       this.permission.set('unavailable');
       return;
     }
-    this.permission.set((await this.source.hasPermission()) ? 'granted' : 'denied');
+    await this.refreshPermission();
 
-    void App.addListener('resume', () => void this.syncNow());
+    if (!this.resumeListenerBound) {
+      this.resumeListenerBound = true;
+      void App.addListener('resume', () => void this.resumeSync());
+    }
     void this.syncNow();
   }
 
@@ -69,9 +79,27 @@ export class ActivityStepSyncService {
     }
   }
 
-  /** Today + 7-day gap backfill. Safe to call repeatedly; a no-op unless permission is granted. */
+  /**
+   * `resume` handler: re-probe the grant first — the user may have enabled READ_STEPS from the
+   * system Health Connect settings while the app was backgrounded (the common path), not via the
+   * in-app button — then run the normal sync.
+   */
+  private async resumeSync(): Promise<void> {
+    await this.refreshPermission();
+    await this.syncNow();
+  }
+
+  /** Re-reads the live READ_STEPS grant into {@link permission}. No-op once the device is `unavailable`. */
+  private async refreshPermission(): Promise<void> {
+    if (this.permission() === 'unavailable') {
+      return;
+    }
+    this.permission.set((await this.source.hasPermission()) ? 'granted' : 'denied');
+  }
+
+  /** Today + 7-day gap backfill. Safe to call repeatedly; a no-op unless permission is granted and a user is signed in. */
   async syncNow(): Promise<void> {
-    if (this.permission() !== 'granted' || this.running) {
+    if (this.permission() !== 'granted' || this.authSession.userId() === null || this.running) {
       return;
     }
     this.running = true;
@@ -84,20 +112,27 @@ export class ActivityStepSyncService {
         await this.repository.maxWinsUpsert(todayIso, todaySteps);
       }
 
-      const liveDates = this.repository
-        .items()
-        .filter((log) => !log.deleted)
-        .map((log) => log.date);
-      for (const date of datesNeedingBackfill(todayIso, liveDates, BACKFILL_LOOKBACK_DAYS)) {
-        const steps = await this.source.readDailySteps(date);
+      // Feed *every* known date — tombstoned rows included — into gap detection, so a day the user
+      // deliberately deleted is not re-pulled and re-created from Health Connect on the next resume.
+      const knownDates = await this.repository.allKnownDates();
+      const gapDates = datesNeedingBackfill(todayIso, knownDates, BACKFILL_LOOKBACK_DAYS);
+      // The reads are independent per day — one batch of native IPC round-trips, not up to 7 serial
+      // ones on every app open / resume. The max-wins writes stay sequential (they read-modify the store).
+      const readings = await Promise.all(gapDates.map((date) => this.source.readDailySteps(date)));
+      for (let i = 0; i < gapDates.length; i += 1) {
+        const steps = readings[i];
         if (steps !== null && steps > 0) {
-          await this.repository.maxWinsUpsert(date, steps);
+          await this.repository.maxWinsUpsert(gapDates[i], steps);
         }
       }
 
       const now = new Date().toISOString();
       this.lastSyncAt.set(now);
       await Preferences.set({ key: LAST_SYNC_KEY, value: now });
+    } catch (error) {
+      // syncNow() is invoked fire-and-forget (main.ts, the resume listener, requestPermission) — a
+      // transient SQLite/HTTP failure or a mid-logout race must not surface as an unhandled rejection.
+      console.error('[steps] Health Connect sync failed', error);
     } finally {
       this.running = false;
     }

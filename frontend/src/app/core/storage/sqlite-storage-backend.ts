@@ -2793,9 +2793,20 @@ export class SqliteStorageBackend implements StorageBackend {
     return rows.map(dailyStepLogRowToDto);
   }
 
+  /** Every calendar date that has a local row, tombstoned rows included — for the Health Connect
+   * backfill's gap detection, so a deliberately deleted day is not re-pulled and re-created. */
+  async listDailyStepLogDates(): Promise<string[]> {
+    const rows = await this.db.query<{ log_date: string }>('SELECT log_date FROM daily_step_log');
+    return rows.map((row) => row.log_date);
+  }
+
   async upsertDailyStepLog(log: DailyStepLog): Promise<DailyStepLog> {
     const userId = this.requireUserId();
-    const existing = await this.db.query('SELECT 1 FROM daily_step_log WHERE id = ?', [log.id]);
+    // Unlike the v4-id flat entities, the (userId, date) v5 id is reused after a delete, so "a row
+    // exists" is not the same as "a live row exists". Route re-adding steps to a tombstoned day
+    // through POST (idempotent upsert that revives server-side) — a PUT would hit 409 ENTITY_DELETED
+    // and the outbox item would be silently dropped, diverging from the web build which always POSTs.
+    const existing = await this.db.query('SELECT 1 FROM daily_step_log WHERE id = ? AND deleted = 0', [log.id]);
     const isNew = existing.length === 0;
     const enqueue = await this.offlineQueue.buildEnqueueTasks({
       userId,

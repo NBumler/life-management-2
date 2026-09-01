@@ -17,4 +17,7 @@ ext {
     // Health Connect plugin (health/HealthConnectStepsPlugin.kt) is the only Kotlin in the app module.
     kotlinVersion = '2.0.21'
     androidxHealthConnectVersion = '1.1.0'
+    // Core library desugaring — androidx.health.connect and HealthConnectStepsPlugin.kt use java.time
+    // (LocalDate/Instant/ZoneId), which is API 26+; minSdk is 24, so it must be backported.
+    desugarJdkLibsVersion = '2.1.5'
 }

@@ -21,7 +21,7 @@ import {
 } from '@ionic/angular/standalone';
 import { TranslatePipe } from '@ngx-translate/core';
 
-import { STEP_BASELINE, stepKcalForDay } from '../../../core/data/activity-kcal';
+import { stepKcalForDay } from '../../../core/data/activity-kcal';
 import { DailyStepLogRepository } from '../../../core/data/daily-step-log.repository';
 import { ProfileRepository } from '../../../core/data/profile.repository';
 import { ActivityStepSyncService } from '../../../core/health/activity-step-sync.service';
@@ -65,12 +65,9 @@ export class StepTrackerPage implements OnInit, ViewWillEnter {
   readonly syncPermission = this.stepSync.permission;
   readonly lastSyncAt = this.stepSync.lastSyncAt;
 
-  readonly baseline = STEP_BASELINE;
   readonly todayIso = today();
   readonly todayInput = signal<number | null>(null);
   readonly saving = signal(false);
-
-  readonly todaySteps = computed(() => this.repository.stepsForDay(this.todayIso));
 
   readonly pastDays = computed(() =>
     this.repository
@@ -90,7 +87,8 @@ export class StepTrackerPage implements OnInit, ViewWillEnter {
 
   async ngOnInit(): Promise<void> {
     await Promise.all([this.repository.load(), this.profileRepository.load()]);
-    this.todayInput.set(this.repository.stepsForDay(this.todayIso) || null);
+    // storedStepsForDay, not `stepsForDay(...) || null`: a stored 0 must prefill as 0, not blank.
+    this.todayInput.set(this.repository.storedStepsForDay(this.todayIso));
   }
 
   ionViewWillEnter(): void {

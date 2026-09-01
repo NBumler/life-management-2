@@ -72,7 +72,9 @@ export class StepLogEditPage implements OnInit, ViewWillEnter {
 
   private applyDate(date: string): void {
     this.date.set(date);
-    this.stepCount.set(this.repository.stepsForDay(date) || null);
+    // storedStepsForDay (not `stepsForDay(date) || null`) so a day explicitly saved with 0 steps
+    // loads as 0, editable and re-savable, instead of a blank input indistinguishable from "no entry".
+    this.stepCount.set(this.repository.storedStepsForDay(date));
   }
 
   onDateChange(value: string): void {

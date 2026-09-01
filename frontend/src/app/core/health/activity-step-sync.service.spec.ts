@@ -1,34 +1,30 @@
-import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
-import { DailyStepLog } from '../../api/model/dailyStepLog';
 import { DailyStepLogRepository } from '../data/daily-step-log.repository';
+import { AuthSessionService } from '../session/auth-session.service';
 import { addDaysIso, today } from '../../shared/local-date';
 import { ActivityStepSyncService } from './activity-step-sync.service';
 import { HealthConnectStepSource } from './health-connect-step-source.service';
 
-function log(date: string, stepCount: number): DailyStepLog {
-  return { id: `id-${date}`, date, stepCount, deleted: false };
-}
-
 describe('ActivityStepSyncService', () => {
   let service: ActivityStepSyncService;
   let source: jasmine.SpyObj<HealthConnectStepSource>;
-  let repo: jasmine.SpyObj<Pick<DailyStepLogRepository, 'load' | 'maxWinsUpsert'>> & {
-    items: ReturnType<typeof signal<DailyStepLog[]>>;
-  };
+  let repo: jasmine.SpyObj<Pick<DailyStepLogRepository, 'load' | 'maxWinsUpsert' | 'allKnownDates'>>;
+  let userId: string | null;
 
   beforeEach(() => {
     source = jasmine.createSpyObj('HealthConnectStepSource', ['isAvailable', 'hasPermission', 'requestPermission', 'readDailySteps']);
-    repo = jasmine.createSpyObj('DailyStepLogRepository', ['load', 'maxWinsUpsert']) as never;
-    repo.items = signal<DailyStepLog[]>([]);
+    repo = jasmine.createSpyObj('DailyStepLogRepository', ['load', 'maxWinsUpsert', 'allKnownDates']);
     repo.load.and.resolveTo();
     repo.maxWinsUpsert.and.resolveTo(null);
+    repo.allKnownDates.and.resolveTo([]);
+    userId = 'user-1';
 
     TestBed.configureTestingModule({
       providers: [
         { provide: HealthConnectStepSource, useValue: source },
         { provide: DailyStepLogRepository, useValue: repo },
+        { provide: AuthSessionService, useValue: { userId: () => userId } },
       ],
     });
     service = TestBed.inject(ActivityStepSyncService);
@@ -40,11 +36,21 @@ describe('ActivityStepSyncService', () => {
     expect(repo.maxWinsUpsert).not.toHaveBeenCalled();
   });
 
+  it('syncNow(): does nothing while logged out, even with permission granted', async () => {
+    service.permission.set('granted');
+    userId = null;
+
+    await service.syncNow();
+
+    expect(repo.load).not.toHaveBeenCalled();
+    expect(source.readDailySteps).not.toHaveBeenCalled();
+  });
+
   it('syncNow(): upserts today plus every gap day in the 7-day window, skipping days that already have a row', async () => {
     service.permission.set('granted');
     const todayIso = today();
     const alreadyLogged = addDaysIso(todayIso, -2);
-    repo.load.and.callFake(async () => repo.items.set([log(alreadyLogged, 4242)]));
+    repo.allKnownDates.and.resolveTo([alreadyLogged]);
     source.readDailySteps.and.callFake(async (date: string) => (date === todayIso ? 9000 : 5000));
 
     await service.syncNow();
@@ -57,6 +63,20 @@ describe('ActivityStepSyncService', () => {
     expect(service.lastSyncAt()).not.toBeNull();
   });
 
+  it('syncNow(): a tombstoned day is a known date, so it is not re-pulled', async () => {
+    service.permission.set('granted');
+    const todayIso = today();
+    const deletedDay = addDaysIso(todayIso, -3);
+    // allKnownDates includes tombstoned rows — the deleted day must stay out of the backfill.
+    repo.allKnownDates.and.resolveTo([deletedDay]);
+    source.readDailySteps.and.resolveTo(4000);
+
+    await service.syncNow();
+
+    const upsertedDates = repo.maxWinsUpsert.calls.allArgs().map(([d]) => d as string);
+    expect(upsertedDates).not.toContain(deletedDay);
+  });
+
   it('syncNow(): skips a day Health Connect can not answer for', async () => {
     service.permission.set('granted');
     const todayIso = today();
@@ -66,6 +86,27 @@ describe('ActivityStepSyncService', () => {
 
     const upsertedDates = repo.maxWinsUpsert.calls.allArgs().map(([d]) => d as string);
     expect(upsertedDates).toEqual([todayIso]);
+  });
+
+  it('syncNow(): swallows a repository failure instead of rejecting (it is called fire-and-forget)', async () => {
+    service.permission.set('granted');
+    repo.load.and.rejectWith(new Error('sqlite is closed'));
+    const consoleError = spyOn(console, 'error');
+
+    await expectAsync(service.syncNow()).toBeResolved();
+    expect(consoleError).toHaveBeenCalled();
+    expect(service.lastSyncAt()).toBeNull();
+  });
+
+  it('resume: re-probes the grant before syncing, so a grant made from system settings is picked up', async () => {
+    service.permission.set('denied');
+    source.hasPermission.and.resolveTo(true);
+    source.readDailySteps.and.resolveTo(0);
+
+    await (service as unknown as { resumeSync(): Promise<void> }).resumeSync();
+
+    expect(service.permission()).toBe('granted');
+    expect(repo.load).toHaveBeenCalled();
   });
 
   it('requestPermission(): flips the signal and syncs on grant', async () => {

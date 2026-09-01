@@ -23,6 +23,12 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    // sourceCompatibility / targetCompatibility are set to 21 by capacitor.build.gradle (applied
+    // below); here we only turn on core library desugaring so the java.time APIs used by
+    // androidx.health.connect and health/HealthConnectStepsPlugin.kt are backported to minSdk 24.
+    compileOptions {
+        coreLibraryDesugaringEnabled true
+    }
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_21.toString()
     }
@@ -36,6 +42,7 @@ repositories {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
+    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:$desugarJdkLibsVersion"
     implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"

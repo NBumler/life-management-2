@@ -38,6 +38,23 @@ export class DailyStepLogRepository {
     return this.items().find((log) => !log.deleted && log.date === date)?.stepCount ?? 0;
   }
 
+  /**
+   * Like {@link stepsForDay} but returns `null` when there is no live row for `date` — so a form
+   * can tell "no entry yet" apart from a deliberately stored 0 (both of which `stepsForDay` maps to 0).
+   */
+  storedStepsForDay(date: string): number | null {
+    return this.items().find((log) => !log.deleted && log.date === date)?.stepCount ?? null;
+  }
+
+  /**
+   * Every calendar date that has a local row, **tombstoned rows included** — the Health Connect
+   * backfill ([[Lépésszám átszinkronizálása a Samsung Health-ből]]) feeds this into its gap
+   * detection so a day the user deliberately deleted is not re-pulled and re-created.
+   */
+  allKnownDates(): Promise<string[]> {
+    return this.storage.listDailyStepLogDates();
+  }
+
   /** Manual entry — always overwrites the stored value for `date`, larger or smaller. */
   async saveManual(date: string, stepCount: number): Promise<DailyStepLog> {
     return this.upsert(date, Math.max(0, Math.round(stepCount)));

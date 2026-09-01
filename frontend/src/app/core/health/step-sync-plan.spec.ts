@@ -1,4 +1,4 @@
-import { datesNeedingBackfill, shouldApplyHealthConnectValue } from './step-sync-plan';
+import { datesNeedingBackfill } from './step-sync-plan';
 
 describe('datesNeedingBackfill', () => {
   it('returns the last N calendar days before today, most recent first, that have no local row', () => {
@@ -32,13 +32,9 @@ describe('datesNeedingBackfill', () => {
     const existing = ['2026-09-04', '2026-09-03', '2026-09-02'];
     expect(datesNeedingBackfill('2026-09-05', existing, 3)).toEqual([]);
   });
-});
 
-describe('shouldApplyHealthConnectValue', () => {
-  it('applies only a strictly greater value (missing day = 0)', () => {
-    expect(shouldApplyHealthConnectValue(5000, 0)).toBe(true);
-    expect(shouldApplyHealthConnectValue(9000, 6000)).toBe(true);
-    expect(shouldApplyHealthConnectValue(6000, 6000)).toBe(false);
-    expect(shouldApplyHealthConnectValue(120, 8000)).toBe(false);
+  it('treats a deliberately deleted (tombstoned) day as "has a row" so it is not re-pulled', () => {
+    // The caller feeds every known date, tombstoned included — a deleted day must stay out of the gap list.
+    expect(datesNeedingBackfill('2026-09-05', ['2026-09-03'], 3)).toEqual(['2026-09-04', '2026-09-02']);
   });
 });

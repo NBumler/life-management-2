@@ -15,6 +15,7 @@ import {
 } from '@ionic/angular/standalone';
 import { TranslatePipe } from '@ngx-translate/core';
 
+import { ActivityStepSyncService } from '../../core/health/activity-step-sync.service';
 import { AuthSessionService } from '../../core/session/auth-session.service';
 import { LocalDatabaseService } from '../../core/storage/local-database.service';
 import { SyncEngineService } from '../../core/sync/sync-engine.service';
@@ -32,6 +33,7 @@ export class LoginPage {
   private readonly authSession = inject(AuthSessionService);
   private readonly localDb = inject(LocalDatabaseService);
   private readonly syncEngine = inject(SyncEngineService);
+  private readonly stepSync = inject(ActivityStepSyncService);
   private readonly router = inject(Router);
 
   readonly form = this.fb.nonNullable.group({
@@ -70,6 +72,9 @@ export class LoginPage {
         await this.localDb.open(userId);
       }
       this.syncEngine.requestDrain();
+      // provideAppInitializer already ran stepSync.init() while logged out (a no-op then); re-invoke
+      // it now so Health Connect auto-sync starts without an app restart. Idempotent, not awaited.
+      void this.stepSync.init();
       await this.router.navigateByUrl('/tabs');
     } catch (error) {
       const isNetworkError = error instanceof HttpErrorResponse && error.status === 0;

@@ -849,6 +849,12 @@ export class HttpStorageBackend implements StorageBackend {
     return firstValueFrom(this.dailyStepLogsApi.listDailyStepLogs());
   }
 
+  /** Web is online-only and never runs the Health Connect backfill; the server list is live-rows-only, which is all this can offer. */
+  async listDailyStepLogDates(): Promise<string[]> {
+    const logs = await firstValueFrom(this.dailyStepLogsApi.listDailyStepLogs());
+    return logs.map((log) => log.date);
+  }
+
   /** POST with an existing id is an idempotent upsert server-side, so this covers both create and update. */
   upsertDailyStepLog(log: DailyStepLog): Promise<DailyStepLog> {
     return firstValueFrom(this.dailyStepLogsApi.createDailyStepLog(log));

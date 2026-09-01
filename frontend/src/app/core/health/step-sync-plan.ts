@@ -23,12 +23,5 @@ export function datesNeedingBackfill(todayIso: string, existingLiveDates: Iterab
   return result;
 }
 
-/**
- * documentation/Subfeatures/Lépésszám átszinkronizálása a Samsung Health-ből.md "Mikor kell
- * felülírni": a Health Connect reading only replaces the stored value when it is strictly greater
- * (a missing day counts as 0). Kept as a pure function so the rule is testable independently of the
- * repository plumbing that also enforces it in `DailyStepLogRepository.maxWinsUpsert`.
- */
-export function shouldApplyHealthConnectValue(healthConnectSteps: number, storedSteps: number): boolean {
-  return healthConnectSteps > storedSteps;
-}
+// The "strictly greater wins (missing day = 0)" rule is enforced in one place —
+// DailyStepLogRepository.maxWinsUpsert. It is deliberately not duplicated as a helper here.
