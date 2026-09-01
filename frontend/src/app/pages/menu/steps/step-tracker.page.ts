@@ -69,6 +69,7 @@ export class StepTrackerPage implements OnInit, ViewWillEnter {
   readonly todayIso = today();
   readonly todayInput = signal<number | null>(null);
   readonly saving = signal(false);
+  readonly syncing = signal(false);
 
   readonly pastDays = computed(() =>
     this.repository
@@ -115,6 +116,26 @@ export class StepTrackerPage implements OnInit, ViewWillEnter {
       await this.repository.saveManual(this.todayIso, value);
     } finally {
       this.saving.set(false);
+    }
+  }
+
+  /**
+   * documentation/Subfeatures/Lépésszám átszinkronizálása a Samsung Health-ből.md "Frissítés most"
+   * (opcionális, későbbi scope): manual trigger for the same app-open sync (today + 7-day backfill),
+   * for when the user doesn't want to wait for the next app open / resume. Re-reads today's stored
+   * value afterwards so a raised (max-wins) count shows without leaving the screen.
+   */
+  async refreshNow(): Promise<void> {
+    if (this.syncing()) {
+      return;
+    }
+    this.syncing.set(true);
+    try {
+      await this.stepSync.syncNow();
+      await this.repository.load();
+      this.todayInput.set(this.repository.storedStepsForDay(this.todayIso));
+    } finally {
+      this.syncing.set(false);
     }
   }
 

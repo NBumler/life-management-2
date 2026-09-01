@@ -32,7 +32,7 @@
       <div class="weekday-cell">{{ weekday }}</div>
     }
   </div>
-  <div class="month-grid">
+  <div class="month-grid" #monthGrid>
     @for (day of grid(); track day.date) {
       <button
         type="button"

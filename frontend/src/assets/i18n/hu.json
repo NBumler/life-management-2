@@ -124,6 +124,7 @@
     "HC_TITLE": "Health Connect",
     "HC_GRANTED": "Engedélyezve — app-nyitáskor automatikusan frissül.",
     "HC_LAST_SYNC": "Utolsó szinkronizálás: {{time}}",
+    "HC_REFRESH_NOW": "Frissítés most",
     "HC_DENIED": "A Health Connect (Samsung Health) automatikus lépésszám-átvételéhez engedély szükséges. Enélkül csak a kézi bevitel működik.",
     "HC_GRANT": "Health Connect engedélyezése",
     "HC_BG_GRANTED": "Háttér-hozzáférés engedélyezve — a „kevés lépés” értesítés akkor is szól este 8-kor, ha nem nyitod meg az appot.",

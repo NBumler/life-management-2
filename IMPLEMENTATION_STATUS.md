@@ -57,7 +57,7 @@ Ha implementálsz egy új feature-t: vedd fel a sort, `Kész`-re állítva, a
 | ↳ [Élet tervek](documentation/Subfeatures/Élet%20tervek.md) | `2b44ec6` (2026-08-19) | `LifePlan*` | `pages/tasks/life-plans/`, `core/data/life-plan.repository.ts` | |
 | ↳ [Háztartási feladatok](documentation/Subfeatures/Háztartási%20feladatok.md) | `56923be` (2026-08-19) | `HouseholdRoom*`, `HouseholdTask*` | `pages/tasks/household/`, `core/data/household-{room,task}.repository.ts` | Naptár-producer: `core/data/household-occurrence.ts` |
 | ↳ [Események](documentation/Features/Események.md) | `d1950b4` (2026-08-19) | `CalendarEvent*` | `pages/tasks/events/`, `core/data/calendar-event.repository.ts` | Naptár-producer: `core/data/event-occurrence.ts` (DAILY/WEEKLY/YEARLY, feb-29 skip) |
-| ↳ [Naptár](documentation/Features/Naptár.md) | `2b44ec6` (2026-08-19) | — (nincs saját adat) | `pages/tasks/calendar/` | Csak frontend aggregátor; hónap-rács + napi lista; swipe gesztus nincs implementálva, csak chevron (lásd Megjegyzések) |
+| ↳ [Naptár](documentation/Features/Naptár.md) | `2b44ec6` (2026-08-19) | — (nincs saját adat) | `pages/tasks/calendar/` | Csak frontend aggregátor; hónap-rács + napi lista. Hónapváltás chevron **és** vízszintes swipe (`GestureController` a `.month-grid`-en) — lásd „Lezárt kör: post-MVP apró frontend extrák" (2026-09-01). |
 
 ## Folyamatban
 
@@ -122,8 +122,8 @@ szerint:
 
 | Extra | Forrás | Flag | Vázlat |
 |---|---|---|---|
-| **Naptár hónapváltó swipe gesztus** | [[Naptár]] | — | Ionic Gesture API a hónap-rácson; ma csak chevron. Kicsi, tisztán frontend. |
-| **„Frissítés most" gomb** | [[Lépésszám követés]] | `menu.lepesszam` | Manuális `ActivityStepSyncService.syncNow()` trigger a Lépésszám képernyőn. Kicsi, tisztán frontend. |
+| ~~**Naptár hónapváltó swipe gesztus**~~ | [[Naptár]] | — | **Kész** (2026-09-01) — lásd „Lezárt kör: post-MVP apró frontend extrák". |
+| ~~**„Frissítés most" gomb**~~ | [[Lépésszám követés]] | `menu.lepesszam` | **Kész** (2026-09-01) — lásd „Lezárt kör: post-MVP apró frontend extrák". |
 | **Értesítés-előzmény lista** | [[Értesítések]] | `menu.ertesitesek` | A kiment bannerek read-only naplója (a `NotificationDedupeStore` már tárol elég adatot). Kicsi–közepes, tisztán frontend. |
 | **Lead-time szerkesztő** | [[Értesítések]] | `menu.ertesitesek` | A `notification-rules` ma fix lead-window-jai (3/2 nap, `< 2000` lépés, stb.) device-local, szerkeszthető beállításokká. Közepes, tisztán frontend. |
 | **Google Calendar export** | [[Események]] | `feladatok.googleExport` | Esemény-előfordulások kiírása Google Calendarba; a flag megvan, a spec MVP-n kívülinek jelöli. Közepes–nagy: OAuth + backend vagy natív calendar API. |
@@ -133,6 +133,28 @@ A Pénzügyek / AYCM „Tudatosan kihagyva" listái (`WEEKLY` interval, undelete
 naptár-producer, hivatalos AYCM-import, statisztika-diagram, custom
 dátumtartomány, stb.) a specek saját „Nem scope" jelölését követik — csak külön
 spec-bővítés után indíthatók, nem részei ennek a körnek.
+
+## Lezárt kör: post-MVP apró frontend extrák (2026-09-01)
+
+A „Következő kör: post-MVP extrák" tábla két legkisebb, tisztán frontend sora,
+egy menetben. Frontend (Karma: 1324 zöld) + `ng build` + lint zöld. Nincs
+backend / séma / OpenAPI érintettség, nincs új outbox / sync ág.
+
+- **Naptár hónapváltó swipe gesztus** — `CalendarMonthPage` mostantól `AfterViewInit`/
+  `OnDestroy`: `GestureController.create({ el: .month-grid, direction: 'x' }, true)`
+  (Angular-zónában futó callback, hogy a `viewYear`/`viewMonth` signal-írás CD-t
+  indítson), `onEnd`-ben `|deltaX| ≥ 60px` → balra `nextMonth()`, jobbra
+  `prevMonth()`. A `direction: 'x'` miatt az `ion-content` függőleges görgetése
+  megmarad (Ionic a `touch-action`-t is `pan-y`-ra állítja). A [[Naptár]] spec (69.
+  sor) eddig is „chevron + vízszintes swipe"-ot írt — a kód most éri utol.
+- **„Frissítés most" gomb** — `step-tracker.page` HC-szekció `granted` ágába egy
+  outline gomb (`STEPS.HC_REFRESH_NOW`, hu+en), `refreshNow()` → `stepSync.syncNow()`
+  (ugyanaz a mai-nap + 7 napos backfill, mint app-nyitáskor) majd `repository.load()`
+  + a mai `todayInput` újraolvasása, `syncing` signal a dupla-katt ellen. A
+  [[Lépésszám átszinkronizálása a Samsung Health-ből]] spec ezt „opcionális, későbbi
+  scope"-ként jelölte — most bekerült; a spec „nincs kötelező sync gomb" kitétele
+  továbbra is áll (a gomb nem kötelező út, az automatikus app-nyitás marad az
+  elsődleges).
 
 ## Lezárt kör: Tennivalók (2026-08-25)
 
@@ -154,7 +176,8 @@ type, local-rows, sync-engine ágak, SQLite séma v5→v7).
   flag megvan hozzá, alapból kikapcsolva.
 - Napi rács swipe gesztus (Naptár hónapváltás) — csak chevron gombok készültek;
   a swipe natív gesztuskezelést igényelne (pl. Ionic Gesture API), ami külön
-  belépő nélkül scope-kúszás lett volna.
+  belépő nélkül scope-kúszás lett volna. **Azóta lezárva:** „Lezárt kör: post-MVP
+  apró frontend extrák" (2026-09-01).
 
 ## Lezárt kör: Kaja + Bevásárlás (2026-08-27)
 
@@ -705,7 +728,9 @@ backend (Testcontainers) + frontend (Karma + `ng build`) + lint zöld.
   (külön JS-kontextus, nulla DI/unit-tesztelhetőség); az app-open backfill a
   tartalék, ami garantálja, hogy egy nap se vesszen el véglegesen.
 - **`STEPS_LOW` értesítés** (20:00, mai < 2000) — az [[Értesítések]] körrel jön.
-- **„Frissítés most" gomb**, **iOS Health** — a spec is későbbi scope-nak jelöli.
+- **„Frissítés most" gomb** — a spec későbbi scope-nak jelölte; **azóta lezárva:**
+  „Lezárt kör: post-MVP apró frontend extrák" (2026-09-01).
+- **iOS Health** — a spec is későbbi scope-nak jelöli.
 
 ## Lezárt kör: **Értesítések** (2026-09-01)
 

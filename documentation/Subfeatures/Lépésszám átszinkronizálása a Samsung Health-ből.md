@@ -39,7 +39,7 @@ Kanonikus képlet: [[Tápérték kalkulátor]] — \(\max(0,\;steps - 3000) \tim
 ### UI/UX elvárások
 
 - Engedély / „utolsó sync” jelzés a [[Lépésszám követés]] képernyőn (rövid státusz).
-- Nincs külön kötelező sync gomb az első körben (app nyitás + 08:00 automatikus); opcionális „Frissítés most” későbbi scope.
+- Nincs külön **kötelező** sync gomb: az app-nyitás + `resume` automatikus út az elsődleges. A [[Lépésszám követés]] képernyőn (a foreground engedély megadása után) van egy opcionális „Frissítés most” gomb, ami manuálisan ugyanazt a `syncNow()` kört (mai nap + 7 napos hiánypótló backfill) futtatja — kényelmi funkció, nem külön adat-út.
 
 ### Megjegyzések
 

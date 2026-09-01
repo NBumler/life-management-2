@@ -1,6 +1,20 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import {
+  AfterViewInit,
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  OnDestroy,
+  OnInit,
+  computed,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
+  Gesture,
+  GestureController,
+  GestureDetail,
   IonBackButton,
   IonButton,
   IonButtons,
@@ -22,9 +36,13 @@ import { today } from '../../../shared/local-date';
 import { CalendarSource, buildCalendarOccurrences, groupOccurrencesByDate } from './calendar-occurrence';
 import { MonthGridDay, buildMonthGrid } from './calendar-month-grid';
 
+/** Minimum horizontal travel (px) for a swipe to count as a month change — below this it's a tap/scroll. */
+const SWIPE_DISTANCE_PX = 60;
+
 /**
  * documentation/Features/Naptár.md "Hónap rács": aktuális hónap nyitáskor, mai nap kiemelve, hét
  * hétfővel kezdődik, chevronok a hónapváltáshoz, "Ma" gomb, cellánként dátumszám + darabszám-badge.
+ * Hónapváltás: chevron **és** vízszintes swipe a rácson (Ionic Gesture API).
  * Nincs saját adat/mutáció — csak a két producer store-ját olvassa.
  */
 @Component({
@@ -34,7 +52,7 @@ import { MonthGridDay, buildMonthGrid } from './calendar-month-grid';
   imports: [IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton, IonButton, IonContent, IonIcon, IonChip, IonLabel, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class CalendarMonthPage implements OnInit {
+export class CalendarMonthPage implements OnInit, AfterViewInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly householdTaskRepository = inject(HouseholdTaskRepository);
@@ -42,6 +60,10 @@ export class CalendarMonthPage implements OnInit {
   private readonly eventRepository = inject(CalendarEventRepository);
   private readonly featureFlags = inject(FeatureFlagsService);
   private readonly translate = inject(TranslateService);
+  private readonly gestureController = inject(GestureController);
+
+  private readonly monthGrid = viewChild.required<ElementRef<HTMLElement>>('monthGrid');
+  private swipeGesture?: Gesture;
 
   private readonly todayIso = today();
   readonly viewYear = signal(Number(this.todayIso.slice(0, 4)));
@@ -88,6 +110,38 @@ export class CalendarMonthPage implements OnInit {
       this.viewMonth.set(month);
     }
     await Promise.all([this.householdTaskRepository.load(), this.householdRoomRepository.load(), this.eventRepository.load()]);
+  }
+
+  ngAfterViewInit(): void {
+    // documentation/Features/Naptár.md: swipe left → next month, swipe right → previous month.
+    // `direction: 'x'` lets ion-content keep its vertical scroll; callbacks run inside the Angular
+    // zone (2nd arg `true`) so the viewYear/viewMonth signal writes trigger change detection.
+    this.swipeGesture = this.gestureController.create(
+      {
+        el: this.monthGrid().nativeElement,
+        gestureName: 'calendar-month-swipe',
+        direction: 'x',
+        threshold: 10,
+        onEnd: (detail) => this.onSwipeEnd(detail),
+      },
+      true,
+    );
+    this.swipeGesture.enable(true);
+  }
+
+  ngOnDestroy(): void {
+    this.swipeGesture?.destroy();
+  }
+
+  private onSwipeEnd(detail: GestureDetail): void {
+    if (Math.abs(detail.deltaX) < SWIPE_DISTANCE_PX) {
+      return;
+    }
+    if (detail.deltaX < 0) {
+      this.nextMonth();
+    } else {
+      this.prevMonth();
+    }
   }
 
   badgeCount(day: MonthGridDay): number {

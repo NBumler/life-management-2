@@ -54,6 +54,11 @@
             }
           </ion-label>
         </ion-item>
+        <div class="ion-padding">
+          <ion-button expand="block" fill="outline" [disabled]="syncing()" (click)="refreshNow()">
+            {{ 'STEPS.HC_REFRESH_NOW' | translate }}
+          </ion-button>
+        </div>
         @if (backgroundPermission() === 'granted') {
           <ion-item lines="none">
             <ion-label class="ion-text-wrap"><p>{{ 'STEPS.HC_BG_GRANTED' | translate }}</p></ion-label>
