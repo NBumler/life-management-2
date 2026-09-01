@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { Preferences } from '@capacitor/preferences';
 
 import { DailyStepLogRepository } from '../data/daily-step-log.repository';
 import { AuthSessionService } from '../session/auth-session.service';
@@ -11,6 +12,10 @@ describe('ActivityStepSyncService', () => {
   let source: jasmine.SpyObj<HealthConnectStepSource>;
   let repo: jasmine.SpyObj<Pick<DailyStepLogRepository, 'load' | 'maxWinsUpsert' | 'allKnownDates'>>;
   let userId: string | null;
+
+  beforeEach(async () => {
+    await Preferences.clear();
+  });
 
   beforeEach(() => {
     source = jasmine.createSpyObj('HealthConnectStepSource', [
@@ -176,5 +181,18 @@ describe('ActivityStepSyncService', () => {
     await service.requestBackgroundPermission();
 
     expect(service.backgroundPermission()).toBe('granted');
+  });
+
+  it('syncNow(): folds in and clears the native worker step stashes before the live read', async () => {
+    service.permission.set('granted');
+    await Preferences.set({ key: 'steps.pendingHealthConnect.2026-08-31', value: '4200' });
+    await Preferences.set({ key: 'steps.pendingHealthConnect.bad', value: 'x' });
+    source.readDailySteps.and.resolveTo(0);
+
+    await service.syncNow();
+
+    expect(repo.maxWinsUpsert).toHaveBeenCalledWith('2026-08-31', 4200);
+    expect((await Preferences.get({ key: 'steps.pendingHealthConnect.2026-08-31' })).value).toBeNull();
+    expect((await Preferences.get({ key: 'steps.pendingHealthConnect.bad' })).value).toBeNull();
   });
 });

@@ -25,3 +25,41 @@ export function datesNeedingBackfill(todayIso: string, existingLiveDates: Iterab
 
 // The "strictly greater wins (missing day = 0)" rule is enforced in one place —
 // DailyStepLogRepository.maxWinsUpsert. It is deliberately not duplicated as a helper here.
+
+/** Prefix the native ReminderWorker uses to stash a Health Connect reading for the app to pick up. */
+export const PENDING_NATIVE_STEP_PREFIX = 'steps.pendingHealthConnect.';
+
+export interface PendingStepReading {
+  date: string;
+  steps: number;
+}
+
+/**
+ * documentation/Features/Értesítések.md "08:00 / 20:00 háttér-értesítés worker" — the 09:00 worker
+ * can't write the app's SQLite / outbox, so it stashes yesterday's Health Connect step total under
+ * `steps.pendingHealthConnect.<YYYY-MM-DD>` in `@capacitor/preferences`. This parses those entries
+ * (from `Preferences.keys()` + `get`) into `{date, steps}` readings for
+ * {@link ActivityStepSyncService} to `maxWinsUpsert`, and lists every matching key to remove
+ * afterwards (invalid ones included, so a bad value can't wedge forever).
+ */
+export function drainPendingNativeStepReadings(
+  entries: Iterable<{ key: string; value: string | null }>,
+): { readings: PendingStepReading[]; keysToClear: string[] } {
+  const readings: PendingStepReading[] = [];
+  const keysToClear: string[] = [];
+  for (const { key, value } of entries) {
+    if (!key.startsWith(PENDING_NATIVE_STEP_PREFIX)) {
+      continue;
+    }
+    keysToClear.push(key);
+    const date = key.slice(PENDING_NATIVE_STEP_PREFIX.length);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || value === null) {
+      continue;
+    }
+    const steps = Number(value);
+    if (Number.isFinite(steps) && steps > 0) {
+      readings.push({ date, steps: Math.round(steps) });
+    }
+  }
+  return { readings, keysToClear };
+}

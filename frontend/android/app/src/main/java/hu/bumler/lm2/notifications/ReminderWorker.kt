@@ -70,10 +70,34 @@ class ReminderWorker(context: Context, params: WorkerParameters) : CoroutineWork
 
         if (slot == ReminderScheduler.SLOT_EVENING) {
             evaluateStepsLow(plan.optJSONObject("stepsLow"), now, today, ledger, osScheduledIds)
+        } else {
+            stashYesterdaySteps(prefs)
         }
 
         ledger.flush()
         return Result.success()
+    }
+
+    /**
+     * documentation/Subfeatures/Lépésszám átszinkronizálása a Samsung Health-ből.md — the 09:00 worker
+     * reads yesterday's Health Connect step total and stashes it under
+     * `steps.pendingHealthConnect.<date>` for {@link ActivityStepSyncService} to max-wins upsert on
+     * the next app open. It does not write the app's SQLite / outbox itself.
+     */
+    private suspend fun stashYesterdaySteps(prefs: SharedPreferences) {
+        val zone = ZoneId.systemDefault()
+        val yesterday = LocalDate.now(zone).minusDays(1)
+        val prefKey = PENDING_STEP_PREFIX + yesterday
+        if (prefs.contains(prefKey)) {
+            return
+        }
+        val start = yesterday.atStartOfDay(zone).toInstant()
+        val end = yesterday.plusDays(1).atStartOfDay(zone).toInstant()
+        val steps = aggregateSteps(start, end) ?: return
+        if (steps > 0) {
+            prefs.edit().putString(prefKey, steps.toString()).apply()
+            Log.i(TAG, "Stashed $steps steps for $yesterday")
+        }
     }
 
     /** Post every plan entry that fell due (but not too long ago) and isn't already fired / OS-scheduled. */
@@ -133,7 +157,9 @@ class ReminderWorker(context: Context, params: WorkerParameters) : CoroutineWork
             return
         }
 
-        val steps = readTodaySteps(now) ?: return
+        val zone = ZoneId.systemDefault()
+        val startOfToday = LocalDate.now(zone).atStartOfDay(zone).toInstant()
+        val steps = aggregateSteps(startOfToday, Instant.ofEpochMilli(now)) ?: return
         Log.i(TAG, "STEPS_LOW check: today=$steps threshold=$threshold")
         if (steps >= threshold) {
             return
@@ -144,8 +170,12 @@ class ReminderWorker(context: Context, params: WorkerParameters) : CoroutineWork
         ledger.record(STEPS_LOW_TYPE, key, today)
     }
 
-    /** Today's step total from Health Connect (device TZ midnight → now), or null when it can't be read. */
-    private suspend fun readTodaySteps(now: Long): Long? {
+    /**
+     * Step total from Health Connect over `[start, end)`, or null when it can't be read (SDK
+     * unavailable, the READ_STEPS / background grant missing, or the query fails). Needs both grants:
+     * the worker runs with no activity, so a foreground-only grant isn't enough.
+     */
+    private suspend fun aggregateSteps(start: Instant, end: Instant): Long? {
         if (HealthConnectClient.getSdkStatus(applicationContext) != HealthConnectClient.SDK_AVAILABLE) {
             return null
         }
@@ -155,15 +185,13 @@ class ReminderWorker(context: Context, params: WorkerParameters) : CoroutineWork
             if (!granted.contains(HealthPermission.PERMISSION_READ_HEALTH_DATA_IN_BACKGROUND) ||
                 !granted.contains(HealthPermission.getReadPermission(StepsRecord::class))
             ) {
-                Log.i(TAG, "Health Connect background read not granted; skipping STEPS_LOW")
+                Log.i(TAG, "Health Connect background read not granted; skipping")
                 return null
             }
-            val zone = ZoneId.systemDefault()
-            val startOfToday = LocalDate.now(zone).atStartOfDay(zone).toInstant()
             val result: AggregationResult = client.aggregate(
                 AggregateRequest(
                     metrics = setOf(StepsRecord.COUNT_TOTAL),
-                    timeRangeFilter = TimeRangeFilter.between(startOfToday, Instant.ofEpochMilli(now)),
+                    timeRangeFilter = TimeRangeFilter.between(start, end),
                 ),
             )
             result[StepsRecord.COUNT_TOTAL] ?: 0L
@@ -273,6 +301,9 @@ class ReminderWorker(context: Context, params: WorkerParameters) : CoroutineWork
         const val REGISTRY_KEY = "lm2_notifScheduled"
         const val DEFAULT_CHANNEL_NAME = "Reminders"
         const val STEPS_LOW_TYPE = "STEPS_LOW"
+
+        /** Keep in sync with step-sync-plan.ts PENDING_NATIVE_STEP_PREFIX. */
+        const val PENDING_STEP_PREFIX = "steps.pendingHealthConnect."
 
         /** Keep MainActivity's literal in sync — a notification tap stashes this extra for the JS side. */
         const val EXTRA_ROUTE = "hu.bumler.lm2.notificationRoute"

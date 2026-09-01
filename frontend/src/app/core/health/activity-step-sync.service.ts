@@ -7,7 +7,7 @@ import { today } from '../../shared/local-date';
 import { DailyStepLogRepository } from '../data/daily-step-log.repository';
 import { AuthSessionService } from '../session/auth-session.service';
 import { HealthConnectStepSource } from './health-connect-step-source.service';
-import { datesNeedingBackfill } from './step-sync-plan';
+import { PENDING_NATIVE_STEP_PREFIX, datesNeedingBackfill, drainPendingNativeStepReadings } from './step-sync-plan';
 
 const LAST_SYNC_KEY = 'steps.lastHealthConnectSyncAt';
 const BACKFILL_LOOKBACK_DAYS = 7;
@@ -139,6 +139,10 @@ export class ActivityStepSyncService {
       await this.repository.load();
       const todayIso = today();
 
+      // Fold in anything the 09:00 native worker stashed (it can't write the store itself) before the
+      // live read below, which can still raise those values further.
+      await this.drainPendingNativeReadings();
+
       const todaySteps = await this.source.readDailySteps(todayIso);
       if (todaySteps !== null) {
         await this.repository.maxWinsUpsert(todayIso, todaySteps);
@@ -168,5 +172,26 @@ export class ActivityStepSyncService {
     } finally {
       this.running = false;
     }
+  }
+
+  /**
+   * documentation/Features/Értesítések.md "08:00 / 20:00 háttér-értesítés worker" — pick up the
+   * `steps.pendingHealthConnect.<date>` readings the 09:00 native worker left behind, fold them in
+   * max-wins, and clear the keys (invalid ones too, so a bad value can't wedge forever).
+   */
+  private async drainPendingNativeReadings(): Promise<void> {
+    const { keys } = await Preferences.keys();
+    const pendingKeys = keys.filter((key) => key.startsWith(PENDING_NATIVE_STEP_PREFIX));
+    if (pendingKeys.length === 0) {
+      return;
+    }
+    const entries = await Promise.all(
+      pendingKeys.map(async (key) => ({ key, value: (await Preferences.get({ key })).value })),
+    );
+    const { readings, keysToClear } = drainPendingNativeStepReadings(entries);
+    for (const { date, steps } of readings) {
+      await this.repository.maxWinsUpsert(date, steps);
+    }
+    await Promise.all(keysToClear.map((key) => Preferences.remove({ key })));
   }
 }
