@@ -72,6 +72,11 @@ export class NotificationsPage {
   protected readonly isNative = Capacitor.isNativePlatform();
   protected readonly permission = this.scheduler.permission;
 
+  constructor() {
+    // The user may have changed the OS permission in system settings since cold start / last resume.
+    void this.scheduler.syncPermission();
+  }
+
   protected readonly rows = computed<NotificationRow[]>(() => {
     const enabled = this.settings.enabled();
     return NOTIFICATION_TYPES.filter((type) => this.featureFlags.isEnabled(NOTIFICATION_SOURCE_FLAG[type])).map((type) => ({

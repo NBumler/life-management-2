@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Preferences } from '@capacitor/preferences';
 
 import { addDaysIso } from '../../shared/local-date';
-import { NotificationType } from './notification-types';
+import { LIFETIME_DEDUPE_TYPES, NotificationType } from './notification-types';
 
 const PREFERENCES_KEY = 'lm2_notifDedupe';
 const RETENTION_DAYS = 35;
@@ -48,11 +48,16 @@ export class NotificationDedupeStore {
     await this.persist();
   }
 
-  /** Drop entries older than the retention window so the blob can't grow without bound. */
+  /**
+   * Drop entries older than the retention window so the blob can't grow without bound —
+   * **except** {@link LIFETIME_DEDUPE_TYPES}, whose "1 / élettartam" guarantee (spec
+   * "Ismétlés-védelem") would otherwise be lost once its entry aged past the window and let the
+   * same once-per-lifetime notification fire again.
+   */
   async prune(todayIso: string): Promise<void> {
     const cutoff = addDaysIso(todayIso, -RETENTION_DAYS);
     const entries = await this.all();
-    const kept = entries.filter((entry) => entry.day >= cutoff);
+    const kept = entries.filter((entry) => LIFETIME_DEDUPE_TYPES.has(entry.type) || entry.day >= cutoff);
     if (kept.length !== entries.length) {
       this.entries = kept;
       await this.persist();

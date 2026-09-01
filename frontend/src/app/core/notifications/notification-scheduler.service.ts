@@ -77,7 +77,16 @@ type Registry = Record<string, RegistryEntry>;
  * (no `@capacitor/background-runner` wired for this), so a fixed-time notification whose day the app
  * is never opened on can be missed — the next app open fires it immediately if still relevant. Same
  * "app-open is the safety net" tradeoff as the Health Connect step sync. A real 08:00/20:00
- * background worker is the next recommended feature.
+ * background worker is the next recommended feature. One residual edge in the same class: if a
+ * `FOOD_SPOILED_ONCE` alarm is force-stopped / OEM-killed after it was scheduled but before it
+ * fired, the reconcile can't tell that apart from a delivery and won't re-fire it (every other type
+ * self-heals because its dedupe key rotates daily).
+ *
+ * Notifications are scheduled **inexact** ({@link fire} passes `isExactNotification: false`): these
+ * reminders don't need alarm-clock precision, so we avoid the Android 12+ exact-alarm permission
+ * and its first-schedule settings-screen redirect. Events are only pre-scheduled
+ * {@link EVENT_HORIZON_DAYS} ahead (narrower than the Események ±1yr projection) — a farther-out
+ * occurrence gets its notification the first time the app is opened within that window.
  */
 @Injectable({ providedIn: 'root' })
 export class NotificationSchedulerService {
@@ -109,6 +118,7 @@ export class NotificationSchedulerService {
   private started = false;
   private running = false;
   private rerunRequested = false;
+  private rerunRefresh = false;
   private pendingRefresh = false;
   private lastTick = 0;
   private debounceHandle: ReturnType<typeof setTimeout> | null = null;
@@ -119,7 +129,9 @@ export class NotificationSchedulerService {
    */
   async init(): Promise<void> {
     if (this.started) {
-      // Re-invoked after an in-session login (LoginPage) — just re-run the reconcile.
+      // Re-invoked after an in-session login (LoginPage) — re-check permission (it may have been
+      // granted in system settings meanwhile) and re-run the reconcile.
+      await this.syncPermission();
       await this.reevaluate('reinit', true);
       return;
     }
@@ -130,14 +142,7 @@ export class NotificationSchedulerService {
       return;
     }
 
-    try {
-      const perm = await this.gateway.checkPermissions();
-      this.permission.set(perm.display === 'granted' ? 'granted' : 'denied');
-    } catch {
-      this.permission.set('unavailable');
-      return;
-    }
-
+    await this.syncPermission();
     await this.ensureChannel();
 
     void this.gateway.addActionPerformedListener((route) => {
@@ -146,7 +151,9 @@ export class NotificationSchedulerService {
       }
     });
 
-    void App.addListener('resume', () => void this.reevaluate('resume', true));
+    // Re-check permission on every foreground (the user can flip it in system settings while
+    // backgrounded), then reconcile against the freshly reloaded store.
+    void App.addListener('resume', () => void this.onResume());
 
     this.lastTick = this.dataChange.tick();
     // React to source-data mutations (local writes bump repo signals; a pull bumps DataChangeNotifier)
@@ -163,6 +170,14 @@ export class NotificationSchedulerService {
         this.meal.items();
         this.householdTask.items();
         this.calendarEvent.items();
+        // CALORIE_STREAK also derives from these (recipe-based intake + TDEE allowance from the
+        // profile and every activity source) — spec "forrás-entitás mutáció" must re-evaluate.
+        this.recipe.items();
+        this.profile.profile();
+        this.workout.items();
+        this.swim.items();
+        this.bike.items();
+        this.climbing.items();
         const pulled = tick !== this.lastTick;
         this.lastTick = tick;
         this.scheduleReevaluate(pulled);
@@ -171,6 +186,32 @@ export class NotificationSchedulerService {
     );
 
     await this.reevaluate('cold-start', true);
+  }
+
+  private async onResume(): Promise<void> {
+    await this.syncPermission();
+    await this.reevaluate('resume', true);
+  }
+
+  /**
+   * Re-reads the OS notification permission into {@link permission}. Runs at cold start, on every
+   * `resume`, and when the settings page opens. A transient plugin error (boot race) leaves the
+   * signal at `unknown` so a later retry can still recover — it must not latch the feature off for
+   * the whole process lifetime.
+   */
+  async syncPermission(): Promise<void> {
+    if (!Capacitor.isNativePlatform()) {
+      this.permission.set('unavailable');
+      return;
+    }
+    try {
+      const perm = await this.gateway.checkPermissions();
+      this.permission.set(perm.display === 'granted' ? 'granted' : 'denied');
+    } catch {
+      if (this.permission() !== 'granted' && this.permission() !== 'denied') {
+        this.permission.set('unknown');
+      }
+    }
   }
 
   /** documentation/Features/Értesítések.md "OS értesítési engedély kérése első használatkor / bekapcsoláskor." */
@@ -217,6 +258,8 @@ export class NotificationSchedulerService {
     }
     if (this.running) {
       this.rerunRequested = true;
+      // Don't lose a refresh-needing trigger (a pull, a resume) that lands mid-run.
+      this.rerunRefresh = this.rerunRefresh || refresh;
       return;
     }
     this.running = true;
@@ -229,7 +272,9 @@ export class NotificationSchedulerService {
       this.running = false;
       if (this.rerunRequested) {
         this.rerunRequested = false;
-        await this.reevaluate('rerun', false);
+        const rerunRefresh = this.rerunRefresh;
+        this.rerunRefresh = false;
+        await this.reevaluate('rerun', rerunRefresh);
       }
     }
   }
@@ -278,15 +323,30 @@ export class NotificationSchedulerService {
     const lang = this.language.activeLanguage();
     const nextRegistry: Registry = {};
 
-    // 1. Retire registry entries whose fire time has passed (they fired / will imminently); keep the
-    //    still-wanted future ones whose text language is unchanged; drop the rest (reschedule below).
+    // 1. Reconcile the registry against what the OS still has queued (`pendingIds`):
+    //    - fire time passed, OS no longer lists it        → delivered (or lost to a force-stop /
+    //      OEM battery kill — indistinguishable, and the same accepted gap as "no background
+    //      worker"): record dedupe so it isn't re-fired.
+    //    - fire time passed but the OS still has it queued → a late alarm that has NOT fired yet:
+    //      cancel it, forget the stale pending id, and let step 2 fire it immediately once.
+    //    - still future, still wanted, same language, OS still has it → keep as-is.
+    //    - anything else (no longer wanted / language changed / the OS dropped a future one) →
+    //      cancel and let step 2 reschedule it.
     for (const [idStr, entry] of Object.entries(registry)) {
+      const id = Number(idStr);
+      const stillPending = pendingIds.has(id);
       if (new Date(entry.fireAt) <= now) {
-        await this.dedupe.record(entry.type, entry.key, entry.fireAt.slice(0, 10));
-      } else if (desiredById.has(Number(idStr)) && entry.lang === lang) {
+        if (stillPending) {
+          await this.cancelIds([id]);
+          pendingIds.delete(id);
+        } else {
+          await this.dedupe.record(entry.type, entry.key, entry.fireAt.slice(0, 10));
+        }
+      } else if (stillPending && desiredById.has(id) && entry.lang === lang) {
         nextRegistry[idStr] = entry;
       } else {
-        await this.cancelIds([Number(idStr)]);
+        await this.cancelIds([id]);
+        pendingIds.delete(id);
       }
     }
 
@@ -384,6 +444,10 @@ export class NotificationSchedulerService {
           channelId: CHANNEL_ID,
           title: this.translate.instant(n.titleKey, n.params),
           body: this.translate.instant(n.bodyKey, n.params),
+          // Inexact: daily 09:00 / 20:00 / event reminders tolerate a few minutes' drift and the
+          // app-open reconcile catches misses — so we skip the exact-alarm permission entirely (no
+          // "Alarms & reminders" settings redirect on first schedule, no Play-review friction).
+          isExactNotification: false,
           ...(at ? { schedule: { at, allowWhileIdle: true } } : {}),
           extra: { route: n.route, type: n.type, key: n.key },
         },

@@ -23,6 +23,7 @@ import { addDaysIso, today } from '../../shared/local-date';
 import { DataChangeNotifier } from '../sync/data-change-notifier';
 import { LocalNotificationsGateway } from './local-notifications.gateway';
 import { NotificationDedupeStore } from './notification-dedupe.store';
+import { notificationNumericId } from './notification-ids';
 import { NotificationSchedulerService } from './notification-scheduler.service';
 import { NotificationSettingsService } from './notification-settings.service';
 import { NotificationType } from './notification-types';
@@ -220,6 +221,94 @@ describe('NotificationSchedulerService', () => {
     await service.reevaluate('test', false);
 
     expect(gateway.schedule).not.toHaveBeenCalled();
+  });
+
+  it('cancels and reschedules a kept future entry when the UI language changed since it was baked', async () => {
+    const service = build();
+    service.permission.set('granted');
+    const date = addDaysIso(today(), 5);
+    eventItems = [allDayEvent(date)];
+    const id = notificationNumericId('EVENT_OCCURRENCE', `ev-${date}:${date}`);
+    await Preferences.set({
+      key: 'lm2_notifScheduled',
+      value: JSON.stringify({
+        [id]: { type: 'EVENT_OCCURRENCE', key: `ev-${date}:${date}`, fireAt: `${date}T09:00:00`, lang: 'en' },
+      }),
+    });
+    gateway.getPending.and.resolveTo({ notifications: [{ id }] } as never);
+
+    await service.reevaluate('test', false);
+
+    expect(gateway.cancelIds).toHaveBeenCalledWith([id]);
+    expect(gateway.schedule).toHaveBeenCalledTimes(1);
+    const registry = JSON.parse((await Preferences.get({ key: 'lm2_notifScheduled' })).value!);
+    expect(registry[id].lang).toBe('hu');
+  });
+
+  it('reschedules a still-wanted future entry that the OS no longer has pending', async () => {
+    const service = build();
+    service.permission.set('granted');
+    const date = addDaysIso(today(), 5);
+    eventItems = [allDayEvent(date)];
+    const id = notificationNumericId('EVENT_OCCURRENCE', `ev-${date}:${date}`);
+    await Preferences.set({
+      key: 'lm2_notifScheduled',
+      value: JSON.stringify({
+        [id]: { type: 'EVENT_OCCURRENCE', key: `ev-${date}:${date}`, fireAt: `${date}T09:00:00`, lang: 'hu' },
+      }),
+    });
+    // getPending stays [] → the OS dropped the alarm.
+
+    await service.reevaluate('test', false);
+
+    expect(gateway.cancelIds).toHaveBeenCalledWith([id]);
+    expect(gateway.schedule).toHaveBeenCalledTimes(1);
+    const arg = gateway.schedule.calls.mostRecent().args[0] as { notifications: { schedule?: { at: Date } }[] };
+    expect(arg.notifications[0].schedule!.at instanceof Date).toBeTrue();
+  });
+
+  it('re-fires a past-due entry the OS still has queued instead of assuming it was delivered', async () => {
+    const service = build();
+    service.permission.set('granted');
+    householdItems = [{ id: 't1', name: 'Porszívózás', nextDue: today(), deleted: false }];
+    const id = notificationNumericId('HOUSEHOLD_TASK_DUE', today());
+    await Preferences.set({
+      key: 'lm2_notifScheduled',
+      value: JSON.stringify({
+        [id]: { type: 'HOUSEHOLD_TASK_DUE', key: today(), fireAt: `${today()}T09:00:00`, lang: 'hu' },
+      }),
+    });
+    gateway.getPending.and.resolveTo({ notifications: [{ id }] } as never);
+
+    await service.reevaluate('test', false);
+
+    expect(gateway.cancelIds).toHaveBeenCalledWith([id]);
+    const arg = gateway.schedule.calls.mostRecent().args[0] as { notifications: { schedule?: unknown }[] };
+    expect(arg.notifications[0].schedule).toBeUndefined();
+    expect(dedupeRecord).toHaveBeenCalledWith('HOUSEHOLD_TASK_DUE', today(), today());
+  });
+
+  it('schedules inexact alarms (no exact-alarm permission needed)', async () => {
+    const service = build();
+    service.permission.set('granted');
+    eventItems = [allDayEvent(addDaysIso(today(), 5))];
+
+    await service.reevaluate('test', false);
+
+    const arg = gateway.schedule.calls.mostRecent().args[0] as { notifications: { isExactNotification?: boolean }[] };
+    expect(arg.notifications[0].isExactNotification).toBeFalse();
+  });
+
+  it('syncPermission stays recoverable after a transient checkPermissions failure', async () => {
+    const service = build();
+    gateway.checkPermissions.and.rejectWith(new Error('plugin not ready'));
+
+    await service.syncPermission();
+    expect(service.permission()).toBe('unknown');
+
+    gateway.checkPermissions.and.resolveTo({ display: 'granted' } as never);
+    await service.syncPermission();
+    expect(service.permission()).toBe('granted');
   });
 });
 

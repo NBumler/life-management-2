@@ -1,4 +1,4 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, Signal, signal } from '@angular/core';
 import { Preferences } from '@capacitor/preferences';
 
 import { NOTIFICATION_TYPES, NotificationType } from './notification-types';
@@ -21,7 +21,7 @@ export class NotificationSettingsService {
   private readonly map = signal<NotificationEnabledMap>(allEnabled());
 
   /** Reactive snapshot of every type's on/off state. */
-  readonly enabled = computed(() => this.map());
+  readonly enabled: Signal<NotificationEnabledMap> = this.map.asReadonly();
 
   isEnabled(type: NotificationType): boolean {
     return this.map()[type];

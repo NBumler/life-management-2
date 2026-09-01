@@ -17,6 +17,14 @@ export const NOTIFICATION_TYPES = [
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
 /**
+ * documentation/Features/Értesítések.md "Ismétlés-védelem (deduplikáció)" table: `FOOD_SPOILED_ONCE`
+ * is the only **1 / élettartam** type — its dedupe key carries no calendar day, so its "already
+ * sent" entry must survive the retention prune forever. Every other type embeds the day in its key
+ * and is safe to age out.
+ */
+export const LIFETIME_DEDUPE_TYPES: ReadonlySet<NotificationType> = new Set<NotificationType>(['FOOD_SPOILED_ONCE']);
+
+/**
  * documentation/Architektúra/Frontend.md: "Az [[Értesítések]] típus-kapcsolói nem feature flag-ek:
  * device-local user beállítások, és a forrás-feature flagje fedi őket (forrás ki → a típus nem
  * jelenik meg és nem ütemez)." This maps each type to the flag that gates its source feature.

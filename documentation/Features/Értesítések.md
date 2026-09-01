@@ -130,7 +130,8 @@ Nincs nyitott kérdés.
 
 - `LocalNotificationService` (vagy ekvivalens): ütemezés, engedély, dedupe store, típus-flag-ek olvasása.
 - Trigger források: készlet store, `DailyStepLog`, Étkezés napi összeg + TDEE allowance, háztartási feladat store (`nextDue`), esemény store + vetítés ([[Események]]).
-- 09:00 / 20:00 / esemény `startTime`: OS scheduled local notifications és/vagy napi background check + immediate local notification.
+- 09:00 / 20:00 / esemény `startTime`: OS scheduled local notifications és/vagy napi background check + immediate local notification. Az OS-ütemezés **inexact** (a napi emlékeztetők pár perc csúszást elviselnek, és app-nyitáskor úgyis pótlódik a kimaradt) — így nincs szükség Android 12+ pontos-ébresztő engedélyre.
+- `EVENT_OCCURRENCE` előre-ütemzési horizont: **+30 nap** (a [[Események]] ±1 éves vetítési horizontjánál szűkebb). Egy távolabbi előfordulás az első olyan app-nyitáskor kap értesítést, amikor már 30 napon belülre esik — háttér-worker hiányában ez az elfogadott kompromisszum.
 - Beállítások page a Menü alatt; flag-ek **device-local** store ([[Bejelentkezés]] — nincs profil-sync az első körben).
 - Újraértékelés kiváltói: app indulás / előtérbe jövés, forrás-entitás mutáció, típus-kapcsoló váltás és **nyelvváltás** ([[Nyelv választás]]). A szövegek i18n kulcsokból készülnek, nem hardcode stringből.
 
