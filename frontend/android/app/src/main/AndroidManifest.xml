@@ -91,6 +91,11 @@
     <!-- documentation/Subfeatures/Lépésszám átszinkronizálása a Samsung Health-ből.md: read-only
          daily step totals from Android Health Connect (Samsung Health data source). -->
     <uses-permission android:name="android.permission.health.READ_STEPS" />
+    <!-- documentation/Features/Értesítések.md "08:00 / 20:00 háttér-értesítés worker": the 20:00
+         ReminderWorker reads today's step total from Health Connect while the app is closed to decide
+         the STEPS_LOW notification. Health Connect requires this extra grant for background reads;
+         it is only requestable once READ_STEPS is already granted. -->
+    <uses-permission android:name="android.permission.health.READ_HEALTH_DATA_IN_BACKGROUND" />
     <!-- documentation/Features/Értesítések.md: local (device-scheduled) notifications, no server push.
          POST_NOTIFICATIONS is the Android 13+ runtime prompt. No SCHEDULE_EXACT_ALARM: the 09:00 /
          20:00 / event-start reminders are scheduled inexact (isExactNotification: false) — a few

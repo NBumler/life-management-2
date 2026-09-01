@@ -39,6 +39,13 @@ class HealthConnectStepsPlugin : Plugin() {
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private val readStepsPermission = HealthPermission.getReadPermission(StepsRecord::class)
 
+    /**
+     * documentation/Features/Értesítések.md "08:00 / 20:00 háttér-értesítés worker" — Health Connect
+     * needs this extra grant for the 20:00 background step read (notifications/ReminderWorker.kt). It
+     * is only offered once [readStepsPermission] is already granted.
+     */
+    private val backgroundReadPermission = HealthPermission.PERMISSION_READ_HEALTH_DATA_IN_BACKGROUND
+
     private fun sdkAvailable(): Boolean =
         HealthConnectClient.getSdkStatus(context) == HealthConnectClient.SDK_AVAILABLE
 
@@ -99,6 +106,58 @@ class HealthConnectStepsPlugin : Plugin() {
                 call.resolve(JSObject().put("granted", granted))
             } catch (e: Exception) {
                 call.reject("Health Connect permission result read failed", e)
+            }
+        }
+    }
+
+    /** Current READ_HEALTH_DATA_IN_BACKGROUND grant, without prompting. */
+    @PluginMethod
+    fun checkBackgroundPermission(call: PluginCall) {
+        val client = clientOrNull()
+        if (client == null) {
+            call.resolve(JSObject().put("granted", false))
+            return
+        }
+        scope.launch {
+            try {
+                val granted = client.permissionController.getGrantedPermissions()
+                    .contains(backgroundReadPermission)
+                call.resolve(JSObject().put("granted", granted))
+            } catch (e: Exception) {
+                call.reject("Health Connect background permission check failed", e)
+            }
+        }
+    }
+
+    /** Prompt for the background-read permission; resolves with the resulting grant. */
+    @PluginMethod
+    fun requestBackgroundPermission(call: PluginCall) {
+        if (!sdkAvailable()) {
+            call.resolve(JSObject().put("granted", false))
+            return
+        }
+        val intent = PermissionController.createRequestPermissionResultContract()
+            .createIntent(context, setOf(backgroundReadPermission))
+        startActivityForResult(call, intent, "onBackgroundPermissionResult")
+    }
+
+    @ActivityCallback
+    fun onBackgroundPermissionResult(call: PluginCall?, result: ActivityResult) {
+        if (call == null) {
+            return
+        }
+        val client = clientOrNull()
+        if (client == null) {
+            call.resolve(JSObject().put("granted", false))
+            return
+        }
+        scope.launch {
+            try {
+                val granted = client.permissionController.getGrantedPermissions()
+                    .contains(backgroundReadPermission)
+                call.resolve(JSObject().put("granted", granted))
+            } catch (e: Exception) {
+                call.reject("Health Connect background permission result read failed", e)
             }
         }
     }

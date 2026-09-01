@@ -125,7 +125,10 @@
     "HC_GRANTED": "Allowed — refreshes automatically on app open.",
     "HC_LAST_SYNC": "Last sync: {{time}}",
     "HC_DENIED": "Automatic step import from Health Connect (Samsung Health) needs permission. Without it only manual entry works.",
-    "HC_GRANT": "Allow Health Connect"
+    "HC_GRANT": "Allow Health Connect",
+    "HC_BG_GRANTED": "Background access allowed — the \"low steps\" reminder fires at 8pm even if you don't open the app.",
+    "HC_BG_DENIED": "Without background access the \"low steps\" reminder is only evaluated when you open the app.",
+    "HC_BG_GRANT": "Allow background access"
   },
   "FINANCE": {
     "DASHBOARD": {

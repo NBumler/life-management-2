@@ -25,6 +25,16 @@ export interface HealthConnectStepsPlugin {
   requestPermission(): Promise<{ granted: boolean }>;
 
   /**
+   * documentation/Features/Értesítések.md "08:00 / 20:00 háttér-értesítés worker" — the
+   * READ_HEALTH_DATA_IN_BACKGROUND grant the 20:00 worker needs to read today's steps while the app
+   * is closed. Only meaningful once {@link checkPermission} is granted.
+   */
+  checkBackgroundPermission(): Promise<{ granted: boolean }>;
+
+  /** Prompt for the background-read permission; resolves with the resulting grant. */
+  requestBackgroundPermission(): Promise<{ granted: boolean }>;
+
+  /**
    * Total steps for a single client-local calendar day (`YYYY-MM-DD`). Implementations sum the
    * Health Connect `StepsRecord` buckets that fall within that day in the device's own timezone.
    */

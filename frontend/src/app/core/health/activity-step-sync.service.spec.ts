@@ -13,7 +13,16 @@ describe('ActivityStepSyncService', () => {
   let userId: string | null;
 
   beforeEach(() => {
-    source = jasmine.createSpyObj('HealthConnectStepSource', ['isAvailable', 'hasPermission', 'requestPermission', 'readDailySteps']);
+    source = jasmine.createSpyObj('HealthConnectStepSource', [
+      'isAvailable',
+      'hasPermission',
+      'requestPermission',
+      'hasBackgroundPermission',
+      'requestBackgroundPermission',
+      'readDailySteps',
+    ]);
+    source.hasBackgroundPermission.and.resolveTo(false);
+    source.requestBackgroundPermission.and.resolveTo(false);
     repo = jasmine.createSpyObj('DailyStepLogRepository', ['load', 'maxWinsUpsert', 'allKnownDates']);
     repo.load.and.resolveTo();
     repo.maxWinsUpsert.and.resolveTo(null);
@@ -128,5 +137,44 @@ describe('ActivityStepSyncService', () => {
 
     expect(service.permission()).toBe('denied');
     expect(source.readDailySteps).not.toHaveBeenCalled();
+  });
+
+  it('resume: reports backgroundPermission granted only when both the foreground and background grants are present', async () => {
+    service.permission.set('denied');
+    source.hasPermission.and.resolveTo(true);
+    source.hasBackgroundPermission.and.resolveTo(true);
+    source.readDailySteps.and.resolveTo(0);
+
+    await (service as unknown as { resumeSync(): Promise<void> }).resumeSync();
+
+    expect(service.backgroundPermission()).toBe('granted');
+  });
+
+  it('resume: backgroundPermission is denied when the foreground grant is missing (never probed)', async () => {
+    service.permission.set('granted');
+    source.hasPermission.and.resolveTo(false);
+    source.hasBackgroundPermission.and.resolveTo(true);
+
+    await (service as unknown as { resumeSync(): Promise<void> }).resumeSync();
+
+    expect(service.backgroundPermission()).toBe('denied');
+    expect(source.hasBackgroundPermission).not.toHaveBeenCalled();
+  });
+
+  it('requestBackgroundPermission(): no-op without the foreground grant', async () => {
+    service.permission.set('denied');
+
+    await service.requestBackgroundPermission();
+
+    expect(source.requestBackgroundPermission).not.toHaveBeenCalled();
+  });
+
+  it('requestBackgroundPermission(): flips the signal on grant', async () => {
+    service.permission.set('granted');
+    source.requestBackgroundPermission.and.resolveTo(true);
+
+    await service.requestBackgroundPermission();
+
+    expect(service.backgroundPermission()).toBe('granted');
   });
 });

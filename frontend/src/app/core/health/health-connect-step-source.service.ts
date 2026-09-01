@@ -51,6 +51,33 @@ export class HealthConnectStepSource {
     }
   }
 
+  /**
+   * documentation/Features/Értesítések.md "08:00 / 20:00 háttér-értesítés worker" — the extra grant
+   * the 20:00 background worker needs to read Health Connect while the app is closed.
+   */
+  async hasBackgroundPermission(): Promise<boolean> {
+    if (!this.native) {
+      return false;
+    }
+    try {
+      return (await HealthConnectSteps.checkBackgroundPermission()).granted;
+    } catch {
+      return false;
+    }
+  }
+
+  /** Prompts for the background-read permission. Returns the resulting grant; false on any error / non-native. */
+  async requestBackgroundPermission(): Promise<boolean> {
+    if (!this.native) {
+      return false;
+    }
+    try {
+      return (await HealthConnectSteps.requestBackgroundPermission()).granted;
+    } catch {
+      return false;
+    }
+  }
+
   /** Total steps for `date` (`YYYY-MM-DD`, device TZ), or null when Health Connect can't answer. */
   async readDailySteps(date: string): Promise<number | null> {
     if (!this.native) {

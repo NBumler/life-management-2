@@ -35,6 +35,12 @@ export class ActivityStepSyncService {
   private readonly authSession = inject(AuthSessionService);
 
   readonly permission = signal<StepSyncPermission>('unknown');
+  /**
+   * documentation/Features/Értesítések.md "08:00 / 20:00 háttér-értesítés worker" — the
+   * READ_HEALTH_DATA_IN_BACKGROUND grant the 20:00 STEPS_LOW worker needs. Only ever `granted` while
+   * {@link permission} is also `granted`.
+   */
+  readonly backgroundPermission = signal<StepSyncPermission>('unknown');
   readonly lastSyncAt = signal<string | null>(null);
   private running = false;
   private resumeListenerBound = false;
@@ -47,12 +53,14 @@ export class ActivityStepSyncService {
   async init(): Promise<void> {
     if (!Capacitor.isNativePlatform()) {
       this.permission.set('unavailable');
+      this.backgroundPermission.set('unavailable');
       return;
     }
     this.lastSyncAt.set((await Preferences.get({ key: LAST_SYNC_KEY })).value ?? null);
 
     if (!(await this.source.isAvailable())) {
       this.permission.set('unavailable');
+      this.backgroundPermission.set('unavailable');
       return;
     }
     await this.refreshPermission();
@@ -74,9 +82,12 @@ export class ActivityStepSyncService {
     }
     const granted = await this.source.requestPermission();
     this.permission.set(granted ? 'granted' : 'denied');
-    if (granted) {
-      await this.syncNow();
+    if (!granted) {
+      this.backgroundPermission.set('denied');
+      return;
     }
+    this.backgroundPermission.set((await this.source.hasBackgroundPermission()) ? 'granted' : 'denied');
+    await this.syncNow();
   }
 
   /**
@@ -89,12 +100,33 @@ export class ActivityStepSyncService {
     await this.syncNow();
   }
 
-  /** Re-reads the live READ_STEPS grant into {@link permission}. No-op once the device is `unavailable`. */
+  /**
+   * Re-reads the live READ_STEPS grant into {@link permission} and the background-read grant into
+   * {@link backgroundPermission}. No-op once the device is `unavailable`.
+   */
   private async refreshPermission(): Promise<void> {
     if (this.permission() === 'unavailable') {
       return;
     }
-    this.permission.set((await this.source.hasPermission()) ? 'granted' : 'denied');
+    const granted = await this.source.hasPermission();
+    this.permission.set(granted ? 'granted' : 'denied');
+    // Background access is meaningless without the foreground grant — don't even probe it then.
+    this.backgroundPermission.set(
+      granted ? ((await this.source.hasBackgroundPermission()) ? 'granted' : 'denied') : 'denied',
+    );
+  }
+
+  /**
+   * documentation/Features/Értesítések.md "08:00 / 20:00 háttér-értesítés worker" — prompt for the
+   * Health Connect background-read permission (Steps screen). Requires the foreground READ_STEPS
+   * grant first; on denial the STEPS_LOW notification stays app-open-only.
+   */
+  async requestBackgroundPermission(): Promise<void> {
+    if (this.permission() !== 'granted' || this.backgroundPermission() === 'unavailable') {
+      return;
+    }
+    const granted = await this.source.requestBackgroundPermission();
+    this.backgroundPermission.set(granted ? 'granted' : 'denied');
   }
 
   /** Today + 7-day gap backfill. Safe to call repeatedly; a no-op unless permission is granted and a user is signed in. */

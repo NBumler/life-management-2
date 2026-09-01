@@ -63,6 +63,7 @@ export class StepTrackerPage implements OnInit, ViewWillEnter {
   private readonly router = inject(Router);
 
   readonly syncPermission = this.stepSync.permission;
+  readonly backgroundPermission = this.stepSync.backgroundPermission;
   readonly lastSyncAt = this.stepSync.lastSyncAt;
 
   readonly todayIso = today();
@@ -119,6 +120,10 @@ export class StepTrackerPage implements OnInit, ViewWillEnter {
 
   async grantHealthConnect(): Promise<void> {
     await this.stepSync.requestPermission();
+  }
+
+  async grantHealthConnectBackground(): Promise<void> {
+    await this.stepSync.requestBackgroundPermission();
   }
 
   editDay(date: string): void {
