@@ -17,6 +17,7 @@ import { ThemeService } from './app/core/config/theme.service';
 import { apiBaseUrlInterceptor } from './app/core/api/api-base-url.interceptor';
 import { AuthSessionService } from './app/core/session/auth-session.service';
 import { authInterceptor } from './app/core/session/auth.interceptor';
+import { ActivityStepSyncService } from './app/core/health/activity-step-sync.service';
 import { LocalDatabaseService } from './app/core/storage/local-database.service';
 import { provideStorageBackend } from './app/core/storage/storage-backend.provider';
 import { SyncEngineService } from './app/core/sync/sync-engine.service';
@@ -52,6 +53,7 @@ bootstrapApplication(AppComponent, {
       const authSession = inject(AuthSessionService);
       const localDb = inject(LocalDatabaseService);
       const syncEngine = inject(SyncEngineService);
+      const stepSync = inject(ActivityStepSyncService);
 
       await Promise.all([languageService.init(), themeService.init(), authSession.restore()]);
 
@@ -61,6 +63,11 @@ bootstrapApplication(AppComponent, {
       }
 
       void syncEngine.init();
+      // documentation/Subfeatures/Lépésszám átszinkronizálása a Samsung Health-ből.md: app-open
+      // Health Connect pull + 7-day gap backfill. Not awaited — no blocking work at cold start.
+      if (userId !== null) {
+        void stepSync.init();
+      }
     }),
   ],
 })

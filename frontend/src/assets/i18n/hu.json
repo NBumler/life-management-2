@@ -59,7 +59,12 @@
     "ADD_DAY": "Nap hozzáadása",
     "NO_PAST_DAYS": "Még nincs korábbi rögzített nap.",
     "DELETE_CONFIRM_TITLE": "Lépésszám törlése",
-    "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd a(z) {{date}} napi lépésszámot?"
+    "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd a(z) {{date}} napi lépésszámot?",
+    "HC_TITLE": "Health Connect",
+    "HC_GRANTED": "Engedélyezve — app-nyitáskor automatikusan frissül.",
+    "HC_LAST_SYNC": "Utolsó szinkronizálás: {{time}}",
+    "HC_DENIED": "A Health Connect (Samsung Health) automatikus lépésszám-átvételéhez engedély szükséges. Enélkül csak a kézi bevitel működik.",
+    "HC_GRANT": "Health Connect engedélyezése"
   },
   "FINANCE": {
     "DASHBOARD": {

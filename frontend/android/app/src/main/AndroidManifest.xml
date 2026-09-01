@@ -37,10 +37,32 @@
 
         <!-- documentation/Subfeatures/Vonalkódos élelmiszer beolvasás.md: @capacitor-mlkit/barcode-scanning -->
         <meta-data android:name="com.google.mlkit.vision.DEPENDENCIES" android:value="barcode_ui"/>
+
+        <!-- documentation/Subfeatures/Lépésszám átszinkronizálása a Samsung Health-ből.md: Health
+             Connect requires a visible rationale for the READ_STEPS permission (both an activity
+             action and, on Android 14+, the intent-filter alias below). The HealthConnectSteps
+             native module handles the intent; see health-connect.plugin.ts. -->
+        <activity-alias
+            android:name="ViewPermissionUsageActivity"
+            android:exported="true"
+            android:targetActivity=".MainActivity"
+            android:permission="android.permission.START_VIEW_PERMISSION_USAGE">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW_PERMISSION_USAGE" />
+                <category android:name="android.intent.category.HEALTH_PERMISSIONS" />
+            </intent-filter>
+        </activity-alias>
     </application>
 
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <!-- documentation/Subfeatures/Lépésszám átszinkronizálása a Samsung Health-ből.md: read-only
+         daily step totals from Android Health Connect (Samsung Health data source). -->
+    <uses-permission android:name="android.permission.health.READ_STEPS" />
+
+    <queries>
+        <package android:name="com.google.android.apps.healthdata" />
+    </queries>
 </manifest>

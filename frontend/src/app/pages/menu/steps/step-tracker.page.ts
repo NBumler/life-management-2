@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -23,6 +24,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { STEP_BASELINE, stepKcalForDay } from '../../../core/data/activity-kcal';
 import { DailyStepLogRepository } from '../../../core/data/daily-step-log.repository';
 import { ProfileRepository } from '../../../core/data/profile.repository';
+import { ActivityStepSyncService } from '../../../core/health/activity-step-sync.service';
 import { today } from '../../../shared/local-date';
 
 /**
@@ -34,6 +36,7 @@ import { today } from '../../../shared/local-date';
   selector: 'app-step-tracker',
   templateUrl: 'step-tracker.page.html',
   imports: [
+    DatePipe,
     FormsModule,
     IonHeader,
     IonToolbar,
@@ -56,7 +59,11 @@ import { today } from '../../../shared/local-date';
 export class StepTrackerPage implements OnInit, ViewWillEnter {
   private readonly repository = inject(DailyStepLogRepository);
   private readonly profileRepository = inject(ProfileRepository);
+  private readonly stepSync = inject(ActivityStepSyncService);
   private readonly router = inject(Router);
+
+  readonly syncPermission = this.stepSync.permission;
+  readonly lastSyncAt = this.stepSync.lastSyncAt;
 
   readonly baseline = STEP_BASELINE;
   readonly todayIso = today();
@@ -110,6 +117,10 @@ export class StepTrackerPage implements OnInit, ViewWillEnter {
     } finally {
       this.saving.set(false);
     }
+  }
+
+  async grantHealthConnect(): Promise<void> {
+    await this.stepSync.requestPermission();
   }
 
   editDay(date: string): void {

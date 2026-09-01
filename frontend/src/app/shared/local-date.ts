@@ -17,6 +17,19 @@ function toLocalDateString(date: Date): string {
 }
 
 /**
+ * `iso` (a `YYYY-MM-DD` calendar day) shifted by `delta` whole days, returned as `YYYY-MM-DD`.
+ * Arithmetic runs in UTC so it is DST-agnostic — the result is a plain calendar date, not an instant.
+ */
+export function addDaysIso(iso: string, delta: number): string {
+  const [year, month, day] = iso.split('-').map(Number);
+  const shifted = new Date(Date.UTC(year, month - 1, day + delta));
+  const y = shifted.getUTCFullYear();
+  const m = String(shifted.getUTCMonth() + 1).padStart(2, '0');
+  const d = String(shifted.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+/**
  * documentation/Features/Tápérték kalkulátor.md "Kanonikus napi mezők": whole completed years,
  * `floor` period, in the client's TZ (both args are `YYYY-MM-DD` client calendar days). Shared by
  * the TDEE engine and the net-salary calculator so the "25 év alatt" / age inputs stay identical.

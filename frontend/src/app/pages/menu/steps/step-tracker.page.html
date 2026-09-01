@@ -40,6 +40,33 @@
     </div>
   </ion-list>
 
+  @if (syncPermission() !== 'unavailable' && syncPermission() !== 'unknown') {
+    <ion-list>
+      <ion-list-header>
+        <ion-label>{{ 'STEPS.HC_TITLE' | translate }}</ion-label>
+      </ion-list-header>
+      @if (syncPermission() === 'granted') {
+        <ion-item lines="none">
+          <ion-label>
+            <p>{{ 'STEPS.HC_GRANTED' | translate }}</p>
+            @if (lastSyncAt(); as ts) {
+              <p>{{ 'STEPS.HC_LAST_SYNC' | translate: { time: (ts | date: 'short') } }}</p>
+            }
+          </ion-label>
+        </ion-item>
+      } @else {
+        <ion-item lines="none">
+          <ion-label class="ion-text-wrap"><p>{{ 'STEPS.HC_DENIED' | translate }}</p></ion-label>
+        </ion-item>
+        <div class="ion-padding">
+          <ion-button expand="block" fill="outline" (click)="grantHealthConnect()">
+            {{ 'STEPS.HC_GRANT' | translate }}
+          </ion-button>
+        </div>
+      }
+    </ion-list>
+  }
+
   <ion-list>
     <ion-list-header>
       <ion-label>{{ 'STEPS.PAST_DAYS' | translate }}</ion-label>

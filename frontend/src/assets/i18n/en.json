@@ -59,7 +59,12 @@
     "ADD_DAY": "Add day",
     "NO_PAST_DAYS": "No past days recorded yet.",
     "DELETE_CONFIRM_TITLE": "Delete step count",
-    "DELETE_CONFIRM_MESSAGE": "Delete the step count for {{date}}?"
+    "DELETE_CONFIRM_MESSAGE": "Delete the step count for {{date}}?",
+    "HC_TITLE": "Health Connect",
+    "HC_GRANTED": "Allowed — refreshes automatically on app open.",
+    "HC_LAST_SYNC": "Last sync: {{time}}",
+    "HC_DENIED": "Automatic step import from Health Connect (Samsung Health) needs permission. Without it only manual entry works.",
+    "HC_GRANT": "Allow Health Connect"
   },
   "FINANCE": {
     "DASHBOARD": {
