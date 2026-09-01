@@ -126,8 +126,8 @@ szerint:
 | ~~**„Frissítés most" gomb**~~ | [[Lépésszám követés]] | `menu.lepesszam` | **Kész** (2026-09-01) — lásd „Lezárt kör: post-MVP apró frontend extrák". |
 | ~~**Értesítés-előzmény lista**~~ | [[Értesítések]] | `menu.ertesitesek` | **Kész** (2026-09-01) — lásd „Lezárt kör: Értesítés-előzmény + Lead-time szerkesztő". |
 | ~~**Lead-time szerkesztő**~~ | [[Értesítések]] | `menu.ertesitesek` | **Kész** (2026-09-01) — lásd „Lezárt kör: Értesítés-előzmény + Lead-time szerkesztő". |
-| **Google Calendar export** | [[Események]] | `feladatok.googleExport` | Esemény-előfordulások kiírása Google Calendarba; a flag megvan, a spec MVP-n kívülinek jelöli. Közepes–nagy: OAuth + backend vagy natív calendar API. |
-| **iOS Health lépés-forrás** | [[Lépésszám követés]] | `menu.lepesszam` | HealthKit step source az Android Health Connect natív modul mellé. Nagy: iOS build + natív modul. |
+| **Google Calendar export** | [[Események]] | `feladatok.googleExport` | **Elhalasztva (2026-09-02) — jelenleg nem tervezett, később újranyitható.** Esemény-előfordulások kiírása Google Calendarba; a flag megvan, a spec MVP-n kívülinek jelöli. Közepes–nagy: OAuth + backend vagy natív calendar API. |
+| **iOS Health lépés-forrás** | [[Lépésszám követés]] | `menu.lepesszam` | **Elhalasztva (2026-09-02) — jelenleg nem tervezett, később újranyitható.** HealthKit step source az Android Health Connect natív modul mellé. Nagy: iOS build + natív modul. |
 
 A Pénzügyek / AYCM „Tudatosan kihagyva" listái (`WEEKLY` interval, undelete,
 naptár-producer, hivatalos AYCM-import, statisztika-diagram, custom
