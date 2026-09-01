@@ -378,6 +378,72 @@ describe('NotificationSchedulerService', () => {
     expect((await Preferences.get({ key: 'lm2_notifBgDedupe' })).value).toBe('[]');
   });
 
+  it('logs a native-worker fire in history with the ledger row\'s own rendered text and fire time', async () => {
+    const service = build();
+    service.permission.set('granted');
+    const firedAt = new Date(`${today()}T20:00:00`).getTime();
+    await Preferences.set({
+      key: 'lm2_notifBgDedupe',
+      value: JSON.stringify([
+        {
+          type: 'STEPS_LOW',
+          key: today(),
+          day: today(),
+          title: 'Kevés lépés ma',
+          body: 'Csak 1200 lépés — mozdulj egyet!',
+          route: '/tabs/menu/steps',
+          firedAt,
+        },
+      ]),
+    });
+
+    await service.reevaluate('test', false);
+
+    expect(historyRecord).toHaveBeenCalledWith(
+      jasmine.objectContaining({
+        type: 'STEPS_LOW',
+        key: today(),
+        title: 'Kevés lépés ma',
+        body: 'Csak 1200 lépés — mozdulj egyet!',
+        route: '/tabs/menu/steps',
+        firedAt,
+      }),
+    );
+  });
+
+  it('recovers a bare (older-worker) ledger row from the background plan, incl. its 20:00 fire time', async () => {
+    const service = build();
+    service.permission.set('granted');
+    const stepsFiredAt = new Date(`${today()}T20:00:00`).getTime();
+    await Preferences.set({
+      key: 'lm2_notifBgPlan',
+      value: JSON.stringify({
+        version: 1,
+        entries: [],
+        stepsLow: {
+          id: 42,
+          key: today(),
+          fireAtEpochMs: stepsFiredAt,
+          threshold: 2000,
+          title: 'Kevés lépés ma',
+          bodyTemplate: 'Csak __STEPS__ lépés ma',
+          stepsPlaceholder: '__STEPS__',
+          route: '/tabs/menu/steps',
+        },
+      }),
+    });
+    await Preferences.set({
+      key: 'lm2_notifBgDedupe',
+      value: JSON.stringify([{ type: 'STEPS_LOW', key: today(), day: today() }]),
+    });
+
+    await service.reevaluate('test', false);
+
+    expect(historyRecord).toHaveBeenCalledWith(
+      jasmine.objectContaining({ type: 'STEPS_LOW', key: today(), route: '/tabs/menu/steps', firedAt: stepsFiredAt }),
+    );
+  });
+
   it('does not re-fire a past-due notification the native worker already recorded', async () => {
     const service = build();
     service.permission.set('granted');

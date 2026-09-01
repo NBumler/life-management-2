@@ -62,6 +62,21 @@ describe('NotificationHistoryStore', () => {
     expect((await Preferences.get({ key: 'lm2_notifHistory' })).value).toBe('[]');
   });
 
+  it('a record() that beats init() loads the persisted log first instead of overwriting it', async () => {
+    await Preferences.set({
+      key: 'lm2_notifHistory',
+      value: JSON.stringify([entry({ key: 'old', title: 'earlier banner' })]),
+    });
+    const fresh = new NotificationHistoryStore();
+
+    // No init() call — record() must lazy-load the persisted log before appending.
+    await fresh.record(entry({ key: 'new', title: 'new banner' }));
+
+    expect(fresh.entries().map((e) => e.key).sort()).toEqual(['new', 'old']);
+    const persisted = JSON.parse((await Preferences.get({ key: 'lm2_notifHistory' })).value!) as { key: string }[];
+    expect(persisted.map((e) => e.key).sort()).toEqual(['new', 'old']);
+  });
+
   it('reloads a persisted log and survives a corrupt blob', async () => {
     await store.record(entry());
     const reloaded = TestBed.inject(NotificationHistoryStore);

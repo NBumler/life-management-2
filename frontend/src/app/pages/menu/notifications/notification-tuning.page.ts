@@ -18,11 +18,8 @@ import {
 } from '@ionic/angular/standalone';
 import { TranslatePipe } from '@ngx-translate/core';
 
-import {
-  NotificationTuning,
-  NotificationTuningService,
-  TUNING_BOUNDS,
-} from '../../../core/notifications/notification-tuning.service';
+import { NotificationTuning, TUNING_BOUNDS } from '../../../core/notifications/notification-tuning';
+import { NotificationTuningService } from '../../../core/notifications/notification-tuning.service';
 
 /**
  * documentation/Features/Értesítések.md "Lead-time szerkesztő" — device-local overrides for the
@@ -75,6 +72,11 @@ export class NotificationTuningPage {
   });
 
   protected setField(key: keyof NotificationTuning, value: number | string | null | undefined): void {
+    // A cleared field (`ion-input type=number` emits '' / null) is "no change", not 0 — `Number('')`
+    // and `Number(null)` are both a finite 0, which would pass the guard below and get saved.
+    if (value === null || value === undefined || value === '') {
+      return;
+    }
     const num = typeof value === 'number' ? value : Number(value);
     if (!Number.isFinite(num)) {
       return;

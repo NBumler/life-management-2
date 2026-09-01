@@ -45,6 +45,13 @@ describe('NotificationTuningService', () => {
     expect(service.tuning().stepsLowThreshold).toBe(DEFAULT_TUNING.stepsLowThreshold);
   });
 
+  it('keeps the current user value (not the spec default) when a later patch field is non-finite', async () => {
+    await service.set({ stepsLowThreshold: 5000 });
+    await service.set({ stepsLowThreshold: Number.NaN, calorieStreakMarginKcal: 900 });
+    expect(service.tuning().stepsLowThreshold).toBe(5000);
+    expect(service.tuning().calorieStreakMarginKcal).toBe(900);
+  });
+
   it('reset() goes back to defaults', async () => {
     await service.set({ stepsLowThreshold: 500 });
     await service.reset();

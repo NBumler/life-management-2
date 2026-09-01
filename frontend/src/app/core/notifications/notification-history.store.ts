@@ -34,14 +34,22 @@ export interface NotificationHistoryEntry {
 @Injectable({ providedIn: 'root' })
 export class NotificationHistoryStore {
   private readonly list = signal<NotificationHistoryEntry[]>([]);
+  /**
+   * Guards {@link record} against racing ahead of {@link init}: `list` starts `[]`, and
+   * {@link persist} writes it unconditionally, so a `record()` before the cold-start load would
+   * otherwise overwrite the persisted log with a single entry. Set by both `init()` and the lazy
+   * load in `ensureLoaded()`.
+   */
+  private loaded = false;
 
   /** Reactive snapshot, newest first. */
   readonly entries: Signal<readonly NotificationHistoryEntry[]> = this.list.asReadonly();
 
-  /** Cold-start sibling of {@link NotificationSettingsService.init} — reads Preferences once. */
+  /** Cold-start sibling of {@link NotificationSettingsService.init} — (re-)reads Preferences. */
   async init(): Promise<void> {
     const raw = (await Preferences.get({ key: PREFERENCES_KEY })).value;
     this.list.set(raw === null ? [] : safeParse(raw));
+    this.loaded = true;
   }
 
   /**
@@ -49,6 +57,7 @@ export class NotificationHistoryStore {
    * re-infer the same delivery across restarts and must not stack duplicate rows.
    */
   async record(entry: NotificationHistoryEntry): Promise<void> {
+    await this.ensureLoaded();
     if (this.list().some((e) => e.type === entry.type && e.key === entry.key)) {
       return;
     }
@@ -60,8 +69,16 @@ export class NotificationHistoryStore {
   }
 
   async clear(): Promise<void> {
+    this.loaded = true; // an explicit wipe is authoritative — no need to load first
     this.list.set([]);
     await this.persist();
+  }
+
+  /** Load the persisted log on the first write that beats {@link init} (main.ts reorder, extra caller). */
+  private async ensureLoaded(): Promise<void> {
+    if (!this.loaded) {
+      await this.init();
+    }
   }
 
   private async persist(): Promise<void> {

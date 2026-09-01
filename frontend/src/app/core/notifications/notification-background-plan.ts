@@ -11,7 +11,7 @@ import {
   foodSpoiledOnceRules,
   householdTaskDueRule,
 } from './notification-rules';
-import { DEFAULT_TUNING, NotificationTuning } from './notification-tuning.service';
+import { DEFAULT_TUNING, NotificationTuning } from './notification-tuning';
 import { DesiredNotification, NotificationType } from './notification-types';
 
 /**

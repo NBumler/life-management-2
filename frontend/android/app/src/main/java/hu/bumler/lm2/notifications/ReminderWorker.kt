@@ -123,8 +123,11 @@ class ReminderWorker(context: Context, params: WorkerParameters) : CoroutineWork
             if (ledger.contains(type, key) || osScheduledIds.contains(id)) {
                 continue
             }
-            post(id, entry.optString("title"), entry.optString("body"), entry.optString("route"))
-            ledger.record(type, key, today)
+            val title = entry.optString("title")
+            val body = entry.optString("body")
+            val route = entry.optString("route")
+            post(id, title, body, route)
+            ledger.record(type, key, today, title, body, route, fireAt)
         }
     }
 
@@ -164,10 +167,14 @@ class ReminderWorker(context: Context, params: WorkerParameters) : CoroutineWork
         if (steps >= threshold) {
             return
         }
+        val title = stepsLow.optString("title")
+        val route = stepsLow.optString("route")
         val body = stepsLow.optString("bodyTemplate")
             .replace(stepsLow.optString("stepsPlaceholder", "__STEPS__"), steps.toString())
-        post(id, stepsLow.optString("title"), body, stepsLow.optString("route"))
-        ledger.record(STEPS_LOW_TYPE, key, today)
+        post(id, title, body, route)
+        // Record the substituted body + the 20:00 fire time so the app-open history merge shows the
+        // real text and hour, not the "__STEPS__" template at 09:00.
+        ledger.record(STEPS_LOW_TYPE, key, today, title, body, route, fireAt)
     }
 
     /**
@@ -279,9 +286,23 @@ class ReminderWorker(context: Context, params: WorkerParameters) : CoroutineWork
 
         fun contains(type: String, key: String): Boolean = keys.contains("$type|$key")
 
-        fun record(type: String, key: String, day: String) {
+        /**
+         * `day` drives the app's dedupe-retention prune; `title`/`body`/`route`/`firedAt` let the
+         * app-open merge write a faithful notification-history row without re-deriving text (the
+         * plan template can't — e.g. the STEPS_LOW body only has `__STEPS__` there).
+         */
+        fun record(type: String, key: String, day: String, title: String, body: String, route: String, firedAtEpochMs: Long) {
             if (keys.add("$type|$key")) {
-                array.put(JSONObject().put("type", type).put("key", key).put("day", day))
+                array.put(
+                    JSONObject()
+                        .put("type", type)
+                        .put("key", key)
+                        .put("day", day)
+                        .put("title", title)
+                        .put("body", body)
+                        .put("route", route)
+                        .put("firedAt", firedAtEpochMs),
+                )
                 dirty = true
             }
         }

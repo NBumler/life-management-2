@@ -510,10 +510,13 @@ export class NotificationSchedulerService {
   /**
    * Merge the native worker's "already fired" ledger ({@link BG_DEDUPE_KEY}) into the shared
    * {@link NotificationDedupeStore} and the {@link NotificationHistoryStore}, then clear it. The
-   * worker appends `{type,key,day}` rows; a rare clear-vs-append race just means one banner could be
-   * re-shown, which the spec already tolerates. The rendered text for the history row is recovered
-   * from the last background plan the app itself wrote ({@link BG_PLAN_KEY}); if that plan has since
-   * been rebuilt without the entry, the row is logged route-only.
+   * worker appends `{type,key,day,title,body,route,firedAt}` rows — the last four let the history row
+   * carry the text the worker actually posted (notably the STEPS_LOW body with the live count
+   * substituted, which the plan template only has as `__STEPS__`) and its real fire time (20:00 for
+   * STEPS_LOW, not 09:00). A row from an older worker build has only `{type,key,day}`; those fall
+   * back to the last background plan the app wrote ({@link BG_PLAN_KEY}) — and if that plan has since
+   * been rebuilt without the entry, to a route-only row timestamped at 09:00. A rare clear-vs-append
+   * race just means one banner could be re-shown, which the spec already tolerates.
    */
   private async mergeNativeDedupe(todayIso: string): Promise<void> {
     const raw = (await Preferences.get({ key: BG_DEDUPE_KEY })).value;
@@ -536,40 +539,68 @@ export class NotificationSchedulerService {
           typeof (row as { type?: unknown }).type === 'string' &&
           typeof (row as { key?: unknown }).key === 'string'
         ) {
-          const r = row as { type: NotificationType; key: string; day?: unknown };
+          const r = row as {
+            type: NotificationType;
+            key: string;
+            day?: unknown;
+            title?: unknown;
+            body?: unknown;
+            route?: unknown;
+            firedAt?: unknown;
+          };
           const day = typeof r.day === 'string' ? r.day : todayIso;
           await this.dedupe.record(r.type, r.key, day);
-          const firedAt = new Date(`${day}T09:00:00`).getTime();
-          await this.recordHistory(r.type, r.key, planText.get(`${r.type}|${r.key}`) ?? {}, firedAt);
+
+          const fromPlan = planText.get(`${r.type}|${r.key}`);
+          const str = (v: unknown): string | undefined => (typeof v === 'string' && v !== '' ? v : undefined);
+          const text = {
+            title: str(r.title) ?? fromPlan?.title,
+            body: str(r.body) ?? fromPlan?.body,
+            route: str(r.route) ?? fromPlan?.route,
+          };
+          const firedAt =
+            typeof r.firedAt === 'number' && Number.isFinite(r.firedAt)
+              ? r.firedAt
+              : fromPlan?.firedAt ?? new Date(`${day}T09:00:00`).getTime();
+          await this.recordHistory(r.type, r.key, text, firedAt);
         }
       }
     }
     await Preferences.set({ key: BG_DEDUPE_KEY, value: '[]' });
   }
 
-  /** `type|key` → rendered text/route, read back from the background plan file for history recovery. */
-  private async loadBackgroundPlanText(): Promise<Map<string, { title?: string; body?: string; route?: string }>> {
-    const map = new Map<string, { title?: string; body?: string; route?: string }>();
+  /** `type|key` → rendered text/route + scheduled epoch, read back from the background plan file for history recovery. */
+  private async loadBackgroundPlanText(): Promise<
+    Map<string, { title?: string; body?: string; route?: string; firedAt?: number }>
+  > {
+    const map = new Map<string, { title?: string; body?: string; route?: string; firedAt?: number }>();
     const raw = (await Preferences.get({ key: BG_PLAN_KEY })).value;
     if (raw === null) {
       return map;
     }
     try {
       const plan = JSON.parse(raw) as {
-        entries?: { type?: string; key?: string; title?: string; body?: string; route?: string }[];
-        stepsLow?: { key?: string; title?: string; bodyTemplate?: string; route?: string } | null;
+        entries?: { type?: string; key?: string; title?: string; body?: string; route?: string; fireAtEpochMs?: number }[];
+        stepsLow?: { key?: string; title?: string; bodyTemplate?: string; route?: string; fireAtEpochMs?: number } | null;
       };
       for (const e of plan.entries ?? []) {
         if (typeof e.type === 'string' && typeof e.key === 'string') {
-          map.set(`${e.type}|${e.key}`, { title: e.title, body: e.body, route: e.route });
+          map.set(`${e.type}|${e.key}`, {
+            title: e.title,
+            body: e.body,
+            route: e.route,
+            firedAt: typeof e.fireAtEpochMs === 'number' ? e.fireAtEpochMs : undefined,
+          });
         }
       }
       if (plan.stepsLow && typeof plan.stepsLow.key === 'string') {
         map.set(`STEPS_LOW|${plan.stepsLow.key}`, {
           title: plan.stepsLow.title,
-          // The template still carries the __STEPS__ placeholder — good enough for a log row.
+          // The template still carries the __STEPS__ placeholder — only used when the ledger row
+          // (which has the substituted body) predates that field.
           body: plan.stepsLow.bodyTemplate,
           route: plan.stepsLow.route,
+          firedAt: typeof plan.stepsLow.fireAtEpochMs === 'number' ? plan.stepsLow.fireAtEpochMs : undefined,
         });
       }
     } catch {

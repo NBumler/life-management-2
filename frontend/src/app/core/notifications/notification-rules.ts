@@ -4,6 +4,7 @@ import { StoredFood } from '../../api/model/storedFood';
 import { addDaysIso } from '../../shared/local-date';
 import { projectEventOccurrences } from '../data/event-occurrence';
 import { addDurationToDate, catalogDurationFor } from '../../pages/food/storage/shelf-life';
+import { DEFAULT_TUNING } from './notification-tuning';
 import { DesiredNotification } from './notification-types';
 
 /**
@@ -34,9 +35,14 @@ export interface FoodExpiringLead {
   short: number;
 }
 
-const DEFAULT_FOOD_EXPIRING_LEAD: FoodExpiringLead = { long: 3, short: 2 };
-const DEFAULT_STEPS_LOW_THRESHOLD = 2000;
-const DEFAULT_CALORIE_STREAK_MARGIN = 750;
+// Rule-fallback defaults are the same numbers the Lead-time szerkesztő ships — kept as a single
+// source ({@link DEFAULT_TUNING}) so a spec change to any default can't leave the two sides disagreeing.
+const DEFAULT_FOOD_EXPIRING_LEAD: FoodExpiringLead = {
+  long: DEFAULT_TUNING.foodExpiringLeadDaysLong,
+  short: DEFAULT_TUNING.foodExpiringLeadDaysShort,
+};
+const DEFAULT_STEPS_LOW_THRESHOLD = DEFAULT_TUNING.stepsLowThreshold;
+const DEFAULT_CALORIE_STREAK_MARGIN = DEFAULT_TUNING.calorieStreakMarginKcal;
 
 /**
  * documentation/Features/Értesítések.md §1 `FOOD_EXPIRING_DAILY`. Lead window starts `lead.long` days

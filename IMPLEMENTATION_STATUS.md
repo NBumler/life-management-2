@@ -889,3 +889,31 @@ slotokhoz drótozva — JS-ből átállítani desync-et okozna), a §1 `> 5 nap`
 küszöb (strukturális elágazás, nem lead-time), és a §4 5 napos sorozat-hossz.
 **On-device próba** (valós banner-előzmény, küszöb-változás → értesítés-viselkedés)
 a folyó on-device tesztelés része.
+
+### Code-review follow (ebben a commitban) — 6 észrevétel
+
+A fenti kör `/code-review`-ja után. Frontend + egy kis natív érintettség (a #2 miatt
+a `ReminderWorker` immár a kirenderelt szöveget is a `lm2_notifBgDedupe` sorba írja).
+Karma zöld (1349), lint + `ng build` zöld.
+
+1. **Natív-worker `STEPS_LOW` előzmény-sor 09:00-val, `__STEPS__`-sal.**
+   `mergeNativeDedupe` minden natív sort `${day}T09:00:00`-ra bélyegzett és a
+   `bodyTemplate`-et (benne a `__STEPS__` jelölő) tette a naplóba. A `ReminderWorker`
+   `Ledger.record` most `title`/`body`/`route`/`firedAt`-et is ír (a `STEPS_LOW`-nál a
+   behelyettesített darabszámot + a 20:00-s időt); a JS-oldal ezekből dolgozik, és csak
+   régi (mezők nélküli) sornál esik vissza a `lm2_notifBgPlan` tervre — ott már a terv
+   `fireAtEpochMs`-ét használva, nem fix 09:00-t.
+2. Lásd #1 — ugyanaz a fix (a behelyettesített `body` visszaírása).
+3. **Kiürített szám-mező = 0 a Lead-time szerkesztőben.** `setField` a `''` / `null`
+   értéket explicit „nincs változás"-ként kezeli, nem engedi `Number('') === 0`-ként
+   a draftba (különben Mentésre a min-re vágódott).
+4. **Duplikált default küszöbök.** Új Angular-mentes `notification-tuning.ts` (típus +
+   `DEFAULT_TUNING` + `TUNING_BOUNDS` + `sanitizeTuning`); a `notification-rules`
+   fallback-konstansai ebből származnak, a `notification-background-plan` innen
+   importál (nem a `*.service`-ből). A `*.service` re-exportál a régi importőröknek.
+5. **`sanitize()` a spec-defaultra állított vissza.** `sanitizeTuning(patch, base)` —
+   `set()` a jelenlegi state-et adja `base`-nek, így egy nem-véges patch-mező a
+   felhasználó tárolt értékét tartja meg, nem a defaultot.
+6. **`NotificationHistoryStore.record()` init() előtt felülírta a naplót.** `loaded`
+   flag + `ensureLoaded()`: az `init()`-et megelőző `record()` előbb beolvassa a
+   perzisztált naplót.
