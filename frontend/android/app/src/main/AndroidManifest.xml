@@ -65,6 +65,23 @@
                 <category android:name="android.intent.category.HEALTH_PERMISSIONS" />
             </intent-filter>
         </activity-alias>
+
+        <!-- documentation/Features/Értesítések.md "08:00 / 20:00 háttér-értesítés worker": two inexact
+             daily AlarmManager alarms broadcast here; the receiver enqueues ReminderWorker and re-arms
+             the next occurrence. Not exported — only this app's own alarms target it. -->
+        <receiver
+            android:name=".notifications.ReminderAlarmReceiver"
+            android:exported="false" />
+
+        <!-- Alarms do not survive a reboot; re-arm them on boot. -->
+        <receiver
+            android:name=".notifications.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
     </application>
 
     <!-- Permissions -->
@@ -80,6 +97,10 @@
          minutes' drift is fine and the app-open reconcile is the safety net, so we avoid the
          "Alarms & reminders" settings redirect and the Play-review friction of exact alarms. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- documentation/Features/Értesítések.md "08:00 / 20:00 háttér-értesítés worker": re-arm the two
+         inexact daily alarms after a device reboot. No SCHEDULE_EXACT_ALARM — the reminders are
+         scheduled inexact and the app-open reconcile is the safety net. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <queries>
         <package android:name="com.google.android.apps.healthdata" />

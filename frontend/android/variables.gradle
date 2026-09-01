@@ -17,6 +17,10 @@ ext {
     // Health Connect plugin (health/HealthConnectStepsPlugin.kt) is the only Kotlin in the app module.
     kotlinVersion = '2.0.21'
     androidxHealthConnectVersion = '1.1.0'
+    // documentation/Features/Értesítések.md "08:00 / 20:00 háttér-értesítés worker" — WorkManager runs
+    // the ReminderWorker (notifications/) off the alarm broadcast so the async Health Connect read and
+    // the notification post survive process death. work-runtime-ktx pulls kotlinx-coroutines too.
+    androidxWorkVersion = '2.9.1'
     // Core library desugaring — androidx.health.connect and HealthConnectStepsPlugin.kt use java.time
     // (LocalDate/Instant/ZoneId), which is API 26+; minSdk is 24, so it must be backported.
     desugarJdkLibsVersion = '2.1.5'

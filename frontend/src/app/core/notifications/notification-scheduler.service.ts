@@ -25,6 +25,7 @@ import { computeTdee } from '../../shared/tdee-calculator';
 import { calendarDayInZone, deviceTimeZoneId } from '../../shared/timezone';
 import { computeDailyNutrition } from '../../pages/food/meal/daily-nutrition';
 import { DataChangeNotifier } from '../sync/data-change-notifier';
+import { BackgroundReminders } from './background-reminders.plugin';
 import { LocalNotificationsGateway } from './local-notifications.gateway';
 import { NotificationDedupeStore } from './notification-dedupe.store';
 import { notificationNumericId } from './notification-ids';
@@ -133,6 +134,7 @@ export class NotificationSchedulerService {
       // granted in system settings meanwhile) and re-run the reconcile.
       await this.syncPermission();
       await this.reevaluate('reinit', true);
+      this.armBackgroundWorker();
       return;
     }
     this.started = true;
@@ -186,6 +188,20 @@ export class NotificationSchedulerService {
     );
 
     await this.reevaluate('cold-start', true);
+    this.armBackgroundWorker();
+  }
+
+  /**
+   * documentation/Features/Értesítések.md "08:00 / 20:00 háttér-értesítés worker" — (re-)arm the two
+   * native inexact daily alarms that run {@link runReconcile}'s background equivalent on days the app
+   * isn't opened. Fire-and-forget; the plugin proxy rejects on a build without the native module
+   * (web / iOS) and that's fine.
+   */
+  private armBackgroundWorker(): void {
+    if (!Capacitor.isNativePlatform()) {
+      return;
+    }
+    void BackgroundReminders.ensureScheduled().catch(() => undefined);
   }
 
   private async onResume(): Promise<void> {

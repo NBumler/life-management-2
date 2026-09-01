@@ -51,6 +51,10 @@ dependencies {
     // documentation/Subfeatures/Lépésszám átszinkronizálása a Samsung Health-ből.md — Android Health
     // Connect read-only step totals (Samsung Health data source). Used by health/HealthConnectStepsPlugin.kt.
     implementation "androidx.health.connect:connect-client:$androidxHealthConnectVersion"
+    // documentation/Features/Értesítések.md "08:00 / 20:00 háttér-értesítés worker" — the AlarmManager
+    // broadcast enqueues a CoroutineWorker so the Health Connect read + notification post run off the
+    // main thread and survive process death. Used by notifications/ReminderWorker.kt.
+    implementation "androidx.work:work-runtime-ktx:$androidxWorkVersion"
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
