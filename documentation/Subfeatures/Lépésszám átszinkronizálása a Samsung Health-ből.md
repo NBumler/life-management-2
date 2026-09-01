@@ -53,7 +53,7 @@ Nincs nyitott kérdés.
 
 ### Frontend
 
-- Health Connect plugin / Capacitor bridge; `ActivityStepService` (vagy ekvivalens): max-wins upsert a helyi `DailyStepLog`-ra.
+- Health Connect plugin / Capacitor bridge: app-lokális Capacitor plugin (`HealthConnectStepsPlugin`, Kotlin, `androidx.health.connect:connect-client`), csak olvasás — elérhetőség, READ_STEPS grant, napi lépés-aggregátum (`StepsRecord.COUNT_TOTAL`). `ActivityStepSyncService`: max-wins upsert a helyi `DailyStepLog`-ra (`DailyStepLogRepository.maxWinsUpsert`).
 - App lifecycle: cold/warm start → mai sync + 7 napos hiánypótló backfill (csak a `DailyStepLog`-gal nem rendelkező napokra).
 - Scheduled 08:00 worker → tegnapi sync.
 - TDEE újraszámolás sikeres nagyobb upsert után.

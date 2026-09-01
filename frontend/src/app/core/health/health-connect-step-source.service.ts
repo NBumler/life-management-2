@@ -9,8 +9,9 @@ import { HealthConnectSteps } from './health-connect.plugin';
  * {@link ActivityStepSyncService}'s tests can mock the whole device flow.
  *
  * Not unit-tested beyond this file's callers: `registerPlugin` returns a Proxy that `spyOn` can't
- * intercept (see food-barcode-scanner.service.ts for the same note) — the native path needs
- * on-device verification. Non-native platforms (the web build) short-circuit to "unavailable".
+ * intercept (see food-barcode-scanner.service.ts for the same note) — the native path
+ * (`HealthConnectStepsPlugin.kt`) needs on-device verification. Non-native platforms (the web
+ * build) short-circuit to "unavailable".
  */
 @Injectable({ providedIn: 'root' })
 export class HealthConnectStepSource {

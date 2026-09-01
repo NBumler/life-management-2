@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- documentation/Subfeatures/Lépésszám átszinkronizálása a Samsung Health-ből.md: the
+         androidx.health.connect:connect-client AAR declares minSdk 26; this app ships minSdk 24.
+         Health Connect code is unreachable on API 24-25 anyway (getSdkStatus() reports unavailable),
+         so the merge override is safe — it does not change the app's own minSdk. -->
+    <uses-sdk tools:overrideLibrary="androidx.health.connect.client" />
 
     <application
         android:allowBackup="true"
@@ -21,6 +28,12 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- Health Connect rationale entry point for Android 13 and below (Android 14+ uses the
+                 activity-alias below). Both route to MainActivity; the WebView shows the step screen. -->
+            <intent-filter>
+                <action android:name="androidx.health.connect.action.SHOW_PERMISSIONS_RATIONALE" />
             </intent-filter>
 
         </activity>

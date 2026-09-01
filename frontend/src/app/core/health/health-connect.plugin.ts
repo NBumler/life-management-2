@@ -5,13 +5,14 @@ import { registerPlugin } from '@capacitor/core';
  * bridge to Android Health Connect (Samsung Health is a data source behind it). The Health Connect
  * call goes straight from the client; there is no backend proxy.
  *
- * This is only the TypeScript contract. The Android side is a native module registered under the
- * name `HealthConnectSteps` — same shape as the barcode scanner slice, where the JS wrapper shipped
- * before its on-device module (see food-barcode-scanner.service.ts). Until that module is present
- * the plugin methods reject / report `available: false`, and {@link HealthConnectStepSource} treats
- * every failure as "no data" so the manual entry path keeps working unchanged.
+ * This is the TypeScript contract. The Android side is an app-local native module registered under
+ * the name `HealthConnectSteps` (`android/.../health/HealthConnectStepsPlugin.kt`, registered in
+ * `MainActivity`). On a device with no Health Connect provider the methods report
+ * `available: false` / reject, and {@link HealthConnectStepSource} treats every failure as "no
+ * data" so the manual entry path keeps working unchanged.
  *
- * iOS is a later scope (documentation/Features/Lépésszám követés.md "Megjegyzések").
+ * iOS is a later scope (documentation/Features/Lépésszám követés.md "Megjegyzések"): there is no
+ * native module for it, so the same "no data" fallback applies.
  */
 export interface HealthConnectStepsPlugin {
   /** Whether Health Connect is installed and this device can serve step data at all. */
