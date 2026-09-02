@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: a409f5b
 ---
 
 # Élelmiszer tárolás
@@ -100,7 +100,7 @@ Ha a helyhez nincs katalógus-idő (manuális lejárat / null engedélyezett hel
 ### UI/UX elvárások
 
 - Kaja tab: készlet lista.
-- **Csoportosítás / szűrés** tárolási hely szerint (kamra / hűtő / fagyasztó / mind).
+- **Szűrés** tárolási hely szerint szegmenssel (kamra / hűtő / fagyasztó / mind). A vizuális hely-szerinti csoportosítás (szekció-fejlécek) tervezett: `backlog/045-tarolas-lista-vizualis-hely-szerinti-csoportositas-szekcio-fejle.md`.
 - **Rendezés** lejárat szerint (közeli / romlott elöl).
 - Romlott és felbontott vizuális jelzés.
 - Keresés: [[Szöveges keresés]] (terméknév / márka).
@@ -136,7 +136,9 @@ Lásd [[Backend-offline first]].
 |---|---|
 | `StoredFood` | `id` (UUID, kliens); `foodId`; `quantityAmount` + `quantityUnit`; `storageLocation` (`ROOM` \| `FRIDGE` \| `FREEZER`); `expiresOn` (date); `opened` (bool); `openedAt` (opcionális); `deleted` / `deleted_at`; `createdAt`, `updatedAt` |
 
-Műveletek: CRUD; felbontás (lejárat újraszámolás); fogyasztás / batch levonás (étkezés orchestrálhatja); cascade soft delete `Food` törlésekor. Listák `deleted = false`. `DELETE` idempotens.
+Műveletek: CRUD; cascade soft delete `Food` törlésekor. Listák `deleted = false`. `DELETE` idempotens.
+
+A **felbontás** (lejárat újraszámolás) és a **fogyasztáskori készletcsökkentés** logikája **kliens-oldali**: a kliens kiszámolja az új állapotot, és full-replace `PUT`-ként küldi a soronként érintett `StoredFood` tételekre (a ≤0-ra fogyott tétel `DELETE`). A szerver a küldött snapshotot fogadja el, nem futtat újra lejárat- vagy FIFO-számítást. Ez szándékos a [[Backend-offline first]] szerződés szerint (a levonás Full-offline is működik).
 
 Mennyiség egységek: [[Mennyiség mező]]. Lejárat számítás: katalógus `duration` → dátum.
 

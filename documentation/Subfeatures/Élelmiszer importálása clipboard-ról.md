@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: a409f5b
 ---
 
 # Élelmiszer importálása clipboard-ról
@@ -53,7 +53,7 @@ Backend-offline állapotban is működik (helyi katalógus + outbox), ugyanazzal
 | 21 | Romlási idő - hűtőben (nap) | hűtő; csak nap |
 | 22 | Romlási idő - fagyasztva (nap) | fagyasztó; csak nap |
 
-A fejlécben előforduló elírások / aliasok fejlécdetektáláskor elfogadottak, pl. `telítettlen` → telítetlen; `fagasztva` → fagyasztva; `szabadon` ≈ kamra / szobahőmérséklet.
+A fejléc-sort a parser pozicionálisan kezeli (nem oszlop-remapre használja): felismeri a leggyakoribb fejléc-mintákat (`Üzlet` + `Termék` kezdés, vagy a `100g / 100ml … energia` minta) és eldobja. A teljes alias- / elírás-tűrő fejléc-lista (`telítettlen`, `fagasztva`, `szabadon` stb.) bővítése tervezett: `backlog/044-clipboard-import-fejlec-alias-tures-bovitese.md`.
 
 #### Fejléc
 
@@ -107,7 +107,7 @@ Nincs nyitott kérdés.
 
 ### Backend
 
-_Nincs külön import végpont kötelező._ Ugyanaz a create, mint manuális / [[Élelmiszerek]] CRUD (opcionális későbbi `POST /foods:batch` optimalizálás).
+_Nincs külön import végpont._ Az import soronként a normál `POST /api/foods` create-et hívja (mint a manuális bevitel). Egy `POST /foods:batch` optimalizálás tervezett, jelenleg nincs.
 
 ### Nyitott kérdések
 

@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: a409f5b
 ---
 
 # Vonalkódos élelmiszer beolvasás
