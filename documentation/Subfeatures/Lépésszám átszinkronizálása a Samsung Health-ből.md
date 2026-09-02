@@ -15,7 +15,7 @@ verifikalt_commit: 6acbd9d
 
 ### Jelenlegi működés
 
-Android **Health Connect** (Samsung Health adatforrás) lépésszámának átvétele, ha a user elfelejti manuálisan frissíteni. Csak **nagyobb** érték írja felül a mentettet. iOS: nincs implementálva, későbbi scope (`backlog/002-ios-health-lepes-forras.md`). Nincs óránkénti sync.
+Android **Health Connect** (Samsung Health adatforrás) lépésszámának átvétele, ha a user elfelejti manuálisan frissíteni. Csak **nagyobb** érték írja felül a mentettet. iOS: nincs implementálva; tervezett: `backlog/002-ios-health-lepes-forras.md`. Nincs óránkénti sync.
 
 ### Funkcionális leírás
 

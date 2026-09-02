@@ -62,7 +62,7 @@ Hiányzó nap = **0** lépés a Tápérték és az összehasonlítások szempont
 
 ### Megjegyzések
 
-- iOS Health: nincs implementálva, későbbi scope — `backlog/002-ios-health-lepes-forras.md`.
+- iOS Health: nincs implementálva. Tervezett: `backlog/002-ios-health-lepes-forras.md`.
 - Feature flag off: nincs lépés UI; TDEE továbbra is PAL=1.2, lépéság = 0 (edzés MET marad).
 
 ### Nyitott kérdések
