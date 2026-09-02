@@ -58,6 +58,14 @@ class QuantityConverterTest {
 	}
 
 	@Test
+	void dbAndCsShareThePieceFamily() {
+		// backlog/063: `db` is contextual; with no darab-definíció `1 db = 1 cs`, so a bare compare
+		// treats them as the same piece family.
+		assertThat(QuantityConverter.quantityFamily("db")).isEqualTo(QuantityConverter.Family.PIECE);
+		assertThat(QuantityConverter.quantitiesEqual(BigDecimal.valueOf(3), "db", BigDecimal.valueOf(3), "cs")).isTrue();
+	}
+
+	@Test
 	void bothMissingCountsAsEqual() {
 		assertThat(QuantityConverter.quantitiesEqual(null, null, null, null)).isTrue();
 		assertThat(QuantityConverter.durationsEqual(null, null, null, null)).isTrue();

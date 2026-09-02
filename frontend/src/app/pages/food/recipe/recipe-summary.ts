@@ -1,5 +1,6 @@
 import { Food } from '../../../api/model/food';
-import { QuantityUnit, canonicalQuantityAmount, quantityFamily } from '../../../shared/quantity';
+import { QuantityUnit } from '../../../shared/quantity';
+import { formatFoodQuantity, resolveFoodQuantity } from '../food-quantity';
 
 /**
  * documentation/Subfeatures/Recept.md "Automatikus összegzés" — pure calculation utility working
@@ -26,47 +27,12 @@ export interface RecipeIngredientQuantity {
   quantityUnit: QuantityUnit;
 }
 
-/**
- * documentation/Subfeatures/Recept.md "Mennyiség → tápanyag": the ingredient's gram/ml equivalent.
- * `cs` (csomag): csomagszám × nettó tartalom (canonical g/ml) — 0 (and "hiányos") if the catalog has
- * no usable net content. Weight/volume units: the given amount, canonicalized to the same base unit.
- */
-function baseAmountOf(amount: number, unit: QuantityUnit, food: Food): { baseAmount: number; missing: boolean } {
-  if (unit !== 'cs') {
-    return { baseAmount: canonicalQuantityAmount(amount, unit), missing: false };
-  }
-  if (food.netAmount == null || food.netUnit == null || food.netUnit === 'cs') {
-    return { baseAmount: 0, missing: true };
-  }
-  return { baseAmount: amount * canonicalQuantityAmount(food.netAmount, food.netUnit as QuantityUnit), missing: false };
-}
-
 /** documentation/Subfeatures/Recept.md "Mennyiség → tápanyag": (baseAmount / 100) × (tápanyag / 100 g|ml); missing catalog field → 0 + hiányos. */
 function nutrientContribution(baseAmount: number, per100: number | null | undefined): { value: number; missing: boolean } {
   if (per100 == null) {
     return { value: 0, missing: true };
   }
   return { value: (baseAmount / 100) * per100, missing: false };
-}
-
-/** documentation/Subfeatures/Recept.md "Ár": N cs → N × priceHuf; other units use the net-content package ratio. */
-function priceContribution(amount: number, unit: QuantityUnit, food: Food): { value: number; missing: boolean } {
-  if (food.priceHuf == null) {
-    return { value: 0, missing: true };
-  }
-  if (unit === 'cs') {
-    return { value: amount * food.priceHuf, missing: false };
-  }
-  if (food.netAmount == null || food.netUnit == null || food.netUnit === 'cs') {
-    return { value: 0, missing: true };
-  }
-  const netUnit = food.netUnit as QuantityUnit;
-  if (quantityFamily(unit) !== quantityFamily(netUnit)) {
-    return { value: 0, missing: true };
-  }
-  const usedBase = canonicalQuantityAmount(amount, unit);
-  const netBase = canonicalQuantityAmount(food.netAmount, netUnit);
-  return { value: (usedBase / netBase) * food.priceHuf, missing: false };
 }
 
 /**
@@ -94,29 +60,33 @@ export function computeRecipeSummary(
       incomplete = true;
       continue;
     }
-    const { baseAmount, missing: baseMissing } = baseAmountOf(ingredient.quantityAmount, ingredient.quantityUnit, food);
-    const price = priceContribution(ingredient.quantityAmount, ingredient.quantityUnit, food);
+    // documentation/Subfeatures/Recept.md: `db`/`cs`/SI all resolve through the shared Food-aware
+    // helper — `packages` drives price (× priceHuf), `baseAmount` drives the per-100 nutrient math.
+    const resolved = resolveFoodQuantity(ingredient.quantityAmount, ingredient.quantityUnit, food);
+    const baseAmount = resolved.baseAmount ?? 0;
+    const priceMissing = food.priceHuf == null || resolved.packages === null;
     const energy = nutrientContribution(baseAmount, food.energyKcal);
     const protein = nutrientContribution(baseAmount, food.proteinG);
     const carbs = nutrientContribution(baseAmount, food.carbsG);
     const fat = nutrientContribution(baseAmount, food.fatG);
 
-    priceHuf += price.value;
+    priceHuf += priceMissing ? 0 : resolved.packages! * food.priceHuf!;
     energyKcal += energy.value;
     proteinG += protein.value;
     carbsG += carbs.value;
     fatG += fat.value;
     baseAmountG += baseAmount;
-    incomplete = incomplete || baseMissing || price.missing || energy.missing || protein.missing || carbs.missing || fat.missing;
+    incomplete =
+      incomplete || resolved.baseAmount === null || priceMissing || energy.missing || protein.missing || carbs.missing || fat.missing;
   }
 
   return { priceHuf, energyKcal, proteinG, carbsG, fatG, baseAmountG, incomplete };
 }
 
-/** documentation/Subfeatures/Recept.md "`cs` megjelenítés": `2cs (1000g)` when the catalog's net content is known, else just `2cs`. */
+/**
+ * documentation/Subfeatures/Recept.md "`db` / `cs` megjelenítés" — thin re-export of the shared
+ * `formatFoodQuantity` with the recipe-list argument order kept for its existing callers.
+ */
 export function formatIngredientQuantity(food: Food | undefined, amount: number, unit: QuantityUnit): string {
-  if (unit !== 'cs' || food === undefined || food.netAmount == null || food.netUnit == null) {
-    return `${amount}${unit}`;
-  }
-  return `${amount}cs (${amount * food.netAmount}${food.netUnit})`;
+  return formatFoodQuantity(amount, unit, food);
 }

@@ -390,16 +390,23 @@ class ShoppingListService {
 	}
 
 	/**
-	 * documentation/Subfeatures/Élelmiszer tárolás.md: a `cs`-unit item splits into one storage row
-	 * per package; every other unit is a single row. Rounded HALF_UP and floored at 1 so it can never
-	 * disagree with the client's own {@code splitCountFor()} (shopping-list-complete.ts) for any
-	 * positive amount — the editor already blocks a non-positive FOOD quantity.
+	 * documentation/Subfeatures/Élelmiszer tárolás.md — bit-identical to shopping-list-complete.ts's
+	 * {@code splitCountFor()}: `cs` + whole amount → that many rows; `cs` + fractional amount → 1 row;
+	 * legacy `db` (no longer selectable, backlog/063) → rounded up to whole packages (`1 db = 1 cs`);
+	 * every other unit → 1 row. Floored at 1 (the editor blocks a non-positive FOOD quantity).
 	 */
 	private static int splitCountFor(ShoppingListItemEntity item) {
-		if (!"cs".equals(item.getQuantityUnit()) || item.getQuantityAmount() == null) {
+		BigDecimal amount = item.getQuantityAmount();
+		if (amount == null) {
 			return 1;
 		}
-		return Math.max(1, item.getQuantityAmount().setScale(0, RoundingMode.HALF_UP).intValueExact());
+		if ("db".equals(item.getQuantityUnit())) {
+			return Math.max(1, amount.setScale(0, RoundingMode.CEILING).intValueExact());
+		}
+		if ("cs".equals(item.getQuantityUnit())) {
+			return amount.stripTrailingZeros().scale() <= 0 ? Math.max(1, amount.intValueExact()) : 1;
+		}
+		return 1;
 	}
 
 	private void cacheResponse(UUID idempotencyKey, UUID userId, ShoppingListCompleteResponse response) {

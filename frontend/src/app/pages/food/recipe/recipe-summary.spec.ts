@@ -29,6 +29,36 @@ describe('recipe-summary', () => {
       expect(summary.incomplete).toBeFalse();
     });
 
+    it('backlog/063: resolves a db-unit ingredient through the darab-definíció (1 db = 1/6 cs)', () => {
+      // 6-pack, 1 db = 1/6 cs; net 180g/cs; price 300 Ft/cs; energy 400 kcal/100g.
+      const rudi = food({
+        id: 'rudi',
+        energyKcal: 400,
+        proteinG: 8,
+        carbsG: 50,
+        fatG: 15,
+        priceHuf: 300,
+        netAmount: 180,
+        netUnit: 'g',
+        pieceAmount: 0.1667,
+        pieceUnit: 'cs',
+      });
+      // 3 db -> ~0.5 cs -> ~90 g -> (90/100)*400 = ~360 kcal; price ~0.5 * 300 = ~150 Ft
+      const summary = computeRecipeSummary([{ foodId: 'rudi', quantityAmount: 3, quantityUnit: 'db' }], [rudi]);
+
+      expect(summary.energyKcal).toBeCloseTo(360, 0);
+      expect(summary.priceHuf).toBeCloseTo(150, 0);
+      expect(summary.incomplete).toBeFalse();
+    });
+
+    it('backlog/063: a db-unit ingredient with no darab-definíció is 1 db = 1 cs', () => {
+      const egg = food({ id: 'egg', energyKcal: 155, priceHuf: 90, netAmount: 60, netUnit: 'g' });
+      const summary = computeRecipeSummary([{ foodId: 'egg', quantityAmount: 3, quantityUnit: 'db' }], [egg]);
+
+      expect(summary.priceHuf).toBeCloseTo(270); // 3 "packages" * 90
+      expect(summary.energyKcal).toBeCloseTo(279); // 3 * 60g -> 180g -> 279
+    });
+
     it('flags incomplete and contributes zero nutrients when a cs-unit ingredient has no catalog net content', () => {
       const mystery = food({ id: 'mystery', energyKcal: 200 });
       const summary = computeRecipeSummary([{ foodId: 'mystery', quantityAmount: 2, quantityUnit: 'cs' }], [mystery]);
@@ -101,6 +131,12 @@ describe('recipe-summary', () => {
     it('never parenthesizes a non-cs unit, even with known net content', () => {
       const flour = food({ netAmount: 1000, netUnit: 'g' });
       expect(formatIngredientQuantity(flour, 200, 'g')).toBe('200g');
+    });
+
+    it('backlog/063: shows the darab-definíció conversion for a db amount', () => {
+      expect(formatIngredientQuantity(food({ pieceAmount: 6, pieceUnit: 'dkg' }), 3, 'db')).toBe('3db (18dkg)');
+      expect(formatIngredientQuantity(food({ pieceAmount: 0.5, pieceUnit: 'cs' }), 1, 'db')).toBe('1db (0.5cs)');
+      expect(formatIngredientQuantity(food({ netAmount: 100, netUnit: 'g' }), 3, 'db')).toBe('3db');
     });
   });
 });

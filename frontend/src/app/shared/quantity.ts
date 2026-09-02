@@ -9,7 +9,7 @@
  */
 
 export type QuantityMode = 'quantity' | 'duration';
-export type QuantityUnit = 'cs' | 'g' | 'dkg' | 'kg' | 'l' | 'dl' | 'cl' | 'ml';
+export type QuantityUnit = 'cs' | 'db' | 'g' | 'dkg' | 'kg' | 'l' | 'dl' | 'cl' | 'ml';
 export type DurationUnit = 'perc' | 'óra' | 'nap' | 'hét' | 'hó' | 'év';
 export type QuantityFamily = 'weight' | 'volume' | 'piece' | 'time';
 
@@ -20,14 +20,20 @@ export interface ParsedQuantity<U extends string = QuantityUnit | DurationUnit> 
 
 export class QuantityParseError extends Error {}
 
-const QUANTITY_UNITS: readonly QuantityUnit[] = ['cs', 'g', 'dkg', 'kg', 'l', 'dl', 'cl', 'ml'];
+const QUANTITY_UNITS: readonly QuantityUnit[] = ['cs', 'db', 'g', 'dkg', 'kg', 'l', 'dl', 'cl', 'ml'];
 
 /**
  * documentation/Architektúra/Mennyiség mező.md "Támogatott egységek — quantity": alias → canonical
- * unit, case-insensitive. Only the piece family has an alias so far (`csomag` → `cs`).
+ * unit, case-insensitive. The piece family carries `csomag` → `cs` and `darab` → `db`.
+ *
+ * `db` is a **contextual** unit: it only fully resolves against a specific `Food` (its darab-
+ * definíció), the same way `cs` resolves against the net content. With no darab-definíció `1 db =
+ * 1 cs` — which is exactly the piece multiplier below, so a `db` amount with no Food context still
+ * canonicalizes (as packages). See `pages/food/food-quantity.ts` for the Food-aware resolution.
  */
 const QUANTITY_ALIASES: Record<string, QuantityUnit> = {
   csomag: 'cs',
+  darab: 'db',
 };
 
 /** documentation/Architektúra/Mennyiség mező.md "Támogatott egységek — duration": alias → canonical unit, case-insensitive. */
@@ -56,7 +62,7 @@ const DURATION_ALIASES: Record<string, DurationUnit> = {
 
 export const QUANTITY_WEIGHT_MULTIPLIERS: Record<string, number> = { g: 1, dkg: 10, kg: 1000 };
 export const QUANTITY_VOLUME_MULTIPLIERS: Record<string, number> = { ml: 1, cl: 10, dl: 100, l: 1000 };
-export const QUANTITY_PIECE_MULTIPLIERS: Record<string, number> = { cs: 1 };
+export const QUANTITY_PIECE_MULTIPLIERS: Record<string, number> = { cs: 1, db: 1 };
 export const DURATION_MULTIPLIERS: Record<string, number> = { perc: 1, óra: 60, nap: 1440, hét: 10080, hó: 43200, év: 525600 };
 
 /**
@@ -139,7 +145,7 @@ function resolveDurationUnit(rawUnit: string): DurationUnit | null {
 }
 
 export function quantityFamily(unit: QuantityUnit): QuantityFamily {
-  if (unit === 'cs') {
+  if (unit === 'cs' || unit === 'db') {
     return 'piece';
   }
   if (unit in QUANTITY_WEIGHT_MULTIPLIERS) {

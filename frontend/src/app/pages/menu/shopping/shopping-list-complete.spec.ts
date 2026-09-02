@@ -35,8 +35,17 @@ describe('partitionItems', () => {
 });
 
 describe('splitCountFor', () => {
-  it('returns the rounded amount for a db-unit item', () => {
+  it('returns the whole amount for a cs-unit item', () => {
     expect(splitCountFor(foodItem({ quantityAmount: 3, quantityUnit: 'cs' }))).toBe(3);
+  });
+
+  it('backlog/063: a fractional cs amount is a single row', () => {
+    expect(splitCountFor(foodItem({ quantityAmount: 2.5, quantityUnit: 'cs' }))).toBe(1);
+  });
+
+  it('backlog/063: a legacy db amount rounds up to whole packages', () => {
+    expect(splitCountFor(foodItem({ quantityAmount: 2, quantityUnit: 'db' }))).toBe(2);
+    expect(splitCountFor(foodItem({ quantityAmount: 2.1, quantityUnit: 'db' }))).toBe(3);
   });
 
   it('returns 1 for any other unit, regardless of amount', () => {

@@ -40,7 +40,12 @@ public final class QuantityConverter {
 			"dl", BigDecimal.valueOf(100),
 			"l", BigDecimal.valueOf(1000));
 
-	private static final Map<String, BigDecimal> PIECE_MULTIPLIERS = Map.of("cs", BigDecimal.valueOf(1));
+	// `db` is a contextual unit: it fully resolves only against a specific Food's darab-definíció
+	// (see the frontend's pages/food/food-quantity.ts). With no definíció `1 db = 1 cs`, which is
+	// exactly this multiplier — so a bare `db` amount still canonicalizes (as packages).
+	private static final Map<String, BigDecimal> PIECE_MULTIPLIERS = Map.of(
+			"cs", BigDecimal.valueOf(1),
+			"db", BigDecimal.valueOf(1));
 
 	private static final Map<String, BigDecimal> DURATION_MULTIPLIERS = Map.of(
 			"perc", BigDecimal.valueOf(1),

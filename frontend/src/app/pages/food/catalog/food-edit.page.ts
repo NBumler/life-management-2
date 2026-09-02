@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
   AlertController,
@@ -32,6 +32,15 @@ import { OpenFoodFactsService } from './open-food-facts.service';
 import { chlorideFromSaltAndSodium, sodiumFromSalt } from './salt-sodium-chloride';
 
 const NO_QUANTITY: ParsedQuantity = { amount: null, unit: null };
+
+/**
+ * backlog/063 — the darab-definíció may not itself be expressed in `db` (circular). Everything else
+ * the QuantityInputComponent accepts (SI units or `cs`) is fine; an empty value is fine (means
+ * "1 darab = 1 csomag"). Mirrors FoodService.validatePiece on the server.
+ */
+function pieceUnitNotDb(control: AbstractControl): ValidationErrors | null {
+  return (control.value as ParsedQuantity | null)?.unit === 'db' ? { pieceUnitDb: true } : null;
+}
 
 /**
  * `Food.netUnit`/`shelfXUnit` are plain `string | null` on the wire (see food.repository.ts on why
@@ -101,7 +110,7 @@ export class FoodEditPage implements OnInit {
     // documentation/Subfeatures/Élelmiszer manuális bevitele.md "1 darab": darab-definíció —
     // üresen hagyva "1 darab = 1 csomag". A QuantityInputComponent sosem commitál fél értéket,
     // így a "vagy mindkettő, vagy egyik sem" szabály itt automatikusan teljesül.
-    pieceDefinition: this.fb.nonNullable.control<ParsedQuantity>(NO_QUANTITY),
+    pieceDefinition: this.fb.nonNullable.control<ParsedQuantity>(NO_QUANTITY, [pieceUnitNotDb]),
     energyKcal: this.fb.control<number | null>(null),
     fatG: this.fb.control<number | null>(null),
     fatSaturatedG: this.fb.control<number | null>(null),

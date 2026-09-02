@@ -1,6 +1,7 @@
 import { Food } from '../../../api/model/food';
 import { StoredFood } from '../../../api/model/storedFood';
-import { QuantityUnit, canonicalQuantityAmount, fromCanonicalQuantityAmount } from '../../../shared/quantity';
+import { QuantityUnit, canonicalQuantityAmount } from '../../../shared/quantity';
+import { resolveFoodQuantity } from '../food-quantity';
 import { afterOpeningDuration, computeOpenedExpiry } from './shelf-life';
 
 /**
@@ -51,8 +52,18 @@ export function planStockConsumption(
       if (remaining <= 0) {
         break;
       }
-      const unit = row.quantityUnit as QuantityUnit;
-      const rowCanonical = canonicalQuantityAmount(row.quantityAmount, unit);
+      // backlog/063 — a `db` row is contextual: canonicalize it through the Food's darab-definíció
+      // the same way the demand map was built (packages, then g/ml). Every other unit keeps the
+      // historical mapping. Write-back is fraction-based so it needs no unit-specific inverse.
+      const rowCanonical =
+        row.quantityUnit === 'db' && food !== undefined
+          ? (resolveFoodQuantity(row.quantityAmount, 'db', food).packages ??
+            resolveFoodQuantity(row.quantityAmount, 'db', food).baseAmount ??
+            row.quantityAmount)
+          : canonicalQuantityAmount(row.quantityAmount, row.quantityUnit as QuantityUnit);
+      if (rowCanonical <= 0) {
+        continue;
+      }
       const consumed = Math.min(remaining, rowCanonical);
       const remainingCanonical = rowCanonical - consumed;
       remaining -= consumed;
@@ -68,7 +79,7 @@ export function planStockConsumption(
       }
       updates.push({
         ...row,
-        quantityAmount: fromCanonicalQuantityAmount(remainingCanonical, unit),
+        quantityAmount: row.quantityAmount * (remainingCanonical / rowCanonical),
         opened: nextOpened,
         openedAt: wasOpened ? row.openedAt : nowIso,
         expiresOn: nextExpiresOn,

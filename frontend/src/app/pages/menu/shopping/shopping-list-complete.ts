@@ -37,13 +37,24 @@ export function partitionItems(items: readonly ShoppingListItem[]): { checkedFoo
 }
 
 /**
- * documentation/Subfeatures/Élelmiszer tárolás.md "Létrehozás — bevásárlásból": a `cs`-unit item
- * with `amount = N` splits into N storage rows, else exactly 1. Rounded and floored at 1 so it
- * always matches the backend's own `splitCountFor()` (ShoppingListService) for any positive amount —
- * the editor blocks a non-positive FOOD quantity, so the floor is only a defensive backstop.
+ * documentation/Subfeatures/Élelmiszer tárolás.md "Létrehozás — bevásárlásból":
+ *  - `cs` + a whole `amount` N → N storage rows (you carried home N packages);
+ *  - `cs` + a fractional `amount` → exactly 1 row with that fractional quantity;
+ *  - legacy `db` (no longer selectable — backlog/063): rounded **up** to whole packages, then split
+ *    like `cs` (with no darab-definíció `1 db = 1 cs`, so this is `ceil(amount)` rows);
+ *  - every other unit → 1 row.
+ *
+ * Floored at 1 and kept bit-identical to the backend's own `splitCountFor()` (ShoppingListService).
  */
 export function splitCountFor(item: ShoppingListItem): number {
-  return item.quantityUnit === 'cs' ? Math.max(1, Math.round(item.quantityAmount ?? 1)) : 1;
+  const amount = item.quantityAmount ?? 1;
+  if (item.quantityUnit === 'db') {
+    return Math.max(1, Math.ceil(amount));
+  }
+  if (item.quantityUnit === 'cs') {
+    return Number.isInteger(amount) ? Math.max(1, amount) : 1;
+  }
+  return 1;
 }
 
 export function buildCompleteDraft(

@@ -25,7 +25,7 @@ import { CustomItemRow, FoodItemRow, ItemRow, RecipeItemRow, isRowComplete, toSa
 
 const SERVINGS_STEP = 0.5;
 /** The units worth a one-tap chip for food portions; anything else is still typeable free-text. */
-const FOOD_QUANTITY_UNIT_CHIPS = ['g', 'dkg', 'cs', 'ml'];
+const FOOD_QUANTITY_UNIT_CHIPS = ['g', 'dkg', 'db', 'ml'];
 
 /**
  * documentation/Subfeatures/Étkezés.md "Tétel — közös" — the full-screen editor for a single meal

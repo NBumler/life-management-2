@@ -236,8 +236,8 @@ class FoodService {
 		if (hasAmount != hasUnit) {
 			throw new ValidationException("A darab-definícióhoz a mennyiség és az egység is kell, vagy egyik sem", "pieceUnit");
 		}
-		if (hasUnit && QuantityConverter.quantityFamily(pieceUnit) == null) {
-			throw new ValidationException("Érvénytelen darab-egység (a »db« itt nem használható)", "pieceUnit");
+		if (hasUnit && ("db".equals(pieceUnit) || QuantityConverter.quantityFamily(pieceUnit) == null)) {
+			throw new ValidationException("Érvénytelen darab-egység (a »db« itt nem használható, körkörös lenne)", "pieceUnit");
 		}
 		if (hasAmount && pieceAmount.signum() <= 0) {
 			throw new ValidationException("A darab mennyiségnek pozitívnak kell lennie", "pieceAmount");

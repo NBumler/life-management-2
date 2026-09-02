@@ -35,6 +35,7 @@ describe('fromCanonicalQuantityAmount', () => {
     ['dl', 3],
     ['l', 2],
     ['cs', 5],
+    ['db', 7],
   ];
   for (const [unit, amount] of cases) {
     it(`round-trips ${amount}${unit} through canonical and back`, () => {
@@ -48,6 +49,8 @@ describe('parseQuantityInput', () => {
     ['120dkg', 120, 'dkg'],
     ['3cs', 3, 'cs'],
     ['2 csomag', 2, 'cs'],
+    ['4db', 4, 'db'],
+    ['2 darab', 2, 'db'],
     ['2l', 2, 'l'],
     ['1.5kg', 1.5, 'kg'],
     ['5cl', 5, 'cl'],
@@ -130,6 +133,10 @@ describe('quantitiesEqual', () => {
 
   it('never treats different unit families as equal, even with the same numeric amount', () => {
     expect(quantitiesEqual({ amount: 3, unit: 'cs' }, { amount: 3, unit: 'g' })).toBe(false);
+  });
+
+  it('backlog/063: db and cs share the piece family (context-free default 1 db = 1 cs)', () => {
+    expect(quantitiesEqual({ amount: 3, unit: 'db' }, { amount: 3, unit: 'cs' })).toBe(true);
   });
 
   it('treats both-missing as equal', () => {

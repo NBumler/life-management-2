@@ -65,6 +65,11 @@
           [unitChips]="['cs', 'g', 'dkg', 'ml']"
         ></app-quantity-input>
       </ion-item>
+      @if (form.controls.pieceDefinition.hasError('pieceUnitDb') && form.controls.pieceDefinition.touched) {
+        <ion-text color="danger">
+          <p class="ion-padding-start">{{ 'FOOD.FORM.PIECE_UNIT_DB_ERROR' | translate }}</p>
+        </ion-text>
+      }
 
       <ion-list-header>{{ 'FOOD.FORM.SECTION_NUTRIENTS' | translate }}</ion-list-header>
       @for (

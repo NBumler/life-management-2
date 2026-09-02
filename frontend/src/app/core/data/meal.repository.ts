@@ -2,9 +2,11 @@ import { Injectable, inject, signal } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 
 import { Meal } from '../../api/model/meal';
+import { resolveFoodQuantity } from '../../pages/food/food-quantity';
 import { planStockConsumption } from '../../pages/food/storage/stock-consumption';
 import { today } from '../../shared/local-date';
 import { QuantityUnit, canonicalQuantityAmount } from '../../shared/quantity';
+import { Food } from '../../api/model/food';
 import { MealDraft, STORAGE_BACKEND } from '../storage/storage-backend';
 import { SyncEngineService } from '../sync/sync-engine.service';
 import { uuidV4 } from '../sync/uuid';
@@ -68,6 +70,7 @@ export class MealRepository {
    */
   private async consumeStock(draft: MealDraft): Promise<void> {
     await this.ensureConsumeInputsLoaded();
+    const foods = this.foodRepository.items();
     const demand = new Map<string, number>();
     for (const item of draft.items) {
       if (item.type === 'RECIPE') {
@@ -76,12 +79,11 @@ export class MealRepository {
           continue;
         }
         for (const ingredient of recipe.ingredients.filter((candidate) => !candidate.deleted)) {
-          const canonical =
-            canonicalQuantityAmount(ingredient.quantityAmount, ingredient.quantityUnit as QuantityUnit) * item.servings;
+          const canonical = this.canonicalDemand(ingredient.quantityAmount, ingredient.quantityUnit, ingredient.foodId, foods) * item.servings;
           demand.set(ingredient.foodId, (demand.get(ingredient.foodId) ?? 0) + canonical);
         }
       } else if (item.type === 'FOOD') {
-        const canonical = canonicalQuantityAmount(item.quantityAmount, item.quantityUnit as QuantityUnit) * item.servings;
+        const canonical = this.canonicalDemand(item.quantityAmount, item.quantityUnit, item.foodId, foods) * item.servings;
         demand.set(item.foodId, (demand.get(item.foodId) ?? 0) + canonical);
       }
     }
@@ -97,6 +99,24 @@ export class MealRepository {
     for (const id of plan.removeIds) {
       await this.storedFoodRepository.remove(id);
     }
+  }
+
+  /**
+   * backlog/063 — the demand a `(amount, unit)` puts on stock. `cs` and SI units keep the historical
+   * `canonicalQuantityAmount` mapping (packages / g / ml). `db` is contextual, so it resolves through
+   * the Food's darab-definíció: prefer packages (`cs`) — the granularity purchase-completion
+   * StoredFood rows use — then the g/ml base amount, then a bare `1 db = 1 cs` fallback.
+   */
+  private canonicalDemand(amount: number, unit: string, foodId: string, foods: readonly Food[]): number {
+    if (unit !== 'db') {
+      return canonicalQuantityAmount(amount, unit as QuantityUnit);
+    }
+    const food = foods.find((candidate) => candidate.id === foodId);
+    if (food === undefined) {
+      return amount; // 1 db = 1 cs
+    }
+    const resolved = resolveFoodQuantity(amount, 'db', food);
+    return resolved.packages ?? resolved.baseAmount ?? amount;
   }
 
   /**
