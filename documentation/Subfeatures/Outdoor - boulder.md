@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Outdoor - boulder
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Outdoor mászónapló]] |
 | **Kapcsolódó** | [[Outdoor boulder admin]], [[Outdoor boulder napló]], [[Indoor - boulder]], [[Mászónapló]], [[Backend-offline first]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Kültéri boulder: Crag → Sector → (opcionális) BoulderProblem + napló. Reference UI-logika: [[Indoor boulder napló]]; master: crag hierarchia.
 

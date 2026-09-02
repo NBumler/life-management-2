@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Edzésnapló
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Edzés]] |
 | **Kapcsolódó** | [[Gyakorlat]], [[Heti terv]], [[Tápérték kalkulátor]], [[Profile]], [[Szinkronizációs központ]], [[Backend-offline first]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Elvégzett konditermi / súlyzós / HIIT / mászó-kiegészítő (hangboard, pinch, campus, izometrikus) sessionök rögzítése és élő követése az [[Edzés]] tab alatt. Egy naplóbejegyzés = egy komplett session. A nap `activityExtraKcal` hozzájárulása a [[Tápérték kalkulátor]] univerzális MET képletével számolódik.
 

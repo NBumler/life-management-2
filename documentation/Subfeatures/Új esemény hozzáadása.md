@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Új esemény hozzáadása
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Események]] |
 | **Kapcsolódó** | [[Naptár]], [[Értesítések]], [[Google Calendar szinkronizálása]], [[Bejelentkezés]], [[Backend-offline first]], [[Szinkronizációs központ]] |
 
-### Célállapot
+### Jelenlegi működés
 
 `CalendarEvent` create / edit űrlap. Entitás, lista, naptár-vetítés, törlés, OpenAPI: [[Események]].
 

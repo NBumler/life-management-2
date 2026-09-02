@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Események
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Life Management 2.0]] |
 | **Kapcsolódó** | [[Tennivalók]], [[Naptár]], [[Új esemény hozzáadása]], [[Google Calendar szinkronizálása]], [[Értesítések]], [[Szöveges keresés]], [[Nyelv választás]], [[Bejelentkezés]], [[Backend-offline first]], [[Szinkronizációs központ]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Saját, user-owned naptári események: egyszeri vagy egyszerűen ismétlődő, egész napos vagy időzített. Lista a Feladatok tab hubjáról; előfordulások a [[Naptár]]ban; emlékeztető: [[Értesítések]] `EVENT_OCCURRENCE`.
 

@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Úszás napló
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Edzés]] |
 | **Kapcsolódó** | [[Tápérték kalkulátor]], [[Profile]], [[Biciklizés napló]], [[Szinkronizációs központ]], [[Backend-offline first]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Úszóedzések naplózása az [[Edzés]] tab alatt. Egy naplóbejegyzés = egy edzés. A nap `activityExtraKcal` hozzájárulása a [[Tápérték kalkulátor]] univerzális MET képletével számolódik. Medencehossz, körök és abból számolt táv **csak napló / statisztika** — nem része a kalóriaszámításnak.
 

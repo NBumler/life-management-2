@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # AYCM tracker
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Life Management 2.0]] |
 | **Kapcsolódó** | [[AYCM elfogadóhely hozzáadása]], [[AYCM Check-In]], [[AYCM Statisztikák]], [[Rendszeres kiadások]], [[Pénzügyek]], [[Szöveges keresés]], [[Nyelv választás]], [[Dark&Light mode]], [[Bejelentkezés]], [[Backend-offline first]], [[Szinkronizációs központ]] |
 
-### Célállapot
+### Jelenlegi működés
 
 AYCM használat követése: elfogadóhelyek + árszabályok, napi Check-In, megtérülés. Belépés: **Menü**. Vékony dashboard + drill-down a három gyerekre; bérlet-kötés a hubon (`AycmSettings`).
 

@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Élelmiszer tárolás
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Kaja]] |
 | **Kapcsolódó** | [[Bevásárlás]], [[Bevásárlás teljesítve]], [[Élelmiszerek]], [[Étkezés]], [[Élelmiszer forrású étkezés]], [[Recept forrású étkezés]], [[Egyéni forrású étkezés]], [[Értesítések]], [[Mennyiség mező]], [[Szöveges keresés]], [[Backend-offline first]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Otthon tárolt élelmiszer-készlet vezetése: tételenkénti mennyiség, tárolási hely, lejárat, felbontás; romlás jelzése és értesítés; étkezéskor készletcsökkentés; manuális felvétel bevásárlás nélkül is.
 

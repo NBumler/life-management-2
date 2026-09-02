@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Profile
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Life Management 2.0]] |
 | **Kapcsolódó** | [[Tápérték kalkulátor]], [[Nettó fizetés kalkulátor]], [[Étkezés]], [[Lépésszám követés]], [[Biciklizés napló]], [[Szinkronizációs központ]], [[Bejelentkezés]], [[Backend-offline first]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Felhasználónként **egy** profilrekord: személyes / cél adatok a [[Tápérték kalkulátor]] és a [[Nettó fizetés kalkulátor]] bemenetéül. A testsúly változásai **súlytörténetben** megmaradnak (későbbi diagram feature); a TDEE mindig a **jelenlegi** testsúllyal számol.
 

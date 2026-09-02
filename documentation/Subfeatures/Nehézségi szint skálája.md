@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Nehézségi szint skálája
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Mászónapló]] |
 | **Kapcsolódó** | [[Nehézségi szint skálája (konverziós mátrix)]], [[Indoor boulder napló]], [[Backend-offline first]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Egységes nehézség-beviteli komponens: skála felismerés, validáció, pre-parsing. **Minden** mászó kontextusban elérhető (fallback / ad-hoc); indoor bouldernél a szín-sáv a gyors út, a szöveges parser mellette él.
 

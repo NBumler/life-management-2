@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Outdoor köteles napló
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Outdoor - köteles]] |
 | **Kapcsolódó** | [[Outdoor köteles admin]], [[Indoor köteles napló]], [[Nehézségi szint skálája]], [[Mászónapló]], [[Tápérték kalkulátor]], [[Backend-offline first]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Kültéri köteles session + kísérletek / multi-pitch. Dashboard: **Outdoor Kötél**.
 

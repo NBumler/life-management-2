@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Élelmiszer hozzáadása
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Élelmiszerek]] |
 | **Kapcsolódó** | [[Vonalkódos élelmiszer beolvasás]], [[Élelmiszer manuális bevitele]], [[Élelmiszer importálása clipboard-ról]], [[Backend-offline first]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Új [[Élelmiszerek]] tétel felvétele több bemeneti csatornán keresztül; a végleges adatbevitel / mentés az [[Élelmiszer manuális bevitele]] űrlapon történik (előtöltve vagy üresen).
 

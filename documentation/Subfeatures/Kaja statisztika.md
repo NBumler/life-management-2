@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Kaja statisztika
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Kaja]] |
 | **Kapcsolódó** | [[Élelmiszerek]], [[Recept]], [[Étkezés]], [[Szöveges keresés]], [[Backend-offline first]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Katalógus-alapú rangsorok: külön listák [[Élelmiszerek]]re és [[Recept]]ekre, aránymutatók szerint. Read-only; számítás a helyi katalógusból. A UI **bővíthető** későbbi statisztika-típusokra (pl. „mit ettem legtöbbet” az [[Étkezés]]ből) — ezek **nem** ebben a körben készülnek el, de az információarchitektúra hagy helyet nekik.
 

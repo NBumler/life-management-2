@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Recept
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Kaja]] |
 | **Kapcsolódó** | [[Élelmiszerek]], [[Mennyiség mező]], [[Szöveges keresés]], [[Recept forrású étkezés]], [[Étkezés]], [[Kaja statisztika]], [[Tápérték kalkulátor]], [[Élelmiszer tárolás]], [[Pakolás]], [[Bejelentkezés]], [[Backend-offline first]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Receptek katalógusa: név, megjegyzés, hozzávalók ([[Élelmiszerek]] + mennyiség), automatikus összegzett tápanyag / ár a részleteken. Étkezéskor a recept forrásként használható ([[Recept forrású étkezés]]); adag / részfogyasztás **nem** receptmező — az étkezés spechéhez tartozik.
 

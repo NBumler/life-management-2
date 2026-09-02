@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Vonalkódos élelmiszer beolvasás
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Élelmiszer hozzáadása]] |
 | **Kapcsolódó** | [[Élelmiszerek]], [[Élelmiszer manuális bevitele]], [[Backend-offline first]], [[Szinkronizációs központ]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Open Food Facts alapján vonalkóddal előtöltött új [[Élelmiszerek]] tétel az [[Élelmiszer manuális bevitele]] űrlapon — kevesebb kézi gépelés.
 

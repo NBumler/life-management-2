@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Indoor - boulder
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Indoor mászónapló]] |
 | **Kapcsolódó** | [[Indoor boulder admin]], [[Indoor boulder napló]], [[Nehézségi szint skálája]], [[Mászónapló]], [[Backend-offline first]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Beltéri boulder: admin (terem + szín-sáv) + napló. **Reference kontextus** a többi mászó flow-hoz.
 

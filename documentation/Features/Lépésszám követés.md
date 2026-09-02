@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Lépésszám követés
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Life Management 2.0]] |
 | **Kapcsolódó** | [[Tápérték kalkulátor]], [[Profile]], [[Értesítések]], [[Lépésszám kézzel manuálisan megadása]], [[Lépésszám átszinkronizálása a Samsung Health-ből]], [[Szinkronizációs központ]], [[Backend-offline first]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Napi lépésszám rögzítése (manuális és/vagy Android Health Connect / Samsung Health). A lépésszám a [[Tápérték kalkulátor]] `activityExtraKcal` lépéságát hajtja. Nincs ki/be kapcsoló: ha a feature flag engedi a feature-t, a modell **mindig** aktív (PAL fix 1.2 + lépéskalória).
 

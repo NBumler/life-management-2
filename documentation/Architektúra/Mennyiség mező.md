@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Mennyiség mező
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Frontend]] |
 | **Kapcsolódó** | [[Bevásárlás]], [[Bevásárlólista írás]], [[Élelmiszerek]], [[Élelmiszer manuális bevitele]], [[Recept]], [[Élelmiszer tárolás]], [[Backend-offline first]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Egységes beviteli UI komponens saját parserrel: a felhasználó egy szöveges mezőbe ír (összeragasztva vagy opcionális szóközzel), a komponens pedig külön **szám** + **egység** értéket ad ki. Ugyanez a komponens szolgál mennyiségre (`quantity`) és időtartamra (`duration`) — a fogyasztó feature átadja a módot.
 

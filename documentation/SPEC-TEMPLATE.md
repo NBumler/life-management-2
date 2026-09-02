@@ -4,29 +4,52 @@ Minden `documentation/**/*.md` jegyzet ezt a szerkezetet követi.
 Agent skill: `.cursor/skills/documentation-spec/SKILL.md`
 Kötelező offline elv: [[Backend-offline first]] (`#### Backend-offline` minden spechen).
 
+A `documentation/` vault a **jelenlegi, implementált állapot** SSOT-ja: a specek azt
+írják le, ahogy az app **ma működik**, nem tervet. Jövőbeli munka / hiányosság /
+change request / bug → `backlog/` jegy (lásd `backlog/README.md`), nem a specbe.
+
+## Frontmatter
+
+Minden spec (kivéve ez a sablon) YAML frontmatterrel kezdődik:
+
+```yaml
+---
+verifikalva: ÉÉÉÉ-HH-NN        # mikor auditálták utoljára a kód ellen
+verifikalt_commit: a1b2c3d     # a HEAD rövid hash-e az audit idején
+---
+```
+
+Ha a specet azóta érintő utolsó commit eltér a `verifikalt_commit`-tól, a spec
+re-verifikálandó (lásd `backlog/README.md` „Staleness-ellenőrzés”).
+
 ## Státusz értékek
 
 | Érték | Jelentés |
 |---|---|
-| `TODO` | Specifikáció még hiányzik / stub |
-| `Váz` | Van tartalom, de nem végleges |
-| `Ideiglenes` | Összevont / ideiglenes spec; szétválasztandó |
-| `Kész` | Elfogadott, implementálható specifikáció |
+| `Kész` | A spec a jelenlegi, implementált működést írja le, auditálva a kód ellen |
+| `Váz` | A spec elsodródott a kódtól, vagy egy `backlog/` jegy lezárása után átírásra vár |
+| `TODO` | A leírás hiányos / stub, nem megbízható |
+| `Ideiglenes` | Archív / összevont pointer-jegyzet; nem bővítendő |
 
 ## Sablon
 
 ```markdown
+---
+verifikalva: ÉÉÉÉ-HH-NN
+verifikalt_commit: a1b2c3d
+---
+
 # {Cím}
 
 ## Business
 
 | | |
 |---|---|
-| **Státusz** | `TODO` / `Váz` / `Ideiglenes` / `Kész` |
+| **Státusz** | `Kész` / `Váz` / `TODO` / `Ideiglenes` |
 | **Szülő** | [[...]] vagy _Nincs szülő (hub / architektúra / gyökér)._ |
 | **Kapcsolódó** | [[...]], [[Backend-offline first]] vagy _Nincs kapcsolódó spec._ |
 
-### Célállapot
+### Jelenlegi működés
 
 …
 
@@ -71,7 +94,7 @@ Kötelező offline elv: [[Backend-offline first]] (`#### Backend-offline` minden
 
 | Szekció | Placeholder |
 |---|---|
-| Célállapot / Funkcionális leírás | `_Nincs business érintettség._` |
+| Jelenlegi működés / Funkcionális leírás | `_Nincs business érintettség._` |
 | UI/UX elvárások | `_Nincs UI/UX érintettség._` |
 | Megjegyzések | `_Nincs megjegyzés._` |
 | Nyitott kérdések | `Nincs nyitott kérdés.` |

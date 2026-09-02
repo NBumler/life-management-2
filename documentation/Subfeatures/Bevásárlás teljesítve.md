@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Bevásárlás teljesítve
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Bevásárlás]] |
 | **Kapcsolódó** | [[Élelmiszerek]], [[Élelmiszer tárolás]], [[Bevásárlás előzmény]], [[Bevásárlólista írás]], [[Backend-offline first]] |
 
-### Célállapot
+### Jelenlegi működés
 
 A felhasználó „Bevásárlás vége” gombjára a pipált / pipálatlan tételek alapján: lista archiválása, megvett élelmiszerek felvétele az [[Élelmiszer tárolás]]ba (lejárat + szükség szerint tárolási hely), pipálatlan tételek új aktív listára másolása.
 

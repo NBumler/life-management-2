@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Biciklizés napló
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Edzés]] |
 | **Kapcsolódó** | [[Tápérték kalkulátor]], [[Profile]], [[Úszás napló]], [[Szinkronizációs központ]], [[Backend-offline first]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Kerékpáros utak naplózása az [[Edzés]] tab alatt. Egy naplóbejegyzés = egy út. A nap hozzájárulása az `activityExtraKcal`-hoz a [[Tápérték kalkulátor]] univerzális MET képletével számolódik; a táv és a szintemelkedés csak napló / statisztika (és MET-kategória választási segéd), nem része a kalóriaszámításnak.
 

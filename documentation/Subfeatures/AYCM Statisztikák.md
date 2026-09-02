@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # AYCM Statisztikák
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[AYCM tracker]] |
 | **Kapcsolódó** | [[AYCM tracker]], [[AYCM Check-In]], [[AYCM elfogadóhely hozzáadása]], [[Rendszeres kiadások]], [[Pénzügyek]], [[Nyelv választás]], [[Dark&Light mode]], [[Bejelentkezés]], [[Backend-offline first]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Read-only összesítés az élő [[AYCM Check-In]] snapshotokból: időablak, megéri-e, helyszín, látogatáslista. Nincs saját entitás. A hub az **aktuális naptári hónap** kártyáit mutatja; ez a képernyő a preset-ablakokat és a bontást.
 

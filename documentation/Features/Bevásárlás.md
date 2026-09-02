@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Bevásárlás
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Life Management 2.0]] |
 | **Kapcsolódó** | [[Kaja]], [[Élelmiszerek]], [[Élelmiszer tárolás]], [[Mennyiség mező]], [[Szöveges keresés]], [[Frontend]], [[Backend-offline first]], [[Szinkronizációs központ]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Bevásárlólisták írása és párhuzamos aktív listák kezelése, vásárlás közbeni pipálás, teljesítés (archiválás + élelmiszerek vezetése az [[Élelmiszer tárolás]]ba), valamint archivált listák előzménye (keresés, újralistázás). Belépés: **Menü** tab (lásd [[Frontend]]) — nem a Kaja tabon.
 

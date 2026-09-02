@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Outdoor boulder napló
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Outdoor - boulder]] |
 | **Kapcsolódó** | [[Outdoor boulder admin]], [[Indoor boulder napló]], [[Nehézségi szint skálája]], [[Mászónapló]], [[Tápérték kalkulátor]], [[Backend-offline first]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Kültéri boulder session + kísérletek. Dashboard: **Outdoor Boulder**.
 

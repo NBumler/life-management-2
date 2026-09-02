@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Outdoor boulder admin
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Outdoor - boulder]] |
 | **Kapcsolódó** | [[Outdoor boulder napló]], [[Indoor boulder admin]], [[Mászónapló]], [[Bejelentkezés]], [[Backend-offline first]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Kültéri boulder törzsadat: **Crag → Sector → (opcionális) BoulderProblem**.
 

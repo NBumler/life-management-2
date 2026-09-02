@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # AYCM Check-In
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[AYCM tracker]] |
 | **Kapcsolódó** | [[AYCM tracker]], [[AYCM elfogadóhely hozzáadása]], [[AYCM Statisztikák]], [[Szöveges keresés]], [[Nyelv választás]], [[Dark&Light mode]], [[Bejelentkezés]], [[Backend-offline first]], [[Szinkronizációs központ]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Napi AYCM belépés rögzítése: partner + dátum + idő → automatikus sávillesztés, **snapshot** az értékkel. Nincs külön előzmény-lista (az a [[AYCM Statisztikák]]); a dátummező tölti az aznapi rekordot.
 

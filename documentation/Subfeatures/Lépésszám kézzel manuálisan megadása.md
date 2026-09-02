@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Lépésszám kézzel manuálisan megadása
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Lépésszám követés]] |
 | **Kapcsolódó** | [[Tápérték kalkulátor]], [[Lépésszám átszinkronizálása a Samsung Health-ből]], [[Szinkronizációs központ]], [[Backend-offline first]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Napi lépésszám kézi rögzítése / módosítása. Egy nap = egy `DailyStepLog`; a manuális mentés **mindig** felülírja a mentett `stepCount`-ot (kisebb és nagyobb értékkel is).
 

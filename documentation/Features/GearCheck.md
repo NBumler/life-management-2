@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # GearCheck
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Life Management 2.0]] |
 | **Kapcsolódó** | [[Eszközök]], [[Sablonok]], [[Pakolás]], [[Bejelentkezés]], [[Backend-offline first]], [[Szinkronizációs központ]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Felszerelés nyilvántartás, pakolási sablonok és aktív pakolások kezelése. Belépés: Menü (lásd [[Frontend]]). Három belépő: [[Eszközök]] | [[Sablonok]] | [[Pakolás]] (aktív sessionök; korlátlan párhuzamos futás).
 

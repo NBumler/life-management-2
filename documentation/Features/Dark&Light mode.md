@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Dark&Light mode
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Life Management 2.0]] |
 | **Kapcsolódó** | [[Frontend]], [[Nyelv választás]], [[Bejelentkezés]], [[Szinkronizációs központ]], [[Étkezés]], [[Backend-offline first]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Az alkalmazás támogat dark és light témát, és **alapértelmezésben a készülék rendszertémáját követi**. A user ezt felülírhatja fix világos vagy fix sötét témára.
 

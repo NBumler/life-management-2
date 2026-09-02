@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Indoor köteles admin
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Indoor - köteles]] |
 | **Kapcsolódó** | [[Indoor köteles napló]], [[Indoor boulder admin]], [[Nehézségi szint skálája]], [[Mászónapló]], [[Backend-offline first]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Beltéri köteles terem-master. **Ugyanaz a `Gym` entitás**, mint a [[Indoor boulder admin]]ban; köteles specifikus mezőkkel bővül.
 

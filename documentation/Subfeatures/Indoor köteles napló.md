@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Indoor köteles napló
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Indoor - köteles]] |
 | **Kapcsolódó** | [[Indoor köteles admin]], [[Indoor boulder napló]], [[Nehézségi szint skálája]], [[Mászónapló]], [[Tápérték kalkulátor]], [[Backend-offline first]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Beltéri köteles session + kísérletek. Dashboard: **Indoor Kötél**. Közös modell: [[Mászónapló]]; UI/mező eltérések az [[Indoor boulder napló]] reference-hez képest.
 

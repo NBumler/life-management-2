@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Outdoor - köteles
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Outdoor mászónapló]] |
 | **Kapcsolódó** | [[Outdoor köteles admin]], [[Outdoor köteles napló]], [[Indoor - köteles]], [[Mászónapló]], [[Backend-offline first]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Kültéri köteles: Route master + napló (TRAD, opcionális multi-pitch, másodmászó MET).
 

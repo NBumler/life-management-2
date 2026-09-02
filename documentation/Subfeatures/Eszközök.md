@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Eszközök
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[GearCheck]] |
 | **Kapcsolódó** | [[Sablonok]], [[Pakolás]], [[Szöveges keresés]], [[Bejelentkezés]], [[Backend-offline first]], [[Szinkronizációs központ]] |
 
-### Célállapot
+### Jelenlegi működés
 
 User-owned felszerelés-katalógus (típus / tétel szint, nem fizikai példány-nyilvántartás): pl. kötél, bundászsák, fejlámpa. A [[Sablonok]] és a [[Pakolás]] ezekre az elemekre hivatkoznak.
 

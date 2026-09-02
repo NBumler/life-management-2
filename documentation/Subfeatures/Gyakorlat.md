@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Gyakorlat
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Edzés]] |
 | **Kapcsolódó** | [[Heti terv]], [[Edzésnapló]], [[Szinkronizációs központ]], [[Backend-offline first]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Egyedi gyakorlatok master / törzsadat katalógusa („mit csinálhatsz?”). Az [[Edzésnapló]] session entry-k `exerciseId`-re hivatkoznak, és **snapshotolják** a nevet, `ExerciseCategory`-t és `ExerciseKind`-ot — master átnevezés vagy törlés nem rontja a múltbeli sessionöket.
 

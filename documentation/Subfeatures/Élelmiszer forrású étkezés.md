@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Élelmiszer forrású étkezés
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Étkezés]] |
 | **Kapcsolódó** | [[Élelmiszerek]], [[Élelmiszer tárolás]], [[Mennyiség mező]], [[Szöveges keresés]], [[Tápérték kalkulátor]], [[Backend-offline first]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Étkezés-tétel egy [[Élelmiszerek]] tételből: élő `foodId` + mennyiség + adagszorzó; effektív mennyiség = mennyiség × szorzó; tápanyag / ár a katalógusból az effektív mennyiségre; készletlevonás.
 

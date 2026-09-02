@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Frontend
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Life Management 2.0]] |
 | **Kapcsolódó** | [[Backend]], [[Fejlesztői környezet]], [[Backend-offline first]], [[Szinkronizációs központ]], [[Bejelentkezés]], [[Kaja]], [[Edzés]], [[Tennivalók]], [[Nyelv választás]], [[Dark&Light mode]], [[Mennyiség mező]], [[Szöveges keresés]], [[Névegyediség]] |
 
-### Célállapot
+### Jelenlegi működés
 
 _Nincs business érintettség._
 

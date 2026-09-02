@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Bevásárlás előzmény
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Bevásárlás]] |
 | **Kapcsolódó** | [[Bevásárlás teljesítve]], [[Bevásárlólista írás]], [[Szöveges keresés]], [[Backend-offline first]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Archivált bevásárlólisták megtekintése, szöveges keresése, és újralistázása új aktív listába.
 

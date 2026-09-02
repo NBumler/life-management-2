@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Élelmiszer importálása clipboard-ról
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Élelmiszer hozzáadása]] |
 | **Kapcsolódó** | [[Élelmiszerek]], [[Élelmiszer manuális bevitele]], [[Mennyiség mező]], [[Backend-offline first]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Több [[Élelmiszerek]] tétel egyszerre történő felvétele táblázatból (pl. Excel / Sheets) **tab-szeparált (TSV)** szöveg beillesztésével egy nagy textboxba — előnézet (új / duplikátum / invalid), majd import.
 

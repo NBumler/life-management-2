@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Recept forrású étkezés
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Étkezés]] |
 | **Kapcsolódó** | [[Recept]], [[Élelmiszer tárolás]], [[Szöveges keresés]], [[Tápérték kalkulátor]], [[Backend-offline first]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Étkezés-tétel egy meglévő [[Recept]] alapján: élő `recipeId` + adagszorzó; tápanyag / ár = aktuális receptösszeg × szorzó; készletlevonás a recept hozzávalóiból × szorzó.
 

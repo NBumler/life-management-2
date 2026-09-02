@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Indoor mászónapló
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Mászónapló]] |
 | **Kapcsolódó** | [[Outdoor mászónapló]], [[Indoor - boulder]], [[Indoor - köteles]], [[Backend-offline first]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Beltéri mászás belépő: boulder + köteles. A hub [[Mászónapló]] dashboard **közvetlenül** a 4 csempével nyit; ez a jegyzet a beltéri ág csoportosítója.
 

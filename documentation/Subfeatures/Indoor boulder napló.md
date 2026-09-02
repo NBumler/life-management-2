@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Indoor boulder napló
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Indoor - boulder]] |
 | **Kapcsolódó** | [[Indoor boulder admin]], [[Nehézségi szint skálája]], [[Nehézségi szint skálája (konverziós mátrix)]], [[Mászónapló]], [[Tápérték kalkulátor]], [[Profile]], [[Backend-offline first]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Beltéri boulder sessionök és kísérletek naplózása. Dashboard belépő: **Indoor Boulder** → ez a form (nincs location/discipline választó).
 

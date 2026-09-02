@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Nettó fizetés kalkulátor
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Pénzügyek]] |
 | **Kapcsolódó** | [[Pénzügyek]], [[Profile]], [[Tápérték kalkulátor]], [[Rendszeres kiadások]], [[Nyelv választás]], [[Dark&Light mode]], [[Bejelentkezés]], [[Backend-offline first]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Egyszerűsített **alkalmazotti** nettó becslés a [[Profile]] `grossMonthlySalaryHuf` (és opcionálisan `birthDate`) alapján. A [[Pénzügyek]] dashboard a **nettó számot** (vagy `~`) innen olvassa; a TB / SZJA bontás ezen a képernyőn van.
 

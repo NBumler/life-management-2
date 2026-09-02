@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Lépésszám átszinkronizálása a Samsung Health-ből
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Lépésszám követés]] |
 | **Kapcsolódó** | [[Tápérték kalkulátor]], [[Lépésszám kézzel manuálisan megadása]], [[Értesítések]], [[Szinkronizációs központ]], [[Backend-offline first]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Android **Health Connect** (Samsung Health adatforrás) lépésszámának átvétele, ha a user elfelejti manuálisan frissíteni. Csak **nagyobb** érték írja felül a mentettet. iOS: későbbi scope. Nincs óránkénti sync.
 

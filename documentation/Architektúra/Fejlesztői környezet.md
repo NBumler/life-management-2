@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Fejlesztői környezet
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Life Management 2.0]] |
 | **Kapcsolódó** | [[Frontend]], [[Backend]], [[Backend-offline first]], [[Bejelentkezés]] |
 
-### Célállapot
+### Jelenlegi működés
 
 _Nincs business érintettség._
 

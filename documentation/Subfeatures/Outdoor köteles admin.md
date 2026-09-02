@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Outdoor köteles admin
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Outdoor - köteles]] |
 | **Kapcsolódó** | [[Outdoor köteles napló]], [[Outdoor boulder admin]], [[Nehézségi szint skálája]], [[Mászónapló]], [[Bejelentkezés]], [[Backend-offline first]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Kültéri köteles törzsadat: **Crag → Sector → Route**.
 

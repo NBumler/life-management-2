@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Backend-offline first
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Life Management 2.0]] |
 | **Kapcsolódó** | [[Frontend]], [[Backend]], [[Szinkronizációs központ]], [[Bejelentkezés]], [[Névegyediség]], [[Tápérték kalkulátor]], [[Vonalkódos élelmiszer beolvasás]], [[Lépésszám átszinkronizálása a Samsung Health-ből]], [[Gyakorlat]] |
 
-### Célállapot
+### Jelenlegi működés
 
 _Nincs business érintettség._
 

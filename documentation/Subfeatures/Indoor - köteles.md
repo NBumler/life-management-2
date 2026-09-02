@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Indoor - köteles
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Indoor mászónapló]] |
 | **Kapcsolódó** | [[Indoor köteles admin]], [[Indoor köteles napló]], [[Indoor - boulder]], [[Mászónapló]], [[Backend-offline first]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Beltéri köteles admin + napló. Eltérések az [[Indoor - boulder]] reference-hez: falmagasság, safety TOPROPE/LEAD, opcionális IndoorRoute, nincs szín-sáv / multi-pitch.
 

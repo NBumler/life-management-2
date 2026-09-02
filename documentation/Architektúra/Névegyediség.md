@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Névegyediség
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Frontend]] |
 | **Kapcsolódó** | [[Backend-offline first]], [[Szöveges keresés]], [[Mennyiség mező]], [[Háztartási feladatok]], [[Eszközök]], [[Sablonok]], [[Gyakorlat]], [[Recept]], [[Élelmiszerek]], [[AYCM elfogadóhely hozzáadása]], [[Indoor boulder admin]], [[Bejelentkezés]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Egyetlen, kőbe vésett szabály arra, hogy **két név mikor számít azonosnak** — és a kliens meg a szerver pontosan ugyanezt alkalmazza.
 

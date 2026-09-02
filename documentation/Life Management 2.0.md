@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Life Management 2.0
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | _Nincs szülő (hub / architektúra / gyökér)._ |
 | **Kapcsolódó** | [[Backend]], [[Frontend]], [[Fejlesztői környezet]], [[Backend-offline first]], [[Mennyiség mező]], [[Szöveges keresés]], [[Névegyediség]], [[Bejelentkezés]], [[Nyelv választás]], [[Dark&Light mode]], [[SPEC-TEMPLATE]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Személyes life-management alkalmazás (hibrid mobil + web). Több felhasználóra is felkészülünk, de az elsődleges cél a személyes használat.
 

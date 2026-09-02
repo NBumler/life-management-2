@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Pakolás
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[GearCheck]] |
 | **Kapcsolódó** | [[Sablonok]], [[Eszközök]], [[Szöveges keresés]], [[Bejelentkezés]], [[Backend-offline first]], [[Szinkronizációs központ]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Aktív pakolás(ok) indítása sablon(ok)ból, eszközök státuszának végigvezetése, lezárás. Egyszerre **korlátlan** számú futó pakolás engedélyezett ugyanannál a usernél.
 

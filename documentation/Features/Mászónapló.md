@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Mászónapló
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Life Management 2.0]] |
 | **Kapcsolódó** | [[Edzés]], [[Tápérték kalkulátor]], [[Profile]], [[Nehézségi szint skálája]], [[Nehézségi szint skálája (konverziós mátrix)]], [[Indoor mászónapló]], [[Outdoor mászónapló]], [[Szinkronizációs központ]], [[Backend-offline first]], [[Giga feature napló specifikáció (Ideiglenes specifikáció)]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Mászóedzések naplózása **4 külön dashboard-belépővel** (Indoor/Outdoor × Boulder/Kötél). A kontextus a belépőgombból jön — **nincs** egy közös form, ahol a user indoor/outdoor vagy boulder/kötél mezőt választana.
 

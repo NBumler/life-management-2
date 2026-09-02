@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Háztartási feladatok
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Tennivalók]] |
 | **Kapcsolódó** | [[Naptár]], [[Értesítések]], [[Szöveges keresés]], [[Nyelv választás]], [[Bejelentkezés]], [[Backend-offline first]], [[Szinkronizációs központ]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Lakás körüli, helyiséghez kötött, ismétlődő teendők. A Feladatok tabon a [[Tennivalók]] hubból nyílik; előfordulásai a [[Naptár]]ban jelennek meg; esedékes / lejárt tételekről napi digest [[Értesítések]].
 

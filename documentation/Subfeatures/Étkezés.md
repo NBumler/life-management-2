@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Étkezés
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Kaja]] |
 | **Kapcsolódó** | [[Élelmiszer tárolás]], [[Tápérték kalkulátor]], [[Értesítések]], [[Recept forrású étkezés]], [[Élelmiszer forrású étkezés]], [[Egyéni forrású étkezés]], [[Recept]], [[Élelmiszerek]], [[Backend-offline first]], [[Szinkronizációs központ]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Napi étkezés-dashboard (egy nap, nincs többnapos történet / diagram) és étkezések CRUD-ja három tételtípussal. Bevitt tápanyag az aznapi tételekből; célok / szintentartás / aktivitás a [[Tápérték kalkulátor]] SSOT-jából. Készletlevonás recept- és élelmiszer-tételeknél ([[Élelmiszer tárolás]]).
 

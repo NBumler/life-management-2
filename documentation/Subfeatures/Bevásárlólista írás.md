@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Bevásárlólista írás
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Bevásárlás]] |
 | **Kapcsolódó** | [[Élelmiszerek]], [[Bevásárlás teljesítve]], [[Mennyiség mező]], [[Backend-offline first]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Aktív bevásárlólista(ák) összeállítása és szerkesztése vásárlás előtt és közben; tételek pipálása a teljesítésig.
 

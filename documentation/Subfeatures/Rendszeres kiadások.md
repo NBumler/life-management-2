@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Rendszeres kiadások
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Pénzügyek]] |
 | **Kapcsolódó** | [[Pénzügyek]], [[Nettó fizetés kalkulátor]], [[AYCM tracker]], [[Értesítések]], [[Szöveges keresés]], [[Nyelv választás]], [[Dark&Light mode]], [[Bejelentkezés]], [[Backend-offline first]], [[Szinkronizációs központ]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Ismétlődő, fix összegű kiadások (előfizetés, bérlet, biztosítás) nyilvántartása. A [[Pénzügyek]] dashboard a **havi ekvivalens összegét** innen olvassa. Az [[AYCM tracker]] opcionálisan **egy** sort belinkel (`linkedRecurringExpenseId` az AYCM oldalon) — **ezen a spechen nincs AYCM mező**.
 

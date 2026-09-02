@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Nyelv választás
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Life Management 2.0]] |
 | **Kapcsolódó** | [[Frontend]], [[Dark&Light mode]], [[Értesítések]], [[Backend]], [[Szinkronizációs központ]], [[Bejelentkezés]], [[Backend-offline first]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Az alkalmazás többnyelvű (i18n): **magyar** és **angol**. Alapértelmezésben a készülék nyelvét követi, és magyarra esik vissza, ha az nem támogatott.
 

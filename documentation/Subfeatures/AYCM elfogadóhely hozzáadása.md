@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # AYCM elfogadóhely hozzáadása
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[AYCM tracker]] |
 | **Kapcsolódó** | [[AYCM tracker]], [[AYCM Check-In]], [[AYCM Statisztikák]], [[Szöveges keresés]], [[Nyelv választás]], [[Dark&Light mode]], [[Bejelentkezés]], [[Backend-offline first]], [[Szinkronizációs központ]] |
 
-### Célállapot
+### Jelenlegi működés
 
 User-owned AYCM elfogadóhelyek (partnerek) és ársávjaik. A wiki-cím a create-flow; a spec **teljes CRUD**. Nincs külön nyitvatartás-tábla: az árszabály **az** idősáv.
 

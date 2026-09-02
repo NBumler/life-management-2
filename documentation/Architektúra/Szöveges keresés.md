@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Szöveges keresés
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Frontend]] |
 | **Kapcsolódó** | [[Bevásárlás előzmény]], [[Pakolás]], [[Élelmiszerek]], [[Háztartási feladatok]], [[Rendszeres kiadások]], [[AYCM elfogadóhely hozzáadása]], [[Backend-offline first]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Egységes szöveges keresési viselkedés a teljes alkalmazásban: kis/nagybetű-független, ékezet-független egyezés; ha a felhasználó ékezetesen keres, az ékezetileg pontosan egyező találatok a lista elejére kerülnek.
 

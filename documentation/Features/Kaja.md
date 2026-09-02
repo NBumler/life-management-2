@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Kaja
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Life Management 2.0]] |
 | **Kapcsolódó** | [[Bevásárlás]], [[Élelmiszerek]], [[Recept]], [[Tápérték kalkulátor]], [[Mennyiség mező]], [[Bejelentkezés]], [[Backend-offline first]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Élelmiszer, tárolás, recept, étkezés és kapcsolódó statisztikák kezelése egy feature alatt. Alsó tab: **Kaja** (lásd [[Frontend]]). A [[Bevásárlás]] domainben kapcsolódik (katalógus / tárolás), de navigációja a **Menü** tabon van.
 

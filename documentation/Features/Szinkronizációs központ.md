@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Szinkronizációs központ
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Life Management 2.0]] |
 | **Kapcsolódó** | [[Backend-offline first]], [[Frontend]], [[Névegyediség]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Dedikált kezelőfelület a hálózati hibák vagy térerőhiány miatt az SQLite Outbox Queue-ban ragadt offline kérések vizuális menedzselésére.
 

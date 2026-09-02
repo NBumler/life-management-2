@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Naptár
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Life Management 2.0]] |
 | **Kapcsolódó** | [[Tennivalók]], [[Háztartási feladatok]], [[Események]], [[Élet tervek]], [[Értesítések]], [[Nyelv választás]], [[Bejelentkezés]], [[Backend-offline first]], [[Szinkronizációs központ]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Aggregált naptár: a producer-feature-ök előfordulásait mutatja. Belépés: [[Tennivalók]] hub → Naptár csempe (Feladatok tab). Nincs saját naptár-entitás és nincs create a naptárból.
 

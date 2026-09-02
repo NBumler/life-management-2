@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Sablonok
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[GearCheck]] |
 | **Kapcsolódó** | [[Eszközök]], [[Pakolás]], [[Szöveges keresés]], [[Bejelentkezés]], [[Backend-offline first]], [[Szinkronizációs központ]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Pakolási sablonok: elnevezett [[Eszközök]] listák (pl. „Hétvégi mászás”, „Tél”). A [[Pakolás]] egy vagy több sablonból indul; a tételek sorrendje a pakolásba másoláskor a kiindulási sorrend.
 

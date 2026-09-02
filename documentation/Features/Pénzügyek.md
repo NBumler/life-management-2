@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Pénzügyek
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Life Management 2.0]] |
 | **Kapcsolódó** | [[Nettó fizetés kalkulátor]], [[Rendszeres kiadások]], [[Profile]], [[AYCM tracker]], [[Nyelv választás]], [[Dark&Light mode]], [[Bejelentkezés]], [[Backend-offline first]], [[Szinkronizációs központ]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Pénzügyi **hub**: belépéskor három szám (nettó, havi fix kiadás, maradék), onnan drill-down a két gyerekre. Belépés: **Menü** (lásd [[Frontend]]).
 

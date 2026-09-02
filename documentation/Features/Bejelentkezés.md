@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Bejelentkezés
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Life Management 2.0]] |
 | **Kapcsolódó** | [[Backend]], [[Frontend]], [[Profile]], [[Backend-offline first]], [[Szinkronizációs központ]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Felhasználói autentikáció és authorizáció: a személyes (user-owned) adatok felhasználónként elkülönítve tárolódnak; a közös katalógusok minden bejelentkezett user számára elérhetők. **Nincs** in-app regisztráció az első körben — új usert üzemeltető `curl` (admin API) hoz létre. A session **tartós**: app verziófrissítés / újratelepítés nélküli frissítés **nem** jelentkezteti ki a usert; idle timeout / forced re-login **nincs**. Későbbi Google login ugyanarra a token-modellre köthető.
 

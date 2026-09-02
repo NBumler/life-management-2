@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Google Calendar szinkronizálása
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Események]] |
 | **Kapcsolódó** | [[Események]], [[Új esemény hozzáadása]], [[Naptár]], [[Értesítések]], [[Frontend]], [[Backend]], [[Bejelentkezés]], [[Backend-offline first]], [[Szinkronizációs központ]] |
 
-### Célállapot
+### Jelenlegi működés
 
 **Egyirányú export: LM2 → Google Calendar** (döntés). A saját [[Események]] felkerülnek egy **dedikált** Google naptárba, így a telefon / gép natív naptárában és a többi eszközön is látszanak.
 

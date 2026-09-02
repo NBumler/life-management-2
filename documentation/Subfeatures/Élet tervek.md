@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Élet tervek
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Tennivalók]] |
 | **Kapcsolódó** | [[Naptár]], [[Események]], [[Háztartási feladatok]], [[Értesítések]], [[Szöveges keresés]], [[Nyelv választás]], [[Dark&Light mode]], [[Bejelentkezés]], [[Backend-offline first]], [[Szinkronizációs központ]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Hosszabb távú, user-owned életcélok (pl. jogosítvány, rope-solo, költözés). Lista a Feladatok tab hubjáról. **Nem** naptári időpont és **nem** ismétlődő háztartási teendő.
 

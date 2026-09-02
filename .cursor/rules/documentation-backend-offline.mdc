@@ -6,6 +6,9 @@ alwaysApply: false
 
 # Backend-offline a specifikációkban
 
+A `documentation/` vault a **jelenlegi, implementált állapot** leírása (nem terv);
+jövőbeli munka / hiányosság / change request / bug → `backlog/` jegy, nem a spec.
+
 Minden `documentation/**/*.md` spechez (kivéve `SPEC-TEMPLATE.md` és `Architektúra/Backend-offline first.md`):
 
 1. Az `## Architektúra` → `### Frontend` alatt **kötelező** a `#### Backend-offline` alfejezet.

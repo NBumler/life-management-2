@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Egyéni forrású étkezés
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Étkezés]] |
 | **Kapcsolódó** | [[Étkezés]], [[Tápérték kalkulátor]], [[Élelmiszer tárolás]], [[Backend-offline first]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Étkezés-tétel katalógus nélkül (vendégség, étterem, becslés): kézi makrók / ár / megjelenő név + adagszorzó. **Nem** módosítja az [[Élelmiszer tárolás]] készletet.
 

@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Nehézségi szint skálája (konverziós mátrix)
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Mászónapló]] |
 | **Kapcsolódó** | [[Nehézségi szint skálája]], [[Mászónapló]], [[Tápérték kalkulátor]], [[Backend-offline first]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Skálák → egységes belső numerikus index \(I_{\text{grade}}\) (`absoluteDifficultyIndex`) statisztikához és volumenhez. **A teljes mátrix JSON implementáció-időben előállítandó** (a repóban ma nincs kód, ez a fájl a specifikáció) — a lenti tábla a **kiindulási referencia-anchor**, a generálási módszer pedig az „Előállítási módszer" alfejezet. A JSON, ha egyszer elkészült, a repo SSOT-ja lesz; eddig ez a spec az.
 

@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Indoor boulder admin
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Indoor - boulder]] |
 | **Kapcsolódó** | [[Indoor boulder napló]], [[Nehézségi szint skálája]], [[Mászónapló]], [[Névegyediség]], [[Backend-offline first]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Beltéri boulder **terem + szín-sáv** törzsadat. Egyedi boulder problémák **nincsenek** az adminban (gyors forgás a falakon) — a napló szín-sávval / ad-hoc grade-del dolgozik.
 

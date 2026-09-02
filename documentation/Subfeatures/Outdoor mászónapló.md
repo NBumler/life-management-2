@@ -1,3 +1,8 @@
+---
+verifikalva:
+verifikalt_commit:
+---
+
 # Outdoor mászónapló
 
 ## Business
@@ -8,7 +13,7 @@
 | **Szülő** | [[Mászónapló]] |
 | **Kapcsolódó** | [[Indoor mászónapló]], [[Outdoor - boulder]], [[Outdoor - köteles]], [[Backend-offline first]] |
 
-### Célállapot
+### Jelenlegi működés
 
 Kültéri mászás belépő: boulder + köteles. A hub dashboard csempéi közvetlenül nyitnak; ez a jegyzet a kültéri ág csoportosítója.
 
