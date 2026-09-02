@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: 279a21b
 ---
 
 # AYCM elfogadóhely hozzáadása
@@ -21,7 +21,9 @@ Belépés: [[AYCM tracker]] hub → elfogadóhelyek. A [[AYCM Check-In]] csak **
 
 **Ownership:** **user-owned** — [[Bejelentkezés]].
 
-**Nem scope (MVP):** hivatalos AYCM-import; térkép / cím mező; partner `active`; éjfélen átnyúló sáv; szabály-duplikálás; seed; undelete; inline partner-create a Check-Inről; külön top-level szabálylista.
+Jelenleg: kézi partner-felvitel, nincs cím / térkép / `active` mező, nincs éjfélen átnyúló sáv, nincs szabály-duplikálás / seed / undelete, nincs inline partner-create a Check-Inről, nincs külön top-level szabálylista. Tervezett bővítmények:
+
+> Tervezett: `backlog/039-aycm-hivatalos-partner-katalogus-import-terkep-cim.md`, `backlog/043-aycm-arsav-ejfelen-atnyulo-idosav.md`
 
 ### Funkcionális leírás
 
@@ -88,7 +90,7 @@ Nincs találat → Check-In: `visitValueHuf = 0`, `listPriceHuf = 0`, `coPayment
 #### CRUD — partner
 
 - Lista, create, edit, törlés. **Duplikálás nincs.**
-- Create: `name` auto-focus; notes opcionális; szabályok utána a szerkesztőn (0 szabállyal is menthető).
+- Create: notes opcionális; szabályok utána a szerkesztőn (0 szabállyal is menthető). (A `name` mező auto-focusa jelenleg nincs bekötve — tervezett: `backlog/038-aycm-partner-create-name-mezo-auto-focus.md`.)
 - **Törlés:** megerősítés a névvel + élő sávok száma. Soft delete a partnerre **és** az összes élő szabályára (cascade). [[AYCM Check-In]] sorok **nem** törlődnek (snapshot). Pickerből kiesik.
 
 #### CRUD — szabály

@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: 279a21b
 ---
 
 # AYCM tracker
@@ -19,7 +19,9 @@ AYCM használat követése: elfogadóhelyek + árszabályok, napi Check-In, megt
 
 **Ownership:** **user-owned** — [[Bejelentkezés]]. Nincs hivatalos AYCM-API / térkép / import.
 
-**Nem scope (MVP):** hivatalos partner-import; térkép; éjfélen átnyúló ársáv; több belinkelt kiadás; több Check-In ugyanazon a naptári napon; naptár-producer; értesítés; 4. gyerek.
+A követés jelenleg: egy belinkelt kiadás, max egy Check-In / naptári nap, éjfélen nem átnyúló ársávok, három gyerek, nincs naptár-producer / értesítés. Tervezett bővítmények:
+
+> Tervezett: `backlog/039-aycm-hivatalos-partner-katalogus-import-terkep-cim.md`, `backlog/041-aycm-check-in-tobb-check-in-naptari-nap-kulon-check-in-lista.md`, `backlog/042-aycm-naptar-producer-ertesites-integracio.md`, `backlog/043-aycm-arsav-ejfelen-atnyulo-idosav.md`
 
 ### Funkcionális leírás
 

@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: 279a21b
 ---
 
 # AYCM Check-In
@@ -19,7 +19,9 @@ Napi AYCM belépés rögzítése: partner + dátum + idő → automatikus sávil
 
 **Ownership:** **user-owned** — [[Bejelentkezés]].
 
-**Nem scope (MVP):** több Check-In ugyanazon a naptári napon; inline partner-create; külön Check-In lista; 15 perces kerekítés; naptár-producer; értesítés; undelete.
+Jelenleg: max egy Check-In / naptári nap, nincs inline partner-create, nincs külön Check-In lista, percpontos idő (nincs 15 perces kerekítés), nincs naptár-producer / értesítés / undelete. Tervezett bővítmények:
+
+> Tervezett: `backlog/041-aycm-check-in-tobb-check-in-naptari-nap-kulon-check-in-lista.md`, `backlog/042-aycm-naptar-producer-ertesites-integracio.md`
 
 ### Funkcionális leírás
 
@@ -81,7 +83,7 @@ Nincs illeszkedő sáv (0 szabály, lyuk, rossz nap): sárga figyelmeztetés, sn
   - Ma nincs élő Check-In → create, default **ma + jelenlegi idő**.
   - Ma van → a **mai** szerkesztő (nem második create).
 - Route pl. `/tabs/menu/aycm/check-in` (opcionális `?date=YYYY-MM-DD` a nap betöltéséhez).
-- **Űrlap:** partner picker (élő, [[Szöveges keresés]]); dátum; idő (percpontos); **Most** = `checkInDate = ma` **és** `checkInTime = most`. Ha ma már van élő sor, a Most **azt** tölti (edit) + idő = most, újraillesztés-előnézet. Notes; Mentés.
+- **Űrlap:** partner picker (élő partnerek, `ion-select` action-sheet — szövegkereső mező a pickerben jelenleg nincs, tervezett: `backlog/037-aycm-check-in-szovegkereso-a-partner-pickerben.md`); dátum; idő (percpontos); **Most** = `checkInDate = ma` **és** `checkInTime = most`. Ha ma már van élő sor, a Most **azt** tölti (edit) + idő = most, újraillesztés-előnézet. Notes; Mentés.
 - Üres partnerlista → CTA [[AYCM elfogadóhely hozzáadása]] (nincs inline create).
 - Dátum váltás: ha arra a napra van élő sor → edit mód (mezők a sorból); ha nincs → create a kiválasztott dátummal (idő marad / Most).
 - Reaktív előnézet: zöld = `ruleLabel` + `listPriceHuf` Ft; sárga = nincs sáv, 0 Ft. i18n: [[Nyelv választás]]. Kontraszt: [[Dark&Light mode]].

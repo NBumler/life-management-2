@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: 279a21b
 ---
 
 # AYCM Statisztikák
@@ -19,7 +19,9 @@ Read-only összesítés az élő [[AYCM Check-In]] snapshotokból: időablak, me
 
 **Ownership:** a Check-In / settings user-owned — [[Bejelentkezés]].
 
-**Nem scope (MVP):** diagram; custom dátumtartomány; „összes idő”; idei naptári év preset; copay-összeg külön kártyán; saját OpenAPI / outbox.
+Jelenleg: három preset-ablak, számkártyák + két lista, nincs diagram, nincs custom dátumtartomány / YTD / „összes idő", nincs külön copay-kártya, nincs saját OpenAPI / outbox. Tervezett bővítmények:
+
+> Tervezett: `backlog/040-aycm-statisztikak-custom-datumtartomany-diagram-ytd-all-time-cop.md`
 
 ### Funkcionális leírás
 
@@ -73,7 +75,7 @@ Tap → [[AYCM Check-In]] `?date=YYYY-MM-DD`.
 
 ### Megjegyzések
 
-A hub három havi száma nem másolódik ide képletként: `THIS_MONTH` ugyanazt a utility-t hívja (`from`/`to` = aktuális hónap). Diagram későbbi scope.
+A hub három havi száma nem másolódik ide képletként: `THIS_MONTH` ugyanazt a utility-t hívja (`from`/`to` = aktuális hónap). Diagram tervezett (`backlog/040-aycm-statisztikak-custom-datumtartomany-diagram-ytd-all-time-cop.md`).
 
 ### Nyitott kérdések
 
