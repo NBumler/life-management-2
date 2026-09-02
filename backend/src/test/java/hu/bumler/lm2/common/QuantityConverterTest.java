@@ -33,6 +33,17 @@ class QuantityConverterTest {
 		assertThat(toMap(root.at("/quantity/volume/multipliers"))).isEqualTo(QuantityConverter.volumeMultipliers());
 		assertThat(toMap(root.at("/quantity/piece/multipliers"))).isEqualTo(QuantityConverter.pieceMultipliers());
 		assertThat(toMap(root.at("/duration/time/multipliers"))).isEqualTo(QuantityConverter.durationMultipliers());
+		assertThat(root.at("/equalityDecimalScale").asInt()).isEqualTo(QuantityConverter.EQUALITY_DECIMAL_SCALE);
+	}
+
+	@Test
+	void equalityIsScaledToTheFixtureDecimalPlaces() {
+		// documentation/Architektúra/Mennyiség mező.md "Kanonikus egyenlőség": a fraction input's
+		// rounding (1/6 → 0.1667) must not produce a false "not equal" against a longer decimal.
+		assertThat(QuantityConverter.quantitiesEqual(
+				new BigDecimal("0.1667"), "cs", new BigDecimal("0.16666666"), "cs")).isTrue();
+		assertThat(QuantityConverter.quantitiesEqual(
+				new BigDecimal("0.1667"), "cs", new BigDecimal("0.1669"), "cs")).isFalse();
 	}
 
 	@Test

@@ -59,7 +59,29 @@ export const QUANTITY_VOLUME_MULTIPLIERS: Record<string, number> = { ml: 1, cl: 
 export const QUANTITY_PIECE_MULTIPLIERS: Record<string, number> = { cs: 1 };
 export const DURATION_MULTIPLIERS: Record<string, number> = { perc: 1, óra: 60, nap: 1440, hét: 10080, hó: 43200, év: 525600 };
 
-const INPUT_PATTERN = /^(-?\d+(?:[.,]\d+)?)\s*([a-zA-Zóőúűáéíöü]+)$/;
+/**
+ * documentation/Architektúra/Mennyiség mező.md "Tört bevitel" / "Kanonikus egyenlőség" — a fraction
+ * input (`1/6 csomag`) is stored as a decimal rounded to this many places, and equality comparisons
+ * work on the canonical amount scaled to an integer at this scale, so float noise from `1/6` etc.
+ * (`6 × 0.1667 ≠ 1` exactly) never produces a false "not equal". Mirrors
+ * `shared/fixtures/quantity-conversion.json` → `equalityDecimalScale` and
+ * `QuantityConverter.EQUALITY_DECIMAL_SCALE`.
+ */
+export const EQUALITY_DECIMAL_SCALE = 4;
+
+const SCALE_FACTOR = 10 ** EQUALITY_DECIMAL_SCALE;
+
+/** Number part: a decimal (`120`, `1.5`, `0,4`) or a simple fraction (`1/6`, `5/2`) — no mixed fractions (`1 1/2`). */
+const INPUT_PATTERN = /^(-?\d+(?:[.,]\d+)?|\d+\/\d+)\s*([a-zA-Zóőúűáéíöü]+)$/;
+
+function roundToScale(value: number): number {
+  return Math.round(value * SCALE_FACTOR) / SCALE_FACTOR;
+}
+
+/** Canonical amounts are equal iff they match once scaled to `EQUALITY_DECIMAL_SCALE` places (integer compare). */
+function scaledEqual(a: number, b: number): boolean {
+  return Math.round(a * SCALE_FACTOR) === Math.round(b * SCALE_FACTOR);
+}
 
 /**
  * documentation/Architektúra/Mennyiség mező.md "Parser kimenet": empty input is a valid "no value"
@@ -75,7 +97,17 @@ export function parseQuantityInput(input: string, mode: QuantityMode): ParsedQua
   if (!match) {
     throw new QuantityParseError(`Cannot parse "${input}" as ${mode}`);
   }
-  const amount = Number(match[1].replace(',', '.'));
+  const rawNumber = match[1];
+  let amount: number;
+  if (rawNumber.includes('/')) {
+    const [numerator, denominator] = rawNumber.split('/').map(Number);
+    if (denominator === 0) {
+      throw new QuantityParseError(`Zero denominator in "${input}"`);
+    }
+    amount = roundToScale(numerator / denominator);
+  } else {
+    amount = Number(rawNumber.replace(',', '.'));
+  }
   if (!Number.isFinite(amount)) {
     throw new QuantityParseError(`Invalid number in "${input}"`);
   }
@@ -144,12 +176,12 @@ export function quantitiesEqual(a: ParsedQuantity<QuantityUnit>, b: ParsedQuanti
   if (quantityFamily(a.unit) !== quantityFamily(b.unit)) {
     return false;
   }
-  return canonicalQuantityAmount(a.amount, a.unit) === canonicalQuantityAmount(b.amount, b.unit);
+  return scaledEqual(canonicalQuantityAmount(a.amount, a.unit), canonicalQuantityAmount(b.amount, b.unit));
 }
 
 export function durationsEqual(a: ParsedQuantity<DurationUnit>, b: ParsedQuantity<DurationUnit>): boolean {
   if (a.amount === null || a.unit === null || b.amount === null || b.unit === null) {
     return a.amount === null && a.unit === null && b.amount === null && b.unit === null;
   }
-  return canonicalDurationAmount(a.amount, a.unit) === canonicalDurationAmount(b.amount, b.unit);
+  return scaledEqual(canonicalDurationAmount(a.amount, a.unit), canonicalDurationAmount(b.amount, b.unit));
 }

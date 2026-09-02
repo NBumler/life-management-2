@@ -2,6 +2,7 @@ import fixture from '../../../../shared/fixtures/quantity-conversion.json';
 import {
   DURATION_MULTIPLIERS,
   DurationUnit,
+  EQUALITY_DECIMAL_SCALE,
   QUANTITY_PIECE_MULTIPLIERS,
   QUANTITY_VOLUME_MULTIPLIERS,
   QUANTITY_WEIGHT_MULTIPLIERS,
@@ -21,6 +22,7 @@ describe('quantity multiplier tables', () => {
     expect(QUANTITY_VOLUME_MULTIPLIERS).toEqual(fixture.quantity.volume.multipliers);
     expect(QUANTITY_PIECE_MULTIPLIERS).toEqual(fixture.quantity.piece.multipliers);
     expect(DURATION_MULTIPLIERS).toEqual(fixture.duration.time.multipliers);
+    expect(EQUALITY_DECIMAL_SCALE).toBe(fixture.equalityDecimalScale);
   });
 });
 
@@ -88,6 +90,27 @@ describe('parseQuantityInput', () => {
     expect(() => parseQuantityInput('abc', 'quantity')).toThrowError(QuantityParseError);
     expect(() => parseQuantityInput('5', 'quantity')).toThrowError(QuantityParseError);
   });
+
+  describe('fraction input (documentation/Architektúra/Mennyiség mező.md "Tört bevitel")', () => {
+    for (const { input, amount } of fixture.fractionExamples) {
+      it(`parses "${input}cs" as ${amount}cs (rounded to ${EQUALITY_DECIMAL_SCALE} places)`, () => {
+        expect(parseQuantityInput(`${input}cs`, 'quantity')).toEqual({ amount, unit: 'cs' });
+      });
+    }
+
+    it('accepts an optional space and the "csomag" alias with a fraction', () => {
+      expect(parseQuantityInput('1/6 cs', 'quantity')).toEqual({ amount: 0.1667, unit: 'cs' });
+      expect(parseQuantityInput('1/6 csomag', 'quantity')).toEqual({ amount: 0.1667, unit: 'cs' });
+    });
+
+    it('rejects a zero denominator', () => {
+      expect(() => parseQuantityInput('1/0cs', 'quantity')).toThrowError(QuantityParseError);
+    });
+
+    it('does not support mixed fractions', () => {
+      expect(() => parseQuantityInput('1 1/2cs', 'quantity')).toThrowError(QuantityParseError);
+    });
+  });
 });
 
 describe('formatQuantityValue', () => {
@@ -111,6 +134,15 @@ describe('quantitiesEqual', () => {
 
   it('treats both-missing as equal', () => {
     expect(quantitiesEqual({ amount: null, unit: null }, { amount: null, unit: null })).toBe(true);
+  });
+
+  it('absorbs fraction-rounding float noise via the scaled-integer compare', () => {
+    // 1/6 stored as 0.1667; a raw 1/6 (0.16666…) is equal at EQUALITY_DECIMAL_SCALE places.
+    expect(quantitiesEqual({ amount: 0.1667, unit: 'cs' }, { amount: 1 / 6, unit: 'cs' })).toBe(true);
+  });
+
+  it('still distinguishes amounts that differ beyond the scale', () => {
+    expect(quantitiesEqual({ amount: 0.1667, unit: 'cs' }, { amount: 0.1669, unit: 'cs' })).toBe(false);
   });
 });
 

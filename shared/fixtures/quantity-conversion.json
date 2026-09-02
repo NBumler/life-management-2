@@ -9,5 +9,13 @@
       "baseUnit": "perc",
       "multipliers": { "perc": 1, "óra": 60, "nap": 1440, "hét": 10080, "hó": 43200, "év": 525600 }
     }
-  }
+  },
+  "equalityDecimalScale": 4,
+  "fractionExamples": [
+    { "input": "1/6", "amount": 0.1667 },
+    { "input": "1/3", "amount": 0.3333 },
+    { "input": "1/4", "amount": 0.25 },
+    { "input": "2/3", "amount": 0.6667 },
+    { "input": "5/2", "amount": 2.5 }
+  ]
 }

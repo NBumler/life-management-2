@@ -1,6 +1,7 @@
 package hu.bumler.lm2.common;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Map;
 
 /**
@@ -19,6 +20,14 @@ public final class QuantityConverter {
 	public enum Family {
 		WEIGHT, VOLUME, PIECE, TIME
 	}
+
+	/**
+	 * documentation/Architektúra/Mennyiség mező.md "Kanonikus egyenlőség": equality compares the
+	 * canonical amounts scaled to this many decimal places (HALF_UP), so a fraction input's rounding
+	 * ({@code 1/6 → 0.1667}) never yields a false "not equal". Mirrors the frontend's
+	 * {@code EQUALITY_DECIMAL_SCALE} (quantity.ts) and the shared fixture's {@code equalityDecimalScale}.
+	 */
+	public static final int EQUALITY_DECIMAL_SCALE = 4;
 
 	private static final Map<String, BigDecimal> WEIGHT_MULTIPLIERS = Map.of(
 			"g", BigDecimal.valueOf(1),
@@ -93,7 +102,13 @@ public final class QuantityConverter {
 		if (familyA == null || familyA != familyB) {
 			return false;
 		}
-		return canonicalQuantityAmount(amountA, unitA).compareTo(canonicalQuantityAmount(amountB, unitB)) == 0;
+		return scaledEqual(canonicalQuantityAmount(amountA, unitA), canonicalQuantityAmount(amountB, unitB));
+	}
+
+	/** Canonical amounts are equal iff they match once scaled to {@link #EQUALITY_DECIMAL_SCALE} places (HALF_UP). */
+	private static boolean scaledEqual(BigDecimal a, BigDecimal b) {
+		return a.setScale(EQUALITY_DECIMAL_SCALE, RoundingMode.HALF_UP)
+				.compareTo(b.setScale(EQUALITY_DECIMAL_SCALE, RoundingMode.HALF_UP)) == 0;
 	}
 
 	/** Same as {@link #quantitiesEqual}, for {@code duration}-mode values (single family, so no family check needed). */
@@ -103,7 +118,7 @@ public final class QuantityConverter {
 		}
 		BigDecimal canonicalA = canonicalDurationAmount(amountA, unitA);
 		BigDecimal canonicalB = canonicalDurationAmount(amountB, unitB);
-		return canonicalA != null && canonicalA.compareTo(canonicalB) == 0;
+		return canonicalA != null && canonicalB != null && scaledEqual(canonicalA, canonicalB);
 	}
 
 	static Map<String, BigDecimal> weightMultipliers() {
