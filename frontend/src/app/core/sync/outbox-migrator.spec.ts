@@ -1,10 +1,10 @@
+import { OUTBOX_PAYLOAD_SCHEMA_VERSION } from './offline-queue.service';
 import { OutboxItem } from './outbox-item';
-import { MigrationStep, migrateOutboxItem } from './outbox-migrator';
+import { MigrationStep, migrateOutboxItem, rewriteDbUnitToCs } from './outbox-migrator';
 
 // documentation/Architektúra/Backend-offline first.md §7 "Payload-verziózás (app frissítés)".
-// SCHEMA_VERSION is 1 today, so the production registry is empty and no real cross-version
-// migration exists yet — these tests exercise the mechanism with synthetic registries passed
-// explicitly (the function's `registry` parameter defaults to the real, empty one in production).
+// The mechanism tests use synthetic registries passed explicitly; the production-registry tests at
+// the bottom pin the real v1 → v2 (`db` → `cs`) step, registered for every OutboxEntityType.
 describe('migrateOutboxItem', () => {
   function item(overrides: Partial<OutboxItem>): OutboxItem {
     return {
@@ -110,12 +110,65 @@ describe('migrateOutboxItem', () => {
     expect(result.payloadVersion).toBe(1);
   });
 
-  it('uses the real (empty) production registry by default, so any stale item today falls through to the error branch', () => {
+  it('an entity type with no registered step still falls through to the error branch (default registry)', () => {
     const stale = item({ payloadVersion: 0, entityType: 'Thing' });
 
     const result = migrateOutboxItem(stale, 1);
 
     expect(result.migrated).toBe(false);
     expect(result.errorMessage).not.toBeNull();
+  });
+
+  describe('production registry — v1 → v2 (backlog/063, db → cs)', () => {
+    it('rewrites a stale Food payload netUnit "db" to "cs" and bumps payloadVersion', () => {
+      const stale = item({
+        payloadVersion: 1,
+        entityType: 'Food',
+        url: '/api/foods/entity-x',
+        payload: { id: 'entity-x', name: 'Túró Rudi', netAmount: 6, netUnit: 'db' },
+      });
+
+      const result = migrateOutboxItem(stale, OUTBOX_PAYLOAD_SCHEMA_VERSION);
+
+      expect(result.migrated).toBe(true);
+      expect(result.errorMessage).toBeNull();
+      expect(result.payloadVersion).toBe(OUTBOX_PAYLOAD_SCHEMA_VERSION);
+      expect((result.payload as { netUnit: string }).netUnit).toBe('cs');
+    });
+
+    it('rewrites nested quantityUnit "db" in a Recipe / Meal / ShoppingList tree, leaving other units alone', () => {
+      const stale = item({
+        payloadVersion: 1,
+        entityType: 'Recipe',
+        url: '/api/recipes/r1',
+        payload: {
+          id: 'r1',
+          ingredients: [
+            { id: 'i1', quantityAmount: 2, quantityUnit: 'db' },
+            { id: 'i2', quantityAmount: 100, quantityUnit: 'g' },
+          ],
+        },
+      });
+
+      const result = migrateOutboxItem(stale, OUTBOX_PAYLOAD_SCHEMA_VERSION);
+
+      const ingredients = (result.payload as { ingredients: { quantityUnit: string }[] }).ingredients;
+      expect(ingredients[0].quantityUnit).toBe('cs');
+      expect(ingredients[1].quantityUnit).toBe('g');
+    });
+
+    it('is a content no-op (but still advances the version) for a payload with no db unit', () => {
+      const stale = item({ payloadVersion: 1, entityType: 'GearItem', payload: { id: 'g1', name: 'Sátor' } });
+
+      const result = migrateOutboxItem(stale, OUTBOX_PAYLOAD_SCHEMA_VERSION);
+
+      expect(result.migrated).toBe(true);
+      expect(result.payload).toEqual({ id: 'g1', name: 'Sátor' });
+      expect(result.payloadVersion).toBe(OUTBOX_PAYLOAD_SCHEMA_VERSION);
+    });
+
+    it('handles a null payload (DELETE item)', () => {
+      expect(rewriteDbUnitToCs(null, '/api/foods/x')).toEqual({ payload: null, url: '/api/foods/x' });
+    });
   });
 });

@@ -1,4 +1,4 @@
-import { OutboxItem } from './outbox-item';
+import { OutboxItem, OutboxEntityType } from './outbox-item';
 import { OUTBOX_PAYLOAD_SCHEMA_VERSION } from './offline-queue.service';
 
 /**
@@ -12,12 +12,79 @@ import { OUTBOX_PAYLOAD_SCHEMA_VERSION } from './offline-queue.service';
 export type MigrationStep = (payload: unknown, url: string) => { payload: unknown; url: string };
 
 /**
- * Empty today: `OUTBOX_PAYLOAD_SCHEMA_VERSION` is still 1, so no outbox item can have an older
- * `payloadVersion` and there is nothing to migrate from yet. Register future steps here as the
- * DTO/route schema changes — see the "Fejlesztői szabály" in §7: every breaking DTO/URL change
- * either adds a step here or knowingly accepts that surviving old items go to ERROR.
+ * The closed set of outbox entity types (mirror of `OutboxEntityType`) — every one needs a `:1`
+ * step for the v1 → v2 bump so a stale pending write survives it. Kept as a plain array (not derived
+ * from the union) because a union has no runtime representation; adding a literal to
+ * `OutboxEntityType` without adding it here is caught by the `satisfies` check below.
  */
-const MIGRATIONS: ReadonlyMap<string, MigrationStep> = new Map<string, MigrationStep>([]);
+const ALL_ENTITY_TYPES = [
+  'UserProfile',
+  'WeightHistoryEntry',
+  'GearItem',
+  'PackingTemplate',
+  'PackingSession',
+  'PackingSessionItem',
+  'LifePlan',
+  'Exercise',
+  'WorkoutSession',
+  'WorkoutPlan',
+  'WeeklyPlan',
+  'SwimLog',
+  'BikeRideLog',
+  'RecurringExpense',
+  'AycmPartner',
+  'AycmPriceRule',
+  'AycmCheckIn',
+  'AycmSettings',
+  'Gym',
+  'GymColorBand',
+  'IndoorRoute',
+  'Crag',
+  'Sector',
+  'Route',
+  'BoulderProblem',
+  'ClimbingSession',
+  'HouseholdRoom',
+  'HouseholdTask',
+  'CalendarEvent',
+  'Food',
+  'StoredFood',
+  'Recipe',
+  'Meal',
+  'DailyStepLog',
+  'ShoppingList',
+  'ShoppingListComplete',
+] as const satisfies readonly OutboxEntityType[];
+
+/**
+ * v1 → v2 (backlog/063): recursively rewrite every `netUnit` / `quantityUnit` string equal to
+ * `'db'` into `'cs'` (the quantity unit rename). A no-op for any payload without those keys, so the
+ * same step is registered for every entity type — the version bump is global, so a stale pending
+ * write of *any* kind must have a `:1` step or it goes to ERROR (§7 "Fejlesztői szabály").
+ */
+export function rewriteDbUnitToCs(payload: unknown, url: string): { payload: unknown; url: string } {
+  return { payload: rewriteNode(payload), url };
+}
+
+const UNIT_KEYS = new Set(['netUnit', 'quantityUnit', 'pieceUnit']);
+
+function rewriteNode(node: unknown): unknown {
+  if (Array.isArray(node)) {
+    return node.map(rewriteNode);
+  }
+  if (node === null || typeof node !== 'object') {
+    return node;
+  }
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(node as Record<string, unknown>)) {
+    out[key] = UNIT_KEYS.has(key) && value === 'db' ? 'cs' : rewriteNode(value);
+  }
+  return out;
+}
+
+const MIGRATIONS: ReadonlyMap<string, MigrationStep> = new Map<string, MigrationStep>(
+  ALL_ENTITY_TYPES.map((entityType) => [`${entityType}:1`, rewriteDbUnitToCs] as const),
+);
 
 export interface OutboxMigrationResult {
   /** false when the item was already at the target version — nothing to do, nothing to persist. */

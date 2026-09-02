@@ -4,7 +4,13 @@ import { LocalDatabaseService, SqlTask } from '../storage/local-database.service
 import { EnqueueRequest, OutboxItem, OutboxMethod, OutboxRow, rowToOutboxItem } from './outbox-item';
 import { uuidV4 } from './uuid';
 
-export const OUTBOX_PAYLOAD_SCHEMA_VERSION = 1;
+/**
+ * v2 (backlog/063): the `db` quantity unit was renamed to `cs` everywhere. Every pending payload
+ * that still carries `netUnit: 'db'` / `quantityUnit: 'db'` is rewritten to `'cs'` before drain —
+ * see `outbox-migrator.ts`. All other entity types get an identity step at `:1` so a stale pending
+ * write of any kind survives the version bump instead of going to ERROR.
+ */
+export const OUTBOX_PAYLOAD_SCHEMA_VERSION = 2;
 
 /** documentation/Architektúra/Backend-offline first.md §6 "Tétel-újrapróbálkozási backoff" (jitter omitted — not load-bearing for correctness). */
 const RETRY_BACKOFF_MS = [2000, 8000, 30000, 120000, 600000];

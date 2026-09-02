@@ -1068,7 +1068,20 @@ const SCHEMA_V27_STATEMENTS: string[] = [
   `CREATE INDEX IF NOT EXISTS idx_daily_step_log_log_date ON daily_step_log (log_date DESC)`,
 ];
 
-const SCHEMA_VERSION = 27;
+// backlog/063 — Mértékegység: »darab« (db) → »csomag« (cs) átnevezés. A helyi store az on-device
+// analógja a Flyway V30 migrációnak: ugyanazok az UPDATE-ek + a `food` darab-definíció mezőpárja
+// (`piece_amount` REAL, `piece_unit` TEXT; mindkettő NULL → "1 darab = 1 csomag", a C. fázis köti be).
+const SCHEMA_V28_STATEMENTS: string[] = [
+  `UPDATE food SET net_unit = 'cs' WHERE net_unit = 'db'`,
+  `UPDATE recipe_ingredient SET quantity_unit = 'cs' WHERE quantity_unit = 'db'`,
+  `UPDATE meal_item SET quantity_unit = 'cs' WHERE quantity_unit = 'db'`,
+  `UPDATE stored_food SET quantity_unit = 'cs' WHERE quantity_unit = 'db'`,
+  `UPDATE shopping_list_item SET quantity_unit = 'cs' WHERE quantity_unit = 'db'`,
+  `ALTER TABLE food ADD COLUMN piece_amount REAL`,
+  `ALTER TABLE food ADD COLUMN piece_unit TEXT`,
+];
+
+const SCHEMA_VERSION = 28;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -1098,7 +1111,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 24, statements: SCHEMA_V24_STATEMENTS },
   { toVersion: 25, statements: SCHEMA_V25_STATEMENTS },
   { toVersion: 26, statements: SCHEMA_V26_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V27_STATEMENTS },
+  { toVersion: 27, statements: SCHEMA_V27_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V28_STATEMENTS },
 ];
 
 export interface SqlTask {
