@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: f605541
 ---
 
 # Bevásárlás
@@ -55,7 +55,7 @@ Nincs nyitott kérdés.
 
 ### Frontend
 
-- Menü alatti Bevásárlás belépő; feature flag a [[Life Management 2.0]] szerint.
+- Menü alatti Bevásárlás belépő; feature flag: `menu.bevasarlas`. A flag kikapcsolása jelenleg a menüpontot rejti, de a `/tabs/menu/shopping*` route maga még nincs `featureFlagGuard` mögött (deep link elérhető marad) — tervezett: `backlog/012-feature-flag-route-guard-hianyzik-a-shopping-tasks-al-route-okon.md`.
 - Közös UI: [[Mennyiség mező]], [[Szöveges keresés]].
 
 #### Backend-offline
@@ -77,10 +77,10 @@ Műveletek (elvárás):
 
 - Aktív lista CRUD; tétel CRUD; pipa frissítés.
 - Aktív lista soft delete (`DELETE` tombstone; nem `ARCHIVED`). Idempotens. Előzmény csak `ARCHIVED` + `deleted = false`.
-- Teljesítés: atomi / tranzakcionális flow — lásd [[Bevásárlás teljesítve]] (archívum + tárolás create + opcionális új aktív lista a pipálatlanokból).
+- Teljesítés: atomi / tranzakcionális flow — lásd [[Bevásárlás teljesítve]] (archívum + tárolás create + opcionális új aktív lista a pipálatlanokból). A tárolási hely enum: `ROOM` \| `FRIDGE` \| `FREEZER` (a Business-próza „kamra" = `ROOM`).
 - Előzmény: archivált listák olvasása; újralistázás új `ACTIVE` listát hoz létre.
 
-Mennyiség egységek SSOT a [[Mennyiség mező]] szerint (`db`, `g`, `dkg`, `kg`, `l`, `dl`, `ml`).
+Mennyiség egységek SSOT a [[Mennyiség mező]] szerint; a `ShoppingListItem` `quantity_unit` szabad szöveg (nincs szerveroldali enum-kényszer), a séma doc-comment a `cl`-t is felsorolja.
 
 ### Nyitott kérdések
 

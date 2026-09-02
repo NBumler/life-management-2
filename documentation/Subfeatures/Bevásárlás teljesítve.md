@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: f605541
 ---
 
 # Bevásárlás teljesítve
@@ -22,7 +22,7 @@ A felhasználó „Bevásárlás vége” gombjára a pipált / pipálatlan tét
 A folyamat **csak** a „Bevásárlás vége” megnyomásakor indul (a pipálás önmagában nem indít semmit).
 
 1. **Pipált tételek = megvett**
-   - **Élelmiszer:** végigvezető flow:
+   - **Élelmiszer:** egy áttekintő képernyő, soronként egy pipált élelmiszer:
      - Lejárati dátum megadása / megerősítése — szabályok: [[Élelmiszer tárolás]] (előtöltés a választott / egyetlen tárolási hely katalógusbeli romlási ideje alapján; üresen hagyva abból számolunk).
      - **Tárolási hely:** az [[Élelmiszerek]] katalógusban **engedélyezett** mód = kitöltött romlási idő (kamra / hűtő / fagyasztó); üres idő = nem engedélyezett.
        - Több engedélyezett → a flow megkérdezi, hol tárolja.
@@ -42,12 +42,11 @@ Részleges teljesítés = a fenti szabályok együtt (pipált → archívum + t�
 
 ### UI/UX elvárások
 
-- „Bevásárlás vége” gomb az aktív lista nézetén ([[Bevásárlólista írás]]).
-- Wizard / lépésenkénti flow a pipált élelmiszerekre: lejárat, majd (ha kell) tárolási hely.
+- „Bevásárlás vége” gomb az aktív lista nézetén ([[Bevásárlólista írás]]), ha a listán van legalább egy tétel.
+- **Egy áttekintő képernyő** a pipált élelmiszerekre (nem szekvenciális wizard): soronként egy tétel, lejárati dátum + (ha a katalógus szerint >1 tárolási hely engedélyezett, vagy null engedélyezett) hely-választó.
 - Dátum mező előtöltése: [[Élelmiszer tárolás]].
 - Üres aktív lista: a „Bevásárlás vége” **nem** elérhető / nem indítható; az üres listát törölni kell ([[Bevásárlólista írás]] — soft delete).
 - Ha van legalább egy tétel, de mind pipálatlan: teljesítéskor nincs tárolás-lépés; az eredeti lista archiválódik, és új aktív lista jön létre a pipálatlan tételekkel (üres pipákkal).
-- Ha van pipált élelmiszer: lejárat (+ szükség szerint tárolási hely) wizard.
 
 ### Megjegyzések
 
@@ -61,7 +60,7 @@ Nincs nyitott kérdés.
 
 ### Frontend
 
-Completion wizard; navigáció / hívások az [[Élelmiszer tárolás]] create felé; új aktív lista létrehozása a pipálatlanokból; eredeti lista archiválása.
+`ShoppingListCompletePage` — egy áttekintő képernyő (`shopping-list-complete.page.ts` + `shopping-list-complete.ts` pure builder); a `db`-darabolás, hely-feloldás és lejárat-előtöltés kliensoldali; új aktív lista létrehozása a pipálatlanokból; eredeti lista archiválása. Egy outbox tétel (`entityType: 'ShoppingListComplete'`), a spun-off lista / tételek / `StoredFood` sorok saját outbox tétel nélkül.
 
 #### Backend-offline
 
@@ -81,13 +80,20 @@ Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító 
     {
       "shoppingListItemId": "uuid",
       "expirationDate": "YYYY-MM-DD",
-      "storageLocation": "PANTRY | FRIDGE | FREEZER"
+      "storageLocation": "ROOM | FRIDGE | FREEZER",
+      "storageEntryIds": ["uuid", "..."]
     }
-  ]
+  ],
+  "newActiveList": {
+    "id": "uuid | null",
+    "items": [{ "id": "uuid", "...": "…" }]
+  }
 }
 ```
 
-`checkedFoodEntries` csak a pipált **élelmiszer** tételekhez tartalmaz sort (nem-élelmiszer és pipálatlan tételek nem szerepelnek benne — azok állapotát a lista már tárolt `checked` mezői adják, a kliens ezt nem duplikálja a body-ban). `storageLocation` csak akkor kötelező mezőnként, ha a Business §-ban leírt "Null engedélyezett" ág futott (a user választott helyet); egyébként a szerver a katalógus szerinti egyetlen engedélyezett módot használja.
+(`storageEntryIds` a kliens által generált `StoredFood` id-k, `db`-darabolásnál soronként több; `newActiveList` `null`, ha nincs pipálatlan tétel.)
+
+`checkedFoodEntries` csak a pipált **élelmiszer** tételekhez tartalmaz sort (nem-élelmiszer és pipálatlan tételek nem szerepelnek benne — azok állapotát a lista már tárolt `checked` mezői adják, a kliens ezt nem duplikálja a body-ban). `storageLocation` csak akkor kötelező mezőnként, ha a katalógus szerint nem pontosan egy tárolási mód engedélyezett (a "Null engedélyezett" vagy "több engedélyezett" ág — a user választott helyet); pontosan egy engedélyezett módnál a szerver azt használja.
 
 **Válasz (200):**
 
@@ -110,7 +116,7 @@ Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító 
 
 **Kliens UUID-k:** a `newActiveListId`-t és a benne lévő új `ShoppingListItem` sorok UUID-jait **a kliens generálja** és küldi a requestben — [[Backend-offline first]] §2 (kliensoldali ID minden szinkronizált entitáson). A válasz `newActiveListId` mezője visszaigazolás, nem újonnan kiosztott azonosító; így a kliens a helyi store-ba már a mentés pillanatában beírhatja az új aktív listát, mielőtt a szerver válasza megérkezne.
 
-**Idempotencia:** a `complete` egy **atomi** végpont — [[Backend]] „Idempotencia” pontja szerint `Idempotency-Key` headerrel (az outbox tétel `id`-ja) és szerveroldali `idempotency_key` táblás replay-vel védett, ugyanúgy, mint `POST /api/shopping-lists/{id}/complete`-ra ott is hivatkozva van. Ha a queue drain közben a kérés megismétlődik (pl. app-kill a válasz előtt), a szerver a **tárolt válasz**t adja vissza újra, nem `409`-et és nem duplikált storage/lista létrehozást.
+**Idempotencia:** a `complete` egy **atomi** végpont — [[Backend]] „Idempotencia” pontja szerint `Idempotency-Key` headerrel és szerveroldali `idempotency_key` táblás replay-vel védett. A natív drain az **outbox tétel `id`-ját** küldi kulcsként; a web (online-only) útvonalon nincs outbox, ott a lista `id`-ja a kulcs. Ha a kérés megismétlődik (pl. app-kill a válasz előtt), a szerver a **tárolt választ** adja vissza újra, nem `409`-et és nem duplikált storage/lista létrehozást.
 
 Offline: [[Backend-offline first]] §11 (atomi, többentitásos művelet — egy outbox tétel).
 

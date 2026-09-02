@@ -72,8 +72,8 @@ function toSaveItem(row: ItemRow, sortOrder: number): ShoppingListItemSaveItem {
  * documentation/Subfeatures/Bevásárlólista írás.md — create + edit in one page (route param `id` is
  * either an existing list's uuid or the literal `new`), mirroring meal-edit.page.ts's shape. FOOD
  * items reuse meal-edit's inline multi-select-picker pattern; NON_FOOD is a plain inline form row.
- * The "Bevásárlás vége" entry point is deliberately not here yet — it belongs to the not-yet-built
- * Bevásárlás teljesítve flow (documentation/Subfeatures/Bevásárlás teljesítve.md).
+ * The "Bevásárlás vége" entry point is the footer button below (routerLink to `.../complete`), which
+ * drives the Bevásárlás teljesítve flow (documentation/Subfeatures/Bevásárlás teljesítve.md).
  */
 @Component({
   selector: 'app-shopping-list-editor',
