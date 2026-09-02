@@ -40,7 +40,7 @@ properties:
   quantityUnit:
     type: string
     nullable: true
-    description: 'documentation/Architektúra/Mennyiség mező.md quantity unit: db, g, dkg, kg, l, dl, cl, or ml.'
+    description: 'documentation/Architektúra/Mennyiség mező.md quantity unit: cs, g, dkg, kg, l, dl, cl, or ml.'
   checked:
     type: boolean
     description: 'documentation/Subfeatures/Bevásárlólista írás.md "pipa" — UI-only until Bevásárlás teljesítve runs.'

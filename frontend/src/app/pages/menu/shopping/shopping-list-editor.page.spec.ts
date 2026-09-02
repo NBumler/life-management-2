@@ -64,7 +64,7 @@ describe('ShoppingListEditorPage', () => {
       shoppingList({
         items: [
           { id: 'i2', shoppingListId: 'sl1', type: 'NON_FOOD', name: 'Mosószer', note: 'Lidl', checked: false, sortOrder: 1, deleted: false },
-          { id: 'i1', shoppingListId: 'sl1', type: 'FOOD', foodId: 'f1', quantityAmount: 2, quantityUnit: 'db', checked: true, sortOrder: 0, deleted: false },
+          { id: 'i1', shoppingListId: 'sl1', type: 'FOOD', foodId: 'f1', quantityAmount: 2, quantityUnit: 'cs', checked: true, sortOrder: 0, deleted: false },
           { id: 'i3', shoppingListId: 'sl1', type: 'NON_FOOD', name: 'Törölve', checked: false, sortOrder: 2, deleted: true },
         ],
       }),
@@ -182,7 +182,7 @@ describe('ShoppingListEditorPage', () => {
     fixture.componentInstance.togglePick('f1', []);
     fixture.componentInstance.confirmPicked();
     const [row] = fixture.componentInstance.items();
-    (row as { quantity: { set: (v: unknown) => void } }).quantity.set({ amount: 2, unit: 'db' });
+    (row as { quantity: { set: (v: unknown) => void } }).quantity.set({ amount: 2, unit: 'cs' });
     fixture.componentInstance.form.controls.name.setValue('Heti bevásárlás');
     repository.save.and.resolveTo(shoppingList({ id: 'new-1' }));
     const router = TestBed.inject(Router);
@@ -193,7 +193,7 @@ describe('ShoppingListEditorPage', () => {
     expect(repository.save).toHaveBeenCalledWith(
       jasmine.objectContaining({
         name: 'Heti bevásárlás',
-        items: [{ id: jasmine.any(String), type: 'FOOD', foodId: 'f1', quantityAmount: 2, quantityUnit: 'db', checked: false, sortOrder: 0 }],
+        items: [{ id: jasmine.any(String), type: 'FOOD', foodId: 'f1', quantityAmount: 2, quantityUnit: 'cs', checked: false, sortOrder: 0 }],
       }),
     );
     expect(navigateSpy).toHaveBeenCalledWith('/tabs/menu/shopping');

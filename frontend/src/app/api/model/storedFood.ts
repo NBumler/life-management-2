@@ -17,7 +17,7 @@ export interface StoredFood {
     foodId: string;
     quantityAmount: number;
     /**
-     * documentation/Architektúra/Mennyiség mező.md quantity unit: db, g, dkg, kg, l, dl, cl, or ml.
+     * documentation/Architektúra/Mennyiség mező.md quantity unit: cs, g, dkg, kg, l, dl, cl, or ml.
      */
     quantityUnit: string;
     storageLocation: StoredFood.StorageLocationEnum;

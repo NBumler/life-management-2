@@ -83,7 +83,7 @@ describe('meal-item-row', () => {
   describe('rowNeedsInput()', () => {
     it('stops asking once the mandatory fields are filled', () => {
       const food = createFoodRow('f1', injector);
-      food.quantityControl.setValue({ amount: 1, unit: 'db' });
+      food.quantityControl.setValue({ amount: 1, unit: 'cs' });
       expect(rowNeedsInput(food)).toBeFalse();
 
       const custom = createCustomRow();

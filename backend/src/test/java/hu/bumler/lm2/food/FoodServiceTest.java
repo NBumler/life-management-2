@@ -151,7 +151,7 @@ class FoodServiceTest {
 		UUID existingId = UUID.randomUUID();
 		FoodEntity existing = new FoodEntity(existingId);
 		existing.rename("Tojás", "tojás");
-		existing.setNetAmount(BigDecimal.valueOf(3), "db");
+		existing.setNetAmount(BigDecimal.valueOf(3), "cs");
 		when(repository.findByDeletedFalse()).thenReturn(List.of(existing));
 
 		UUID newId = UUID.randomUUID();

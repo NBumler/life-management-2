@@ -22,7 +22,7 @@ export interface Food {
     priceHuf?: number | null;
     netAmount?: number | null;
     /**
-     * documentation/Architektúra/Mennyiség mező.md quantity unit: db, g, dkg, kg, l, dl, cl, or ml.
+     * documentation/Architektúra/Mennyiség mező.md quantity unit: cs, g, dkg, kg, l, dl, cl, or ml.
      */
     netUnit?: string | null;
     energyKcal?: number | null;

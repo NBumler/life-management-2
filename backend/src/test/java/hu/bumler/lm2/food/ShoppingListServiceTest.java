@@ -61,7 +61,7 @@ class ShoppingListServiceTest {
 		ShoppingListItem item = new ShoppingListItem(id, listId, ShoppingListItem.TypeEnum.FOOD, false, sortOrder, false);
 		item.foodId(foodId);
 		item.quantityAmount(BigDecimal.valueOf(2));
-		item.quantityUnit("db");
+		item.quantityUnit("cs");
 		return item;
 	}
 
@@ -190,7 +190,7 @@ class ShoppingListServiceTest {
 		UUID foodId = UUID.randomUUID();
 		ShoppingListItemEntity kept = new ShoppingListItemEntity(keptId, listId, "FOOD", 0);
 		kept.setFoodId(foodId);
-		kept.setQuantity(BigDecimal.ONE, "db");
+		kept.setQuantity(BigDecimal.ONE, "cs");
 		ShoppingListItemEntity removed = new ShoppingListItemEntity(removedId, listId, "NON_FOOD", 1);
 		removed.setName("Törlendő");
 

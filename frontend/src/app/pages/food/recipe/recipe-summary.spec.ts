@@ -19,19 +19,19 @@ describe('recipe-summary', () => {
       expect(summary.incomplete).toBeFalse();
     });
 
-    it('resolves a db-unit ingredient via the catalog net content, canonicalized to grams', () => {
+    it('resolves a cs-unit ingredient via the catalog net content, canonicalized to grams', () => {
       const egg = food({ id: 'egg', energyKcal: 155, proteinG: 13, carbsG: 1, fatG: 11, priceHuf: 90, netAmount: 60, netUnit: 'g' });
-      // 3 db * 60g = 180g base amount -> (180/100)*155 = 279
-      const summary = computeRecipeSummary([{ foodId: 'egg', quantityAmount: 3, quantityUnit: 'db' }], [egg]);
+      // 3 cs * 60g = 180g base amount -> (180/100)*155 = 279
+      const summary = computeRecipeSummary([{ foodId: 'egg', quantityAmount: 3, quantityUnit: 'cs' }], [egg]);
 
       expect(summary.energyKcal).toBeCloseTo(279);
-      expect(summary.priceHuf).toBeCloseTo(270); // 3 db * 90 Ft
+      expect(summary.priceHuf).toBeCloseTo(270); // 3 cs * 90 Ft
       expect(summary.incomplete).toBeFalse();
     });
 
-    it('flags incomplete and contributes zero nutrients when a db-unit ingredient has no catalog net content', () => {
+    it('flags incomplete and contributes zero nutrients when a cs-unit ingredient has no catalog net content', () => {
       const mystery = food({ id: 'mystery', energyKcal: 200 });
-      const summary = computeRecipeSummary([{ foodId: 'mystery', quantityAmount: 2, quantityUnit: 'db' }], [mystery]);
+      const summary = computeRecipeSummary([{ foodId: 'mystery', quantityAmount: 2, quantityUnit: 'cs' }], [mystery]);
 
       expect(summary.energyKcal).toBe(0);
       expect(summary.incomplete).toBeTrue();
@@ -47,7 +47,7 @@ describe('recipe-summary', () => {
       expect(summary.incomplete).toBeTrue();
     });
 
-    it('flags incomplete and prices zero when a non-db ingredient has no catalog net content', () => {
+    it('flags incomplete and prices zero when a non-cs ingredient has no catalog net content', () => {
       const noNet = food({ id: 'no-net', priceHuf: 300 });
       const summary = computeRecipeSummary([{ foodId: 'no-net', quantityAmount: 50, quantityUnit: 'g' }], [noNet]);
 
@@ -68,7 +68,7 @@ describe('recipe-summary', () => {
       const summary = computeRecipeSummary(
         [
           { foodId: 'flour', quantityAmount: 100, quantityUnit: 'g' },
-          { foodId: 'gone', quantityAmount: 1, quantityUnit: 'db' },
+          { foodId: 'gone', quantityAmount: 1, quantityUnit: 'cs' },
         ],
         [flour],
       );
@@ -85,20 +85,20 @@ describe('recipe-summary', () => {
   });
 
   describe('formatIngredientQuantity', () => {
-    it('shows the parenthesized net-content conversion for a db amount when the catalog net content is known', () => {
+    it('shows the parenthesized net-content conversion for a cs amount when the catalog net content is known', () => {
       const egg = food({ netAmount: 60, netUnit: 'g' });
-      expect(formatIngredientQuantity(egg, 2, 'db')).toBe('2db (120g)');
+      expect(formatIngredientQuantity(egg, 2, 'cs')).toBe('2cs (120g)');
     });
 
-    it('shows just the db amount when the catalog has no net content', () => {
-      expect(formatIngredientQuantity(food(), 2, 'db')).toBe('2db');
+    it('shows just the cs amount when the catalog has no net content', () => {
+      expect(formatIngredientQuantity(food(), 2, 'cs')).toBe('2cs');
     });
 
-    it('shows just the db amount when the food itself is unknown', () => {
-      expect(formatIngredientQuantity(undefined, 2, 'db')).toBe('2db');
+    it('shows just the cs amount when the food itself is unknown', () => {
+      expect(formatIngredientQuantity(undefined, 2, 'cs')).toBe('2cs');
     });
 
-    it('never parenthesizes a non-db unit, even with known net content', () => {
+    it('never parenthesizes a non-cs unit, even with known net content', () => {
       const flour = food({ netAmount: 1000, netUnit: 'g' });
       expect(formatIngredientQuantity(flour, 200, 'g')).toBe('200g');
     });

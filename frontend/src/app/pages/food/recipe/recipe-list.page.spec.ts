@@ -45,8 +45,8 @@ describe('RecipeListPage', () => {
   it('subtitle(): reports the live ingredient count, excluding tombstoned rows', () => {
     const item = recipe({
       ingredients: [
-        { id: 'i1', recipeId: 'r1', foodId: 'f1', quantityAmount: 1, quantityUnit: 'db', sortOrder: 0, deleted: false },
-        { id: 'i2', recipeId: 'r1', foodId: 'f2', quantityAmount: 1, quantityUnit: 'db', sortOrder: 1, deleted: true },
+        { id: 'i1', recipeId: 'r1', foodId: 'f1', quantityAmount: 1, quantityUnit: 'cs', sortOrder: 0, deleted: false },
+        { id: 'i2', recipeId: 'r1', foodId: 'f2', quantityAmount: 1, quantityUnit: 'cs', sortOrder: 1, deleted: true },
       ],
     });
 

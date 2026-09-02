@@ -83,7 +83,7 @@ class ShoppingListCompleteServiceTest {
 		UUID foodId = createFoodWithNetAmount(token, "Ásványvíz", BigDecimal.valueOf(0.5), "l");
 		UUID listId = UUID.randomUUID();
 		UUID itemId = UUID.randomUUID();
-		createList(token, listId, foodItemDto(itemId, listId, foodId, BigDecimal.valueOf(3), "db", true));
+		createList(token, listId, foodItemDto(itemId, listId, foodId, BigDecimal.valueOf(3), "cs", true));
 
 		List<UUID> storageEntryIds = List.of(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
 		ShoppingListCompleteRequest request = new ShoppingListCompleteRequest(

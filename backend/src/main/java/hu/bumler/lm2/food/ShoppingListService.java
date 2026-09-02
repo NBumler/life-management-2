@@ -369,7 +369,7 @@ class ShoppingListService {
 		if (splitCount > 1) {
 			BigDecimal netAmount = food.getNetAmount();
 			rowAmount = netAmount != null ? netAmount : BigDecimal.ONE;
-			rowUnit = netAmount != null ? food.getNetUnit() : "db";
+			rowUnit = netAmount != null ? food.getNetUnit() : "cs";
 		} else {
 			rowAmount = item.getQuantityAmount();
 			rowUnit = item.getQuantityUnit();
@@ -390,13 +390,13 @@ class ShoppingListService {
 	}
 
 	/**
-	 * documentation/Subfeatures/Élelmiszer tárolás.md: a `db`-unit item splits into one storage row
-	 * per unit; every other unit is a single row. Rounded HALF_UP and floored at 1 so it can never
+	 * documentation/Subfeatures/Élelmiszer tárolás.md: a `cs`-unit item splits into one storage row
+	 * per package; every other unit is a single row. Rounded HALF_UP and floored at 1 so it can never
 	 * disagree with the client's own {@code splitCountFor()} (shopping-list-complete.ts) for any
 	 * positive amount — the editor already blocks a non-positive FOOD quantity.
 	 */
 	private static int splitCountFor(ShoppingListItemEntity item) {
-		if (!"db".equals(item.getQuantityUnit()) || item.getQuantityAmount() == null) {
+		if (!"cs".equals(item.getQuantityUnit()) || item.getQuantityAmount() == null) {
 			return 1;
 		}
 		return Math.max(1, item.getQuantityAmount().setScale(0, RoundingMode.HALF_UP).intValueExact());

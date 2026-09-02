@@ -64,9 +64,9 @@ describe('RecipeEditPage', () => {
       recipe({
         note: 'Reggelire',
         ingredients: [
-          { id: 'i2', recipeId: 'r1', foodId: 'f1', quantityAmount: 1, quantityUnit: 'db', sortOrder: 1, deleted: false },
-          { id: 'i1', recipeId: 'r1', foodId: 'f1', quantityAmount: 3, quantityUnit: 'db', sortOrder: 0, deleted: false },
-          { id: 'i3', recipeId: 'r1', foodId: 'f1', quantityAmount: 2, quantityUnit: 'db', sortOrder: 2, deleted: true },
+          { id: 'i2', recipeId: 'r1', foodId: 'f1', quantityAmount: 1, quantityUnit: 'cs', sortOrder: 1, deleted: false },
+          { id: 'i1', recipeId: 'r1', foodId: 'f1', quantityAmount: 3, quantityUnit: 'cs', sortOrder: 0, deleted: false },
+          { id: 'i3', recipeId: 'r1', foodId: 'f1', quantityAmount: 2, quantityUnit: 'cs', sortOrder: 2, deleted: true },
         ],
       }),
     ]);
@@ -76,7 +76,7 @@ describe('RecipeEditPage', () => {
     expect(fixture.componentInstance.recipeId()).toBe('r1');
     expect(fixture.componentInstance.form.controls.note.value).toBe('Reggelire');
     expect(fixture.componentInstance.ingredients().map((row) => row.id)).toEqual(['i1', 'i2']);
-    expect(fixture.componentInstance.ingredients()[0].quantity()).toEqual({ amount: 3, unit: 'db' });
+    expect(fixture.componentInstance.ingredients()[0].quantity()).toEqual({ amount: 3, unit: 'cs' });
   });
 
   it('edit mode: a stale id no longer in the repository redirects back to the list', async () => {
@@ -172,7 +172,7 @@ describe('RecipeEditPage', () => {
     fixture.componentInstance.togglePicker();
     fixture.componentInstance.toggleFoodPick(food({ id: 'a' }));
     fixture.componentInstance.confirmPicked();
-    fixture.componentInstance.ingredients()[0].quantityControl.setValue({ amount: 3, unit: 'db' });
+    fixture.componentInstance.ingredients()[0].quantityControl.setValue({ amount: 3, unit: 'cs' });
     repository.save.and.resolveTo(recipe({ id: 'new-1' }));
     const router = TestBed.inject(Router);
     const navigateSpy = spyOn(router, 'navigateByUrl').and.resolveTo(true);
@@ -182,7 +182,7 @@ describe('RecipeEditPage', () => {
     expect(repository.save).toHaveBeenCalledWith(
       jasmine.objectContaining({
         name: 'Rántotta',
-        ingredients: [{ id: jasmine.any(String), foodId: 'a', quantityAmount: 3, quantityUnit: 'db', sortOrder: 0 }],
+        ingredients: [{ id: jasmine.any(String), foodId: 'a', quantityAmount: 3, quantityUnit: 'cs', sortOrder: 0 }],
       }),
     );
     expect(navigateSpy).toHaveBeenCalledWith('/tabs/food/recipe');

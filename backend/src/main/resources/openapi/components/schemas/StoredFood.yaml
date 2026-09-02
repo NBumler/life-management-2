@@ -25,7 +25,7 @@ properties:
     type: number
   quantityUnit:
     type: string
-    description: 'documentation/Architektúra/Mennyiség mező.md quantity unit: db, g, dkg, kg, l, dl, cl, or ml.'
+    description: 'documentation/Architektúra/Mennyiség mező.md quantity unit: cs, g, dkg, kg, l, dl, cl, or ml.'
   storageLocation:
     type: string
     enum:

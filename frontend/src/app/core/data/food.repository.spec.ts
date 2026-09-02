@@ -31,7 +31,7 @@ describe('isDuplicateFood', () => {
   });
 
   it('never treats different unit families as equal, even with the same numeric amount', () => {
-    const a = food({ netAmount: 3, netUnit: 'db' });
+    const a = food({ netAmount: 3, netUnit: 'cs' });
     const b = food({ netAmount: 3, netUnit: 'g' });
     expect(isDuplicateFood(a, b)).toBe(false);
   });

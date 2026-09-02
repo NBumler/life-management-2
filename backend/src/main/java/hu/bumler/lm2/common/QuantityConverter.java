@@ -31,7 +31,7 @@ public final class QuantityConverter {
 			"dl", BigDecimal.valueOf(100),
 			"l", BigDecimal.valueOf(1000));
 
-	private static final Map<String, BigDecimal> PIECE_MULTIPLIERS = Map.of("db", BigDecimal.valueOf(1));
+	private static final Map<String, BigDecimal> PIECE_MULTIPLIERS = Map.of("cs", BigDecimal.valueOf(1));
 
 	private static final Map<String, BigDecimal> DURATION_MULTIPLIERS = Map.of(
 			"perc", BigDecimal.valueOf(1),
@@ -44,7 +44,7 @@ public final class QuantityConverter {
 	private QuantityConverter() {
 	}
 
-	/** {@code null} for a unit outside the fixed quantity unit set (db, g, dkg, kg, l, dl, cl, ml). */
+	/** {@code null} for a unit outside the fixed quantity unit set (cs, g, dkg, kg, l, dl, cl, ml). */
 	public static Family quantityFamily(String unit) {
 		if (PIECE_MULTIPLIERS.containsKey(unit)) {
 			return Family.PIECE;
@@ -58,7 +58,7 @@ public final class QuantityConverter {
 		return null;
 	}
 
-	/** Canonical base-unit amount (grams / millilitres / db) for a {@code quantity}-mode value, or {@code null} for an unknown unit. */
+	/** Canonical base-unit amount (grams / millilitres / cs) for a {@code quantity}-mode value, or {@code null} for an unknown unit. */
 	public static BigDecimal canonicalQuantityAmount(BigDecimal amount, String unit) {
 		Family family = quantityFamily(unit);
 		if (family == null) {

@@ -89,12 +89,12 @@ class RecipeIntegrationTest {
 		UUID foodId = createFood(token, "Tojás");
 		UUID firstId = UUID.randomUUID();
 		createRecipe(token,
-				recipe(firstId, "Rántotta A", List.of(ingredient(UUID.randomUUID(), firstId, foodId, BigDecimal.valueOf(3), "db", 0))))
+				recipe(firstId, "Rántotta A", List.of(ingredient(UUID.randomUUID(), firstId, foodId, BigDecimal.valueOf(3), "cs", 0))))
 				.andExpect(status().isOk());
 
 		UUID secondId = UUID.randomUUID();
 		createRecipe(token,
-				recipe(secondId, "Rántotta B", List.of(ingredient(UUID.randomUUID(), secondId, foodId, BigDecimal.valueOf(3), "db", 0))))
+				recipe(secondId, "Rántotta B", List.of(ingredient(UUID.randomUUID(), secondId, foodId, BigDecimal.valueOf(3), "cs", 0))))
 				.andExpect(status().isConflict())
 				.andExpect(jsonPath("$.code").value("UNIQUE_VIOLATION"))
 				.andExpect(jsonPath("$.field").value("ingredients"))
@@ -106,7 +106,7 @@ class RecipeIntegrationTest {
 		String token = registerAndLogin("recipe-food-missing");
 		UUID id = UUID.randomUUID();
 
-		createRecipe(token, recipe(id, "Hiányos", List.of(ingredient(UUID.randomUUID(), id, UUID.randomUUID(), BigDecimal.ONE, "db", 0))))
+		createRecipe(token, recipe(id, "Hiányos", List.of(ingredient(UUID.randomUUID(), id, UUID.randomUUID(), BigDecimal.ONE, "cs", 0))))
 				.andExpect(status().isNotFound());
 	}
 
@@ -206,7 +206,7 @@ class RecipeIntegrationTest {
 		UUID foodId = createFood(token, "Répa-recept");
 		UUID id = UUID.randomUUID();
 		UUID ingredientId = UUID.randomUUID();
-		createRecipe(token, recipe(id, "Répasaláta", List.of(ingredient(ingredientId, id, foodId, BigDecimal.valueOf(2), "db", 0))))
+		createRecipe(token, recipe(id, "Répasaláta", List.of(ingredient(ingredientId, id, foodId, BigDecimal.valueOf(2), "cs", 0))))
 				.andExpect(status().isOk());
 
 		MvcResult result = mockMvc

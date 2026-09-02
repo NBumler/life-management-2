@@ -42,8 +42,8 @@ class QuantityConverterTest {
 
 	@Test
 	void numericallyEqualAmountsInDifferentFamiliesAreNeverEqual() {
-		// documentation/Architektúra/Mennyiség mező.md: "egy 3db és egy 3g érték soha nem egyenlő".
-		assertThat(QuantityConverter.quantitiesEqual(BigDecimal.valueOf(3), "db", BigDecimal.valueOf(3), "g")).isFalse();
+		// documentation/Architektúra/Mennyiség mező.md: "egy 3cs és egy 3g érték soha nem egyenlő".
+		assertThat(QuantityConverter.quantitiesEqual(BigDecimal.valueOf(3), "cs", BigDecimal.valueOf(3), "g")).isFalse();
 	}
 
 	@Test

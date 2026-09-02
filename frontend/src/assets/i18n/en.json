@@ -576,7 +576,7 @@
   "SHARED": {
     "QUANTITY_INPUT": {
       "HELP_TITLE": "How to enter this",
-      "HELP_QUANTITY": "Type a number and a unit, the space is optional. Example: 120dkg, 3 db, 2l, 5cl.",
+      "HELP_QUANTITY": "Type a number and a unit, the space is optional. Example: 120dkg, 3 cs, 2l, 5cl.",
       "HELP_DURATION": "Type a number and a time unit. Example: 14nap, 2 hét, 3hó.",
       "PLACEHOLDER_QUANTITY": "e.g. 120 dkg",
       "PLACEHOLDER_DURATION": "e.g. 2 weeks",

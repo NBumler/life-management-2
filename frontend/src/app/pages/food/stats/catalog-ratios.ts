@@ -30,11 +30,11 @@ export function computeRatio(numerator: number | null | undefined, denominator: 
 
 /**
  * documentation/Subfeatures/Kaja statisztika.md "Bázis mennyiség": `ár_per_100 = priceHuf × (100 /
- * nettó_baseAmount)`. A `db`-unit net content has no weight/volume dimension to scale to "per 100
+ * nettó_baseAmount)`. A `cs`-unit net content has no weight/volume dimension to scale to "per 100
  * g/ml" — same exclusion `recipe-summary.ts`'s `priceContribution` already applies for the same reason.
  */
 export function pricePer100(food: Food): number | null {
-  if (food.priceHuf == null || food.netAmount == null || food.netUnit == null || food.netUnit === 'db') {
+  if (food.priceHuf == null || food.netAmount == null || food.netUnit == null || food.netUnit === 'cs') {
     return null;
   }
   const netBase = canonicalQuantityAmount(food.netAmount, food.netUnit as QuantityUnit);
@@ -59,8 +59,8 @@ function foodRatio(food: Food, metric: RatioMetric): number | null {
  * documentation/Subfeatures/Kaja statisztika.md "Bázis mennyiség" — the recipe's price normalized to
  * a per-100 g/ml basis, so PROTEIN_PER_PRICE ranks recipes on the same scale `pricePer100` puts
  * foods on (whole-recipe HUF vs per-100 HUF would be an apples-to-oranges rank across the two
- * segments). Null — "hiányos" — when the recipe has no weight/volume dimension (all-`db`, no net
- * content), mirroring `pricePer100`'s own `db` exclusion.
+ * segments). Null — "hiányos" — when the recipe has no weight/volume dimension (all-`cs`, no net
+ * content), mirroring `pricePer100`'s own `cs` exclusion.
  */
 function recipePricePer100(summary: RecipeSummary): number | null {
   if (summary.baseAmountG === 0) {

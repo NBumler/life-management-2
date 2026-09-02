@@ -36,7 +36,7 @@ describe('partitionItems', () => {
 
 describe('splitCountFor', () => {
   it('returns the rounded amount for a db-unit item', () => {
-    expect(splitCountFor(foodItem({ quantityAmount: 3, quantityUnit: 'db' }))).toBe(3);
+    expect(splitCountFor(foodItem({ quantityAmount: 3, quantityUnit: 'cs' }))).toBe(3);
   });
 
   it('returns 1 for any other unit, regardless of amount', () => {
@@ -46,7 +46,7 @@ describe('splitCountFor', () => {
 
 describe('buildCompleteDraft', () => {
   it('expands a db-unit checked item into one storageEntryId/storageEntry per unit', () => {
-    const item = foodItem({ id: 'i1', checked: true, quantityAmount: 3, quantityUnit: 'db' });
+    const item = foodItem({ id: 'i1', checked: true, quantityAmount: 3, quantityUnit: 'cs' });
     const input: CheckedFoodWizardInput = { item, expirationDate: '2026-09-01', storageLocation: 'FRIDGE', foodNetAmount: 0.5, foodNetUnit: 'l' };
 
     const draft = buildCompleteDraft('sl1', [item], [input]);
@@ -57,12 +57,12 @@ describe('buildCompleteDraft', () => {
   });
 
   it('falls back to 1 db when the catalog has no net amount for a db-unit split', () => {
-    const item = foodItem({ id: 'i1', checked: true, quantityAmount: 2, quantityUnit: 'db' });
+    const item = foodItem({ id: 'i1', checked: true, quantityAmount: 2, quantityUnit: 'cs' });
     const input: CheckedFoodWizardInput = { item, expirationDate: '2026-09-01', storageLocation: 'ROOM', foodNetAmount: null, foodNetUnit: null };
 
     const draft = buildCompleteDraft('sl1', [item], [input]);
 
-    expect(draft.storageEntries.every((entry) => entry.quantityAmount === 1 && entry.quantityUnit === 'db')).toBeTrue();
+    expect(draft.storageEntries.every((entry) => entry.quantityAmount === 1 && entry.quantityUnit === 'cs')).toBeTrue();
   });
 
   it('a non-db unit produces exactly one storage entry using the item\'s own quantity', () => {

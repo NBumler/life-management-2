@@ -38,7 +38,7 @@ describe('pricePer100', () => {
   });
 
   it('is null for a db-unit net content (no weight/volume dimension to scale to 100)', () => {
-    expect(pricePer100(food({ priceHuf: 200, netAmount: 4, netUnit: 'db' }))).toBeNull();
+    expect(pricePer100(food({ priceHuf: 200, netAmount: 4, netUnit: 'cs' }))).toBeNull();
   });
 });
 

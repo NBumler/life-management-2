@@ -7,7 +7,7 @@ import { afterOpeningDuration, computeOpenedExpiry } from './shelf-life';
  * documentation/Subfeatures/Élelmiszer tárolás.md "Készletcsökkenés étkezéskor" — pure client-side
  * FIFO/opened-first consumption plan, called from Meal creation (RECIPE/FOOD items only; CUSTOM
  * never touches storage). `demandCanonical` is per-`foodId`, already summed across every item in the
- * meal and expressed in that food's canonical base unit (g/ml/db) — the caller (`MealRepository`)
+ * meal and expressed in that food's canonical base unit (g/ml/cs) — the caller (`MealRepository`)
  * is responsible for that conversion via `shared/quantity.ts`'s `canonicalQuantityAmount`.
  *
  * Rules (numbered as in the spec):

@@ -109,7 +109,7 @@ class RecipeServiceTest {
 		RecipeEntity conflict = recipe(conflictId, "Rántotta 2");
 		when(repository.findByDeletedFalse()).thenReturn(List.of(conflict));
 		when(ingredientRepository.findByRecipeIdInAndDeletedFalse(List.of(conflictId))).thenReturn(List.of(
-				ingredient(UUID.randomUUID(), conflictId, foodB, BigDecimal.valueOf(2), "db", 0),
+				ingredient(UUID.randomUUID(), conflictId, foodB, BigDecimal.valueOf(2), "cs", 0),
 				ingredient(UUID.randomUUID(), conflictId, foodA, BigDecimal.valueOf(100), "g", 1)));
 
 		UUID id = UUID.randomUUID();
@@ -118,7 +118,7 @@ class RecipeServiceTest {
 
 		// Same pairs, opposite order — the set comparison must be order-independent.
 		RecipeIngredient ingA = new RecipeIngredient(UUID.randomUUID(), id, foodA, BigDecimal.valueOf(100), "g", 0, false);
-		RecipeIngredient ingB = new RecipeIngredient(UUID.randomUUID(), id, foodB, BigDecimal.valueOf(2), "db", 1, false);
+		RecipeIngredient ingB = new RecipeIngredient(UUID.randomUUID(), id, foodB, BigDecimal.valueOf(2), "cs", 1, false);
 		Recipe dto = new Recipe(id, "Rántotta", false, List.of(ingA, ingB));
 
 		assertThatThrownBy(() -> service.create(dto))
@@ -173,7 +173,7 @@ class RecipeServiceTest {
 		UUID keptFoodId = UUID.randomUUID();
 		UUID removedFoodId = UUID.randomUUID();
 		UUID newFoodId = UUID.randomUUID();
-		RecipeIngredientEntity kept = ingredient(keptId, recipeId, keptFoodId, BigDecimal.valueOf(2), "db", 0);
+		RecipeIngredientEntity kept = ingredient(keptId, recipeId, keptFoodId, BigDecimal.valueOf(2), "cs", 0);
 		RecipeIngredientEntity removed = ingredient(removedId, recipeId, removedFoodId, BigDecimal.ONE, "dl", 1);
 
 		when(repository.findById(recipeId)).thenReturn(Optional.of(existing));
@@ -182,7 +182,7 @@ class RecipeServiceTest {
 		liveFood(newFoodId);
 
 		UUID newIngredientId = UUID.randomUUID();
-		RecipeIngredient keptDto = new RecipeIngredient(keptId, recipeId, keptFoodId, BigDecimal.valueOf(2), "db", 1, false);
+		RecipeIngredient keptDto = new RecipeIngredient(keptId, recipeId, keptFoodId, BigDecimal.valueOf(2), "cs", 1, false);
 		RecipeIngredient newDto = new RecipeIngredient(newIngredientId, recipeId, newFoodId, BigDecimal.TEN, "dkg", 0, false);
 		Recipe dto = new Recipe(recipeId, "Rántotta", false, List.of(newDto, keptDto));
 
@@ -215,7 +215,7 @@ class RecipeServiceTest {
 		when(ingredientRepository.existsById(foreignIngredientId)).thenReturn(true);
 		liveFood(victimFoodId);
 
-		RecipeIngredient hijackDto = new RecipeIngredient(foreignIngredientId, myRecipeId, victimFoodId, BigDecimal.ONE, "db", 0, false);
+		RecipeIngredient hijackDto = new RecipeIngredient(foreignIngredientId, myRecipeId, victimFoodId, BigDecimal.ONE, "cs", 0, false);
 		Recipe dto = new Recipe(myRecipeId, "Rántotta", false, List.of(hijackDto));
 
 		assertThatThrownBy(() -> service.update(myRecipeId, dto)).isInstanceOf(EntityNotFoundException.class);
@@ -230,14 +230,14 @@ class RecipeServiceTest {
 		UUID recipeId = UUID.randomUUID();
 		RecipeEntity existing = recipe(recipeId, "Rántotta");
 		UUID foodId = UUID.randomUUID();
-		RecipeIngredientEntity tombstoned = ingredient(UUID.randomUUID(), recipeId, foodId, BigDecimal.ONE, "db", 0);
+		RecipeIngredientEntity tombstoned = ingredient(UUID.randomUUID(), recipeId, foodId, BigDecimal.ONE, "cs", 0);
 		tombstoned.softDelete();
 
 		when(repository.findById(recipeId)).thenReturn(Optional.of(existing));
 		when(ingredientRepository.findByRecipeId(recipeId)).thenReturn(List.of(tombstoned));
 		liveFood(foodId);
 
-		RecipeIngredient dto = new RecipeIngredient(tombstoned.getId(), recipeId, foodId, BigDecimal.ONE, "db", 0, false);
+		RecipeIngredient dto = new RecipeIngredient(tombstoned.getId(), recipeId, foodId, BigDecimal.ONE, "cs", 0, false);
 		service.update(recipeId, new Recipe(recipeId, "Rántotta", false, List.of(dto)));
 
 		assertThat(tombstoned.isDeleted()).isFalse();
@@ -281,7 +281,7 @@ class RecipeServiceTest {
 	void delete_softDeletesRecipeAndCascadesToLiveIngredients() {
 		UUID id = UUID.randomUUID();
 		RecipeEntity existing = recipe(id, "Rántotta");
-		RecipeIngredientEntity liveIngredient = ingredient(UUID.randomUUID(), id, UUID.randomUUID(), BigDecimal.ONE, "db", 0);
+		RecipeIngredientEntity liveIngredient = ingredient(UUID.randomUUID(), id, UUID.randomUUID(), BigDecimal.ONE, "cs", 0);
 		when(repository.findById(id)).thenReturn(Optional.of(existing));
 		when(ingredientRepository.findByRecipeIdAndDeletedFalse(id)).thenReturn(List.of(liveIngredient));
 		when(ingredientRepository.findByRecipeId(id)).thenReturn(List.of(liveIngredient));

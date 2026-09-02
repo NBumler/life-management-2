@@ -8,7 +8,7 @@ import { MealItemSaveItem } from '../../../core/storage/storage-backend';
  * documentation/Subfeatures/Étkezés.md "Tétel — közös" / [[Recept forrású étkezés]] / [[Élelmiszer
  * forrású étkezés]] / [[Egyéni forrású étkezés]] — one item's effective (servings-multiplied)
  * macros/price, live against the current Recipe/Food catalog snapshot. Reuses
- * `recipe-summary.ts`'s per-100g/db scaling model for RECIPE (the recipe's own live ingredient sum
+ * `recipe-summary.ts`'s per-100g/cs scaling model for RECIPE (the recipe's own live ingredient sum
  * × servings) and FOOD (a single-ingredient sum × servings) — CUSTOM never touches the catalog.
  */
 export interface MealItemEffective {

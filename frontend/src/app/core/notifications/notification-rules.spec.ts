@@ -16,7 +16,7 @@ function storedFood(overrides: Partial<StoredFood>): StoredFood {
     id: 'sf-1',
     foodId: 'food-1',
     quantityAmount: 1,
-    quantityUnit: 'db',
+    quantityUnit: 'cs',
     storageLocation: StoredFood.StorageLocationEnum.Fridge,
     expiresOn: '2026-09-10',
     opened: false,

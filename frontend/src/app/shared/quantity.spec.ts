@@ -32,7 +32,7 @@ describe('fromCanonicalQuantityAmount', () => {
     ['ml', 400],
     ['dl', 3],
     ['l', 2],
-    ['db', 5],
+    ['cs', 5],
   ];
   for (const [unit, amount] of cases) {
     it(`round-trips ${amount}${unit} through canonical and back`, () => {
@@ -44,7 +44,8 @@ describe('fromCanonicalQuantityAmount', () => {
 describe('parseQuantityInput', () => {
   const quantityExamples: [string, number, QuantityUnit][] = [
     ['120dkg', 120, 'dkg'],
-    ['3db', 3, 'db'],
+    ['3cs', 3, 'cs'],
+    ['2 csomag', 2, 'cs'],
     ['2l', 2, 'l'],
     ['1.5kg', 1.5, 'kg'],
     ['5cl', 5, 'cl'],
@@ -105,7 +106,7 @@ describe('quantitiesEqual', () => {
   });
 
   it('never treats different unit families as equal, even with the same numeric amount', () => {
-    expect(quantitiesEqual({ amount: 3, unit: 'db' }, { amount: 3, unit: 'g' })).toBe(false);
+    expect(quantitiesEqual({ amount: 3, unit: 'cs' }, { amount: 3, unit: 'g' })).toBe(false);
   });
 
   it('treats both-missing as equal', () => {

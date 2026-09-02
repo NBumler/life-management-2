@@ -9,7 +9,7 @@
  */
 
 export type QuantityMode = 'quantity' | 'duration';
-export type QuantityUnit = 'db' | 'g' | 'dkg' | 'kg' | 'l' | 'dl' | 'cl' | 'ml';
+export type QuantityUnit = 'cs' | 'g' | 'dkg' | 'kg' | 'l' | 'dl' | 'cl' | 'ml';
 export type DurationUnit = 'perc' | 'óra' | 'nap' | 'hét' | 'hó' | 'év';
 export type QuantityFamily = 'weight' | 'volume' | 'piece' | 'time';
 
@@ -20,7 +20,15 @@ export interface ParsedQuantity<U extends string = QuantityUnit | DurationUnit> 
 
 export class QuantityParseError extends Error {}
 
-const QUANTITY_UNITS: readonly QuantityUnit[] = ['db', 'g', 'dkg', 'kg', 'l', 'dl', 'cl', 'ml'];
+const QUANTITY_UNITS: readonly QuantityUnit[] = ['cs', 'g', 'dkg', 'kg', 'l', 'dl', 'cl', 'ml'];
+
+/**
+ * documentation/Architektúra/Mennyiség mező.md "Támogatott egységek — quantity": alias → canonical
+ * unit, case-insensitive. Only the piece family has an alias so far (`csomag` → `cs`).
+ */
+const QUANTITY_ALIASES: Record<string, QuantityUnit> = {
+  csomag: 'cs',
+};
 
 /** documentation/Architektúra/Mennyiség mező.md "Támogatott egységek — duration": alias → canonical unit, case-insensitive. */
 const DURATION_ALIASES: Record<string, DurationUnit> = {
@@ -48,7 +56,7 @@ const DURATION_ALIASES: Record<string, DurationUnit> = {
 
 export const QUANTITY_WEIGHT_MULTIPLIERS: Record<string, number> = { g: 1, dkg: 10, kg: 1000 };
 export const QUANTITY_VOLUME_MULTIPLIERS: Record<string, number> = { ml: 1, cl: 10, dl: 100, l: 1000 };
-export const QUANTITY_PIECE_MULTIPLIERS: Record<string, number> = { db: 1 };
+export const QUANTITY_PIECE_MULTIPLIERS: Record<string, number> = { cs: 1 };
 export const DURATION_MULTIPLIERS: Record<string, number> = { perc: 1, óra: 60, nap: 1440, hét: 10080, hó: 43200, év: 525600 };
 
 const INPUT_PATTERN = /^(-?\d+(?:[.,]\d+)?)\s*([a-zA-Zóőúűáéíöü]+)$/;
@@ -88,7 +96,10 @@ export function formatQuantityValue(value: ParsedQuantity): string {
 }
 
 function resolveQuantityUnit(rawUnit: string): QuantityUnit | null {
-  return (QUANTITY_UNITS as readonly string[]).includes(rawUnit) ? (rawUnit as QuantityUnit) : null;
+  if ((QUANTITY_UNITS as readonly string[]).includes(rawUnit)) {
+    return rawUnit as QuantityUnit;
+  }
+  return QUANTITY_ALIASES[rawUnit] ?? null;
 }
 
 function resolveDurationUnit(rawUnit: string): DurationUnit | null {
@@ -96,7 +107,7 @@ function resolveDurationUnit(rawUnit: string): DurationUnit | null {
 }
 
 export function quantityFamily(unit: QuantityUnit): QuantityFamily {
-  if (unit === 'db') {
+  if (unit === 'cs') {
     return 'piece';
   }
   if (unit in QUANTITY_WEIGHT_MULTIPLIERS) {
@@ -111,7 +122,7 @@ export function canonicalQuantityAmount(amount: number, unit: QuantityUnit): num
   return amount * multipliers[unit];
 }
 
-/** Inverse of {@link canonicalQuantityAmount}: a canonical (g/ml/db) amount back into `unit`. */
+/** Inverse of {@link canonicalQuantityAmount}: a canonical (g/ml/cs) amount back into `unit`. */
 export function fromCanonicalQuantityAmount(canonicalAmount: number, unit: QuantityUnit): number {
   const family = quantityFamily(unit);
   const multipliers = family === 'weight' ? QUANTITY_WEIGHT_MULTIPLIERS : family === 'volume' ? QUANTITY_VOLUME_MULTIPLIERS : QUANTITY_PIECE_MULTIPLIERS;

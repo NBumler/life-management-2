@@ -31,7 +31,7 @@ describe('isDuplicateRecipe', () => {
     const existing = recipe({
       name: 'Rántotta A',
       ingredients: [
-        { id: 'i1', recipeId: 'r1', foodId: 'egg', quantityAmount: 3, quantityUnit: 'db', sortOrder: 0, deleted: false },
+        { id: 'i1', recipeId: 'r1', foodId: 'egg', quantityAmount: 3, quantityUnit: 'cs', sortOrder: 0, deleted: false },
         { id: 'i2', recipeId: 'r1', foodId: 'milk', quantityAmount: 100, quantityUnit: 'ml', sortOrder: 1, deleted: false },
       ],
     });
@@ -40,7 +40,7 @@ describe('isDuplicateRecipe', () => {
       name: 'Rántotta B',
       ingredients: [
         { foodId: 'milk', quantityAmount: 100, quantityUnit: 'ml' },
-        { foodId: 'egg', quantityAmount: 3, quantityUnit: 'db' },
+        { foodId: 'egg', quantityAmount: 3, quantityUnit: 'cs' },
       ],
     };
     expect(isDuplicateRecipe(existing, draft)).toBeTrue();
@@ -50,20 +50,20 @@ describe('isDuplicateRecipe', () => {
     const existing = recipe({
       name: 'Rántotta A',
       ingredients: [
-        { id: 'i1', recipeId: 'r1', foodId: 'egg', quantityAmount: 3, quantityUnit: 'db', sortOrder: 0, deleted: false },
+        { id: 'i1', recipeId: 'r1', foodId: 'egg', quantityAmount: 3, quantityUnit: 'cs', sortOrder: 0, deleted: false },
         { id: 'i2', recipeId: 'r1', foodId: 'milk', quantityAmount: 100, quantityUnit: 'ml', sortOrder: 1, deleted: true },
       ],
     });
-    const draft = { id: 'other', name: 'Rántotta B', ingredients: [{ foodId: 'egg', quantityAmount: 3, quantityUnit: 'db' }] };
+    const draft = { id: 'other', name: 'Rántotta B', ingredients: [{ foodId: 'egg', quantityAmount: 3, quantityUnit: 'cs' }] };
     expect(isDuplicateRecipe(existing, draft)).toBeTrue();
   });
 
   it('does not match when a single ingredient amount differs', () => {
     const existing = recipe({
       name: 'Rántotta A',
-      ingredients: [{ id: 'i1', recipeId: 'r1', foodId: 'egg', quantityAmount: 3, quantityUnit: 'db', sortOrder: 0, deleted: false }],
+      ingredients: [{ id: 'i1', recipeId: 'r1', foodId: 'egg', quantityAmount: 3, quantityUnit: 'cs', sortOrder: 0, deleted: false }],
     });
-    const draft = { id: 'other', name: 'Rántotta B', ingredients: [{ foodId: 'egg', quantityAmount: 4, quantityUnit: 'db' }] };
+    const draft = { id: 'other', name: 'Rántotta B', ingredients: [{ foodId: 'egg', quantityAmount: 4, quantityUnit: 'cs' }] };
     expect(isDuplicateRecipe(existing, draft)).toBeFalse();
   });
 });
@@ -183,7 +183,7 @@ describe('RecipeRepository caching', () => {
   it('an unchanged reload does not replace the signal — even when an ingredient version is stable', async () => {
     configure(false);
     storage.listRecipes.and.resolveTo([
-      recipe({ id: 'a', name: 'Alma torta', ingredients: [{ id: 'i1', recipeId: 'a', foodId: 'f1', quantityAmount: 1, quantityUnit: 'db', sortOrder: 0, deleted: false }] }),
+      recipe({ id: 'a', name: 'Alma torta', ingredients: [{ id: 'i1', recipeId: 'a', foodId: 'f1', quantityAmount: 1, quantityUnit: 'cs', sortOrder: 0, deleted: false }] }),
     ]);
 
     await repository.load();
@@ -196,13 +196,13 @@ describe('RecipeRepository caching', () => {
   it('reload() picks up an ingredient-only change (nested aggregate)', async () => {
     configure(true);
     storage.listRecipes.and.resolveTo([
-      recipe({ id: 'a', name: 'Alma torta', ingredients: [{ id: 'i1', recipeId: 'a', foodId: 'f1', quantityAmount: 1, quantityUnit: 'db', sortOrder: 0, deleted: false, updatedAt: 'v1' }] }),
+      recipe({ id: 'a', name: 'Alma torta', ingredients: [{ id: 'i1', recipeId: 'a', foodId: 'f1', quantityAmount: 1, quantityUnit: 'cs', sortOrder: 0, deleted: false, updatedAt: 'v1' }] }),
     ]);
     await repository.load();
     const firstReference = repository.items();
 
     storage.listRecipes.and.resolveTo([
-      recipe({ id: 'a', name: 'Alma torta', ingredients: [{ id: 'i1', recipeId: 'a', foodId: 'f1', quantityAmount: 2, quantityUnit: 'db', sortOrder: 0, deleted: false, updatedAt: 'v2' }] }),
+      recipe({ id: 'a', name: 'Alma torta', ingredients: [{ id: 'i1', recipeId: 'a', foodId: 'f1', quantityAmount: 2, quantityUnit: 'cs', sortOrder: 0, deleted: false, updatedAt: 'v2' }] }),
     ]);
     await repository.reload();
 

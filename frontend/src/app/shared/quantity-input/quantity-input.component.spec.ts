@@ -144,8 +144,8 @@ describe('QuantityInputComponent', () => {
 
     it('activeUnit() reports the current parsed unit for chip highlighting', () => {
       expect(fixture.componentInstance.activeUnit()).toBeNull();
-      fixture.componentInstance.onInput('3db');
-      expect(fixture.componentInstance.activeUnit()).toBe('db');
+      fixture.componentInstance.onInput('3cs');
+      expect(fixture.componentInstance.activeUnit()).toBe('cs');
     });
   });
 });
