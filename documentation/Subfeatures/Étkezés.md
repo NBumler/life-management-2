@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-02
-verifikalt_commit: 65c3b52
+verifikalt_commit: d67c348
 ---
 
 # Étkezés
@@ -105,6 +105,8 @@ ID + mennyiség/szorzó; tápanyag az aktuális katalógusból. Katalógus-téte
 - Kaja: Étkezés dashboard (fenti vékony layout).
 - Fejléc: **Étkezés rögzítése**.
 - Űrlap: időpont, megjegyzés, tételek; mentés footer; iOS `16px`.
+- Tétellista: kompakt, csak-olvasható összegző sorok (cím + „mennyiség · adagszorzó · effektív kcal/ár"). A sorra koppintva teljes képernyős tétel-szerkesztő modal nyílik; átrendezés fel/le nyíllal (natív, egymás alatt) vagy fogantyúval (web), törlés a soron. Hiányos tétel a mentés blokkolásakor jelölést kap.
+- Tétel-szerkesztő modal: soronként egy mező (a mennyiség mező teljes szélességű), `servings` lépegetővel (± 0,5, kézzel is írható), élő effektív kcal/ár előnézet. „Kész" gomb csak érvényes soron aktív; háttérre koppintva a sor „hiányos" marad. Picker-megerősítés / egyéni tétel hozzáadása után a modal automatikusan felnyílik az első kitöltésre váró új tételre (FOOD → mennyiség, CUSTOM → név + kalória; RECIPE nem, mert `servings` = 1 alapból).
 
 ### Megjegyzések
 
@@ -121,6 +123,7 @@ Nincs nyitott kérdés.
 - Dashboard: dátum + 4 progress bar + ár + lista; színlogika pure TS.
 - Cél / maintenance / activity: [[Tápérték kalkulátor]] utility / store.
 - Élő tételösszegzés; DateTime modul.
+- Étkezés szerkesztő: a tétel-sor modell (`meal-item-row.ts` — RECIPE/FOOD/CUSTOM signal-mezőkkel, `toSaveItem` / `buildRowFromDto` / factory-k / `isRowComplete` / `rowNeedsInput`) megosztva a `reorder-list` összegző lista és a `MealItemEditorComponent` modal között; a modal ugyanazt a sor-objektumot mutálja, amit a lista mutat.
 
 #### Backend-offline
 
