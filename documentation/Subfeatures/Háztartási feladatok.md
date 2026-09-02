@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: 8819b52
 ---
 
 # Háztartási feladatok
@@ -19,7 +19,9 @@ Lakás körüli, helyiséghez kötött, ismétlődő teendők. A Feladatok tabon
 
 **Ownership:** **user-owned** — [[Bejelentkezés]].
 
-**Nem scope (MVP):** kapcsolat [[Élet tervek]]kel; egyszeri (nem ismétlődő) feladat; heti-nap / havi / szezonális ritmus; skip / snooze / szünet / undo; duplikálás; seed helyiségek; teljes elvégzés-előzmény lista; kapacitás-tervező (napi perc/energia keret); lead time az értesítésen (előző este / N nappal korábban); undelete UI.
+A ritmusmodell jelenleg egyetlen `intervalDays` szám; nincs egyszeri feladat, heti-nap / havi / szezonális ritmus, skip / snooze / szünet / undo, duplikálás, seed helyiség, kapacitás-tervező, értesítés lead time, undelete UI, és nincs kapcsolat az [[Élet tervek]]kel.
+
+> Tervezett: `backlog/060-haztartasi-feladatok-post-mvp-bovitmenyek.md`
 
 ### Funkcionális leírás
 
@@ -114,7 +116,7 @@ Tap az előfordulásra → feladat részletek / szerkesztő. Pipálás a naptár
 
 #### Értesítések
 
-Aktív típus: `HOUSEHOLD_TASK_DUE` — szabályok SSOT: [[Értesítések]]. Röviden: napi **09:00** digest, `nextDue ≤ ma` élő feladatok, 1 / naptári nap; 0 találat → nincs értesítés; tap → ez a lista Lejárt+Ma. A naptár 10 előfordulása **nem** 10 értesítés.
+Aktív típus: `HOUSEHOLD_TASK_DUE` — szabályok SSOT: [[Értesítések]]. Röviden: napi **09:00** digest, `nextDue ≤ ma` élő feladatok, 1 / naptári nap; 0 találat → nincs értesítés; tap → ez a lista (`/tabs/tasks/household`, ahol a Lejárt és a Ma szekció felül van). A naptár 10 előfordulása **nem** 10 értesítés.
 
 #### Törlés (soft delete) — közös
 
@@ -139,6 +141,11 @@ HTTP `DELETE` a szerződésben marad; a szerver tombstone-t ír, nem fizikai dro
 ### Megjegyzések
 
 A Feladatok tab IA (hub vs közvetlen lista) a [[Tennivalók]] speché. Ez a spec a háztartási CRUD + naptár-producer + értesítés-forrás.
+
+#### Tudatos korlát
+
+- **Egy feladat = egy helyiség.** Nincs több helyiséghez rendelt egyetlen sor; a multi-room create N független `HouseholdTask` sort hoz létre, amelyek ezután egymástól függetlenül gördülnek.
+- **Nincs teljes elvégzés-előzmény napló** — csak a `lastCompletedAt` (utolsó pipálás) van tárolva.
 
 ### Nyitott kérdések
 

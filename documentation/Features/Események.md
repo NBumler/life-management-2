@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: 8819b52
 ---
 
 # Események
@@ -19,7 +19,9 @@ Saját, user-owned naptári események: egyszeri vagy egyszerűen ismétlődő, 
 
 **Ownership:** **user-owned** — [[Bejelentkezés]].
 
-**Nem scope (MVP):** [[Google Calendar szinkronizálása]] (a spec `Kész` — egyirányú export —, de a flag az első körben ki); naptárból create; hónap-rácson timed sáv; „csak ez az előfordulás” / kivételek; többnapos / éjfélen átnyúló esemény; RRULE (havi, heti napok mix, COUNT); skip / snooze / undo; duplikálás; vendégek; eseményenkénti lead time; seed.
+A ritmusmodell jelenleg `DAILY` / `WEEKLY` / `YEARLY` + skalár `interval`; nincs havi / heti-napok-mix / `COUNT` RRULE, nincs többnapos / éjfélen átnyúló esemény, nincs „csak ez az előfordulás" / instance-kivétel, nincs naptárból create, hónap-rácson timed sáv, skip / snooze / undo, duplikálás, vendéglista, eseményenkénti lead time, seed. A [[Google Calendar szinkronizálása]] export sincs implementálva.
+
+> Tervezett: `backlog/061-esemenyek-post-mvp-bovitmenyek.md`; Google export: `backlog/001-google-calendar-export.md`
 
 A create/edit űrlap mezői itt élnek; a [[Új esemény hozzáadása]] erre a specre mutat.
 
@@ -105,7 +107,7 @@ HTTP `DELETE` marad; a szerver tombstone-t ír. Már törölt ID-re `DELETE` →
 - Üres állapot (nincs élő esemény): CTA új eseményre.
 - Create / edit: lásd [[Új esemény hozzáadása]] + alább.
 - Törlés: confirmation; ismétlődőnél sorozat-figyelmeztetés.
-- Fejléc belépő: **Google export** beállítás, ha a `feladatok.googleExport` flag be van kapcsolva ([[Google Calendar szinkronizálása]], [[Frontend]]).
+- Fejléc belépő: **Google export** beállítás — a `feladatok.googleExport` flag jelenleg `false`, a belépő nincs bekötve; tervezett: `backlog/001-google-calendar-export.md` ([[Google Calendar szinkronizálása]], [[Frontend]]).
 
 #### Create / edit űrlap
 
@@ -119,7 +121,11 @@ HTTP `DELETE` marad; a szerver tombstone-t ír. Már törölt ID-re `DELETE` →
 
 ### Megjegyzések
 
-A Feladatok tab csempéi: [[Tennivalók]]. A naptár fogyasztói szerződés: [[Naptár]]. Google: [[Google Calendar szinkronizálása]] — **egyirányú export** (LM2 → Google), az itteni sor a forrás; a Google-oldali szerkesztés felülíródik. Az entitást és a végpontokat az export **nem** érinti (device-local export-állapot).
+A Feladatok tab csempéi: [[Tennivalók]]. A naptár fogyasztói szerződés: [[Naptár]]. Google: [[Google Calendar szinkronizálása]] — tervezett egyirányú export (`backlog/001-google-calendar-export.md`), egyelőre nincs implementálva.
+
+#### Tudatos korlát
+
+Az esemény ideje **falóra**-szemantikájú a `date` napján (nincs külön TZ-mező); DST-váltás mellett a 15:00 marad 15:00. Több eszköz eltérő időzónában ugyanazt a falórát látja.
 
 ### Nyitott kérdések
 

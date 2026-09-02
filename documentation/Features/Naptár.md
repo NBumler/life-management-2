@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: 8819b52
 ---
 
 # Naptár
@@ -19,7 +19,9 @@ Aggregált naptár: a producer-feature-ök előfordulásait mutatja. Belépés: 
 
 **Ownership:** nincs saját adat; a producer entitások **user-owned** — [[Bejelentkezés]].
 
-**Nem scope (MVP):** nap / hét rács; év nézet; hét számok; húzással átütemezés; kereső; naptárból create; hónap-rácson időzített sáv (az idő a napi listán); Google Calendar; utolsó nézett hónap / szűrő megjegyzése eszközön; lead-time értesítés a naptár előfordulásairól (háztartási digest / esemény: [[Értesítések]]).
+Jelenleg két nézet van (hónap rács + napi lista); nincs nap / hét rács, év nézet, hét számok, húzással átütemezés, kereső, naptárból create, hónap-rácson időzített sáv (az idő a napi listán), utolsó nézett hónap / szűrő eszközön való megjegyzése, és nincs lead-time értesítés a naptár előfordulásairól (a háztartási digest / esemény-értesítés a producer specjein van).
+
+> Tervezett: `backlog/062-naptar-post-mvp-bovitmenyek.md`; Google Calendar: `backlog/001-google-calendar-export.md`
 
 ### Funkcionális leírás
 
@@ -83,7 +85,7 @@ Nincs nap / hét rács az MVP-ben.
 - Cím: a nap dátuma (i18n). Előző / következő nap chevron; **Ma** → mai napi lista.
 - Vissza → a hónap rács, ahonnan nyitottuk, azzal a nappal kiemelve.
 - Sor: **pipa** csak ha `completable`; tap a sorra → producer szerkesztő. Háztartás: feladat create/edit + pipálás = `PUT` (`nextDue`, `lastCompletedAt`) — [[Háztartási feladatok]]. Esemény: **nincs pipa**; tap → sorozat szerkesztő ([[Események]] / [[Új esemény hozzáadása]]). Nincs undo; pipára nincs külön confirm.
-- Háztartási sor: cím, alcím (helyiség), energia, perc; `overdue` → figyelmeztető szín + lemaradás (`ma − date` nap).
+- Háztartási sor: cím, alcím (helyiség); `overdue` → figyelmeztető szín. Az energia / perc / lemaradás-nap megjelenítése a napi lista során jelenleg hiányzik (a DTO viszi a mezőket) — tervezett: `backlog/030-naptar-napi-lista-haztartasi-sora-nem-mutat-energiat-percet-lema.md`.
 - Esemény sor: cím; időzítettnél `startTime–endTime`; egész naposnál i18n „egész nap”; alcím = helyszín.
 - Sorrend a napon: **egész napos** (`allDay`) elöl — háztartás, majd esemény, azon belül helyiség `sortOrder` / `title` — utána időzítettek `startTime`, majd `title`.
 - Producer store változás után a **badge és a lista azonnal** újraszámolódik. Háztartás pipálás: lekerül erről a napról, új `nextDue` a jövőben ([[Háztartási feladatok]]). Esemény marad a napján.
@@ -105,12 +107,12 @@ Nincs `+` gomb, nincs long-press create. Üres nap = napi lista üres állapotta
 
 #### Értesítések
 
-A naptár **nem** ütemez értesítést. Háztartási digest: [[Értesítések]] `HOUSEHOLD_TASK_DUE`. Esemény: `EVENT_OCCURRENCE` ([[Események]]). Háztartási tap → lista Lejárt+Ma; esemény tap → esemény szerkesztő — **nem** a naptár.
+A naptár **nem** ütemez értesítést. Háztartási digest: [[Értesítések]] `HOUSEHOLD_TASK_DUE`. Esemény: `EVENT_OCCURRENCE` ([[Események]]). Háztartási értesítés tap → `/tabs/tasks/household` (Lejárt / Ma szekció felül); esemény tap → esemény szerkesztő — **nem** a naptár.
 
 ### UI/UX elvárások
 
 - **Belépés:** [[Tennivalók]] hub → Naptár csempe.
-- Feature flag: **saját** Naptár flag ([[Life Management 2.0]]). Ki → a hub csempe rejtve; a [[Háztartási feladatok]] ettől függetlenül megy (a [[Tennivalók]] flagje).
+- Feature flag: **saját** Naptár flag ([[Life Management 2.0]]). Ki → a hub csempe rejtve; a [[Háztartási feladatok]] ettől függetlenül megy (a [[Tennivalók]] flagje). A `/tabs/tasks/calendar` route maga jelenleg nincs `featureFlagGuard` mögött — tervezett: `backlog/012-feature-flag-route-guard-hianyzik-a-shopping-tasks-al-route-okon.md`.
 - Hónap rács + napi lista, fentiek szerint.
 - Chipek a rács tetején (és a napi listán).
 - Kontraszt: badge / overdue / ma kiemelés dark és light témában — [[Dark&Light mode]].
@@ -118,7 +120,7 @@ A naptár **nem** ütemez értesítést. Háztartási digest: [[Értesítések]]
 
 ### Megjegyzések
 
-A Feladatok tab IA (négy csempe) a [[Tennivalók]] speché. Timed sáv a hónap rácson és naptárból create továbbra sincs.
+A Feladatok tab IA (négy csempe) a [[Tennivalók]] speché. Timed sáv a hónap rácson és naptárból create nincs (`backlog/062-naptar-post-mvp-bovitmenyek.md`).
 
 ### Nyitott kérdések
 

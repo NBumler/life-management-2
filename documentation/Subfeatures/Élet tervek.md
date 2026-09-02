@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: 8819b52
 ---
 
 # Élet tervek
@@ -26,7 +26,9 @@ Hosszabb távú, user-owned életcélok (pl. jogosítvány, rope-solo, költöz�
 | [[Események]] | A cél maga („meglegyen a jogosítvány”) | A konkrét vizsga 10:00-kor |
 | [[Háztartási feladatok]] | — | Ismétlődő, helyiséghez kötött teendő; **nincs** `lifePlanId` |
 
-**Nem scope (MVP):** naptár-producer ([[Naptár]] `LIFE_PLAN` chip / előfordulás); értesítés ([[Értesítések]]); mérföldkő / checklist a terven; FK [[Háztartási feladatok]]hez vagy [[Események]]hez; kategória; prioritás; százalékos progress; duplikálás; seed; undelete; skip / snooze.
+Az élet terv jelenleg cím + állapot + opcionális céldátum + jegyzet; nincs naptár-producer, értesítés, mérföldkő / checklist, FK más entitáshoz, kategória, prioritás, %-progress, duplikálás, seed, undelete, skip / snooze.
+
+> Tervezett: `backlog/059-elet-tervek-post-mvp-bovitmenyek.md`; naptár-producer + értesítés: `backlog/062-naptar-post-mvp-bovitmenyek.md`, `backlog/028-kesobbi-ertesites-tipusok-rendszeres-kiadasok-elet-tervek.md`
 
 ### Funkcionális leírás
 
@@ -82,7 +84,7 @@ HTTP `DELETE` marad; a szerver tombstone-t ír. Már törölt ID-re `DELETE` →
 
 #### Értesítések
 
-Nincs aktív típus. Későbbi hook: [[Értesítések]].
+Nincs aktív [[Értesítések]] típus az Élet tervekhez. Tervezett (céldátum-emlékeztető): `backlog/028-kesobbi-ertesites-tipusok-rendszeres-kiadasok-elet-tervek.md`.
 
 ### UI/UX elvárások
 
@@ -99,7 +101,11 @@ Nincs aktív típus. Későbbi hook: [[Értesítések]].
 
 ### Megjegyzések
 
-A Feladatok tab csempéi: [[Tennivalók]]. A naptár `LIFE_PLAN` slotja foglalt, de ez a spec **nem** producer — chip a producer-szerződésig rejtve ([[Naptár]]).
+A Feladatok tab csempéi: [[Tennivalók]].
+
+#### Tudatos korlát
+
+Az Élet tervek **nem** naptár-producer: a `LIFE_PLAN` slot fenn van tartva a [[Naptár]] forrás-uniójában, de az app nem emittál előfordulást, és a chip a producer-szerződés megvalósításáig rejtve marad (`calendar-occurrence.ts` `CalendarSource` csak `HOUSEHOLD_TASK | EVENT`).
 
 ### Nyitott kérdések
 

@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: 8819b52
 ---
 
 # Tennivalók
@@ -37,7 +37,9 @@ A háztartási CRUD, naptár-előfordulás és `HOUSEHOLD_TASK_DUE` digest a [[H
 
 ### Megjegyzések
 
-_Nincs megjegyzés._
+A `feladatok.eletTervek` / `feladatok.esemenyek` / `feladatok.naptar` flag jelenleg csak a hub-csempét rejti; a `/tabs/tasks/{life-plans,events,calendar}` al-route-ok maguk még nincsenek `featureFlagGuard` mögött, így deep link megnyithatja a letiltott feature-t.
+
+> Tervezett: `backlog/012-feature-flag-route-guard-hianyzik-a-shopping-tasks-al-route-okon.md`
 
 ### Nyitott kérdések
 
