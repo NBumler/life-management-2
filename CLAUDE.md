@@ -57,6 +57,18 @@ machine — set `CHROME_BIN` explicitly. From the Bash tool:
 CHROME_BIN="/c/Program Files/Google/Chrome/Application/chrome.exe" npm run test:ci
 ```
 
+**`node`/`npm`/`npx`/`ng` are not on PATH** (installed via NVS at
+`C:\Users\admin\AppData\Local\nvs\node\<ver>\x64\`). Shell state doesn't persist between tool
+calls, so prefix every frontend command:
+```
+export PATH="/c/Users/admin/AppData/Local/nvs/node/24.1.0/x64:$PATH" && cd frontend && npm run <script>
+```
+Karma has no `--tests` filter — narrow a run with `npm test -- --include='**/quantity.spec.ts'`, or
+temporarily `fdescribe`/`fit` in the spec. `gen:api` needs the `openapi-generator-cli` npm bin; if
+NVS is unavailable, Java (Corretto 21) is on PATH and the generator jar is cached at
+`frontend/node_modules/@openapitools/openapi-generator-cli/versions/7.24.0.jar` — `java -jar <that>
+generate …` with the same args as the `gen:api` script reproduces it.
+
 Android install onto a phone on the dev LAN (debug build against the dev machine's backend):
 ```
 scripts/install-android.ps1 [-ApiHost <ip|hostname>] [-Usb]
@@ -109,8 +121,10 @@ and 20 acceptance criteria: [`Backend-offline first.md`](documentation/Architekt
 
 ### Backend (`backend/src/main/java/hu/bumler/lm2/`)
 
-- **Feature-based packages**, not layers: `hu.bumler.lm2.<feature>` (`auth`, `gear`, `profile`, …) plus
-  `hu.bumler.lm2.common` for cross-cutting config/error-handling/normalization. Within a feature:
+- **Feature-based packages**, not layers: `hu.bumler.lm2.<feature>` — `auth`, `aycm`, `climbing`,
+  `finance`, `food`, `gear`, `profile`, `steps`, `tasks`, `workout` — plus
+  `hu.bumler.lm2.common` for cross-cutting config/error-handling/normalization (and `common/sync` for
+  the shared delta-pull machinery). Within a feature:
   Controller (thin, implements a generated interface) → Service (`@Transactional`, business logic) →
   Repository. DTOs only at the boundary — generated OpenAPI models in/out, JPA entities never leave
   the service layer; mapping is done by hand in a `*Mapper` per feature.
@@ -131,8 +145,11 @@ and 20 acceptance criteria: [`Backend-offline first.md`](documentation/Architekt
   indexes, which is also why integration tests use Testcontainers Postgres, pinned to the same image
   tag as `docker-compose.yml`, rather than H2).
 - **Name/barcode/hex-color/quantity normalization must match the frontend bit-for-bit** — shared
-  parity fixtures live in `shared/fixtures/*.json` and are read by both the Java and TypeScript test
-  suites. Adding an edge case means adding a fixture row, not a one-off test on either side.
+  parity fixtures live in `shared/fixtures/{name,barcode,hex-color}-normalization.json` +
+  `quantity-conversion.json`, read on the Java side by `common/{Name,Barcode,HexColor}NormalizerTest`
+  + `QuantityConverterTest` and on the TS side by `shared/*-normalization.spec.ts` +
+  `shared/quantity.spec.ts`. Adding an edge case means adding a fixture row, not a one-off test on
+  either side.
 - Global error shape: `{ code, message, field?, conflictingId? }` from one `@RestControllerAdvice`.
   `message` is server-side/undebugged text only (diagnostics + sync-center fallback) — user-facing
   text is always translated client-side from `code`, so every new error class needs a stable `code`.
@@ -185,6 +202,14 @@ Layering (`pages/`, `shared/`, `core/`, `api/`):
   install script can retarget a build without touching TypeScript. `environment.ts` only holds
   build-time constants (`production`); feature flags are likewise a runtime asset
   (`assets/config/features.json`), not a code constant, so they're available Full-Offline too.
+- **Native surface (Capacitor plugins):** `@capacitor-community/sqlite` (local store),
+  `@aparajita/capacitor-secure-storage` (token at rest), `@capacitor-mlkit/barcode-scanning`,
+  `@capacitor/local-notifications`, `@capacitor/network` (feeds the connectivity signal),
+  `@capacitor/preferences`, `haptics`, `keyboard`, `app`. `capacitor.config.ts` sets
+  `androidScheme: 'http'` **only** when `LM2_CAP_HTTP_SCHEME=1` — LAN dev installs hit a plain-HTTP
+  backend and Chromium blocks mixed-content XHR from an `https://` WebView origin; `install-android.ps1`
+  sets it, production never does. `npm run build` emits to `www/` (Capacitor `webDir`); `npx cap sync
+  android` copies it into the native project.
 - **Tab registry, not hardcoded tabs**: 4 bottom tabs (Kaja/food, Edzés/workout, Feladatok/tasks, Menü),
   built from a feature-flagged config. Disabling a flag removes its tab/segment/route (guarded), never
   leaves a disabled-looking button. Full route map and flag registry: Frontend.md.
@@ -214,9 +239,10 @@ rewritten to the new current state and the ticket is archived.
 - **A `#### Backend-offline` subsection under Frontend is mandatory on every spec** (except
   `SPEC-TEMPLATE.md` and `Backend-offline first.md` itself) — describing whether/how the feature works
   Backend-offline and Full-offline, and referencing `[[Backend-offline first]]`. A `.cursor/hooks`
-  Python hook (`check-backend-offline-spec.py`) checks for this after file writes/edits.
-  When you edit a doc under `documentation/`, reformat it to this structure and don't skip this
-  section, unless the user explicitly says not to.
+  Python hook (`check-backend-offline-spec.py`, wired in `.cursor/hooks.json`) checks for this — but
+  `.cursor/hooks.json` and `.cursor/rules/*.mdc` are **Cursor-only and do not run under Claude Code**,
+  so applying this rule is on you. When you edit a doc under `documentation/`, reformat it to this
+  structure and don't skip this section, unless the user explicitly says not to.
 - No `Nem scope (MVP)` / "post-MVP" / "későbbi scope" blocks in specs — deferred work is a `backlog/`
   ticket, optionally with a `> Tervezett: backlog/NNN-...md` pointer line. Permanent accepted limits
   go under `### Megjegyzések` with a `#### Tudatos korlát` label.
