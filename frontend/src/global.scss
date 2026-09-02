@@ -33,5 +33,9 @@
  */
 
 /* @import "@ionic/angular/css/palettes/dark.always.css"; */
-/* @import "@ionic/angular/css/palettes/dark.class.css"; */
-@import '@ionic/angular/css/palettes/dark.system.css';
+/* Class strategy: dark mode is driven solely by the `.ion-palette-dark` class on
+   <html>, which ThemeService toggles from its `isDark()` signal (explicit dark, or
+   system + prefers-color-scheme). This is what makes a fixed "Világos"/"Sötét"
+   override actually win over the device theme — see documentation/Features/Dark&Light mode.md. */
+@import '@ionic/angular/css/palettes/dark.class.css';
+/* @import "@ionic/angular/css/palettes/dark.system.css"; */

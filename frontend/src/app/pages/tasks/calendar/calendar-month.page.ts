@@ -190,7 +190,11 @@ export class CalendarMonthPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async openDay(day: MonthGridDay): Promise<void> {
-    await this.router.navigate(['/tabs/tasks/calendar', day.date]);
+    // documentation/Features/Naptár.md: "Vissza → a hónap rács, ahonnan nyitottuk". Pass the *grid's*
+    // month (not day.date's — an adjacent-month grey cell would carry the wrong one) so the day page
+    // can send it back verbatim on goBack().
+    const fromMonth = `${this.viewYear()}-${String(this.viewMonth()).padStart(2, '0')}`;
+    await this.router.navigate(['/tabs/tasks/calendar', day.date], { queryParams: { from: fromMonth } });
   }
 
   private shiftMonth(delta: number): void {

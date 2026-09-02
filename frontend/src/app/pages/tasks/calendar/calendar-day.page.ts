@@ -59,6 +59,12 @@ export class CalendarDayPage implements OnInit {
 
   private readonly todayIso = today();
   readonly date = signal(this.route.snapshot.paramMap.get('date') ?? this.todayIso);
+  /**
+   * documentation/Features/Naptár.md: the grid returns to the month it was opened *from*, not the
+   * currently-viewed day's month (which can drift via the day chevrons or an adjacent-month cell).
+   * `null` on a deep link → fall back to the viewed day's month.
+   */
+  private readonly originMonth = this.route.snapshot.queryParamMap.get('from');
 
   readonly eventsSourceAvailable = this.featureFlags.isEnabled('feladatok.esemenyek');
   readonly activeSources = signal<ReadonlySet<CalendarSource>>(
@@ -121,6 +127,8 @@ export class CalendarDayPage implements OnInit {
   }
 
   async goBack(): Promise<void> {
-    await this.router.navigate(['/tabs/tasks/calendar'], { queryParams: { highlight: this.date(), month: this.date().slice(0, 7) } });
+    await this.router.navigate(['/tabs/tasks/calendar'], {
+      queryParams: { highlight: this.date(), month: this.originMonth ?? this.date().slice(0, 7) },
+    });
   }
 }

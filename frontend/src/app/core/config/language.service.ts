@@ -32,7 +32,9 @@ export class LanguageService {
 }
 
 function systemLanguage(): ActiveLanguage {
-  return navigator.language.toLowerCase().startsWith('hu') ? 'hu' : 'en';
+  // documentation/Features/Nyelv választás.md: device language when it's hu or en, otherwise hu
+  // (Hungarian is the fallback, not English).
+  return navigator.language.toLowerCase().startsWith('en') ? 'en' : 'hu';
 }
 
 function isLanguageMode(value: string | null): value is LanguageMode {
