@@ -30,19 +30,18 @@ Személyes life-management alkalmazás (hibrid mobil + web). Több felhasználó
 
 #### Dokumentációs konvenciók
 
+A `documentation/` vault a **jelenlegi, implementált állapot** Single Source of Truth-ja (jelen idejű próza, „így működik ma"). Jövőbeli munka, hiányosság, change request és bug a repo gyökér `backlog/` jegyrendszerében él, nem a specben. Ha egy `backlog/` jegy elkészül, a hozzá tartozó spec frissül a jelenlegi állapotra.
+
 | Mappa | Jelentés |
 |---|---|
-| `Features/` | Feature szintű specifikáció (részben vagy teljesen kidolgozva) |
-| `Subfeatures/` | Kidolgozott (vagy legalább vázolt) alfeature |
-| `Subfeatures - TODO/` | Alfeature specifikáció még hiányzik vagy részleges |
-| `Architektúra/` | Kidolgozott architektúra jegyzetek |
+| `Features/` | Feature szintű specifikáció |
+| `Subfeatures/` | Alfeature specifikáció |
+| `Architektúra/` | Architektúra-SSOT jegyzetek |
 
-A korábbi `- TODO` mappák (`Feature - TODO/`, `Architektúra - TODO/`, `Subfeatures - TODO/`) kiürültek és törölve lettek; minden spec a végleges `Features/`, `Subfeatures/`, `Architektúra/` mappában él.
+Minden specifikáció egységes szerkezetet követ: **Business** + **Architektúra** (Frontend → **Backend-offline** → Backend). A `#### Backend-offline` alfejezet kötelező. Minden specen `verifikalva` / `verifikalt_commit` frontmatter (a kód elleni verifikáció dátuma + commitja). Sablon: [[SPEC-TEMPLATE]]. Státusz: `Kész` (a kód ellen auditált, jelenlegi működés) / `Váz` (elsodródott a kódtól, jegy után átírandó) / `Ideiglenes` / `TODO`.
+Agent skillek: `.cursor/skills/documentation-spec/` (spec) + `.cursor/skills/task-ticket/` (`backlog/` jegy). Offline SSOT: [[Backend-offline first]].
 
-Minden specifikáció egységes szerkezetet követ: **Business** + **Architektúra** (Frontend → **Backend-offline** → Backend). A `#### Backend-offline` alfejezet kötelező. Sablon: [[SPEC-TEMPLATE]]. Státusz: `TODO` / `Váz` / `Ideiglenes` / `Kész`.
-Agent skill: `.cursor/skills/documentation-spec/`. Offline SSOT: [[Backend-offline first]].
-
-#### Feature lista — kidolgozott / részben (`Features/`)
+#### Feature lista (`Features/`)
 
 - [[Kaja]]
 - [[Edzés]]
@@ -65,25 +64,21 @@ Agent skill: `.cursor/skills/documentation-spec/`. Offline SSOT: [[Backend-offli
 - [[Események]]
 - [[Pénzügyek]]
 
-#### Feature lista — hiányos / stub
+#### Rendszerszintű tervezett munka
 
-_Nincs:_ minden feature és architektúra jegyzet `Kész`.
+Az MVP-n túli, rendszerszintű tételek `backlog/` jegyként vannak rögzítve:
 
-#### Első kör (MVP) hatókör
-
-A specifikáció teljes, de nem minden része az **első kiadás** része. Ami tudatosan kimarad:
-
-| Kimarad | Hol van rögzítve |
+| Tétel | Jegy |
 |---|---|
-| **Web mint kiadott platform** — a web build fordul és fejlesztésre használható, de nem QA-zott, és offline nem támogatott | [[Frontend]] (web hatókör), [[Backend-offline first]] §17 |
-| **iOS build és telepítés** (az iOS Health lépés-sync is) | [[Fejlesztői környezet]], [[Lépésszám követés]] |
-| **Google Calendar export** — a spec `Kész`, de a flag `false` | [[Google Calendar szinkronizálása]] |
-| **Remote push** (FCM / APNs); az első kör lokális ütemezés | [[Értesítések]] |
-| **Prod hosting / TLS** — a dev környezet van specifikálva; a natív app `apiBaseUrl`-je konfiguráció | [[Backend]], [[Fejlesztői környezet]] |
-| **Profil-szintű beállítás-sync** (nyelv, téma, értesítés-kapcsolók device-localak) | [[Bejelentkezés]], [[Nyelv választás]], [[Dark&Light mode]] |
-| Realtime sync, mezőszintű merge, CRDT | [[Backend-offline first]] §17 |
+| Web mint kiadott (QA-zott, publikált) platform | `backlog/003-web-mint-kiadott-platform.md` |
+| iOS build és eszközre telepítés | `backlog/004-ios-build-es-telepites.md` |
+| iOS Health lépés-forrás | `backlog/002-ios-health-lepes-forras.md` |
+| Google Calendar export (flag `feladatok.googleExport` = `false`) | `backlog/001-google-calendar-export.md` |
+| Remote push (FCM / APNs) | `backlog/005-remote-push-fcm-apns.md` |
+| Prod hosting / TLS | `backlog/006-prod-hosting-tls.md` |
+| Profil-szintű beállítás-sync (nyelv / téma / értesítés-kapcsolók) | `backlog/007-profil-szintu-beallitas-sync.md` |
 
-Az egyes feature specek `Nem scope (MVP)` szakaszai ennél részletesebbek; ez a tábla csak a rendszerszintű vágásokat sorolja.
+Realtime sync, mezőszintű merge és CRDT **tudatos, elfogadott korlát** — [[Backend-offline first]] §17.
 
 ### UI/UX elvárások
 
@@ -91,7 +86,7 @@ Alsó tab bar: Kaja, Edzés, Feladatok, Menü. Tab-térkép, tabon belüli navig
 
 ### Megjegyzések
 
-**A specifikáció lezárva:** minden feature, alfeature és architektúra jegyzet `Kész`. A négy architektúra-SSOT, amiből az implementáció indul: [[Frontend]] (app-shell, flag registry), [[Backend]] (stack, OpenAPI, séma), [[Backend-offline first]] (offline szerződés) és [[Fejlesztői környezet]] (monorepo, futtatás, Android telepítés).
+**Az MVP leszállítva:** a vault a jelenlegi, implementált állapotot írja le, a kód ellen auditálva (`backlog/audit/ROLLUP.md`). A négy architektúra-SSOT: [[Frontend]] (app-shell, flag registry), [[Backend]] (stack, OpenAPI, séma), [[Backend-offline first]] (offline szerződés) és [[Fejlesztői környezet]] (monorepo, futtatás, Android telepítés).
 
 A korábbi 5 nyitott kérdésből kettő a leszállított kód által eldőlt (Health Connect: saját Capacitor plugin; secure storage: `@aparajita/capacitor-secure-storage`), három tervezett munkaként jegyzett:
 

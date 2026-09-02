@@ -198,37 +198,55 @@ Layering (`pages/`, `shared/`, `core/`, `api/`):
 
 ### Documentation specs (`documentation/`)
 
-This is an **Obsidian vault**, and it's under active governance:
+This is an **Obsidian vault**, and it is the **Single Source of Truth for the current, implemented
+behavior** — present-tense prose ("how it works today"), audited against the code. It is not a plan.
+Future work — feature, change request, bug — goes to the repo-root [`backlog/`](backlog/) ticket
+system (see "Backlog" below), never into the spec. When a `backlog/` ticket lands, its `specs:` are
+rewritten to the new current state and the ticket is archived.
 
-- Every spec file (Features, Subfeatures, Architektúra) uses a fixed heading structure: `# Title` →
-  `## Business` (Státusz/Szülő/Kapcsolódó table, Célállapot, Funkcionális leírás, UI/UX elvárások,
-  Megjegyzések, Nyitott kérdések) → `## Architektúra` (Frontend → **Backend-offline** → Backend →
-  Nyitott kérdések). Exact template and placeholder text for "not applicable" sections:
-  `.cursor/skills/documentation-spec/SKILL.md` (also mirrored in `documentation/SPEC-TEMPLATE.md`).
+- Every spec file (Features, Subfeatures, Architektúra) uses a fixed heading structure: YAML
+  frontmatter (`verifikalva: <ÉÉÉÉ-HH-NN>` / `verifikalt_commit: <short sha>` — the date and commit
+  the spec was last verified against the code) → `# Title` → `## Business` (Státusz/Szülő/Kapcsolódó
+  table, `### Jelenlegi működés`, Funkcionális leírás, UI/UX elvárások, Megjegyzések, Nyitott kérdések)
+  → `## Architektúra` (Frontend → **Backend-offline** → Backend → Nyitott kérdések). Exact template and
+  placeholder text for "not applicable" sections: `.cursor/skills/documentation-spec/SKILL.md` (also
+  mirrored in `documentation/SPEC-TEMPLATE.md`).
 - **A `#### Backend-offline` subsection under Frontend is mandatory on every spec** (except
   `SPEC-TEMPLATE.md` and `Backend-offline first.md` itself) — describing whether/how the feature works
   Backend-offline and Full-offline, and referencing `[[Backend-offline first]]`. A `.cursor/hooks`
   Python hook (`check-backend-offline-spec.py`) checks for this after file writes/edits.
   When you edit a doc under `documentation/`, reformat it to this structure and don't skip this
   section, unless the user explicitly says not to.
-- Status field is one of exactly: `TODO`, `Váz`, `Ideiglenes`, `Kész`.
+- No `Nem scope (MVP)` / "post-MVP" / "későbbi scope" blocks in specs — deferred work is a `backlog/`
+  ticket, optionally with a `> Tervezett: backlog/NNN-...md` pointer line. Permanent accepted limits
+  go under `### Megjegyzések` with a `#### Tudatos korlát` label.
+- Status field is one of exactly: `Kész` (current implemented behavior, audited against code), `Váz`
+  (drifted from code / awaiting rewrite after a `backlog/` ticket), `Ideiglenes`, `TODO`.
 - Use `[[Wikilink]]` syntax for cross-references between notes.
+
+### Backlog (`backlog/`)
+
+Jira-style ticket system at the repo root for all future work. `NNN-slug.md` files with YAML
+frontmatter (`id`/`type`/`status`/`title`/`specs`/`flag?`/`created`/`closed`); `backlog/archive/` for
+closed tickets; `backlog/audit/` for the doc↔code audit reports. Template: `backlog/TICKET-TEMPLATE.md`
+(the peer of `documentation/SPEC-TEMPLATE.md`). Conventions + status lifecycle + the done→spec
+migration checklist: `backlog/README.md`. Agent skill: `.cursor/skills/task-ticket/`. The
+`backlog/` folder is deliberately outside `documentation/`, so the vault hook and `.mdc` glob never
+touch it.
 
 ## Notes
 
 - **Git workflow: work directly on `master`.** This is a solo repo — do **not** create feature
   branches. Commit each finished, green (tests + lint + build) slice straight to `master` with a
   descriptive message. This overrides the default "if on the default branch, branch first" behavior.
-- Repo is mid-implementation: the spec (`documentation/`) is fully closed (`Kész`), and the backend
-  and frontend are being built out feature by feature (auth, profile, and the GearCheck slice — gear
-  items, packing templates, packing sessions — exist so far). Check a feature's own spec under
-  `documentation/Features/` or `documentation/Subfeatures/` for its concrete contract before
-  implementing it.
-- [`IMPLEMENTATION_STATUS.md`](IMPLEMENTATION_STATUS.md) (repo root) tracks *code* completeness per
-  feature — separate from the vault's `Státusz` field, which only tracks spec completeness (and is
-  always `Kész`). Each done entry pins the spec file's commit hash at verification time; if that spec
-  file has since moved on, the feature is stale and needs re-verification before being trusted as done.
-  Check it before re-surveying the whole repo, and update it when you finish or touch a feature.
+- The MVP is delivered: `documentation/` describes the current, implemented behavior (audited against
+  code — `backlog/audit/ROLLUP.md`). Check a feature's own spec under `documentation/Features/` or
+  `documentation/Subfeatures/` for its concrete contract before touching it; its `verifikalt_commit`
+  frontmatter says which commit it was last verified against — if `git log -1 --format=%h -- <spec>`
+  has moved past that, the spec may have drifted and needs re-checking.
+- [`IMPLEMENTATION_STATUS.md`](IMPLEMENTATION_STATUS.md) (repo root) is a thin **changelog** of
+  completed rounds and closed `backlog/` tickets — not a "what's done / what's not" state table
+  (that role is gone; the vault is the current-state SSOT and `backlog/` holds the open work).
 - Backend/frontend version numbers are **not pinned by the spec** — `build.gradle.kts` and
   `package.json` are the source of truth; the architecture docs only state constraints (e.g. Java 25,
   Spring Boot 4.x, Postgres, Ionic 8+, Angular Signals + standalone, Capacitor 8+).
