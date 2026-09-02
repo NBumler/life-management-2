@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: dac7f81
 ---
 
 # Nehézségi szint skálája
@@ -52,9 +52,9 @@ Sikeres egyértelmű parse → `absoluteDifficultyIndex` a [[Nehézségi szint s
 1. `ion-input` (text); jobb szélen postfix (`slot="end"`); alatta suggestion `ion-chip`-ek.
 2. Állapotgép (**250 ms** debounce):
    - **Üres:** nincs postfix; INVALID
-   - **Egyértelmű** (pontosan egy regex): postfix = FRA / YDS / UIAA / V / FONT; popover; VALID
-   - **Kétértelmű** (tiszta szám, pl. `4`/`6`): chipek + fallback modal; köteles `6` → VI és 6a; `4` → IV és 4. Fallback: `3`/`4`/`5` VALID Francia default (ezeken a fokokon francia/Font betű nélkül is érvényes grade — a `3` a mátrix `FRENCH '3'` / `FONT '3'` sora; `1`/`2` mátrixsor nélkül marad kétértelmű); **`6`-tól felfelé minden csupasz szám** (`6`, `7`, `8`, `9`, …) INVALID amíg nincs chip-választás — francia/Font jelölésben 6-tól kötelező a betű (`6a`/`6A` stb.), tehát a betű nélküli forma önmagában hiányos, ugyanúgy, mint a `6` esetén
-   - **Ismeretlen:** kérdőjel; súgó modal példákkal; INVALID
+   - **Egyértelmű** (pontosan egy regex): záró badge = FRA / YDS / UIAA / V / FONT; VALID
+   - **Kétértelmű** (tiszta szám, pl. `4`/`6`): suggestion `ion-chip`-sor + inline hiba-note (`ERROR_AMBIGUOUS`); köteles `6` → VI és 6a; `4` → IV és 4. Fallback: `3`/`4`/`5` VALID Francia default (ezeken a fokokon francia/Font betű nélkül is érvényes grade — a `3` a mátrix `FRENCH '3'` / `FONT '3'` sora; `1`/`2` mátrixsor nélkül marad kétértelmű); **`6`-tól felfelé minden csupasz szám** (`6`, `7`, `8`, `9`, …) INVALID amíg nincs chip-választás — francia/Font jelölésben 6-tól kötelező a betű (`6a`/`6A` stb.)
+   - **Ismeretlen:** `?` záró badge + `HelpInputComponent` súgó-ikon → `AlertController` modal példákkal + inline hiba-note (`ERROR_UNKNOWN`); INVALID
 3. **Mobil pre-parsing:** Boulder → NAGYBETŰ; Köteles → kisbetű (kivéve I,V,X UIAA karakterek); `trim()`
 
 ### Megjegyzések
@@ -87,7 +87,7 @@ Pure client; nincs outbox. Index mapping: [[Nehézségi szint skálája (konverz
 
 ### Backend
 
-Mentéskor raw grade → `absoluteDifficultyIndex` újraszámolás / validáció ugyanezzel a mátrix JSON-nal.
+A szerver jelenleg **nem** számol újra / nem validál grade indexet mentéskor — az `absoluteDifficultyIndex` (és a `guidebookGrade`) verbatim tárolódik. Szerver-oldali mátrix-paritás tervezett: `backlog/024-climbing-grade-matrix-kozos-generalt-json-asset-backend-index-uj.md`.
 
 ### Nyitott kérdések
 

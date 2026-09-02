@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: dac7f81
 ---
 
 # Nehézségi szint skálája (konverziós mátrix)
@@ -15,7 +15,7 @@ verifikalt_commit:
 
 ### Jelenlegi működés
 
-Skálák → egységes belső numerikus index \(I_{\text{grade}}\) (`absoluteDifficultyIndex`) statisztikához és volumenhez. **A teljes mátrix JSON implementáció-időben előállítandó** (a repóban ma nincs kód, ez a fájl a specifikáció) — a lenti tábla a **kiindulási referencia-anchor**, a generálási módszer pedig az „Előállítási módszer" alfejezet. A JSON, ha egyszer elkészült, a repo SSOT-ja lesz; eddig ez a spec az.
+Skálák → egységes belső numerikus index \(I_{\text{grade}}\) (`absoluteDifficultyIndex`) statisztikához és volumenhez. A mátrix **megvalósítva** `shared/climbing/climbing-grade-matrix.ts` **client-only TS const**-ként (`FRENCH` / `YDS` / `UIAA` / `FONT` / `V_SCALE`), nem külön `shared/fixtures/*.json` asset. A Font alsó cellák a lenti „Előállítási módszer" szerint racionalizálva (növekvő, deduplikált létra); a `6B=18 … 8B=40` önkonzisztens farok verbatim. Közös generált JSON asset + szerver-oldali betöltés tervezett: `backlog/024-climbing-grade-matrix-kozos-generalt-json-asset-backend-index-uj.md`.
 
 ### Funkcionális leírás
 
@@ -51,7 +51,7 @@ A skálák közti nehézség-egyeztetés eredendően szakértői-konszenzus kér
 1. Válassz **egy** konzisztens, publikált skálaegyeztető forrást (pl. egy elismert terem / szövetségi grade-táblázat) a hiányzó alfokozatok (pl. `6a+`, `V2.5` közi lépések) kitöltéséhez — **ne** keverj több forrást egy skálapáron belül.
 2. Minden felismert alfokozat egy egyedi, **szigorúan növekvő** egész `I_grade`-et kap; a lépések **köztudottan nem egyenletesek** (a nehézség-érzet nem lineáris a fokozatokkal) — ez szándékos, nem hiba.
 3. A fenti anchor sorok értékei **kötöttek** (nem módosíthatók a JSON generálásakor); közéjük / köréjük a választott forrás szerint kell interpolálni.
-4. A generált JSON-t mindkét oldal (kliens parser + szerver validáció) ugyanabból a fájlból tölti be — [[Backend-offline first]] §15 (build asset).
+4. Jelenleg csak a kliens tölti be (a TS const-ból); szerver-oldali paritás-betöltés nincs — `backlog/024-climbing-grade-matrix-kozos-generalt-json-asset-backend-index-uj.md`.
 
 **Volumen** ([[Mászónapló]]) — **kísérletenkénti** összegzés, nem session-szintű egy `I_grade`-del szorzás:
 
@@ -62,7 +62,7 @@ A skálák közti nehézség-egyeztetés eredendően szakértői-konszenzus kér
 
 \[I_{\text{grade}} = \left\lfloor \frac{lowIndex + highIndex}{2} \right\rfloor\]
 
-(egész lefelé kerekítés — determinisztikus, klienst és szervert egyaránt köti).
+(egész **lefelé** kerekítés — determinisztikus, klienst és szervert egyaránt köti). A kötelező `floor` a `colorBandMidIndex()` helperben (`shared/climbing/climbing-grade-matrix.ts`) él és tesztelt; az `indoor-boulder-session-edit.page.ts` jelenleg tévesen `Math.round`-ot hív (páratlan `low+high` összegnél 1-index eltérés) — javítás tervezett: `backlog/013-climbing-szin-sav-kozep-index-math-round-a-kotelezett-math-floor.md`.
 
 ### UI/UX elvárások
 
@@ -89,7 +89,7 @@ Nincs outbox; pure mapping. Lásd [[Backend-offline first]].
 
 ### Backend
 
-Ugyanaz a repo JSON startup seed / cache; mentéskori index számítás paritás a klienssel.
+Jelenleg **nincs** szerver-oldali mátrix-betöltés vagy mentéskori index-újraszámítás — a szerver az `absoluteDifficultyIndex`-et verbatim tárolja. Paritás tervezett: `backlog/024-climbing-grade-matrix-kozos-generalt-json-asset-backend-index-uj.md`.
 
 ### Nyitott kérdések
 

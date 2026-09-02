@@ -161,7 +161,7 @@ Szerződés és szemantika: [[Backend-offline first]] (SSOT) — itt csak az imp
 #### Kötelező elvek
 
 - [[Backend-offline first]]: kliens UUID (v4, természetes kulcsnál v5), idempotens írás, soft delete, cascade `updated_at` bump.
-- Az entitás ID stratégia **nem** lehet szerveroldali `IDENTITY` auto-increment. (A [[Giga feature napló specifikáció (Ideiglenes specifikáció)]] régi `IDENTITY` / `Long` példái elavultak — ott is jelölve; a moduláris specek a kliens UUID-t írják.)
+- Az entitás ID stratégia **nem** lehet szerveroldali `IDENTITY` auto-increment; minden szinkronizált entitás kliens-generált UUID-t kap ([[Backend-offline first]]).
 - Az OpenAPI sémákban az entitás ID-k UUID típusúak.
 - **Külső integrációk nincsenek proxyzva** a backenden: a [[Frontend]] közvetlenül hívja őket (Open Food Facts, Health Connect, Google), így `BACKEND_OFFLINE` állapotban is működnek.
 - **Auth / authorizáció:** JWT access + refresh, `@PreAuthorize`, user-owned vs shared ownership — SSOT: [[Bejelentkezés]]. Admin API a `/api/admin/**` alatt `X-Admin-Api-Key` filterrel, nem JWT role-lal.

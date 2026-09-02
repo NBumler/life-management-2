@@ -37,7 +37,7 @@ Személyes life-management alkalmazás (hibrid mobil + web). Több felhasználó
 | `Subfeatures - TODO/` | Alfeature specifikáció még hiányzik vagy részleges |
 | `Architektúra/` | Kidolgozott architektúra jegyzetek |
 
-A `- TODO` mappák **csak addig léteznek, amíg van bennük tartalom**: a `Feature - TODO/` és az `Architektúra - TODO/` kiürült, ezért törölve. A `Subfeatures - TODO/` ma egyetlen fájlt tart, az archív pointert ([[Giga feature napló specifikáció (Ideiglenes specifikáció)]]), aminek a tartalma szét van osztva a kanonikus specek közé.
+A korábbi `- TODO` mappák (`Feature - TODO/`, `Architektúra - TODO/`, `Subfeatures - TODO/`) kiürültek és törölve lettek; minden spec a végleges `Features/`, `Subfeatures/`, `Architektúra/` mappában él.
 
 Minden specifikáció egységes szerkezetet követ: **Business** + **Architektúra** (Frontend → **Backend-offline** → Backend). A `#### Backend-offline` alfejezet kötelező. Sablon: [[SPEC-TEMPLATE]]. Státusz: `TODO` / `Váz` / `Ideiglenes` / `Kész`.
 Agent skill: `.cursor/skills/documentation-spec/`. Offline SSOT: [[Backend-offline first]].

@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: dac7f81
 ---
 
 # Mászónapló
@@ -11,7 +11,7 @@ verifikalt_commit:
 |---|---|
 | **Státusz** | `Kész` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Edzés]], [[Tápérték kalkulátor]], [[Profile]], [[Nehézségi szint skálája]], [[Nehézségi szint skálája (konverziós mátrix)]], [[Indoor mászónapló]], [[Outdoor mászónapló]], [[Szinkronizációs központ]], [[Backend-offline first]], [[Giga feature napló specifikáció (Ideiglenes specifikáció)]] |
+| **Kapcsolódó** | [[Edzés]], [[Tápérték kalkulátor]], [[Profile]], [[Nehézségi szint skálája]], [[Nehézségi szint skálája (konverziós mátrix)]], [[Indoor mászónapló]], [[Outdoor mászónapló]], [[Szinkronizációs központ]], [[Backend-offline first]] |
 
 ### Jelenlegi működés
 
@@ -26,19 +26,17 @@ Egy naplóegység = egy `ClimbingSession` + alatta `AscentAttempt` lista. A kal�
 - **4 csempe:** Indoor Boulder · Indoor Kötél · Outdoor Boulder · Outdoor Kötél — mindegyik a saját specifikus napló-flow-ját nyitja.
 - **Mászó Statisztikák** (fejléc / külön kártya).
 - **Terem / Helyszín Admin** (fejléc fogaskerék); kontextus-napló képernyőn is gyors admin belépő.
-- **Közös session lista** szűrő-tabokkal / badge-ekkel a 4 kontextusra.
+- **Per-kontextus session lista:** a `ClimbingSessionListPage` a `route.data.contextKey` alapján a 4 kontextushoz külön listát ad. Egy közös lista váltható szűrő-tabokkal / badge-ekkel tervezett: `backlog/022-climbing-kozos-session-lista-4-kontextusu-szuro-tabbal-a-4-kulon.md`.
 
 Kontextus váltás **aktív session közben tilos** — lezárás / mentés, majd új session másik belépőből.
 
-„Aktív session" = **kliens-lokális draft állapot** (a Frontend `pages/` szintjén tartott UI-state / draft storage — [[Backend-offline first]] §15 „draft"), **nem** perzisztált `ClimbingSession` mező; a `ClimbingSession` entitásnak nincs saját `isActive` / státusz mezője.
+„Aktív session" = **kliens-lokális draft állapot**, **nem** perzisztált `ClimbingSession` mező; a `ClimbingSession` entitásnak nincs saját `isActive` / státusz mezője. A draft jelenleg csak memóriában él — folyamatban lévő session app-kill után elveszik; a draft-perzisztálás / helyreállítás tervezett: `backlog/021-climbing-folyamatban-levo-session-draft-perzisztalasa-app-kill-t.md`.
 
 #### Subfeature fa
 
 - [[Indoor mászónapló]] → [[Indoor - boulder]] (admin + napló reference), [[Indoor - köteles]]
 - [[Outdoor mászónapló]] → [[Outdoor - boulder]], [[Outdoor - köteles]]
 - Közös: [[Nehézségi szint skálája]], [[Nehézségi szint skálája (konverziós mátrix)]]
-
-Fejlesztési / spech sorrend: hub+kalória → skála+mátrix → Indoor boulder (reference) → többi kontextus eltérésekkel.
 
 #### Entitás — `ClimbingSession` (közös)
 
@@ -50,10 +48,10 @@ Fejlesztési / spech sorrend: hub+kalória → skála+mátrix → Indoor boulder
 | `discipline` | `BOULDER` \| `ROPE` — **dashboard discriminator** |
 | `totalSessionDurationMinutes` | Egész `> 0` ha van; hiányzik → fallback (lásd Kalória) |
 | `pumpRating` | Opcionális 1–5; kalória módosító |
-| `headspaceRating` | Opcionális 1–5; csak statisztika |
+| `headspaceRating` | Opcionális 1–5; rögzítve, de jelenleg egyetlen statisztikai nézet sem olvassa — megjelenítés tervezett: `backlog/025-climbing-headspacerating-megjelenitese-valamelyik-statisztikaban.md` |
 | `notes` | Opcionális |
 | `climbingPartners` | Opcionális string lista |
-| `weatherConditions` | Opcionális enum; **csak outdoor** sessionön (`COLD_DRY`, `HOT_HUMID`, `WINDY`, `WET`, …) |
+| `weatherConditions` | Opcionális enum (`COLD_DRY`, `HOT_HUMID`, `WINDY`, `WET`); a „csak outdoor" korlát **kliens-oldalon** kényszerített (az indoor form fixen `null`-t küld), a szerver laza (mint `workout_session`) |
 | `gymId` / crag–sector hivatkozások | Kontextus szerint — gyerek specek |
 | `attempts` | `AscentAttempt[]` |
 | `deleted` | Soft delete |
@@ -138,25 +136,25 @@ Testsúly \(m\): [[Profile]] aktuális kg — **nem** fagyasztódik. TRAD: \(m_{
 - Kötél: \(\text{Volume} = \sum_{\text{sikeres kísérletek}} \text{mászott méter}_i \times I_{\text{grade},i}\) (a „mászott méter” kísérletenként: `lengthInMeters`, vagy a pitch-ek összege multi-pitchnél)
 - Boulder: 1 sikeres kísérlet ≡ **4 m**; \(\text{Volume} = \sum_{\text{sikeres kísérletek}} 4 \times I_{\text{grade},i}\)
 
-#### Statisztikák (2.0 scope)
+#### Statisztikák
 
-Max grade kontextusonként; összes Volume; sikerarány-bontás (Onsight / Flash / Redpoint / sikertelen — a rögzített `ascentStyle` nélküli sikeres kísérlet redpointként számít); grade piramis (30 / 90 / 365 nap).
+Max grade kontextusonként (a legnehezebb **sikeres** kísérlet); összes Volume; sikerarány-bontás (Onsight / Flash / Redpoint / sikertelen — a rögzített `ascentStyle` nélküli sikeres kísérlet redpointként számít); grade piramis (30 / 90 / 365 nap ablak; a többi mutató all-time). `computeClimbingStats` (`climbing-stats.ts`).
 
 #### Soft delete / offline
 
-Minden mászó entitás: soft delete ([[Backend-offline first]]). Nested session + attempts **egy** POST/PUT. Élő pipálás + utólagos mentés; draft app-kill után helyreáll.
+Minden mászó entitás: soft delete ([[Backend-offline first]]). Nested session + attempts **egy** POST/PUT. Élő pipálás + utólagos mentés; a draft-perzisztálás (app-kill utáni helyreállítás) tervezett — `backlog/021-climbing-folyamatban-levo-session-draft-perzisztalasa-app-kill-t.md`.
 
-**Nem scope (2.0):** gear wear / kötél-leltár; mikro pihenő-stopper; térképnézet / fotó (Crag/Sector opcionális GPS mező OK; UI 2.1).
+**Nincs:** gear wear / kötél-leltár; mikro pihenő-stopper; térképnézet / fotó (a `crag.latitude` / `longitude` oszlop létezik, a térkép-UI nincs).
 
 ### UI/UX elvárások
 
 - Belépés: [[Edzés]] tab → Mászónapló hub → 4 csempe.
-- 1-tap chip-ek, grade pre-parser, legutóbbi terem/helyszín előtöltés (1.0 fájdalompont ellensúlya).
-- Közös lista + kontextus szűrők.
+- 1-tap chip-ek, grade pre-parser, legutóbbi terem/helyszín előtöltés.
+- Per-kontextus session lista (a közös, szűrő-tabos listát a `backlog/022-...` jegy fedi).
 
 ### Megjegyzések
 
-Korábbi összevont szöveg: [[Giga feature napló specifikáció (Ideiglenes specifikáció)]] — pointer; tartalom a moduláris specekbe került.
+_Nincs megjegyzés._
 
 ### Nyitott kérdések
 
@@ -166,9 +164,9 @@ Nincs nyitott kérdés.
 
 ### Frontend
 
-- Hub dashboard; közös session lista; 4 kontextus route → gyerek napló screenek.
-- Shared grade parser komponens; climbing calorie + volume pure TS ([[Tápérték kalkulátor]] / shared modul).
-- Draft: Ionic Storage / SQLite.
+- Hub dashboard; per-kontextus session listák; 4 kontextus route → gyerek napló screenek.
+- Shared grade parser komponens (`shared/grade-input/`); climbing calorie + volume pure TS (`shared/climbing/` + `pages/workout/climbing/climbing-metrics.ts` / `climbing-stats.ts`).
+- Draft: jelenleg csak in-memory form-state; perzisztálás tervezett (`backlog/021-...`).
 
 #### Backend-offline
 
@@ -176,10 +174,10 @@ Olvasás/írás helyi store; mutációk outbox + kliens UUID; soft delete synche
 
 ### Backend
 
-- OpenAPI: `POST/PUT/GET/DELETE /api/climbing/sessions` — polymorphic DTO (`locationType` + `discipline` discriminator).
-- Master külön: `Gym` + `GymColorBand`; `Crag` + `Sector` + `Route` / `BoulderProblem` (gyerek specek).
-- UUID kliens; soft delete; nested session body.
-- Opcionális szerveroldali grade index + kcal paritás.
+- OpenAPI: `POST` / `PUT` / `GET` / `DELETE /api/climbing/sessions` (+ `-item`). **Egy flat `climbing_session` tábla** nullable kontextus-mezőkkel; a diszkriminátor a `locationType` + `discipline` pár.
+- Master külön, per-entitás endpoint: `/api/climbing/{gyms,gym-color-bands,indoor-routes,crags,sectors,routes,boulder-problems}` — `Gym` + `GymColorBand` + `IndoorRoute` (`V22`), `Crag` + `Sector` + `Route` + `BoulderProblem` (`V23`).
+- UUID kliens; soft delete; nested session body (`ClimbingSessionService.saveTree`, `NestedChildResolver`).
+- A szerver **sosem** számol / validál grade indexet vagy kcal-t: az `absoluteDifficultyIndex` és a `guidebookGrade` verbatim tárolódik. Szerveroldali paritás tervezett — `backlog/024-climbing-grade-matrix-kozos-generalt-json-asset-backend-index-uj.md`.
 
 ### Nyitott kérdések
 
