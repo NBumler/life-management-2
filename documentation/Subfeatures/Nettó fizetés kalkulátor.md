@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: ebf0f17
 ---
 
 # Nettó fizetés kalkulátor
@@ -19,7 +19,9 @@ Egyszerűsített **alkalmazotti** nettó becslés a [[Profile]] `grossMonthlySal
 
 **Ownership:** nincs saját entitás; a bemenet user-owned profil — [[Bejelentkezés]].
 
-**Nem scope (MVP):** NAV-pontos számítás; családi / első házas / 30 év alatti anya / egyéb kedvezmény; KATA / KIVA; szocho (munkáltatói); cafeteria; 13. havi; what-if bruttó ezen a képernyőn; maradék (az a [[Pénzügyek]] hubon); OpenAPI / szerveroldali nettó.
+A becslés jelenleg a TB-járulékot, a 15% SZJA-t és a 25 év alatti SZJA-kedvezményt fedi. NAV-pontos számítás, további kedvezmények (családi / első házas / 30 év alatti anya / KATA / KIVA / szocho / cafeteria / 13. havi) és a képernyőn belüli what-if bruttó mező tervezettek:
+
+> Tervezett: `backlog/034-netto-fizetes-kalkulator-nav-pontos-szamitas-tovabbi-kedvezmenye.md`, `backlog/035-netto-fizetes-kalkulator-kepernyon-beluli-what-if-brutto-mezo.md`
 
 ### Funkcionális leírás
 
@@ -81,7 +83,11 @@ A [[Pénzügyek]] hub **csak** a `net`-et (vagy `~`) olvassa; TB / SZJA / kedvez
 
 ### Megjegyzések
 
-Nem adótanácsadás. A plafon (`715_765`) 2026-os keret; változáskor a konstans + ez a spec frissül.
+Nem adótanácsadás.
+
+#### Tudatos korlát
+
+A konstansok (`TB_RATE`, `SZJA_RATE`, `UNDER_25_SZJA_EXEMPTION_CAP_HUF = 715_765`) kézzel karbantartottak a `net-pay-calculator.ts`-ben — nincs NAV-API. A `715_765` a 2026-os keret; jogszabály-változáskor a konstanst **és** ezt a specet frissíteni kell.
 
 ### Nyitott kérdések
 

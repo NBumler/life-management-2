@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: ebf0f17
 ---
 
 # Pénzügyek
@@ -19,7 +19,9 @@ Pénzügyi **hub**: belépéskor három szám (nettó, havi fix kiadás, maradé
 
 **Ownership:** **user-owned** — [[Bejelentkezés]]. A hubnak nincs saját entitása.
 
-**Nem scope (MVP):** egyszeri tranzakció; banki szinkron; envelope / keret; más pénznem; bér melletti bevétel; lakásrezsi mint külön gyerek; befektetés; számla. Közelgő fizetés-értesítés: kint az MVP-ből ([[Értesítések]] későbbi típus; forrás: [[Rendszeres kiadások]]).
+A hub a három számra + két gyerekre szűkített. Egyszeri tranzakció / fizetési előzmény, banki szinkron / envelope-keret / más pénznem / befektetés-számla / bér melletti bevétel, valamint a közelgő fizetés-értesítés tervezett bővítmények:
+
+> Tervezett: `backlog/033-penzugyek-egyszeri-tranzakcio-fizetesi-elozmeny-occurrence-tabla.md`, `backlog/036-penzugyek-banki-szinkron-envelope-keret-mas-penznem-befektetes-b.md`, `backlog/028-kesobbi-ertesites-tipusok-rendszeres-kiadasok-elet-tervek.md`
 
 ### Funkcionális leírás
 
@@ -40,7 +42,7 @@ A hub **fogyasztó**. Nem ír kiadást, nem tárol nettót, nincs saját OpenAPI
 
 #### Hiányjelzés (`~` / homokóra)
 
-Ugyanaz a minta, mint a [[Tápérték kalkulátor]] / [[Profile]]: hiányos bemenetnél a szám **nem számolható** → `~` / homokóra. A sor **látszik**, nem rejtjük.
+A [[Tápérték kalkulátor]] / [[Profile]] mintáját követi: hiányos bemenetnél a szám **nem számolható** (`computeNetPay` `computable: false`) → `~` / homokóra. A sor **látszik**, nem rejtjük.
 
 | Kártya | Mikor szám | Mikor `~` |
 |---|---|---|

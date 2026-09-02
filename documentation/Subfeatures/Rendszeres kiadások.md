@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: ebf0f17
 ---
 
 # Rendszeres kiadások
@@ -21,7 +21,9 @@ Belépés: [[Pénzügyek]] hub → Havi kiadások / Maradék kártya, vagy közv
 
 **Ownership:** **user-owned** — [[Bejelentkezés]].
 
-**Nem scope (MVP):** egyszeri tranzakció; fizetési előzmény-tábla; `WEEKLY` / tetszőleges `interval`; envelope; más pénznem; naptár-producer ([[Naptár]]); közelgő fizetés-értesítés ([[Értesítések]] — továbbra is későbbi típus); duplikálás; seed; undelete; `endDate`; banki szinkron.
+A ritmus jelenleg `MONTHLY` / `QUARTERLY` / `YEARLY`; a soft delete végleges (nincs undelete / `endDate`), nincs duplikálás / seed, nincs fizetési előzmény-tábla, nincs naptár-producer, nincs közelgő fizetés-értesítés. Tervezett bővítmények:
+
+> Tervezett: `backlog/031-rendszeres-kiadasok-weekly-tetszoleges-billing-interval.md`, `backlog/032-rendszeres-kiadasok-undelete-enddate-duplikalas-seed.md`, `backlog/033-penzugyek-egyszeri-tranzakcio-fizetesi-elozmeny-occurrence-tabla.md`, `backlog/028-kesobbi-ertesites-tipusok-rendszeres-kiadasok-elet-tervek.md`
 
 ### Funkcionális leírás
 
@@ -117,7 +119,7 @@ Feb. 29. mint szándékolt nap: nem-szökőévben clamp 28-ra; következő szök
 - [[Pénzügyek]] dashboard: Σ beszámított `monthlyEquivalentHuf`.
 - [[AYCM tracker]]: egy beszámított sor havi ekvivalense; különben `~`. Picker / `AycmSettings`: [[AYCM tracker]] hub.
 - [[Naptár]]: **nem** producer.
-- [[Értesítések]]: közelgő fizetés **nem** az első kör; a típus hook marad a spechen.
+- [[Értesítések]]: közelgő fizetés-értesítés **nincs** — tervezett (`backlog/028-kesobbi-ertesites-tipusok-rendszeres-kiadasok-elet-tervek.md`).
 
 ### UI/UX elvárások
 
@@ -151,13 +153,13 @@ Nincs nyitott kérdés.
 - Pure TS: `monthlyEquivalentHuf`, `addPeriod`, Lejárt/Ma/Később/Szüneteltetett, `countsInMonthlyEquivalent`.
 - Kereső: [[Szöveges keresés]]. i18n enumok: [[Nyelv választás]].
 - OpenAPI generált kliens; mutációk offline rétegen.
-- Fizetve / szünet / szerkesztés: `PUT`. Törlés: `DELETE` (soft).
+- Fizetve / szünet / szerkesztés: a natív outbox `PUT`-ot ír (create-nél `POST`); a web `HttpStorageBackend` update-re is `POST`-ot hív (a szerver idempotens upsertje miatt viselkedésben azonos). Törlés: `DELETE` (soft).
 - Dashboard: import `countsInMonthlyEquivalent` + `monthlyEquivalentHuf` — nem másolja a képletet ([[Pénzügyek]]).
 
 #### Backend-offline
 
 - Olvasás / írás helyi store-ból Backend-offline és Full-offline esetén is.
-- Create / update (Fizetve, `active`, mezők) / delete → outbox (`OfflineQueueService`) + kliens UUID; sync: [[Szinkronizációs központ]].
+- Create / update (Fizetve, `active`, mezők) / delete → outbox (`OfflineQueueService`) + kliens UUID; sync: [[Szinkronizációs központ]]. A natív úton a create `POST`, a többi mutáció `PUT`; a web `HttpStorageBackend` update-re is `POST`-ot hív (idempotens upsert).
 - `addPeriod` és havi ekvivalens **mindig** kliens pure TS (nincs homokóra).
 - Soft delete: helyi `deleted = true` + outbox `DELETE`. Soha nem syncelt draft: helyi hard remove + outbox purge.
 - Pull: `deleted = true` → kiesik a listából; pending `PUT` ugyanarra az ID-ra eldobandó.
