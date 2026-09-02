@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: 65c3b52
 ---
 
 # Étkezés
@@ -85,12 +85,13 @@ Ugyanaz a ±5% zöld a saját célra; **piros nincs**:
 
 #### Élő hivatkozás (recept / élelmiszer)
 
-ID + mennyiség/szorzó; tápanyag a aktuális katalógusból. Törlés: warning + cascade ([[Recept]], [[Élelmiszerek]]).
+ID + mennyiség/szorzó; tápanyag az aktuális katalógusból. Katalógus-tétel törlésekor a hivatkozó étkezés-tételek **cascade** soft delete-et kapnak, és a most üressé vált étkezés is soft delete-elődik ([[Recept]], [[Élelmiszerek]]). A törlés-megerősítő jelenleg nem sorolja fel a hivatkozó étkezéseket — tervezett: `backlog/009-katalogus-recept-etkezes-torles-megerosito-nem-sorolja-fel-a-cas.md`.
 
 #### Készlet
 
 - Create mentéskor: recept / élelmiszer levonás ([[Élelmiszer tárolás]]); egyéni nem.
 - Szerkesztés / törlés: nincs visszapótlás.
+- A levonás **kliens-oldali** (`meal.repository.ts:consumeStock` → `stock-consumption.ts`); a szerver nem von le. **Tudatos korlát:** két offline eszközön naplózott étkezés esetén a `stored_food` relatív csökkentése elveszhet a sor-szintű last-write-wins alatt ([[Backend-offline first]] §17).
 
 #### Időzóna
 
@@ -132,7 +133,7 @@ Dashboard és CRUD helyi store; mutációk outboxba, kliens UUID. Sync: [[Szinkr
 | `Meal` | `id` (UUID); `eatenAt` (timestamptz); `timeZoneId`; `note`; `deleted`; timestamps |
 | `MealItem` | `id`; `mealId`; `type`; `servings`; típusmezők; `sortOrder` |
 
-Cascade: `Food` / `Recipe` delete → itemek, majd üres meal soft delete.
+Cascade: `Food` / `Recipe` delete → itemek (`MealCascade`), majd üres meal soft delete. `MealItem`-nek nincs saját `user_id`; a delta pull a szülő `Meal`-en át vetíti. `POST` létező id-val idempotens upsert; `PUT` deleted meal → 409 `ENTITY_DELETED`; a Meal + tételei egy nested tree-ként mentődnek (`MealService.saveTree`).
 
 ### Nyitott kérdések
 

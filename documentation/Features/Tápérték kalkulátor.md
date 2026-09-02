@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: 65c3b52
 ---
 
 # Tápérték kalkulátor
@@ -17,7 +17,7 @@ verifikalt_commit:
 
 Korábbi név: **Kalóriakalkulátor**. A [[Profile]] és a napi aktivitás alapján kiszámítja a szintentartást, az aznapi kalória-/makrócélokat és az `activityExtraKcal` értéket. Az [[Étkezés]] dashboard progress barjai és az [[Értesítések]] kalória-túllépés szabálya ebből az SSOT-ból olvas. Nincs külön energiaegyenleg-feature.
 
-**Jövőbeli:** célok intervallumra váltása (zöld sáv = intervallum); most: egy szám + ±5%.
+A célok jelenleg egy-egy szám + ±5% zöld sáv; intervallum-alapú célokra váltás tervezett: `backlog/052-tapertek-kalkulator-celok-intervallumra-valtasa.md`.
 
 ### Funkcionális leírás
 
@@ -107,7 +107,7 @@ Profilsúly / cél / edzés / lépés változás → pure TS utility azonnal új
 
 - Napi progress barok: [[Étkezés]] dashboard (elsődleges).
 - Saját magyarázó / debug UI később opcionális.
-- Offline: becsült jelölés csak ha adat hiányzik (~ / homokóra).
+- Hiányos profilnál a dashboard jelenleg az összes bart egyetlen szöveges figyelmeztetésre cseréli (`PROFILE_INCOMPLETE_NOTICE`). A per-érték „becsült" (`~` / homokóra) részleges jelölés tervezett: `backlog/049-tapertek-kalkulator-per-ertek-becsult-jeloles-reszleges-profilna.md`.
 
 ### Megjegyzések
 
@@ -131,7 +131,7 @@ Számítás kliensen Backend-offline / Full-offline. Mentett napló/profil outbo
 
 ### Backend
 
-Ugyanazok a képletek szerveroldali validációhoz / read-modelhez (OpenAPI); kanonikus konstanslista szinkronban a frontendel.
+_Nincs backend érintettség._ A teljes számítás **kliens-only pure TS** (`shared/tdee-calculator.ts` + `core/data/activity-kcal.ts`); nincs szerveroldali TDEE-képlet, read-model vagy OpenAPI végpont. A kanonikus konstanslista egyetlen helyen (frontend) él. Szerveroldali képletek / read-model felvétele (vagy ennek végleges kimondása) tervezett: `backlog/047-tapertek-kalkulator-szerveroldali-kepletek-vagy-a-spec-backend-s.md`.
 
 ### Nyitott kérdések
 

@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: 65c3b52
 ---
 
 # Egyéni forrású étkezés
@@ -34,7 +34,7 @@ verifikalt_commit:
 
 - Nincs `foodId` / `recipeId`.
 - Készlet: **soha** nem von le / nem pótol.
-- Későbbi scope (nem most): étel típus (péksüti, tészta, …) becsléshez.
+- Étel-típus (péksüti, tészta, …) mező a becsléshez tervezett: `backlog/051-egyeni-forrasu-etkezes-etel-tipus-becsleshez.md`.
 
 ### UI/UX elvárások
 

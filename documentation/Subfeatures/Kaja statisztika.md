@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: 65c3b52
 ---
 
 # Kaja statisztika
@@ -15,18 +15,18 @@ verifikalt_commit:
 
 ### Jelenlegi működés
 
-Katalógus-alapú rangsorok: külön listák [[Élelmiszerek]]re és [[Recept]]ekre, aránymutatók szerint. Read-only; számítás a helyi katalógusból. A UI **bővíthető** későbbi statisztika-típusokra (pl. „mit ettem legtöbbet” az [[Étkezés]]ből) — ezek **nem** ebben a körben készülnek el, de az információarchitektúra hagy helyet nekik.
+Katalógus-alapú rangsorok: külön listák [[Élelmiszerek]]re és [[Recept]]ekre, aránymutatók szerint. Read-only; számítás a helyi katalógusból. Jelenleg egyetlen statisztika-típus (Katalógus arányok) van; a `statType` diszkriminátor kódszinten létezik, de renderelt típusválasztó vezérlő és a második (fogyasztás-alapú) típus még nincs — tervezett: `backlog/048-kaja-statisztika-stattype-tipusvalaszto-ui-masodik-statisztika-t.md`.
 
 ### Funkcionális leírás
 
 #### Statisztika-típusok (extenzibilitás)
 
-| Típus | Scope most | Adatforrás |
+| Típus | Állapot | Adatforrás |
 |---|---|---|
-| **Katalógus arányok** | `Kész` / implementálandó | [[Élelmiszerek]], [[Recept]] |
-| Egyéb (pl. fogyasztás / „legtöbbet evett”, idősoros, …) | Későbbi specek | pl. [[Étkezés]] |
+| **Katalógus arányok** | implementálva | [[Élelmiszerek]], [[Recept]] |
+| Egyéb (pl. fogyasztás / „legtöbbet evett”, idősoros, …) | tervezett (`backlog/048-...`) | pl. [[Étkezés]] |
 
-UI: típusválasztó / szegmens (vagy későbbi tab). Az első és egyetlen kidolgozott típus: **Katalógus arányok**. Új típus hozzáadása ne törje a meglévő képernyőt.
+A `catalog-ratios.ts` return-shape-je készen áll a bővítésre; renderelt típusválasztó vezérlő jelenleg nincs (amíg egy opció van). Új típus hozzáadása nem törheti a meglévő képernyőt.
 
 #### Katalógus arányok — két külön lista
 
@@ -73,7 +73,7 @@ Lista tétel koppintás → [[Élelmiszerek]] vagy [[Recept]] részletek.
 ### UI/UX elvárások
 
 - Kaja tab: Statisztika belépő.
-- Típus: Katalógus arányok (hely a jövőbeli típusoknak).
+- Típus: Katalógus arányok (a jövőbeli típusoknak — `backlog/048-kaja-statisztika-stattype-tipusvalaszto-ui-masodik-statisztika-t.md` — az IA hagy helyet).
 - Élelmiszer / Recept váltó (két külön lista).
 - Mutató választó; rendezés irány (↓ / ↑); kereső.
 - Táblázat / lista oszlopok: **helyezés**, név, mutatóérték (+ hiányos badge).

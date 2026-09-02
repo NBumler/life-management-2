@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: 65c3b52
 ---
 
 # Recept forrású étkezés
@@ -24,7 +24,7 @@ verifikalt_commit:
 - Tárolás: `recipeId` + `servings` (nincs tápanyag-snapshot).
 - Effektív makrók / ár: [[Recept]] aktuális összegzése × `servings`.
 - Készlet (étkezés **létrehozás** mentésekor): minden hozzávaló effektív mennyisége (`hozzávaló × servings`) levonása az [[Élelmiszer tárolás]]ból (opened-first szabályok ott). Szerkesztés / törlés: nincs készlet-visszapótlás ([[Étkezés]]).
-- Recept törlésekor: warning + cascade ([[Recept]], [[Étkezés]]).
+- Recept törlésekor: cascade soft delete a hivatkozó tételekre / étkezésekre ([[Recept]], [[Étkezés]]). A törlés-megerősítő nem sorolja fel a hivatkozó étkezéseket — tervezett: `backlog/009-katalogus-recept-etkezes-torles-megerosito-nem-sorolja-fel-a-cas.md`.
 
 ### UI/UX elvárások
 

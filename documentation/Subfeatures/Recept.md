@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: 65c3b52
 ---
 
 # Recept
@@ -28,7 +28,7 @@ Az egész feature (lista, create, szerkesztés, törlés, kalkuláció, keresés
 | Mező | Szabály |
 |---|---|
 | **Recept neve** | Kötelező (pl. Sajtos tejfölös tészta). |
-| **Megjegyzés** | Opcionális, többsoros sima szöveg (pl. elkészítési lépések). **Nincs** markdown. Későbbi feature lehet külön lépéslista / elkészítési idő — most a megjegyzésben él. |
+| **Megjegyzés** | Opcionális, többsoros sima szöveg (pl. elkészítési lépések). **Nincs** markdown. Külön lépéslista / elkészítési idő admin tervezett (`backlog/053-recept-kulon-elkeszitesi-lepesek-ido-admin.md`); jelenleg a megjegyzésben él. |
 | **Hozzávalók** | Opcionális lista; üres hozzávalós recept menthető. |
 
 Nincs adagszám / serving mező a recepten.
@@ -62,7 +62,7 @@ A hozzávalók és az [[Élelmiszerek]] tápanyag / ár mezőiből **számított
 - összes **szénhidrát** (g)
 - összes **zsír** (g)
 
-Egyéb tápanyagok (só, rost, stb.) ugyanezzel a modellel számolhatók a kliensen / API-n — étkezés, fogyás, [[Tápérték kalkulátor]], [[Kaja statisztika]] számára; a részletek elsődleges sorában a fenti öt + hiányjelzés elég.
+A `computeRecipeSummary` jelenleg a fenti öt értéket (a 4 headline makró + ár) összegzi. Az egyéb tápanyagok (só, rost, stb.) ugyanezzel a modellel való összegzése tervezett: `backlog/050-recept-egyeb-tapanyagok-so-rost-osszegzese.md`.
 
 ##### Mennyiség → tápanyag
 
@@ -98,7 +98,7 @@ Backend-offline: helyi ellenőrzés is.
 #### CRUD / törlés
 
 - Lista, részletek, létrehozás, szerkesztés, soft delete — mind offline-képes. Soha nem szinkronizált helyi draft → helyi hard remove + outbox tisztítás — [[Backend-offline first]].
-- Törléskor ha vannak hivatkozó [[Étkezés]] / [[Recept forrású étkezés]] rekordok: megerősítő dialógus **felsorolja** őket, majd **cascade** soft delete (mint [[Élelmiszerek]]). Shared katalógus: a cascade **minden user** érintett étkezéseire vonatkozik; a UI jelezze. Nincs undelete UI. Név-egyediség csak élő sorokra.
+- Törléskor a hivatkozó [[Étkezés]] / [[Recept forrású étkezés]] rekordok **cascade** soft delete-et kapnak (backend `MealCascade` + kliens drain/pull `mealItemCascadeTombstoneTasks`), shared katalógus → **minden user** érintett étkezésére. A megerősítő dialógus jelenleg egy sima név-alapú megerősítés; a hivatkozó rekordok tételes felsorolása és a több-felhasználós hatás jelzése tervezett: `backlog/009-katalogus-recept-etkezes-torles-megerosito-nem-sorolja-fel-a-cas.md`. Nincs undelete UI. Név-egyediség csak élő sorokra.
 
 #### Kapcsolat étkezéssel
 
@@ -107,13 +107,13 @@ Backend-offline: helyi ellenőrzés is.
 ### UI/UX elvárások
 
 - Kaja tab: recept lista + [[Szöveges keresés]].
-- Részletek: név, megjegyzés, hozzávalók (db-nél zárójeles nettó), összegzett ár / kcal / fehérje / szénhidrát / zsír; hiányos adat jelzés.
+- Külön read-only **Részletek** nézet (név, megjegyzés, hozzávalók db-nél zárójeles nettóval, összegzett ár / kcal / fehérje / szénhidrát / zsír, hiányos adat jelzés) tervezett: `backlog/046-recept-read-only-reszletek-nezet.md`. Jelenleg a listából tap közvetlenül a szerkesztőbe visz, ami mutatja az összegzést.
 - Szerkesztő: név, megjegyzés, hozzávaló lista (törlés, reorder, mennyiség); multi-select élelmiszer felvevő.
 - Mentés: fix alsó footer; iOS input min. `16px`.
 
 ### Megjegyzések
 
-Későbbi külön „elkészítési lépések / idő” admin: a megjegyzésből választható le; most nem scope.
+Külön „elkészítési lépések / idő” admin: a megjegyzésből választható le; tervezett — `backlog/053-recept-kulon-elkeszitesi-lepesek-ido-admin.md`.
 
 ### Nyitott kérdések
 
@@ -141,8 +141,8 @@ Nincs nyitott kérdés.
 
 - Unique: `name_normalized` **élő** sorokra ([[Névegyediség]]); alkalmazás-szintű / query ellenőrzés a hozzávaló-halmaz duplikációra — **globális** (shared, `deleted = false`).
 - **Ownership:** shared — nincs `userId`; Auth: bármely autentikált `USER` CRUD ([[Bejelentkezés]]).
-- CRUD + soft delete cascade az étkezés-hivatkozásokra **minden usernél** (vagy az Étkezés spechel egyeztetett cascade). `DELETE` idempotens; törölt `GET` by id → 200 + `deleted`.
-- Összegzett tápanyag / ár: **számított** (kliens és/vagy read-model); nem kötelező denormalizált oszlop — ha cache kell, később.
+- CRUD + soft delete cascade az étkezés-hivatkozásokra **minden usernél** (`MealCascade`). `DELETE` idempotens; `POST` létező id-val idempotens upsert; `PUT` soft-deleted soron → 409 `ENTITY_DELETED`; törölt `GET` by id → 200 + `deleted`.
+- Összegzett tápanyag / ár: **számított kliensen** (`recipe-summary.ts:computeRecipeSummary`), nincs denormalizált oszlop és nincs szerveroldali read-model.
 
 ### Nyitott kérdések
 

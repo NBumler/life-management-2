@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: 65c3b52
 ---
 
 # Élelmiszer forrású étkezés
@@ -25,7 +25,7 @@ verifikalt_commit:
 - Tárolás: `foodId` + `quantityAmount` + `quantityUnit` + `servings` (nem az effektív mennyiség külön oszlopként kötelező — az számított; opcionális denormalizálás tilos követelmény).
 - Effektív tápanyag / ár: ugyanaz a modell, mint [[Recept]] / [[Élelmiszerek]] (`db` → nettó; `/100` × tápanyag) az **effektív** mennyiségre. Hiányos katalógusmező → 0 az adott mutatóban.
 - Készlet: create mentéskor effektív mennyiség levonása ([[Élelmiszer tárolás]]). Szerkesztés / törlés: nincs visszapótlás.
-- Élelmiszer törlésekor: warning + cascade az érintett tételekre / étkezésekre ([[Élelmiszerek]], [[Étkezés]]).
+- Élelmiszer törlésekor: cascade soft delete az érintett tételekre / étkezésekre ([[Élelmiszerek]], [[Étkezés]]). A törlés-megerősítő nem sorolja fel a hivatkozó étkezéseket — tervezett: `backlog/009-katalogus-recept-etkezes-torles-megerosito-nem-sorolja-fel-a-cas.md`.
 
 ### UI/UX elvárások
 
