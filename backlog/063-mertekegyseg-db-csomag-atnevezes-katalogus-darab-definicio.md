@@ -23,6 +23,12 @@ closed:
 
 # 063 — Mértékegység: »darab« → »csomag« átnevezés + katalógus darab-definíció (törtekkel)
 
+> **Haladás (2026-09-03):** minden kód-szelet kész és zöld (`master`):
+> A (rename, `5c1df5f`) · E (migráció V30 / SCHEMA_V28 / OutboxMigrator v2, `dff1456`) ·
+> D (tört-parser + skálázott-egész egyenlőség, `fb1e267`) · B (`Food.pieceAmount/pieceUnit`,
+> `c6c52f4`) · C (kontextuális `db` + `food-quantity.ts` közös feloldó, `61815f9`).
+> Hátra: a 12 érintett spec átírása a jelen állapotra + `IMPLEMENTATION_STATUS.md` sor + archiválás.
+
 ## Motiváció / probléma
 
 A katalógus fogalmilag **csomagokat** tárol — az ár `Ft / csomag`, a mennyiség „1 **csomag**
