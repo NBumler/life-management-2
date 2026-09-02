@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, Input, forwardRef, signal } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 
 import { HelpInputComponent } from '../help-input/help-input.component';
 import { ParsedQuantity, QuantityMode, QuantityParseError, formatQuantityValue, parseQuantityInput } from '../quantity';
@@ -16,7 +17,7 @@ import { ParsedQuantity, QuantityMode, QuantityParseError, formatQuantityValue, 
   selector: 'app-quantity-input',
   templateUrl: 'quantity-input.component.html',
   styleUrls: ['quantity-input.component.scss'],
-  imports: [HelpInputComponent],
+  imports: [HelpInputComponent, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [
     {
@@ -29,6 +30,8 @@ import { ParsedQuantity, QuantityMode, QuantityParseError, formatQuantityValue, 
 export class QuantityInputComponent implements ControlValueAccessor {
   @Input() mode: QuantityMode = 'quantity';
   @Input() label = '';
+  /** Literal placeholder override; when empty, a mode-appropriate example hint is shown instead. */
+  @Input() placeholder = '';
 
   readonly text = signal('');
   /** i18n key of the current inline error, or `null`. */
@@ -40,6 +43,12 @@ export class QuantityInputComponent implements ControlValueAccessor {
 
   get helpTextKey(): string {
     return this.mode === 'quantity' ? 'SHARED.QUANTITY_INPUT.HELP_QUANTITY' : 'SHARED.QUANTITY_INPUT.HELP_DURATION';
+  }
+
+  get placeholderKey(): string {
+    return this.mode === 'quantity'
+      ? 'SHARED.QUANTITY_INPUT.PLACEHOLDER_QUANTITY'
+      : 'SHARED.QUANTITY_INPUT.PLACEHOLDER_DURATION';
   }
 
   writeValue(value: ParsedQuantity | null): void {

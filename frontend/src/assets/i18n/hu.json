@@ -575,6 +575,8 @@
       "HELP_TITLE": "Hogyan add meg",
       "HELP_QUANTITY": "Írj számot és egységet, szóköz opcionális. Példa: 120dkg, 3 db, 2l, 5cl.",
       "HELP_DURATION": "Írj számot és időegységet. Példa: 14nap, 2 hét, 3hó.",
+      "PLACEHOLDER_QUANTITY": "pl. 120 dkg",
+      "PLACEHOLDER_DURATION": "pl. 2 hét",
       "ERROR_QUANTITY": "Ismeretlen mennyiség vagy egység.",
       "ERROR_DURATION": "Ismeretlen időtartam vagy időegység."
     },

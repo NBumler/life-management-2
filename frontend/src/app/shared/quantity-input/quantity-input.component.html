@@ -1,6 +1,7 @@
 <app-help-input
   [label]="label"
   [value]="text()"
+  [placeholder]="placeholder || (placeholderKey | translate)"
   [disabled]="disabled()"
   helpTitleKey="SHARED.QUANTITY_INPUT.HELP_TITLE"
   [helpTextKey]="helpTextKey"
