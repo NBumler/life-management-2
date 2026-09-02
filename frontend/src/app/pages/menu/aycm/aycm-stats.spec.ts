@@ -48,6 +48,12 @@ describe('aycm-stats windowRange', () => {
   it('handles February leap length via the last-day helper', () => {
     expect(windowRange('THIS_MONTH', '2028-02-05').to).toBe('2028-02-29');
   });
+
+  it('THIS_YEAR spans the whole current calendar year, monthCount 12', () => {
+    expect(windowRange('THIS_YEAR', '2026-08-31')).toEqual({ from: '2026-01-01', to: '2026-12-31', monthCount: 12 });
+    expect(windowRange('THIS_YEAR', '2026-01-01')).toEqual({ from: '2026-01-01', to: '2026-12-31', monthCount: 12 });
+    expect(windowRange('THIS_YEAR', '2028-12-31')).toEqual({ from: '2028-01-01', to: '2028-12-31', monthCount: 12 });
+  });
 });
 
 describe('aycm-stats filterCheckIns', () => {

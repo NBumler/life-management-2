@@ -308,7 +308,8 @@
       "WINDOW": {
         "THIS_MONTH": "This month",
         "PREV_MONTH": "Previous month",
-        "LAST_3_MONTHS": "Last 3 months"
+        "LAST_3_MONTHS": "Last 3 months",
+        "THIS_YEAR": "This year"
       },
       "CARD_VISITS": "Visits",
       "CARD_VALUE": "Total value",

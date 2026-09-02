@@ -135,6 +135,15 @@ describe('AycmStatsPage', () => {
     expect(component.summary().visitCount).toBe(0);
   });
 
+  it('switches to the whole-year window and costs 12 months of pass', async () => {
+    await setup(true);
+    component.setWindow('THIS_YEAR');
+    expect(component.window()).toBe('THIS_YEAR');
+    // the sample rows sit in the current month, so they are inside the current year too
+    expect(component.summary()).toEqual({ visitCount: 2, visitValueSumHuf: 5000 });
+    expect(component.worthItHuf()).toBe(5000 - 30000 * 12);
+  });
+
   it('opens the Check-In editor for a tapped visit date', async () => {
     await setup(true);
     const router = TestBed.inject(Router);

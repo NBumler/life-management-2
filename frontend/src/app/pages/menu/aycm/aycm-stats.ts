@@ -6,7 +6,7 @@
 import { AycmCheckIn } from '../../../api/model/aycmCheckIn';
 import { AycmPartner } from '../../../api/model/aycmPartner';
 
-export type StatsWindow = 'THIS_MONTH' | 'PREV_MONTH' | 'LAST_3_MONTHS';
+export type StatsWindow = 'THIS_MONTH' | 'PREV_MONTH' | 'LAST_3_MONTHS' | 'THIS_YEAR';
 
 export interface WindowRange {
   /** Inclusive `YYYY-MM-DD`. */
@@ -66,6 +66,12 @@ export function windowRange(window: StatsWindow, todayIso: string): WindowRange 
     const startYear = Math.floor(zeroBased / 12);
     const startMonth = (zeroBased % 12) + 1;
     return { from: firstDayIso(startYear, startMonth), to: lastDayIso(year, month), monthCount: 3 };
+  }
+  if (window === 'THIS_YEAR') {
+    // The whole current calendar year. `monthCount` is 12 like every other window's whole-month
+    // count (LAST_3_MONTHS counts the running partial month as full too), so "megéri-e" measures
+    // the visits against a full year's pass — not the months elapsed so far.
+    return { from: firstDayIso(year, 1), to: lastDayIso(year, 12), monthCount: 12 };
   }
   // THIS_MONTH
   return { from: firstDayIso(year, month), to: lastDayIso(year, month), monthCount: 1 };

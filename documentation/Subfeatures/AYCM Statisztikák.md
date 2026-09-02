@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: 279a21b
+verifikalva: 2026-09-03
+verifikalt_commit: 8c6b5c6
 ---
 
 # AYCM Statisztikák
@@ -19,9 +19,9 @@ Read-only összesítés az élő [[AYCM Check-In]] snapshotokból: időablak, me
 
 **Ownership:** a Check-In / settings user-owned — [[Bejelentkezés]].
 
-Jelenleg: három preset-ablak, számkártyák + két lista, nincs diagram, nincs custom dátumtartomány / YTD / „összes idő", nincs külön copay-kártya, nincs saját OpenAPI / outbox. Tervezett bővítmények:
+Jelenleg: négy preset-ablak (köztük az **idei naptári év**), számkártyák + két lista, nincs diagram, nincs custom dátumtartomány, nincs „összes idő", nincs külön copay-kártya, nincs saját OpenAPI / outbox. Tervezett bővítmények:
 
-> Tervezett: `backlog/040-aycm-statisztikak-custom-datumtartomany-diagram-ytd-all-time-cop.md`
+> Tervezett: `backlog/040-aycm-statisztikak-custom-datumtartomany-diagram-ytd-all-time-cop.md` (custom dátumtartomány, „összes idő", diagram, külön copay-kártya)
 
 ### Funkcionális leírás
 
@@ -38,8 +38,11 @@ Default: **ez a hónap** — ugyanaz a darab / Σ, mint a [[AYCM tracker]] hubon
 | `THIS_MONTH` | aktuális naptári hónap 1. napja … utolsó napja | 1 |
 | `PREV_MONTH` | előző naptári hónap teljes | 1 |
 | `LAST_3_MONTHS` | aktuális−2 hónap 1. napja … aktuális hónap utolsó napja (3 teljes naptári hónap, a jelenlegi bent) | 3 |
+| `THIS_YEAR` | aktuális év `01-01` … `12-31` (teljes naptári év, a jövőbeli hónapok is bent) | 12 |
 
-Nincs custom, nincs YTD, nincs all-time.
+`THIS_YEAR` `monthCount`-ja a **teljes** év (12), nem az eddig eltelt hónapok — ugyanaz az elv, mint a `LAST_3_MONTHS`-nál, ami a folyó részleges hónapot is teljesnek számolja; a megéri-e így az egész éves bérlethez méri a látogatásokat.
+
+Nincs custom dátumtartomány, nincs all-time.
 
 #### Összegző számok
 
@@ -69,7 +72,7 @@ Tap → [[AYCM Check-In]] `?date=YYYY-MM-DD`.
 
 - **Belépés:** [[AYCM tracker]] hub → Megéri-e kártya / statisztika belépő. Flag: **AYCM tracker**.
 - Route pl. `/tabs/menu/aycm/stats`.
-- Preset választó (három); kártyák: darab, Σ érték, megéri-e (vagy `~`); helyszín tábla; látogatáslista.
+- Preset választó (négy, vízszintesen görgethető `ion-segment`); kártyák: darab, Σ érték, megéri-e (vagy `~`); helyszín tábla; látogatáslista.
 - Read-only (szerkesztés a Check-In oldalon). i18n: [[Nyelv választás]]. Kontraszt: [[Dark&Light mode]].
 - Üres ablak: 0 / 0 Ft / megéri = `0 − passCost` vagy `~`; listák üresek, nincs create CTA.
 
@@ -86,7 +89,7 @@ Nincs nyitott kérdés.
 ### Frontend
 
 - Képernyő: `AycmStatsPage`.
-- Pure TS: ablak `from`/`to` + `monthCount`; szűrés; Σ / darab; megéri-e; groupBy `partnerId`.
+- Pure TS: ablak `from`/`to` + `monthCount` (`windowRange` a `StatsWindow` union négy értékére); szűrés; Σ / darab; megéri-e; groupBy `partnerId`.
 - Check-In lista: helyi store (vagy már behúzott `GET /api/aycm-check-ins?from=&to=` a [[AYCM Check-In]] szerint). Nincs saját mutáció.
 
 #### Backend-offline

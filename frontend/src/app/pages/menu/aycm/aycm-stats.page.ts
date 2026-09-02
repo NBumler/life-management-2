@@ -76,7 +76,7 @@ export class AycmStatsPage implements OnInit, ViewWillEnter {
   private readonly featureFlags = inject(FeatureFlagsService);
 
   readonly window = signal<StatsWindow>('THIS_MONTH');
-  readonly windows: readonly StatsWindow[] = ['THIS_MONTH', 'PREV_MONTH', 'LAST_3_MONTHS'];
+  readonly windows: readonly StatsWindow[] = ['THIS_MONTH', 'PREV_MONTH', 'LAST_3_MONTHS', 'THIS_YEAR'];
 
   private readonly range = computed(() => windowRange(this.window(), today()));
   private readonly windowCheckIns = computed(() => {
@@ -126,7 +126,12 @@ export class AycmStatsPage implements OnInit, ViewWillEnter {
   }
 
   setWindow(value: string | undefined): void {
-    if (value === 'THIS_MONTH' || value === 'PREV_MONTH' || value === 'LAST_3_MONTHS') {
+    if (
+      value === 'THIS_MONTH' ||
+      value === 'PREV_MONTH' ||
+      value === 'LAST_3_MONTHS' ||
+      value === 'THIS_YEAR'
+    ) {
       this.window.set(value);
     }
   }

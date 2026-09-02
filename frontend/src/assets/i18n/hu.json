@@ -308,7 +308,8 @@
       "WINDOW": {
         "THIS_MONTH": "Ez a hónap",
         "PREV_MONTH": "Előző hónap",
-        "LAST_3_MONTHS": "Utolsó 3 hónap"
+        "LAST_3_MONTHS": "Utolsó 3 hónap",
+        "THIS_YEAR": "Idei év"
       },
       "CARD_VISITS": "Látogatások",
       "CARD_VALUE": "Érték összesen",

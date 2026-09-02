@@ -1,7 +1,7 @@
 ---
 id: 40
 type: feature
-status: backlog
+status: in-progress
 title: "AYCM Statisztikák bővítés — idei év (THIS_YEAR) + custom dátumtartomány + diagram + all-time + copay-kártya"
 specs:
   - "[[AYCM Statisztikák]]"
@@ -53,30 +53,34 @@ Kód: `frontend/src/app/pages/menu/aycm/aycm-stats.ts` (`StatsWindow` union típ
 Önállóan szállítható szeletekre bontva — a sorrend egyben a javasolt szállítási
 sorrend is. A 1. szelet a legkisebb, önmagában is érték.
 
-### 1. `THIS_YEAR` preset (idei naptári év)  ← korábbi külön 064-es jegy, ide olvasztva
+### 1. `THIS_YEAR` preset (idei naptári év)  ← korábbi külön 064-es jegy, ide olvasztva — **KÉSZ (2026-09-03)**
 
-- [ ] Új `THIS_YEAR` preset-ablak: `from` = az aktuális év `YYYY-01-01`,
-      `to` = `YYYY-12-31` (kliens TZ, zárt intervallum).
-- [ ] A tartományon belüli **jövőbeli** dátumú Check-In benne marad (konzisztens a
-      meglévő ablakokkal és a hubbal — nincs vágás).
-- [ ] `monthCount = 12` (a teljes naptári év, konzisztensen a „minden ablak teljes
+- [x] Új `THIS_YEAR` preset-ablak: `from` = az aktuális év `YYYY-01-01`,
+      `to` = `YYYY-12-31` (kliens TZ, zárt intervallum). — `windowRange()` új ág.
+- [x] A tartományon belüli **jövőbeli** dátumú Check-In benne marad (konzisztens a
+      meglévő ablakokkal és a hubbal — nincs vágás). — `filterCheckIns` változatlan.
+- [x] `monthCount = 12` (a teljes naptári év, konzisztensen a „minden ablak teljes
       naptári hónapokra kerekít" szabállyal — vö. `LAST_3_MONTHS` a folyó részleges
-      hónapot is teljesnek számolja). Lásd a döntési naplót.
-- [ ] Az összesítők ugyanazokat a pure-TS utility-ket hívják, mint a többi ablak:
+      hónapot is teljesnek számolja). Döntés: **A) `12`**.
+- [x] Az összesítők ugyanazokat a pure-TS utility-ket hívják, mint a többi ablak:
       `filterCheckIns` / `summarize` (darab + Σ `visitValueHuf`, 0 OK, sosem `~`),
       `passCostHuf(settings, expenses, 12)`, `worthItHuf(...)` (előjeles egész Ft,
       nincs clamp; `~` csak ha `passCostComputable = false`).
-- [ ] Helyszín bontás és látogatáslista változatlan logikával, csak a nagyobb
+- [x] Helyszín bontás és látogatáslista változatlan logikával, csak a nagyobb
       halmazon (rendezés, névfeloldás, tap → Check-In `?date=YYYY-MM-DD` ugyanaz).
-- [ ] UI: negyedik `ion-segment-button` a preset-választóban, saját i18n kulccsal
-      (HU + EN). A gombok ne törjenek szét keskeny kijelzőn — `scrollable` segment
-      vagy tördelés, [[Dark&Light mode]] kontraszttal.
-- [ ] `setWindow()` guard és a `windows` tömb kiegészítve; `StatsWindow` union
+- [x] UI: negyedik `ion-segment-button` a preset-választóban, saját i18n kulccsal
+      (HU „Idei év" + EN „This year"). `ion-segment` `scrollable` — a négy gomb nem
+      csonkul keskeny kijelzőn.
+- [x] `setWindow()` guard és a `windows` tömb kiegészítve; `StatsWindow` union
       típus bővítve.
-- [ ] `aycm-stats.spec.ts`: `windowRange('THIS_YEAR', ...)` határeset (év eleje /
+- [x] `aycm-stats.spec.ts`: `windowRange('THIS_YEAR', ...)` határeset (év eleje /
       vége; a `to` fix `12-31`), `monthCount === 12`.
       `aycm-stats.page.spec.ts`: a negyedik segment kiválasztható, a megéri-e 12
       havi bérlet-költséggel számol.
+- [x] [[AYCM Statisztikák]] spec frissítve: „Ablakok (preset)" tábla `THIS_YEAR`
+      sorral + `monthCount = 12` indoklás, `### Jelenlegi működés` („négy
+      preset-ablak"), UI/UX (négy, görgethető segment), Frontend szakasz;
+      `> Tervezett:` pointer szűkítve a maradék 4 szeletre; `verifikalva: 2026-09-03`.
 
 ### 2. Custom dátumtartomány
 
@@ -125,6 +129,11 @@ sorrend is. A 1. szelet a legkisebb, önmagában is érték.
 - **Összevonás (2026-09-03):** a külön `064-aycm-statisztikak-idei-ev-...` jegy ide
   olvasztva mint 1. szelet. Nincs önálló 064-es fájl; a spec `> Tervezett:` pointere
   továbbra is erre a fájlra (`040-...`) mutat.
+- **1. szelet leszállítva (2026-09-03):** `THIS_YEAR` preset kész, tesztekkel + i18n +
+  spec-frissítéssel. `status: in-progress`. Érintett kód:
+  `frontend/src/app/pages/menu/aycm/aycm-stats.ts` (`StatsWindow`, `windowRange`),
+  `aycm-stats.page.ts` (`windows`, `setWindow`), `aycm-stats.page.html` (`scrollable`
+  segment), `frontend/src/assets/i18n/{hu,en}.json`. Hátralévő: 2–5. szelet.
 - **Szállíthatóság:** az 5 szelet külön PR-ben mehet; a THIS_YEAR a legkisebb,
   önmagában is érték, javasolt elsőnek.
 - **`monthCount` döntés (`THIS_YEAR`, nyitott):**
