@@ -171,17 +171,28 @@ if ($Deliver) {
     }
 
     $tag = "dev-apk"
-    $null = & gh release view $tag --repo $repoSlug 2>$null
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "'$tag' prerelease letrehozasa ($repoSlug)..."
-        $notes = "Legfrissebb debug APK telefonos teszteleshez. Minden 'install-android.ps1 -Deliver' futas feluliria."
-        & gh release create $tag --repo $repoSlug --prerelease --title "Dev APK builds" --notes $notes
-        if ($LASTEXITCODE -ne 0) { throw "gh release create sikertelen (exit $LASTEXITCODE)" }
-    }
 
-    Write-Host "APK feltoltese: $tag <- $apkPath"
-    & gh release upload $tag $apkPath --repo $repoSlug --clobber
-    if ($LASTEXITCODE -ne 0) { throw "gh release upload sikertelen (exit $LASTEXITCODE)" }
+    # A script-szintu $ErrorActionPreference = "Stop" a nativ exe stderr-jet is terminalo hibava
+    # teszi (PS 5.1), a 'gh release view' pedig a meg nem letezo release-re stderr-re ir + nem-nulla
+    # exit code-ot ad -- ez a normal "meg kell hozni" ag. Erre a szakaszra Continue-ra valtunk es
+    # kizarolag a $LASTEXITCODE-ra tamaszkodunk; a try/finally garantalja a visszaallitast.
+    $savedEap = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    try {
+        & gh release view $tag --repo $repoSlug 2>&1 | Out-Null
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "'$tag' prerelease letrehozasa ($repoSlug)..."
+            $notes = "Legfrissebb debug APK telefonos teszteleshez. Minden 'install-android.ps1 -Deliver' futas feluliria."
+            & gh release create $tag --repo $repoSlug --prerelease --title "Dev APK builds" --notes $notes
+            if ($LASTEXITCODE -ne 0) { throw "gh release create sikertelen (exit $LASTEXITCODE)" }
+        }
+
+        Write-Host "APK feltoltese: $tag <- $apkPath"
+        & gh release upload $tag $apkPath --repo $repoSlug --clobber
+        if ($LASTEXITCODE -ne 0) { throw "gh release upload sikertelen (exit $LASTEXITCODE)" }
+    } finally {
+        $ErrorActionPreference = $savedEap
+    }
 
     $downloadUrl = "https://github.com/$repoSlug/releases/download/$tag/app-debug.apk"
     Write-Host ""
