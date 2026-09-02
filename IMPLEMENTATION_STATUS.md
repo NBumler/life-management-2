@@ -134,7 +134,29 @@ naptár-producer, hivatalos AYCM-import, statisztika-diagram, custom
 dátumtartomány, stb.) a specek saját „Nem scope" jelölését követik — csak külön
 spec-bővítés után indíthatók, nem részei ennek a körnek.
 
-## Lezárt kör: post-MVP apró frontend extrák (2026-09-01)
+## Lezárt kör: dokumentáció ↔ implementáció audit + 3 RED-javítás (2026-09-02)
+
+A `documentation/` → jelenlegi-állapot SSOT + `backlog/` feladatrendszer restructure
+Fázis 3b–3c. Állítás-szintű audit mind a 76 `Kész` spec ellen, 14 domén-chunkban
+(`backlog/audit/chunk-NN-*.md` + `ROLLUP.md`). ~1270 állítás, ~91% Implemented; 9
+GREEN / 4 YELLOW / 2 RED chunk + 1 elfogadott kivétel. Minden Missing / Partial /
+Describes-future találat jegyként: `backlog/009`–`062` (54 db).
+
+Három tényleges kód-hiba javítva (`fix(frontend)` commit; frontend lint + `ng build`
++ `test:ci` zöld, 1353 teszt):
+
+- **Dark&Light mode** — a `global.scss` csak a `dark.system.css`-t importálta, ezért
+  a `ThemeService` `.ion-palette-dark` osztály-toggle-je hatástalan volt: fix „Világos"
+  sötét készüléken nem világosított, fix „Sötét" világos készüléken nem sötétített.
+  Váltás `dark.class.css`-re (osztály-stratégia), amit a `ThemeService.isDark()` hajt.
+- **Naptár** — a napi listáról visszatérve a `calendar-day.page.ts goBack()` a
+  megtekintett napból számolta a rács hónapját, ezért szomszédos hónap napjának tapja
+  után a rács átugrott. Az eredeti hónap most `?from=YYYY-MM` query paramban utazik
+  `openDay` → nap → `goBack` láncon (fallback: a nap hónapja deep linknél).
+- **Nyelv választás** — `systemLanguage()` bármely nem-`en` locale-ra `en`-t adott a
+  spec által előírt `hu` fallback helyett; javítva + új `language.service.spec.ts`.
+
+
 
 A „Következő kör: post-MVP extrák" tábla két legkisebb, tisztán frontend sora,
 egy menetben. Frontend (Karma: 1324 zöld) + `ng build` + lint zöld. Nincs
