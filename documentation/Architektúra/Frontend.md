@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: 9a41447
 ---
 
 # Frontend
@@ -207,7 +207,7 @@ Ami nincs a táblában, annak nincs flagje: a [[Élelmiszerek]], [[Élelmiszer t
 
 ##### Függőségek
 
-A config **build-time validált**; szabálysértés fordítási hiba, nem futásidejű meglepetés.
+A `features.json` build-időben bundle-ölt asset, a `FeatureFlags` root service szinkron olvassa; a kulcs- és függőség-validáció **load-time dev-hiba** (a `feature-flags.service.ts` komment ezt kimondja), nem szó szerinti fordítási hiba.
 
 | Ha be van kapcsolva | Akkor kötelező | Miért |
 |---|---|---|
@@ -243,9 +243,9 @@ Az induláson **nincs blokkoló hálózati hívás** — [[Backend-offline first
 | `@capacitor/app` | Resume / pause életciklus → drain, pull, mai lépés-sync | [[Backend-offline first]] §6, [[Lépésszám követés]] |
 | `@capacitor-mlkit/barcode-scanning` | Vonalkód kamera (eszközön belüli, Full-offline is megy) | [[Vonalkódos élelmiszer beolvasás]] |
 | `@capacitor/local-notifications` | 09:00 / 20:00 / esemény `startTime` ütemezés | [[Értesítések]] |
-| `@capacitor/background-runner` | 08:00 háttérfeladat: tegnapi lépésszám | [[Lépésszám átszinkronizálása a Samsung Health-ből]] |
-| Health Connect bridge | Android lépésszám olvasás (nincs first-party plugin) | ugyanaz — csomagválasztás: Nyitott kérdések |
-| Secure storage (Keychain / EncryptedSharedPreferences) | Access + refresh token; app-frissítés után is megmarad | [[Bejelentkezés]] — csomagválasztás: Nyitott kérdések |
+| **Saját háttér-plugin** (`core/notifications/background-reminders.plugin.ts` + natív `AlarmManager` / `WorkManager` `ReminderWorker`) | 09:00 / 20:00 háttérfeladat (tegnapi lépésszám stash + `STEPS_LOW` esti értékelés) — a `@capacitor/background-runner` **nem** került be | [[Lépésszám átszinkronizálása a Samsung Health-ből]], [[Értesítések]] |
+| **Saját Health Connect plugin** (`core/health/health-connect.plugin.ts` + `HealthConnectStepsPlugin.kt`, `androidx.health.connect:connect-client`) | Android lépésszám olvasás | [[Lépésszám átszinkronizálása a Samsung Health-ből]] |
+| `@aparajita/capacitor-secure-storage` | Access + refresh token; app-frissítés után is megmarad | [[Bejelentkezés]] |
 | `@capacitor/preferences` | Device-local beállítások: nyelv, téma, értesítés típus-kapcsolók | [[Bejelentkezés]] device-local tábla |
 
 Platform-kényelmi pluginok (splash screen, status bar, keyboard) szükség szerint; nem spec-döntés.
@@ -305,7 +305,6 @@ _Nincs backend érintettség._ (szerveroldali szerződés: [[Backend]]; sync vé
 
 ### Nyitott kérdések
 
-- Health Connect bridge: közösségi Capacitor csomag vs saját plugin ([[Lépésszám átszinkronizálása a Samsung Health-ből]]) — csomagválasztás implementációkor, nem blokkolja a specet.
-- Secure storage konkrét csomag (Keychain / EncryptedSharedPreferences wrapper) — [[Bejelentkezés]] szerint a követelmény kötött (app-frissítés után is megmarad), a csomag nem.
+Nincs nyitott kérdés. (A Health Connect bridge saját Capacitor plugin lett; a secure storage az `@aparajita/capacitor-secure-storage` — lásd a Capacitor plugin táblát.)
 
 Lezárva: state management (Signals + root service-ek), tab → feature hozzárendelés, feature flag mechanizmus és registry, sync képernyő útvonala (`/tabs/menu/sync`), Capacitor plugin lista, generált kliens illesztése (repository réteg, nem interceptor), generált kód kimeneti mappája.

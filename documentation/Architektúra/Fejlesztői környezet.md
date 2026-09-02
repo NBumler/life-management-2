@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: 9a41447
 ---
 
 # Fejlesztői környezet
@@ -103,7 +103,7 @@ Két Android-oldali beállítás, amit a projektnek **egyszer** el kell végezni
 - **Cleartext HTTP:** az Android 9+ tiltja a titkosítatlan forgalmat, tehát egy `http://192.168.x.y:8080` hívás alapból elhasal. Kell egy `network_security_config.xml`, amely a fejlesztői hosztokra engedi a cleartextet, és **kizárólag a `debug` varianthoz** van kötve — a release build maradjon HTTPS-only.
 - **CORS:** a natív Capacitor WebView origin nem `null`, hanem az `androidScheme` szerinti (`https://localhost`), tehát a backend `local` profilja engedélyezze ezt az origint. A böngészős fejlesztés a proxy miatt nem igényel CORS-t.
 
-A szkript maga a `frontend/` projekt felállításakor születik meg (ma még nincs kód a repóban); a fenti lépéssor és paraméterezés a szerződése.
+A szkript (`scripts/install-android.ps1`), a debug-only cleartext network-security-config (`frontend/android/app/src/debug/res/xml/network_security_config.xml`) és a `local` profil `https://localhost` CORS-engedélye (`SecurityConfig`) mind a repóban van.
 
 #### Backend-offline
 
@@ -124,5 +124,5 @@ A fejlesztői környezet nem futásidejű feature, de az offline állapotok **k�
 
 ### Nyitott kérdések
 
-- Prod üzemeltetés / hosting és TLS — [[Backend]].
-- iOS build és eszközre telepítés: nem scope az első körben ([[Lépésszám követés]] iOS Health szintén későbbi).
+- iOS build és eszközre telepítés: `> Tervezett: backlog/004-ios-build-es-telepites.md` (az iOS Health lépés-forrás: `backlog/002-ios-health-lepes-forras.md`).
+- Prod üzemeltetés / hosting és TLS: `> Tervezett: backlog/006-prod-hosting-tls.md`.

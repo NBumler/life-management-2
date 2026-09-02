@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: 9a41447
 ---
 
 # Backend-offline first
@@ -107,7 +107,7 @@ Nincs nyitott kérdés.
 - **Nincs bináris tartalom** a helyi store-ban az első körben (nincs kép / fájl feltöltés).
 - **A helyi DB nem titkosított** az első körben (nincs SQLCipher): a készülék OS-szintű lemeztitkosítására és app-sandboxára támaszkodunk. Az auth tokenek ettől függetlenül platform secure store-ban vannak ([[Bejelentkezés]]).
 - `sync_state` tábla: `cursor`, `last_pull_at`, `last_pull_status`, `first_pull_completed`.
-- `seed_state` tábla: melyik seed-verzió futott már le ([[Gyakorlat]], §15).
+- `seed_state` tábla (melyik seed-verzió futott már le): a helyi SQLite sémából jelenleg **hiányzik** (a seed-latch weben localStorage-ban, natívon az üres-store-check adja) — tervezett: `backlog/057-backend-offline-seed-state-tabla-hianya-a-helyi-sqlite-semabol.md`.
 
 #### 4. Outbox — adatmodell
 
@@ -434,7 +434,7 @@ Elv: a külső integrációk **soha nincsenek** a saját backenden proxyzva ([[B
 - **Build asset** (Full-offline is elérhető): nehézségi konverziós mátrix JSON, `Exercise` seed fájl, i18n (`hu.json` / `en.json`), enumok, feature flag konfiguráció.
 - Az `Exercise` seed sorai **user-owned másolatok determinisztikus v5 ID-vel** (§9) → többeszközös első indulás nem duplikálja a katalógust és nem ütközik a `name` egyediségbe.
 - A seed create-ek **normál outbox tételek** (offline első indulásnál is működik).
-- `seed_state` tábla tartja, melyik seed-verzió futott le; a seed nem fut újra minden induláskor.
+- A seed nem fut újra minden induláskor: a latch jelenleg weben localStorage, natívon az üres-store-check. A dedikált `seed_state` tábla tervezett — `backlog/057-backend-offline-seed-state-tabla-hianya-a-helyi-sqlite-semabol.md`.
 
 #### 16. UI elvárások offline állapotban
 

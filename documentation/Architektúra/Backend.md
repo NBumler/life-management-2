@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: 9a41447
 ---
 
 # Backend
@@ -101,7 +101,7 @@ backend/
 - Szervezés: gyökérfájl + `openapi/paths/*.yaml` és `openapi/components/schemas/*.yaml` `$ref`-fel. A starter kit egyetlen fájlt említ — a **szándékos eltérés** oka a kb. 40 entitás; a gyökérfájl útvonala változatlan, tehát a `/gen-api-client` konvenció érvényes marad.
 - A `GET /api/sync/changes` és a `GET /api/health` nem CRUD végpont: nem jönnek ki az entitás-sablonból, **kézzel** kell felvenni őket a válasz-sémákkal együtt. Ha kimaradnak, a generált kliensből is hiányoznak, és a `SyncEngine` nem fordul le.
 - **Validáció a sémában él** (`required`, `maxLength`, `pattern`, `minimum`), nem kézzel a DTO-n: így a generált Java DTO jakarta annotációt kap, és a generált kliens ugyanazt a szabályt ismeri. A `@Valid` a controller paraméteren, a hibát a globális handler képezi le.
-- Swagger UI a **becsomagolt statikus specből** szolgálódik ki (fejlesztői kipróbálás), nem kódból generálva.
+- Beépített Swagger UI jelenleg **nincs** kiszolgálva (nincs springdoc / swagger-ui-webjar függőség); a specet a `openapi.yaml` + `openapi/` fájlok adják közvetlenül.
 - A szerződéstartás kényszere a fordítás: a generált API interface-eket a controllerek implementálják, tehát spec-változás után a backend **nem fordul**, amíg nincs átvezetve.
 
 ##### Generátor profilok
@@ -123,7 +123,7 @@ backend/
 - **Közös oszlopok** minden szinkronizált táblán ([[Backend-offline first]]): `id uuid` PK (**kliens adja**), `created_at`, `updated_at` (`timestamptz`), `deleted boolean not null default false`, `deleted_at`, user-owned táblán `user_id uuid not null`.
 - **`updated_at` DB triggerből** (`BEFORE INSERT OR UPDATE` → `now()`): a cascade soft delete-ek bulk `UPDATE`-jeinél is kötelezően frissül. Ez a [[Backend-offline first]] „kritikus követelmény"-e — alkalmazásrétegben egy elfelejtett bulk update csendben kitüntetné a sort a delta pullból, és a többi eszköz szellemsorokat látna. JPA oldalon a mező `@Generated(INSERT, UPDATE)`, hogy Hibernate visszaolvassa a szerver által adott értéket.
 - **Indexek:** `(user_id, updated_at)` a user-owned táblákon (a delta pull szűrése), FK-kra index, és a [[Névegyediség]] hatóköre szerinti partial unique indexek (`WHERE deleted = false`) a normalizált oszlopon.
-- **Tombstone:** fizikai törlés csak a retenciós határ (**180 nap** a `deleted_at`-tól) után, ütemezett job; a job frissíti a `sync_meta.tombstone_horizon` értéket.
+- **Tombstone:** a `sync_meta.tombstone_horizon` (`now() - interval '180 days'`) olvasása és a `410 CURSOR_TOO_OLD` ág megvan; a **fizikai törlést végző ütemezett cleanup / horizon-frissítő job jelenleg hiányzik** — tervezett: `backlog/056-backend-tombstone-fizikai-torles-180-nap-utemezett-job-hianyzik.md`.
 
 #### Névnormalizálás — kliens–szerver paritás
 
@@ -145,7 +145,7 @@ Szerződés és szemantika: [[Backend-offline first]] (SSOT) — itt csak az imp
   - `nextCursor`: opaque base64(`updated_at` + `id`), nem nyers timestamp.
   - **Kötelező teszt:** minden `deleted` oszlopos tábla szerepel a view-ban. Új entitás migrációja a view-t is újraírja; ez az egyetlen hely, ahol egy elfelejtett tábla **csendben** kiesne a syncből, és a hiba csak a user eszközén derülne ki.
   - `410 CURSOR_TOO_OLD`: ha a `since` régebbi a `sync_meta.tombstone_horizon`-nál.
-- **Idempotencia:** `Idempotency-Key` minden módosító kérésen. A CRUD természetesen idempotens (upsert kliens UUID-ra, soft delete idempotens), de az **atomi** végpontok nem — a `POST /api/shopping-lists/{id}/complete` archivál, `StoredFood`-okat hoz létre és új listát nyit ([[Bevásárlás teljesítve]]), tehát a visszajátszása duplikálna. Ezért `idempotency_key` tábla (`key` PK, `user_id`, `endpoint`, `http_status`, `response_body`, `created_at`) filterben ellenőrizve; replaynél a **tárolt válasz** megy vissza. Retenció 30 nap.
+- **Idempotencia:** a natív drain **minden** replay-en küld `Idempotency-Key` headert (`= outbox.id`). A plain CRUD természetesen idempotens (upsert kliens UUID-ra, soft delete idempotens), így ott a szerver nem kényszeríti ki a kulcsot. Az **atomi** végpontok nem idempotensek — a `POST /api/shopping-lists/{id}/complete` archivál, `StoredFood`-okat hoz létre és új listát nyit ([[Bevásárlás teljesítve]]), tehát a visszajátszása duplikálna. Ezért **ezen a végponton** `idempotency_key` tábla (`key` PK, `user_id`, `endpoint`, `http_status`, `response_body`, `created_at`) alapú replay-védelem; replaynél a **tárolt válasz** megy vissza. A 30 napos retenciós prune job és a header szélesebb körű kikényszerítése tervezett: `backlog/058-backend-idempotency-key-30-napos-prune-job-enforce-everywhere-vi.md`.
 - **Upsert:** explicit `findById` → insert vagy update a service-ben. Nem támaszkodunk a JPA `save()` heurisztikájára: kliens által adott PK-nál a `save()` insert / update döntése nem magától értetődő. `POST` létező `id`-val → `200` + a frissített sor, nem `409`.
 - **Nested aggregate `PUT`** ([[Edzésnapló]], [[Mászónapló]], [[Recept]], [[Sablonok]]): a teljes fa cseréje egy tranzakcióban, gyerekeken soft delete a kiesőkre — a részleges szinkronizált állapot így kizárt.
 
@@ -190,5 +190,5 @@ Nincs aggregált „Kaja API" a szülőben. A szerződés **erőforrás / tag al
 
 ### Nyitott kérdések
 
-- **Prod üzemeltetés / hosting** (saját VPS + docker-compose vs managed platform + managed Postgres, TLS, backup): az első kör a fejlesztői környezetre szól — [[Fejlesztői környezet]]. A natív app `apiBaseUrl`-je konfiguráció, tehát a döntés nem blokkolja a fejlesztést.
-- Az openapi-generator `spring` profiljának **Spring Boot 4 / Framework 7 kimenetét** verzió-pineléskor ellenőrizni kell. Ha az adott generátor-verzió még nem kompatibilis, a tartalék: csak model / DTO generálás, és az API interface kézzel íródik a spec alapján (a szerződés forrása változatlanul az OpenAPI).
+- Az openapi-generator `7.24.0` `spring` profilja Spring Boot `4.1.0`-val fordul (`useBeanValidation` / `useJakartaEe` pinelve); ~40 controller implementálja a generált interfészeket, a build zöld — a tartalék (kézzel írt API interface) nem kellett. A jövőbeli verzió-emeléskori re-check karbantartási emlékeztető: `> Tervezett: backlog/008-openapi-generator-spring-boot-4-kimenet-ellenorzes.md`.
+- Prod üzemeltetés / hosting és TLS: `> Tervezett: backlog/006-prod-hosting-tls.md`.
