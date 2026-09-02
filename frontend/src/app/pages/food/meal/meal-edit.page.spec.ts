@@ -133,7 +133,7 @@ describe('MealEditPage', () => {
     expect(fixture.componentInstance.activePicker()).toBe('none');
   });
 
-  it('food picker: adds a row per picked food with an empty quantity', async () => {
+  it('food picker: adds a row per picked food with an empty quantity, and auto-opens the editor on it', async () => {
     await createFixture('new');
     foodRepository.items.set([food({ id: 'f1' })]);
     await fixture.componentInstance.ngOnInit();
@@ -145,9 +145,33 @@ describe('MealEditPage', () => {
     const [row] = fixture.componentInstance.items();
     expect(row.type).toBe('FOOD');
     expect(row.type === 'FOOD' && row.quantity()).toEqual({ amount: null, unit: null });
+    expect(fixture.componentInstance.editorRow()).toBe(row);
   });
 
-  it('addCustomRow(): appends a blank CUSTOM row', async () => {
+  it('recipe picker: does not auto-open the editor (a RECIPE row is born valid)', async () => {
+    await createFixture('new');
+    recipeRepository.items.set([recipe({ id: 'r1' })]);
+    await fixture.componentInstance.ngOnInit();
+
+    fixture.componentInstance.togglePicker('recipe');
+    fixture.componentInstance.togglePick('r1', []);
+    fixture.componentInstance.confirmPicked();
+
+    expect(fixture.componentInstance.editorRow()).toBeNull();
+  });
+
+  it('closeEditor(): clears the open row', async () => {
+    await createFixture('new');
+    await fixture.componentInstance.ngOnInit();
+    fixture.componentInstance.addCustomRow();
+    expect(fixture.componentInstance.editorRow()).not.toBeNull();
+
+    fixture.componentInstance.closeEditor();
+
+    expect(fixture.componentInstance.editorRow()).toBeNull();
+  });
+
+  it('addCustomRow(): appends a blank CUSTOM row and opens the editor on it', async () => {
     await createFixture('new');
     await fixture.componentInstance.ngOnInit();
 
@@ -156,6 +180,7 @@ describe('MealEditPage', () => {
     const [row] = fixture.componentInstance.items();
     expect(row.type).toBe('CUSTOM');
     expect(row.type === 'CUSTOM' && row.displayName()).toBe('');
+    expect(fixture.componentInstance.editorRow()).toBe(row);
   });
 
   it('removeItem(): drops the row', async () => {

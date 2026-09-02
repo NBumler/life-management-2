@@ -1,0 +1,133 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="cancelled.emit()">{{ 'COMMON.CANCEL' | translate }}</ion-button>
+    </ion-buttons>
+    <ion-title>{{ title }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-list>
+    @switch (row.type) {
+      @case ('FOOD') {
+        <ion-item lines="none">
+          <app-quantity-input
+            [ngModel]="foodRow.quantity()"
+            (ngModelChange)="foodRow.quantity.set($event)"
+            [ngModelOptions]="{ standalone: true }"
+            mode="quantity"
+            [label]="'FOOD.MEAL.QUANTITY_LABEL' | translate"
+          ></app-quantity-input>
+        </ion-item>
+        @if (foodRow.quantity().amount === null) {
+          <ion-note color="danger" class="field-error">{{ 'FOOD.MEAL.QUANTITY_REQUIRED' | translate }}</ion-note>
+        }
+      }
+      @case ('CUSTOM') {
+        <ion-item>
+          <ion-input
+            [value]="customRow.displayName()"
+            (ionInput)="customRow.displayName.set($any($event.target).value ?? '')"
+            [label]="'FOOD.MEAL.CUSTOM_NAME_LABEL' | translate"
+            labelPlacement="stacked"
+          ></ion-input>
+        </ion-item>
+        @if (customRow.displayName().trim() === '') {
+          <ion-note color="danger" class="field-error">{{ 'FOOD.MEAL.CUSTOM_NAME_REQUIRED' | translate }}</ion-note>
+        }
+        <ion-item>
+          <ion-input
+            type="number"
+            inputmode="decimal"
+            [value]="customRow.caloriesKcal()"
+            (ionInput)="customRow.caloriesKcal.set(parseOptionalNumber($any($event.target).value))"
+            [label]="'FOOD.MEAL.CUSTOM_CALORIES_LABEL' | translate"
+            labelPlacement="stacked"
+          ></ion-input>
+        </ion-item>
+        @if (customRow.caloriesKcal() === null) {
+          <ion-note color="danger" class="field-error">{{ 'FOOD.MEAL.CUSTOM_CALORIES_REQUIRED' | translate }}</ion-note>
+        }
+        <ion-item>
+          <ion-input
+            type="number"
+            inputmode="decimal"
+            [value]="customRow.proteinG()"
+            (ionInput)="customRow.proteinG.set(parseOptionalNumber($any($event.target).value))"
+            [label]="'FOOD.MEAL.CUSTOM_PROTEIN_LABEL' | translate"
+            labelPlacement="stacked"
+          ></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-input
+            type="number"
+            inputmode="decimal"
+            [value]="customRow.carbsG()"
+            (ionInput)="customRow.carbsG.set(parseOptionalNumber($any($event.target).value))"
+            [label]="'FOOD.MEAL.CUSTOM_CARBS_LABEL' | translate"
+            labelPlacement="stacked"
+          ></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-input
+            type="number"
+            inputmode="decimal"
+            [value]="customRow.fatG()"
+            (ionInput)="customRow.fatG.set(parseOptionalNumber($any($event.target).value))"
+            [label]="'FOOD.MEAL.CUSTOM_FAT_LABEL' | translate"
+            labelPlacement="stacked"
+          ></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-input
+            type="number"
+            inputmode="decimal"
+            [value]="customRow.priceHuf()"
+            (ionInput)="customRow.priceHuf.set(parseOptionalNumber($any($event.target).value))"
+            [label]="'FOOD.MEAL.CUSTOM_PRICE_LABEL' | translate"
+            labelPlacement="stacked"
+          ></ion-input>
+        </ion-item>
+      }
+    }
+
+    <ion-item lines="none" class="servings-item">
+      <ion-label>{{ 'FOOD.MEAL.SERVINGS_LABEL' | translate }}</ion-label>
+      <div class="servings-stepper" slot="end">
+        <ion-button
+          fill="outline"
+          size="small"
+          [disabled]="row.servings() <= step"
+          [attr.aria-label]="'COMMON.DECREASE' | translate"
+          (click)="adjustServings(-step)"
+        >
+          −
+        </ion-button>
+        <ion-input
+          class="servings-value"
+          type="number"
+          inputmode="decimal"
+          [value]="row.servings()"
+          (ionInput)="onServingsInput($any($event.target).value)"
+        ></ion-input>
+        <ion-button fill="outline" size="small" [attr.aria-label]="'COMMON.INCREASE' | translate" (click)="adjustServings(step)"> + </ion-button>
+      </div>
+    </ion-item>
+  </ion-list>
+
+  <div class="effective-preview">
+    <span>{{
+      'FOOD.MEAL.EFFECTIVE_SUMMARY' | translate: { kcal: effective().energyKcal | number: '1.0-0', price: effective().priceHuf | number: '1.0-0' }
+    }}</span>
+    @if (effective().incomplete) {
+      <span class="effective-preview__warn"> · {{ 'FOOD.MEAL.DASHBOARD.SUMMARY_INCOMPLETE' | translate }}</span>
+    }
+  </div>
+</ion-content>
+
+<ion-footer>
+  <ion-toolbar>
+    <ion-button expand="block" class="ion-margin" [disabled]="!valid()" (click)="done.emit()">{{ 'COMMON.DONE' | translate }}</ion-button>
+  </ion-toolbar>
+</ion-footer>

@@ -1,0 +1,8 @@
+// The item list shows read-only summaries; the whole label opens the per-item editor modal.
+.meal-item-summary {
+  cursor: pointer;
+}
+
+.meal-item-summary__error {
+  color: var(--ion-color-danger);
+}

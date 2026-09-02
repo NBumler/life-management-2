@@ -1,6 +1,5 @@
-import { DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, OnInit, WritableSignal, computed, inject, signal } from '@angular/core';
-import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
   AlertController,
@@ -15,6 +14,7 @@ import {
   IonItem,
   IonLabel,
   IonList,
+  IonModal,
   IonSearchbar,
   IonTextarea,
   IonTitle,
@@ -28,80 +28,43 @@ import { Recipe } from '../../../api/model/recipe';
 import { FoodRepository } from '../../../core/data/food.repository';
 import { MealRepository } from '../../../core/data/meal.repository';
 import { RecipeRepository } from '../../../core/data/recipe.repository';
-import { MealDraft, MealItemSaveItem } from '../../../core/storage/storage-backend';
+import { MealDraft } from '../../../core/storage/storage-backend';
 import { today } from '../../../shared/local-date';
-import { ParsedQuantity, QuantityUnit } from '../../../shared/quantity';
-import { QuantityInputComponent } from '../../../shared/quantity-input/quantity-input.component';
+import { formatQuantityValue } from '../../../shared/quantity';
 import { ReorderListComponent } from '../../../shared/reorder-list/reorder-list.component';
 import { compareRank, matchesSearch } from '../../../shared/text-search';
 import { deviceTimeZoneId, instantFromLocalDateTime } from '../../../shared/timezone';
-import { uuidV4 } from '../../../core/sync/uuid';
+import { MealItemEditorComponent } from './meal-item-editor.component';
+import {
+  FoodItemRow,
+  ItemRow,
+  RecipeItemRow,
+  buildRowFromDto,
+  createCustomRow,
+  createFoodRow,
+  createRecipeRow,
+  isRowComplete,
+  rowNeedsInput,
+  toSaveItem,
+} from './meal-item-row';
 import { computeMealItemEffective } from './meal-item-summary';
-
-const NO_QUANTITY: ParsedQuantity<QuantityUnit> = { amount: null, unit: null };
-
-interface RecipeItemRow {
-  id: string;
-  type: 'RECIPE';
-  recipeId: string;
-  servings: WritableSignal<number>;
-}
-interface FoodItemRow {
-  id: string;
-  type: 'FOOD';
-  foodId: string;
-  quantity: WritableSignal<ParsedQuantity<QuantityUnit>>;
-  servings: WritableSignal<number>;
-}
-interface CustomItemRow {
-  id: string;
-  type: 'CUSTOM';
-  displayName: WritableSignal<string>;
-  caloriesKcal: WritableSignal<number | null>;
-  proteinG: WritableSignal<number | null>;
-  carbsG: WritableSignal<number | null>;
-  fatG: WritableSignal<number | null>;
-  priceHuf: WritableSignal<number | null>;
-  servings: WritableSignal<number>;
-}
-type ItemRow = RecipeItemRow | FoodItemRow | CustomItemRow;
-
-function toSaveItem(row: ItemRow, sortOrder: number): MealItemSaveItem {
-  if (row.type === 'RECIPE') {
-    return { id: row.id, type: 'RECIPE', recipeId: row.recipeId, servings: row.servings(), sortOrder };
-  }
-  if (row.type === 'FOOD') {
-    const quantity = row.quantity();
-    return { id: row.id, type: 'FOOD', foodId: row.foodId, quantityAmount: quantity.amount ?? 0, quantityUnit: quantity.unit ?? 'g', servings: row.servings(), sortOrder };
-  }
-  return {
-    id: row.id,
-    type: 'CUSTOM',
-    displayName: row.displayName(),
-    caloriesKcal: row.caloriesKcal() ?? 0,
-    proteinG: row.proteinG(),
-    carbsG: row.carbsG(),
-    fatG: row.fatG(),
-    priceHuf: row.priceHuf(),
-    servings: row.servings(),
-    sortOrder,
-  };
-}
 
 /**
  * documentation/Subfeatures/Étkezés.md "Étkezés entitás" / "Tétel — közös" — create + edit in one
  * page (route param `id` is either an existing meal's uuid or the literal `new`), mirroring
- * recipe-edit.page.ts's shape. Three item source types share one mixed reorderable list; RECIPE and
- * FOOD reuse recipe-edit's multi-select-picker pattern, CUSTOM is a plain inline form row.
+ * recipe-edit.page.ts's shape. Three item source types share one mixed reorderable list, rendered as
+ * compact read-only summaries; tapping a row (or adding one via a picker) opens `MealItemEditorComponent`
+ * in a modal for the full-width per-item form. The row objects (`meal-item-row.ts`) are shared
+ * verbatim between the list and the modal.
  */
 @Component({
   selector: 'app-meal-edit',
   templateUrl: 'meal-edit.page.html',
+  styleUrls: ['meal-edit.page.scss'],
   imports: [
     ReactiveFormsModule,
-    FormsModule,
-    QuantityInputComponent,
     ReorderListComponent,
+    MealItemEditorComponent,
     IonHeader,
     IonToolbar,
     IonTitle,
@@ -117,8 +80,8 @@ function toSaveItem(row: ItemRow, sortOrder: number): MealItemSaveItem {
     IonLabel,
     IonCheckbox,
     IonSearchbar,
+    IonModal,
     TranslatePipe,
-    DecimalPipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -140,6 +103,8 @@ export class MealEditPage implements OnInit {
   readonly pickerQuery = signal('');
   readonly pickedIds = signal<ReadonlySet<string>>(new Set());
   readonly showItemErrors = signal(false);
+  /** The item row currently open in the editor modal, or `null` when it's closed. */
+  readonly editorRow = signal<ItemRow | null>(null);
 
   readonly form = this.fb.nonNullable.group({
     date: this.fb.nonNullable.control(today(), [Validators.required]),
@@ -183,7 +148,7 @@ export class MealEditPage implements OnInit {
         existing.items
           .filter((item) => !item.deleted)
           .sort((a, b) => a.sortOrder - b.sortOrder)
-          .map((item) => this.buildRowFromDto(item)),
+          .map((item) => buildRowFromDto(item)),
       );
     }
   }
@@ -198,6 +163,41 @@ export class MealEditPage implements OnInit {
 
   effectiveOf(row: ItemRow, index: number) {
     return computeMealItemEffective(toSaveItem(row, index), this.recipeRepository.items(), this.foodRepository.items());
+  }
+
+  isRowComplete(row: ItemRow): boolean {
+    return isRowComplete(row);
+  }
+
+  /** Header text for a summary row / the editor modal: the catalog name, or the custom item's own name. */
+  rowTitle(row: ItemRow): string {
+    if (row.type === 'RECIPE') {
+      return this.recipeOf(row)?.name ?? '—';
+    }
+    if (row.type === 'FOOD') {
+      return this.foodOf(row)?.name ?? '—';
+    }
+    return row.displayName().trim() || this.translate.instant('FOOD.MEAL.CUSTOM_ITEM_TITLE');
+  }
+
+  /** One-line summary under the row title: quantity (FOOD) · servings · effective kcal/price. */
+  rowSummaryLine(row: ItemRow, index: number): string {
+    if (row.type === 'FOOD' && row.quantity().amount === null) {
+      return this.translate.instant('FOOD.MEAL.QUANTITY_REQUIRED');
+    }
+    const parts: string[] = [];
+    if (row.type === 'FOOD') {
+      parts.push(formatQuantityValue(row.quantity()));
+    }
+    parts.push(this.translate.instant('FOOD.MEAL.SERVINGS_SHORT', { value: row.servings() }));
+    const effective = this.effectiveOf(row, index);
+    parts.push(
+      this.translate.instant('FOOD.MEAL.EFFECTIVE_SUMMARY', {
+        kcal: Math.round(effective.energyKcal),
+        price: Math.round(effective.priceHuf),
+      }),
+    );
+    return parts.join(' · ');
   }
 
   togglePicker(kind: 'recipe' | 'food'): void {
@@ -229,25 +229,28 @@ export class MealEditPage implements OnInit {
     const kind = this.activePicker();
     const newRows: ItemRow[] =
       kind === 'recipe'
-        ? [...this.pickedIds()].map((recipeId) => ({ id: uuidV4(), type: 'RECIPE', recipeId, servings: signal(1) }) satisfies RecipeItemRow)
-        : [...this.pickedIds()].map((foodId) => ({ id: uuidV4(), type: 'FOOD', foodId, quantity: signal(NO_QUANTITY), servings: signal(1) }) satisfies FoodItemRow);
+        ? [...this.pickedIds()].map((recipeId) => createRecipeRow(recipeId))
+        : [...this.pickedIds()].map((foodId) => createFoodRow(foodId));
     this.items.update((rows) => [...rows, ...newRows]);
     this.activePicker.set('none');
+    const firstNeedingInput = newRows.find(rowNeedsInput);
+    if (firstNeedingInput !== undefined) {
+      this.openEditor(firstNeedingInput);
+    }
   }
 
   addCustomRow(): void {
-    const row: CustomItemRow = {
-      id: uuidV4(),
-      type: 'CUSTOM',
-      displayName: signal(''),
-      caloriesKcal: signal(null),
-      proteinG: signal(null),
-      carbsG: signal(null),
-      fatG: signal(null),
-      priceHuf: signal(null),
-      servings: signal(1),
-    };
+    const row = createCustomRow();
     this.items.update((rows) => [...rows, row]);
+    this.openEditor(row);
+  }
+
+  openEditor(row: ItemRow): void {
+    this.editorRow.set(row);
+  }
+
+  closeEditor(): void {
+    this.editorRow.set(null);
   }
 
   onItemsReordered(reordered: ItemRow[]): void {
@@ -256,32 +259,6 @@ export class MealEditPage implements OnInit {
 
   removeItem(row: ItemRow): void {
     this.items.update((rows) => rows.filter((entry) => entry.id !== row.id));
-  }
-
-  private buildRowFromDto(item: { id: string; type: string; recipeId?: string | null; foodId?: string | null; quantityAmount?: number | null; quantityUnit?: string | null; displayName?: string | null; caloriesKcal?: number | null; proteinG?: number | null; carbsG?: number | null; fatG?: number | null; priceHuf?: number | null; servings: number }): ItemRow {
-    if (item.type === 'RECIPE') {
-      return { id: item.id, type: 'RECIPE', recipeId: item.recipeId ?? '', servings: signal(item.servings) };
-    }
-    if (item.type === 'FOOD') {
-      return {
-        id: item.id,
-        type: 'FOOD',
-        foodId: item.foodId ?? '',
-        quantity: signal({ amount: item.quantityAmount ?? null, unit: (item.quantityUnit as QuantityUnit) ?? null }),
-        servings: signal(item.servings),
-      };
-    }
-    return {
-      id: item.id,
-      type: 'CUSTOM',
-      displayName: signal(item.displayName ?? ''),
-      caloriesKcal: signal(item.caloriesKcal ?? null),
-      proteinG: signal(item.proteinG ?? null),
-      carbsG: signal(item.carbsG ?? null),
-      fatG: signal(item.fatG ?? null),
-      priceHuf: signal(item.priceHuf ?? null),
-      servings: signal(item.servings),
-    };
   }
 
   /**
@@ -301,10 +278,8 @@ export class MealEditPage implements OnInit {
   }
 
   async save(): Promise<void> {
-    const invalidQuantity = this.items().some((row) => row.type === 'FOOD' && row.quantity().amount === null);
-    const invalidCustom = this.items().some((row) => row.type === 'CUSTOM' && (row.displayName().trim() === '' || row.caloriesKcal() === null));
-    const invalidServings = this.items().some((row) => row.servings() <= 0);
-    if (this.form.invalid || this.items().length === 0 || invalidQuantity || invalidCustom || invalidServings) {
+    const hasIncompleteItem = this.items().some((row) => !isRowComplete(row));
+    if (this.form.invalid || this.items().length === 0 || hasIncompleteItem) {
       this.form.markAllAsTouched();
       this.showItemErrors.set(true);
       return;

@@ -10,7 +10,10 @@
     "CLOSE": "Close",
     "REMOVE": "Remove",
     "MOVE_UP": "Move up",
-    "MOVE_DOWN": "Move down"
+    "MOVE_DOWN": "Move down",
+    "DONE": "Done",
+    "DECREASE": "Decrease",
+    "INCREASE": "Increase"
   },
   "LOGIN": {
     "TITLE": "Log in",
@@ -735,7 +738,11 @@
       "PICKER_CONFIRM": "Add selected",
       "NO_ITEMS": "No items yet.",
       "QUANTITY_REQUIRED": "Quantity is required.",
+      "QUANTITY_LABEL": "Amount",
       "SERVINGS_LABEL": "Servings",
+      "SERVINGS_SHORT": "{{value}}× serving",
+      "ITEM_INCOMPLETE": "Incomplete item – tap to fill it in.",
+      "CUSTOM_ITEM_TITLE": "Custom item",
       "CUSTOM_NAME_LABEL": "Display name",
       "CUSTOM_NAME_REQUIRED": "Display name is required.",
       "CUSTOM_CALORIES_LABEL": "Calories (kcal)",

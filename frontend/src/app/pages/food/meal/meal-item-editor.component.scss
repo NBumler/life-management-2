@@ -1,0 +1,35 @@
+// One meal item, edited full-width in a modal — the layout the cramped inline list row could never give.
+.field-error {
+  display: block;
+  padding-inline: 16px;
+  margin-top: 4px;
+  font-size: 0.8rem;
+}
+
+.servings-item {
+  margin-top: 8px;
+}
+
+.servings-stepper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.servings-value {
+  width: 4.5rem;
+  text-align: center;
+  --padding-start: 4px;
+  --padding-end: 4px;
+}
+
+.effective-preview {
+  margin-top: 16px;
+  padding-inline: 4px;
+  color: var(--ion-color-medium);
+  font-size: 0.9rem;
+}
+
+.effective-preview__warn {
+  color: var(--ion-color-warning);
+}

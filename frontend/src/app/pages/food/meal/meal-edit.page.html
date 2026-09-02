@@ -97,93 +97,13 @@
     } @else {
       <app-reorder-list [items]="items()" (reorder)="onItemsReordered($event)" (remove)="removeItem($event)">
         <ng-template let-row let-i="index">
-          @if (row.type === 'RECIPE') {
-            <ion-label>
-              <h3>{{ recipeOf(row)?.name ?? '—' }}</h3>
-              <p>{{ 'FOOD.MEAL.EFFECTIVE_SUMMARY' | translate: { kcal: effectiveOf(row, i).energyKcal | number: '1.0-0', price: effectiveOf(row, i).priceHuf | number: '1.0-0' } }}</p>
-            </ion-label>
-            <ion-input
-              [value]="row.servings()"
-              (ionChange)="row.servings.set(+($any($event.target).value || 1))"
-              type="number"
-              [label]="'FOOD.MEAL.SERVINGS_LABEL' | translate"
-              labelPlacement="stacked"
-            ></ion-input>
-          } @else if (row.type === 'FOOD') {
-            <ion-label>
-              <h3>{{ foodOf(row)?.name ?? '—' }}</h3>
-              @if (showItemErrors() && row.quantity().amount === null) {
-                <p style="color: var(--ion-color-danger)">{{ 'FOOD.MEAL.QUANTITY_REQUIRED' | translate }}</p>
-              } @else {
-                <p>{{ 'FOOD.MEAL.EFFECTIVE_SUMMARY' | translate: { kcal: effectiveOf(row, i).energyKcal | number: '1.0-0', price: effectiveOf(row, i).priceHuf | number: '1.0-0' } }}</p>
-              }
-            </ion-label>
-            <app-quantity-input [ngModel]="row.quantity()" (ngModelChange)="row.quantity.set($event)" [ngModelOptions]="{ standalone: true }" mode="quantity"></app-quantity-input>
-            <ion-input
-              [value]="row.servings()"
-              (ionChange)="row.servings.set(+($any($event.target).value || 1))"
-              type="number"
-              [label]="'FOOD.MEAL.SERVINGS_LABEL' | translate"
-              labelPlacement="stacked"
-            ></ion-input>
-          } @else {
-            <ion-label>
-              <ion-input
-                [value]="row.displayName()"
-                (ionChange)="row.displayName.set($any($event.target).value ?? '')"
-                [label]="'FOOD.MEAL.CUSTOM_NAME_LABEL' | translate"
-                labelPlacement="stacked"
-              ></ion-input>
-              @if (showItemErrors() && row.displayName().trim() === '') {
-                <p style="color: var(--ion-color-danger)">{{ 'FOOD.MEAL.CUSTOM_NAME_REQUIRED' | translate }}</p>
-              }
-              <ion-input
-                [value]="row.caloriesKcal()"
-                (ionChange)="row.caloriesKcal.set($any($event.target).value === '' ? null : +$any($event.target).value)"
-                type="number"
-                [label]="'FOOD.MEAL.CUSTOM_CALORIES_LABEL' | translate"
-                labelPlacement="stacked"
-              ></ion-input>
-              @if (showItemErrors() && row.caloriesKcal() === null) {
-                <p style="color: var(--ion-color-danger)">{{ 'FOOD.MEAL.CUSTOM_CALORIES_REQUIRED' | translate }}</p>
-              }
-              <ion-input
-                [value]="row.proteinG()"
-                (ionChange)="row.proteinG.set($any($event.target).value === '' ? null : +$any($event.target).value)"
-                type="number"
-                [label]="'FOOD.MEAL.CUSTOM_PROTEIN_LABEL' | translate"
-                labelPlacement="stacked"
-              ></ion-input>
-              <ion-input
-                [value]="row.carbsG()"
-                (ionChange)="row.carbsG.set($any($event.target).value === '' ? null : +$any($event.target).value)"
-                type="number"
-                [label]="'FOOD.MEAL.CUSTOM_CARBS_LABEL' | translate"
-                labelPlacement="stacked"
-              ></ion-input>
-              <ion-input
-                [value]="row.fatG()"
-                (ionChange)="row.fatG.set($any($event.target).value === '' ? null : +$any($event.target).value)"
-                type="number"
-                [label]="'FOOD.MEAL.CUSTOM_FAT_LABEL' | translate"
-                labelPlacement="stacked"
-              ></ion-input>
-              <ion-input
-                [value]="row.priceHuf()"
-                (ionChange)="row.priceHuf.set($any($event.target).value === '' ? null : +$any($event.target).value)"
-                type="number"
-                [label]="'FOOD.MEAL.CUSTOM_PRICE_LABEL' | translate"
-                labelPlacement="stacked"
-              ></ion-input>
-            </ion-label>
-            <ion-input
-              [value]="row.servings()"
-              (ionChange)="row.servings.set(+($any($event.target).value || 1))"
-              type="number"
-              [label]="'FOOD.MEAL.SERVINGS_LABEL' | translate"
-              labelPlacement="stacked"
-            ></ion-input>
-          }
+          <ion-label class="meal-item-summary" (click)="openEditor(row)">
+            <h3>{{ rowTitle(row) }}</h3>
+            <p>{{ rowSummaryLine(row, i) }}</p>
+            @if (showItemErrors() && !isRowComplete(row)) {
+              <p class="meal-item-summary__error">{{ 'FOOD.MEAL.ITEM_INCOMPLETE' | translate }}</p>
+            }
+          </ion-label>
         </ng-template>
       </app-reorder-list>
     }
@@ -195,3 +115,18 @@
     <ion-button expand="block" type="submit" form="meal-form" class="ion-margin">{{ 'COMMON.SAVE' | translate }}</ion-button>
   </ion-toolbar>
 </ion-footer>
+
+<ion-modal [isOpen]="editorRow() !== null" (didDismiss)="closeEditor()">
+  <ng-template>
+    @if (editorRow(); as row) {
+      <app-meal-item-editor
+        [row]="row"
+        [title]="rowTitle(row)"
+        [foods]="foodRepository.items()"
+        [recipes]="recipeRepository.items()"
+        (done)="closeEditor()"
+        (cancelled)="closeEditor()"
+      ></app-meal-item-editor>
+    }
+  </ng-template>
+</ion-modal>

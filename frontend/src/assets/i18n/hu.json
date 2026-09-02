@@ -10,7 +10,10 @@
     "CLOSE": "Bezárás",
     "REMOVE": "Eltávolítás",
     "MOVE_UP": "Mozgatás felfelé",
-    "MOVE_DOWN": "Mozgatás lefelé"
+    "MOVE_DOWN": "Mozgatás lefelé",
+    "DONE": "Kész",
+    "DECREASE": "Csökkentés",
+    "INCREASE": "Növelés"
   },
   "LOGIN": {
     "TITLE": "Bejelentkezés",
@@ -735,7 +738,11 @@
       "PICKER_CONFIRM": "Kijelöltek hozzáadása",
       "NO_ITEMS": "Még nincs tétel.",
       "QUANTITY_REQUIRED": "A mennyiség megadása kötelező.",
+      "QUANTITY_LABEL": "Mennyiség",
       "SERVINGS_LABEL": "Adagszorzó",
+      "SERVINGS_SHORT": "{{value}}× adag",
+      "ITEM_INCOMPLETE": "Hiányos tétel – koppints a kitöltéshez.",
+      "CUSTOM_ITEM_TITLE": "Egyéni tétel",
       "CUSTOM_NAME_LABEL": "Megjelenő név",
       "CUSTOM_NAME_REQUIRED": "A megjelenő név kötelező.",
       "CUSTOM_CALORIES_LABEL": "Kalória (kcal)",
