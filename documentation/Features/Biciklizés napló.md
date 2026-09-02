@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: 39829a9
 ---
 
 # Biciklizés napló
@@ -24,7 +24,7 @@ Kerékpáros utak naplózása az [[Edzés]] tab alatt. Egy naplóbejegyzés = eg
 | Mező | Típus / szabály |
 |---|---|
 | `id` | UUID, kliens generálja létrehozáskor |
-| `date` | Naptári dátum (kliens TZ); aznapi `activityExtraKcal` összegzéshez. Start/end időpont **nincs** az első körben. |
+| `date` | Naptári dátum (kliens TZ); aznapi `activityExtraKcal` összegzéshez. Start/end időpont **nincs**. |
 | `durationMinutes` | Kötelező; egész szám, `> 0` |
 | `intensity` | Kötelező enum — lásd MET tábla |
 | `distanceKm` | Opcionális; `≥ 0`; tisztán napló / statisztika + átlagsebesség-hint |
@@ -74,11 +74,11 @@ Soft javaslat (nem írja felül a user `intensity` választását):
 - **Lista:** időrend (újabb elöl); soron: dátum, időtartam, `intensity`, opcionális táv / emelkedés; megjelenített kcal = utility számítás (Profile `m` + MET).
 - **Új / szerkesztés űrlap:** dátum, `durationMinutes`, `intensity` (kötelező); `distanceKm`, `elevationGainMeters` (opcionális); élő kcal előnézet; ha van táv+idő → `avgSpeedKmH` + soft MET-hint.
 - **Törlés:** megerősítő dialógus, soft delete (`deleted`); szinkronizálatlan helyi only → hard remove + outbox tisztítás. Lásd [[Backend-offline first]].
-- Első fókusz: `durationMinutes` (vagy a platformon legkényelmesebb kötelező mező).
+- A `durationMinutes` pozicionálisan a `date` utáni első kötelező numerikus kontroll (nincs explicit autofókusz-attribútum).
 
 ### Megjegyzések
 
-- GPS / külső eszköz sync: későbbi scope (nincs az első körben).
+- GPS / külső eszköz sync: nincs implementálva, tervezett.
 - Mintázatban rokon: [[Úszás napló]] (MET napló, Edzés tab).
 
 ### Nyitott kérdések

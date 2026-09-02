@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: 39829a9
 ---
 
 # Heti terv
@@ -65,7 +65,7 @@ Indításkor az [[Edzésnapló]] átmásolja ezeket session entry / set előtöl
 |---|---|
 | `id` | UUID |
 | `weekStartDate` | A hét hétfője (kliens TZ, ISO date) |
-| `slots` | Nap → opcionális `planId` (Hétfő…Vasárnap; max egy sablon / nap az első körben) |
+| `slots` | Nap → opcionális `planId` (Hétfő…Vasárnap; max egy sablon / nap — partial unique index `(weekly_plan_id, day_of_week) WHERE deleted = false`) |
 | `deleted` | Soft delete |
 | `createdAt` / `updatedAt` | Audit |
 
@@ -90,7 +90,7 @@ CRUD: sablon lista/szerkesztő; heti dashboard slot szerkesztés; soft delete sa
 
 ### Megjegyzések
 
-Nincs bonyolult progresszió-motor az első körben — a napló ghost values / PR viszi a progresszió UX-et ([[Edzésnapló]]).
+Nincs bonyolult progresszió-motor — a napló ghost values / PR viszi a progresszió UX-et ([[Edzésnapló]]). A `active` sablon-szintű kapcsoló, nem „program" entitás; nincs „mikro-session" típus (a rövid kiegészítő edzések sima naplók).
 
 Az `active` mező szándékosan sablon-szintű kapcsoló, nem egy külön „sablon-készlet” / „program” entitás — tetszőleges kombináció aktiválható egyszerre, nincs kikényszerített „csak egy aktív készlet” szabály. Nagyon gyakori, alacsony volumenű, egy-két gyakorlatos sessionök (pl. napi rövid, nem bukásig menő kiegészítő gyakorlás) külön modell nélkül, sima [[Edzésnapló]] sessionként rögzíthetők — nincs szükség rájuk külön „mikro-session” típusra.
 

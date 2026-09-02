@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: 39829a9
 ---
 
 # Edzés
@@ -58,7 +58,7 @@ Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító 
 
 ### Backend
 
-_Nincs backend érintettség._ (közös edzés domain / OpenAPI később itt vagy a gyerekekben)
+Közös `hu.bumler.lm2.workout` csomag hostolja mind az öt gyerek entitáscsaládot: `Exercise` ([[Gyakorlat]]), `WorkoutSession` + `ExerciseEntry` + `SetEntry` ([[Edzésnapló]]), `WorkoutPlan` + `PlanExercise` + `PlanSet` és `WeeklyPlan` + `Slot` ([[Heti terv]]), `SwimLog` ([[Úszás napló]]), `BikeRideLog` ([[Biciklizés napló]]) — mindegyik Controller/Service/Mapper/Repository/SyncDataLoader-rel, Flyway `V17`–`V21`, kézzel írt OpenAPI. Nincs szerveroldali kcal-számítás. A részletes szerződés a gyerek specekben.
 
 ### Nyitott kérdések
 

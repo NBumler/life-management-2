@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: 39829a9
 ---
 
 # Gyakorlat
@@ -64,7 +64,7 @@ Meghatározza az [[Edzésnapló]] szett beviteli mezőit:
 
 Nincs kötelező „alapértelmezett szett / súly sablon” a masteren — a cél reps/súly a [[Heti terv]] sablonján és az [[Edzésnapló]] ghost values-ön él.
 
-**Seed:** első indításkor beépített JSON a helyi store-ba (és sync a backendre) — pl. Bench Press, Squat, Pull-up, Hangboard Hang, Pinch Block Lift. Seed tételek user-owned másolatok stabil kliens UUID-val (nincs külön shared rendszer-katalógus az első körben).
+**Seed:** első indításkor (üres store) az `assets/data/exercise-seed.json` **12 beépített, magyar nevű** gyakorlata kerül a helyi store-ba, és syncelődik a backendre. Minden seed sor user-owned másolat, determinisztikus v5 kliens UUID-val (`Exercise:<userId>:<normalizedName>`), nincs külön shared rendszer-katalógus. (Weben a seed-latch localStorage-ban él.)
 
 **Ad-hoc az [[Edzésnapló]]ból:** új név → opcionálisan új `Exercise` a katalógusba (`category` / `kind` kitöltendő a mentéskor).
 

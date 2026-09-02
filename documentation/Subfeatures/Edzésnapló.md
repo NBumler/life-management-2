@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: 39829a9
 ---
 
 # Edzésnapló
@@ -141,17 +141,20 @@ PR típusok (badge a szett mellett): számított **1RM** megdöntés; **max súl
 
 #### Kapcsolat [[Heti terv]]
 
-- „Edzés indítása a tervből”: új session a `WorkoutPlan` sablonból; előtöltés; `planId = WorkoutPlan.id`. A gyorsindítás lista csak **aktív** sablonokat kínál fel (`WorkoutPlan.active`) — tetszőleges számú sablon lehet egyszerre aktív, lásd [[Heti terv]].
+- „Edzés indítása a tervből”: új session a `WorkoutPlan` sablonból; előtöltés (`rowsFromPlan`); `planId = WorkoutPlan.id`. Az előtöltő logika kész; belépője jelenleg a [[Heti terv]] heti dashboard nap-`START` gombja (`?planId=`). Az Edzésnapló dashboardon nincs önálló „Terv indítása" gyorsindító (aktív sablonok listája) — tervezett: `backlog/054-edzesnaplo-dashboard-terv-inditasa-gyorsindito-aktiv-sablonok-li.md`.
 - Eltérés szabad (nincs hiba); a napló a valóságot rögzíti.
 - **Adherence:** adott héten van-e session ugyanezzel a `planId`-del (részletek: [[Heti terv]]).
 - **Ad-hoc** terv nélkül: támogatott.
 - **„Ugyanaz, mint legutóbb”:** legutóbbi session struktúra + súlyok másolása terv nélkül.
 
-#### Statisztika (első kör)
+#### Statisztika
 
-- Élő / szerkesztés: **ghost values** — legutóbbi alkalom ugyanarra a gyakorlatra (pl. „80 kg × 8”).
-- Gyakorlat: 1RM / max súly fejlődési görbe.
-- Aggregát: heti volumen; izomcsoport-eloszlás (snapshot / katalógus kategória alapján).
+Jelenleg él:
+
+- **Ghost values** az utólagos szerkesztőben (`workout-session-edit`) — legutóbbi alkalom ugyanarra a gyakorlatra (pl. „80 kg × 8”). Az élő `active-workout` nézetben nincs ghost, csak a **PR badge** (1RM / max súly / max volumen megdöntés).
+- Session-szintű **volumen-előnézet** (`Σ reps × weightKg` a WORKING/DROPSET/FAILURE szetteken).
+
+Tervezett (`backlog/055-edzesnaplo-statisztika-felulet-1rm-max-suly-gorbe-heti-volumen-i.md`): per-gyakorlat 1RM / max súly fejlődési görbe, heti volumen aggregát, izomcsoport-eloszlás.
 
 ### UI/UX elvárások
 
@@ -167,8 +170,8 @@ PR típusok (badge a szett mellett): számított **1RM** megdöntés; **max súl
 
 ### Megjegyzések
 
-- 1.0-ból **nem** visszük: bonyolult edzés közbeni %-os 1RM mátrix; komplex per-szett szuperszett UI — helyette `supersetGroup`.
-- 2.0 elengedhetetlen: `edgeSizeMm` + `holdTimeSeconds` (+ `distanceMeters` kardióhoz).
+- Nincs edzés közbeni %-os 1RM mátrix és nincs komplex per-szett szuperszett UI — a csoportosítás egyetlen `supersetGroup` egész.
+- A szett-modell tartalmazza az `edgeSizeMm` + `holdTimeSeconds` (hangboard) és a `distanceMeters` (kardió) mezőket — ezek nem részei a session MET-kalóriájának.
 - Seed gyakorlatok: [[Gyakorlat]].
 - Naplózható entitások törlése: egységes **soft delete** ([[Backend-offline first]]); nested mentés: egy session = egy payload.
 
@@ -184,7 +187,7 @@ Nincs nyitott kérdés.
 - Nested model a store-ban; draft session SQLite / Ionic Storage.
 - Rest timer + haptic; PR / volume / Epley pure TS utility.
 - Shared MET / kcal: [[Tápérték kalkulátor]]; testsúly: [[Profile]].
-- Ghost values: előző session ugyanarra `exerciseId` / név egyezésre.
+- Ghost values (`workout-metrics.ts:ghostForExercise`): előző session ugyanarra `exerciseId` / név egyezésre — a `workout-session-edit` képernyőn jelenik meg.
 - OpenAPI generált kliens; mutációk offline rétegen.
 - Atomi mentés: teljes session + exercises + sets **egy** POST/PUT body.
 
@@ -199,10 +202,10 @@ Nincs nyitott kérdés.
 ### Backend
 
 - Táblák (Liquibase): `workout_session`, `workout_exercise_entry`, `workout_set_entry` (+ katalógus: [[Gyakorlat]] / `exercise_catalog`).
-- OpenAPI: nested CRUD pl. `POST/PUT /api/workout/sessions` — teljes fa egy kérésben; lista / get / delete.
+- OpenAPI: nested CRUD `POST` / `PUT /api/workout-sessions` (kötőjeles, mint a `swim-logs` / `bike-ride-logs` / `workout-plans`) — teljes fa egy kérésben; lista / get / delete.
 - Validáció: `workoutType` enum; szett mezők `exerciseKind` szerint (szerver oldalon laza vagy típus-szabály).
 - Soft delete: `deleted` / `deleted_at` a sessionön; listák szűrnek.
-- Update: **teljes nested fa cseréje** egy PUT body-ban (nincs részleges PATCH az első körben).
+- Update: **teljes nested fa cseréje** egy PUT body-ban (nincs részleges PATCH); a child-diff a `common/NestedChildResolver` (create / undelete / reject).
 - Nincs szerveroldali kcal tárolás; opcionális MET-paritás a [[Tápérték kalkulátor]]ssal.
 - Auth / user scope: a bejelentkezett user saját sessionjei.
 - Konfliktus: kliens UUID; idempotens upsert + sor-szintű last-write-wins ([[Backend-offline first]]).

@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: 39829a9
 ---
 
 # Úszás napló
@@ -68,11 +68,11 @@ Egyetlen kötelező választó — nincs külön `swimmingIntensity` + `strokeTy
 - **Új / szerkesztés:** dátum, `durationMinutes`, `intensity` kötelező; medencehossz + körök (együtt); `OPEN_WATER`-nél medence mezők rejtve, opcionális `distanceMeters`; élő kcal előnézet.
 - Számított táv megjelenítése, ha van medence + kör.
 - **Törlés:** megerősítés, soft delete (`deleted`); szinkronizálatlan helyi only → hard remove + outbox tisztítás. Lásd [[Backend-offline first]].
-- Első fókusz: `durationMinutes` (vagy platform szerint a legkényelmesebb kötelező mező).
+- A `durationMinutes` pozicionálisan a `date` utáni első kötelező numerikus kontroll (nincs explicit autofókusz-attribútum).
 
 ### Megjegyzések
 
-- Külső sync / óra: későbbi scope.
+- Külső sync / óra: nincs implementálva, tervezett.
 - Mintázatban rokon: [[Biciklizés napló]].
 
 ### Nyitott kérdések
