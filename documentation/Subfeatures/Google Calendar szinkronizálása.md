@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: 59d07bf
 ---
 
 # Google Calendar szinkronizálása
@@ -9,17 +9,19 @@ verifikalt_commit:
 
 | | |
 |---|---|
-| **Státusz** | `Kész` |
+| **Státusz** | `Váz` |
 | **Szülő** | [[Események]] |
 | **Kapcsolódó** | [[Események]], [[Új esemény hozzáadása]], [[Naptár]], [[Értesítések]], [[Frontend]], [[Backend]], [[Bejelentkezés]], [[Backend-offline first]], [[Szinkronizációs központ]] |
 
+> **Nincs implementálva.** Jelenleg csak a `feladatok.googleExport` feature flag létezik (értéke `false`); export-kód, OAuth-réteg, egyeztető kör és beállító képernyő nincs. Az alábbi `## Funkcionális leírás` és `## Architektúra` az **elfogadott terv**, amelyet a `backlog/001-google-calendar-export.md` jegy (status: `deferred`) követ.
+
 ### Jelenlegi működés
 
-**Egyirányú export: LM2 → Google Calendar** (döntés). A saját [[Események]] felkerülnek egy **dedikált** Google naptárba, így a telefon / gép natív naptárában és a többi eszközön is látszanak.
-
-**Nem MVP:** az első kiadásban a feature flag `false`. A spec `Kész` = a terv elfogadott és implementálható, nem azt jelenti, hogy az első körben elkészül.
+Az [[Események]] sorok **kizárólag** a saját backendre szinkronizálnak ([[Backend-offline first]]); Google Calendar exportot az app nem végez. A `feladatok.googleExport` flag `false`, és függ az [[Események]] flagtől — kikapcsolva nincs export-belépő és nem fut egyeztetés.
 
 ### Funkcionális leírás
+
+> Az ebben a szakaszban leírtak a **tervezett** működésre vonatkoznak — lásd `backlog/001-google-calendar-export.md`.
 
 #### Irány és forrás-tulajdonos (döntés)
 
@@ -110,6 +112,8 @@ Későbbi kör lehet: import (a Google mint új [[Naptár]] producer) és a napl
 Nincs nyitott kérdés.
 
 ## Architektúra
+
+> Az ebben a szakaszban leírtak a **tervezett** architektúrára vonatkoznak — lásd `backlog/001-google-calendar-export.md`.
 
 ### Frontend
 
