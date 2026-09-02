@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: f9ca94e
 ---
 
 # Bejelentkezés
@@ -15,7 +15,7 @@ verifikalt_commit:
 
 ### Jelenlegi működés
 
-Felhasználói autentikáció és authorizáció: a személyes (user-owned) adatok felhasználónként elkülönítve tárolódnak; a közös katalógusok minden bejelentkezett user számára elérhetők. **Nincs** in-app regisztráció az első körben — új usert üzemeltető `curl` (admin API) hoz létre. A session **tartós**: app verziófrissítés / újratelepítés nélküli frissítés **nem** jelentkezteti ki a usert; idle timeout / forced re-login **nincs**. Későbbi Google login ugyanarra a token-modellre köthető.
+Felhasználói autentikáció és authorizáció: a személyes (user-owned) adatok felhasználónként elkülönítve tárolódnak; a közös katalógusok minden bejelentkezett user számára elérhetők. **Nincs** in-app regisztráció — új usert üzemeltető `curl` (admin API) hoz létre. A session **tartós**: app verziófrissítés / újratelepítés nélküli frissítés **nem** jelentkezteti ki a usert; idle timeout / forced re-login **nincs**. Egy tervezett Google login ugyanarra a token-modellre köthető.
 
 ### Funkcionális leírás
 
@@ -26,10 +26,10 @@ Felhasználói autentikáció és authorizáció: a személyes (user-owned) adat
 | `id` | UUID (szerver generálhatja user létrehozáskor — ez **nem** offline entitás) |
 | `username` | Kötelező; **case-sensitive** (szándékos kivétel a [[Névegyediség]] szabálya alól: `alice` ≠ `Alice`); egyedi; hossz **3–32**; engedélyezett karakterek: `a-z`, `A-Z`, `0-9`, `.`, `_`, `-` (regex: `^[a-zA-Z0-9._-]{3,32}$`) |
 | `passwordHash` | Csak szerveren; soha nem kerül API válaszba / OpenAPI kliens modellbe |
-| `role` | Mindig `USER` (egyetlen alkalmazás-szerep az első körben) |
+| `role` | Mindig `USER` (egyetlen alkalmazás-szerep) |
 | `createdAt` / `updatedAt` | Audit |
 
-**Nincs** email, display name, avatar, telefon az első körben ([[Profile]] továbbra is a személyes / cél mezők helye).
+**Nincs** email, display name, avatar, telefon ([[Profile]] a személyes / cél mezők helye).
 
 #### Regisztráció — nincs UI
 
@@ -53,7 +53,7 @@ Felhasználói autentikáció és authorizáció: a személyes (user-owned) adat
 
 - Nincs idle timeout, nincs periodikus forced re-login, nincs „session lejárt, jelentkezz be újra” a mindennapi használatban.
 - **Új alkalmazásverzió telepítése / frissítése** (Capacitor / store update): a biztonságos token-tároló **megmarad** → a user bejelentkezve marad.
-- Access token lejárat: háttérben refresh tokennel csendes megújítás (userátlan a usernek).
+- Access token lejárat: a `401` válasz után az interceptor **átlátszóan** frissít refresh tokennel és újrapróbálja a kérést (single-flight koordinátor). A frissítés jelenleg **reaktív** (nincs proaktív, lejárat előtti megújítás) — tervezett: `backlog/018-auth-proaktiv-csendes-access-token-frissites-lejarat-elott.md`. Sikertelen refresh után a session törlődik; az aktív `/login` átirányítás a következő guardolt navigációkor lép életbe — tervezett: `backlog/011-auth-sikertelen-csendes-refresh-utan-nincs-aktiv-atiranyitas-a-l.md`.
 - Explicit kijelentkezés, admin általi user törlés / jelszócsere utáni összes token revoke, vagy refresh token érvénytelenítése: ezek **szándékos** kiléptetések.
 
 #### Több eszköz
@@ -75,7 +75,7 @@ Felhasználói autentikáció és authorizáció: a személyes (user-owned) adat
 
 ### Megjegyzések
 
-- Google (és egyéb OAuth) login: későbbi scope; ugyanaz a `User` + JWT access/refresh kibocsátás a sikeres OAuth után. Username+password megmaradhat párhuzamosan.
+- Google (és egyéb OAuth) login: nincs implementálva, tervezett; ugyanaz a `User` + JWT access/refresh kibocsátás a sikeres OAuth után. Username+password megmaradhat párhuzamosan.
 - [[Pénzügyek]] **user-owned** (hubnak nincs saját entitása; `RecurringExpense` a [[Rendszeres kiadások]]ban). A mátrix és a `userId` szűrés kötelező.
 
 ### Nyitott kérdések
@@ -87,8 +87,8 @@ Nincs nyitott kérdés.
 ### Frontend
 
 - Login page; auth guard / interceptor: védett route-ok csak bejelentkezve.
-- Generált OpenAPI kliens: `Authorization: Bearer <accessToken>`; 401 → refresh → retry; refresh fail → login.
-- Token tárolás: **platform secure storage** (Capacitor Secure Storage / Keychain / EncryptedSharedPreferences; web: httpOnly cookie **vagy** secure web storage — végleges választás implementációkor, de **kötelező**, hogy app update után megmaradjon).
+- Generált OpenAPI kliens: `Authorization: Bearer <accessToken>`; 401 → refresh → retry (single-flight `token-refresh-coordinator`); refresh fail → session `clear()` + login a következő guardolt navigációkor.
+- Token tárolás: **platform secure storage** — `@aparajita/capacitor-secure-storage` (natív: Keychain / EncryptedSharedPreferences; web: a plugin web-fallbackja, nem httpOnly cookie — a web build amúgy is online-only). App update után megmarad.
 - Helyi SQLite / store: **userId-hoz kötött**. Más user bejelentkezése előtt az előző user helyi adatai ne keveredjenek (izolált DB / kulcstér, vagy wipe + full pull).
 - Menü → Kijelentkezés: [[Frontend]] navigáció.
 
@@ -106,14 +106,14 @@ Nincs nyitott kérdés.
 
 - Spring Security + JWT.
 - **Access token:** rövid élettartam (ajánlott: 15–60 perc); payload: `sub` = userId, `username`, `role=USER`.
-- **Refresh token:** hosszú élettartam (gyakorlatilag „amíg revoke / jelszócsere”); szerveren **hashelve** tárolva; eszközönként külön sor (`userId`, `tokenHash`, `createdAt`, `expiresAt`, `revokedAt`, opcionális `deviceLabel`).
+- **Refresh token:** TTL **fix 180 nap**, és minden `refresh` rotál (a régi sor `revoke()`) — így egy aktívan használt eszköz gyakorlatilag nem jár le, de revoke / jelszócsere azonnal érvényteleníti. Szerveren **hashelve** tárolva (SHA-256 base64); eszközönként külön sor (`userId`, `tokenHash`, `createdAt`, `expiresAt`, `revokedAt`, opcionális `deviceLabel` — utóbbi jelenleg nincs kitöltve).
 - OpenAPI: `securitySchemes` (HTTP Bearer JWT); publikus: `POST /auth/login`, `POST /auth/refresh`; védett: minden üzleti API; admin: külön API-key header.
 - Jelszó: erős hash (pl. BCrypt / Argon2); plaintext soha nem naplózandó.
 
 #### Authorizáció
 
 - Szerep: csak `USER`. Nincs `ADMIN` role az alkalmazásban.
-- Metódus / végpont védelem: Spring `@PreAuthorize("isAuthenticated()")` (és ahol kell, role check — jelenleg minden autentikált = `USER`).
+- Végpont-védelem: `SecurityConfig` `authorizeHttpRequests().anyRequest().authenticated()` (nincs `@PreAuthorize` annotáció); a `permitAll` lista: `/api/health`, `/api/auth/login`, `/api/auth/refresh`.
 - **User-owned** entitások: minden query / mutáció a `SecurityContext` `userId`-jára szűr; idegen `id` → 404 (ne 403 enumeration).
 - **Shared** entitások (`Food`, `Recipe`, …): bármely autentikált `USER` CRUD; nincs `userId` oszlop ownershipra.
 - Admin user-kezelés: **nem** JWT role, hanem `X-Admin-Api-Key` (env / secret) a `/api/admin/**` alatt.
@@ -191,7 +191,9 @@ A DB / API réteg ownership döntései. Új feature specifikálásakor ezt a tá
 | Rendszeres kiadások (`RecurringExpense`) | [[Rendszeres kiadások]], [[Pénzügyek]] |
 | Outbox queue | eszköz + user kontextus — [[Szinkronizációs központ]] |
 
-##### Device-local (nem sync a saját profilba az első körben)
+##### Device-local (nem sync a saját profilba)
+
+Profil-szintű (több-eszközös) sync tervezett: `backlog/007-profil-szintu-beallitas-sync.md`.
 
 | Adat | Spec |
 |---|---|

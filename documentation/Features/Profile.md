@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: f9ca94e
 ---
 
 # Profile
@@ -15,7 +15,7 @@ verifikalt_commit:
 
 ### Jelenlegi működés
 
-Felhasználónként **egy** profilrekord: személyes / cél adatok a [[Tápérték kalkulátor]] és a [[Nettó fizetés kalkulátor]] bemenetéül. A testsúly változásai **súlytörténetben** megmaradnak (későbbi diagram feature); a TDEE mindig a **jelenlegi** testsúllyal számol.
+Felhasználónként **egy** profilrekord: személyes / cél adatok a [[Tápérték kalkulátor]] és a [[Nettó fizetés kalkulátor]] bemenetéül. A testsúly változásai **súlytörténetben** megmaradnak (a diagram-megjelenítés tervezett); a TDEE mindig a **jelenlegi** testsúllyal számol.
 
 Nincs profil-kitöltöttségi gate: hiányos / üres profil mellett is szabad a navigáció. A fogyasztó képernyők (pl. [[Étkezés]]) a [[Tápérték kalkulátor]] szerint jelzik, ha nem számolható a keret (`~` / homokóra).
 
@@ -29,7 +29,7 @@ Nincs profil-kitöltöttségi gate: hiányos / üres profil mellett is szabad a 
 | `birthDate` | űrlapon: ha kitöltve, érvényes dátum | Életkor: kliens TZ, `floor` évek ([[Tápérték kalkulátor]]) |
 | `sex` | ha kitöltve | `MALE` / `FEMALE` — BMR + safety floor |
 | `heightCm` | ha kitöltve | 100–250 |
-| `currentWeightKg` | ha kitöltve | 30–300; max 1 tizedes |
+| `currentWeightKg` | ha kitöltve | 30–300. A „max 1 tizedes" jelenleg a DB-oszlop `numeric(5,1)` skálája; kliensoldali 1-tizedes bevitel-validáció / kerekítés tervezett: `backlog/019-profile-kliensoldali-1-tizedes-bevitel-validacio-a-suly-mezokre.md`. |
 | `goal` | ha kitöltve | `FAT_LOSS` / `MAINTENANCE` / `WEIGHT_GAIN` — UI: Fogyás / Megtartás / Tömegnövelés |
 | `kgPerWeek` | feltételes | Pozitív szám, 0.1–1.5. **`FAT_LOSS` / `WEIGHT_GAIN`:** mentéskor kötelező, ha a `goal` ki van töltve. **`MAINTENANCE`:** mező **rejtett**, érték ignorált (Δ = 0 a [[Tápérték kalkulátor]]ban). |
 | `grossMonthlySalaryHuf` | **opcionális** | Egész, `≥ 0`; [[Nettó fizetés kalkulátor]] |
@@ -37,7 +37,7 @@ Nincs profil-kitöltöttségi gate: hiányos / üres profil mellett is szabad a 
 
 **Nincs** `activityLevel` / aktivitási szint — a PAL fix 1.2 a [[Tápérték kalkulátor]]ban; a napi aktivitás a [[Lépésszám követés]] + edzésnaplókból jön.
 
-Nincs display name / avatar / email az első körben (auth: [[Bejelentkezés]]).
+Nincs display name / avatar / email (auth: [[Bejelentkezés]]).
 
 **Nincs „komplett profil” kényszer** és nincs automatikus átirányítás a Profile-ra.
 
@@ -54,16 +54,16 @@ A [[Tápérték kalkulátor]] (és az [[Étkezés]] progress barok) **nem crashe
 
 #### Súlytörténet — `WeightHistoryEntry`
 
-Diagram feature **későbbi** scope; az adatmodell és a CRUD **most** kell.
+Az adatmodell és a CRUD kész; a diagram-megjelenítés tervezett.
 
 | Mező | Szabály |
 |---|---|
 | `id` | UUID, kliens |
 | `recordedAt` | Dátum-idő (kliens TZ); alapértelmezés: mentés / rögzítés pillanata |
-| `weightKg` | 30–300; max 1 tizedes |
+| `weightKg` | 30–300 (1-tizedes kliens-validáció tervezett: `backlog/019-profile-kliensoldali-1-tizedes-bevitel-validacio-a-suly-mezokre.md`) |
 | `deleted` | Soft delete (`false` default); a history lista szűri |
 
-**Írás Profile mentéskor:** ha `currentWeightKg` **változott** az előző mentett jelenlegi súlyhoz képest (és az új érték ki van töltve) → új history sor az új súllyal. Más mező változása **nem** nyit sort. Első súlymegadás (üres → érték) → egy history sor.
+**Írás Profile mentéskor** (kliensoldali, `ProfileRepository.save` — a backend nem hozza létre automatikusan): ha `currentWeightKg` **változott** az előző mentett jelenlegi súlyhoz képest (és az új érték ki van töltve) → új history sor az új súllyal. Más mező változása **nem** nyit sort. Első súlymegadás (üres → érték) → egy history sor.
 
 **Manuális hozzáadás:** a súlytörténet listán **„+ Új bejegyzés”** CTA is elérhető, ami közvetlenül (a Profile form kitöltése nélkül) hoz létre egy history sort tetszőleges `recordedAt` + `weightKg` párral — ez teszi lehetővé a retroaktív (múltbeli dátumú, pl. utólag felírt) súlyrögzítést. Ez a create út **nem** módosítja a `currentWeightKg`-t (csak a Profile form mentése teszi azt, lásd fent).
 
@@ -77,7 +77,7 @@ A [[Tápérték kalkulátor]] **csak** `currentWeightKg`-t használ; a history k
 - Egy űrlap: fenti mezők; **Mentés** gomb (nincs élő TDEE előnézet ezen a képernyőn).
 - `goal = MAINTENANCE` → `kgPerWeek` rejtve.
 - Mentés után rövid siker-feedback; store frissül → más képernyők TDEE-je újraszámol (ha számolható).
-- Súlytörténet: lista a Profile képernyőn (vagy ugyaninnen megnyíló részletező); **„+ Új bejegyzés”** manuális / retroaktív hozzáadás; szerkesztés / törlés; **diagram nincs** az első körben.
+- Súlytörténet: lista a Profile képernyőn (vagy ugyaninnen megnyíló részletező); **„+ Új bejegyzés”** manuális / retroaktív hozzáadás; szerkesztés / törlés; **diagram nincs** (tervezett).
 
 ### Megjegyzések
 
