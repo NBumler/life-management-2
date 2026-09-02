@@ -121,7 +121,7 @@ export class StepTrackerPage implements OnInit, ViewWillEnter {
 
   /**
    * documentation/Subfeatures/Lépésszám átszinkronizálása a Samsung Health-ből.md "Frissítés most"
-   * (opcionális, későbbi scope): manual trigger for the same app-open sync (today + 7-day backfill),
+   * (optional convenience button): manual trigger for the same app-open sync (today + 7-day backfill),
    * for when the user doesn't want to wait for the next app open / resume. Re-reads today's stored
    * value afterwards so a raised (max-wins) count shows without leaving the screen.
    */

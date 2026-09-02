@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: 6acbd9d
 ---
 
 # Lépésszám átszinkronizálása a Samsung Health-ből
@@ -15,13 +15,13 @@ verifikalt_commit:
 
 ### Jelenlegi működés
 
-Android **Health Connect** (Samsung Health adatforrás) lépésszámának átvétele, ha a user elfelejti manuálisan frissíteni. Csak **nagyobb** érték írja felül a mentettet. iOS: későbbi scope. Nincs óránkénti sync.
+Android **Health Connect** (Samsung Health adatforrás) lépésszámának átvétele, ha a user elfelejti manuálisan frissíteni. Csak **nagyobb** érték írja felül a mentettet. iOS: nincs implementálva, későbbi scope (`backlog/002-ios-health-lepes-forras.md`). Nincs óránkénti sync.
 
 ### Funkcionális leírás
 
 #### Mikor kell sync
 
-1. **App megnyitás:** lekéri a **mai** napi lépésszámot Health Connectből, **és** önjavító backfill: megnézi az elmúlt **7 naptári napot** (ma nélkül), és amelyikre **nincs** helyi `DailyStepLog` sor (sem manuális, sem korábbi sync nem írta), arra is lekéri és max-wins upsertolja a Health Connect adatot. Ez a lépés véd az ellen, hogy a 08:00-as háttérfeladat OS-szintű elhalasztása / kilövése (Doze mode, gyártói agresszív akkumulátor-optimalizálás) miatt egy nap véglegesen kimaradjon: legkésőbb a következő app-nyitáskor pótlódik, amíg a Health Connect helyi retenciója fedi (jellemzően jóval 7 napnál hosszabb).
+1. **App megnyitás:** lekéri a **mai** napi lépésszámot Health Connectből, **és** önjavító backfill: megnézi az elmúlt **7 naptári napot** (ma nélkül), és amelyikre **nincs** helyi `DailyStepLog` sor (sem manuális, sem korábbi sync nem írta), arra is lekéri és max-wins upsertolja a Health Connect adatot. Ez a lépés véd az ellen, hogy a 09:00-as háttérfeladat OS-szintű elhalasztása / kilövése (Doze mode, gyártói agresszív akkumulátor-optimalizálás) miatt egy nap véglegesen kimaradjon: legkésőbb a következő app-nyitáskor pótlódik, amíg a Health Connect helyi retenciója fedi (jellemzően jóval 7 napnál hosszabb).
 2. **Napi 09:00** (kliens TZ) háttérfeladat: lekéri a **tegnapi** lépésszámot (ha tegnap elfelejtett menteni). A mai napot a futás **nem** érinti. Ez az elsődleges, gyors út; az 1. pont a tartalék, ha ez nem fut le. Az implementáció ezt az [[Értesítések]] 08:00 / 20:00 háttér-workerével közös 09:00-as `AlarmManager` futásba vonja össze (a tegnapi összeg stabil, a percpontosság irreleváns). A háttér-worker Kotlinból csak a `@capacitor/preferences` (`steps.pendingHealthConnect.<dátum>`) kulcsba **stasheli** a tegnapi értéket — nem ír közvetlenül az SQLite-ba / outboxba; a következő app-nyitáskor az `ActivityStepSyncService` olvassa be és `maxWinsUpsert`-eli (a live HC-olvasás előtt, hogy az még feljebb vihesse).
 
 #### Mikor kell felülírni

@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: 6acbd9d
 ---
 
 # Lépésszám követés
@@ -51,7 +51,7 @@ Hiányzó nap = **0** lépés a Tápérték és az összehasonlítások szempont
 
 #### Értesítés
 
-20:00-kor, ha a **mai** `stepCount` &lt; 2000 → [[Értesítések]].
+20:00-kor, ha a **mai** `stepCount` a küszöb alatt van → [[Értesítések]]. A küszöb alapértéke 2000, az [[Értesítések]] finomhangolásában állítható.
 
 ### UI/UX elvárások
 
@@ -62,7 +62,7 @@ Hiányzó nap = **0** lépés a Tápérték és az összehasonlítások szempont
 
 ### Megjegyzések
 
-- iOS Health: későbbi scope.
+- iOS Health: nincs implementálva, későbbi scope — `backlog/002-ios-health-lepes-forras.md`.
 - Feature flag off: nincs lépés UI; TDEE továbbra is PAL=1.2, lépéság = 0 (edzés MET marad).
 
 ### Nyitott kérdések
