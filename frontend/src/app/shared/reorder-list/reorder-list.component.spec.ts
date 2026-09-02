@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Capacitor } from '@capacitor/core';
+import { provideTranslateService } from '@ngx-translate/core';
 
 import { ReorderableItem, ReorderListComponent } from './reorder-list.component';
 
@@ -15,7 +16,10 @@ describe('ReorderListComponent', () => {
   }
 
   beforeEach(async () => {
-    await TestBed.configureTestingModule({ imports: [ReorderListComponent] }).compileComponents();
+    await TestBed.configureTestingModule({
+      imports: [ReorderListComponent],
+      providers: [provideTranslateService()],
+    }).compileComponents();
     fixture = TestBed.createComponent(ReorderListComponent);
     fixture.componentInstance.items = items();
   });

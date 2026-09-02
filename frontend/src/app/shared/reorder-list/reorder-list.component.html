@@ -7,13 +7,31 @@
         } @else {
           <ion-label>{{ item.label }}</ion-label>
         }
-        <ion-button fill="clear" [disabled]="i === 0" (click)="moveUp(i)">
-          <ion-icon name="chevron-up-outline" slot="icon-only" aria-hidden="true"></ion-icon>
-        </ion-button>
-        <ion-button fill="clear" [disabled]="i === items.length - 1" (click)="moveDown(i)">
-          <ion-icon name="chevron-down-outline" slot="icon-only" aria-hidden="true"></ion-icon>
-        </ion-button>
-        <ion-button fill="clear" color="danger" (click)="remove.emit(item)">
+        <div class="reorder-arrows" slot="end">
+          <ion-button
+            class="reorder-arrow"
+            fill="outline"
+            size="small"
+            color="medium"
+            [disabled]="i === 0"
+            [attr.aria-label]="'COMMON.MOVE_UP' | translate"
+            (click)="moveUp(i)"
+          >
+            <ion-icon name="chevron-up-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+          </ion-button>
+          <ion-button
+            class="reorder-arrow"
+            fill="outline"
+            size="small"
+            color="medium"
+            [disabled]="i === items.length - 1"
+            [attr.aria-label]="'COMMON.MOVE_DOWN' | translate"
+            (click)="moveDown(i)"
+          >
+            <ion-icon name="chevron-down-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+          </ion-button>
+        </div>
+        <ion-button slot="end" fill="clear" color="danger" [attr.aria-label]="'COMMON.REMOVE' | translate" (click)="remove.emit(item)">
           <ion-icon name="close-outline" slot="icon-only" aria-hidden="true"></ion-icon>
         </ion-button>
       </ion-item>

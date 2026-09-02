@@ -1,0 +1,22 @@
+// Native reorder controls. The up/down arrows are stacked vertically (not side by
+// side) so a row keeps its horizontal space for the projected body — e.g. the
+// quantity input in a meal / shopping-list item row, which otherwise gets squeezed
+// to ~0 width. Each arrow is an outlined box with a deliberate gap between them, so
+// "down" can't easily be mis-tapped for "up".
+.reorder-arrows {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-inline-start: 4px;
+}
+
+.reorder-arrow {
+  margin: 0;
+  height: 30px;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  --padding-start: 8px;
+  --padding-end: 8px;
+  --border-radius: 6px;
+}

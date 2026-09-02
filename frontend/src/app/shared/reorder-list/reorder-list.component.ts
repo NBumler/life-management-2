@@ -2,6 +2,7 @@ import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, ContentChild, EventEmitter, Input, Output, TemplateRef } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 import { IonButton, IonIcon, IonItem, IonLabel, IonList, IonReorder, IonReorderGroup, ItemReorderEventDetail } from '@ionic/angular/standalone';
+import { TranslatePipe } from '@ngx-translate/core';
 
 export interface ReorderableItem {
   id: string;
@@ -17,7 +18,8 @@ export interface ReorderableItem {
 @Component({
   selector: 'app-reorder-list',
   templateUrl: 'reorder-list.component.html',
-  imports: [IonList, IonItem, IonLabel, IonButton, IonIcon, IonReorderGroup, IonReorder, NgTemplateOutlet],
+  styleUrls: ['reorder-list.component.scss'],
+  imports: [IonList, IonItem, IonLabel, IonButton, IonIcon, IonReorderGroup, IonReorder, NgTemplateOutlet, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ReorderListComponent<T extends ReorderableItem = ReorderableItem> {
