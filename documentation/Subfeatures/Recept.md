@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: 65c3b52
+verifikalva: 2026-09-03
+verifikalt_commit: b9d7577
 ---
 
 # Recept
@@ -47,10 +47,19 @@ Nincs adagszám / serving mező a recepten.
 2. Bezárás után a kijelölt élelmiszerek megjelennek a hozzávalólistán.
 3. Mennyiség mezők **üresek** (nincs előtöltés) — mentés előtt a user tölti; üres mennyiségű hozzávaló → invalid / nem menthető, amíg ki nincs töltve **vagy** a sor törölve nincs. (Ha a receptnek van hozzávaló sora, annak mennyisége kötelező; nulla hozzávaló OK.)
 
-##### `db` megjelenítés és jelentés
+##### `cs` / `db` megjelenítés és jelentés
 
-- Tárolás: pl. `amount=2`, `unit=db`.
-- UI: ha a katalógus nettó tartalma ismert → **`2db (1000g)`** formátum (nettó × darabszám, a nettó egységében). Ha nettó üres → csak `2db` (nincs zárójeles átváltás).
+A hozzávaló mennyisége lehet **csomag** (`cs`), **darab** (`db`) vagy SI (`g`/`ml`/…). A `db` egység
+**kontextuális**: mindig az adott [[Élelmiszerek]] darab-definícióján keresztül értelmezhető
+(`pieceAmount` + `pieceUnit`), ahogy a `cs` a nettó tartalmon keresztül. Feloldás nélkül `1 db = 1
+csomag`. A közös feloldó: `frontend/src/app/pages/food/food-quantity.ts`.
+
+- Tárolás: pl. `amount=2`, `unit=cs` vagy `unit=db`.
+- UI zárójeles átváltás (`formatFoodQuantity`):
+  - `2cs (1000g)` — ha a katalógus nettó tartalma ismert; különben `2cs`.
+  - `3db (18dkg)` — ha a darab-definíció SI (`1 db = 6 dkg`).
+  - `3db (0.5cs)` — ha a darab-definíció csomag-hányad (`1 db = 1/6 cs`, tört tizedesre kerekítve).
+  - `3db` — ha nincs darab-definíció.
 
 #### Automatikus összegzés (részletek + downstream)
 
@@ -68,9 +77,13 @@ A `computeRecipeSummary` jelenleg a fenti öt értéket (a 4 headline makró + �
 
 Tápanyagok a katalógusban **100 g / 100 ml**-re vannak megadva.
 
-1. Határozd meg a hozzávaló **gramm / ml ekvivalensét** (`baseAmount`), ha lehet:
-   - `unit = db`: `baseAmount = darabszám × nettó tartalom` (ha nettó üres → `baseAmount = 0`)
-   - tömeg / térfogat egység: `baseAmount =` a megadott mennyiség (kanonikus egységre hozva, ha kell)
+1. Határozd meg a hozzávaló **gramm / ml ekvivalensét** (`baseAmount`) a közös
+   `resolveFoodQuantity(amount, unit, food)` feloldóval:
+   - `unit = cs`: `baseAmount = csomagszám × nettó tartalom` (kanonikus g/ml); nettó nem-SI / üres →
+     nincs `baseAmount` (hiányos).
+   - `unit = db`: a darab-definíción át `cs`-re, majd a fenti; SI darab-definíció esetén közvetlenül
+     `darabszám × pieceAmount` (g/ml). Definíció nélkül `1 db = 1 cs`.
+   - tömeg / térfogat egység: `baseAmount =` a megadott mennyiség kanonikus g/ml-re hozva.
 2. Egy tápanyagra: `(baseAmount / 100) × (tápanyag / 100 g|ml)`.
 3. Receptösszeg = hozzávalók összege.
 
@@ -78,11 +91,14 @@ Ha egy élelmiszeren a konkrét tápanyag mező üres → ahhoz a hozzávalóhoz
 
 ##### Ár
 
-Katalógus ár = **Ft / csomag** (1 csomag = nettó tartalom).
+Katalógus ár = **Ft / csomag** (1 csomag = nettó tartalom). Az ár mindig
+`csomag-ekvivalens × priceHuf`, ahol a csomag-ekvivalenst a `resolveFoodQuantity` adja (`packages`):
 
-- `N db` → `N × priceHuf`
+- `N cs` → `N × priceHuf`
+- `N db` → a darab-definíción át csomagra, majd `× priceHuf` (definíció nélkül `N × priceHuf`); SI
+  darab-definíció + azonos dimenziójú nettó esetén a g/ml-ből számolt csomaghányad.
 - Egyéb mennyiség + ismert nettó (ugyanaz a dimenzió): `(felhasznált / nettó) × priceHuf`
-- Nettó vagy ár üres → az adott hozzávaló ára **0**, hiányos jelzés ha az ár mező üres volt / nettó hiányzott a csomagaránynál
+- Nettó vagy ár üres (és nem `cs`/definíció nélküli `db`) → az adott hozzávaló ára **0** + hiányos jelzés
 
 #### Duplikáció
 
@@ -92,6 +108,10 @@ Katalógus ár = **Ft / csomag** (1 csomag = nettó tartalom).
 2. a hozzávaló-halmaz megegyezik: ugyanazok az `foodId` + `amount` + `unit` párok, **sorrendtől függetlenül** (üres hozzávalós receptek: csak a név dönt; két üres-hozzávalós különböző nevű OK).
 
    Szándékos szabály: a cél a szó szerinti véletlen kétszer-bevitel elkerülése — ha két recept hozzávaló-halmaza (mennyiségre pontosan) megegyezik, az a gyakorlatban tipikusan elgépelt duplikátum, nem két legitim, eltérő recept. Ha a userben mégis szándékosan két, azonos hozzávalójú de eltérő elkészítésű recept van, egy tetszőleges hozzávaló mennyiségének 1 egységgel eltérő megadásával a szabály megkerülhető — ez tudatosan elfogadott korlát, nem hiba.
+
+   A `unit` itt **szó szerinti** párként számít (nincs kereszt-egység kanonikalizálás): `2db` ≠ `2cs`
+   akkor is, ha az adott élelmiszer darab-definíciója szerint egyenértékűek lennének. Ez összhangban
+   van a fenti „szó szerinti kétszer-bevitel elkerülése" céllal.
 
 Backend-offline: helyi ellenőrzés is.
 
@@ -107,8 +127,8 @@ Backend-offline: helyi ellenőrzés is.
 ### UI/UX elvárások
 
 - Kaja tab: recept lista + [[Szöveges keresés]].
-- Külön read-only **Részletek** nézet (név, megjegyzés, hozzávalók db-nél zárójeles nettóval, összegzett ár / kcal / fehérje / szénhidrát / zsír, hiányos adat jelzés) tervezett: `backlog/046-recept-read-only-reszletek-nezet.md`. Jelenleg a listából tap közvetlenül a szerkesztőbe visz, ami mutatja az összegzést.
-- Szerkesztő: név, megjegyzés, hozzávaló lista (törlés, reorder, mennyiség); multi-select élelmiszer felvevő.
+- Külön read-only **Részletek** nézet (név, megjegyzés, hozzávalók `cs`/`db`-nél zárójeles átváltással, összegzett ár / kcal / fehérje / szénhidrát / zsír, hiányos adat jelzés) tervezett: `backlog/046-recept-read-only-reszletek-nezet.md`. Jelenleg a listából tap közvetlenül a szerkesztőbe visz, ami mutatja az összegzést.
+- Szerkesztő: név, megjegyzés, hozzávaló lista (törlés, reorder, mennyiség — [[Mennyiség mező]] `unitChips`: `cs`/`db`/`g`/`dkg`/`ml`); multi-select élelmiszer felvevő.
 - Mentés: fix alsó footer; iOS input min. `16px`.
 
 ### Megjegyzések
@@ -137,7 +157,7 @@ Nincs nyitott kérdés.
 | Entitás | Fő mezők |
 |---|---|
 | `Recipe` | `id` (UUID, kliens); `name` (unique élő sorokra `name_normalized` szerint — [[Névegyediség]]); `note`; `deleted` / `deleted_at`; `createdAt`, `updatedAt` |
-| `RecipeIngredient` | `id`; `recipeId`; `foodId`; `quantityAmount`; `quantityUnit`; `sortOrder` |
+| `RecipeIngredient` | `id`; `recipeId`; `foodId`; `quantityAmount`; `quantityUnit` (`cs` / `db` / SI — [[Mennyiség mező]]); `sortOrder` |
 
 - Unique: `name_normalized` **élő** sorokra ([[Névegyediség]]); alkalmazás-szintű / query ellenőrzés a hozzávaló-halmaz duplikációra — **globális** (shared, `deleted = false`).
 - **Ownership:** shared — nincs `userId`; Auth: bármely autentikált `USER` CRUD ([[Bejelentkezés]]).

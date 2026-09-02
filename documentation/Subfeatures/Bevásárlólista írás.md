@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: f605541
+verifikalva: 2026-09-03
+verifikalt_commit: b9d7577
 ---
 
 # Bevásárlólista írás
@@ -22,7 +22,7 @@ Aktív bevásárlólista(ák) összeállítása és szerkesztése vásárlás el
 - Új aktív lista létrehozása; opcionális név.
 - Több aktív lista párhuzamosan kezelhető (a [[Bevásárlás]] szülő szerint).
 - Tétel hozzáadása:
-  - **Élelmiszer:** kizárólag az [[Élelmiszerek]] katalógusból (nincs „gyors létrehozás” a listáról). Mennyiség: [[Mennyiség mező]].
+  - **Élelmiszer:** kizárólag az [[Élelmiszerek]] katalógusból (nincs „gyors létrehozás” a listáról). Mennyiség: [[Mennyiség mező]] — **`cs` (csomag) + súly/térfogat**; a `db` (darab) itt **nem** választható, mert a bevásárlás csomag-szintű (a katalógus ára is `Ft / csomag`, per-darab ár nincs). Részletek / indoklás: `backlog/063`.
   - **Nem-élelmiszer:** név (kötelező) + mennyiség ([[Mennyiség mező]]) + egy szabad szöveges mező (bolt, megjegyzés, egyéb — egy mezőben).
 - Lista és tételek **szerkeszthetők** vásárlás közben is (hozzáadás, módosítás, törlés, átnevezés).
 - Tételek **pipálhatók** („megvettem” jelzés). A pipa csak UI / állapot a listán; semmi sem történik a [[Bevásárlás teljesítve]] megnyomásáig.
@@ -32,7 +32,7 @@ Aktív bevásárlólista(ák) összeállítása és szerkesztése vásárlás el
 
 - Lista részlete: név (opcionális szerkesztés), tételek listája, pipa kontroll tételenként.
 - Élelmiszer hozzáadás: katalógus választó (keresés: [[Szöveges keresés]], ha a választó keresőmezőt ad).
-- Mennyiség mezők: [[Mennyiség mező]] (összeragasztott input, pl. `120dkg`, `3db`, `2l`).
+- Mennyiség mezők: [[Mennyiség mező]] (összeragasztott input, pl. `120dkg`, `3cs`, `2l`). Élelmiszer-tételnél nincs `db`-chip; ha egy legacy / más eszközről szinkronizált sor mégis `db` egységű, a [[Bevásárlás teljesítve]] a teljesítéskor egész csomagra felfelé kerekíti.
 - Nem-élelmiszer: név + mennyiség + szabad szöveg mező.
 - Egyértelmű „Bevásárlás vége” belépő a [[Bevásárlás teljesítve]] flow-ra.
 - Törlés: megerősítés kötelező (soft delete; lásd fent).

@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: 4fe11e1
+verifikalva: 2026-09-03
+verifikalt_commit: b9d7577
 ---
 
 # Étkezés
@@ -91,7 +91,7 @@ ID + mennyiség/szorzó; tápanyag az aktuális katalógusból. Katalógus-téte
 
 - Create mentéskor: recept / élelmiszer levonás ([[Élelmiszer tárolás]]); egyéni nem.
 - Szerkesztés / törlés: nincs visszapótlás.
-- A levonás **kliens-oldali** (`meal.repository.ts:consumeStock` → `stock-consumption.ts`); a szerver nem von le. **Tudatos korlát:** két offline eszközön naplózott étkezés esetén a `stored_food` relatív csökkentése elveszhet a sor-szintű last-write-wins alatt ([[Backend-offline first]] §17).
+- A levonás **kliens-oldali** (`meal.repository.ts:consumeStock` → `stock-consumption.ts`); a szerver nem von le. A FOOD tétel / recept-hozzávaló mennyisége `db` egység esetén a `Food` darab-definícióján át kerül kanonikus alapra (`resolveFoodQuantity` — [[Mennyiség mező]]). **Tudatos korlát:** két offline eszközön naplózott étkezés esetén a `stored_food` relatív csökkentése elveszhet a sor-szintű last-write-wins alatt ([[Backend-offline first]] §17).
 
 #### Időzóna
 
@@ -123,7 +123,7 @@ Nincs nyitott kérdés.
 - Dashboard: dátum + 4 progress bar + ár + lista; színlogika pure TS.
 - Cél / maintenance / activity: [[Tápérték kalkulátor]] utility / store.
 - Élő tételösszegzés; DateTime modul.
-- Étkezés szerkesztő: a tétel-sor modell (`meal-item-row.ts` — RECIPE/FOOD/CUSTOM signal-mezőkkel, `toSaveItem` / `buildRowFromDto` / factory-k / `isRowComplete` / `rowNeedsInput`) megosztva a `reorder-list` összegző lista és a `MealItemEditorComponent` modal között; a modal ugyanazt a sor-objektumot mutálja, amit a lista mutat. A FOOD sor mennyisége `FormControl` + tükör-signal (a recept-hozzávaló mintájára), `[[Mennyiség mező]]` `unitChips`-szel (`g`/`dkg`/`db`/`ml`).
+- Étkezés szerkesztő: a tétel-sor modell (`meal-item-row.ts` — RECIPE/FOOD/CUSTOM signal-mezőkkel, `toSaveItem` / `buildRowFromDto` / factory-k / `isRowComplete` / `rowNeedsInput`) megosztva a `reorder-list` összegző lista és a `MealItemEditorComponent` modal között; a modal ugyanazt a sor-objektumot mutálja, amit a lista mutat. A FOOD sor mennyisége `FormControl` + tükör-signal (a recept-hozzávaló mintájára), `[[Mennyiség mező]]` `unitChips`-szel (`g`/`dkg`/`db`/`ml` — a `db` az adott `Food`-hoz kötve, a darab-definíción át oldódik fel).
 
 #### Backend-offline
 

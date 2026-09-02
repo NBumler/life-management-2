@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: a409f5b
+verifikalva: 2026-09-03
+verifikalt_commit: b9d7577
 ---
 
 # Élelmiszer tárolás
@@ -29,16 +29,20 @@ Otthon tárolt élelmiszer-készlet vezetése: tételenkénti mennyiség, tárol
 [[Bevásárlás teljesítve]]: pipált élelmiszer → tárolási tétel(ek).
 
 - Lejárat és tárolási hely szabályai: lásd lentebb + [[Bevásárlás teljesítve]].
-- **Darabolás:** ha a lista tétel mennyisége `db` egységű és `amount = N` → **N külön** tárolási tétel jön létre (felbontás külön követhető). Egyéb egységnél (pl. `1kg`): **egy** tárolási tétel a megadott mennyiséggel. Csomagszám szerinti vásárláshoz a listán `db` használandó.
+- **Darabolás:**
+  - lista tétel `cs` egységű, **egész** `amount = N` → **N külön** tárolási tétel (felbontás külön követhető);
+  - `cs` egységű, **tört** `amount` → **egy** tárolási tétel a tört mennyiséggel;
+  - **legacy `db`** egységű sor (a `db` a bevásárlólistán már nem választható — `backlog/063`) → a darab-definíción át `cs`-re old fel, **egész csomagra felfelé kerekít**, majd az egész-`cs` ág szerint darabol;
+  - egyéb egységnél (pl. `1kg`): **egy** tárolási tétel a megadott mennyiséggel.
 
-Minden új tétel mennyisége: `db` szétválasztáskor egy tétel = a katalógus **1 csomag nettó tartalma** (ha van); ha nincs nettó a katalógusban → `1 db`.
+Minden új tétel mennyisége: `cs` szétválasztáskor egy tétel = a katalógus **1 csomag nettó tartalma** (ha van); ha nincs nettó a katalógusban → `1 cs`. A frontend (`shopping-list-complete.ts` `splitCountFor`) és a backend (`ShoppingListService.splitCountFor`) bitre azonos szabályt futtat.
 
 #### Létrehozás — manuális
 
 Bevásárlás nélkül is felvehető:
 
 - [[Élelmiszerek]] választó ([[Szöveges keresés]])
-- Mennyiség ([[Mennyiség mező]] `quantity`)
+- Mennyiség ([[Mennyiség mező]] `quantity` — `db` is megadható, egy `Food`-hoz kötve, a darab-definíción át feloldva)
 - Tárolási hely (engedélyezett módok a katalógusból; ha nincs kitöltve egyik sem → mindhárom választható)
 - Lejárati dátum (előtöltés a helyhez tartozó katalógus-romlási idővel; üresen hagyva abból számolódik; felülírható)
 - Opcionálisan rögtön „felbontva” (akkor a felbontás szabályai érvényesülnek mentéskor)
@@ -67,7 +71,7 @@ Forrás: [[Élelmiszer forrású étkezés]], [[Recept forrású étkezés]] (ne
 
 Étkezés **létrehozásakor** levonás; szerkesztés / törlés esetén **nincs** visszapótlás ([[Étkezés]]).
 
-Egy adott `Food`-ra fogyasztott mennyiség levonása:
+Egy adott `Food`-ra fogyasztott mennyiség levonása. A kereslet és a tárolási sorok is **közös kanonikus alapra** kerülnek: `cs` / SI egység a szokásos módon, `db` a `Food` darab-definícióján át (elsőként csomagra — ez a „darabolás" sorok granularitása —, majd g/ml-re; definíció nélkül `1 db = 1 cs`). A `resolveFoodQuantity` közös feloldó. A tétel visszaírt mennyisége **arányos** a megmaradt kanonikus hányaddal (nincs egység-specifikus inverz).
 
 1. Először a **már felbontott** tételekből (pl. lejárat szerint növekvő — FIFO a felbontottak között).
 2. Ha még kell: **zárt** tételből — a fogyasztás előtt / közben **felbontás** (fenti lejárat-szabály), majd levonás.

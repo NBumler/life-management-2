@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: a409f5b
+verifikalva: 2026-09-03
+verifikalt_commit: b9d7577
 ---
 
 # Élelmiszerek
@@ -37,7 +37,8 @@ verifikalt_commit: a409f5b
 
 Részletes UI / szabályok: [[Élelmiszer manuális bevitele]].
 
-- Alap: termék, üzlet, márka, vonalkód (EAN), egyéb, ár (Ft/csomag), 1 csomag nettó tartalma ([[Mennyiség mező]] `quantity`).
+- Alap: termék, üzlet, márka, vonalkód (EAN), egyéb, ár (Ft/csomag), 1 csomag nettó tartalma ([[Mennyiség mező]] `quantity`), **1 darab** (opcionális darab-definíció).
+- **1 darab (`pieceAmount` + `pieceUnit`):** opcionális; „1 darab mekkora" — vagy SI mennyiséggel (`1 db = 30 g`), vagy a csomag hányadaként (`0.25 cs`, tört is: `1/6 csomag`). Mindkettő üres → `1 darab = 1 csomag`. Csak az egyik kitöltve → validációs hiba (vagy mindkettő, vagy egyik sem). A `pieceUnit` **nem** lehet `db` (körkörös). Ezáltal a `db` mennyiség-egység ott is használható, ahol egy `Food`-hoz kötött (recept-hozzávaló, [[Élelmiszer forrású étkezés]], [[Élelmiszer tárolás]] felvétel), és a darab-definíción keresztül old fel csomagra → g/ml-re → árra.
 - Tápanyagok 100 g / 100 ml-re (rögzített sorrend; só → nátrium / klorid kalkuláció).
 - Romlási idők ([[Mennyiség mező]] `duration`): kamra, hűtő, fagyasztó, felbontás után.
 - Engedélyezett tárolási mód = kitöltött kamra / hűtő / fagyasztó idő; üres = nem engedélyezett ([[Bevásárlás teljesítve]], [[Élelmiszer tárolás]]).
@@ -46,7 +47,7 @@ Részletes UI / szabályok: [[Élelmiszer manuális bevitele]].
 
 Új tétel mentése **tiltott**, ha **minden** mezője megegyezik egy már létező **élő** katalóguselemével. Részleges egyezés megengedett (pl. ugyanaz a termék más üzletben = külön tétel). A szabály **backend-offline** állapotban is él (helyi adat).
 
-A mezők összehasonlításának kanonikus szabálya (szöveg-normalizálás, vonalkód, `null` ≠ `0`, mennyiség-egység): [[Névegyediség]] → mezőhalmaz-egyediség.
+A mezők összehasonlításának kanonikus szabálya (szöveg-normalizálás, vonalkód, `null` ≠ `0`, mennyiség-egység — `netAmount`/`netUnit` **és** `pieceAmount`/`pieceUnit`, skálázott-egész egyenlőséggel): [[Névegyediség]] → mezőhalmaz-egyediség.
 
 A `store` jelenleg szabad szöveg a `Food` soron; külön bolt-entitásra bontás (ár boltonként) tervezett, nincs nyitott jegy.
 
@@ -99,14 +100,14 @@ OpenAPI scope — élelmiszer katalógus (közös a subfeature-ökkel):
 
 | Entitás | Fő mezők (elvárás) |
 |---|---|
-| `Food` | `id` (UUID, kliens); `name` (kötelező); `store`; `brand`; `barcode`; `note`; `priceHuf` (Ft/csomag); `netAmount` + `netUnit` (`quantity` egységek, `cl` is); tápanyag mezők (kcal + g értékek a spece szerinti listával); `shelfRoomAmount`/`Unit`, `shelfFridgeAmount`/`Unit`, `shelfFreezerAmount`/`Unit`, `shelfAfterOpeningAmount`/`Unit` (`duration`); `deleted` / `deleted_at`; `createdAt`, `updatedAt` |
+| `Food` | `id` (UUID, kliens); `name` (kötelező); `store`; `brand`; `barcode`; `note`; `priceHuf` (Ft/csomag); `netAmount` + `netUnit` (`quantity` egységek, `cl` is); `pieceAmount` + `pieceUnit` (darab-definíció — `numeric` / `text`, mindkettő nullable, both-or-neither; `pieceUnit ∈ {g,dkg,kg,ml,cl,dl,l,cs}`, `db` tiltott); tápanyag mezők (kcal + g értékek a spece szerinti listával); `shelfRoomAmount`/`Unit`, `shelfFridgeAmount`/`Unit`, `shelfFreezerAmount`/`Unit`, `shelfAfterOpeningAmount`/`Unit` (`duration`); `deleted` / `deleted_at`; `createdAt`, `updatedAt` |
 
 **Ownership:** shared — nincs `userId`; Auth: bármely autentikált `USER` CRUD ([[Bejelentkezés]]).
 
 Műveletek:
 
 - CRUD; lista + szöveges keresés.
-- Create/update: duplikáció ellenőrzés (összes mező egyezése, [[Névegyediség]] szerint normalizálva) — **globális** a shared katalógus **élő** sorain. Alkalmazás-szintű ellenőrzés, nem egyetlen unique index.
+- Create/update: duplikáció ellenőrzés (összes mező egyezése, [[Névegyediség]] szerint normalizálva, a darab-definíciót is beleértve) — **globális** a shared katalógus **élő** sorain. Alkalmazás-szintű ellenőrzés, nem egyetlen unique index. A darab-definíció both-or-neither / `db`-tiltás szabályát a `FoodService.validatePiece` kényszeríti (`VALIDATION_ERROR` + `field`), a klienssel azonos szabállyal.
 - Delete: soft delete + cascade soft delete a hivatkozó tárolás / recept / bevásárlás / étkezés tételekre **minden usernél**; a kliens a megerősítéshez előtte lekérdezheti / helyben tudja a hivatkozásokat. `DELETE` idempotens; saját törölt `GET` by id → 200 + `deleted` (ne 404).
 
 Mennyiség / időtartam egységek SSOT: [[Mennyiség mező]].

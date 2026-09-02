@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: 9a41447
+verifikalva: 2026-09-03
+verifikalt_commit: b9d7577
 ---
 
 # Névegyediség
@@ -74,7 +74,12 @@ Az [[Élelmiszerek]] duplikáció-szabálya nem egy névre, hanem **minden mező
 | Szöveg (termék, üzlet, márka, egyéb) | `normalizeName` szerint |
 | Vonalkód (EAN) | Trim + minden nem-számjegy karakter eltávolítása, majd karakteres egyezés. Üres = üres. |
 | Szám (ár, tápanyag értékek) | A tárolt érték pontos egyezése. **`null` ≠ `0`** |
-| Mennyiség / időtartam | `amount` + `unit` párként, a [[Mennyiség mező]] kanonikus egységére váltva (`1 l` = `100 cl`) |
+| Mennyiség / időtartam | `amount` + `unit` párként, a [[Mennyiség mező]] kanonikus egységére váltva (`1 l` = `100 cl`), **10^4-gyel skálázott egész** összehasonlítással (a tört bevitel kerekítése ne adjon hamis eltérést) |
+
+A `Food` összevetett mennyiség-mezői: `netAmount` + `netUnit` **és** `pieceAmount` + `pieceUnit`
+(a darab-definíció — [[Élelmiszerek]]). A `pieceUnit` sosem `db` (körkörös lenne), de a `cs` (csomag-
+hányad, akár tört) megengedett, ezért `0.25 cs` = `1/4 csomag` a skálázott-egész összevetés alatt.
+A `netAmount`/`netUnit` sosem `db` (a katalógus csomagokban méri a nettó tartalmat).
 
 Ugyanez a szabály fut a [[Élelmiszer manuális bevitele]] mentésénél és a [[Élelmiszer importálása clipboard-ról]] előnézetében — ott a **batchen belüli** korábbi érvényes sorokkal is összevetve.
 

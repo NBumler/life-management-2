@@ -1,7 +1,7 @@
 ---
 id: 063
 type: feature                 # feature | change-request | bug
-status: in-progress           # backlog | deferred | ready | in-progress | blocked | done | dropped
+status: done                  # backlog | deferred | ready | in-progress | blocked | done | dropped
 title: Mértékegység — »darab« → »csomag« átnevezés + katalógus darab-definíció (törtekkel)
 specs:
   - "[[Mennyiség mező]]"
@@ -18,16 +18,16 @@ specs:
   - "[[Élelmiszer importálása clipboard-ról]]"
 flag:
 created: 2026-09-02
-closed:
+closed: 2026-09-03
 ---
 
 # 063 — Mértékegység: »darab« → »csomag« átnevezés + katalógus darab-definíció (törtekkel)
 
-> **Haladás (2026-09-03):** minden kód-szelet kész és zöld (`master`):
-> A (rename, `5c1df5f`) · E (migráció V30 / SCHEMA_V28 / OutboxMigrator v2, `dff1456`) ·
-> D (tört-parser + skálázott-egész egyenlőség, `fb1e267`) · B (`Food.pieceAmount/pieceUnit`,
-> `c6c52f4`) · C (kontextuális `db` + `food-quantity.ts` közös feloldó, `61815f9`).
-> Hátra: a 12 érintett spec átírása a jelen állapotra + `IMPLEMENTATION_STATUS.md` sor + archiválás.
+> **Lezárva 2026-09-03.** Kód-szeletek (`master`): A (rename, `5c1df5f`) · E (migráció V30 /
+> SCHEMA_V28 / OutboxMigrator v2, `dff1456`) · D (tört-parser + skálázott-egész egyenlőség,
+> `fb1e267`) · B (`Food.pieceAmount/pieceUnit`, `c6c52f4`) · C (kontextuális `db` +
+> `food-quantity.ts` közös feloldó, `61815f9`). A 12 érintett spec átírva a jelen állapotra;
+> `IMPLEMENTATION_STATUS.md` sor hozzáadva. lint + test:ci (1416) + gradlew test + build zöld.
 
 ## Motiváció / probléma
 

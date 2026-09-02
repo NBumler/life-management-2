@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: a409f5b
+verifikalva: 2026-09-03
+verifikalt_commit: b9d7577
 ---
 
 # Élelmiszer manuális bevitele
@@ -36,7 +36,8 @@ Az űrlap **új létrehozásra** és **szerkesztésre** is szolgál ([[Élelmisz
 | **Vonalkód (EAN)** | Termék vonalkódja. [[Vonalkódos élelmiszer beolvasás]] automatikusan töltheti. Kézi javítás után az input végén lévő **sync gomb** újra lekéri az Open Food Facts adatokat (lásd lent). |
 | **Egyéb** | Tetszőleges megjegyzés (pl. ízesített termék); backend mező: `Food.note`. **Fogalmilag nem** azonos a bevásárlás nem-élelmiszer `ShoppingListItem.note` mezőjével (más tábla, más felület, más életciklus) — a `note` oszlopnév szándékosan több entitáson is ismétlődik a sémában (pl. `Recipe.note`, `Meal.note`), ez a séma konvenciója, nem összetévesztendő azonosság. |
 | **Ár** | Egy szám; jelentése **Ft / csomag** (egység a UI-n jelölve, nem külön input). |
-| **1 csomag nettó tartalma** | [[Mennyiség mező]] `quantity` módban. **Egy darabra** vonatkozik (pl. 1 tojás → `1db`; tej → `1l`). |
+| **1 csomag nettó tartalma** | [[Mennyiség mező]] `quantity` módban. Egy **csomag** nettó tartalma (pl. tej → `1l`, liszt → `1kg`, 6-os túró rudi → `1cs` vagy a teljes tömeg). |
+| **1 darab** | Opcionális darab-definíció ([[Mennyiség mező]] `quantity` módban, `unitChips`: `cs`/`g`/`dkg`/`ml`). „1 darab mekkora" — SI (`1 db = 6 dkg`) vagy a csomag hányada (`1/6 csomag`, tört is). Üresen hagyva `1 darab = 1 csomag`. `db` egység itt **tiltott** (körkörös); a mező alatt inline hiba, ha a user mégis `db`-t ír be. |
 
 #### Tápanyagok szekció
 
@@ -92,14 +93,15 @@ Az EAN mező végén gomb (jelszó-reveal mintára). Megnyomásra: OFF API hív�
 
 #### Duplikáció
 
-Létrehozáskor / mentéskor: új tétel **tiltott**, ha **minden** mezője megegyezik egy már létező élelmiszerével (lásd [[Élelmiszerek]]). Részleges egyezés (pl. ugyanaz a név, más üzlet) **megengedett**. A mezők összehasonlításának szabálya: [[Névegyediség]].
+Létrehozáskor / mentéskor: új tétel **tiltott**, ha **minden** mezője megegyezik egy már létező élelmiszerével (lásd [[Élelmiszerek]]) — a darab-definíciót (`pieceAmount` + `pieceUnit`) is beleértve. Részleges egyezés (pl. ugyanaz a név, más üzlet, vagy más darab-definíció) **megengedett**. A mezők összehasonlításának szabálya: [[Névegyediség]].
 
 ### UI/UX elvárások
 
-- Szekciók: alapadatok → tápanyagok (rögzített sorrend) → romlási idők.
+- Szekciók: alapadatok (köztük „1 csomag nettó tartalma" + „1 darab") → tápanyagok (rögzített sorrend) → romlási idők.
 - Mentés gomb: fix alsó footer (thumb-zone).
 - iOS zoom védelem: beviteli mezők betűmérete minimum `16px`.
-- Mennyiség / idő: [[Mennyiség mező]] (`quantity` nettó tartalomra; `duration` romlási időkre).
+- Mennyiség / idő: [[Mennyiség mező]] (`quantity` nettó tartalomra és darab-definícióra; `duration` romlási időkre).
+- A „1 darab" mező `db` bevitelnél inline hibát mutat (`FOOD.FORM.PIECE_UNIT_DB_ERROR`), és a mentés blokkolódik, amíg nem SI / `cs` értékre nem javul (vagy nem ürül ki).
 - Vonalkód: sync gomb az input végén; felülírás megerősítő dialógus (régi → új, csak eltérések).
 
 ### Megjegyzések

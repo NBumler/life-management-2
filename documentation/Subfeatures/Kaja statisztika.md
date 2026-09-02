@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: 65c3b52
+verifikalva: 2026-09-03
+verifikalt_commit: b9d7577
 ---
 
 # Kaja statisztika
@@ -48,7 +48,7 @@ Nincs közös összevont rangsor.
 - **Élelmiszer:** tápanyagok és a belőlük számolt arányok **100 g / 100 ml** alapon (katalógusmezők közvetlenül). Ár a fehérje/ár mutatóhoz: a csomagárat hozd **100 g/ml**-re, ha van nettó tartalom:  
   `ár_per_100 = priceHuf × (100 / nettó_baseAmount)`  
   (nettó egység dimenziója egyezzen; ha nettó / ár hiányzik → hiányos).
-- **Recept:** a recept **teljes összegzett** tápanyagai és ára ([[Recept]] kalkuláció). Mivel a recepten nincs adagszám mező, ez az összeg = **egy adag** a rangsor szempontjából.
+- **Recept:** a recept **teljes összegzett** tápanyagai és ára ([[Recept]] kalkuláció — a hozzávalók `cs` / `db` / SI mennyisége a közös `resolveFoodQuantity` feloldón át kerül gramm/ml és csomag-ekvivalensre). Mivel a recepten nincs adagszám mező, ez az összeg = **egy adag** a rangsor szempontjából. A recept-ár-per-100 akkor „hiányos", ha a recept összesített `baseAmount`-ja 0 (nincs súly/térfogat dimenzió — pl. minden hozzávaló `cs`/`db` nettó tartalom nélkül).
 
 #### Hiányos adat
 

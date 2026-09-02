@@ -14,7 +14,17 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
-_Még nincs lezárt `backlog/` jegy a restructure óta._
+- **2026-09-03 — #063** `db` → `csomag` (`cs`) mértékegység-átnevezés + katalógus darab-definíció
+  törtekkel. A `db` quantity-egység mindenütt `cs` (a katalógus csomagokat tárol); a `darab` (`db`)
+  **kontextuális** egységként tér vissza, a `Food.pieceAmount` + `pieceUnit` darab-definíción át
+  feloldva (`pages/food/food-quantity.ts`), definíció nélkül `1 db = 1 cs`. A Mennyiség mező
+  elfogad `N/M` törtet (4 tizedesre kerekítve), a kanonikus egyenlőség 10⁴-gyel skálázott egész.
+  3-rétegű adatmigráció: Flyway `V30` · lokális SQLite `SCHEMA_V28` · `OutboxMigrator` v2. A
+  bevásárlólistán a `db` nem választható; a teljesítés `cs` egész → N tárolási sor, tört → 1 sor,
+  legacy `db` → felfelé kerekít. Érintett specek: [[Mennyiség mező]], [[Névegyediség]],
+  [[Élelmiszerek]], [[Élelmiszer manuális bevitele]], [[Élelmiszer tárolás]], [[Recept]],
+  [[Étkezés]], [[Élelmiszer forrású étkezés]], [[Bevásárlólista írás]], [[Bevásárlás teljesítve]],
+  [[Kaja statisztika]], [[Élelmiszer importálása clipboard-ról]].
 
 ## Lezárt kör: dokumentáció ↔ implementáció restructure + 3 RED-javítás (2026-09-02)
 

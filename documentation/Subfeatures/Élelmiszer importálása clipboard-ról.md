@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: a409f5b
+verifikalva: 2026-09-03
+verifikalt_commit: b9d7577
 ---
 
 # Élelmiszer importálása clipboard-ról
@@ -36,7 +36,7 @@ Backend-offline állapotban is működik (helyi katalógus + outbox), ugyanazzal
 - Üres sorok: kihagyva.
 - Tizedes: **`.` és `,`** is elfogadott számoknál.
 - Szöveges üres jelölő: `-` → üres mező (mintha nem lenne kitöltve). Valódi üres cella szintén üres.
-- **Vonalkód** és **felbontás utáni** romlási idő: ebben a formátumban **nincs** oszlop → importált tételen üresen maradnak (később szerkeszthetők).
+- **Vonalkód**, **felbontás utáni** romlási idő és a **darab-definíció** (`pieceAmount` / `pieceUnit`): ebben a formátumban **nincs** oszlop → importált tételen üresen maradnak (a darab-definíció így `1 darab = 1 csomag`; később a [[Élelmiszer manuális bevitele]] űrlapon szerkeszthető).
 
 #### Oszlopok (rögzített sorrend, 22 db)
 
@@ -72,7 +72,7 @@ Ha a só ki van töltve, és a nátrium / klorid a sorban **üres** → ugyanaz 
 | Kategória | Szabály |
 |---|---|
 | **Új (importálható)** | Érvényes sor, és **nem** duplikátuma egy már létező (vagy ugyanebben a batchben már elfogadott) élelmiszernek. |
-| **Duplikátum** | Minden mező megegyezik egy meglévő katalóguselemmel (szabály: [[Élelmiszerek]], mezőnormalizálás: [[Névegyediség]]), vagy a batchen belüli korábbi érvényes sorral. |
+| **Duplikátum** | Minden mező megegyezik egy meglévő katalóguselemmel (szabály: [[Élelmiszerek]], mezőnormalizálás: [[Névegyediség]] — a darab-definíció is beleszámít, de az importált soron mindig üres), vagy a batchen belüli korábbi érvényes sorral. |
 | **Invalid** | Pl. hiányzó **Termék**; nettó tartalom nem parse-olható ([[Mennyiség mező]]); számmező nem értelmezhető szám; oszlopszám eltérés (túl kevés / egyértelműen törött sor). A lenyitható szekcióban **ok** megjelenik. |
 
 Az Import gomb csak az **Új** kategóriát menti. Sikeres import után: toast / visszajelzés a létrehozott darabszámmal; a textbox és az előnézet állapota frissíthető (üresre vagy az importáltak kikerülésével — ajánlott: textbox törlése + számlálók nullázása, lista frissül).

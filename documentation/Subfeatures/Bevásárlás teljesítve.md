@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: f605541
+verifikalva: 2026-09-03
+verifikalt_commit: b9d7577
 ---
 
 # Bevásárlás teljesítve
@@ -29,8 +29,11 @@ A folyamat **csak** a „Bevásárlás vége” megnyomásakor indul (a pipálá
        - Pontosan egy → nem kérdez, azzal megy.
        - Null engedélyezett → a user választ helyet és ad lejáratot (nincs katalógus-alapértelmezés).
      - Létrejön a megfelelő [[Élelmiszer tárolás]] bejegyzés / bejegyzések:
-       - Lista mennyiség `db` és `amount = N` → **N külön** tárolási tétel (egyenként a katalógus 1 csomag nettó tartalmával; ha nincs nettó → `1 db`). Indoklás / szabályok: [[Élelmiszer tárolás]].
+       - Lista mennyiség `cs` és **egész** `amount = N` → **N külön** tárolási tétel (egyenként a katalógus 1 csomag nettó tartalmával; ha nincs nettó → `1 cs`).
+       - `cs` és **tört** `amount` → **egy** tárolási tétel a tört mennyiséggel.
+       - **Legacy `db`** sor (a `db` a listán már nem választható — `backlog/063`) → a darab-definíción át `cs`-re old fel, egész csomagra **felfelé** kerekít, majd az egész-`cs` ág szerint darabol.
        - Egyéb egység → **egy** tárolási tétel a lista mennyiségével.
+       - Indoklás / szabályok: [[Élelmiszer tárolás]].
    - **Nem-élelmiszer:** nem kerül tárolásba; csak az archív lista része lesz.
 2. **Pipálatlan tételek = meg nem vett**
    - Új **aktív** lista jön létre ugyanezekkel a tételekkel és mennyiségekkel, **üres pipákkal**.
@@ -60,7 +63,7 @@ Nincs nyitott kérdés.
 
 ### Frontend
 
-`ShoppingListCompletePage` — egy áttekintő képernyő (`shopping-list-complete.page.ts` + `shopping-list-complete.ts` pure builder); a `db`-darabolás, hely-feloldás és lejárat-előtöltés kliensoldali; új aktív lista létrehozása a pipálatlanokból; eredeti lista archiválása. Egy outbox tétel (`entityType: 'ShoppingListComplete'`), a spun-off lista / tételek / `StoredFood` sorok saját outbox tétel nélkül.
+`ShoppingListCompletePage` — egy áttekintő képernyő (`shopping-list-complete.page.ts` + `shopping-list-complete.ts` pure builder); a `cs`/legacy-`db` darabolás (`splitCountFor`), hely-feloldás és lejárat-előtöltés kliensoldali; új aktív lista létrehozása a pipálatlanokból; eredeti lista archiválása. Egy outbox tétel (`entityType: 'ShoppingListComplete'`), a spun-off lista / tételek / `StoredFood` sorok saját outbox tétel nélkül.
 
 #### Backend-offline
 
@@ -91,7 +94,7 @@ Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító 
 }
 ```
 
-(`storageEntryIds` a kliens által generált `StoredFood` id-k, `db`-darabolásnál soronként több; `newActiveList` `null`, ha nincs pipálatlan tétel.)
+(`storageEntryIds` a kliens által generált `StoredFood` id-k, `cs`-darabolásnál soronként több; `newActiveList` `null`, ha nincs pipálatlan tétel.)
 
 `checkedFoodEntries` csak a pipált **élelmiszer** tételekhez tartalmaz sort (nem-élelmiszer és pipálatlan tételek nem szerepelnek benne — azok állapotát a lista már tárolt `checked` mezői adják, a kliens ezt nem duplikálja a body-ban). `storageLocation` csak akkor kötelező mezőnként, ha a katalógus szerint nem pontosan egy tárolási mód engedélyezett (a "Null engedélyezett" vagy "több engedélyezett" ág — a user választott helyet); pontosan egy engedélyezett módnál a szerver azt használja.
 
@@ -107,7 +110,7 @@ Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító 
 
 **Szerveroldali lépések (egy DB tranzakcióban):**
 
-1. A `checkedFoodEntries` alapján létrehozza a storage sorokat (mennyiség szerinti bontás: [[Élelmiszer tárolás]] szabálya — `db`/`amount = N` → N külön tétel, egyéb egység → egy tétel).
+1. A `checkedFoodEntries` alapján létrehozza a storage sorokat (mennyiség szerinti bontás: [[Élelmiszer tárolás]] szabálya — `cs` + egész N → N külön tétel; `cs` + tört → egy tétel; legacy `db` → egész csomagra felfelé kerekítve; egyéb egység → egy tétel). A `ShoppingListService.splitCountFor` a klienssel bitre azonos.
 2. Az eredeti listát `ARCHIVED`-re állítja, `completedAt` időbélyeggel; a tételek és pipaállapotok megmaradnak.
 3. Ha van pipálatlan tétel, létrehozza az új aktív listát **a kliens által küldött UUID-kal** (lásd lent) — ha nincs, `newActiveListId = null`.
 4. Bármely lépés hibája → teljes rollback, semmi nem íródik félig.
