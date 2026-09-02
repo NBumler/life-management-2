@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: 0d07ce6
 ---
 
 # Sablonok
@@ -19,7 +19,7 @@ Pakolási sablonok: elnevezett [[Eszközök]] listák (pl. „Hétvégi mászás
 
 **Ownership:** **user-owned** — [[Bejelentkezés]].
 
-**Nem scope (MVP):** seed / előre töltött sablonok; sablonból új `GearItem` létrehozása (csak picker; CRUD az [[Eszközök]] képernyőn).
+Nincs seed / előre töltött sablon, és sablonból nem hozható létre új `GearItem` (a tétel-picker csak meglévő katalógus-elemet ad; a `GearItem` CRUD az [[Eszközök]] képernyőn van).
 
 ### Funkcionális leírás
 
@@ -69,12 +69,12 @@ Egy sablonon belül ugyanaz a `gearItemId` **legfeljebb egyszer** szerepelhet.
 
 - **Eszköz törlés:** a sablon-tételekből cascade soft delete — [[Eszközök]].
 - **Sablon szerkesztés futó pakolás mellett:** szabadon engedélyezett; a futó lista **nem** követi a változást — [[Pakolás]].
-- **Új `GearItem`:** csak az [[Eszközök]] képernyőn (MVP). Sablon / pakolás csak meglévő elemet vesz fel pickerrel.
+- **Új `GearItem`:** csak az [[Eszközök]] képernyőn. Sablon / pakolás csak meglévő elemet vesz fel pickerrel.
 
 ### UI/UX elvárások
 
 - Belépés: [[GearCheck]] hub → **Sablonok**.
-- Lista: kereső ([[Szöveges keresés]]); soron: `name`, opcionális `notes` előnézet, tételszám; műveletek: megnyitás / szerkesztés, másolás, törlés.
+- Lista: kereső ([[Szöveges keresés]]); soron: `name`, opcionális `notes` előnézet; műveletek: megnyitás / szerkesztés, másolás, törlés. (A soronkénti **tételszám** kijelzése jelenleg hiányzik — tervezett: `backlog/026-gear-sablon-lista-sor-elo-tetelszam-kijelzese.md`.)
 - Create / edit: `name` (kötelező, auto-focus create-nél), `notes` (opcionális); alatta rendezhető tétellista + „eszköz hozzáadása” picker.
 - Törlés / másolás: egyértelmű gombok; törlésnél confirmation a fenti szöveggel.
 - Új sablon mentése után: navigáció vissza a Sablonok listára (**nem** marad a szerkesztő oldalon); az újonnan létrehozott sor finoman outline-olva jelzi, melyik a friss elem (query paraméterrel átadva, nem perzisztens állapot).
@@ -94,7 +94,7 @@ Nincs nyitott kérdés.
 - Sablon lista / create / edit / másolás képernyők a GearCheck alatt.
 - Megosztott `GearItem` picker ([[Eszközök]]); platformos reorder.
 - OpenAPI generált kliens; mutációk offline rétegen.
-- Nested mentés: sablon + tételek egy requestben ajánlott (mint [[Heti terv]] / session minták), vagy külön item végpontok — implementációs részlet, de a kliens offline outbox konzisztens legyen.
+- Nested mentés: a sablon + tételek **egy** requestben mennek (teljes fa csere id-diff-fel: `PackingTemplateService.saveTree` + `NestedChildResolver`; kliens tükör: `savePackingTemplate` id-diff). A duplikálás **kliensoldali** create + copy a normál nested create úton (nincs külön `POST .../duplicate` endpoint).
 
 #### Backend-offline
 
@@ -110,7 +110,7 @@ Nincs nyitott kérdés.
   - `packing_template` (`id` UUID, `user_id`, `name`, `notes` nullable, `deleted` / `deleted_at`, audit)
   - `packing_template_item` (`id` UUID, `template_id`, `gear_item_id`, `sort_order`, `deleted` / `deleted_at`, audit); unique `(template_id, gear_item_id)` élő sorokra; sablon `DELETE` → cascade soft delete a tételekre; `gear_item` törlésekor item sorok cascade soft delete ([[Eszközök]])
 - Egyediség: `(user_id, name_normalized)` unique a sablonon, **élő** sorokra (`WHERE deleted = false`) — [[Névegyediség]].
-- OpenAPI CRUD + `POST .../duplicate` (vagy kliens oldali create+copy ugyanazzal a szerződéssel); user scope: [[Bejelentkezés]].
+- OpenAPI CRUD (nested tree `PUT`); a duplikálás kliensoldali create + copy, **nincs** `POST .../duplicate` endpoint. User scope: [[Bejelentkezés]].
 - `DELETE` sablon: soft delete + tételek; **nem** érinti a futó pakolás táblákat és a `gear_item` sort. Idempotens (már törölt → 200).
 
 ### Nyitott kérdések

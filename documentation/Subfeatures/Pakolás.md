@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: 0d07ce6
 ---
 
 # Pakolás
@@ -19,7 +19,7 @@ Aktív pakolás(ok) indítása sablon(ok)ból, eszközök státuszának végigve
 
 **Ownership:** **user-owned** — [[Bejelentkezés]].
 
-**Nem scope (MVP):** pakolás-előzmény / archívum; sablon hozzáadása futás közben; tétel eltávolítása a futó listáról (csak státuszváltás); új `GearItem` create pakolásból (csak [[Eszközök]]).
+Nincs pakolás-előzmény / archívum, futás közben nem adható sablon a sessionhöz, tétel a futó listáról nem távolítható el (csak státuszváltás), és pakolásból nem hozható létre új `GearItem` (a `GearItem` CRUD csak az [[Eszközök]] képernyőn).
 
 ### Funkcionális leírás
 
@@ -29,7 +29,7 @@ Aktív pakolás(ok) indítása sablon(ok)ból, eszközök státuszának végigve
 |---|---|
 | `id` | UUID, kliens generálja |
 | `destination` | Opcionális szabad szöveg (úticél); **szerkeszthető** futás közben |
-| `sourceTemplateIds` | UUID lista — az induláskor választott [[Sablonok]] `id`-jai (sorrend = kiválasztási sorrend); UI forrás-jelöléshez |
+| `sourceTemplateIds` | UUID lista — az induláskor választott [[Sablonok]] `id`-jai (sorrend = kiválasztási sorrend); jelenleg a **futó pakolás lista** cím-fallbackjéhez használt (a session képernyőn még nem jelenik meg — lásd Megjegyzések) |
 | `createdAt` / `updatedAt` | Audit |
 | `deleted` | Soft delete (`false` default); a futó lista szűri |
 
@@ -76,7 +76,7 @@ A státuszok között **tetszőlegesen** lehet ugrani (chip tap vagy ciklus); `P
 5. Ha minden sablon üres → üres session OK; tételek később pickerrel.
 6. Kezdeti `status` = `NOT_PACKED`; `sortOrder` a fenti unió sorrendje.
 
-Sablon **módosítás / törlés** a futó session tételeit **nem** változtatja. Törölt sablon `id` a `sourceTemplateIds`-ben: UI „törölt sablon” / elrejtés; a tételek maradnak.
+Sablon **módosítás / törlés** a futó session tételeit **nem** változtatja. Törölt sablon `id` a `sourceTemplateIds`-ben: a futó pakolás lista cím-fallbackjéből a fel nem oldható id csendben kimarad; a tételek maradnak. (Explicit „törölt sablon" jelölés és a forrás-sablonok megjelenítése a session képernyőn jelenleg hiányzik — tervezett: `backlog/027-gear-pakolas-session-kepernyo-forras-sablonok-torolt-sablon-jelz.md`.)
 
 Futás közben **új sablon nem** adható a sessionhöz — csak induláskor. Extra eszköz: meglévő `GearItem` pickerrel (duplikátum disabled + lista végére); új tétel: `NOT_PACKED`, `sortOrder` = végére.
 
@@ -114,7 +114,7 @@ Egy tétel kártya:
 
 - Belépés: [[GearCheck]] hub → **Aktív pakolás** (lista a futó sessionökről + új indítás; korlátlan darabszám).
 - Lista soron cím: a `destination`, ha meg van adva; ha nincs, a `sourceTemplateIds` alapján a forrás-sablon(ok) neve, **vesszővel összefűzve** — csak ha egyik forrás-sablon neve sem oldható fel (pl. törölt sablon(ok)ból indult, üres lista), akkor esik vissza „Névtelen pakolás” feliratra.
-- Session képernyő: úticél szerkesztő; forrás-sablonok jelölése; kereső; státusz-sort; manuális reorder; tételkártyák a fenti interakcióval; „eszköz hozzáadása” picker; lezárás gomb + confirmation.
+- Session képernyő: úticél szerkesztő; kereső; státusz-sort; manuális reorder; tételkártyák a fenti interakcióval; „eszköz hozzáadása” picker; lezárás gomb + confirmation. (A forrás-sablonok jelölése a session képernyőn tervezett: `backlog/027-gear-pakolas-session-kepernyo-forras-sablonok-torolt-sablon-jelz.md`.)
 - Indítás flow: multi-select sablon(ok) (≥1) + opcionális úticél.
 
 ### Megjegyzések
@@ -132,6 +132,7 @@ Nincs nyitott kérdés.
 - Session lista + detail (státuszgép UI); platformos reorder; megosztott `GearItem` picker ([[Eszközök]]).
 - Élő név: join / select a helyi `gear_item` store-ból `gearItemId` alapján.
 - OpenAPI generált kliens; mutációk offline rétegen.
+- **Csak a session-létrehozás nested atomi írás** (session + kezdeti tételek egy requestben). A tétel-mutációk (status / sortOrder / extra tétel hozzáadása) **külön** outbox-műveletek a standalone item-végpontokon keresztül, nem nested session-mentés.
 
 #### Backend-offline
 
@@ -146,7 +147,7 @@ Nincs nyitott kérdés.
 - Táblák:
   - `packing_session` (`id` UUID, `user_id`, `destination` nullable, `source_template_ids` JSON/array, `deleted` / `deleted_at`, audit)
   - `packing_session_item` (`id` UUID, `session_id`, `gear_item_id`, `status`, `sort_order`, `deleted` / `deleted_at`, audit); unique `(session_id, gear_item_id)` élő sorokra; session `DELETE` → cascade soft delete; `gear_item` törléskor item cascade soft delete ([[Eszközök]])
-- Lezárás / user törlés: soft delete (listák `deleted = false`). Nincs archive UI az MVP-ben.
+- Lezárás / user törlés: soft delete (listák `deleted = false`). Nincs archive UI.
 - OpenAPI CRUD; user scope: [[Bejelentkezés]]. Korlátlan élő session / user (nincs unique „egy aktív” constraint). `DELETE` idempotens.
 
 ### Nyitott kérdések

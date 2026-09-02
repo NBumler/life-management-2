@@ -1,6 +1,6 @@
 ---
-verifikalva:
-verifikalt_commit:
+verifikalva: 2026-09-02
+verifikalt_commit: 0d07ce6
 ---
 
 # Eszközök
@@ -19,7 +19,7 @@ User-owned felszerelés-katalógus (típus / tétel szint, nem fizikai példány
 
 **Ownership:** **user-owned** — [[Bejelentkezés]].
 
-**Nem scope (MVP / 2.0 első kör):** kategória, mennyiség (`quantity`), súly, katalógus-állapot, fotó, gyártó, vásárlás / ellenőrzés dátum, élettartam / gear wear, ellenőrzési emlékeztető ([[Értesítések]]), seed / előre töltött lista.
+A `GearItem` jelenleg csak `name` + `notes`; nincs kategória, mennyiség (`quantity`), súly, katalógus-állapot, fotó, gyártó, vásárlás / ellenőrzés dátum, élettartam / gear wear, ellenőrzési emlékeztető, seed / előre töltött lista. Ezek tervezett bővítmények (jelenleg nincs jegy — a GearCheck-en belüli igény jelentkezésekor nyitandó).
 
 ### Funkcionális leírás
 
@@ -33,7 +33,7 @@ User-owned felszerelés-katalógus (típus / tétel szint, nem fizikai példány
 | `deleted` | Soft delete (`false` default); listák szűrik |
 | `createdAt` / `updatedAt` | Audit |
 
-Nincs `quantity`, `category`, `isFavorite` az MVP-ben. Törölt név **újra felvehető** (egyediség csak élő sorokra).
+Nincs `quantity`, `category`, `isFavorite`. Törölt név **újra felvehető** (egyediség csak élő sorokra).
 
 **Üres start:** első indításkor a katalógus üres — nincs seed.
 
@@ -56,13 +56,13 @@ Nincs `quantity`, `category`, `isFavorite` az MVP-ben. Törölt név **újra fel
 
 - Belépés: [[GearCheck]] hub → **Eszközök** (három belépő: Eszközök | Sablonok | Aktív pakolás).
 - Lista: kereső ([[Szöveges keresés]]); soron: `name`, opcionális `notes` előnézet.
-- Create / edit: `name` (kötelező), `notes` (opcionális); `name` mező auto-focus create-nél.
+- Create / edit: `name` (kötelező), `notes` (opcionális, jelenleg egysoros beviteli mező); `name` mező auto-focus create-nél.
 - Törlés: confirmation dialog a cascade hatással.
 - Megosztott picker a [[Sablonok]] / [[Pakolás]] felé (kereső + lista); picker csak `deleted = false`.
 
 ### Megjegyzések
 
-- Mennyiség / kategória későbbi scope, ha a GearCheck-en belül máshol is megjelenik az igény.
+- Mennyiség / kategória tervezett, ha a GearCheck-en belül máshol is jelentkezik az igény (nincs nyitott jegy).
 - A [[Sablonok]] és [[Pakolás]] specek a cascade és a „csak picker, nincs create” szabályait követik / hivatkozzák.
 
 ### Nyitott kérdések
