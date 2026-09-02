@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-02
-verifikalt_commit: 9a41447
+verifikalt_commit: 4fe11e1
 ---
 
 # Mennyiség mező
@@ -94,12 +94,23 @@ Az input végén (jelszó-mező „megjelenítés” gombjának mintájára) egy
 - `quantity`: pl. „Írj számot és egységet, szóköz opcionális. Példa: `120dkg`, `3 db`, `2l`, `5cl`.”
 - `duration`: pl. „Írj számot és időegységet. Példa: `14nap`, `2 hét`, `3hó`.”
 
+#### Gyors egység-választó (`unitChips`) — opcionális
+
+A fogyasztó feature átadhat egy `unitChips` egységlistát; ekkor a mező alatt (a `HelpInputComponent`
+`[chips]` slotján) egy chip-sor jelenik meg. Egy chipre koppintva a komponens a **már beírt számot
+megtartja** (vagy `1`-et használ, ha nincs / értelmezhetetlen), és arra az egységre vált — ez csak
+gyorsítás, a szabadszöveges bevitel változatlanul minden egységet elfogad. Üres `unitChips` (alap)
+esetén nincs chip-sor. Az éppen kiválasztott egység chipje kiemelt (nem `outline`).
+
+Első használó: az étkezés tétel-szerkesztő FOOD mennyisége (`g`, `dkg`, `db`, `ml`).
+
 ### UI/UX elvárások
 
 - Egy input mező; platformnak megfelelő billentyűzet (ahol lehet, számozós / text).
 - Ha a felületen egyértelmű, hogy ide fog gépelni a user: auto-focus ([[Life Management 2.0]] elv).
 - Hibaállapot: rövid, érthető üzenet (pl. ismeretlen egység / hiányzó szám).
 - Helper ikon mindig elérhető a mező végén.
+- Ha a fogyasztó `unitChips`-et ad: gyors egység-választó chip-sor a mező alatt (fent).
 
 ### Megjegyzések
 

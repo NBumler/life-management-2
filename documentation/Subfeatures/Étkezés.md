@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-02
-verifikalt_commit: d67c348
+verifikalt_commit: 4fe11e1
 ---
 
 # Étkezés
@@ -123,7 +123,7 @@ Nincs nyitott kérdés.
 - Dashboard: dátum + 4 progress bar + ár + lista; színlogika pure TS.
 - Cél / maintenance / activity: [[Tápérték kalkulátor]] utility / store.
 - Élő tételösszegzés; DateTime modul.
-- Étkezés szerkesztő: a tétel-sor modell (`meal-item-row.ts` — RECIPE/FOOD/CUSTOM signal-mezőkkel, `toSaveItem` / `buildRowFromDto` / factory-k / `isRowComplete` / `rowNeedsInput`) megosztva a `reorder-list` összegző lista és a `MealItemEditorComponent` modal között; a modal ugyanazt a sor-objektumot mutálja, amit a lista mutat.
+- Étkezés szerkesztő: a tétel-sor modell (`meal-item-row.ts` — RECIPE/FOOD/CUSTOM signal-mezőkkel, `toSaveItem` / `buildRowFromDto` / factory-k / `isRowComplete` / `rowNeedsInput`) megosztva a `reorder-list` összegző lista és a `MealItemEditorComponent` modal között; a modal ugyanazt a sor-objektumot mutálja, amit a lista mutat. A FOOD sor mennyisége `FormControl` + tükör-signal (a recept-hozzávaló mintájára), `[[Mennyiség mező]]` `unitChips`-szel (`g`/`dkg`/`db`/`ml`).
 
 #### Backend-offline
 
