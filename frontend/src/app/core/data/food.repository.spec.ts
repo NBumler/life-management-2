@@ -41,6 +41,12 @@ describe('isDuplicateFood', () => {
     const b = food({ netAmount: 100, netUnit: 'cl' });
     expect(isDuplicateFood(a, b)).toBe(true);
   });
+
+  it('backlog/063: the darab-definíció (pieceAmount/pieceUnit) is part of the field set', () => {
+    expect(isDuplicateFood(food({ pieceAmount: 0.1667, pieceUnit: 'cs' }), food({ pieceAmount: 0.1667, pieceUnit: 'cs' }))).toBe(true);
+    expect(isDuplicateFood(food({ pieceAmount: 0.1667, pieceUnit: 'cs' }), food({ pieceAmount: 30, pieceUnit: 'g' }))).toBe(false);
+    expect(isDuplicateFood(food({ pieceAmount: null, pieceUnit: null }), food({ pieceAmount: 30, pieceUnit: 'g' }))).toBe(false);
+  });
 });
 
 describe('FoodRepository', () => {

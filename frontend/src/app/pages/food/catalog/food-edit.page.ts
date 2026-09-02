@@ -98,6 +98,10 @@ export class FoodEditPage implements OnInit {
     note: this.fb.control<string | null>(null),
     priceHuf: this.fb.control<number | null>(null),
     netAmount: this.fb.nonNullable.control<ParsedQuantity>(NO_QUANTITY),
+    // documentation/Subfeatures/Élelmiszer manuális bevitele.md "1 darab": darab-definíció —
+    // üresen hagyva "1 darab = 1 csomag". A QuantityInputComponent sosem commitál fél értéket,
+    // így a "vagy mindkettő, vagy egyik sem" szabály itt automatikusan teljesül.
+    pieceDefinition: this.fb.nonNullable.control<ParsedQuantity>(NO_QUANTITY),
     energyKcal: this.fb.control<number | null>(null),
     fatG: this.fb.control<number | null>(null),
     fatSaturatedG: this.fb.control<number | null>(null),
@@ -169,6 +173,7 @@ export class FoodEditPage implements OnInit {
         note: food.note ?? null,
         priceHuf: food.priceHuf ?? null,
         netAmount: toParsedQuantity(food.netAmount, food.netUnit),
+        pieceDefinition: toParsedQuantity(food.pieceAmount, food.pieceUnit),
         energyKcal: food.energyKcal ?? null,
         fatG: food.fatG ?? null,
         fatSaturatedG: food.fatSaturatedG ?? null,
@@ -353,6 +358,8 @@ export class FoodEditPage implements OnInit {
       priceHuf: raw.priceHuf,
       netAmount: raw.netAmount.amount,
       netUnit: raw.netAmount.unit,
+      pieceAmount: raw.pieceDefinition.amount,
+      pieceUnit: raw.pieceDefinition.unit,
       energyKcal: raw.energyKcal,
       fatG: raw.fatG,
       fatSaturatedG: raw.fatSaturatedG,

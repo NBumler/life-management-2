@@ -54,6 +54,15 @@ public class FoodEntity {
 	@Column(name = "net_unit")
 	private String netUnit;
 
+	// backlog/063 — darab-definíció: "1 darab = piece_amount piece_unit". Mindkettő null → "1 darab
+	// = 1 csomag". piece_unit ∈ {g,dkg,kg,ml,cl,dl,l,cs}; a `db` tiltott (körkörös). A both-or-neither
+	// és a tiltott-egység szabályt a FoodService validálja (a kliens előre, ugyanazzal a szabállyal).
+	@Column(name = "piece_amount")
+	private BigDecimal pieceAmount;
+
+	@Column(name = "piece_unit")
+	private String pieceUnit;
+
 	@Column(name = "energy_kcal")
 	private BigDecimal energyKcal;
 
@@ -213,6 +222,19 @@ public class FoodEntity {
 	public void setNetAmount(BigDecimal netAmount, String netUnit) {
 		this.netAmount = netAmount;
 		this.netUnit = netUnit;
+	}
+
+	public BigDecimal getPieceAmount() {
+		return pieceAmount;
+	}
+
+	public String getPieceUnit() {
+		return pieceUnit;
+	}
+
+	public void setPiece(BigDecimal pieceAmount, String pieceUnit) {
+		this.pieceAmount = pieceAmount;
+		this.pieceUnit = pieceUnit;
 	}
 
 	public BigDecimal getEnergyKcal() {

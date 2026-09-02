@@ -619,6 +619,7 @@
       "NOTE_LABEL": "Other",
       "PRICE_LABEL": "Price (HUF / package)",
       "NET_AMOUNT_LABEL": "Net content per package",
+      "PIECE_LABEL": "One piece (e.g. a 6-pack → 1/6 package; blank: 1 piece = 1 package)",
       "SECTION_NUTRIENTS": "Nutrition (per 100 g / 100 ml)",
       "SECTION_SHELF_LIFE": "Shelf life",
       "NUTRIENT_ENERGY": "Energy (kcal)",

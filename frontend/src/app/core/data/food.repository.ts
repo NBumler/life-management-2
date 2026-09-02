@@ -56,6 +56,10 @@ export function isDuplicateFood(existing: Food, draft: Food): boolean {
       { amount: existing.netAmount ?? null, unit: (existing.netUnit as QuantityUnit) ?? null },
       { amount: draft.netAmount ?? null, unit: (draft.netUnit as QuantityUnit) ?? null },
     ) &&
+    quantitiesEqual(
+      { amount: existing.pieceAmount ?? null, unit: (existing.pieceUnit as QuantityUnit) ?? null },
+      { amount: draft.pieceAmount ?? null, unit: (draft.pieceUnit as QuantityUnit) ?? null },
+    ) &&
     numberEquals(existing.energyKcal, draft.energyKcal) &&
     numberEquals(existing.fatG, draft.fatG) &&
     numberEquals(existing.fatSaturatedG, draft.fatSaturatedG) &&

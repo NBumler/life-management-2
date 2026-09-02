@@ -3086,6 +3086,8 @@ export interface FoodRow {
   price_huf: number | null;
   net_amount: number | null;
   net_unit: string | null;
+  piece_amount: number | null;
+  piece_unit: string | null;
   energy_kcal: number | null;
   fat_g: number | null;
   fat_saturated_g: number | null;
@@ -3128,6 +3130,8 @@ export function foodRowToDto(row: FoodRow): Food {
     priceHuf: row.price_huf,
     netAmount: row.net_amount,
     netUnit: row.net_unit,
+    pieceAmount: row.piece_amount,
+    pieceUnit: row.piece_unit,
     energyKcal: row.energy_kcal,
     fatG: row.fat_g,
     fatSaturatedG: row.fat_saturated_g,
@@ -3165,6 +3169,8 @@ const FOOD_COLUMNS = [
   'price_huf',
   'net_amount',
   'net_unit',
+  'piece_amount',
+  'piece_unit',
   'energy_kcal',
   'fat_g',
   'fat_saturated_g',
@@ -3198,6 +3204,8 @@ function foodValues(dto: Food): unknown[] {
     dto.priceHuf ?? null,
     dto.netAmount ?? null,
     dto.netUnit ?? null,
+    dto.pieceAmount ?? null,
+    dto.pieceUnit ?? null,
     dto.energyKcal ?? null,
     dto.fatG ?? null,
     dto.fatSaturatedG ?? null,

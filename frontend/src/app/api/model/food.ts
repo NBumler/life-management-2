@@ -25,6 +25,14 @@ export interface Food {
      * documentation/Architektúra/Mennyiség mező.md quantity unit: cs, g, dkg, kg, l, dl, cl, or ml.
      */
     netUnit?: string | null;
+    /**
+     * backlog/063 — darab-definíció: \"1 darab = pieceAmount pieceUnit\" (fraction allowed, e.g. 1/6 csomag). Null together with pieceUnit means \"1 darab = 1 csomag\". Both set or both null.
+     */
+    pieceAmount?: number | null;
+    /**
+     * documentation/Architektúra/Mennyiség mező.md quantity unit for the darab-definíció: g, dkg, kg, ml, cl, dl, l, or cs. `db` is forbidden here (it would be circular).
+     */
+    pieceUnit?: string | null;
     energyKcal?: number | null;
     fatG?: number | null;
     fatSaturatedG?: number | null;

@@ -192,13 +192,22 @@ describe('FoodEditPage', () => {
     fixture.componentInstance.form.patchValue({
       name: 'Tej',
       netAmount: { amount: 1, unit: 'l' },
+      pieceDefinition: { amount: 0.1667, unit: 'cs' },
       shelfFridge: { amount: 5, unit: 'nap' },
     });
 
     await fixture.componentInstance.save();
 
     expect(repository.save).toHaveBeenCalledWith(
-      jasmine.objectContaining({ name: 'Tej', netAmount: 1, netUnit: 'l', shelfFridgeAmount: 5, shelfFridgeUnit: 'nap' }),
+      jasmine.objectContaining({
+        name: 'Tej',
+        netAmount: 1,
+        netUnit: 'l',
+        pieceAmount: 0.1667,
+        pieceUnit: 'cs',
+        shelfFridgeAmount: 5,
+        shelfFridgeUnit: 'nap',
+      }),
     );
     expect(navigateSpy).toHaveBeenCalledWith('/tabs/food/catalog');
   });

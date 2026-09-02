@@ -619,6 +619,7 @@
       "NOTE_LABEL": "Egyéb",
       "PRICE_LABEL": "Ár (Ft / csomag)",
       "NET_AMOUNT_LABEL": "1 csomag nettó tartalma",
+      "PIECE_LABEL": "1 darab (pl. 6-os túró rudi → 1/6 csomag; üresen: 1 darab = 1 csomag)",
       "SECTION_NUTRIENTS": "Tápanyagok (100 g / 100 ml)",
       "SECTION_SHELF_LIFE": "Romlási idők",
       "NUTRIENT_ENERGY": "Energia (kcal)",

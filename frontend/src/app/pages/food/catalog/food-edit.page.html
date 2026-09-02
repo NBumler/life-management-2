@@ -57,6 +57,14 @@
       <ion-item>
         <app-quantity-input formControlName="netAmount" mode="quantity" [label]="'FOOD.FORM.NET_AMOUNT_LABEL' | translate"></app-quantity-input>
       </ion-item>
+      <ion-item>
+        <app-quantity-input
+          formControlName="pieceDefinition"
+          mode="quantity"
+          [label]="'FOOD.FORM.PIECE_LABEL' | translate"
+          [unitChips]="['cs', 'g', 'dkg', 'ml']"
+        ></app-quantity-input>
+      </ion-item>
 
       <ion-list-header>{{ 'FOOD.FORM.SECTION_NUTRIENTS' | translate }}</ion-list-header>
       @for (

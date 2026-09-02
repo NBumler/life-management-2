@@ -16,6 +16,8 @@ class FoodMapper {
 		dto.priceHuf(entity.getPriceHuf());
 		dto.netAmount(entity.getNetAmount());
 		dto.netUnit(entity.getNetUnit());
+		dto.pieceAmount(entity.getPieceAmount());
+		dto.pieceUnit(entity.getPieceUnit());
 		dto.energyKcal(entity.getEnergyKcal());
 		dto.fatG(entity.getFatG());
 		dto.fatSaturatedG(entity.getFatSaturatedG());

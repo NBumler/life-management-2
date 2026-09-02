@@ -179,6 +179,47 @@ class FoodServiceTest {
 		assertThatThrownBy(() -> service.create(dto)).isInstanceOf(UniqueViolationException.class);
 	}
 
+	// --- backlog/063 darab-definíció (pieceAmount / pieceUnit) ---
+
+	@Test
+	void create_pieceDefinitionParticipatesInDuplicateDetection() {
+		UUID existingId = UUID.randomUUID();
+		FoodEntity existing = new FoodEntity(existingId);
+		existing.rename("Túró Rudi", "túró rudi");
+		existing.setPiece(BigDecimal.valueOf(0.1667), "cs");
+		when(repository.findByDeletedFalse()).thenReturn(List.of(existing));
+
+		UUID newId = UUID.randomUUID();
+		when(repository.findById(newId)).thenReturn(Optional.empty());
+
+		// Different piece definition -> not a duplicate.
+		Food distinct = food(newId, "Túró Rudi").pieceAmount(BigDecimal.valueOf(30)).pieceUnit("g");
+		assertThat(service.create(distinct).getPieceUnit().orElse(null)).isEqualTo("g");
+
+		// Same piece definition -> duplicate.
+		Food same = food(UUID.randomUUID(), "Túró Rudi").pieceAmount(BigDecimal.valueOf(0.1667)).pieceUnit("cs");
+		when(repository.findById(any())).thenReturn(Optional.empty());
+		assertThatThrownBy(() -> service.create(same)).isInstanceOf(UniqueViolationException.class);
+	}
+
+	@Test
+	void create_rejectsHalfFilledPieceDefinition() {
+		UUID id = UUID.randomUUID();
+		when(repository.findById(id)).thenReturn(Optional.empty());
+
+		assertThatThrownBy(() -> service.create(food(id, "X").pieceAmount(BigDecimal.valueOf(30))))
+				.isInstanceOf(hu.bumler.lm2.common.exception.ValidationException.class);
+	}
+
+	@Test
+	void create_rejectsDbAsPieceUnit() {
+		UUID id = UUID.randomUUID();
+		when(repository.findById(id)).thenReturn(Optional.empty());
+
+		assertThatThrownBy(() -> service.create(food(id, "X").pieceAmount(BigDecimal.ONE).pieceUnit("db")))
+				.isInstanceOf(hu.bumler.lm2.common.exception.ValidationException.class);
+	}
+
 	// --- update ---
 
 	@Test

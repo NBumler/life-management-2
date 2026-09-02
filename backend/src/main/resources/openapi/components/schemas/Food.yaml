@@ -36,6 +36,18 @@ properties:
     type: string
     nullable: true
     description: 'documentation/Architektúra/Mennyiség mező.md quantity unit: cs, g, dkg, kg, l, dl, cl, or ml.'
+  pieceAmount:
+    type: number
+    nullable: true
+    description: >-
+      backlog/063 — darab-definíció: "1 darab = pieceAmount pieceUnit" (fraction allowed, e.g. 1/6
+      csomag). Null together with pieceUnit means "1 darab = 1 csomag". Both set or both null.
+  pieceUnit:
+    type: string
+    nullable: true
+    description: >-
+      documentation/Architektúra/Mennyiség mező.md quantity unit for the darab-definíció: g, dkg, kg,
+      ml, cl, dl, l, or cs. `db` is forbidden here (it would be circular).
   energyKcal:
     type: number
     nullable: true

@@ -15,6 +15,7 @@ import hu.bumler.lm2.common.QuantityConverter;
 import hu.bumler.lm2.common.exception.EntityDeletedException;
 import hu.bumler.lm2.common.exception.EntityNotFoundException;
 import hu.bumler.lm2.common.exception.UniqueViolationException;
+import hu.bumler.lm2.common.exception.ValidationException;
 
 /**
  * documentation/Subfeatures/Élelmiszerek.md — shared/global catalog: no per-user ownership, so
@@ -116,6 +117,9 @@ class FoodService {
 		Integer priceHuf = dto.getPriceHuf().orElse(null);
 		BigDecimal netAmount = dto.getNetAmount().orElse(null);
 		String netUnit = dto.getNetUnit().orElse(null);
+		BigDecimal pieceAmount = dto.getPieceAmount().orElse(null);
+		String pieceUnit = dto.getPieceUnit().orElse(null);
+		validatePiece(pieceAmount, pieceUnit);
 		BigDecimal energyKcal = dto.getEnergyKcal().orElse(null);
 		BigDecimal fatG = dto.getFatG().orElse(null);
 		BigDecimal fatSaturatedG = dto.getFatSaturatedG().orElse(null);
@@ -138,10 +142,10 @@ class FoodService {
 		BigDecimal shelfAfterOpeningAmount = dto.getShelfAfterOpeningAmount().orElse(null);
 		String shelfAfterOpeningUnit = dto.getShelfAfterOpeningUnit().orElse(null);
 
-		findLiveDuplicate(entity.getId(), normalizedName, store, brand, note, normalizedBarcode, priceHuf, netAmount, netUnit, energyKcal, fatG,
-				fatSaturatedG, fatUnsaturatedG, fatTransG, carbsG, carbsSugarsG, carbsComplexG, carbsFiberG, proteinG, saltG, sodiumG, chlorideG,
-				shelfRoomAmount, shelfRoomUnit, shelfFridgeAmount, shelfFridgeUnit, shelfFreezerAmount, shelfFreezerUnit, shelfAfterOpeningAmount,
-				shelfAfterOpeningUnit)
+		findLiveDuplicate(entity.getId(), normalizedName, store, brand, note, normalizedBarcode, priceHuf, netAmount, netUnit, pieceAmount,
+				pieceUnit, energyKcal, fatG, fatSaturatedG, fatUnsaturatedG, fatTransG, carbsG, carbsSugarsG, carbsComplexG, carbsFiberG, proteinG,
+				saltG, sodiumG, chlorideG, shelfRoomAmount, shelfRoomUnit, shelfFridgeAmount, shelfFridgeUnit, shelfFreezerAmount, shelfFreezerUnit,
+				shelfAfterOpeningAmount, shelfAfterOpeningUnit)
 				.ifPresent(conflict -> {
 					throw new UniqueViolationException("An identical food already exists", "name", conflict.getId());
 				});
@@ -153,6 +157,7 @@ class FoodService {
 		entity.setNote(note);
 		entity.setPriceHuf(priceHuf);
 		entity.setNetAmount(netAmount, netUnit);
+		entity.setPiece(pieceAmount, pieceUnit);
 		entity.setEnergyKcal(energyKcal);
 		entity.setFatG(fatG);
 		entity.setFatSaturatedG(fatSaturatedG);
@@ -180,11 +185,11 @@ class FoodService {
 	 * base-unit equality.
 	 */
 	private java.util.Optional<FoodEntity> findLiveDuplicate(UUID selfId, String normalizedName, String store, String brand, String note,
-			String normalizedBarcode, Integer priceHuf, BigDecimal netAmount, String netUnit, BigDecimal energyKcal, BigDecimal fatG,
-			BigDecimal fatSaturatedG, BigDecimal fatUnsaturatedG, BigDecimal fatTransG, BigDecimal carbsG, BigDecimal carbsSugarsG,
-			BigDecimal carbsComplexG, BigDecimal carbsFiberG, BigDecimal proteinG, BigDecimal saltG, BigDecimal sodiumG, BigDecimal chlorideG,
-			BigDecimal shelfRoomAmount, String shelfRoomUnit, BigDecimal shelfFridgeAmount, String shelfFridgeUnit, BigDecimal shelfFreezerAmount,
-			String shelfFreezerUnit, BigDecimal shelfAfterOpeningAmount, String shelfAfterOpeningUnit) {
+			String normalizedBarcode, Integer priceHuf, BigDecimal netAmount, String netUnit, BigDecimal pieceAmount, String pieceUnit,
+			BigDecimal energyKcal, BigDecimal fatG, BigDecimal fatSaturatedG, BigDecimal fatUnsaturatedG, BigDecimal fatTransG, BigDecimal carbsG,
+			BigDecimal carbsSugarsG, BigDecimal carbsComplexG, BigDecimal carbsFiberG, BigDecimal proteinG, BigDecimal saltG, BigDecimal sodiumG,
+			BigDecimal chlorideG, BigDecimal shelfRoomAmount, String shelfRoomUnit, BigDecimal shelfFridgeAmount, String shelfFridgeUnit,
+			BigDecimal shelfFreezerAmount, String shelfFreezerUnit, BigDecimal shelfAfterOpeningAmount, String shelfAfterOpeningUnit) {
 		return repository.findByDeletedFalse().stream()
 				.filter(existing -> !existing.getId().equals(selfId))
 				.filter(existing -> Objects.equals(existing.getNameNormalized(), normalizedName))
@@ -194,6 +199,7 @@ class FoodService {
 				.filter(existing -> Objects.equals(nullToEmpty(existing.getBarcodeNormalized()), nullToEmpty(normalizedBarcode)))
 				.filter(existing -> Objects.equals(existing.getPriceHuf(), priceHuf))
 				.filter(existing -> QuantityConverter.quantitiesEqual(existing.getNetAmount(), existing.getNetUnit(), netAmount, netUnit))
+				.filter(existing -> QuantityConverter.quantitiesEqual(existing.getPieceAmount(), existing.getPieceUnit(), pieceAmount, pieceUnit))
 				.filter(existing -> numberEquals(existing.getEnergyKcal(), energyKcal))
 				.filter(existing -> numberEquals(existing.getFatG(), fatG))
 				.filter(existing -> numberEquals(existing.getFatSaturatedG(), fatSaturatedG))
@@ -216,6 +222,26 @@ class FoodService {
 				.filter(existing -> QuantityConverter.durationsEqual(existing.getShelfAfterOpeningAmount(), existing.getShelfAfterOpeningUnit(),
 						shelfAfterOpeningAmount, shelfAfterOpeningUnit))
 				.findFirst();
+	}
+
+	/**
+	 * backlog/063 — darab-definíció szabályok (a kliens ugyanezt futtatja előre): a {@code pieceAmount}
+	 * és a {@code pieceUnit} vagy együtt van megadva, vagy egyik sem; a {@code pieceUnit} valós
+	 * mennyiség-egység kell legyen (a {@code db} tiltott — {@link QuantityConverter#quantityFamily}
+	 * arra {@code null}-t ad); az amount pozitív.
+	 */
+	private static void validatePiece(BigDecimal pieceAmount, String pieceUnit) {
+		boolean hasAmount = pieceAmount != null;
+		boolean hasUnit = pieceUnit != null && !pieceUnit.isBlank();
+		if (hasAmount != hasUnit) {
+			throw new ValidationException("A darab-definícióhoz a mennyiség és az egység is kell, vagy egyik sem", "pieceUnit");
+		}
+		if (hasUnit && QuantityConverter.quantityFamily(pieceUnit) == null) {
+			throw new ValidationException("Érvénytelen darab-egység (a »db« itt nem használható)", "pieceUnit");
+		}
+		if (hasAmount && pieceAmount.signum() <= 0) {
+			throw new ValidationException("A darab mennyiségnek pozitívnak kell lennie", "pieceAmount");
+		}
 	}
 
 	private static boolean textEquals(String a, String b) {
