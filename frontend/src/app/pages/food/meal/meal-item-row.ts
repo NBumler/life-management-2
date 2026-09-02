@@ -1,4 +1,6 @@
-import { WritableSignal, signal } from '@angular/core';
+import { Injector, Signal, WritableSignal, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { FormControl } from '@angular/forms';
 
 import { MealItemSaveItem } from '../../../core/storage/storage-backend';
 import { uuidV4 } from '../../../core/sync/uuid';
@@ -9,6 +11,10 @@ import { ParsedQuantity, QuantityUnit } from '../../../shared/quantity';
  * One reorderable list mixes three source types (RECIPE / FOOD / CUSTOM); each row keeps its own
  * editable fields as signals so the item-editor modal and the summary list can share the exact same
  * mutable object. `toSaveItem` projects a row into the persistence-facing `MealItemSaveItem`.
+ *
+ * FOOD quantity follows the recipe-edit ingredient pattern: a `FormControl` bound to
+ * `<app-quantity-input [formControl]>`, mirrored to a read-only `quantity` signal (`toSignal`) so
+ * `computed()`s in the editor/list stay reactive to it.
  */
 
 export const NO_QUANTITY: ParsedQuantity<QuantityUnit> = { amount: null, unit: null };
@@ -24,7 +30,8 @@ export interface FoodItemRow {
   id: string;
   type: 'FOOD';
   foodId: string;
-  quantity: WritableSignal<ParsedQuantity<QuantityUnit>>;
+  quantityControl: FormControl<ParsedQuantity<QuantityUnit>>;
+  quantity: Signal<ParsedQuantity<QuantityUnit>>;
   servings: WritableSignal<number>;
 }
 
@@ -46,8 +53,14 @@ export function createRecipeRow(recipeId: string): RecipeItemRow {
   return { id: uuidV4(), type: 'RECIPE', recipeId, servings: signal(1) };
 }
 
-export function createFoodRow(foodId: string): FoodItemRow {
-  return { id: uuidV4(), type: 'FOOD', foodId, quantity: signal(NO_QUANTITY), servings: signal(1) };
+function buildFoodRow(id: string, foodId: string, quantity: ParsedQuantity<QuantityUnit>, servings: number, injector: Injector): FoodItemRow {
+  const quantityControl = new FormControl<ParsedQuantity<QuantityUnit>>(quantity, { nonNullable: true });
+  const quantitySignal = toSignal(quantityControl.valueChanges, { initialValue: quantityControl.getRawValue(), injector });
+  return { id, type: 'FOOD', foodId, quantityControl, quantity: quantitySignal, servings: signal(servings) };
+}
+
+export function createFoodRow(foodId: string, injector: Injector): FoodItemRow {
+  return buildFoodRow(uuidV4(), foodId, NO_QUANTITY, 1, injector);
 }
 
 export function createCustomRow(): CustomItemRow {
@@ -81,18 +94,18 @@ export interface MealItemDto {
   servings: number;
 }
 
-export function buildRowFromDto(item: MealItemDto): ItemRow {
+export function buildRowFromDto(item: MealItemDto, injector: Injector): ItemRow {
   if (item.type === 'RECIPE') {
     return { id: item.id, type: 'RECIPE', recipeId: item.recipeId ?? '', servings: signal(item.servings) };
   }
   if (item.type === 'FOOD') {
-    return {
-      id: item.id,
-      type: 'FOOD',
-      foodId: item.foodId ?? '',
-      quantity: signal({ amount: item.quantityAmount ?? null, unit: (item.quantityUnit as QuantityUnit) ?? null }),
-      servings: signal(item.servings),
-    };
+    return buildFoodRow(
+      item.id,
+      item.foodId ?? '',
+      { amount: item.quantityAmount ?? null, unit: (item.quantityUnit as QuantityUnit) ?? null },
+      item.servings,
+      injector,
+    );
   }
   return {
     id: item.id,

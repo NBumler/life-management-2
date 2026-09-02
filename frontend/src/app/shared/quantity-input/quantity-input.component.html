@@ -8,4 +8,12 @@
   [errorKey]="errorMessage()"
   (valueChange)="onInput($event)"
   (blurred)="onBlur()"
-/>
+>
+  @if (unitChips.length > 0) {
+    <div chips class="unit-chips">
+      @for (unit of unitChips; track unit) {
+        <ion-chip [outline]="activeUnit() !== unit" [disabled]="disabled()" (click)="pickUnit(unit)">{{ unit }}</ion-chip>
+      }
+    </div>
+  }
+</app-help-input>

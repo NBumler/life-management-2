@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Injector, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
@@ -89,6 +89,7 @@ export class MealEditPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
+  private readonly injector = inject(Injector);
   private readonly repository = inject(MealRepository);
   readonly foodRepository = inject(FoodRepository);
   readonly recipeRepository = inject(RecipeRepository);
@@ -148,7 +149,7 @@ export class MealEditPage implements OnInit {
         existing.items
           .filter((item) => !item.deleted)
           .sort((a, b) => a.sortOrder - b.sortOrder)
-          .map((item) => buildRowFromDto(item)),
+          .map((item) => buildRowFromDto(item, this.injector)),
       );
     }
   }
@@ -230,7 +231,7 @@ export class MealEditPage implements OnInit {
     const newRows: ItemRow[] =
       kind === 'recipe'
         ? [...this.pickedIds()].map((recipeId) => createRecipeRow(recipeId))
-        : [...this.pickedIds()].map((foodId) => createFoodRow(foodId));
+        : [...this.pickedIds()].map((foodId) => createFoodRow(foodId, this.injector));
     this.items.update((rows) => [...rows, ...newRows]);
     this.activePicker.set('none');
     const firstNeedingInput = newRows.find(rowNeedsInput);

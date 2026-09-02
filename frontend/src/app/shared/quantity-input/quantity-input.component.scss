@@ -5,3 +5,14 @@
   display: block;
   width: 100%;
 }
+
+.unit-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding-top: 4px;
+}
+
+.unit-chips ion-chip {
+  margin: 0;
+}

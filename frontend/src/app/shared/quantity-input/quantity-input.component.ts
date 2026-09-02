@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, Input, forwardRef, signal } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { IonChip } from '@ionic/angular/standalone';
 import { TranslatePipe } from '@ngx-translate/core';
 
 import { HelpInputComponent } from '../help-input/help-input.component';
@@ -12,12 +13,16 @@ import { ParsedQuantity, QuantityMode, QuantityParseError, formatQuantityValue, 
  *
  * Invalid input never commits a partial value to the parent form — the last successfully parsed
  * value (or null) is preserved in the control's value until the text becomes parseable again.
+ *
+ * `unitChips` (opt-in) renders a quick-pick unit row under the field via `HelpInputComponent`'s
+ * `[chips]` slot — a shortcut that rewrites the current value's unit, keeping the typed amount. The
+ * free-text field stays the source of truth; the chips never restrict what can be typed.
  */
 @Component({
   selector: 'app-quantity-input',
   templateUrl: 'quantity-input.component.html',
   styleUrls: ['quantity-input.component.scss'],
-  imports: [HelpInputComponent, TranslatePipe],
+  imports: [HelpInputComponent, IonChip, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [
     {
@@ -32,6 +37,8 @@ export class QuantityInputComponent implements ControlValueAccessor {
   @Input() label = '';
   /** Literal placeholder override; when empty, a mode-appropriate example hint is shown instead. */
   @Input() placeholder = '';
+  /** Quick-pick units shown as chips under the field; empty (default) hides the row entirely. */
+  @Input() unitChips: string[] = [];
 
   readonly text = signal('');
   /** i18n key of the current inline error, or `null`. */
@@ -86,6 +93,33 @@ export class QuantityInputComponent implements ControlValueAccessor {
   }
 
   onBlur(): void {
+    this.onTouched();
+  }
+
+  /** The unit of the currently parsed value, or `null` — used to highlight the matching chip. */
+  activeUnit(): string | null {
+    try {
+      return parseQuantityInput(this.text(), this.mode).unit;
+    } catch {
+      return null;
+    }
+  }
+
+  /** Chip tap: keep the amount already typed (or default to 1), swap in the chosen unit. */
+  pickUnit(unit: string): void {
+    if (this.disabled()) {
+      return;
+    }
+    let amount: number | null = null;
+    try {
+      amount = parseQuantityInput(this.text(), this.mode).amount;
+    } catch {
+      amount = null;
+    }
+    const nextAmount = amount ?? 1;
+    this.text.set(`${nextAmount}${unit}`);
+    this.errorMessage.set(null);
+    this.onChange({ amount: nextAmount, unit } as ParsedQuantity);
     this.onTouched();
   }
 }

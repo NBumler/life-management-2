@@ -1,3 +1,6 @@
+import { Injector } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+
 import {
   buildRowFromDto,
   createCustomRow,
@@ -9,6 +12,13 @@ import {
 } from './meal-item-row';
 
 describe('meal-item-row', () => {
+  let injector: Injector;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({});
+    injector = TestBed.inject(Injector);
+  });
+
   describe('factories', () => {
     it('createRecipeRow(): a fresh RECIPE row is born valid with servings = 1', () => {
       const row = createRecipeRow('r1');
@@ -21,9 +31,10 @@ describe('meal-item-row', () => {
     });
 
     it('createFoodRow(): a fresh FOOD row has no quantity yet and needs input', () => {
-      const row = createFoodRow('f1');
+      const row = createFoodRow('f1', injector);
       expect(row.type).toBe('FOOD');
       expect(row.quantity()).toEqual({ amount: null, unit: null });
+      expect(row.quantityControl.getRawValue()).toEqual({ amount: null, unit: null });
       expect(isRowComplete(row)).toBeFalse();
       expect(rowNeedsInput(row)).toBeTrue();
     });
@@ -39,9 +50,10 @@ describe('meal-item-row', () => {
   });
 
   describe('isRowComplete()', () => {
-    it('FOOD is complete once it has a quantity amount and positive servings', () => {
-      const row = createFoodRow('f1');
-      row.quantity.set({ amount: 120, unit: 'g' });
+    it('FOOD is complete once its quantity control holds an amount and servings stays positive', () => {
+      const row = createFoodRow('f1', injector);
+      row.quantityControl.setValue({ amount: 120, unit: 'g' });
+      expect(row.quantity()).toEqual({ amount: 120, unit: 'g' });
       expect(isRowComplete(row)).toBeTrue();
 
       row.servings.set(0);
@@ -70,8 +82,8 @@ describe('meal-item-row', () => {
 
   describe('rowNeedsInput()', () => {
     it('stops asking once the mandatory fields are filled', () => {
-      const food = createFoodRow('f1');
-      food.quantity.set({ amount: 1, unit: 'db' });
+      const food = createFoodRow('f1', injector);
+      food.quantityControl.setValue({ amount: 1, unit: 'db' });
       expect(rowNeedsInput(food)).toBeFalse();
 
       const custom = createCustomRow();
@@ -83,7 +95,7 @@ describe('meal-item-row', () => {
 
   describe('toSaveItem()', () => {
     it('projects a FOOD row, defaulting a still-empty quantity to 0 g', () => {
-      const row = createFoodRow('f1');
+      const row = createFoodRow('f1', injector);
       expect(toSaveItem(row, 3)).toEqual({
         id: row.id,
         type: 'FOOD',
@@ -94,7 +106,7 @@ describe('meal-item-row', () => {
         sortOrder: 3,
       });
 
-      row.quantity.set({ amount: 2, unit: 'dl' });
+      row.quantityControl.setValue({ amount: 2, unit: 'dl' });
       expect(toSaveItem(row, 0)).toEqual(jasmine.objectContaining({ quantityAmount: 2, quantityUnit: 'dl' }));
     });
 
@@ -117,25 +129,29 @@ describe('meal-item-row', () => {
   });
 
   describe('buildRowFromDto()', () => {
-    it('round-trips a FOOD item', () => {
-      const row = buildRowFromDto({ id: 'i1', type: 'FOOD', foodId: 'f9', quantityAmount: 50, quantityUnit: 'g', servings: 2 });
+    it('round-trips a FOOD item into a control + mirrored signal', () => {
+      const row = buildRowFromDto({ id: 'i1', type: 'FOOD', foodId: 'f9', quantityAmount: 50, quantityUnit: 'g', servings: 2 }, injector);
       expect(row.type).toBe('FOOD');
       expect(row.type === 'FOOD' && row.quantity()).toEqual({ amount: 50, unit: 'g' });
+      expect(row.type === 'FOOD' && row.quantityControl.getRawValue()).toEqual({ amount: 50, unit: 'g' });
       expect(row.servings()).toBe(2);
     });
 
     it('round-trips a CUSTOM item, preserving explicit nulls', () => {
-      const row = buildRowFromDto({
-        id: 'i2',
-        type: 'CUSTOM',
-        displayName: 'Keksz',
-        caloriesKcal: 200,
-        proteinG: null,
-        carbsG: 30,
-        fatG: null,
-        priceHuf: null,
-        servings: 1,
-      });
+      const row = buildRowFromDto(
+        {
+          id: 'i2',
+          type: 'CUSTOM',
+          displayName: 'Keksz',
+          caloriesKcal: 200,
+          proteinG: null,
+          carbsG: 30,
+          fatG: null,
+          priceHuf: null,
+          servings: 1,
+        },
+        injector,
+      );
       expect(row.type === 'CUSTOM' && row.caloriesKcal()).toBe(200);
       expect(row.type === 'CUSTOM' && row.carbsG()).toBe(30);
       expect(row.type === 'CUSTOM' && row.proteinG()).toBeNull();

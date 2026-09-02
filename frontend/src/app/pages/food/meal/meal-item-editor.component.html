@@ -13,11 +13,10 @@
       @case ('FOOD') {
         <ion-item lines="none">
           <app-quantity-input
-            [ngModel]="foodRow.quantity()"
-            (ngModelChange)="foodRow.quantity.set($event)"
-            [ngModelOptions]="{ standalone: true }"
+            [formControl]="foodRow.quantityControl"
             mode="quantity"
             [label]="'FOOD.MEAL.QUANTITY_LABEL' | translate"
+            [unitChips]="quantityUnitChips"
           ></app-quantity-input>
         </ion-item>
         @if (foodRow.quantity().amount === null) {

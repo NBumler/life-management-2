@@ -111,4 +111,41 @@ describe('QuantityInputComponent', () => {
   it('renders the composed help-input shell', () => {
     expect((fixture.nativeElement as HTMLElement).querySelector('app-help-input')).not.toBeNull();
   });
+
+  describe('unit chips', () => {
+    it('pickUnit() keeps a typed amount and swaps the unit, emitting the parsed value', () => {
+      const changes: (ParsedQuantity | null)[] = [];
+      fixture.componentInstance.registerOnChange((value) => changes.push(value));
+      fixture.componentInstance.onInput('120g');
+
+      fixture.componentInstance.pickUnit('dkg');
+
+      expect(fixture.componentInstance.text()).toBe('120dkg');
+      expect(changes[changes.length - 1]).toEqual({ amount: 120, unit: 'dkg' });
+      expect(fixture.componentInstance.errorMessage()).toBeNull();
+    });
+
+    it('pickUnit() defaults the amount to 1 when the field is empty or unparseable', () => {
+      fixture.componentInstance.onInput('nonsense');
+
+      fixture.componentInstance.pickUnit('ml');
+
+      expect(fixture.componentInstance.text()).toBe('1ml');
+    });
+
+    it('pickUnit() is a no-op while disabled', () => {
+      fixture.componentInstance.onInput('2l');
+      fixture.componentInstance.setDisabledState(true);
+
+      fixture.componentInstance.pickUnit('dl');
+
+      expect(fixture.componentInstance.text()).toBe('2l');
+    });
+
+    it('activeUnit() reports the current parsed unit for chip highlighting', () => {
+      expect(fixture.componentInstance.activeUnit()).toBeNull();
+      fixture.componentInstance.onInput('3db');
+      expect(fixture.componentInstance.activeUnit()).toBe('db');
+    });
+  });
 });

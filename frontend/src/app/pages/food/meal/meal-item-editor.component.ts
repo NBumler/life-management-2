@@ -1,6 +1,6 @@
 import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, computed } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule } from '@angular/forms';
 import {
   IonButton,
   IonButtons,
@@ -24,6 +24,8 @@ import { computeMealItemEffective } from './meal-item-summary';
 import { CustomItemRow, FoodItemRow, ItemRow, RecipeItemRow, isRowComplete, toSaveItem } from './meal-item-row';
 
 const SERVINGS_STEP = 0.5;
+/** The units worth a one-tap chip for food portions; anything else is still typeable free-text. */
+const FOOD_QUANTITY_UNIT_CHIPS = ['g', 'dkg', 'db', 'ml'];
 
 /**
  * documentation/Subfeatures/Étkezés.md "Tétel — közös" — the full-screen editor for a single meal
@@ -37,7 +39,7 @@ const SERVINGS_STEP = 0.5;
   templateUrl: 'meal-item-editor.component.html',
   styleUrls: ['meal-item-editor.component.scss'],
   imports: [
-    FormsModule,
+    ReactiveFormsModule,
     QuantityInputComponent,
     IonHeader,
     IonToolbar,
@@ -106,4 +108,5 @@ export class MealItemEditorComponent {
   }
 
   protected readonly step = SERVINGS_STEP;
+  protected readonly quantityUnitChips = FOOD_QUANTITY_UNIT_CHIPS;
 }
