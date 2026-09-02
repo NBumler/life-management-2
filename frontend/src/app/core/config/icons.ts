@@ -44,9 +44,11 @@ import {
   star,
   starOutline,
   statsChartOutline,
+  storefrontOutline,
   syncOutline,
   timeOutline,
   trashOutline,
+  walletOutline,
 } from 'ionicons/icons';
 
 /**
@@ -102,8 +104,10 @@ export function registerIcons(): void {
     star: star,
     'star-outline': starOutline,
     'stats-chart-outline': statsChartOutline,
+    'storefront-outline': storefrontOutline,
     'sync-outline': syncOutline,
     'time-outline': timeOutline,
     'trash-outline': trashOutline,
+    'wallet-outline': walletOutline,
   });
 }
