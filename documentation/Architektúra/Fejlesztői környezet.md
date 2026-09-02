@@ -90,6 +90,29 @@ Cél: a telefonra kerülő **debug** APK a fejlesztői gépen futó backendet l�
 5. **Telepítés:** `adb devices` ellenőrzés, majd `adb install -r app/build/outputs/apk/debug/app-debug.apk`.
 6. **Visszajelzés:** a szkript kiírja a beállított `apiBaseUrl`-t, és próbát tesz a `GET /api/health`-re, hogy a hálózati út a telepítés **előtt** kiderüljön.
 
+#### Távoli telepítés — `-Deliver`
+
+Ha a session-t nem a dev LAN-ról vezérled (pl. telefonról), nincs `adb`-vel elérhető eszköz. Ilyenkor
+a `-Deliver` kapcsoló az 5–6. lépés helyett a **`dev-apk`** nevű GitHub **prerelease**-re tölti fel az
+APK-t, és kiírja a letöltő URL-t:
+
+```
+scripts/install-android.ps1 -Deliver
+```
+
+- A `dev-apk` prerelease az első futáskor jön létre; minden további futás `--clobber`-rel **felülírja**
+  rajta az `app-debug.apk` asset-et — nem szaporodnak a release-ek, és `prerelease: true` miatt nem
+  lesz „Latest release" a repo főoldalán.
+- A repó **publikus**, így a letöltő URL bejelentkezés nélkül él a telefon böngészőjében:
+  `https://github.com/<owner>/<repo>/releases/download/dev-apk/app-debug.apk`. A telefonon egyszer
+  engedélyezni kell az „ismeretlen appok telepítése"-t annak az appnak, amelyikből letöltöd.
+- **Csak offline-first tesztelésre.** Az `apiBaseUrl` a dev gép aktuális LAN IP-jét kapja (vagy
+  `-ApiHost`-ot), ami távolról nem elérhető — a szinkron nem megy, a `Backend-offline` / `Full-offline`
+  funkciók viszont igen. A debug APK a **debug** keystore-ral van aláírva (nem a production kulcs).
+- Igényli a **GitHub CLI**-t (`gh`) egyszer beléptetve (`winget install --id GitHub.cli`, majd
+  `gh auth login`). `-Usb`-vel együtt nem használható. A release asset-ek nem terhelik a repo
+  Git-tárhelyét és az LFS-sávszélt; fájlonkénti limit 2 GB.
+
 Kapcsolódási módok:
 
 | Mód | Beállítás |

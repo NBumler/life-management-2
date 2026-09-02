@@ -71,12 +71,16 @@ generate …` with the same args as the `gen:api` script reproduces it.
 
 Android install onto a phone on the dev LAN (debug build against the dev machine's backend):
 ```
-scripts/install-android.ps1 [-ApiHost <ip|hostname>] [-Usb]
+scripts/install-android.ps1 [-ApiHost <ip|hostname>] [-Usb] [-Deliver]
 ```
 Writes `frontend/src/assets/config/app-config.json` (`apiBaseUrl`), runs `npm run build` +
 `npx cap sync android`, builds the debug APK, installs it via `adb`, then probes `GET /api/health`
 before finishing. See Fejlesztői környezet.md for Wi-Fi/USB/wireless-debugging setup (firewall rule,
 `adb reverse`, cleartext HTTP network-security-config for the debug variant only).
+`-Deliver` swaps the `adb` install for an upload to the `dev-apk` GitHub prerelease (asset
+overwritten each run) and prints its public download URL — for testing from a phone off the dev
+LAN (e.g. a remote-controlled session); offline-first features only, the backend won't be
+reachable. Needs the `gh` CLI authenticated once (`gh auth login`); mutually exclusive with `-Usb`.
 
 Required env vars (`.env`, git-ignored; `.env.example` is the tracked template): `POSTGRES_USER`,
 `POSTGRES_PASSWORD`, `POSTGRES_DB`, `LM2_JWT_SECRET`, `LM2_ADMIN_API_KEY`. Backend local secrets also

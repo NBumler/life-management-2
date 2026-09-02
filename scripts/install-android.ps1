@@ -1,20 +1,34 @@
 <#
 .SYNOPSIS
-    Builds the frontend, points it at this machine's backend, and installs the debug APK
-    on a phone on the same home network (or over USB). See documentation/Architektúra/Fejlesztői környezet.md.
+    Builds the frontend, points it at this machine's backend, and either installs the debug APK
+    on a phone on the same home network (or over USB), or - with -Deliver - uploads it to a
+    GitHub Release for download from anywhere (remote-controlled session, no device on the LAN).
+    See documentation/Architektúra/Fejlesztői környezet.md.
 
 .PARAMETER ApiHost
     Overrides the auto-detected backend host (IP or hostname). Ignored when -Usb is set.
 
 .PARAMETER Usb
     Use `adb reverse` instead of a LAN IP; apiBaseUrl becomes http://localhost:8080/api.
+
+.PARAMETER Deliver
+    Skip the adb install; instead upload app-debug.apk to the 'dev-apk' GitHub prerelease
+    (created on first use, asset overwritten on every run) and print its download URL.
+    For testing from a phone that isn't on the dev LAN - offline-first features only, the
+    backend won't be reachable. Requires the GitHub CLI (`gh`) authenticated once via `gh auth login`.
+    Mutually exclusive with -Usb.
 #>
 param(
     [string]$ApiHost,
-    [switch]$Usb
+    [switch]$Usb,
+    [switch]$Deliver
 )
 
 $ErrorActionPreference = "Stop"
+
+if ($Deliver -and $Usb) {
+    throw "-Deliver es -Usb egyutt nem ertelmezheto: a -Deliver nem telepit csatlakoztatott eszkozre, csak feltolti az APK-t GitHub Release-re."
+}
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $frontendDir = Join-Path $repoRoot "frontend"
@@ -135,10 +149,50 @@ try {
     Pop-Location
 }
 
-# 5. Telepítés
+# 5. Kézbesítés
 $apkPath = Join-Path $androidDir "app/build/outputs/apk/debug/app-debug.apk"
 if (-not (Test-Path $apkPath)) {
     throw "Nem talalhato APK: $apkPath"
+}
+
+if ($Deliver) {
+    # Egy allando 'dev-apk' GitHub prerelease-re toltjuk fel; minden futas feluliria az asset-et
+    # (--clobber), igy nem szaporodnak a release-ek. A repo publikus -> a letolto URL bejelentkezes
+    # nelkul el. Cel: LAN-on kivuli (pl. telefonrol vezerelt) session-bol is teszthelheto legyen az
+    # app - offline-first funkciok; a backend ilyenkor nem elerheto.
+    if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
+        throw "A -Deliver a GitHub CLI-t igenyli, ami nincs a PATH-on. Telepites: winget install --id GitHub.cli ; majd egyszer: gh auth login"
+    }
+
+    $originUrl = (git -C $repoRoot remote get-url origin).Trim()
+    $repoSlug = $originUrl -replace '^git@github\.com:', '' -replace '^https://github\.com/', '' -replace '\.git$', ''
+    if (-not $repoSlug -or $repoSlug -eq $originUrl) {
+        throw "Nem sikerult a repo slug-ot kiolvasni az origin remote-bol: $originUrl"
+    }
+
+    $tag = "dev-apk"
+    $null = & gh release view $tag --repo $repoSlug 2>$null
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "'$tag' prerelease letrehozasa ($repoSlug)..."
+        $notes = "Legfrissebb debug APK telefonos teszteleshez. Minden 'install-android.ps1 -Deliver' futas feluliria."
+        & gh release create $tag --repo $repoSlug --prerelease --title "Dev APK builds" --notes $notes
+        if ($LASTEXITCODE -ne 0) { throw "gh release create sikertelen (exit $LASTEXITCODE)" }
+    }
+
+    Write-Host "APK feltoltese: $tag <- $apkPath"
+    & gh release upload $tag $apkPath --repo $repoSlug --clobber
+    if ($LASTEXITCODE -ne 0) { throw "gh release upload sikertelen (exit $LASTEXITCODE)" }
+
+    $downloadUrl = "https://github.com/$repoSlug/releases/download/$tag/app-debug.apk"
+    Write-Host ""
+    Write-Host "Kesz. Toltsd le a telefonon (bejelentkezes nelkul is mukodik):"
+    Write-Host "  $downloadUrl"
+    if (-not $ApiHost -and -not $Usb) {
+        Write-Host ""
+        Write-Host "Megj.: apiBaseUrl = $apiBaseUrl (a gep aktualis LAN IP-je). Tavolrol a backend ezen"
+        Write-Host "       nem erheto el ezen - az offline-first funkciok mennek, a szinkron nem."
+    }
+    return
 }
 
 $deviceLines = adb devices | Select-String -Pattern "\tdevice$"
