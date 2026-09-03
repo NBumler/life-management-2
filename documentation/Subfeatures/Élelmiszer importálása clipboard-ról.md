@@ -53,7 +53,7 @@ Backend-offline állapotban is működik (helyi katalógus + outbox), ugyanazzal
 | 21 | Romlási idő - hűtőben (nap) | hűtő; csak nap |
 | 22 | Romlási idő - fagyasztva (nap) | fagyasztó; csak nap |
 
-A fejléc-sort a parser pozicionálisan kezeli (nem oszlop-remapre használja): felismeri a leggyakoribb fejléc-mintákat (`Üzlet` + `Termék` kezdés, vagy a `100g / 100ml … energia` minta) és eldobja. A teljes alias- / elírás-tűrő fejléc-lista (`telítettlen`, `fagasztva`, `szabadon` stb.) bővítése tervezett: `backlog/044-clipboard-import-fejlec-alias-tures-bovitese.md`.
+A fejléc-sort a parser pozicionálisan kezeli (nem oszlop-remapre használja): felismeri a leggyakoribb fejléc-mintákat (`Üzlet` + `Termék` kezdés, vagy a `100g / 100ml … energia` minta) és eldobja.
 
 #### Fejléc
 
@@ -88,6 +88,10 @@ Az Import gomb csak az **Új** kategóriát menti. Sikeres import után: toast /
 ### Megjegyzések
 
 A példaadat forrása táblázat export; a romlási oszlopok **napban** értendők (nem szabad `14hét` string). A manuális űrlapon továbbra is teljes `duration` [[Mennyiség mező]] van.
+
+#### Tudatos korlát
+
+A fejléc-felismerés a fenti két mintára szorítkozik (`Üzlet` + `Termék` kezdés, illetve a `100g / 100ml … energia` minta). Ez a kanonikus táblázat-exportra elég; egy ezektől eltérő fejléc-sor adatsorként esne be. Tág alias- / elírás-tűrő fejléc-szótár nem indokolt — a bemenet formátuma rögzített. (Vizsgálva és elvetve: `backlog/archive/044-clipboard-import-fejlec-alias-tures-bovitese.md`.)
 
 ### Nyitott kérdések
 

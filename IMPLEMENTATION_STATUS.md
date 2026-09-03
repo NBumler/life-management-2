@@ -14,6 +14,11 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-03 — #044 (dropped)** Clipboard-import fejléc-alias tűrés bővítése — **nem kell**. A
+  jelenlegi import a gyakorlatban jól működik; a bemenet formátuma rögzített (kanonikus
+  táblázat-export), így a `looksLikeHeaderRow` két felismert mintája elég. Tág alias-szótár haszon
+  nélküli komplexitás lenne. Nincs kód; a spec `backlog/044` forward-pointere kikerült, helyette
+  `### Megjegyzések → #### Tudatos korlát`. Érintett spec: [[Élelmiszer importálása clipboard-ról]].
 - **2026-09-03 — #038** AYCM partner-create név-mező auto-focus. A spec name auto-focust ír, az
   `aycm-partner-edit` `ion-input`-ján nem volt bekötve. `[autofocus]="!isEdit"` — a codebase bevett
   „create-nél fókusz" mintája (`food-edit`, `event-edit`, `packing-template-editor`, stb.);
