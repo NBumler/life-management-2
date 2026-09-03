@@ -14,8 +14,11 @@ export type MigrationStep = (payload: unknown, url: string) => { payload: unknow
 /**
  * The closed set of outbox entity types (mirror of `OutboxEntityType`) — every one needs a `:1`
  * step for the v1 → v2 bump so a stale pending write survives it. Kept as a plain array (not derived
- * from the union) because a union has no runtime representation; adding a literal to
- * `OutboxEntityType` without adding it here is caught by the `satisfies` check below.
+ * from the union) because a union has no runtime representation.
+ *
+ * Two compile-time checks keep it honest, in both directions:
+ *  - `satisfies readonly OutboxEntityType[]` — no array entry that isn't a real `OutboxEntityType`;
+ *  - `assertAllEntityTypesListed` below — no `OutboxEntityType` member missing from the array.
  */
 const ALL_ENTITY_TYPES = [
   'UserProfile',
@@ -55,6 +58,17 @@ const ALL_ENTITY_TYPES = [
   'ShoppingList',
   'ShoppingListComplete',
 ] as const satisfies readonly OutboxEntityType[];
+
+/**
+ * Compile-time completeness guard for `ALL_ENTITY_TYPES` — the direction `satisfies` cannot check.
+ * If a member of `OutboxEntityType` is missing from the array, `MissingEntityTypes` is that member
+ * instead of `never`, and this declaration fails to type-check (`true` is not assignable to a string
+ * literal). Without it a new entity type added to the union alone would silently lose its `:1`
+ * migration step and send every stale pending write of that type to ERROR on the next
+ * `OUTBOX_PAYLOAD_SCHEMA_VERSION` bump. Exported so it is a "used" symbol and the spec can assert it.
+ */
+type MissingEntityTypes = Exclude<OutboxEntityType, (typeof ALL_ENTITY_TYPES)[number]>;
+export const ALL_ENTITY_TYPES_EXHAUSTIVE: [MissingEntityTypes] extends [never] ? true : MissingEntityTypes = true;
 
 /**
  * v1 → v2 (backlog/063): recursively rewrite every `netUnit` / `quantityUnit` string equal to

@@ -1,6 +1,6 @@
 import { OUTBOX_PAYLOAD_SCHEMA_VERSION } from './offline-queue.service';
 import { OutboxItem } from './outbox-item';
-import { MigrationStep, migrateOutboxItem, rewriteDbUnitToCs } from './outbox-migrator';
+import { ALL_ENTITY_TYPES_EXHAUSTIVE, MigrationStep, migrateOutboxItem, rewriteDbUnitToCs } from './outbox-migrator';
 
 // documentation/Architektúra/Backend-offline first.md §7 "Payload-verziózás (app frissítés)".
 // The mechanism tests use synthetic registries passed explicitly; the production-registry tests at
@@ -170,5 +170,11 @@ describe('migrateOutboxItem', () => {
     it('handles a null payload (DELETE item)', () => {
       expect(rewriteDbUnitToCs(null, '/api/foods/x')).toEqual({ payload: null, url: '/api/foods/x' });
     });
+  });
+
+  it('C-1: ALL_ENTITY_TYPES is exhaustive vs OutboxEntityType (compile-time guard, asserted here too)', () => {
+    // The real enforcement is the type of ALL_ENTITY_TYPES_EXHAUSTIVE — a missing union member makes
+    // outbox-migrator.ts fail to compile. This just pins the runtime value so the symbol stays used.
+    expect(ALL_ENTITY_TYPES_EXHAUSTIVE).toBe(true);
   });
 });
