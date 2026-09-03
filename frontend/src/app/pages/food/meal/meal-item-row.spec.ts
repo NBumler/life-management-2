@@ -1,6 +1,3 @@
-import { Injector } from '@angular/core';
-import { TestBed } from '@angular/core/testing';
-
 import {
   NO_QUANTITY,
   buildRowFromDto,
@@ -15,13 +12,6 @@ import {
 } from './meal-item-row';
 
 describe('meal-item-row', () => {
-  let injector: Injector;
-
-  beforeEach(() => {
-    TestBed.configureTestingModule({});
-    injector = TestBed.inject(Injector);
-  });
-
   describe('factories', () => {
     it('createRecipeRow(): a fresh RECIPE row is born valid with servings = 1', () => {
       const row = createRecipeRow('r1');
@@ -34,7 +24,7 @@ describe('meal-item-row', () => {
     });
 
     it('createFoodRow(): a fresh FOOD row has no quantity yet and needs input', () => {
-      const row = createFoodRow('f1', injector);
+      const row = createFoodRow('f1');
       expect(row.type).toBe('FOOD');
       expect(row.quantity()).toEqual({ amount: null, unit: null });
       expect(row.quantityControl.getRawValue()).toEqual({ amount: null, unit: null });
@@ -54,7 +44,7 @@ describe('meal-item-row', () => {
 
   describe('isRowComplete()', () => {
     it('FOOD is complete once its quantity control holds an amount and servings stays positive', () => {
-      const row = createFoodRow('f1', injector);
+      const row = createFoodRow('f1');
       row.quantityControl.setValue({ amount: 120, unit: 'g' });
       expect(row.quantity()).toEqual({ amount: 120, unit: 'g' });
       expect(isRowComplete(row)).toBeTrue();
@@ -85,7 +75,7 @@ describe('meal-item-row', () => {
 
   describe('rowNeedsInput()', () => {
     it('stops asking once the mandatory fields are filled', () => {
-      const food = createFoodRow('f1', injector);
+      const food = createFoodRow('f1');
       food.quantityControl.setValue({ amount: 1, unit: 'cs' });
       expect(rowNeedsInput(food)).toBeFalse();
 
@@ -98,7 +88,7 @@ describe('meal-item-row', () => {
 
   describe('toSaveItem()', () => {
     it('projects a FOOD row, defaulting a still-empty quantity to 0 g', () => {
-      const row = createFoodRow('f1', injector);
+      const row = createFoodRow('f1');
       expect(toSaveItem(row, 3)).toEqual({
         id: row.id,
         type: 'FOOD',
@@ -133,7 +123,7 @@ describe('meal-item-row', () => {
 
   describe('buildRowFromDto()', () => {
     it('round-trips a FOOD item into a control + mirrored signal', () => {
-      const row = buildRowFromDto({ id: 'i1', type: 'FOOD', foodId: 'f9', quantityAmount: 50, quantityUnit: 'g', servings: 2 }, injector);
+      const row = buildRowFromDto({ id: 'i1', type: 'FOOD', foodId: 'f9', quantityAmount: 50, quantityUnit: 'g', servings: 2 });
       expect(row.type).toBe('FOOD');
       expect(row.type === 'FOOD' && row.quantity()).toEqual({ amount: 50, unit: 'g' });
       expect(row.type === 'FOOD' && row.quantityControl.getRawValue()).toEqual({ amount: 50, unit: 'g' });
@@ -153,7 +143,6 @@ describe('meal-item-row', () => {
           priceHuf: null,
           servings: 1,
         },
-        injector,
       );
       expect(row.type === 'CUSTOM' && row.caloriesKcal()).toBe(200);
       expect(row.type === 'CUSTOM' && row.carbsG()).toBe(30);
@@ -163,7 +152,7 @@ describe('meal-item-row', () => {
 
   describe('snapshotRow() / restoreRow() (B-1)', () => {
     it('FOOD: restores servings and the quantity control to the snapshot', () => {
-      const row = buildRowFromDto({ id: 'i1', type: 'FOOD', foodId: 'f9', quantityAmount: 50, quantityUnit: 'g', servings: 2 }, injector);
+      const row = buildRowFromDto({ id: 'i1', type: 'FOOD', foodId: 'f9', quantityAmount: 50, quantityUnit: 'g', servings: 2 });
       const snap = snapshotRow(row);
 
       if (row.type === 'FOOD') {

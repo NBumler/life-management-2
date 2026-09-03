@@ -1,4 +1,3 @@
-import { Injector } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideTranslateService } from '@ngx-translate/core';
 
@@ -8,7 +7,6 @@ import { createCustomRow, createFoodRow } from './meal-item-row';
 describe('MealItemEditorComponent', () => {
   let fixture: ComponentFixture<MealItemEditorComponent>;
   let component: MealItemEditorComponent;
-  let injector: Injector;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -18,18 +16,17 @@ describe('MealItemEditorComponent', () => {
 
     fixture = TestBed.createComponent(MealItemEditorComponent);
     component = fixture.componentInstance;
-    injector = TestBed.inject(Injector);
   });
 
   it('creates', () => {
-    component.row = createFoodRow('f1', injector);
+    component.row = createFoodRow('f1');
     fixture.detectChanges();
     expect(component).toBeTruthy();
   });
 
   describe('servings stepper', () => {
     it('adjustServings(): steps the multiplier and never goes to zero or below', () => {
-      component.row = createFoodRow('f1', injector);
+      component.row = createFoodRow('f1');
 
       component.adjustServings(0.5);
       expect(component.row.servings()).toBe(1.5);
@@ -43,7 +40,7 @@ describe('MealItemEditorComponent', () => {
     });
 
     it('onServingsInput(): accepts a positive decimal, ignores empty / non-positive / NaN', () => {
-      component.row = createFoodRow('f1', injector);
+      component.row = createFoodRow('f1');
 
       component.onServingsInput('0.8');
       expect(component.row.servings()).toBe(0.8);
@@ -99,7 +96,7 @@ describe('MealItemEditorComponent', () => {
   });
 
   it('emits done / cancelled', () => {
-    component.row = createFoodRow('f1', injector);
+    component.row = createFoodRow('f1');
     const doneSpy = jasmine.createSpy('done');
     const cancelledSpy = jasmine.createSpy('cancelled');
     component.done.subscribe(doneSpy);

@@ -1,5 +1,4 @@
-import { Injector, Signal, WritableSignal, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { Signal, WritableSignal, signal } from '@angular/core';
 import { FormControl } from '@angular/forms';
 
 import { MealItemSaveItem } from '../../../core/storage/storage-backend';
@@ -13,8 +12,10 @@ import { ParsedQuantity, QuantityUnit } from '../../../shared/quantity';
  * mutable object. `toSaveItem` projects a row into the persistence-facing `MealItemSaveItem`.
  *
  * FOOD quantity follows the recipe-edit ingredient pattern: a `FormControl` bound to
- * `<app-quantity-input [formControl]>`, mirrored to a read-only `quantity` signal (`toSignal`) so
- * `computed()`s in the editor/list stay reactive to it.
+ * `<app-quantity-input [formControl]>`, mirrored to a read-only `quantity` signal. The mirror is a
+ * plain manual subscription with an explicit `destroy()` (not `toSignal` on a page-lifetime
+ * injector), so a row removed from the list tears its subscription down immediately instead of
+ * leaking it until the page is destroyed.
  */
 
 /** Frozen so the shared module-level sentinel can't be mutated in place by a future caller. */
@@ -34,6 +35,8 @@ export interface FoodItemRow {
   quantityControl: FormControl<ParsedQuantity<QuantityUnit>>;
   quantity: Signal<ParsedQuantity<QuantityUnit>>;
   servings: WritableSignal<number>;
+  /** Tears down the `quantityControl.valueChanges` → `quantity` mirror. Call when the row is removed. */
+  destroy(): void;
 }
 
 export interface CustomItemRow {
@@ -54,14 +57,23 @@ export function createRecipeRow(recipeId: string): RecipeItemRow {
   return { id: uuidV4(), type: 'RECIPE', recipeId, servings: signal(1) };
 }
 
-function buildFoodRow(id: string, foodId: string, quantity: ParsedQuantity<QuantityUnit>, servings: number, injector: Injector): FoodItemRow {
+function buildFoodRow(id: string, foodId: string, quantity: ParsedQuantity<QuantityUnit>, servings: number): FoodItemRow {
   const quantityControl = new FormControl<ParsedQuantity<QuantityUnit>>(quantity, { nonNullable: true });
-  const quantitySignal = toSignal(quantityControl.valueChanges, { initialValue: quantityControl.getRawValue(), injector });
-  return { id, type: 'FOOD', foodId, quantityControl, quantity: quantitySignal, servings: signal(servings) };
+  const quantitySignal = signal(quantityControl.getRawValue());
+  const subscription = quantityControl.valueChanges.subscribe((value) => quantitySignal.set(value));
+  return {
+    id,
+    type: 'FOOD',
+    foodId,
+    quantityControl,
+    quantity: quantitySignal.asReadonly(),
+    servings: signal(servings),
+    destroy: () => subscription.unsubscribe(),
+  };
 }
 
-export function createFoodRow(foodId: string, injector: Injector): FoodItemRow {
-  return buildFoodRow(uuidV4(), foodId, NO_QUANTITY, 1, injector);
+export function createFoodRow(foodId: string): FoodItemRow {
+  return buildFoodRow(uuidV4(), foodId, NO_QUANTITY, 1);
 }
 
 export function createCustomRow(): CustomItemRow {
@@ -95,7 +107,7 @@ export interface MealItemDto {
   servings: number;
 }
 
-export function buildRowFromDto(item: MealItemDto, injector: Injector): ItemRow {
+export function buildRowFromDto(item: MealItemDto): ItemRow {
   if (item.type === 'RECIPE') {
     return { id: item.id, type: 'RECIPE', recipeId: item.recipeId ?? '', servings: signal(item.servings) };
   }
@@ -105,7 +117,6 @@ export function buildRowFromDto(item: MealItemDto, injector: Injector): ItemRow 
       item.foodId ?? '',
       { amount: item.quantityAmount ?? null, unit: (item.quantityUnit as QuantityUnit) ?? null },
       item.servings,
-      injector,
     );
   }
   return {

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Input, forwardRef, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, computed, forwardRef, signal } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { IonChip } from '@ionic/angular/standalone';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -96,14 +96,18 @@ export class QuantityInputComponent implements ControlValueAccessor {
     this.onTouched();
   }
 
-  /** The unit of the currently parsed value, or `null` — used to highlight the matching chip. */
-  activeUnit(): string | null {
+  /**
+   * The unit of the currently parsed value, or `null` — used to highlight the matching chip.
+   * A `computed` off `text()` (not a per-change-detection method call); `mode` is set once and never
+   * changes after construction.
+   */
+  readonly activeUnit = computed<string | null>(() => {
     try {
       return parseQuantityInput(this.text(), this.mode).unit;
     } catch {
       return null;
     }
-  }
+  });
 
   /** Chip tap: keep the amount already typed (or default to 1), swap in the chosen unit. */
   pickUnit(unit: string): void {
@@ -117,9 +121,16 @@ export class QuantityInputComponent implements ControlValueAccessor {
       amount = null;
     }
     const nextAmount = amount ?? 1;
-    this.text.set(`${nextAmount}${unit}`);
+    const nextText = `${nextAmount}${unit}`;
+    this.text.set(nextText);
     this.errorMessage.set(null);
-    this.onChange({ amount: nextAmount, unit } as ParsedQuantity);
+    // Emit the canonical parse of the exact text now shown, not a hand-built object — so the emitted
+    // value can never drift from the field if a chip label ever differs from the parser's unit token.
+    try {
+      this.onChange(parseQuantityInput(nextText, this.mode));
+    } catch {
+      this.onChange({ amount: nextAmount, unit } as ParsedQuantity);
+    }
     this.onTouched();
   }
 }

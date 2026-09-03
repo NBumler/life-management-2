@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Injector, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
@@ -88,11 +88,10 @@ import { computeMealItemEffective } from './meal-item-summary';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MealEditPage implements OnInit {
+export class MealEditPage implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
-  private readonly injector = inject(Injector);
   private readonly repository = inject(MealRepository);
   readonly foodRepository = inject(FoodRepository);
   readonly recipeRepository = inject(RecipeRepository);
@@ -156,7 +155,7 @@ export class MealEditPage implements OnInit {
         existing.items
           .filter((item) => !item.deleted)
           .sort((a, b) => a.sortOrder - b.sortOrder)
-          .map((item) => buildRowFromDto(item, this.injector)),
+          .map((item) => buildRowFromDto(item)),
       );
     }
   }
@@ -177,7 +176,14 @@ export class MealEditPage implements OnInit {
     return isRowComplete(row);
   }
 
-  /** Header text for a summary row / the editor modal: the catalog name, or the custom item's own name. */
+  /**
+   * Header text for a summary row / the editor modal: the catalog name, or the custom item's own name.
+   *
+   * Deliberately a template-called method, not a `computed()` (GIGA-REVIEW B-4): it's a cheap lookup
+   * at this list size, and it stays live-reactive to a language switch via the sibling `| translate`
+   * bindings on the page — a `computed` wrapping `translate.instant` would freeze at the language it
+   * first ran under. Same reasoning for `rowSummaryLine`.
+   */
   rowTitle(row: ItemRow): string {
     if (row.type === 'RECIPE') {
       return this.recipeOf(row)?.name ?? '—';
@@ -238,7 +244,7 @@ export class MealEditPage implements OnInit {
     const newRows: ItemRow[] =
       kind === 'recipe'
         ? [...this.pickedIds()].map((recipeId) => createRecipeRow(recipeId))
-        : [...this.pickedIds()].map((foodId) => createFoodRow(foodId, this.injector));
+        : [...this.pickedIds()].map((foodId) => createFoodRow(foodId));
     this.items.update((rows) => [...rows, ...newRows]);
     this.activePicker.set('none');
     const firstNeedingInput = newRows.find(rowNeedsInput);
@@ -298,7 +304,18 @@ export class MealEditPage implements OnInit {
   }
 
   removeItem(row: ItemRow): void {
+    if (row.type === 'FOOD') {
+      row.destroy();
+    }
     this.items.update((rows) => rows.filter((entry) => entry.id !== row.id));
+  }
+
+  ngOnDestroy(): void {
+    for (const row of this.items()) {
+      if (row.type === 'FOOD') {
+        row.destroy();
+      }
+    }
   }
 
   /**
