@@ -18,7 +18,7 @@ function boulderGym(): Gym {
   return { id: 'g1', name: 'Blokk', address: null, disciplines: [Gym.DisciplinesEnum.Boulder], defaultWallHeightMeters: null, availableSafetyStyles: null, deleted: false };
 }
 
-function band(): GymColorBand {
+function band(overrides: Partial<GymColorBand> = {}): GymColorBand {
   return {
     id: 'b1',
     gymId: 'g1',
@@ -30,7 +30,13 @@ function band(): GymColorBand {
     absoluteDifficultyIndexLower: 10,
     absoluteDifficultyIndexUpper: 12,
     deleted: false,
+    ...overrides,
   };
+}
+
+/** Odd-sum range: floor((15+18)/2) = 16, whereas Math.round would give 17. */
+function oddBand(): GymColorBand {
+  return band({ id: 'b2', name: 'Kék', hexColor: '#0000ff', gradeLower: '6C', gradeUpper: '7A', absoluteDifficultyIndexLower: 15, absoluteDifficultyIndexUpper: 18 });
 }
 
 describe('IndoorBoulderSessionEditPage', () => {
@@ -63,7 +69,7 @@ describe('IndoorBoulderSessionEditPage', () => {
           },
         },
         { provide: GymRepository, useValue: { load: () => Promise.resolve(), items: signal<Gym[]>([boulderGym()]) } },
-        { provide: GymColorBandRepository, useValue: { load: () => Promise.resolve(), forGym: () => [band()] } },
+        { provide: GymColorBandRepository, useValue: { load: () => Promise.resolve(), forGym: () => [band(), oddBand()] } },
         { provide: ProfileRepository, useValue: { load: () => Promise.resolve(), profile: signal({ currentWeightKg: 70 }) } },
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: idParam }) } } },
         { provide: AlertController, useValue: { create: () => Promise.resolve({ present: () => Promise.resolve() }) } },
@@ -133,5 +139,18 @@ describe('IndoorBoulderSessionEditPage', () => {
     const draft = saveSpy.calls.mostRecent().args[0];
     expect(draft.attempts[0].absoluteDifficultyIndex).toBe(11);
     expect(draft.attempts[0].gradeRange).toBe('6A–6B');
+  });
+
+  it('floors the colour-band mid index for an odd-sum range (deterministic, matches the server)', async () => {
+    await setup();
+    component.form.patchValue({ gymId: 'g1' });
+    component.addAttempt();
+    component.pickBand(component.attempts()[0], 'b2');
+
+    await component.save();
+
+    const draft = saveSpy.calls.mostRecent().args[0];
+    // floor((15 + 18) / 2) = 16 — not Math.round's 17.
+    expect(draft.attempts[0].absoluteDifficultyIndex).toBe(16);
   });
 });

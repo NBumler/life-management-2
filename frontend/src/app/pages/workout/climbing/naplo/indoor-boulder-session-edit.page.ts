@@ -35,6 +35,7 @@ import { ProfileRepository } from '../../../../core/data/profile.repository';
 import { AscentAttemptSaveItem, ClimbingSessionDraft } from '../../../../core/storage/storage-backend';
 import { uuidV4 } from '../../../../core/sync/uuid';
 import { today } from '../../../../shared/local-date';
+import { colorBandMidIndex } from '../../../../shared/climbing/climbing-grade-matrix';
 import { parseGrade } from '../../../../shared/climbing/grade-scale';
 import { GradeInputComponent } from '../../../../shared/grade-input/grade-input.component';
 import { climbingKcal, climbingVolume } from '../climbing-metrics';
@@ -300,7 +301,7 @@ export class IndoorBoulderSessionEditPage implements OnInit {
     }
     const band = this.bandById(row.colorBandId());
     if (band) {
-      return Math.round((band.absoluteDifficultyIndexLower + band.absoluteDifficultyIndexUpper) / 2);
+      return colorBandMidIndex(band.absoluteDifficultyIndexLower, band.absoluteDifficultyIndexUpper);
     }
     return null;
   }
