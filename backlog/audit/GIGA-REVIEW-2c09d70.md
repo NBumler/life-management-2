@@ -39,6 +39,11 @@
 
 `b/M/m/n` = blocker / major / minor / nit darabszám, a chunk lezárásakor kitöltve.
 
+> **2026-09-03 — FIX KÉSZ.** Mind a 35 finding rendezve ugyanebben a session-ben (`worktree-giga-review`
+> ág, 12 fix-szelet). A lenti chunk-táblákban a `Státusz` oszlop `open` értékei elavultak: 33 finding
+> `fixed` (kód + teszt), 2 `dokumentált korlát` (C-4, E-3). Részletek: „Konszolidált fix-lista" →
+> „Fix-implementáció".
+
 ---
 
 ## Chunk A — Doksi-restrukturálás (Fázis 3b–6)
@@ -417,15 +422,45 @@ a998990  fix(scripts): install-android.ps1 -Deliver — gh release view ne bukjo
 
 ---
 
-## Konszolidált fix-lista (a fix-session ezt fogyasztja)
+## Konszolidált fix-lista
 
-> **Mind a 8 chunk `DONE`.** Összesen **35 finding: 0 blocker · 3 major · 13 minor · 19 nit.**
-> A 3 major + 13 minor lent, súlyosság szerint. A 19 nit a chunk-szekciók „Findings" tábláiban
-> marad (kód-komment / elnevezés / mikro-perf / defenzív guardok) — batch-elhető takarításként.
-> A fix-session a repo normál menete szerint dolgozik: `master`-en, zöld (teszt+lint+build) szeletenként.
+> **STÁTUSZ (2026-09-03): mind a 35 finding rendezve.** A fix-implementáció ugyanebben a session-ben
+> készült el, a `worktree-giga-review` ágon, 12 zöld (teszt+lint+build) szeletben — lásd
+> „Fix-implementáció" lent. 33 finding **javítva** kóddal/teszttel, 2 **dokumentált korlát**
+> (C-4, E-3 — a naiv javításuk nagyobb kockázatot / aránytalan infra-t hozna, mint az érték).
 >
-> **Javasolt jegyesítés:** `ticket-per-major` (F-1, F-2, B-1 külön jegy), a minor-ok chunk/téma szerint
-> csoportosítva 3–4 jegybe (C-food-quantity, C/E-offline-cascade, F-scheduled-jobs, egyéb-FE-polish).
+> Eredeti összegzés: **35 finding: 0 blocker · 3 major · 13 minor · 19 nit.**
+
+### Fix-implementáció (2026-09-03, `worktree-giga-review`)
+
+| Szelet | Commit | Findingok | Teszt |
+|---|---|---|---|
+| 1 | `fix(backend): IdempotencyKeyPruneJob @Transactional` | **F-1** | `IdempotencyKeyPruneJobTest.scheduledPrune_*` (új) |
+| 2 | `fix(backend): ütemezett job + N+1` | G-1, F-4, F-5, F-6, F-7 | `PackingTemplateServiceTest`, `TombstonePurgeJobTest` |
+| 3 | `fix: splitCountFor MAX_SPLIT_ROWS` | C-9 | `ShoppingListSplitCountTest` (új) + FE spec |
+| 4 | `fix(frontend): exhaustiveness-guard` | C-1 | `outbox-migrator.spec` (compile-time + runtime) |
+| 5 | `fix(frontend): food-quantity védelem` | C-2, C-3, C-5 | `food-quantity.spec`, `recipe-summary.spec` |
+| 6 | `fix(shared): kerekítés HALF_UP + negatív bevitel` | C-6, C-8 | `quantity.spec` |
+| 7 | `fix(frontend): tétel-szerkesztő Mégse` | **B-1**, B-2, B-6 | `meal-edit.page.spec` (5 új), `meal-item-row.spec`, `meal-item-editor.component.spec` |
+| 8 | `fix(frontend): CD / élettartam finomítás` | B-3, B-4, B-5 | `quantity-input.component.spec`, `meal-item-row.spec` |
+| 9 | `fix(frontend): natív seed + Food-törlés cascade` | **F-2**, F-3, E-1, E-2 | `exercise-seed.spec` (új), `food-delete-cascade.spec` (új) |
+| 10 | `fix(frontend): apró polish` | G-2, D-1, E-3 | `profile.page.spec` |
+| 11 | `fix(scripts): install-android.ps1 -Deliver` | H-1, H-2, H-3, H-4 | PS AST parse-check (nincs script-teszt) |
+| 12 | `docs: drift-recept, ReminderScheduler, §17` | A-1, A-2, A-3 | — |
+| 13 | `docs(audit): tracker + C-4 tudatos korlát` | C-4 (dokumentált), tracker-zárás | — |
+
+**Dokumentált korlátok (nem kódváltás):**
+- **C-4** → `documentation/Subfeatures/Élelmiszer tárolás.md` §Megjegyzések → `#### Tudatos korlát`:
+  a piece-`Food` készlet „kanonikus alap-egysége" nem egyértékű (csomag vs. g/ml); a teljes
+  kiküszöbölés `Food`-onkénti dimenzió-normalizálást igényelne kliens+szerver oldalon, ami érdemi
+  viselkedés-változás a készlet-FIFO-ban. A [[Backend-offline first]] LWW / relatív-vesztés melletti
+  elfogadott pontatlanság.
+- **E-3** → `documentation/Subfeatures/Élelmiszerek.md` §Megjegyzések → `#### Tudatos korlát`:
+  az en `DELETE_REF_*` `item(s)` alakja marad — nincs messageformat-compiler, egy stringért nem éri
+  meg bevezetni; az `(s)` a projekt no-ICU plural konvenciója.
+
+**Verifikáció (mind zöld):** backend `./gradlew test` (teljes, Testcontainers) + `build`;
+frontend `npm run lint` + `npm run test:ci` (1498 teszt) + `npm run build`.
 
 ### MAJOR (3)
 
@@ -469,3 +504,4 @@ a998990  fix(scripts): install-android.ps1 -Deliver — gh release view ne bukjo
 - 2026-09-03 — **Chunk C DONE (a legmagasabb kockázatú).** 9 finding: **0 blocker, 0 major**, 4 minor, 5 nit. A `db→cs` átnevezés + adatmigráció **jól van megcsinálva**: FE↔BE mennyiség-paritás (scale, scaledEqual, piece multipliers) tükrözve; a Flyway V30 + SQLite V28 + OutboxMigrator v2 hármas konzisztens és a delta-pull `updated_at`-bumpot explicit, korlátos no-op mergeként kezeli; a `recipe-summary` refaktor viselkedés-megőrző; a `splitCountFor` kliens↔szerver paritás minden reális bemenetre áll; a `FoodService.validatePiece` erős. A 4 minor: OutboxMigrator exhaustiveness-illúzió (C-1), `food-quantity.ts` nem védi magát `netAmount<=0`-tól (C-2) és hint-inkonzisztencia (C-3), plusz egy #063 előtti gyökér — a piece-Food készlet „kanonikus egysége" nem egyértékű (C-4).
 - 2026-09-03 — **Chunk H DONE.** 1 minor + 3 nit. A `-Deliver` ág + a `a998990` PS 5.1 natív-stderr fix helyes; a nyitott apróságok: a `git remote get-url origin` a Stop alatt fut (H-1), a `gh release view` bármely hibája „not found"-ként kezelt (H-2), a download-URL publikus repót feltételez (H-3), az `ssh://` remote-alak nem kezelt (H-4). Nincs titok-szivárgás.
 - 2026-09-03 — **GIGA-REVIEW BEFEJEZVE — mind a 8 chunk `DONE`.** Végösszeg: **35 finding — 0 blocker · 3 major · 13 minor · 19 nit.** A 3 major: **F-1** (`IdempotencyKeyPruneJob` `@Scheduled` útja tranzakció nélkül → a prune-job éjjelente `TransactionRequiredException`, a tábla korlátlanul nő; a teszt a proxyn át hív, elfedi), **F-2** (`#057` `EXERCISE_SEED_VERSION` verzió-latch a `count===0` guard miatt nem tud új seed-sort meglévő telepítésre juttatni), **B-1** (a tétel-szerkesztő modal „Mégse"-je nem állít vissza + add+cancel után a `save()` az egész étkezésre blokkol). A legmagasabb kockázatúnak jelölt Chunk C (#063 `db→cs` + adatmigráció) **0 blocker/major** — a hármas migráció és a FE↔BE paritás jól megcsinálva. A fix-implementáció a fenti „Konszolidált fix-lista" majoraiból/minoraiból indítható; javasolt jegyesítés ott.
+- 2026-09-03 — **FIX-IMPLEMENTÁCIÓ BEFEJEZVE — mind a 35 finding rendezve** (ugyanez a session, `worktree-giga-review` ág). 33 finding javítva kóddal + teszttel 12 zöld szeletben (a squasholt review-commit felett `87aea7d`…`1864912`); 2 dokumentált korlát (C-4, E-3). Új tesztfájlok: `ShoppingListSplitCountTest`, `exercise-seed.spec.ts`, `food-delete-cascade.spec.ts` + kiemelt tiszta segédfüggvények a `SqliteStorageBackend`-hez (`seedRowsToInsert`, `emptiedMeals`) és az étkezés-sorhoz (`snapshotRow`/`restoreRow`). Verifikáció: backend `./gradlew test` (teljes) + `build`; frontend `npm run lint` + `test:ci` (1498) + `build` — mind zöld. Következő lépés: `git merge --ff-only worktree-giga-review` a főcheckoutban.

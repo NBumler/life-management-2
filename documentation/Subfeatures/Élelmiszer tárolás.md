@@ -115,6 +115,10 @@ Ha a helyhez nincs katalógus-idő (manuális lejárat / null engedélyezett hel
 
 Az étkezés UI / kalória a [[Étkezés]] spechéz tartozik; itt a készletlevonás szabályai az SSOT.
 
+#### Tudatos korlát
+
+A „közös kanonikus alap" egy darab-definícióval rendelkező `Food` esetén **nem egyértékű**: a `resolveFoodQuantity` egy `cs`/`db` mennyiséget csomagra old fel, egy SI mennyiséget viszont g/ml-re. Ha ugyanannak a `Food`-nak a tárolási sorai és az étkezés-hivatkozásai eltérő dimenzióban vannak (pl. `cs` split-vásárlásból vs. `g`-ben megadott étkezés-tétel), a FIFO-levonás grammot vonhat ki csomagból, azaz aránytalanul csökkenthet. Ez a [[Backend-offline first]] row-level last-write-wins és a relatív-számláló-vesztés melletti elfogadott pontatlanság — a személyes használatban a tárolási sorok és az étkezés-tételek jellemzően azonos egységet használnak. Teljes kiküszöböléshez `Food`-onként egy dimenzióra normalizáló lépés kellene a kliens és szerver oldali levonásban egyaránt.
+
 ### Nyitott kérdések
 
 Nincs nyitott kérdés.
