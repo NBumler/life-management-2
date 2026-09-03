@@ -32,8 +32,17 @@ class IdempotencyKeyPruneJob {
 		this.repository = repository;
 	}
 
-	/** Daily at 03:15 server time. Overridable (or disable-able with {@code -}) via config for tests / ops. */
+	/**
+	 * Daily at 03:15 server time. Overridable (or disable-able with {@code -}) via config for tests / ops.
+	 *
+	 * <p>{@code @Transactional} lives here, on the {@code @Scheduled} entry point, not only on
+	 * {@link #prune()}: the scheduler calls this method through the Spring proxy, but {@code prune()}
+	 * is reached by a plain {@code this.prune()} self-invocation that bypasses the proxy — so without
+	 * this annotation the {@code @Modifying} bulk delete would run with no ambient transaction and
+	 * throw {@code TransactionRequiredException} on every scheduled run.
+	 */
 	@Scheduled(cron = "${lm2.idempotency.prune.cron:0 15 3 * * *}")
+	@Transactional
 	void scheduledPrune() {
 		prune();
 	}

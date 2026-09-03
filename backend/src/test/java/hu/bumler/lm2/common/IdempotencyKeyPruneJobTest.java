@@ -48,6 +48,23 @@ class IdempotencyKeyPruneJobTest {
 		assertThat(job.prune()).isZero();
 	}
 
+	/**
+	 * The production path is {@code @Scheduled scheduledPrune()}, which reaches the {@code @Modifying}
+	 * bulk delete via a plain {@code this.prune()} self-invocation. Exercising it here (rather than
+	 * {@code prune()} directly) proves the transaction is actually established on that path — without
+	 * {@code @Transactional} on {@code scheduledPrune()} this throws {@code TransactionRequiredException}.
+	 */
+	@Test
+	void scheduledPrune_runsInATransaction_andDeletesExpiredRows() {
+		UUID expired = insertKey(OffsetDateTime.now().minusDays(IdempotencyKeyPruneJob.RETENTION_DAYS + 1));
+		UUID recent = insertKey(OffsetDateTime.now().minusDays(IdempotencyKeyPruneJob.RETENTION_DAYS - 1));
+
+		job.scheduledPrune();
+
+		assertThat(keyExists(expired)).as("row older than 30 days is pruned on the scheduled path").isFalse();
+		assertThat(keyExists(recent)).as("row within the 30-day window is kept").isTrue();
+	}
+
 	private UUID insertKey(OffsetDateTime createdAt) {
 		UUID key = UUID.randomUUID();
 		jdbcTemplate.update("""
