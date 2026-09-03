@@ -54,7 +54,11 @@ export const routes: Routes = [
             ],
           },
           {
+            // documentation/Features/GearCheck.md — Menü → GearCheck. One flag on the tree top
+            // guards the index route and every child (the `finance` pattern); the menu tile is
+            // already hidden by the same flag in menu.page.ts.
             path: 'gear',
+            canActivate: [featureFlagGuard('menu.gearcheck')],
             children: [
               { path: '', loadComponent: () => import('./pages/menu/gear/gear-check.page').then((m) => m.GearCheckPage) },
               { path: 'items', loadComponent: () => import('./pages/menu/gear/items/gear-items.page').then((m) => m.GearItemsPage) },
