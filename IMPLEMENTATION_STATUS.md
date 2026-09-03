@@ -14,6 +14,14 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-03 — #019** Profile: kliensoldali 1-tizedes bevitel-validáció a súly mezőkre. A
+  `Profile.md` „max 1 tizedes" eddig csak a `numeric(5,1)` DB-oszlop skálája volt; a kliens csak
+  min/max-ot validált és néma DB-kerekítésre hagyatkozott. Új `oneDecimalPlaceValidator` (Reactive
+  Forms, float-reprezentációs zajra toleráns `scaled - round(scaled) < 1e-9` teszt) a
+  `currentWeightKg` és a súlytörténet-bejegyzés `weightKg` mezőjén: >1 tizedesjegy → `oneDecimalPlace`
+  hiba, `PROFILE.VALIDATION_ONE_DECIMAL` felirat a mező alatt, `save()` / `saveEntry()` nem hív
+  repót. Érintett spec: [[Profile]].
+  Kód: `frontend/pages/menu/profile/profile.page.{ts,html}`, `assets/i18n/{hu,en}.json` (+ `profile.page.spec.ts`).
 - **2026-09-03 — #058** Idempotency-Key 30-napos prune job + enforce-everywhere pontosítás. Az
   `idempotency_key` sorok csak a `POST /api/shopping-lists/{id}/complete` replay-ét szolgálják; a
   `Backend.md` „30 napig" retenciójához nem volt takarító job. Új `common/IdempotencyKeyPruneJob`

@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: f9ca94e
+verifikalva: 2026-09-03
+verifikalt_commit: be28d88
 ---
 
 # Profile
@@ -29,7 +29,7 @@ Nincs profil-kitöltöttségi gate: hiányos / üres profil mellett is szabad a 
 | `birthDate` | űrlapon: ha kitöltve, érvényes dátum | Életkor: kliens TZ, `floor` évek ([[Tápérték kalkulátor]]) |
 | `sex` | ha kitöltve | `MALE` / `FEMALE` — BMR + safety floor |
 | `heightCm` | ha kitöltve | 100–250 |
-| `currentWeightKg` | ha kitöltve | 30–300. A „max 1 tizedes" jelenleg a DB-oszlop `numeric(5,1)` skálája; kliensoldali 1-tizedes bevitel-validáció / kerekítés tervezett: `backlog/019-profile-kliensoldali-1-tizedes-bevitel-validacio-a-suly-mezokre.md`. |
+| `currentWeightKg` | ha kitöltve | 30–300; **max 1 tizedesjegy** — kliensoldali `oneDecimalPlaceValidator` (a `numeric(5,1)` DB-skála kliens-tükre), hiba esetén `PROFILE.VALIDATION_ONE_DECIMAL` a mező alatt, a mentés blokkolva. |
 | `goal` | ha kitöltve | `FAT_LOSS` / `MAINTENANCE` / `WEIGHT_GAIN` — UI: Fogyás / Megtartás / Tömegnövelés |
 | `kgPerWeek` | feltételes | Pozitív szám, 0.1–1.5. **`FAT_LOSS` / `WEIGHT_GAIN`:** mentéskor kötelező, ha a `goal` ki van töltve. **`MAINTENANCE`:** mező **rejtett**, érték ignorált (Δ = 0 a [[Tápérték kalkulátor]]ban). |
 | `grossMonthlySalaryHuf` | **opcionális** | Egész, `≥ 0`; [[Nettó fizetés kalkulátor]] |
@@ -44,7 +44,7 @@ Nincs display name / avatar / email (auth: [[Bejelentkezés]]).
 #### Mentés validáció
 
 - Üres / részlegesen kitöltött profil **menthető** (és üresen is létezhet helyi store-ban).
-- Kitöltött mezőkre: tartomány / enum / dátum ellenőrzés.
+- Kitöltött mezőkre: tartomány / enum / dátum ellenőrzés; a súly mezők (`currentWeightKg`, súlytörténet `weightKg`) **legfeljebb 1 tizedesjegyet** fogadnak el (kliensoldali validáció, nem néma DB-kerekítés).
 - Ha `goal ∈ {FAT_LOSS, WEIGHT_GAIN}` → `kgPerWeek` kötelező ezen a mentésen.
 - Ha `goal = MAINTENANCE` → `kgPerWeek` nem jelenik meg; nem validáljuk.
 
@@ -60,7 +60,7 @@ Az adatmodell és a CRUD kész; a diagram-megjelenítés tervezett.
 |---|---|
 | `id` | UUID, kliens |
 | `recordedAt` | Dátum-idő (kliens TZ); alapértelmezés: mentés / rögzítés pillanata |
-| `weightKg` | 30–300 (1-tizedes kliens-validáció tervezett: `backlog/019-profile-kliensoldali-1-tizedes-bevitel-validacio-a-suly-mezokre.md`) |
+| `weightKg` | 30–300; **max 1 tizedesjegy** (ugyanaz a `oneDecimalPlaceValidator` a súlytörténet-bejegyzés űrlapján) |
 | `deleted` | Soft delete (`false` default); a history lista szűri |
 
 **Írás Profile mentéskor** (kliensoldali, `ProfileRepository.save` — a backend nem hozza létre automatikusan): ha `currentWeightKg` **változott** az előző mentett jelenlegi súlyhoz képest (és az új érték ki van töltve) → új history sor az új súllyal. Más mező változása **nem** nyit sort. Első súlymegadás (üres → érték) → egy history sor.
@@ -92,7 +92,8 @@ Nincs nyitott kérdés.
 
 ### Frontend
 
-- Profile page: form + Mentés; `WeightHistoryEntry` lista + edit/delete.
+- Profile page: form + Mentés; `WeightHistoryEntry` lista + edit/delete. A súly mezőkön
+  `oneDecimalPlaceValidator` (Reactive Forms) — >1 tizedesjegy → `oneDecimalPlace` hiba, `PROFILE.VALIDATION_ONE_DECIMAL` felirat, `save()` / `saveEntry()` nem hív repót.
 - Helyi profile store; változás után TDEE utility újrafuttatás ([[Tápérték kalkulátor]]).
 - Hiányos bemenet: fogyasztók `~` / homokóra — nincs navigációs zár.
 - OpenAPI generált kliens; mutációk offline rétegen.
