@@ -39,7 +39,11 @@ export const routes: Routes = [
           },
           { path: 'sync', loadComponent: () => import('./pages/menu/sync/sync.page').then((m) => m.SyncPage) },
           {
+            // documentation/Features/Bevásárlás.md — Menü → Bevásárlás. One flag on the tree top
+            // guards the index route and every child (the `finance` pattern); the menu tile is
+            // already hidden by the same flag in menu.page.ts.
             path: 'shopping',
+            canActivate: [featureFlagGuard('menu.bevasarlas')],
             children: [
               { path: '', loadComponent: () => import('./pages/menu/shopping/shopping-lists.page').then((m) => m.ShoppingListsPage) },
               { path: 'new', loadComponent: () => import('./pages/menu/shopping/shopping-list-editor.page').then((m) => m.ShoppingListEditorPage) },
@@ -200,7 +204,11 @@ export const routes: Routes = [
         children: [
           { path: '', loadComponent: () => import('./pages/tasks/tennivalok-hub.page').then((m) => m.TennivalokHubPage) },
           {
+            // documentation/Features/Tennivalók.md: a Háztartási csempét a `tab.feladatok` flag már
+            // fedi (nincs saját flagje); a másik három saját flaggel takart — a hub-csempe mellett a
+            // gyerek route-fák is guardoltak, hogy a deep link se rendereljen letiltott al-oldalt.
             path: 'life-plans',
+            canActivate: [featureFlagGuard('feladatok.eletTervek')],
             children: [
               { path: '', loadComponent: () => import('./pages/tasks/life-plans/life-plan-list.page').then((m) => m.LifePlanListPage) },
               { path: 'new', loadComponent: () => import('./pages/tasks/life-plans/life-plan-edit.page').then((m) => m.LifePlanEditPage) },
@@ -218,6 +226,7 @@ export const routes: Routes = [
           },
           {
             path: 'events',
+            canActivate: [featureFlagGuard('feladatok.esemenyek')],
             children: [
               { path: '', loadComponent: () => import('./pages/tasks/events/event-list.page').then((m) => m.EventListPage) },
               { path: 'new', loadComponent: () => import('./pages/tasks/events/event-edit.page').then((m) => m.EventEditPage) },
@@ -226,6 +235,7 @@ export const routes: Routes = [
           },
           {
             path: 'calendar',
+            canActivate: [featureFlagGuard('feladatok.naptar')],
             children: [
               { path: '', loadComponent: () => import('./pages/tasks/calendar/calendar-month.page').then((m) => m.CalendarMonthPage) },
               { path: ':date', loadComponent: () => import('./pages/tasks/calendar/calendar-day.page').then((m) => m.CalendarDayPage) },
