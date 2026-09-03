@@ -14,6 +14,15 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-03 — #058** Idempotency-Key 30-napos prune job + enforce-everywhere pontosítás. Az
+  `idempotency_key` sorok csak a `POST /api/shopping-lists/{id}/complete` replay-ét szolgálják; a
+  `Backend.md` „30 napig" retenciójához nem volt takarító job. Új `common/IdempotencyKeyPruneJob`
+  (napi `@Scheduled`, `lm2.idempotency.prune.cron`-nal felülírható) egyetlen JPQL bulk `DELETE`-tel
+  törli a 30 napnál régebbi `created_at`-ú sorokat (`IdempotencyKeyRepository.deleteByCreatedAtBefore`,
+  `@Modifying @Query`). Az enforce-everywhere vizsgálat eredménye: nincs teendő — a plain CRUD a
+  kliens-UUID upsert miatt eleve replay-biztos, az egyetlen atomi végpont már fedve van; a spec
+  §Idempotencia ezt most explicit kimondja. Érintett spec: [[Backend]].
+  Kód: `backend/common/IdempotencyKeyPruneJob`, `common/IdempotencyKeyRepository`.
 - **2026-09-03 — #057** `seed_state` helyi latch tábla + natív verzió-latch. A `Backend-offline
   first.md` §3/§15 felsorolja a `seed_state` táblát, de a helyi SQLite sémából hiányzott — a natív
   seed eddig az `exercise_catalog` üres-store-check-jére támaszkodott. Új `SCHEMA_V29`

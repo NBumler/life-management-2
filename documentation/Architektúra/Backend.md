@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-03
-verifikalt_commit: b8699cf
+verifikalt_commit: e6b8617
 ---
 
 # Backend
@@ -145,7 +145,7 @@ Szerződés és szemantika: [[Backend-offline first]] (SSOT) — itt csak az imp
   - `nextCursor`: opaque base64(`updated_at` + `id`), nem nyers timestamp.
   - **Kötelező teszt:** minden `deleted` oszlopos tábla szerepel a view-ban. Új entitás migrációja a view-t is újraírja; ez az egyetlen hely, ahol egy elfelejtett tábla **csendben** kiesne a syncből, és a hiba csak a user eszközén derülne ki.
   - `410 CURSOR_TOO_OLD`: ha a `since` régebbi a `sync_meta.tombstone_horizon`-nál.
-- **Idempotencia:** a natív drain **minden** replay-en küld `Idempotency-Key` headert (`= outbox.id`). A plain CRUD természetesen idempotens (upsert kliens UUID-ra, soft delete idempotens), így ott a szerver nem kényszeríti ki a kulcsot. Az **atomi** végpontok nem idempotensek — a `POST /api/shopping-lists/{id}/complete` archivál, `StoredFood`-okat hoz létre és új listát nyit ([[Bevásárlás teljesítve]]), tehát a visszajátszása duplikálna. Ezért **ezen a végponton** `idempotency_key` tábla (`key` PK, `user_id`, `endpoint`, `http_status`, `response_body`, `created_at`) alapú replay-védelem; replaynél a **tárolt válasz** megy vissza. A 30 napos retenciós prune job és a header szélesebb körű kikényszerítése tervezett: `backlog/058-backend-idempotency-key-30-napos-prune-job-enforce-everywhere-vi.md`.
+- **Idempotencia:** a natív drain **minden** replay-en küld `Idempotency-Key` headert (`= outbox.id`). A plain CRUD természetesen idempotens (upsert kliens UUID-ra, soft delete idempotens), így ott a szerver nem kényszeríti ki és nem is tárolja a kulcsot — **nincs mit „enforce-everywhere"-elni**, a kliens-UUID upsert eleve replay-biztos. Az **atomi** (nem-upsert) végpontok nem idempotensek — a `POST /api/shopping-lists/{id}/complete` archivál, `StoredFood`-okat hoz létre és új listát nyit ([[Bevásárlás teljesítve]]), tehát a visszajátszása duplikálna; ez **az egyetlen ilyen végpont** ma, és az `Idempotency-Key` kötelezettség + tárolás oda korlátozódik (új atomi végpont ugyanezt a `common` mechanizmust használja). Ezen a végponton `idempotency_key` tábla (`key` PK, `user_id`, `endpoint`, `http_status`, `response_body`, `created_at`) alapú replay-védelem; replaynél a **tárolt válasz** megy vissza. A tábla sorait napi ütemezett job (`common/IdempotencyKeyPruneJob` — `@Scheduled` cron `0 15 3 * * *`, a `SchedulingConfig` `@EnableScheduling`-jével; `lm2.idempotency.prune.cron`-nal felülírható / `-`-ral kikapcsolható) egyetlen JPQL bulk `DELETE`-tel törli 30 napnál régebbi `created_at` után.
 - **Upsert:** explicit `findById` → insert vagy update a service-ben. Nem támaszkodunk a JPA `save()` heurisztikájára: kliens által adott PK-nál a `save()` insert / update döntése nem magától értetődő. `POST` létező `id`-val → `200` + a frissített sor, nem `409`.
 - **Nested aggregate `PUT`** ([[Edzésnapló]], [[Mászónapló]], [[Recept]], [[Sablonok]]): a teljes fa cseréje egy tranzakcióban, gyerekeken soft delete a kiesőkre — a részleges szinkronizált állapot így kizárt.
 
