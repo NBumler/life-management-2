@@ -68,6 +68,16 @@ describe('ProfilePage — one-decimal weight validation (backlog/019)', () => {
     expect(profileRepository.save).toHaveBeenCalled();
   });
 
+  it('G-2: normalizes a comma-decimal string, so "70,25" is still flagged (not slipped through as NaN)', async () => {
+    const page = await createComponent();
+
+    page.form.controls.currentWeightKg.setValue('70,25' as unknown as number);
+    expect(page.form.controls.currentWeightKg.errors?.['oneDecimalPlace']).toBeTrue();
+
+    page.form.controls.currentWeightKg.setValue('70,5' as unknown as number);
+    expect(page.form.controls.currentWeightKg.errors).toBeNull();
+  });
+
   it('flags a two-decimal weight-history entry and blocks the entry save', async () => {
     const page = await createComponent();
     page.startAddEntry();

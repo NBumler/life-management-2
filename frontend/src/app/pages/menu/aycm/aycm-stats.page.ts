@@ -185,6 +185,9 @@ export class AycmStatsPage implements OnInit, ViewWillEnter {
     }
   }
 
+  // A custom range always has two bounds — an `ion-datetime` can't be cleared to empty in this UI, so
+  // an empty/undefined value is ignored (the previous bound is kept) rather than treated as a state
+  // (GIGA-REVIEW D-1).
   setCustomFrom(value: string | null | undefined): void {
     if (value) {
       this.customFrom.set(value.slice(0, 10));

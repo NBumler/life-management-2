@@ -44,7 +44,9 @@ function oneDecimalPlaceValidator(control: AbstractControl): ValidationErrors | 
   if (value === null || value === undefined || value === '') {
     return null;
   }
-  const numeric = typeof value === 'number' ? value : Number(value);
+  // `ion-input type="number"` normally hands us a `.` string, but a paste or a comma-decimal keyboard
+  // can yield "70,5" — normalize so it doesn't slip through as NaN (G-2).
+  const numeric = typeof value === 'number' ? value : Number(String(value).replace(',', '.'));
   if (Number.isNaN(numeric)) {
     return null;
   }

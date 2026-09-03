@@ -78,6 +78,10 @@ Az egész Élelmiszerek feature (CRUD, keresés, OFF sync a gyerekekben) **backe
 
 A [[Bevásárlás]] navigációja a Menü tabon van, de az élelmiszer tételek ehhez a katalógushoz kötődnek.
 
+#### Tudatos korlát
+
+A törlés-megerősítő angol hivatkozás-számláló szövegei (`FOOD.CATALOG.DELETE_REF_*` / `FOOD.RECIPE.DELETE_REF_*`) `item(s)` alakú, szám-agnosztikus többesszámot használnak (`2 stored item(s)`), nem ICU pluralt. A projekt ngx-translate-je nincs messageformat-compilerrel felszerelve, és egy string kedvéért nem éri meg bevezetni — az `(s)` a projekt egységes no-ICU plural konvenciója. A magyar oldalon nincs teendő (számnév után nincs többesszám).
+
 ### Nyitott kérdések
 
 Nincs nyitott kérdés.
