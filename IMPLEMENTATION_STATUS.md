@@ -14,6 +14,15 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-03 — #020** Hiányzó teszt-lefedettség: `ThemeService` unit teszt + admin-jelszócsere
+  token-revoke teszt. Új `theme.service.spec.ts` (8 eset). A `system`-mód élő OS-váltás tesztje
+  **valódi hibát fedett fel**: az `isDark` computed csak a `mode()` signalra frissült, a
+  `media.matches`-t nem követte, így futás közbeni `prefers-color-scheme` váltásnál nem váltott
+  témát (a `Dark&Light mode.md` viszont explicit „élőben reagál"-t ír). Fix: `systemDark` signal
+  tükrözi a media-match állapotot. Új `AuthAndProfileFlowTests
+  .adminPasswordChange_revokesEverySession_thenNewPasswordWorks`: két eszköz refresh tokene is
+  `401` a jelszócsere után, az új jelszó működik. Érintett specek: [[Dark&Light mode]], [[Bejelentkezés]].
+  Kód: `frontend/core/config/theme.service.ts`, `backend/auth/AuthAndProfileFlowTests`.
 - **2026-09-03 — #044 (dropped)** Clipboard-import fejléc-alias tűrés bővítése — **nem kell**. A
   jelenlegi import a gyakorlatban jól működik; a bemenet formátuma rögzített (kanonikus
   táblázat-export), így a `looksLikeHeaderRow` két felismert mintája elég. Tág alias-szótár haszon

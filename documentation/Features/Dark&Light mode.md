@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: f9ca94e
+verifikalva: 2026-09-03
+verifikalt_commit: 2f99631
 ---
 
 # Dark&Light mode
@@ -63,8 +63,6 @@ A status bar stílust a `ThemeService.apply()` állítja (`StatusBar.setStyle`, 
 
 Kontraszt-ellenőrzés a fejlesztés része, nem külön projekt: új komponens akkor kész, ha mindkét palettában megfelel a fenti két aránynak. Automatikus kontraszt-ellenőrzés nincs.
 
-Nincs `ThemeService` unit teszt — tervezett: `backlog/020-hianyzo-teszt-lefedettseg-themeservice-unit-teszt-admin-jelszocs.md`.
-
 ### Nyitott kérdések
 
 Nincs nyitott kérdés.
@@ -73,7 +71,7 @@ Nincs nyitott kérdés.
 
 ### Frontend
 
-- `ThemeService` (root, [[Frontend]] `core/config/`): a beállítás signalja, a `prefers-color-scheme` media query figyelése, az osztály-kapcsoló és a status bar stílus beállítása.
+- `ThemeService` (root, [[Frontend]] `core/config/`): a beállítás signalja, a `prefers-color-scheme` media query figyelése, az osztály-kapcsoló és a status bar stílus beállítása. A media query `matches` állapotát egy `systemDark` signal tükrözi, így az `isDark` computed a rendszer **futás közbeni** téma-váltására is újraszámol (nem csak a `mode` változására). Unit teszt: `theme.service.spec.ts` (init / setMode / explicit override / élő OS-váltás).
 - A preferencia betöltése az app init része (téma és nyelv együtt, hálózat nélkül).
 - Nincs komponens-szintű téma logika: a komponensek CSS változókat használnak, a service csak a gyökér osztályt állítja.
 

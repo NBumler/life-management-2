@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-03
-verifikalt_commit: a72c86f
+verifikalt_commit: 2f99631
 ---
 
 # Bejelentkezés
@@ -148,7 +148,10 @@ curl -sS -X PUT "$API_BASE/api/admin/users/alice/password" \
   -d '{"password":"new-strong-password"}'
 ```
 
-Siker: `204` (vagy `200`); az `alice` user minden eszközön újra be kell jelentkezzen.
+Siker: `204` (vagy `200`); az `alice` user minden eszközön újra be kell jelentkezzen. Ezt a
+teljes-session-revoke viselkedést a `AuthAndProfileFlowTests
+.adminPasswordChange_revokesEverySession_thenNewPasswordWorks` integrációs teszt fedi (két eszköz
+refresh tokene is `401`-et kap a csere után).
 
 #### Login curl (opcionális ellenőrzés)
 
