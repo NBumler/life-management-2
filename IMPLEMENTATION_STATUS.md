@@ -14,6 +14,13 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-03 — #013** Climbing szín-sáv közép-index `floor`. Az indoor-boulder napló
+  `resolveIndex()`-e a shared `colorBandMidIndex()` helpert hívja az inline
+  `Math.round((low + high) / 2)` helyett — a mátrix-spec által kliensre és szerverre kötelezővé
+  tett **lefelé kerekített** közép, determinisztikusan; páratlan `low + high` összegnél eddig
+  1-index csúszás volt a mentett `absoluteDifficultyIndex` snapshotban és a volumen-modellben.
+  Érintett specek: [[Nehézségi szint skálája (konverziós mátrix)]], [[Indoor boulder napló]].
+  Kód: `pages/workout/climbing/naplo/indoor-boulder-session-edit.page.ts` (+ `.spec.ts`).
 - **2026-09-03 — #040** AYCM statisztika bővítés — négy új időablak és két új nézet az
   `AycmStatsPage`-en: `THIS_YEAR` (teljes idei naptári év, `monthCount = 12`), `ALL_TIME` (a
   legkorábbi élő Check-Intől), `CUSTOM` (szabad `from … to`, fordított bevitel normalizálva),

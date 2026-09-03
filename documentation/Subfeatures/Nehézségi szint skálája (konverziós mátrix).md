@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: dac7f81
+verifikalva: 2026-09-03
+verifikalt_commit: 3db8536
 ---
 
 # Nehézségi szint skálája (konverziós mátrix)
@@ -62,7 +62,7 @@ A skálák közti nehézség-egyeztetés eredendően szakértői-konszenzus kér
 
 \[I_{\text{grade}} = \left\lfloor \frac{lowIndex + highIndex}{2} \right\rfloor\]
 
-(egész **lefelé** kerekítés — determinisztikus, klienst és szervert egyaránt köti). A kötelező `floor` a `colorBandMidIndex()` helperben (`shared/climbing/climbing-grade-matrix.ts`) él és tesztelt; az `indoor-boulder-session-edit.page.ts` jelenleg tévesen `Math.round`-ot hív (páratlan `low+high` összegnél 1-index eltérés) — javítás tervezett: `backlog/013-climbing-szin-sav-kozep-index-math-round-a-kotelezett-math-floor.md`.
+(egész **lefelé** kerekítés — determinisztikus, klienst és szervert egyaránt köti). A kötelező `floor` a `colorBandMidIndex()` helperben (`shared/climbing/climbing-grade-matrix.ts`) él és tesztelt; az `indoor-boulder-session-edit.page.ts` `resolveIndex()` ezt a helpert hívja (a volumen-modellhez és a mentett `absoluteDifficultyIndex` snapshothoz egyaránt), így páratlan `low+high` összegnél is a lefelé kerekített közép jön ki.
 
 ### UI/UX elvárások
 

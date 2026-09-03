@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: dac7f81
+verifikalva: 2026-09-03
+verifikalt_commit: 3db8536
 ---
 
 # Indoor boulder napló
@@ -40,7 +40,7 @@ Közös session modell: [[Mászónapló]] (`locationType=INDOOR`, `discipline=BO
 | `colorBandId` | Opcionális; ha van → elsődleges gyorsválasztás |
 | Snapshot | `colorName`, `hexColor`, `gradeRange` szöveg (pl. `6A–6B`). A numerikus index-tartomány (`Lower`/`Upper`) snapshotolása tervezett — `backlog/023-climbing-a-kiserlet-snapshot-tarolja-a-szin-sav-numerikus-index-.md` |
 | `userRawInput` | Opcionális / alternatív: [[Nehézségi szint skálája]] Font/V parser |
-| `absoluteDifficultyIndex` | Szín-sávból: a `[Lower, Upper]` index **lefelé kerekített** közepe (`colorBandMidIndex`, `floor`); parser esetén a parsed grade indexe. (A napló-oldali kód jelenleg `Math.round`-ot hív — `backlog/013-climbing-szin-sav-kozep-index-math-round-a-kotelezett-math-floor.md`.) |
+| `absoluteDifficultyIndex` | Szín-sávból: a `[Lower, Upper]` index **lefelé kerekített** közepe (`resolveIndex()` → `colorBandMidIndex`, `floor` — determinisztikus, klienst és szervert egyaránt köti); parser esetén a parsed grade indexe. |
 | `isSuccess` | Boolean |
 | `attemptCount` | Opcionális `≥ 1` (próbák az adott problémán) |
 | `ascentStyle` | Ha siker: `FLASH` \| `REDPOINT` \| `ONSIGHT` (ONSIGHT megengedett fallback) |
