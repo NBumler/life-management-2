@@ -7,3 +7,7 @@ lm2:
     # Disable the scheduled trigger under test; TombstonePurgeJobTest drives the job directly.
     tombstone-purge:
       cron: "-"
+  idempotency:
+    # Disable the scheduled trigger under test; IdempotencyKeyPruneJobTest drives the job directly.
+    prune:
+      cron: "-"
