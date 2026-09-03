@@ -1751,9 +1751,12 @@ export class SqliteStorageBackend implements StorageBackend {
   }
 
   /**
-   * documentation/Subfeatures/Élelmiszer tárolás.md "Törlés": cascades to every live storage item
-   * referencing this catalog entry, mirroring HouseholdRoom's local cascade to its tasks — the
-   * server does its own cascade on the DELETE, and the post-drain pull confirms each one independently.
+   * documentation/Subfeatures/Élelmiszerek.md "Törlés": the server cascades a Food DELETE to every
+   * live `stored_food`, `recipe_ingredient`, `meal_item` and `shopping_list_item` referencing this
+   * catalog entry (across every user), then soft-deletes any Meal left with zero live items — but
+   * never a shopping list, even if emptied (documentation/Subfeatures/Bevásárlólista írás.md "Üres
+   * aktív lista"). We mirror the whole cascade locally so the offline store is not inconsistent
+   * until the next delta pull; the post-drain pull then confirms each row independently.
    */
   async deleteFood(id: string): Promise<Food> {
     const userId = this.requireUserId();
@@ -1779,9 +1782,42 @@ export class SqliteStorageBackend implements StorageBackend {
       'SELECT id FROM recipe_ingredient WHERE food_id = ? AND deleted = 0',
       [id],
     );
+    const cascadeMealItemRows = await this.db.query<{ id: string; meal_id: string }>(
+      'SELECT id, meal_id FROM meal_item WHERE food_id = ? AND deleted = 0',
+      [id],
+    );
+    const cascadeShoppingItemRows = await this.db.query<{ id: string }>(
+      'SELECT id FROM shopping_list_item WHERE food_id = ? AND deleted = 0',
+      [id],
+    );
+    // Meals left with zero live items after the meal_item cascade are soft-deleted too, mirroring
+    // the server's MealCascade. A shopping list is deliberately left alone even when emptied.
+    const removedItemsByMeal = new Map<string, number>();
+    for (const row of cascadeMealItemRows) {
+      removedItemsByMeal.set(row.meal_id, (removedItemsByMeal.get(row.meal_id) ?? 0) + 1);
+    }
+    const emptiedMealIds: string[] = [];
+    for (const [mealId, removedCount] of removedItemsByMeal) {
+      const liveCountRows = await this.db.query<{ c: number }>(
+        'SELECT COUNT(*) AS c FROM meal_item WHERE meal_id = ? AND deleted = 0',
+        [mealId],
+      );
+      if ((liveCountRows[0]?.c ?? 0) - removedCount <= 0) {
+        emptiedMealIds.push(mealId);
+      }
+    }
+    const nowIso = new Date().toISOString();
     const cascadeTasks = [
       ...cascadeStoredFoodRows.map((row) => storedFoodLocalRemoveTask(row.id)),
       ...cascadeRecipeIngredientRows.map((row) => recipeIngredientLocalRemoveTask(row.id)),
+      ...cascadeMealItemRows.map((row) => mealItemLocalRemoveTask(row.id)),
+      ...cascadeShoppingItemRows.map((row) => shoppingListItemLocalRemoveTask(row.id)),
+      ...emptiedMealIds.map(
+        (mealId): SqlTask => ({
+          statement: 'UPDATE meal SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ? AND deleted = 0',
+          values: [nowIso, mealId],
+        }),
+      ),
     ];
     await this.db.executeTransaction([entityTask, ...cascadeTasks, ...enqueue.outboxTasks]);
     await this.offlineQueue.refreshCounts(userId);
