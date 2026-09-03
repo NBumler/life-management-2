@@ -5,7 +5,7 @@ import { Food } from '../../api/model/food';
 import { normalizeBarcode } from '../../shared/barcode-normalization';
 import { normalizeName } from '../../shared/name-normalization';
 import { DurationUnit, QuantityUnit, durationsEqual, quantitiesEqual } from '../../shared/quantity';
-import { STORAGE_BACKEND } from '../storage/storage-backend';
+import { FoodReferenceCounts, STORAGE_BACKEND } from '../storage/storage-backend';
 import { DataChangeNotifier } from '../sync/data-change-notifier';
 import { SyncEngineService } from '../sync/sync-engine.service';
 import { uuidV4 } from '../sync/uuid';
@@ -206,6 +206,11 @@ export class FoodRepository {
     this.items.update((list) => list.filter((item) => item.id !== id));
     this.lastSignature = foodSetSignature(this.items());
     this.requestDrainIfNative();
+  }
+
+  /** documentation/Subfeatures/Élelmiszerek.md "Törlés": cascade counts for the confirm dialog; `null` on web. */
+  countReferences(id: string): Promise<FoodReferenceCounts | null> {
+    return this.storage.countFoodReferences(id);
   }
 
   private requestDrainIfNative(): void {

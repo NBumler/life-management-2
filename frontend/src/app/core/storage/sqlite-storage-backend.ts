@@ -198,6 +198,7 @@ import { OfflineQueueService } from '../sync/offline-queue.service';
 import { uuidV4 } from '../sync/uuid';
 import { LocalDatabaseService, SqlTask } from './local-database.service';
 import {
+  FoodReferenceCounts,
   GearItemReferenceCounts,
   MealDraft,
   PackingSessionStartDraft,
@@ -1830,6 +1831,26 @@ export class SqliteStorageBackend implements StorageBackend {
   private async readFood(id: string): Promise<Food> {
     const rows = await this.db.query<FoodRow>('SELECT * FROM food WHERE id = ?', [id]);
     return foodRowToDto(rows[0]);
+  }
+
+  /**
+   * documentation/Subfeatures/Élelmiszerek.md "Törlés": live rows that a Food DELETE would cascade
+   * to — the four tables `deleteFood` soft-deletes. Local store only (shared catalog, so these span
+   * every user once synced); `HttpStorageBackend` returns `null`.
+   */
+  async countFoodReferences(id: string): Promise<FoodReferenceCounts> {
+    const [storedFood, recipeIngredient, mealItem, shoppingListItem] = await Promise.all([
+      this.db.query<{ c: number }>('SELECT COUNT(*) AS c FROM stored_food WHERE food_id = ? AND deleted = 0', [id]),
+      this.db.query<{ c: number }>('SELECT COUNT(*) AS c FROM recipe_ingredient WHERE food_id = ? AND deleted = 0', [id]),
+      this.db.query<{ c: number }>('SELECT COUNT(*) AS c FROM meal_item WHERE food_id = ? AND deleted = 0', [id]),
+      this.db.query<{ c: number }>('SELECT COUNT(*) AS c FROM shopping_list_item WHERE food_id = ? AND deleted = 0', [id]),
+    ]);
+    return {
+      storedFoodCount: storedFood[0]?.c ?? 0,
+      recipeIngredientCount: recipeIngredient[0]?.c ?? 0,
+      mealItemCount: mealItem[0]?.c ?? 0,
+      shoppingListItemCount: shoppingListItem[0]?.c ?? 0,
+    };
   }
 
   async listStoredFoods(): Promise<StoredFood[]> {

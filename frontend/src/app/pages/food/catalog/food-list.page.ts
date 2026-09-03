@@ -26,6 +26,7 @@ import { FoodRepository } from '../../../core/data/food.repository';
 import { compareRank, matchesSearch } from '../../../shared/text-search';
 import { navigateFoodSection } from '../food-sections';
 import { FoodBarcodeScannerService } from './food-barcode-scanner.service';
+import { buildFoodDeleteConfirmMessage } from './food-delete-confirm';
 import { FoodPrefillService } from './food-prefill.service';
 import { OpenFoodFactsService } from './open-food-facts.service';
 
@@ -103,9 +104,10 @@ export class FoodListPage implements OnInit, ViewWillEnter {
   }
 
   async delete(item: Food): Promise<void> {
+    const counts = await this.repository.countReferences(item.id);
     const alert = await this.alertController.create({
       header: this.translate.instant('FOOD.CATALOG.DELETE_CONFIRM_TITLE'),
-      message: this.translate.instant('FOOD.CATALOG.DELETE_CONFIRM_MESSAGE', { name: item.name }),
+      message: buildFoodDeleteConfirmMessage(this.translate, item.name, counts),
       buttons: [
         { text: this.translate.instant('COMMON.CANCEL'), role: 'cancel' },
         { text: this.translate.instant('COMMON.DELETE'), role: 'destructive', handler: () => void this.repository.remove(item.id) },

@@ -613,7 +613,11 @@
       "NO_RESULTS": "No results.",
       "DELETE_CONFIRM_TITLE": "Delete food",
       "DELETE_CONFIRM_MESSAGE": "Are you sure you want to delete \"{{name}}\"? This is a shared catalog item — deleting it may also affect other users' storage, recipes, shopping lists, and meals referencing it.",
-      "DELETE_CONFIRM_MESSAGE_WITH_REFS": "Are you sure you want to delete \"{{name}}\"? This is a shared catalog item, and other data still references it: {{refs}}. Deleting it will also delete those, for every user."
+      "DELETE_CONFIRM_MESSAGE_WITH_REFS": "Are you sure you want to delete \"{{name}}\"? This is a shared catalog item, and other data still references it: {{refs}}. Deleting it will also delete those, for every user.",
+      "DELETE_REF_STORED_FOOD": "{{count}} stored item(s)",
+      "DELETE_REF_RECIPE_INGREDIENT": "{{count}} recipe ingredient(s)",
+      "DELETE_REF_MEAL_ITEM": "{{count}} meal item(s)",
+      "DELETE_REF_SHOPPING_LIST_ITEM": "{{count}} shopping list item(s)"
     },
     "FORM": {
       "ADD_TITLE": "New food",

@@ -76,6 +76,7 @@ import { buildSeedExercises } from '../data/exercise-seed';
 import { AuthSessionService } from '../session/auth-session.service';
 import { uuidV4 } from '../sync/uuid';
 import {
+  FoodReferenceCounts,
   GearItemReferenceCounts,
   MealDraft,
   PackingSessionStartDraft,
@@ -358,6 +359,11 @@ export class HttpStorageBackend implements StorageBackend {
 
   deleteFood(id: string): Promise<Food> {
     return firstValueFrom(this.foodsApi.deleteFood(id));
+  }
+
+  /** No local store on web to query — the delete confirmation shows the generic shared-catalog message instead. */
+  countFoodReferences(): Promise<FoodReferenceCounts | null> {
+    return Promise.resolve(null);
   }
 
   listStoredFoods(): Promise<StoredFood[]> {

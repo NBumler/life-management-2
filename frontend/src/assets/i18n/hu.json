@@ -613,7 +613,11 @@
       "NO_RESULTS": "Nincs találat.",
       "DELETE_CONFIRM_TITLE": "Élelmiszer törlése",
       "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd a(z) „{{name}}” tételt? Ez egy közös katalóguselem — a törlés más felhasználók tárolását, receptjeit, bevásárlólistáit és étkezéseit is érintheti.",
-      "DELETE_CONFIRM_MESSAGE_WITH_REFS": "Biztosan törlöd a(z) „{{name}}” tételt? Erre még hivatkozik: {{refs}}. A törlés ezeket is törli, minden felhasználónál."
+      "DELETE_CONFIRM_MESSAGE_WITH_REFS": "Biztosan törlöd a(z) „{{name}}” tételt? Erre még hivatkozik: {{refs}}. A törlés ezeket is törli, minden felhasználónál.",
+      "DELETE_REF_STORED_FOOD": "{{count}} tárolási tétel",
+      "DELETE_REF_RECIPE_INGREDIENT": "{{count}} recept-hozzávaló",
+      "DELETE_REF_MEAL_ITEM": "{{count}} étkezés-tétel",
+      "DELETE_REF_SHOPPING_LIST_ITEM": "{{count}} bevásárlólista-tétel"
     },
     "FORM": {
       "ADD_TITLE": "Új élelmiszer",

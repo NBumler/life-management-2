@@ -73,6 +73,17 @@ export interface GearItemReferenceCounts {
   sessionCount: number;
 }
 
+/**
+ * documentation/Subfeatures/Élelmiszerek.md "Törlés": live rows referencing a shared catalog Food,
+ * for the delete-confirm dialog's cascade list. Counts are across every user (shared catalog).
+ */
+export interface FoodReferenceCounts {
+  storedFoodCount: number;
+  recipeIngredientCount: number;
+  mealItemCount: number;
+  shoppingListItemCount: number;
+}
+
 export interface PackingSessionStartDraft {
   id: string;
   destination: string | null;
@@ -656,6 +667,8 @@ export interface StorageBackend {
   upsertFood(food: Food): Promise<Food>;
   /** documentation/Subfeatures/Élelmiszer tárolás.md "Törlés": cascades to every live storage item referencing this catalog entry. */
   deleteFood(id: string): Promise<Food>;
+  /** documentation/Subfeatures/Élelmiszerek.md "Törlés": cascade counts for the confirm dialog; `null` if not computable (web — no local store). */
+  countFoodReferences(id: string): Promise<FoodReferenceCounts | null>;
 
   listStoredFoods(): Promise<StoredFood[]>;
   upsertStoredFood(item: StoredFood): Promise<StoredFood>;

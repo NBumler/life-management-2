@@ -26,6 +26,7 @@ import { Food } from '../../../api/model/food';
 import { FoodDuplicateError, FoodRepository } from '../../../core/data/food.repository';
 import { ParsedQuantity } from '../../../shared/quantity';
 import { QuantityInputComponent } from '../../../shared/quantity-input/quantity-input.component';
+import { buildFoodDeleteConfirmMessage } from './food-delete-confirm';
 import { FoodPrefillService } from './food-prefill.service';
 import { OpenFoodFactsMappedFields, computeOffDiff } from './open-food-facts';
 import { OpenFoodFactsService } from './open-food-facts.service';
@@ -411,9 +412,10 @@ export class FoodEditPage implements OnInit {
     if (id === null) {
       return;
     }
+    const counts = await this.repository.countReferences(id);
     const alert = await this.alertController.create({
       header: this.translate.instant('FOOD.CATALOG.DELETE_CONFIRM_TITLE'),
-      message: this.translate.instant('FOOD.CATALOG.DELETE_CONFIRM_MESSAGE', { name: this.form.controls.name.value }),
+      message: buildFoodDeleteConfirmMessage(this.translate, this.form.controls.name.value, counts),
       buttons: [
         { text: this.translate.instant('COMMON.CANCEL'), role: 'cancel' },
         { text: this.translate.instant('COMMON.DELETE'), role: 'destructive', handler: () => void this.deleteAndNavigateBack(id) },

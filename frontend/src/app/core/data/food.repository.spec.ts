@@ -55,7 +55,7 @@ describe('FoodRepository', () => {
   let syncEngine: jasmine.SpyObj<Pick<SyncEngineService, 'requestDrainDebounced'>>;
 
   beforeEach(() => {
-    storage = jasmine.createSpyObj('StorageBackend', ['listFoods', 'upsertFood', 'deleteFood']);
+    storage = jasmine.createSpyObj('StorageBackend', ['listFoods', 'upsertFood', 'deleteFood', 'countFoodReferences']);
     syncEngine = jasmine.createSpyObj('SyncEngineService', ['requestDrainDebounced']);
 
     TestBed.configureTestingModule({
@@ -65,6 +65,14 @@ describe('FoodRepository', () => {
       ],
     });
     repository = TestBed.inject(FoodRepository);
+  });
+
+  it('countReferences(): delegates to the storage backend', async () => {
+    const refs = { storedFoodCount: 1, recipeIngredientCount: 0, mealItemCount: 2, shoppingListItemCount: 0 };
+    storage.countFoodReferences.and.resolveTo(refs);
+
+    await expectAsync(repository.countReferences('a')).toBeResolvedTo(refs);
+    expect(storage.countFoodReferences).toHaveBeenCalledWith('a');
   });
 
   it('load(): reads all items from the storage backend', async () => {

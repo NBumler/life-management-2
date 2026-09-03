@@ -17,7 +17,9 @@ function food(overrides: Partial<Food> = {}): Food {
 
 describe('FoodListPage', () => {
   let fixture: ComponentFixture<FoodListPage>;
-  let repository: jasmine.SpyObj<Pick<FoodRepository, 'load' | 'remove'>> & { items: ReturnType<typeof signal<Food[]>> };
+  let repository: jasmine.SpyObj<Pick<FoodRepository, 'load' | 'remove' | 'countReferences'>> & {
+    items: ReturnType<typeof signal<Food[]>>;
+  };
   let alertController: jasmine.SpyObj<AlertController>;
   let actionSheetController: jasmine.SpyObj<ActionSheetController>;
   let toastController: jasmine.SpyObj<ToastController>;
@@ -26,8 +28,9 @@ describe('FoodListPage', () => {
   let prefillService: jasmine.SpyObj<FoodPrefillService>;
 
   beforeEach(async () => {
-    repository = jasmine.createSpyObj('FoodRepository', ['load', 'remove']) as never;
+    repository = jasmine.createSpyObj('FoodRepository', ['load', 'remove', 'countReferences']) as never;
     repository.items = signal<Food[]>([]);
+    repository.countReferences.and.resolveTo(null);
     alertController = jasmine.createSpyObj('AlertController', ['create']);
     actionSheetController = jasmine.createSpyObj('ActionSheetController', ['create']);
     toastController = jasmine.createSpyObj('ToastController', ['create']);
