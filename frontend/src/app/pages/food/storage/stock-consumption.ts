@@ -55,12 +55,13 @@ export function planStockConsumption(
       // backlog/063 — a `db` row is contextual: canonicalize it through the Food's darab-definíció
       // the same way the demand map was built (packages, then g/ml). Every other unit keeps the
       // historical mapping. Write-back is fraction-based so it needs no unit-specific inverse.
-      const rowCanonical =
-        row.quantityUnit === 'db' && food !== undefined
-          ? (resolveFoodQuantity(row.quantityAmount, 'db', food).packages ??
-            resolveFoodQuantity(row.quantityAmount, 'db', food).baseAmount ??
-            row.quantityAmount)
-          : canonicalQuantityAmount(row.quantityAmount, row.quantityUnit as QuantityUnit);
+      let rowCanonical: number;
+      if (row.quantityUnit === 'db' && food !== undefined) {
+        const resolved = resolveFoodQuantity(row.quantityAmount, 'db', food);
+        rowCanonical = resolved.packages ?? resolved.baseAmount ?? row.quantityAmount;
+      } else {
+        rowCanonical = canonicalQuantityAmount(row.quantityAmount, row.quantityUnit as QuantityUnit);
+      }
       if (rowCanonical <= 0) {
         continue;
       }

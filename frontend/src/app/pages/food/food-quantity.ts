@@ -43,9 +43,13 @@ function isSiUnit(unit: string): boolean {
   return family === 'weight' || family === 'volume';
 }
 
-/** The Food's net content as a canonical g/ml amount, or `null` if it isn't a usable SI quantity. */
+/**
+ * The Food's net content as a canonical g/ml amount, or `null` if it isn't a usable SI quantity.
+ * A non-positive / NaN `netAmount` (corrupt or legacy catalog data — the backend `validatePiece`
+ * only guards `pieceAmount > 0`) also yields `null`, so `packages` never becomes `Infinity` / `NaN`.
+ */
 function netBase(food: FoodQuantityContext): number | null {
-  if (food.netAmount == null || food.netUnit == null || !isSiUnit(food.netUnit)) {
+  if (food.netAmount == null || !(food.netAmount > 0) || food.netUnit == null || !isSiUnit(food.netUnit)) {
     return null;
   }
   return canonicalQuantityAmount(food.netAmount, food.netUnit as QuantityUnit);
@@ -99,8 +103,9 @@ export function resolveFoodQuantity(amount: number, unit: QuantityUnit, food: Fo
 
 /**
  * documentation/Subfeatures/Recept.md "`db` / `cs` megjelenítés" — the parenthesised conversion hint:
- * `3db (18dkg)` for an SI darab-definíció, `3db (0.5cs)` for a package-fraction one, `3db` with no
- * definíció; `2cs (1000g)` when the net content is known.
+ * `3db (18dkg)` for an SI darab-definíció, `3db (0.5cs)` for a package-fraction one; with no
+ * darab-definíció `1 db = 1 cs`, so `db` gets the same net-content hint as `cs` (`3db (3000g)`),
+ * never a bare `3db` when the net content is known. `2cs (1000g)` when the net content is known.
  */
 export function formatFoodQuantity(amount: number, unit: QuantityUnit, food: FoodQuantityContext | undefined): string {
   const bare = `${amount}${unit}`;
@@ -109,16 +114,16 @@ export function formatFoodQuantity(amount: number, unit: QuantityUnit, food: Foo
   }
   if (unit === 'db') {
     const piece = pieceDef(food);
-    if (piece === null) {
-      return bare;
+    if (piece !== null) {
+      return `${amount}db (${tidy(amount * piece.amount)}${piece.unit})`;
     }
-    return `${amount}db (${tidy(amount * piece.amount)}${piece.unit})`;
+    // fall through: no darab-definíció → 1 db = 1 cs → the cs net-content hint below
   }
-  if (unit === 'cs') {
-    if (food.netAmount == null || food.netUnit == null) {
+  if (unit === 'db' || unit === 'cs') {
+    if (food.netAmount == null || !(food.netAmount > 0) || food.netUnit == null) {
       return bare;
     }
-    return `${amount}cs (${tidy(amount * food.netAmount)}${food.netUnit})`;
+    return `${amount}${unit} (${tidy(amount * food.netAmount)}${food.netUnit})`;
   }
   return bare;
 }

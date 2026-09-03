@@ -136,7 +136,11 @@ describe('recipe-summary', () => {
     it('backlog/063: shows the darab-definíció conversion for a db amount', () => {
       expect(formatIngredientQuantity(food({ pieceAmount: 6, pieceUnit: 'dkg' }), 3, 'db')).toBe('3db (18dkg)');
       expect(formatIngredientQuantity(food({ pieceAmount: 0.5, pieceUnit: 'cs' }), 1, 'db')).toBe('1db (0.5cs)');
-      expect(formatIngredientQuantity(food({ netAmount: 100, netUnit: 'g' }), 3, 'db')).toBe('3db');
+    });
+
+    it('C-3: a db amount with no darab-definíció but known net content gets the cs net-content hint (1 db = 1 cs)', () => {
+      expect(formatIngredientQuantity(food({ netAmount: 100, netUnit: 'g' }), 3, 'db')).toBe('3db (300g)');
+      expect(formatIngredientQuantity(food({}), 3, 'db')).toBe('3db');
     });
   });
 });

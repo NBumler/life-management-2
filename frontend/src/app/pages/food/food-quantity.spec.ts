@@ -61,8 +61,16 @@ describe('formatFoodQuantity (backlog/063)', () => {
     expect(formatFoodQuantity(3, 'db', { pieceAmount: 0.1667, pieceUnit: 'cs' })).toBe('3db (0.5001cs)');
   });
 
-  it('no darab-definíció → "3db"', () => {
-    expect(formatFoodQuantity(3, 'db', { netAmount: 100, netUnit: 'g' })).toBe('3db');
+  it('C-3: no darab-definíció but known net content → same hint as cs ("3db (300g)"), not bare "3db"', () => {
+    expect(formatFoodQuantity(3, 'db', { netAmount: 100, netUnit: 'g' })).toBe('3db (300g)');
+  });
+
+  it('no darab-definíció and no net content → bare "3db"', () => {
+    expect(formatFoodQuantity(3, 'db', {})).toBe('3db');
+  });
+
+  it('C-2: no darab-definíció and a non-positive net content → bare "3db" (no "3db (0g)")', () => {
+    expect(formatFoodQuantity(3, 'db', { netAmount: 0, netUnit: 'g' })).toBe('3db');
   });
 
   it('cs with known net content → "2cs (1000g)"', () => {
@@ -75,5 +83,16 @@ describe('formatFoodQuantity (backlog/063)', () => {
 
   it('SI unit is shown bare', () => {
     expect(formatFoodQuantity(200, 'g', { netAmount: 1, netUnit: 'kg' })).toBe('200g');
+  });
+});
+
+describe('resolveFoodQuantity — corrupt net content (C-2)', () => {
+  it('a zero netAmount yields packages: null, never Infinity', () => {
+    expect(resolveFoodQuantity(2, 'cs', { netAmount: 0, netUnit: 'g' })).toEqual({ packages: 2, baseAmount: null });
+    expect(resolveFoodQuantity(200, 'g', { netAmount: 0, netUnit: 'g' })).toEqual({ packages: null, baseAmount: 200 });
+  });
+
+  it('a negative netAmount yields packages: null', () => {
+    expect(resolveFoodQuantity(200, 'g', { netAmount: -5, netUnit: 'g' })).toEqual({ packages: null, baseAmount: 200 });
   });
 });
