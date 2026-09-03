@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: 0d07ce6
+verifikalva: 2026-09-03
+verifikalt_commit: 44a9a01
 ---
 
 # Sablonok
@@ -30,6 +30,7 @@ Nincs seed / előre töltött sablon, és sablonból nem hozható létre új `Ge
 | `id` | UUID, kliens generálja |
 | `name` | Kötelező; **egyedi a user élő sablonjai között** — összehasonlítási szabály: [[Névegyediség]] |
 | `notes` | Opcionális szabad szöveg |
+| `itemCount` | **Származtatott, csak-olvasható** — az élő `PackingTemplateItem` sorok száma; csak a lista-DTO-n van kitöltve (a nested detail a teljes `items` tömböt adja), és a `GET /api/sync/changes` feed **nem** tölti. |
 | `deleted` | Soft delete (`false` default); listák szűrik |
 | `createdAt` / `updatedAt` | Audit |
 
@@ -74,7 +75,7 @@ Egy sablonon belül ugyanaz a `gearItemId` **legfeljebb egyszer** szerepelhet.
 ### UI/UX elvárások
 
 - Belépés: [[GearCheck]] hub → **Sablonok**.
-- Lista: kereső ([[Szöveges keresés]]); soron: `name`, opcionális `notes` előnézet; műveletek: megnyitás / szerkesztés, másolás, törlés. (A soronkénti **tételszám** kijelzése jelenleg hiányzik — tervezett: `backlog/026-gear-sablon-lista-sor-elo-tetelszam-kijelzese.md`.)
+- Lista: kereső ([[Szöveges keresés]]); soron: `name`, a sablon **élő tételszáma** (`{{count}} eszköz`, 0 is kiírva), opcionális `notes` előnézet; műveletek: megnyitás / szerkesztés, másolás, törlés.
 - Create / edit: `name` (kötelező, auto-focus create-nél), `notes` (opcionális); alatta rendezhető tétellista + „eszköz hozzáadása” picker.
 - Törlés / másolás: egyértelmű gombok; törlésnél confirmation a fenti szöveggel.
 - Új sablon mentése után: navigáció vissza a Sablonok listára (**nem** marad a szerkesztő oldalon); az újonnan létrehozott sor finoman outline-olva jelzi, melyik a friss elem (query paraméterrel átadva, nem perzisztens állapot).
@@ -91,14 +92,14 @@ Nincs nyitott kérdés.
 
 ### Frontend
 
-- Sablon lista / create / edit / másolás képernyők a GearCheck alatt.
+- Sablon lista / create / edit / másolás képernyők a GearCheck alatt. A lista soron a `template.itemCount` jelenik meg (`GEAR.TEMPLATES.ITEM_COUNT`); a `PackingTemplateRepository` mentés után a visszakapott fából (`items` élő sorok száma) frissíti az összegző sort.
 - Megosztott `GearItem` picker ([[Eszközök]]); platformos reorder.
 - OpenAPI generált kliens; mutációk offline rétegen.
 - Nested mentés: a sablon + tételek **egy** requestben mennek (teljes fa csere id-diff-fel: `PackingTemplateService.saveTree` + `NestedChildResolver`; kliens tükör: `savePackingTemplate` id-diff). A duplikálás **kliensoldali** create + copy a normál nested create úton (nincs külön `POST .../duplicate` endpoint).
 
 #### Backend-offline
 
-- Olvasás / írás helyi store-ból Backend-offline és Full-offline esetén is.
+- Olvasás / írás helyi store-ból Backend-offline és Full-offline esetén is. A lista `itemCount`-ja natívon a helyi SQLite lekérdezés korrelált alkérdése (`COUNT(*) … WHERE deleted = 0`), tehát offline is helyes; weben a szerver számolja.
 - Create / update / delete / duplicate → outbox (`OfflineQueueService`) + kliens UUID; sync: [[Szinkronizációs központ]].
 - Sablon törlés: helyi sablon + tételek `deleted = true`; futó pakolás sorai érintetlenek. Soha nem syncelt draft: helyi hard remove + outbox purge.
 - Eszköz-cascade: [[Eszközök]] — helyi sablon-tételek eltávolítása az eszköz delete műveletben.
@@ -110,6 +111,7 @@ Nincs nyitott kérdés.
   - `packing_template` (`id` UUID, `user_id`, `name`, `notes` nullable, `deleted` / `deleted_at`, audit)
   - `packing_template_item` (`id` UUID, `template_id`, `gear_item_id`, `sort_order`, `deleted` / `deleted_at`, audit); unique `(template_id, gear_item_id)` élő sorokra; sablon `DELETE` → cascade soft delete a tételekre; `gear_item` törlésekor item sorok cascade soft delete ([[Eszközök]])
 - Egyediség: `(user_id, name_normalized)` unique a sablonon, **élő** sorokra (`WHERE deleted = false`) — [[Névegyediség]].
+- `GET /api/packing-templates`: a `PackingTemplateService.list` minden sorra beállítja az `itemCount`-ot (`PackingTemplateItemRepository.countByTemplateIdAndDeletedFalse`, sablononként egy triviális `COUNT`). A `PackingTemplateMapper.toDto` érintetlen — a sync data loader így nem számol feleslegesen, a feed `itemCount`-ja `null`.
 - OpenAPI CRUD (nested tree `PUT`); a duplikálás kliensoldali create + copy, **nincs** `POST .../duplicate` endpoint. User scope: [[Bejelentkezés]].
 - `DELETE` sablon: soft delete + tételek; **nem** érinti a futó pakolás táblákat és a `gear_item` sort. Idempotens (már törölt → 200).
 

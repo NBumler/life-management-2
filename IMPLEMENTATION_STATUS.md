@@ -14,6 +14,15 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-03 — #026** Gear: sablon-lista soronkénti élő tételszám. A `[[Sablonok]]` UI/UX explicit
+  kérte a tételszámot minden soron; eddig csak name + notes látszott. Új származtatott, csak-olvasható
+  `itemCount` a `PackingTemplate` lista-DTO-n: `PackingTemplateService.list` állítja be
+  (`PackingTemplateItemRepository.countByTemplateIdAndDeletedFalse`), a `toDto` / sync data loader
+  érintetlen (a feed `itemCount`-ja `null`). Weben a szerver adja; natívon a
+  `SqliteStorageBackend.listPackingTemplates` korrelált `COUNT` alkérdése, így offline is helyes; a
+  repository mentés után a visszakapott fából frissíti az összegzőt. Lista sor: `„{{count}} eszköz”`.
+  Érintett spec: [[Sablonok]].
+  Kód: `backend/gear/PackingTemplateService` (+ `PackingTemplateItemRepository`, `openapi PackingTemplate.yaml`), `frontend/core/storage/sqlite-storage-backend.ts`, `core/data/packing-template.repository.ts`, `pages/menu/gear/templates/packing-templates.page.html`, `assets/i18n/{hu,en}.json`.
 - **2026-09-03 — #019** Profile: kliensoldali 1-tizedes bevitel-validáció a súly mezőkre. A
   `Profile.md` „max 1 tizedes" eddig csak a `numeric(5,1)` DB-oszlop skálája volt; a kliens csak
   min/max-ot validált és néma DB-kerekítésre hagyatkozott. Új `oneDecimalPlaceValidator` (Reactive
