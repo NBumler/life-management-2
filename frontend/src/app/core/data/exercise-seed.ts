@@ -33,6 +33,20 @@ export function exerciseSeedId(userId: string, name: string): Promise<string> {
   return uuidV5(`Exercise:${userId}:${normalizeName(name)}`);
 }
 
+/**
+ * The subset of `seeds` whose ids are **not** already in the local `exercise_catalog` (the caller
+ * passes every existing id, live or tombstoned) — i.e. what `seedExercises` should upsert.
+ *
+ * This per-row gate replaces the old catalog-wide "only seed when the table is empty" check: a
+ * bumped {@link EXERCISE_SEED_VERSION} now delivers genuinely new `exercise-seed.json` rows to an
+ * install that already seeded an earlier version, while a seed row the user later deleted (its id
+ * is present as a tombstone) is left deleted, not resurrected. It also makes a mid-seed crash
+ * self-healing — the next run just inserts whatever ids are still missing.
+ */
+export function seedRowsToInsert(existingIds: ReadonlySet<string>, seeds: readonly Exercise[]): Exercise[] {
+  return seeds.filter((seed) => !existingIds.has(seed.id));
+}
+
 /** Materializes `EXERCISE_SEED` into full `Exercise` DTOs for the given user. */
 export async function buildSeedExercises(userId: string): Promise<Exercise[]> {
   const exercises: Exercise[] = [];

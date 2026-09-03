@@ -37,7 +37,8 @@ import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 import { WorkoutPlan } from '../../api/model/workoutPlan';
 import { WorkoutSession } from '../../api/model/workoutSession';
 import { DailyStepLog } from '../../api/model/dailyStepLog';
-import { buildSeedExercises, EXERCISE_SEED_KEY, EXERCISE_SEED_VERSION } from '../data/exercise-seed';
+import { buildSeedExercises, EXERCISE_SEED_KEY, EXERCISE_SEED_VERSION, seedRowsToInsert } from '../data/exercise-seed';
+import { emptiedMeals } from './food-delete-cascade';
 import {
   CalendarEventRow,
   ExerciseRow,
@@ -194,7 +195,7 @@ import {
   dailyStepLogRowToDto,
 } from '../data/local-rows';
 import { AuthSessionService } from '../session/auth-session.service';
-import { OfflineQueueService } from '../sync/offline-queue.service';
+import { EnqueueResult, OfflineQueueService } from '../sync/offline-queue.service';
 import { uuidV4 } from '../sync/uuid';
 import { LocalDatabaseService, SqlTask } from './local-database.service';
 import {
@@ -1555,9 +1556,14 @@ export class SqliteStorageBackend implements StorageBackend {
    * documentation/Subfeatures/Gyakorlat.md "Seed" + Backend-offline first.md §15: the `seed_state`
    * table is the native seed-latch (the on-device analogue of web's `localStorage` latch). Once its
    * `seed_version` for this key reaches `EXERCISE_SEED_VERSION` the seed never runs again — even if
-   * the user later deletes every exercise. The "catalog already non-empty" check still short-circuits
-   * an install whose catalog synced in from another device before the first `seedExercises()` call;
-   * the deterministic v5 ids keep any residual repeat write idempotent.
+   * the user later deletes every exercise.
+   *
+   * Below the latch the gate is **per row**, not catalog-wide (`seedRowsToInsert`): only the seed
+   * ids missing from `exercise_catalog` are inserted. So a bumped `EXERCISE_SEED_VERSION` delivers
+   * new `exercise-seed.json` rows to an install that already seeded an earlier version; a seed row
+   * synced in from another device, or one the user deleted, is skipped (its id is already present);
+   * and a crash mid-seed self-heals on the next launch. Deterministic v5 ids keep any repeat write
+   * idempotent.
    */
   async seedExercises(): Promise<void> {
     const userId = this.requireUserId();
@@ -1568,11 +1574,11 @@ export class SqliteStorageBackend implements StorageBackend {
     if ((latch[0]?.seed_version ?? 0) >= EXERCISE_SEED_VERSION) {
       return;
     }
-    const rows = await this.db.query<{ count: number }>('SELECT COUNT(*) AS count FROM exercise_catalog');
-    if ((rows[0]?.count ?? 0) === 0) {
-      for (const exercise of await buildSeedExercises(userId)) {
-        await this.upsertExercise(exercise);
-      }
+    const seeds = await buildSeedExercises(userId);
+    const existing = await this.db.query<{ id: string }>('SELECT id FROM exercise_catalog');
+    const existingIds = new Set(existing.map((row) => row.id));
+    for (const exercise of seedRowsToInsert(existingIds, seeds)) {
+      await this.upsertExercise(exercise);
     }
     await this.db.run(
       `INSERT INTO seed_state (seed_key, seed_version, applied_at) VALUES (?, ?, ?)
@@ -1816,34 +1822,58 @@ export class SqliteStorageBackend implements StorageBackend {
       'SELECT id FROM shopping_list_item WHERE food_id = ? AND deleted = 0',
       [id],
     );
-    // Meals left with zero live items after the meal_item cascade are soft-deleted too, mirroring
-    // the server's MealCascade. A shopping list is deliberately left alone even when emptied.
-    const removedItemsByMeal = new Map<string, number>();
-    for (const row of cascadeMealItemRows) {
-      removedItemsByMeal.set(row.meal_id, (removedItemsByMeal.get(row.meal_id) ?? 0) + 1);
-    }
-    const emptiedMealIds: string[] = [];
-    for (const [mealId, removedCount] of removedItemsByMeal) {
+    // Meals left with zero live items after the meal_item cascade are removed too, mirroring the
+    // server's MealCascade. A shopping list is deliberately left alone even when emptied.
+    const affectedMealIds = [...new Set(cascadeMealItemRows.map((row) => row.meal_id))];
+    const liveItemCountByMealId = new Map<string, number>();
+    for (const mealId of affectedMealIds) {
       const liveCountRows = await this.db.query<{ c: number }>(
         'SELECT COUNT(*) AS c FROM meal_item WHERE meal_id = ? AND deleted = 0',
         [mealId],
       );
-      if ((liveCountRows[0]?.c ?? 0) - removedCount <= 0) {
-        emptiedMealIds.push(mealId);
+      liveItemCountByMealId.set(mealId, liveCountRows[0]?.c ?? 0);
+    }
+    const emptiedMealIds = emptiedMeals(cascadeMealItemRows, liveItemCountByMealId);
+
+    const nowIso = new Date().toISOString();
+    // Each emptied meal gets its own coalescing DELETE enqueue: if it was created offline (a pending
+    // POST) the coalesce cancels the POST and the local row is hard-removed, so the drain does NOT
+    // re-create a meal that points at the now-deleted Food; an already-synced meal just gets a
+    // redundant, idempotent DELETE (the server's own Food cascade covers the same ground).
+    const mealCascadeTasks: SqlTask[] = [];
+    for (const mealId of emptiedMealIds) {
+      let mealEnqueue: EnqueueResult | null = null;
+      try {
+        mealEnqueue = await this.offlineQueue.buildEnqueueTasks({
+          userId,
+          method: 'DELETE',
+          url: `/api/meals/${mealId}`,
+          payload: null,
+          entityType: 'Meal',
+          targetEntityId: mealId,
+        });
+      } catch {
+        // Meal already has a pending DELETE — nothing more to enqueue; just make sure the local row
+        // and its items are gone.
+      }
+      mealCascadeTasks.push(...(mealEnqueue?.outboxTasks ?? []));
+      if (mealEnqueue?.hardRemoveLocalEntity) {
+        mealCascadeTasks.push({ statement: 'DELETE FROM meal_item WHERE meal_id = ?', values: [mealId] });
+        mealCascadeTasks.push({ statement: 'DELETE FROM meal WHERE id = ?', values: [mealId] });
+      } else {
+        mealCascadeTasks.push({
+          statement: 'UPDATE meal SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ? AND deleted = 0',
+          values: [nowIso, mealId],
+        });
       }
     }
-    const nowIso = new Date().toISOString();
+
     const cascadeTasks = [
       ...cascadeStoredFoodRows.map((row) => storedFoodLocalRemoveTask(row.id)),
       ...cascadeRecipeIngredientRows.map((row) => recipeIngredientLocalRemoveTask(row.id)),
       ...cascadeMealItemRows.map((row) => mealItemLocalRemoveTask(row.id)),
       ...cascadeShoppingItemRows.map((row) => shoppingListItemLocalRemoveTask(row.id)),
-      ...emptiedMealIds.map(
-        (mealId): SqlTask => ({
-          statement: 'UPDATE meal SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ? AND deleted = 0',
-          values: [nowIso, mealId],
-        }),
-      ),
+      ...mealCascadeTasks,
     ];
     await this.db.executeTransaction([entityTask, ...cascadeTasks, ...enqueue.outboxTasks]);
     await this.offlineQueue.refreshCounts(userId);
