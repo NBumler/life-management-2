@@ -72,7 +72,7 @@ import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 import { WorkoutPlan } from '../../api/model/workoutPlan';
 import { WorkoutSession } from '../../api/model/workoutSession';
 import { DailyStepLog } from '../../api/model/dailyStepLog';
-import { buildSeedExercises } from '../data/exercise-seed';
+import { buildSeedExercises, EXERCISE_SEED_VERSION } from '../data/exercise-seed';
 import { AuthSessionService } from '../session/auth-session.service';
 import { uuidV4 } from '../sync/uuid';
 import {
@@ -288,9 +288,10 @@ export class HttpStorageBackend implements StorageBackend {
    * documentation/Subfeatures/Gyakorlat.md "Seed": web has no local store to gate on. `listExercises`
    * returns live rows only, so an "is it empty?" check alone would re-POST the whole seed on every
    * launch once the user has deleted all of it (and the server `create` won't undelete those
-   * tombstones). A per-user `localStorage` latch makes it genuinely once-ever for this browser;
-   * the "server already non-empty" check still short-circuits a fresh browser whose catalog synced
-   * from a native device. The deterministic v5 ids keep any residual repeat POST idempotent.
+   * tombstones). A per-user `localStorage` latch (holding the applied `seed_version`, mirroring
+   * native's `seed_state` table — Backend-offline first.md §15) makes it genuinely once-ever for this
+   * browser; the "server already non-empty" check still short-circuits a fresh browser whose catalog
+   * synced from a native device. The deterministic v5 ids keep any residual repeat POST idempotent.
    */
   async seedExercises(): Promise<void> {
     const userId = this.authSession.userId();
@@ -298,7 +299,7 @@ export class HttpStorageBackend implements StorageBackend {
       return;
     }
     const latchKey = `lm2.exerciseSeedDone.${userId}`;
-    if (localStorage.getItem(latchKey) === '1') {
+    if (Number(localStorage.getItem(latchKey)) >= EXERCISE_SEED_VERSION) {
       return;
     }
     const existing = await firstValueFrom(this.exercisesApi.listExercises());
@@ -307,7 +308,7 @@ export class HttpStorageBackend implements StorageBackend {
         await firstValueFrom(this.exercisesApi.createExercise(exercise));
       }
     }
-    localStorage.setItem(latchKey, '1');
+    localStorage.setItem(latchKey, String(EXERCISE_SEED_VERSION));
   }
 
   listHouseholdRooms(): Promise<HouseholdRoom[]> {

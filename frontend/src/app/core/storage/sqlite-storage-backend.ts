@@ -37,7 +37,7 @@ import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 import { WorkoutPlan } from '../../api/model/workoutPlan';
 import { WorkoutSession } from '../../api/model/workoutSession';
 import { DailyStepLog } from '../../api/model/dailyStepLog';
-import { buildSeedExercises } from '../data/exercise-seed';
+import { buildSeedExercises, EXERCISE_SEED_KEY, EXERCISE_SEED_VERSION } from '../data/exercise-seed';
 import {
   CalendarEventRow,
   ExerciseRow,
@@ -1545,16 +1545,34 @@ export class SqliteStorageBackend implements StorageBackend {
     return this.readExercise(id);
   }
 
-  /** documentation/Subfeatures/Gyakorlat.md "Seed": no-op once the catalog has any row (live or tombstoned). */
+  /**
+   * documentation/Subfeatures/Gyakorlat.md "Seed" + Backend-offline first.md §15: the `seed_state`
+   * table is the native seed-latch (the on-device analogue of web's `localStorage` latch). Once its
+   * `seed_version` for this key reaches `EXERCISE_SEED_VERSION` the seed never runs again — even if
+   * the user later deletes every exercise. The "catalog already non-empty" check still short-circuits
+   * an install whose catalog synced in from another device before the first `seedExercises()` call;
+   * the deterministic v5 ids keep any residual repeat write idempotent.
+   */
   async seedExercises(): Promise<void> {
     const userId = this.requireUserId();
-    const rows = await this.db.query<{ count: number }>('SELECT COUNT(*) AS count FROM exercise_catalog');
-    if ((rows[0]?.count ?? 0) > 0) {
+    const latch = await this.db.query<{ seed_version: number }>(
+      'SELECT seed_version FROM seed_state WHERE seed_key = ?',
+      [EXERCISE_SEED_KEY],
+    );
+    if ((latch[0]?.seed_version ?? 0) >= EXERCISE_SEED_VERSION) {
       return;
     }
-    for (const exercise of await buildSeedExercises(userId)) {
-      await this.upsertExercise(exercise);
+    const rows = await this.db.query<{ count: number }>('SELECT COUNT(*) AS count FROM exercise_catalog');
+    if ((rows[0]?.count ?? 0) === 0) {
+      for (const exercise of await buildSeedExercises(userId)) {
+        await this.upsertExercise(exercise);
+      }
     }
+    await this.db.run(
+      `INSERT INTO seed_state (seed_key, seed_version, applied_at) VALUES (?, ?, ?)
+       ON CONFLICT(seed_key) DO UPDATE SET seed_version = excluded.seed_version, applied_at = excluded.applied_at`,
+      [EXERCISE_SEED_KEY, EXERCISE_SEED_VERSION, new Date().toISOString()],
+    );
   }
 
   private async readExercise(id: string): Promise<Exercise> {

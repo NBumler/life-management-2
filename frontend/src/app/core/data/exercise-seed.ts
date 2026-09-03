@@ -16,6 +16,15 @@ export interface ExerciseSeed {
 export const EXERCISE_SEED: readonly ExerciseSeed[] = exerciseSeedJson as ExerciseSeed[];
 
 /**
+ * documentation/Architektúra/Backend-offline first.md §15: the seed-latch identity. Native records
+ * it in the `seed_state` table, web in a per-user `localStorage` key — both skip the seed once the
+ * stored `seed_version` is `>=` this. Bump `EXERCISE_SEED_VERSION` when `exercise-seed.json` gains
+ * rows that should also land on installs that already ran an earlier seed.
+ */
+export const EXERCISE_SEED_KEY = 'exercise';
+export const EXERCISE_SEED_VERSION = 1;
+
+/**
  * documentation/Architektúra/Backend-offline first.md §9: deterministic v5 id so two offline devices
  * of the same user converge on one row instead of creating duplicates. The `userId` is part of the
  * name because the server PK is global — two users seeding "Fekvenyomás" must still get distinct ids.

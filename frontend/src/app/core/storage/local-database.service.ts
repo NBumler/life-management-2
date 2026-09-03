@@ -1081,7 +1081,21 @@ const SCHEMA_V28_STATEMENTS: string[] = [
   `ALTER TABLE food ADD COLUMN piece_unit TEXT`,
 ];
 
-const SCHEMA_VERSION = 28;
+/**
+ * documentation/Architektúra/Backend-offline first.md §3/§15: a dedikált seed-latch tábla — melyik
+ * seed (`seed_key`) melyik verziója (`seed_version`) futott már le ezen az eszközön. Eddig a natív
+ * seed az `exercise_catalog` üres-store-check-jére támaszkodott; ez a tábla teszi explicitté és
+ * verzió-követhetővé (a web oldali `localStorage` latch on-device analógja).
+ */
+const SCHEMA_V29_STATEMENTS: string[] = [
+  `CREATE TABLE IF NOT EXISTS seed_state (
+    seed_key TEXT PRIMARY KEY,
+    seed_version INTEGER NOT NULL,
+    applied_at TEXT NOT NULL
+  )`,
+];
+
+const SCHEMA_VERSION = 29;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -1112,7 +1126,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 25, statements: SCHEMA_V25_STATEMENTS },
   { toVersion: 26, statements: SCHEMA_V26_STATEMENTS },
   { toVersion: 27, statements: SCHEMA_V27_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V28_STATEMENTS },
+  { toVersion: 28, statements: SCHEMA_V28_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V29_STATEMENTS },
 ];
 
 export interface SqlTask {
