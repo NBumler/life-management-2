@@ -2,12 +2,15 @@ import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
 import {
+  NO_QUANTITY,
   buildRowFromDto,
   createCustomRow,
   createFoodRow,
   createRecipeRow,
   isRowComplete,
+  restoreRow,
   rowNeedsInput,
+  snapshotRow,
   toSaveItem,
 } from './meal-item-row';
 
@@ -156,5 +159,54 @@ describe('meal-item-row', () => {
       expect(row.type === 'CUSTOM' && row.carbsG()).toBe(30);
       expect(row.type === 'CUSTOM' && row.proteinG()).toBeNull();
     });
+  });
+
+  describe('snapshotRow() / restoreRow() (B-1)', () => {
+    it('FOOD: restores servings and the quantity control to the snapshot', () => {
+      const row = buildRowFromDto({ id: 'i1', type: 'FOOD', foodId: 'f9', quantityAmount: 50, quantityUnit: 'g', servings: 2 }, injector);
+      const snap = snapshotRow(row);
+
+      if (row.type === 'FOOD') {
+        row.quantityControl.setValue({ amount: 999, unit: 'dkg' });
+        row.servings.set(5);
+      }
+      restoreRow(row, snap);
+
+      expect(row.type === 'FOOD' && row.quantityControl.getRawValue()).toEqual({ amount: 50, unit: 'g' });
+      expect(row.servings()).toBe(2);
+    });
+
+    it('CUSTOM: restores every field (incl. explicit nulls) to the snapshot', () => {
+      const row = createCustomRow();
+      row.displayName.set('Torta');
+      row.caloriesKcal.set(450);
+      row.proteinG.set(null);
+      row.servings.set(1);
+      const snap = snapshotRow(row);
+
+      row.displayName.set('Túró');
+      row.caloriesKcal.set(1);
+      row.proteinG.set(9);
+      row.servings.set(4);
+      restoreRow(row, snap);
+
+      expect(row.displayName()).toBe('Torta');
+      expect(row.caloriesKcal()).toBe(450);
+      expect(row.proteinG()).toBeNull();
+      expect(row.servings()).toBe(1);
+    });
+
+    it('RECIPE: restores the servings multiplier', () => {
+      const row = createRecipeRow('r1');
+      row.servings.set(2);
+      const snap = snapshotRow(row);
+      row.servings.set(7);
+      restoreRow(row, snap);
+      expect(row.servings()).toBe(2);
+    });
+  });
+
+  it('B-6: NO_QUANTITY is frozen', () => {
+    expect(Object.isFrozen(NO_QUANTITY)).toBeTrue();
   });
 });

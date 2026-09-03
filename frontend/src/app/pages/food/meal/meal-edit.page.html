@@ -116,7 +116,7 @@
   </ion-toolbar>
 </ion-footer>
 
-<ion-modal [isOpen]="editorRow() !== null" (didDismiss)="closeEditor()">
+<ion-modal [isOpen]="editorRow() !== null" (didDismiss)="onEditorDismiss()">
   <ng-template>
     @if (editorRow(); as row) {
       <app-meal-item-editor
@@ -124,8 +124,8 @@
         [title]="rowTitle(row)"
         [foods]="foodRepository.items()"
         [recipes]="recipeRepository.items()"
-        (done)="closeEditor()"
-        (cancelled)="closeEditor()"
+        (done)="commitEditor()"
+        (cancelled)="cancelEditor()"
       ></app-meal-item-editor>
     }
   </ng-template>

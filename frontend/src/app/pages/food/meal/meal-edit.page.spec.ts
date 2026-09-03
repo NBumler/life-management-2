@@ -160,15 +160,89 @@ describe('MealEditPage', () => {
     expect(fixture.componentInstance.editorRow()).toBeNull();
   });
 
-  it('closeEditor(): clears the open row', async () => {
-    await createFixture('new');
-    await fixture.componentInstance.ngOnInit();
-    fixture.componentInstance.addCustomRow();
-    expect(fixture.componentInstance.editorRow()).not.toBeNull();
+  describe('item editor modal — commit vs cancel (B-1)', () => {
+    it('commitEditor(): closes the modal and keeps every edit the modal made', async () => {
+      await createFixture('new');
+      await fixture.componentInstance.ngOnInit();
+      fixture.componentInstance.addCustomRow();
+      const row = fixture.componentInstance.items()[0];
+      if (row.type !== 'CUSTOM') throw new Error('expected CUSTOM');
+      row.displayName.set('Sajt');
+      row.caloriesKcal.set(120);
 
-    fixture.componentInstance.closeEditor();
+      fixture.componentInstance.commitEditor();
 
-    expect(fixture.componentInstance.editorRow()).toBeNull();
+      expect(fixture.componentInstance.editorRow()).toBeNull();
+      expect(fixture.componentInstance.items()).toContain(row);
+      expect(row.displayName()).toBe('Sajt');
+    });
+
+    it('cancelEditor(): a freshly added row that was never savable is dropped from the list', async () => {
+      await createFixture('new');
+      await fixture.componentInstance.ngOnInit();
+      fixture.componentInstance.addCustomRow();
+      const row = fixture.componentInstance.items()[0];
+      if (row.type !== 'CUSTOM') throw new Error('expected CUSTOM');
+      row.displayName.set('elkezdtem gépelni');
+
+      fixture.componentInstance.cancelEditor();
+
+      expect(fixture.componentInstance.editorRow()).toBeNull();
+      expect(fixture.componentInstance.items()).toEqual([]);
+    });
+
+    it('cancelEditor(): after add + cancel, save() is no longer blocked by a leftover incomplete row', async () => {
+      await createFixture('new');
+      recipeRepository.items.set([recipe({ id: 'r1' })]);
+      repository.save.and.resolveTo(meal({ id: 'new-1' }));
+      spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
+      await fixture.componentInstance.ngOnInit();
+      fixture.componentInstance.togglePicker('recipe');
+      fixture.componentInstance.togglePick('r1', []);
+      fixture.componentInstance.confirmPicked();
+      fixture.componentInstance.addCustomRow();
+
+      fixture.componentInstance.cancelEditor();
+      await fixture.componentInstance.save();
+
+      expect(repository.save).toHaveBeenCalled();
+    });
+
+    it('cancelEditor(): edits to an existing, already-valid row are rolled back to the on-open snapshot', async () => {
+      await createFixture('m1');
+      repository.items.set([meal({ items: [customMealItem({ displayName: 'Torta', caloriesKcal: 450, servings: 1 })] })]);
+      await fixture.componentInstance.ngOnInit();
+      const row = fixture.componentInstance.items()[0];
+      if (row.type !== 'CUSTOM') throw new Error('expected CUSTOM');
+
+      fixture.componentInstance.openEditor(row);
+      row.displayName.set('Túró');
+      row.caloriesKcal.set(999);
+      row.servings.set(3);
+      fixture.componentInstance.cancelEditor();
+
+      expect(fixture.componentInstance.items()).toContain(row);
+      expect(row.displayName()).toBe('Torta');
+      expect(row.caloriesKcal()).toBe(450);
+      expect(row.servings()).toBe(1);
+    });
+
+    it('onEditorDismiss(): a backdrop dismiss behaves like cancel; a dismiss after commit/cancel is a no-op', async () => {
+      await createFixture('m1');
+      repository.items.set([meal({ items: [customMealItem({ displayName: 'Torta', caloriesKcal: 450 })] })]);
+      await fixture.componentInstance.ngOnInit();
+      const row = fixture.componentInstance.items()[0];
+      if (row.type !== 'CUSTOM') throw new Error('expected CUSTOM');
+
+      fixture.componentInstance.openEditor(row);
+      row.displayName.set('Túró');
+      fixture.componentInstance.onEditorDismiss();
+      expect(row.displayName()).toBe('Torta');
+      expect(fixture.componentInstance.editorRow()).toBeNull();
+
+      // already closed → no throw, no further change
+      expect(() => fixture.componentInstance.onEditorDismiss()).not.toThrow();
+    });
   });
 
   it('addCustomRow(): appends a blank CUSTOM row and opens the editor on it', async () => {

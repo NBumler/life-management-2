@@ -39,12 +39,15 @@ import {
   FoodItemRow,
   ItemRow,
   RecipeItemRow,
+  RowSnapshot,
   buildRowFromDto,
   createCustomRow,
   createFoodRow,
   createRecipeRow,
   isRowComplete,
+  restoreRow,
   rowNeedsInput,
+  snapshotRow,
   toSaveItem,
 } from './meal-item-row';
 import { computeMealItemEffective } from './meal-item-summary';
@@ -106,6 +109,10 @@ export class MealEditPage implements OnInit {
   readonly showItemErrors = signal(false);
   /** The item row currently open in the editor modal, or `null` when it's closed. */
   readonly editorRow = signal<ItemRow | null>(null);
+  /** Value copy of `editorRow` taken on open, so "Mégse" can put the shared row object back. */
+  private editorSnapshot: RowSnapshot | null = null;
+  /** True when the editor opened on a row that wasn't yet savable — "Mégse" then drops it entirely. */
+  private editorDropOnCancel = false;
 
   readonly form = this.fb.nonNullable.group({
     date: this.fb.nonNullable.control(today(), [Validators.required]),
@@ -247,11 +254,43 @@ export class MealEditPage implements OnInit {
   }
 
   openEditor(row: ItemRow): void {
+    this.editorSnapshot = snapshotRow(row);
+    this.editorDropOnCancel = !isRowComplete(row);
     this.editorRow.set(row);
   }
 
-  closeEditor(): void {
+  /** "Kész" — keep every edit the modal made to the shared row, just close. */
+  commitEditor(): void {
+    this.editorSnapshot = null;
+    this.editorDropOnCancel = false;
     this.editorRow.set(null);
+  }
+
+  /**
+   * "Mégse" / backdrop dismiss — undo the modal's edits: a row that wasn't savable when the editor
+   * opened (a freshly picked/added one) is dropped from the list; any other row is restored to its
+   * on-open snapshot.
+   */
+  cancelEditor(): void {
+    const row = this.editorRow();
+    if (row !== null) {
+      if (this.editorDropOnCancel) {
+        this.removeItem(row);
+      } else if (this.editorSnapshot !== null) {
+        restoreRow(row, this.editorSnapshot);
+      }
+    }
+    this.editorSnapshot = null;
+    this.editorDropOnCancel = false;
+    this.editorRow.set(null);
+  }
+
+  /** `(didDismiss)` fires for a backdrop/swipe close (→ cancel) and also after our own commit/cancel
+   * already nulled `editorRow` (→ no-op). */
+  onEditorDismiss(): void {
+    if (this.editorRow() !== null) {
+      this.cancelEditor();
+    }
   }
 
   onItemsReordered(reordered: ItemRow[]): void {

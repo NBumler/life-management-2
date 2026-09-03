@@ -17,7 +17,8 @@ import { ParsedQuantity, QuantityUnit } from '../../../shared/quantity';
  * `computed()`s in the editor/list stay reactive to it.
  */
 
-export const NO_QUANTITY: ParsedQuantity<QuantityUnit> = { amount: null, unit: null };
+/** Frozen so the shared module-level sentinel can't be mutated in place by a future caller. */
+export const NO_QUANTITY: ParsedQuantity<QuantityUnit> = Object.freeze({ amount: null, unit: null });
 
 export interface RecipeItemRow {
   id: string;
@@ -166,6 +167,65 @@ export function isRowComplete(row: ItemRow): boolean {
     return row.displayName().trim() !== '' && row.caloriesKcal() !== null;
   }
   return true;
+}
+
+/**
+ * A value copy of a row's editable fields, taken when the item editor opens so a "Mégse" can put the
+ * shared row object back exactly as it was (the editor binds straight to the row's signals /
+ * `FormControl`, so without this a cancel would keep every keystroke). `restoreRow` is the inverse.
+ */
+export type RowSnapshot =
+  | { type: 'RECIPE'; servings: number }
+  | { type: 'FOOD'; servings: number; quantity: ParsedQuantity<QuantityUnit> }
+  | {
+      type: 'CUSTOM';
+      servings: number;
+      displayName: string;
+      caloriesKcal: number | null;
+      proteinG: number | null;
+      carbsG: number | null;
+      fatG: number | null;
+      priceHuf: number | null;
+    };
+
+export function snapshotRow(row: ItemRow): RowSnapshot {
+  if (row.type === 'RECIPE') {
+    return { type: 'RECIPE', servings: row.servings() };
+  }
+  if (row.type === 'FOOD') {
+    return { type: 'FOOD', servings: row.servings(), quantity: row.quantityControl.getRawValue() };
+  }
+  return {
+    type: 'CUSTOM',
+    servings: row.servings(),
+    displayName: row.displayName(),
+    caloriesKcal: row.caloriesKcal(),
+    proteinG: row.proteinG(),
+    carbsG: row.carbsG(),
+    fatG: row.fatG(),
+    priceHuf: row.priceHuf(),
+  };
+}
+
+export function restoreRow(row: ItemRow, snapshot: RowSnapshot): void {
+  if (row.type === 'RECIPE' && snapshot.type === 'RECIPE') {
+    row.servings.set(snapshot.servings);
+    return;
+  }
+  if (row.type === 'FOOD' && snapshot.type === 'FOOD') {
+    row.servings.set(snapshot.servings);
+    row.quantityControl.setValue(snapshot.quantity);
+    return;
+  }
+  if (row.type === 'CUSTOM' && snapshot.type === 'CUSTOM') {
+    row.servings.set(snapshot.servings);
+    row.displayName.set(snapshot.displayName);
+    row.caloriesKcal.set(snapshot.caloriesKcal);
+    row.proteinG.set(snapshot.proteinG);
+    row.carbsG.set(snapshot.carbsG);
+    row.fatG.set(snapshot.fatG);
+    row.priceHuf.set(snapshot.priceHuf);
+  }
 }
 
 /**

@@ -1,5 +1,5 @@
 import { DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, computed, viewChild } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import {
   IonButton,
@@ -69,6 +69,8 @@ export class MealItemEditorComponent {
   @Output() readonly done = new EventEmitter<void>();
   @Output() readonly cancelled = new EventEmitter<void>();
 
+  private readonly servingsInput = viewChild<IonInput>('servingsInput');
+
   readonly effective = computed(() => computeMealItemEffective(toSaveItem(this.row, 0), this.recipes, this.foods));
   readonly valid = computed(() => isRowComplete(this.row));
 
@@ -95,16 +97,25 @@ export class MealItemEditorComponent {
     const value = Number(raw);
     if (Number.isFinite(value) && value > 0) {
       this.row.servings.set(value);
+      return;
     }
+    // Rejected (empty / 0 / negative / NaN): the one-way `[value]` binding won't repaint because the
+    // signal didn't change, so put the field's DOM value back to the model explicitly.
+    void this.servingsInput()
+      ?.getInputElement()
+      .then((el) => (el.value = String(this.row.servings())));
   }
 
-  /** `''` / unparseable → null, otherwise the parsed number — for the CUSTOM calorie/macro/price fields. */
+  /**
+   * `''` / unparseable / negative → null, otherwise the parsed number — for the CUSTOM
+   * calorie/macro/price fields (a negative kcal / macro / price is not a real value).
+   */
   parseOptionalNumber(raw: string): number | null {
     if (raw === '') {
       return null;
     }
     const value = Number(raw);
-    return Number.isNaN(value) ? null : value;
+    return Number.isNaN(value) || value < 0 ? null : value;
   }
 
   protected readonly step = SERVINGS_STEP;

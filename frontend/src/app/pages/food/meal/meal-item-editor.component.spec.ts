@@ -64,6 +64,12 @@ describe('MealItemEditorComponent', () => {
       expect(component.parseOptionalNumber('12.5')).toBe(12.5);
       expect(component.parseOptionalNumber('0')).toBe(0);
     });
+
+    it('B-2: rejects a negative value (no negative kcal / macro / price)', () => {
+      component.row = createCustomRow();
+      expect(component.parseOptionalNumber('-50')).toBeNull();
+      expect(component.parseOptionalNumber('-0.1')).toBeNull();
+    });
   });
 
   describe('valid()', () => {
