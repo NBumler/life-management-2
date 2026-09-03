@@ -2,8 +2,10 @@ package hu.bumler.lm2.gear;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,10 +39,17 @@ class PackingTemplateService {
 
 	@Transactional(readOnly = true)
 	List<PackingTemplate> list(UUID userId) {
-		return repository.findByUserIdAndDeletedFalseOrderByNameAsc(userId).stream()
+		List<PackingTemplateEntity> templates = repository.findByUserIdAndDeletedFalseOrderByNameAsc(userId);
+		if (templates.isEmpty()) {
+			return List.of();
+		}
+		List<UUID> templateIds = templates.stream().map(PackingTemplateEntity::getId).toList();
+		Map<UUID, Long> liveItemCounts = itemRepository.countLiveItemsByTemplateIds(templateIds).stream()
+				.collect(Collectors.toMap(PackingTemplateItemCount::templateId, PackingTemplateItemCount::count));
+		return templates.stream()
 				.map(entity -> {
 					PackingTemplate dto = mapper.toDto(entity);
-					dto.setItemCount((int) itemRepository.countByTemplateIdAndDeletedFalse(entity.getId()));
+					dto.setItemCount(liveItemCounts.getOrDefault(entity.getId(), 0L).intValue());
 					return dto;
 				})
 				.toList();

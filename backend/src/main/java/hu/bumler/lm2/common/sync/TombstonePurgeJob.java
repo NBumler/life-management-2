@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -36,6 +36,11 @@ import org.springframework.stereotype.Component;
  *
  * <p>Deliberately not {@code @Transactional}: each {@code DELETE} autocommits on its own connection,
  * so a foreign-key failure on one table is caught in isolation without poisoning the sibling deletes.
+ *
+ * <p>Single-instance assumption: there is no distributed lock (ShedLock etc.). Two concurrent runs
+ * would be harmless anyway — every {@code DELETE} is idempotent and {@link #advanceHorizon()} only
+ * ever moves the horizon forward ({@code GREATEST}) — but the project runs one backend instance and
+ * this job is not written for a multi-instance deployment.
  */
 @Component
 class TombstonePurgeJob {
@@ -45,8 +50,12 @@ class TombstonePurgeJob {
 	/** documentation/Architektúra/Backend-offline first.md §"Tombstone-retenció" — the "legalább 180 nap". */
 	static final int RETENTION_DAYS = 180;
 
-	/** Table names come from the Postgres catalog, not from user input; this is a defence-in-depth guard. */
-	private static final Pattern SAFE_TABLE_NAME = Pattern.compile("[a-z_]+");
+	/**
+	 * Table names come from the Postgres catalog, not from user input; this is a defence-in-depth guard
+	 * before the name is interpolated into the {@code DELETE}. Matches lowercase snake_case with digits
+	 * (e.g. a hypothetical {@code v2_foo}); anything else aborts the run rather than risking injection.
+	 */
+	private static final Pattern SAFE_TABLE_NAME = Pattern.compile("[a-z0-9_]+");
 
 	private final JdbcTemplate jdbcTemplate;
 
@@ -84,8 +93,11 @@ class TombstonePurgeJob {
 					}
 					it.remove();
 					progressed = true;
-				} catch (DataAccessException retryOnNextPass) {
-					// A not-yet-swept child row still references this one; retry once the child is gone.
+				} catch (DataIntegrityViolationException retryOnNextPass) {
+					// A not-yet-swept child row still references this one (FK violation); retry once the
+					// child is gone. Any other DataAccessException (lock timeout, lost connection, …) is
+					// NOT swallowed here — it propagates and fails the run instead of being mis-logged as
+					// "could not be drained (foreign-key order)".
 				}
 			}
 			if (!progressed) {
@@ -109,7 +121,16 @@ class TombstonePurgeJob {
 		jdbcTemplate.update(
 				"UPDATE sync_meta SET tombstone_horizon = GREATEST(tombstone_horizon, now() - (? * interval '1 day'))",
 				RETENTION_DAYS);
-		return jdbcTemplate.queryForObject("SELECT tombstone_horizon FROM sync_meta", OffsetDateTime.class);
+		// V1__common_infrastructure.sql seeds exactly one sync_meta row and nothing else inserts, so
+		// this is defensive: an empty table would otherwise abort the run with EmptyResultDataAccessException.
+		List<OffsetDateTime> horizons = jdbcTemplate.queryForList(
+				"SELECT tombstone_horizon FROM sync_meta ORDER BY tombstone_horizon DESC LIMIT 1", OffsetDateTime.class);
+		if (horizons.isEmpty()) {
+			OffsetDateTime fallback = OffsetDateTime.now().minusDays(RETENTION_DAYS);
+			log.warn("Tombstone purge: sync_meta has no row; falling back to a computed horizon of {}.", fallback);
+			return fallback;
+		}
+		return horizons.get(0);
 	}
 
 	private List<String> discoverTombstoneTables() {

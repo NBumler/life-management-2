@@ -42,6 +42,7 @@ class PackingTemplateServiceTest {
 		service = new PackingTemplateService(repository, itemRepository, gearItemRepository, new PackingTemplateMapper(),
 				new PackingTemplateItemMapper());
 		when(repository.saveAndFlush(any())).thenAnswer(inv -> inv.getArgument(0));
+		when(itemRepository.countLiveItemsByTemplateIds(any())).thenReturn(List.of());
 	}
 
 	private static PackingTemplateEntity template(UUID id, UUID userId) {
@@ -329,13 +330,14 @@ class PackingTemplateServiceTest {
 	}
 
 	@Test
-	void list_populatesTheLiveItemCountPerTemplate() {
+	void list_populatesTheLiveItemCountPerTemplate_fromOneGroupedQuery() {
 		UUID userId = UUID.randomUUID();
 		PackingTemplateEntity full = template(UUID.randomUUID(), userId);
 		PackingTemplateEntity empty = template(UUID.randomUUID(), userId);
 		when(repository.findByUserIdAndDeletedFalseOrderByNameAsc(userId)).thenReturn(List.of(full, empty));
-		when(itemRepository.countByTemplateIdAndDeletedFalse(full.getId())).thenReturn(3L);
-		when(itemRepository.countByTemplateIdAndDeletedFalse(empty.getId())).thenReturn(0L);
+		// Only templates with live items come back from the grouped count; the empty one is absent → 0.
+		when(itemRepository.countLiveItemsByTemplateIds(List.of(full.getId(), empty.getId())))
+				.thenReturn(List.of(new PackingTemplateItemCount(full.getId(), 3L)));
 
 		List<PackingTemplate> result = service.list(userId);
 

@@ -17,6 +17,9 @@ import org.springframework.transaction.annotation.Transactional;
  *
  * <p>Plain CRUD endpoints need no row here at all — they are naturally idempotent (client-supplied
  * UUID upsert, idempotent soft delete), so there is nothing to prune for them.
+ *
+ * <p>Single-instance assumption: no distributed lock (ShedLock etc.). A concurrent double-run would
+ * be harmless (the delete is idempotent), but the project runs one backend instance.
  */
 @Component
 class IdempotencyKeyPruneJob {
