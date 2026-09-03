@@ -3,3 +3,7 @@ lm2:
     secret: test-only-secret-do-not-use-in-prod-0123456789
   admin:
     api-key: test-admin-api-key
+  sync:
+    # Disable the scheduled trigger under test; TombstonePurgeJobTest drives the job directly.
+    tombstone-purge:
+      cron: "-"
