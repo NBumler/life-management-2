@@ -375,8 +375,14 @@ export class SqliteStorageBackend implements StorageBackend {
   }
 
   async listPackingTemplates(): Promise<PackingTemplate[]> {
-    const rows = await this.db.query<PackingTemplateRow>('SELECT * FROM packing_template WHERE deleted = 0 ORDER BY name COLLATE NOCASE');
-    return rows.map(packingTemplateRowToDto);
+    const rows = await this.db.query<PackingTemplateRow & { item_count: number }>(
+      `SELECT t.*,
+         (SELECT COUNT(*) FROM packing_template_item i WHERE i.template_id = t.id AND i.deleted = 0) AS item_count
+       FROM packing_template t
+       WHERE t.deleted = 0
+       ORDER BY t.name COLLATE NOCASE`,
+    );
+    return rows.map((row) => ({ ...packingTemplateRowToDto(row), itemCount: row.item_count }));
   }
 
   async getPackingTemplateDetail(id: string): Promise<PackingTemplateDetail> {

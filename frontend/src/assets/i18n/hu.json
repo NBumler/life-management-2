@@ -421,6 +421,7 @@
       "NAME": "Név",
       "NOTES": "Megjegyzés",
       "EMPTY": "Még nincs felvett sablon.",
+      "ITEM_COUNT": "{{count}} eszköz",
       "ITEMS_EMPTY": "Nincs eszköz a sablonban.",
       "ITEM_PICKER_ADD": "Eszköz hozzáadása",
       "ITEM_PICKER_CLOSE": "Bezárás",

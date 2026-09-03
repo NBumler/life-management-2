@@ -17,6 +17,7 @@ import hu.bumler.lm2.common.exception.UniqueViolationException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -325,5 +326,20 @@ class PackingTemplateServiceTest {
 		List<PackingTemplate> result = service.list(userId);
 
 		assertThat(result).hasSize(2).extracting(PackingTemplate::getId).containsExactly(t1.getId(), t2.getId());
+	}
+
+	@Test
+	void list_populatesTheLiveItemCountPerTemplate() {
+		UUID userId = UUID.randomUUID();
+		PackingTemplateEntity full = template(UUID.randomUUID(), userId);
+		PackingTemplateEntity empty = template(UUID.randomUUID(), userId);
+		when(repository.findByUserIdAndDeletedFalseOrderByNameAsc(userId)).thenReturn(List.of(full, empty));
+		when(itemRepository.countByTemplateIdAndDeletedFalse(full.getId())).thenReturn(3L);
+		when(itemRepository.countByTemplateIdAndDeletedFalse(empty.getId())).thenReturn(0L);
+
+		List<PackingTemplate> result = service.list(userId);
+
+		assertThat(result).extracting(PackingTemplate::getId, PackingTemplate::getItemCount)
+				.containsExactly(tuple(full.getId(), 3), tuple(empty.getId(), 0));
 	}
 }

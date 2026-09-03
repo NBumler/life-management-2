@@ -58,6 +58,26 @@ describe('PackingTemplateRepository', () => {
     expect(repository.templates().map((t) => t.id)).toEqual(['new-1']);
   });
 
+  it('save(): reflects the saved tree\'s live item count on the refreshed summary row (backlog/026)', async () => {
+    storage.listPackingTemplates.and.resolveTo([]);
+    await repository.load();
+    storage.savePackingTemplate.and.resolveTo(
+      detail({
+        id: 'new-1',
+        name: 'Bundazsák',
+        items: [
+          { id: 'i1', templateId: 'new-1', gearItemId: 'g1', sortOrder: 0, deleted: false },
+          { id: 'i2', templateId: 'new-1', gearItemId: 'g2', sortOrder: 1, deleted: false },
+          { id: 'i3', templateId: 'new-1', gearItemId: 'g3', sortOrder: 2, deleted: true }, // tombstone, not counted
+        ],
+      }),
+    );
+
+    await repository.save({ name: 'Bundazsák', notes: null, items: [] });
+
+    expect(repository.templates()[0].itemCount).toBe(2);
+  });
+
   it('save(): throws PackingTemplateNameConflictError before writing, when another live template has the same normalized name', async () => {
     storage.listPackingTemplates.and.resolveTo([template({ id: 'existing', name: 'Tél' })]);
     await repository.load();

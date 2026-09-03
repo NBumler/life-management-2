@@ -104,6 +104,7 @@ export class PackingTemplateRepository {
       id: saved.id,
       name: saved.name,
       notes: saved.notes,
+      itemCount: saved.items.filter((item) => !item.deleted).length,
       deleted: saved.deleted,
       deletedAt: saved.deletedAt,
       createdAt: saved.createdAt,

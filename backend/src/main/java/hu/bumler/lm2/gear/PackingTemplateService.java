@@ -37,7 +37,13 @@ class PackingTemplateService {
 
 	@Transactional(readOnly = true)
 	List<PackingTemplate> list(UUID userId) {
-		return repository.findByUserIdAndDeletedFalseOrderByNameAsc(userId).stream().map(mapper::toDto).toList();
+		return repository.findByUserIdAndDeletedFalseOrderByNameAsc(userId).stream()
+				.map(entity -> {
+					PackingTemplate dto = mapper.toDto(entity);
+					dto.setItemCount((int) itemRepository.countByTemplateIdAndDeletedFalse(entity.getId()));
+					return dto;
+				})
+				.toList();
 	}
 
 	@Transactional(readOnly = true)

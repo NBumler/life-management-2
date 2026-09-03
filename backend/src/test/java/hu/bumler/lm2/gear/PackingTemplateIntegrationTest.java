@@ -14,6 +14,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import hu.bumler.lm2.TestcontainersConfiguration;
@@ -21,10 +22,12 @@ import hu.bumler.lm2.api.model.AdminCreateUserRequest;
 import hu.bumler.lm2.api.model.AuthTokens;
 import hu.bumler.lm2.api.model.GearItem;
 import hu.bumler.lm2.api.model.LoginRequest;
+import hu.bumler.lm2.api.model.PackingTemplate;
 import hu.bumler.lm2.api.model.PackingTemplateDetail;
 import hu.bumler.lm2.api.model.PackingTemplateItem;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -93,6 +96,33 @@ class PackingTemplateIntegrationTest {
 		assertThat(itemById(after, itemC).getDeleted()).isFalse();
 		assertThat(itemById(after, itemC).getGearItemId()).isEqualTo(gearC);
 		assertThat(itemById(after, itemB).getDeleted()).isTrue();
+	}
+
+	@Test
+	void list_reportsLiveItemCountPerRow_ignoringTombstonedItems() throws Exception {
+		String token = registerAndLogin("template-item-count");
+		UUID gearA = createGearItem(token, "Kötél");
+		UUID gearB = createGearItem(token, "Beülő");
+
+		UUID withItems = UUID.randomUUID();
+		UUID itemA = UUID.randomUUID();
+		UUID itemB = UUID.randomUUID();
+		createTemplate(token, new PackingTemplateDetail(withItems, "Van benne", false,
+				List.of(new PackingTemplateItem(itemA, withItems, gearA, 0, false),
+						new PackingTemplateItem(itemB, withItems, gearB, 1, false)))).andExpect(status().isOk());
+		// Drop one item via the tree PUT — it becomes a tombstone and must not be counted.
+		putTemplate(token, withItems, new PackingTemplateDetail(withItems, "Van benne", false,
+				List.of(new PackingTemplateItem(itemA, withItems, gearA, 0, false)))).andExpect(status().isOk());
+
+		createTemplate(token, new PackingTemplateDetail(UUID.randomUUID(), "Üres", false, List.of())).andExpect(status().isOk());
+
+		MvcResult result = mockMvc.perform(get("/api/packing-templates").header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+				.andExpect(status().isOk()).andReturn();
+		List<PackingTemplate> list = objectMapper.readValue(
+				result.getResponse().getContentAsString(), new TypeReference<List<PackingTemplate>>() { });
+
+		assertThat(list).extracting(PackingTemplate::getName, PackingTemplate::getItemCount)
+				.contains(tuple("Van benne", 1), tuple("Üres", 0));
 	}
 
 	@Test

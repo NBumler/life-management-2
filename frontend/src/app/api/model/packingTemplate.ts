@@ -16,6 +16,10 @@ export interface PackingTemplate {
     id: string;
     name: string;
     notes?: string | null;
+    /**
+     * documentation/Subfeatures/Sablonok.md — count of live PackingTemplateItem rows on this template, for the per-row display in the list view. Derived, read-only; not populated on the sync-changes feed.
+     */
+    readonly itemCount?: number;
     deleted: boolean;
     readonly deletedAt?: string | null;
     readonly createdAt?: string;

@@ -421,6 +421,7 @@
       "NAME": "Name",
       "NOTES": "Notes",
       "EMPTY": "No templates yet.",
+      "ITEM_COUNT": "{{count}} item(s)",
       "ITEMS_EMPTY": "No items in this template.",
       "ITEM_PICKER_ADD": "Add item",
       "ITEM_PICKER_CLOSE": "Close",

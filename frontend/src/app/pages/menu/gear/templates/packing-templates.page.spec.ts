@@ -64,4 +64,12 @@ describe('PackingTemplatesPage', () => {
   it('highlightedId() is null when there is no `highlight` query param', () => {
     expect(fixture.componentInstance.highlightedId()).toBeNull();
   });
+
+  it('documentation/Subfeatures/Sablonok.md: each row renders the per-template item count (backlog/026)', () => {
+    repository.templates.set([template({ id: 't1', name: 'Tél', itemCount: 4 })]);
+    fixture.detectChanges();
+
+    // provideTranslateService() has no catalog loaded, so the pipe echoes the key — enough to prove the row binds it.
+    expect(fixture.nativeElement.textContent).toContain('GEAR.TEMPLATES.ITEM_COUNT');
+  });
 });

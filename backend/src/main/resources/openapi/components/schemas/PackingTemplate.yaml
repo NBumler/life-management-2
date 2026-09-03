@@ -14,6 +14,14 @@ properties:
   notes:
     type: string
     nullable: true
+  itemCount:
+    type: integer
+    format: int32
+    description: >-
+      documentation/Subfeatures/Sablonok.md — count of live PackingTemplateItem rows on this
+      template, for the per-row display in the list view. Derived, read-only; not populated on the
+      sync-changes feed.
+    readOnly: true
   deleted:
     type: boolean
   deletedAt:

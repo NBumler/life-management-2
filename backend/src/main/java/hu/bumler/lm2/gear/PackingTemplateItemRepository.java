@@ -12,6 +12,9 @@ interface PackingTemplateItemRepository extends JpaRepository<PackingTemplateIte
 
 	List<PackingTemplateItemEntity> findByTemplateIdAndDeletedFalse(UUID templateId);
 
+	/** documentation/Subfeatures/Sablonok.md — per-row live item count in the template list. */
+	long countByTemplateIdAndDeletedFalse(UUID templateId);
+
 	/** documentation/Subfeatures/Eszközök.md — GearItem delete cascade. */
 	List<PackingTemplateItemEntity> findByGearItemIdAndUserIdAndDeletedFalse(UUID gearItemId, UUID userId);
 }
