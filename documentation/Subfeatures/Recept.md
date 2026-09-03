@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-03
-verifikalt_commit: b9d7577
+verifikalt_commit: bdf5680
 ---
 
 # Recept
@@ -118,7 +118,7 @@ Backend-offline: helyi ellenőrzés is.
 #### CRUD / törlés
 
 - Lista, részletek, létrehozás, szerkesztés, soft delete — mind offline-képes. Soha nem szinkronizált helyi draft → helyi hard remove + outbox tisztítás — [[Backend-offline first]].
-- Törléskor a hivatkozó [[Étkezés]] / [[Recept forrású étkezés]] rekordok **cascade** soft delete-et kapnak (backend `MealCascade` + kliens drain/pull `mealItemCascadeTombstoneTasks`), shared katalógus → **minden user** érintett étkezésére. A megerősítő dialógus jelenleg egy sima név-alapú megerősítés; a hivatkozó rekordok tételes felsorolása és a több-felhasználós hatás jelzése tervezett: `backlog/009-katalogus-recept-etkezes-torles-megerosito-nem-sorolja-fel-a-cas.md`. Nincs undelete UI. Név-egyediség csak élő sorokra.
+- Törléskor a hivatkozó [[Étkezés]] / [[Recept forrású étkezés]] rekordok **cascade** soft delete-et kapnak (backend `MealCascade` + kliens drain/pull `mealItemCascadeTombstoneTasks`), shared katalógus → **minden user** érintett étkezésére. A megerősítő dialógus natívon kiírja a hivatkozó étkezés-tételek darabszámát (`countRecipeReferences` a helyi `meal_item` sorokból; `DELETE_CONFIRM_MESSAGE_WITH_REFS`), és mindig jelzi, hogy közös katalóguselem törlése **minden felhasználó** étkezéseit érinti; web-en / hivatkozás nélkül a generikus szöveg. Nincs undelete UI. Név-egyediség csak élő sorokra.
 
 #### Kapcsolat étkezéssel
 

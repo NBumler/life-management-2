@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-03
-verifikalt_commit: b56be9c
+verifikalt_commit: bdf5680
 ---
 
 # Élelmiszerek
@@ -54,7 +54,7 @@ A `store` jelenleg szabad szöveg a `Food` soron; külön bolt-entitásra bontá
 #### Törlés (soft delete)
 
 - Soft delete + megerősítés — [[Backend-offline first]] (tombstone, ne 404). Soha nem szinkronizált helyi draft → helyi hard remove + outbox tisztítás.
-- A megerősítő dialógus **jelenleg** egy generikus közös-katalógus figyelmeztetést mutat („más felhasználók tárolását, receptjeit, bevásárlólistáit és étkezéseit is érintheti"). A konkrét hivatkozás-lista tételes felsorolása még nincs bekötve — tervezett: `backlog/009-katalogus-recept-etkezes-torles-megerosito-nem-sorolja-fel-a-cas.md`.
+- A megerősítő dialógus felsorolja a cascade-elt hivatkozásokat, ha ismertek: a `countFoodReferences` a helyi store-ból megszámolja a tételre hivatkozó élő `stored_food` / `recipe_ingredient` / `meal_item` / `shopping_list_item` sorokat, és a `DELETE_CONFIRM_MESSAGE_WITH_REFS` szöveg fix sorrendben kiírja a nem-üres csoportokat („N tárolási tétel, M recept-hozzávaló, …"). Ha nincs hivatkozás, vagy web-en (nincs helyi store — a lekérdezés `null`), a generikus közös-katalógus figyelmeztetés jelenik meg. Mindkét szöveg jelzi, hogy közös katalóguselem törlése **minden felhasználó** adatait érinti.
 - Törléskor a hivatkozó elemek is soft delete: a cascade a `stored_food`, `recipe_ingredient`, `meal_item` és `shopping_list_item` sorokra fut, majd a cascade után 0 élő tétellel maradó étkezés is soft delete-elődik (a bevásárlólista üresen is megmarad — [[Étkezés]], [[Bevásárlás]]). A **helyi** (offline) cascade ugyanezt a négy táblát + az üresre fogyott étkezéseket kezeli, tükrözve a szerveroldali cascade-et; a drain utáni delta pull soronként megerősíti.
 - **Shared katalógus:** a cascade **minden user** hivatkozó adataira vonatkozik; a megerősítő szöveg jelezze, hogy közös katalóguselem törlése más felhasználók adatait is érintheti.
 - Duplikáció-ellenőrzés csak **élő** (`deleted = false`) sorokra. Nincs undelete UI.
@@ -72,7 +72,7 @@ Az egész Élelmiszerek feature (CRUD, keresés, OFF sync a gyerekekben) **backe
 - Belépés a **Kaja** tabon.
 - Lista + kereső; tétel → részletek / szerkesztés.
 - Hozzáadás belépő: [[Élelmiszer hozzáadása]] (és/vagy FAB — vonalkód: [[Vonalkódos élelmiszer beolvasás]]).
-- Törlés: megerősítő dialógus (közös-katalógus figyelmeztetés; a tételes hivatkozás-lista tervezett — `backlog/009-katalogus-recept-etkezes-torles-megerosito-nem-sorolja-fel-a-cas.md`).
+- Törlés: megerősítő dialógus — natívon felsorolja a hivatkozó tételeket (tárolás, recept-hozzávaló, étkezés-tétel, bevásárlólista-tétel darabszámmal), web-en / hivatkozás nélkül a generikus közös-katalógus figyelmeztetés.
 
 ### Megjegyzések
 
@@ -90,7 +90,7 @@ Nincs nyitott kérdés.
 
 #### Backend-offline
 
-- Katalógus CRUD, keresés, duplikáció-ellenőrzés: helyi adatokból (Backend-offline / Full-offline). Listák `deleted = false`. A helyi törlés-cascade a szerveroldalival azonos négy táblát (`stored_food`, `recipe_ingredient`, `meal_item`, `shopping_list_item`) + az üresre fogyott étkezéseket fedi (lásd „Törlés"); tételes cascade-előnézet UI nincs.
+- Katalógus CRUD, keresés, duplikáció-ellenőrzés: helyi adatokból (Backend-offline / Full-offline). Listák `deleted = false`. A helyi törlés-cascade a szerveroldalival azonos négy táblát (`stored_food`, `recipe_ingredient`, `meal_item`, `shopping_list_item`) + az üresre fogyott étkezéseket fedi (lásd „Törlés"). A törlés-megerősítő tételes hivatkozás-listája szintén a helyi store-ból számol; web-en (nincs helyi store) a generikus szöveg jelenik meg.
 - Mutációk outboxba; kliens UUID. OFF sync a gyerek specekben.
 - Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
 

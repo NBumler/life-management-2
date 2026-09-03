@@ -14,6 +14,14 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-03 — #009** Törlés-megerősítő felsorolja a cascade-hivatkozásokat (Food + Recept). A
+  közös katalógus Food / Recept törlés-megerősítő dialógusa eddig csak generikus szöveget mutatott
+  (a `DELETE_CONFIRM_MESSAGE_WITH_REFS` kulcs használatlan volt, a Recept-é a több-user hatást sem
+  jelezte). Új `StorageBackend.countFood/RecipeReferences` (Sqlite: a hivatkozó élő sorok COUNT-ja;
+  Http: `null`) + `pages/food/shared-catalog-delete-confirm.ts` helper: natívon felsorolja a
+  hivatkozó tételeket darabszámmal, web-en / hivatkozás nélkül a generikus, minden-felhasználós
+  figyelmeztetés. Érintett specek: [[Élelmiszerek]], [[Recept]], [[Étkezés]].
+  Kód: `core/storage/*`, `core/data/{food,recipe}.repository.ts`, `pages/food/*`, `assets/i18n/*`.
 - **2026-09-03 — #010** Offline Food-törlés helyi cascade a `meal_item` + `shopping_list_item`
   sorokra. A `SqliteStorageBackend.deleteFood` eddig csak `stored_food` + `recipe_ingredient`
   sorokat cascade-elt helyben; a backend `FoodService.delete` mind a négy hivatkozó táblát kezeli,

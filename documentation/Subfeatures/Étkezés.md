@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-03
-verifikalt_commit: b9d7577
+verifikalt_commit: bdf5680
 ---
 
 # Étkezés
@@ -85,7 +85,7 @@ Ugyanaz a ±5% zöld a saját célra; **piros nincs**:
 
 #### Élő hivatkozás (recept / élelmiszer)
 
-ID + mennyiség/szorzó; tápanyag az aktuális katalógusból. Katalógus-tétel törlésekor a hivatkozó étkezés-tételek **cascade** soft delete-et kapnak, és a most üressé vált étkezés is soft delete-elődik ([[Recept]], [[Élelmiszerek]]). A törlés-megerősítő jelenleg nem sorolja fel a hivatkozó étkezéseket — tervezett: `backlog/009-katalogus-recept-etkezes-torles-megerosito-nem-sorolja-fel-a-cas.md`.
+ID + mennyiség/szorzó; tápanyag az aktuális katalógusból. Katalógus-tétel törlésekor a hivatkozó étkezés-tételek **cascade** soft delete-et kapnak, és a most üressé vált étkezés is soft delete-elődik ([[Recept]], [[Élelmiszerek]]). Az élelmiszer- és recept-törlés megerősítő dialógusa natívon kiírja a hivatkozó étkezés-tételek darabszámát („N étkezés-tétel"), és jelzi a több-felhasználós hatást (web-en / hivatkozás nélkül a generikus szöveg).
 
 #### Készlet
 
