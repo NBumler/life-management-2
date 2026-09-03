@@ -44,6 +44,11 @@
           labelPlacement="stacked"
         ></ion-input>
       </ion-item>
+      @if (form.controls.currentWeightKg.touched && form.controls.currentWeightKg.errors?.['oneDecimalPlace']) {
+        <ion-text color="danger">
+          <p class="ion-padding-start">{{ 'PROFILE.VALIDATION_ONE_DECIMAL' | translate }}</p>
+        </ion-text>
+      }
 
       <ion-item>
         <ion-select formControlName="goal" [label]="'PROFILE.GOAL' | translate" labelPlacement="stacked">
@@ -115,6 +120,11 @@
             [label]="'PROFILE.WEIGHT_KG' | translate"
             labelPlacement="stacked"
           ></ion-input>
+          @if (entryForm.controls.weightKg.touched && entryForm.controls.weightKg.errors?.['oneDecimalPlace']) {
+            <ion-text color="danger">
+              <p>{{ 'PROFILE.VALIDATION_ONE_DECIMAL' | translate }}</p>
+            </ion-text>
+          }
           <div class="entry-form-actions">
             <ion-button fill="clear" type="button" (click)="cancelEntryEdit()">{{ 'COMMON.CANCEL' | translate }}</ion-button>
             <ion-button type="submit">{{ 'COMMON.SAVE' | translate }}</ion-button>

@@ -35,6 +35,23 @@ function kgPerWeekRequiredValidator(control: AbstractControl): ValidationErrors 
   return required && (kgPerWeek === null || kgPerWeek === undefined) ? { kgPerWeekRequired: true } : null;
 }
 
+/**
+ * documentation/Features/Profile.md: the weight fields map to `numeric(5,1)` columns. Reject more than
+ * one decimal place on the client instead of leaning on the DB to truncate silently.
+ */
+function oneDecimalPlaceValidator(control: AbstractControl): ValidationErrors | null {
+  const value = control.value as number | string | null;
+  if (value === null || value === undefined || value === '') {
+    return null;
+  }
+  const numeric = typeof value === 'number' ? value : Number(value);
+  if (Number.isNaN(numeric)) {
+    return null;
+  }
+  const scaled = numeric * 10;
+  return Math.abs(scaled - Math.round(scaled)) < 1e-9 ? null : { oneDecimalPlace: true };
+}
+
 /** documentation/Features/Profile.md: one form, no live TDEE preview, plus the weight history CRUD list. */
 @Component({
   selector: 'app-profile',
@@ -78,7 +95,7 @@ export class ProfilePage implements OnInit {
       birthDate: this.fb.control<string | null>(null),
       sex: this.fb.control<UserProfile.SexEnum | null>(null),
       heightCm: this.fb.control<number | null>(null, [Validators.min(100), Validators.max(250)]),
-      currentWeightKg: this.fb.control<number | null>(null, [Validators.min(30), Validators.max(300)]),
+      currentWeightKg: this.fb.control<number | null>(null, [Validators.min(30), Validators.max(300), oneDecimalPlaceValidator]),
       goal: this.fb.control<UserProfile.GoalEnum | null>(null),
       kgPerWeek: this.fb.control<number | null>(null, [Validators.min(0.1), Validators.max(1.5)]),
       grossMonthlySalaryHuf: this.fb.control<number | null>(null, [Validators.min(0)]),
@@ -95,7 +112,7 @@ export class ProfilePage implements OnInit {
   readonly entryEditingId = signal<string | 'new' | null>(null);
   readonly entryForm = this.fb.group({
     recordedAt: this.fb.nonNullable.control<string>(nowForDatetimeLocal(), [Validators.required]),
-    weightKg: this.fb.control<number | null>(null, [Validators.required, Validators.min(30), Validators.max(300)]),
+    weightKg: this.fb.control<number | null>(null, [Validators.required, Validators.min(30), Validators.max(300), oneDecimalPlaceValidator]),
   });
 
   async ngOnInit(): Promise<void> {

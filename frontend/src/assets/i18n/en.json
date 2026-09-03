@@ -353,6 +353,7 @@
     "GOAL_WEIGHT_GAIN": "Weight gain",
     "KG_PER_WEEK": "Target rate (kg/week)",
     "VALIDATION_KG_PER_WEEK_REQUIRED": "Required when the goal is fat loss or weight gain.",
+    "VALIDATION_ONE_DECIMAL": "At most one decimal place is allowed.",
     "GROSS_MONTHLY_SALARY_HUF": "Gross monthly salary (HUF)",
     "SAVE_SUCCESS": "Saved.",
     "WEIGHT_HISTORY_TITLE": "Weight history",

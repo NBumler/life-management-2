@@ -353,6 +353,7 @@
     "GOAL_WEIGHT_GAIN": "Tömegnövelés",
     "KG_PER_WEEK": "Cél ütem (kg/hét)",
     "VALIDATION_KG_PER_WEEK_REQUIRED": "Fogyás vagy tömegnövelés célnál kötelező megadni a heti ütemet.",
+    "VALIDATION_ONE_DECIMAL": "Legfeljebb egy tizedesjegy adható meg.",
     "GROSS_MONTHLY_SALARY_HUF": "Bruttó havi fizetés (Ft)",
     "SAVE_SUCCESS": "Mentve.",
     "WEIGHT_HISTORY_TITLE": "Súlytörténet",
