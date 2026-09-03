@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: 9a41447
+verifikalva: 2026-09-03
+verifikalt_commit: b8699cf
 ---
 
 # Backend
@@ -123,7 +123,7 @@ backend/
 - **Közös oszlopok** minden szinkronizált táblán ([[Backend-offline first]]): `id uuid` PK (**kliens adja**), `created_at`, `updated_at` (`timestamptz`), `deleted boolean not null default false`, `deleted_at`, user-owned táblán `user_id uuid not null`.
 - **`updated_at` DB triggerből** (`BEFORE INSERT OR UPDATE` → `now()`): a cascade soft delete-ek bulk `UPDATE`-jeinél is kötelezően frissül. Ez a [[Backend-offline first]] „kritikus követelmény"-e — alkalmazásrétegben egy elfelejtett bulk update csendben kitüntetné a sort a delta pullból, és a többi eszköz szellemsorokat látna. JPA oldalon a mező `@Generated(INSERT, UPDATE)`, hogy Hibernate visszaolvassa a szerver által adott értéket.
 - **Indexek:** `(user_id, updated_at)` a user-owned táblákon (a delta pull szűrése), FK-kra index, és a [[Névegyediség]] hatóköre szerinti partial unique indexek (`WHERE deleted = false`) a normalizált oszlopon.
-- **Tombstone:** a `sync_meta.tombstone_horizon` (`now() - interval '180 days'`) olvasása és a `410 CURSOR_TOO_OLD` ág megvan; a **fizikai törlést végző ütemezett cleanup / horizon-frissítő job jelenleg hiányzik** — tervezett: `backlog/056-backend-tombstone-fizikai-torles-180-nap-utemezett-job-hianyzik.md`.
+- **Tombstone:** a `sync_meta.tombstone_horizon` olvasása és a `410 CURSOR_TOO_OLD` ág mellett egy napi ütemezett job (`common/sync/TombstonePurgeJob` — `@Scheduled` cron `0 30 3 * * *`, a `common/SchedulingConfig` `@EnableScheduling`-jével; a `lm2.sync.tombstone-purge.cron` property-vel felülírható, `-`-ral kikapcsolható) a horizontot `GREATEST(tombstone_horizon, now() - 180 nap)`-ra tolja — **monoton, sosem visszafelé** —, majd fizikailag törli a horizontnál régebbi `deleted_at`-ú sorokat. A söprendő táblák a séma-katalógusból jönnek (minden `deleted_at` oszlopos `BASE TABLE`), nem hardkódolt lista, ugyanúgy, ahogy a `SyncChangesViewCompletenessTest` felfedezi a `deleted` oszlopos táblákat. Mivel a szinkronizált táblák FK-jai **nem** `ON DELETE CASCADE`-ek, a törlés több körben fut: a még le nem söpört gyerekre hivatkozó sor a következő körre marad, és mivel a cascade soft delete a szülőt és a gyerekeket egy tranzakcióban tombstone-olja, a körök mindig konvergálnak. **Nem tranzakcionális:** minden `DELETE` külön commitál a saját connectionjén, így egy FK-ütközés izoláltan elkapódik, nem rontja el a testvér törléseket.
 
 #### Névnormalizálás — kliens–szerver paritás
 

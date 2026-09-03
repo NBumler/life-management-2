@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: 9a41447
+verifikalva: 2026-09-03
+verifikalt_commit: b8699cf
 ---
 
 # Backend-offline first
@@ -548,7 +548,7 @@ Válasz:
 - **Rendezés:** `(updated_at, id)` növekvő; a `nextCursor` az utolsó kiadott sor kulcsa. Tombstone-nál a `data` lehet `null`.
 - A rendezés **stabil és teljes** kell legyen: az `(updated_at, id)` páros egyedi, így lapozásnál egyetlen sor sem maradhat ki és nem jöhet kétszer. A `hasMore` akkor `true`, ha a `limit`-en túl van még sor.
 - **Elavult cursor:** `410` + `{ "code": "CURSOR_TOO_OLD" }`.
-- **Tombstone-retenció:** legalább **180 nap** a `deleted_at`-tól; ennél régebbi tombstone fizikailag is törölhető.
+- **Tombstone-retenció:** **180 nap** a `deleted_at`-tól. Egy napi ütemezett backend job (`common/sync/TombstonePurgeJob`) a `sync_meta.tombstone_horizon`-t `now() - 180 nap`-ra tolja — monoton, sosem visszafelé —, majd fizikailag törli az ennél régebbi `deleted_at`-ú tombstone-okat minden szinkronizált táblából (a táblalista a séma-katalógusból, a nem-cascade FK-k miatt több körben). Implementációs részletek: [[Backend]] „Séma és migráció → Tombstone".
 - A queue által visszajátszott `POST` / `PUT` / `DELETE` továbbra is a **normál** üzleti végpontokra megy — külön „write sync API” nincs, csak ez az olvasási delta végpont.
 
 #### Upsert és atomi végpontok

@@ -14,6 +14,16 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-03 — #056** Tombstone-retenció cleanup + horizon-frissítő ütemezett job. A
+  `410 CURSOR_TOO_OLD` ág és a `sync_meta.tombstone_horizon` olvasása eddig is megvolt, de nem
+  tolta senki a horizontot és nem törölte fizikailag a 180 napnál régebbi tombstone-okat. Új
+  `common/SchedulingConfig` (`@EnableScheduling`) + `common/sync/TombstonePurgeJob`: napi
+  `@Scheduled` job (cron `0 30 3 * * *`, `lm2.sync.tombstone-purge.cron`-nal felülírható /
+  kikapcsolható), ami a horizontot `GREATEST(tombstone_horizon, now() - 180 nap)`-ra tolja
+  (monoton), majd a séma-katalógusból felfedezett szinkronizált táblákból több körben (nem-cascade
+  FK-k) fizikailag törli a horizontnál régebbi `deleted_at`-ú sorokat; nem tranzakcionális, így egy
+  FK-ütközés nem rontja el a testvér törléseket. Érintett specek: [[Backend]], [[Backend-offline first]].
+  Kód: `backend/common/SchedulingConfig`, `backend/common/sync/TombstonePurgeJob`.
 - **2026-09-03 — #009** Törlés-megerősítő felsorolja a cascade-hivatkozásokat (Food + Recept). A
   közös katalógus Food / Recept törlés-megerősítő dialógusa eddig csak generikus szöveget mutatott
   (a `DELETE_CONFIRM_MESSAGE_WITH_REFS` kulcs használatlan volt, a Recept-é a több-user hatást sem
