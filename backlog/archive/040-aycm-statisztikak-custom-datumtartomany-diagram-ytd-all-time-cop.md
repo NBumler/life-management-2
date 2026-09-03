@@ -1,13 +1,13 @@
 ---
 id: 40
 type: feature
-status: in-progress
+status: done
 title: "AYCM Statisztikák bővítés — idei év (THIS_YEAR) + custom dátumtartomány + diagram + all-time + copay-kártya"
 specs:
   - "[[AYCM Statisztikák]]"
 flag:
 created: 2026-09-02
-closed:
+closed: 2026-09-03
 ---
 
 # 40 — AYCM Statisztikák bővítés — idei év + custom dátumtartomány + diagram + all-time + copay-kártya
@@ -131,15 +131,18 @@ sorrend is. A 1. szelet a legkisebb, önmagában is érték.
 - [x] **Nem** megy a megéri-e számba — `worthItHuf` továbbra is csak
       `visitValueSumHuf − passCostHuf`. Teszt is rögzíti.
 
-### Közös
+### Közös — **KÉSZ (2026-09-03)**
 
-- [ ] `npm run lint` + `npm run test:ci` (frontend) zöld. Backend nincs érintve
-      (pure-TS, helyi store, nincs outbox / API — csak több sort szűr).
-- [ ] [[AYCM Statisztikák]] spec átírva a leszállított állapotra: „Ablakok (preset)"
-      tábla, `### Jelenlegi működés`, `### Funkcionális leírás`, `### UI/UX elvárások`,
-      `### Architektúra → Frontend`; a „Nincs custom / YTD / all-time / diagram /
-      copay-kártya" mondatok szűkítve / törölve; a `> Tervezett:` pointer törölve
-      vagy szűkítve; `#### Backend-offline` felülvizsgálva.
+- [x] `npm run lint` + `npm run test:ci` (frontend) zöld (32 spec az `aycm-stats*`
+      fájlokban) + `npm run build` zöld. Backend nincs érintve (pure-TS, helyi store,
+      nincs outbox / API — csak több sort szűr).
+- [x] [[AYCM Statisztikák]] spec teljesen átírva a leszállított állapotra: „Ablakok"
+      tábla (6 ablak + `monthsSpanned`), `### Jelenlegi működés`, „Havi bontás
+      (diagram)" + „Összegző számok" (önrész) alszekciók, `### UI/UX elvárások`,
+      `### Architektúra → Frontend`; a „Nincs custom / all-time / diagram / copay"
+      mondatok és a `> Tervezett:` pointer törölve; `#### Backend-offline` felülvizsgálva
+      (nem változott: pure-TS, helyi store, nincs outbox); `#### Tudatos korlát` a
+      nem-lapozott listákra; `verifikalva` / `verifikalt_commit` bumpolva.
 
 ## Terv / döntési napló
 
@@ -184,10 +187,21 @@ sorrend is. A 1. szelet a legkisebb, önmagában is érték.
 
 ## Lezáráskor (on-done)
 
-- Frissített specek: [[AYCM Statisztikák]] — „Ablakok (preset)" tábla az új
-  presetekkel + custom tartomány, `### Jelenlegi működés` / `### Funkcionális leírás`
-  / `### UI/UX elvárások` / Frontend szakasz átírva, a „Nem scope" / „Tervezett"
-  hivatkozások törölve / szűkítve, diagram + copay-kártya dokumentálva.
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — AYCM statisztika bővítés (THIS_YEAR / custom / all-time / diagram / copay)
+Négy commitban szállítva (mind `master`, mind zöld: lint + test:ci + build):
+
+1. `52a097c` — 1. szelet: `THIS_YEAR` preset.
+2. `a385df6` — 2. + 3. + 5. szelet: `CUSTOM` + `ALL_TIME` ablak + önrész-kártya.
+3. `6c8fe56` — 4. szelet: havi bontás diagram.
+4. *(ez a commit)* — spec-átírás + jegy archiválás.
+
+- Frissített spec: [[AYCM Statisztikák]] — teljes átírás a jelen állapotra: 6 ablak
+  (`THIS_MONTH` / `PREV_MONTH` / `LAST_3_MONTHS` / `THIS_YEAR` / `ALL_TIME` / `CUSTOM`)
+  + `monthsSpanned` `monthCount`-elv, önrész-kártya, havi bontás diagram, `CUSTOM`
+  dátumbevitel a UI/UX-ban, Frontend architektúra a pure-TS + page felépítéssel,
+  `#### Backend-offline` felülvizsgálva, `#### Tudatos korlát` a nem-lapozott listákra.
+  A `> Tervezett:` pointer és a „Nincs custom / all-time / diagram / copay" mondatok
+  törölve. `verifikalva: 2026-09-03`, `verifikalt_commit: 6c8fe56`.
+- `IMPLEMENTATION_STATUS.md` sor: 2026-09-03 — AYCM statisztika bővítés (#040).
 - Kód: `frontend/src/app/pages/menu/aycm/aycm-stats.ts`, `aycm-stats.page.ts`,
-  `aycm-stats.page.html`, i18n `hu` / `en`, specek
+  `aycm-stats.page.html`, `aycm-stats.page.scss` (új), `aycm-stats.spec.ts`,
+  `aycm-stats.page.spec.ts`, `frontend/src/assets/i18n/{hu,en}.json`.

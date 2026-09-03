@@ -14,6 +14,14 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-03 — #040** AYCM statisztika bővítés — négy új időablak és két új nézet az
+  `AycmStatsPage`-en: `THIS_YEAR` (teljes idei naptári év, `monthCount = 12`), `ALL_TIME` (a
+  legkorábbi élő Check-Intől), `CUSTOM` (szabad `from … to`, fordított bevitel normalizálva),
+  külön önrész-kártya (`coPaymentSumHuf` + átlag, sosem a megéri-e-ben), és egy függőség
+  nélküli CSS havi-bontás diagram (csak ≥ 2 hónapos ablaknál). Új pure-TS: `monthsSpanned` /
+  `customRange` / `allTimeRange` / `monthlyBuckets`; `summarize` kiegészítve. Tisztán
+  kliensoldali, Backend-offline / Full-offline (nincs API / outbox). Érintett spec:
+  [[AYCM Statisztikák]]. Kód: `pages/menu/aycm/aycm-stats*`, `assets/i18n/{hu,en}.json`.
 - **2026-09-03 — #063** `db` → `csomag` (`cs`) mértékegység-átnevezés + katalógus darab-definíció
   törtekkel. A `db` quantity-egység mindenütt `cs` (a katalógus csomagokat tárol); a `darab` (`db`)
   **kontextuális** egységként tér vissza, a `Food.pieceAmount` + `pieceUnit` darab-definíción át
