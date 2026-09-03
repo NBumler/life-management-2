@@ -22,6 +22,7 @@
           [label]="'AYCM.PARTNERS.FIELD_NAME' | translate"
           [placeholder]="'AYCM.PARTNERS.FIELD_NAME_PLACEHOLDER' | translate"
           autocapitalize="sentences"
+          [autofocus]="!isEdit"
         ></ion-input>
       </ion-item>
       @if (nameError()) {

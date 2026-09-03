@@ -1,5 +1,6 @@
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { AlertController } from '@ionic/angular/standalone';
 import { provideTranslateService } from '@ngx-translate/core';
@@ -108,6 +109,22 @@ describe('AycmPartnerEditPage', () => {
     await component.saveRule();
     expect(component.ruleError()).toBeNull();
     expect(repository.saveRule).toHaveBeenCalled();
+  });
+
+  it('auto-focuses the name field when creating a new partner (backlog/038)', async () => {
+    await setup('new');
+    fixture.detectChanges();
+
+    const nameInput = fixture.debugElement.query(By.css('ion-input[formControlName="name"]'));
+    expect(nameInput.properties['autofocus']).toBeTrue();
+  });
+
+  it('does not auto-focus the name field when editing an existing partner', async () => {
+    await setup('p1');
+    fixture.detectChanges();
+
+    const nameInput = fixture.debugElement.query(By.css('ion-input[formControlName="name"]'));
+    expect(nameInput.properties['autofocus']).toBeFalse();
   });
 
   it('surfaces a name conflict from the repository', async () => {
