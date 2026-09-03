@@ -1,14 +1,14 @@
 ---
 id: 64
 type: bug
-status: backlog
+status: done
 title: Feature-flag route-guard hianyzik a gear menu al-route-fan
 specs:
   - "[[GearCheck]]"
   - "[[Frontend]]"
 flag:
 created: 2026-09-03
-closed:
+closed: 2026-09-03
 ---
 
 # 64 — Feature-flag route-guard hianyzik a gear menu al-route-fan
@@ -32,12 +32,12 @@ Forrás: `#012` döntési napló (2026-09-03).
 
 ## Elfogadási kritériumok
 
-- [ ] `app.routes.ts`: `featureFlagGuard('menu.gearcheck')` a `gear` route-fa tetején
+- [x] `app.routes.ts`: `featureFlagGuard('menu.gearcheck')` a `gear` route-fa tetején
       (a `finance` / `aycm` / `shopping` minta); deep link letiltott flaggel → `/tabs/menu`.
-- [ ] `app.routes.spec.ts`: `gear` eset a meglévő táblázathoz (flag ki → `/tabs/menu`, be → aktiválható).
-- [ ] `npm run lint` + `npm run test:ci` + `npm run build` zöld.
-- [ ] [[GearCheck]] `### Jelenlegi működés` / Frontend szakasz: a `menu.gearcheck` flag a
-      csempét **és** a `/tabs/menu/gear*` route-fát fedi.
+- [x] `app.routes.spec.ts`: `gear` eset a meglévő táblázathoz (flag ki → `/tabs/menu`, be → aktiválható).
+- [x] `npm run lint` + `npm run test:ci` + `npm run build` zöld.
+- [x] [[GearCheck]] Frontend szakasz: a `menu.gearcheck` flag a csempét **és** a
+      `/tabs/menu/gear` route-fát fedi; [[Frontend]] „Feature flag-ek → Mechanizmus" felsorolás bővítve.
 
 ## Terv / döntési napló
 

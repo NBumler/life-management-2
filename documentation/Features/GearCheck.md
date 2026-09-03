@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: 0d07ce6
+verifikalva: 2026-09-03
+verifikalt_commit: 1917ba8
 ---
 
 # GearCheck
@@ -43,7 +43,7 @@ Nincs nyitott kérdés.
 
 ### Frontend
 
-Menü alatti GearCheck belépő; három subfeature képernyő ([[Eszközök]], [[Sablonok]], [[Pakolás]]).
+Menü alatti GearCheck belépő; három subfeature képernyő ([[Eszközök]], [[Sablonok]], [[Pakolás]]). Feature flag: `menu.gearcheck` — a kikapcsolása a menüpontot rejti **és** a `/tabs/menu/gear` route-fát a tetején `featureFlagGuard('menu.gearcheck')` blokkolja (a `finance` / `aycm` minta): deep link → `/tabs/menu`.
 
 #### Backend-offline
 

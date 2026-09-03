@@ -14,6 +14,11 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-03 — #064** `featureFlagGuard` a `/tabs/menu/gear` route-fán. A #012 párja: a
+  `menu.gearcheck` flag eddig csak a menü-csempét rejtette, a `gear` route-fa guard nélkül maradt
+  (deep link → letiltott feature). A `gear` node tetejére felkerül a `featureFlagGuard('menu.gearcheck')`
+  (a `finance` / `aycm` / `shopping` minta), az `app.routes.spec.ts` táblázat `gear` esettel bővül.
+  Érintett specek: [[GearCheck]], [[Frontend]]. Kód: `frontend/src/app/app.routes.ts` (+ `.spec.ts`).
 - **2026-09-03 — #012** `featureFlagGuard` a menü- / Feladatok-al-route-fákon. A `menu.bevasarlas`
   és a `feladatok.{eletTervek,esemenyek,naptar}` flag eddig csak a hub-csempét rejtette; a
   `/tabs/menu/shopping*` és a `/tabs/tasks/{life-plans,events,calendar}` route-fák guard nélkül
