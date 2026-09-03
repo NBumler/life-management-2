@@ -1,12 +1,19 @@
 /**
  * documentation/Subfeatures/AYCM Statisztikák.md — the read-only stats computed from live AycmCheckIn
- * snapshots. Pure TS, no Angular. Three preset windows, a per-window summary, a per-partner
- * breakdown and a visit list. `coPaymentHuf` never appears here; `visitValueHuf` is the only money.
+ * snapshots. Pure TS, no Angular. Preset + custom + all-time windows, a per-window summary, a
+ * per-partner breakdown, a monthly chart and a visit list. `visitValueHuf` drives "megéri-e";
+ * `coPaymentHuf` is only ever summed into its own card and never enters the worth-it math.
  */
 import { AycmCheckIn } from '../../../api/model/aycmCheckIn';
 import { AycmPartner } from '../../../api/model/aycmPartner';
 
-export type StatsWindow = 'THIS_MONTH' | 'PREV_MONTH' | 'LAST_3_MONTHS' | 'THIS_YEAR';
+export type StatsWindow =
+  | 'THIS_MONTH'
+  | 'PREV_MONTH'
+  | 'LAST_3_MONTHS'
+  | 'THIS_YEAR'
+  | 'ALL_TIME'
+  | 'CUSTOM';
 
 export interface WindowRange {
   /** Inclusive `YYYY-MM-DD`. */
@@ -20,6 +27,8 @@ export interface WindowRange {
 export interface StatsSummary {
   visitCount: number;
   visitValueSumHuf: number;
+  /** Σ `coPaymentHuf` — shown on its own card, never folded into "megéri-e". */
+  coPaymentSumHuf: number;
 }
 
 export interface PartnerBreakdownRow {
@@ -78,6 +87,44 @@ export function windowRange(window: StatsWindow, todayIso: string): WindowRange 
 }
 
 /**
+ * Distinct calendar months an inclusive `[fromIso, toIso]` range touches — the pass-cost multiplier
+ * for the CUSTOM / ALL_TIME windows. Partial months at either end count as whole, exactly like the
+ * presets (`LAST_3_MONTHS` counts the running partial month as one). `from > to` → 0.
+ */
+export function monthsSpanned(fromIso: string, toIso: string): number {
+  const [fromYear, fromMonth] = fromIso.split('-').map(Number);
+  const [toYear, toMonth] = toIso.split('-').map(Number);
+  return Math.max(0, toYear * 12 + toMonth - (fromYear * 12 + fromMonth) + 1);
+}
+
+/**
+ * documentation/Subfeatures/AYCM Statisztikák.md "Egyéni tartomány". Any two client calendar days,
+ * inclusive; the endpoints are swapped if given reversed so the range is always valid. `monthCount`
+ * is the whole calendar months the (normalised) range spans.
+ */
+export function customRange(fromIso: string, toIso: string): WindowRange {
+  const [from, to] = fromIso <= toIso ? [fromIso, toIso] : [toIso, fromIso];
+  return { from, to, monthCount: monthsSpanned(from, to) };
+}
+
+/**
+ * documentation/Subfeatures/AYCM Statisztikák.md "Összes idő". From the earliest live Check-In to
+ * the later of today / the latest Check-In (future rows stay in, like every other window).
+ * `monthCount` = whole calendar months since the first Check-In, so "megéri-e" measures the whole
+ * history against every pass month paid since. No Check-In → a single-day, single-month range.
+ */
+export function allTimeRange(checkIns: readonly AycmCheckIn[], todayIso: string): WindowRange {
+  const dates = checkIns.filter((c) => !c.deleted).map((c) => c.checkInDate);
+  if (dates.length === 0) {
+    return { from: todayIso, to: todayIso, monthCount: 1 };
+  }
+  const from = dates.reduce((min, d) => (d < min ? d : min));
+  const latest = dates.reduce((max, d) => (d > max ? d : max));
+  const to = latest > todayIso ? latest : todayIso;
+  return { from, to, monthCount: monthsSpanned(from, to) };
+}
+
+/**
  * Live rows whose `checkInDate` is in the inclusive [from, to] window (lexical compare is correct for
  * `YYYY-MM-DD`). Future dates inside the window are kept (the hub does not clip them either).
  */
@@ -89,11 +136,15 @@ export function filterCheckIns(
   return checkIns.filter((c) => !c.deleted && c.checkInDate >= from && c.checkInDate <= to);
 }
 
-/** documentation/Subfeatures/AYCM Statisztikák.md "Összegző számok": count (0 OK) + Σ visitValueHuf (0 OK, never `~`). */
+/**
+ * documentation/Subfeatures/AYCM Statisztikák.md "Összegző számok": count (0 OK) + Σ visitValueHuf
+ * (0 OK, never `~`) + Σ coPaymentHuf (its own card, never in "megéri-e").
+ */
 export function summarize(checkIns: readonly AycmCheckIn[]): StatsSummary {
   return {
     visitCount: checkIns.length,
     visitValueSumHuf: checkIns.reduce((sum, c) => sum + c.visitValueHuf, 0),
+    coPaymentSumHuf: checkIns.reduce((sum, c) => sum + c.coPaymentHuf, 0),
   };
 }
 

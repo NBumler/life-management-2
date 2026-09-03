@@ -111,8 +111,16 @@ describe('AycmStatsPage', () => {
   it('summarises the current month by default', async () => {
     await setup(true);
     expect(component.window()).toBe('THIS_MONTH');
-    expect(component.summary()).toEqual({ visitCount: 2, visitValueSumHuf: 5000 });
+    expect(component.summary()).toEqual({ visitCount: 2, visitValueSumHuf: 5000, coPaymentSumHuf: 1000 });
     expect(component.breakdown().map((r) => [r.displayName, r.visitCount])).toEqual([['Life1', 2]]);
+  });
+
+  it('sums the co-payment onto its own card and a per-visit average, never into worth-it', async () => {
+    await setup(true);
+    expect(component.summary().coPaymentSumHuf).toBe(1000);
+    expect(component.coPaymentAvgHuf()).toBe(500);
+    // worth-it is Σ visitValue − pass cost, the co-payment is not in it
+    expect(component.worthItHuf()).toBe(5000 - 30000);
   });
 
   it('computes worth-it as Σ − monthly pass cost when the finance flag is on', async () => {
@@ -140,8 +148,45 @@ describe('AycmStatsPage', () => {
     component.setWindow('THIS_YEAR');
     expect(component.window()).toBe('THIS_YEAR');
     // the sample rows sit in the current month, so they are inside the current year too
-    expect(component.summary()).toEqual({ visitCount: 2, visitValueSumHuf: 5000 });
+    expect(component.summary()).toEqual({ visitCount: 2, visitValueSumHuf: 5000, coPaymentSumHuf: 1000 });
     expect(component.worthItHuf()).toBe(5000 - 30000 * 12);
+  });
+
+  it('CUSTOM window filters to the picked range and derives the pass-cost months from its span', async () => {
+    await setup(true);
+    checkInRepo.checkIns.set([
+      checkIn({ id: 'jan', checkInDate: '2026-01-10', visitValueHuf: 1000 }),
+      checkIn({ id: 'feb', checkInDate: '2026-02-20', visitValueHuf: 4000 }),
+      checkIn({ id: 'apr', checkInDate: '2026-04-01', visitValueHuf: 9000 }),
+    ]);
+    component.setWindow('CUSTOM');
+    component.setCustomFrom('2026-01-01');
+    component.setCustomTo('2026-02-28');
+    expect(component.summary().visitCount).toBe(2);
+    expect(component.summary().visitValueSumHuf).toBe(5000);
+    // Jan + Feb = 2 whole months → 2 × 30000 pass cost
+    expect(component.worthItHuf()).toBe(5000 - 30000 * 2);
+  });
+
+  it('flags a reversed CUSTOM range but still counts it (endpoints swap)', async () => {
+    await setup(true);
+    component.setWindow('CUSTOM');
+    component.setCustomFrom('2026-03-31');
+    component.setCustomTo('2026-01-01');
+    expect(component.customRangeReversed()).toBe(true);
+    expect(component.summary().visitCount).toBe(0); // sample rows are in the running month, not Q1 2026
+  });
+
+  it('ALL_TIME spans from the earliest Check-In and keeps rows outside the current month', async () => {
+    await setup(true);
+    checkInRepo.checkIns.set([
+      checkIn({ id: 'old', checkInDate: '2025-11-05', visitValueHuf: 2000 }),
+      checkIn({ id: 'recent', checkInDate: today(), visitValueHuf: 3000 }),
+    ]);
+    component.setWindow('ALL_TIME');
+    expect(component.window()).toBe('ALL_TIME');
+    expect(component.summary().visitCount).toBe(2);
+    expect(component.summary().visitValueSumHuf).toBe(5000);
   });
 
   it('opens the Check-In editor for a tapped visit date', async () => {

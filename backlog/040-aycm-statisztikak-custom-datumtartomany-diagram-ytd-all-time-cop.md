@@ -82,22 +82,32 @@ sorrend is. A 1. szelet a legkisebb, önmagában is érték.
       preset-ablak"), UI/UX (négy, görgethető segment), Frontend szakasz;
       `> Tervezett:` pointer szűkítve a maradék 4 szeletre; `verifikalva: 2026-09-03`.
 
-### 2. Custom dátumtartomány
+### 2. Custom dátumtartomány — **KÉSZ (2026-09-03)**
 
-- [ ] A preset-választó mellett tetszőleges `from … to` nap megadható
-      (dátumválasztó, kliens TZ, zárt intervallum, `from ≤ to` validáció).
-- [ ] `monthCount` a tartomány által érintett teljes naptári hónapok száma
-      (ugyanaz a definíció, mint a preseteknél) — részleges hónapok kezelése
-      döntendő, lásd döntési napló.
-- [ ] Ugyanazok az összesítők / bontás / lista.
+- [x] A preset-választóban `CUSTOM` szegmens; alatta két `ion-input type="date"`
+      (`Kezdő nap` / `Záró nap`), kliens TZ, zárt intervallum. `from ≤ to` nem
+      validációs hiba: fordított bevitelnél a végpontok megcserélődnek, és egy
+      `warning` `IonNote` jelzi (`customRange()` normalizál).
+- [x] `monthCount` a (normalizált) tartomány által érintett teljes naptári hónapok
+      száma (`monthsSpanned()`), részleges hónapok **felfelé kerekítve** — konzisztens
+      a presetekkel.
+- [x] Ugyanazok az összesítők / bontás / lista / diagram a `CUSTOM` tartományon.
+- [x] `aycm-stats.spec.ts`: `monthsSpanned` + `customRange` (normál + fordított);
+      `aycm-stats.page.spec.ts`: `CUSTOM` szűrés + `monthCount`-alapú megéri-e,
+      fordított tartomány jelzése.
 
-### 3. „Összes idő" (all-time)
+### 3. „Összes idő" (all-time) — **KÉSZ (2026-09-03)**
 
-- [ ] Preset, ami az összes élő Check-Inre szűr (nincs alsó határ; `to` = ma vagy a
-      legkésőbbi Check-In).
-- [ ] `passCostComputable` / megéri-e: döntendő, hogy all-time-ra van-e értelmes
-      `monthCount` (pl. az első Check-In óta eltelt hónapok) vagy csak a darab + Σ
-      jelenik meg, megéri-e nélkül — lásd döntési napló.
+- [x] `ALL_TIME` szegmens: `from` = a legkorábbi élő Check-In napja, `to` =
+      max(ma, legkésőbbi Check-In) — a jövőbeli sorok bent maradnak. Nincs Check-In →
+      egy napra / egy hónapra esik össze (`allTimeRange()`).
+- [x] `monthCount` = a legkorábbi Check-Intől számított teljes naptári hónapok
+      (`monthsSpanned(from, to)`) → a megéri-e a teljes előzményt méri az azóta
+      kifizetett összes bérlethónaphoz. Döntés: **van értelmes `monthCount`** (nem
+      rejtjük a megéri-e-t).
+- [x] `aycm-stats.spec.ts`: `allTimeRange` (Check-Inekkel, jövőbeli Check-Innel,
+      üresen); `aycm-stats.page.spec.ts`: `ALL_TIME` a folyó hónapon kívüli sorokat is
+      tartja.
 
 ### 4. Diagram (időbeli trend)
 
@@ -108,11 +118,13 @@ sorrend is. A 1. szelet a legkisebb, önmagában is érték.
 - [ ] Megjelenítés a kaja-statisztika, ill. az edzésnapló-statisztika (ha addigra
       van) diagram-megoldásával konzisztensen; [[Dark&Light mode]] kontraszt.
 
-### 5. Külön copay- (önrész-) kártya
+### 5. Külön copay- (önrész-) kártya — **KÉSZ (2026-09-03)**
 
-- [ ] A `coPaymentHuf` összege külön kártyán a választott ablakra (Σ önrész,
-      esetleg alkalmankénti átlag).
-- [ ] **Nem** megy a megéri-e számba (a spec jelenlegi invariánsa marad).
+- [x] A `coPaymentHuf` összege külön `ion-card`-on a választott ablakra
+      (`summarize().coPaymentSumHuf`), alatta alkalmankénti átlag
+      (`coPaymentAvgHuf`, egész Ft, üres ablakon elrejtve).
+- [x] **Nem** megy a megéri-e számba — `worthItHuf` továbbra is csak
+      `visitValueSumHuf − passCostHuf`. Teszt is rögzíti.
 
 ### Közös
 
@@ -133,7 +145,14 @@ sorrend is. A 1. szelet a legkisebb, önmagában is érték.
   spec-frissítéssel. `status: in-progress`. Érintett kód:
   `frontend/src/app/pages/menu/aycm/aycm-stats.ts` (`StatsWindow`, `windowRange`),
   `aycm-stats.page.ts` (`windows`, `setWindow`), `aycm-stats.page.html` (`scrollable`
-  segment), `frontend/src/assets/i18n/{hu,en}.json`. Hátralévő: 2–5. szelet.
+  segment), `frontend/src/assets/i18n/{hu,en}.json`.
+- **2., 3., 5. szelet leszállítva (2026-09-03):** `CUSTOM` + `ALL_TIME` ablak és az
+  önrész-kártya egy commitban. Új pure-TS: `monthsSpanned` / `customRange` /
+  `allTimeRange`; `summarize` kiegészítve `coPaymentSumHuf`-fal. Page: `customFrom` /
+  `customTo` signal, `customRangeReversed`, `range` computed 3-ágú, `coPaymentAvgHuf`.
+  HTML: `CUSTOM` dátumbevitel + önrész-kártya. i18n: `WINDOW.ALL_TIME/CUSTOM`,
+  `CUSTOM_FROM/TO`, `CUSTOM_RANGE_REVERSED`, `CARD_COPAY`, `COPAY_AVG`. Hátra: 4.
+  szelet (diagram) + spec-átírás + jegy-archiválás.
 - **Szállíthatóság:** az 5 szelet külön PR-ben mehet; a THIS_YEAR a legkisebb,
   önmagában is érték, javasolt elsőnek.
 - **`monthCount` döntés (`THIS_YEAR`, nyitott):**

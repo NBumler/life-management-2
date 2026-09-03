@@ -16,6 +16,32 @@
     }
   </ion-segment>
 
+  @if (window() === 'CUSTOM') {
+    <ion-item>
+      <ion-input
+        type="date"
+        [label]="'AYCM.STATS.CUSTOM_FROM' | translate"
+        labelPlacement="stacked"
+        [value]="customFrom()"
+        (ionChange)="setCustomFrom($any($event.detail.value))"
+      ></ion-input>
+    </ion-item>
+    <ion-item [lines]="customRangeReversed() ? 'none' : 'full'">
+      <ion-input
+        type="date"
+        [label]="'AYCM.STATS.CUSTOM_TO' | translate"
+        labelPlacement="stacked"
+        [value]="customTo()"
+        (ionChange)="setCustomTo($any($event.detail.value))"
+      ></ion-input>
+    </ion-item>
+    @if (customRangeReversed()) {
+      <ion-item lines="full">
+        <ion-note color="warning">{{ 'AYCM.STATS.CUSTOM_RANGE_REVERSED' | translate }}</ion-note>
+      </ion-item>
+    }
+  }
+
   <ion-card>
     <ion-card-header>
       <ion-card-title>{{ 'AYCM.STATS.CARD_VISITS' | translate }}</ion-card-title>
@@ -41,6 +67,20 @@
         {{ 'AYCM.STATS.AMOUNT' | translate: { amount: (worthItHuf() | number: '1.0-0') } }}
       } @else {
         <ion-text color="medium">{{ 'AYCM.STATS.NOT_COMPUTABLE' | translate }}</ion-text>
+      }
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>{{ 'AYCM.STATS.CARD_COPAY' | translate }}</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      {{ 'AYCM.STATS.AMOUNT' | translate: { amount: (summary().coPaymentSumHuf | number: '1.0-0') } }}
+      @if (coPaymentAvgHuf() !== null) {
+        <p>
+          {{ 'AYCM.STATS.COPAY_AVG' | translate: { amount: (coPaymentAvgHuf() | number: '1.0-0') } }}
+        </p>
       }
     </ion-card-content>
   </ion-card>

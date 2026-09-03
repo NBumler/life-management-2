@@ -1,8 +1,11 @@
 import { AycmCheckIn } from '../../../api/model/aycmCheckIn';
 import { AycmPartner } from '../../../api/model/aycmPartner';
 import {
+  allTimeRange,
+  customRange,
   filterCheckIns,
   groupByPartner,
+  monthsSpanned,
   summarize,
   visitList,
   windowRange,
@@ -56,6 +59,65 @@ describe('aycm-stats windowRange', () => {
   });
 });
 
+describe('aycm-stats monthsSpanned', () => {
+  it('counts distinct calendar months inclusively, partial months as whole', () => {
+    expect(monthsSpanned('2026-08-01', '2026-08-31')).toBe(1);
+    expect(monthsSpanned('2026-08-31', '2026-09-01')).toBe(2);
+    expect(monthsSpanned('2026-01-15', '2026-03-02')).toBe(3);
+    expect(monthsSpanned('2025-11-10', '2026-02-05')).toBe(4);
+  });
+
+  it('is 0 when from is after to', () => {
+    expect(monthsSpanned('2026-09-01', '2026-08-01')).toBe(0);
+  });
+});
+
+describe('aycm-stats customRange', () => {
+  it('keeps the given endpoints and derives monthCount from the span', () => {
+    expect(customRange('2026-03-10', '2026-05-20')).toEqual({
+      from: '2026-03-10',
+      to: '2026-05-20',
+      monthCount: 3,
+    });
+  });
+
+  it('swaps reversed endpoints so the range is always valid', () => {
+    expect(customRange('2026-05-20', '2026-03-10')).toEqual({
+      from: '2026-03-10',
+      to: '2026-05-20',
+      monthCount: 3,
+    });
+  });
+});
+
+describe('aycm-stats allTimeRange', () => {
+  it('runs from the earliest Check-In to today, monthCount over the whole span', () => {
+    const rows = [
+      checkIn({ id: 'a', checkInDate: '2025-11-20' }),
+      checkIn({ id: 'b', checkInDate: '2026-02-10' }),
+      checkIn({ id: 'gone', checkInDate: '2024-01-01', deleted: true }),
+    ];
+    expect(allTimeRange(rows, '2026-03-15')).toEqual({
+      from: '2025-11-20',
+      to: '2026-03-15',
+      monthCount: 5,
+    });
+  });
+
+  it('extends the end past today when a future Check-In exists', () => {
+    const rows = [checkIn({ id: 'a', checkInDate: '2026-02-10' }), checkIn({ id: 'f', checkInDate: '2026-06-01' })];
+    expect(allTimeRange(rows, '2026-03-15')).toEqual({
+      from: '2026-02-10',
+      to: '2026-06-01',
+      monthCount: 5,
+    });
+  });
+
+  it('collapses to a single day/month when there is no Check-In', () => {
+    expect(allTimeRange([], '2026-03-15')).toEqual({ from: '2026-03-15', to: '2026-03-15', monthCount: 1 });
+  });
+});
+
 describe('aycm-stats filterCheckIns', () => {
   const rows = [
     checkIn({ id: 'in', checkInDate: '2026-08-01' }),
@@ -73,12 +135,14 @@ describe('aycm-stats filterCheckIns', () => {
 });
 
 describe('aycm-stats summarize', () => {
-  it('counts every row and sums visitValueHuf (0 rows → 0/0)', () => {
-    expect(summarize([])).toEqual({ visitCount: 0, visitValueSumHuf: 0 });
-    expect(summarize([checkIn({ visitValueHuf: 0 }), checkIn({ visitValueHuf: 3000 })])).toEqual({
-      visitCount: 2,
-      visitValueSumHuf: 3000,
-    });
+  it('counts every row and sums visitValueHuf + coPaymentHuf (0 rows → all 0)', () => {
+    expect(summarize([])).toEqual({ visitCount: 0, visitValueSumHuf: 0, coPaymentSumHuf: 0 });
+    expect(
+      summarize([
+        checkIn({ visitValueHuf: 0, coPaymentHuf: 200 }),
+        checkIn({ visitValueHuf: 3000, coPaymentHuf: 500 }),
+      ]),
+    ).toEqual({ visitCount: 2, visitValueSumHuf: 3000, coPaymentSumHuf: 700 });
   });
 });
 
