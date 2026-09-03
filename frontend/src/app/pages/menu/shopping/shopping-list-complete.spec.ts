@@ -1,5 +1,5 @@
 import { ShoppingListItem } from '../../../api/model/shoppingListItem';
-import { CheckedFoodWizardInput, buildCompleteDraft, partitionItems, splitCountFor } from './shopping-list-complete';
+import { CheckedFoodWizardInput, MAX_SPLIT_ROWS, buildCompleteDraft, partitionItems, splitCountFor } from './shopping-list-complete';
 
 function foodItem(overrides: Partial<ShoppingListItem> = {}): ShoppingListItem {
   return { id: 'i1', shoppingListId: 'sl1', type: 'FOOD', foodId: 'f1', quantityAmount: 1, quantityUnit: 'kg', checked: false, sortOrder: 0, deleted: false, ...overrides };
@@ -50,6 +50,11 @@ describe('splitCountFor', () => {
 
   it('returns 1 for any other unit, regardless of amount', () => {
     expect(splitCountFor(foodItem({ quantityAmount: 5, quantityUnit: 'kg' }))).toBe(1);
+  });
+
+  it('C-9: clamps an absurd amount to MAX_SPLIT_ROWS instead of asking for millions of rows', () => {
+    expect(splitCountFor(foodItem({ quantityAmount: 5_000_000, quantityUnit: 'cs' }))).toBe(MAX_SPLIT_ROWS);
+    expect(splitCountFor(foodItem({ quantityAmount: 5_000_000.4, quantityUnit: 'db' }))).toBe(MAX_SPLIT_ROWS);
   });
 });
 

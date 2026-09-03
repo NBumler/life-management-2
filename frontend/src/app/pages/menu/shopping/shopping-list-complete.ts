@@ -44,17 +44,24 @@ export function partitionItems(items: readonly ShoppingListItem[]): { checkedFoo
  *    like `cs` (with no darab-definíció `1 db = 1 cs`, so this is `ceil(amount)` rows);
  *  - every other unit → 1 row.
  *
- * Floored at 1 and kept bit-identical to the backend's own `splitCountFor()` (ShoppingListService).
+ * Clamped to `[1, MAX_SPLIT_ROWS]` and kept bit-identical to the backend's own `splitCountFor()`
+ * (ShoppingListService) — the cap guards against an absurd amount asking for millions of rows.
  */
+export const MAX_SPLIT_ROWS = 999;
+
 export function splitCountFor(item: ShoppingListItem): number {
   const amount = item.quantityAmount ?? 1;
   if (item.quantityUnit === 'db') {
-    return Math.max(1, Math.ceil(amount));
+    return clampSplitCount(Math.ceil(amount));
   }
   if (item.quantityUnit === 'cs') {
-    return Number.isInteger(amount) ? Math.max(1, amount) : 1;
+    return Number.isInteger(amount) ? clampSplitCount(amount) : 1;
   }
   return 1;
+}
+
+function clampSplitCount(value: number): number {
+  return Math.min(MAX_SPLIT_ROWS, Math.max(1, value));
 }
 
 export function buildCompleteDraft(

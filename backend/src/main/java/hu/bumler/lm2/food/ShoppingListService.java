@@ -44,6 +44,13 @@ class ShoppingListService {
 
 	private static final String COMPLETE_ENDPOINT = "POST /api/shopping-lists/{id}/complete";
 
+	/**
+	 * Upper bound on the number of storage rows one shopping-list item may split into. A sanity cap for
+	 * an absurd quantity — a realistic grocery run never approaches it. Kept identical to the client's
+	 * {@code MAX_SPLIT_ROWS} (shopping-list-complete.ts) so the split count matches on both sides.
+	 */
+	static final int MAX_SPLIT_ROWS = 999;
+
 	private final ShoppingListRepository repository;
 	private final ShoppingListItemRepository itemRepository;
 	private final FoodRepository foodRepository;
@@ -393,20 +400,26 @@ class ShoppingListService {
 	 * documentation/Subfeatures/Élelmiszer tárolás.md — bit-identical to shopping-list-complete.ts's
 	 * {@code splitCountFor()}: `cs` + whole amount → that many rows; `cs` + fractional amount → 1 row;
 	 * legacy `db` (no longer selectable, backlog/063) → rounded up to whole packages (`1 db = 1 cs`);
-	 * every other unit → 1 row. Floored at 1 (the editor blocks a non-positive FOOD quantity).
+	 * every other unit → 1 row. Clamped to {@code [1, }{@value #MAX_SPLIT_ROWS}{@code ]} — the floor
+	 * because the editor blocks a non-positive FOOD quantity, the cap so an absurd amount can't ask for
+	 * millions of rows (and so {@code intValueExact()} can't throw on a value beyond {@code int}).
 	 */
-	private static int splitCountFor(ShoppingListItemEntity item) {
+	static int splitCountFor(ShoppingListItemEntity item) {
 		BigDecimal amount = item.getQuantityAmount();
 		if (amount == null) {
 			return 1;
 		}
 		if ("db".equals(item.getQuantityUnit())) {
-			return Math.max(1, amount.setScale(0, RoundingMode.CEILING).intValueExact());
+			return clampSplitCount(amount.setScale(0, RoundingMode.CEILING));
 		}
 		if ("cs".equals(item.getQuantityUnit())) {
-			return amount.stripTrailingZeros().scale() <= 0 ? Math.max(1, amount.intValueExact()) : 1;
+			return amount.stripTrailingZeros().scale() <= 0 ? clampSplitCount(amount) : 1;
 		}
 		return 1;
+	}
+
+	private static int clampSplitCount(BigDecimal value) {
+		return value.max(BigDecimal.ONE).min(BigDecimal.valueOf(MAX_SPLIT_ROWS)).intValue();
 	}
 
 	private void cacheResponse(UUID idempotencyKey, UUID userId, ShoppingListCompleteResponse response) {
