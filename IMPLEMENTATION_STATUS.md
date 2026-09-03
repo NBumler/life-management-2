@@ -14,6 +14,15 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-03 — #057** `seed_state` helyi latch tábla + natív verzió-latch. A `Backend-offline
+  first.md` §3/§15 felsorolja a `seed_state` táblát, de a helyi SQLite sémából hiányzott — a natív
+  seed eddig az `exercise_catalog` üres-store-check-jére támaszkodott. Új `SCHEMA_V29`
+  (`seed_state(seed_key PK, seed_version, applied_at)`, `SCHEMA_VERSION` 28→29) +
+  `EXERCISE_SEED_KEY` / `EXERCISE_SEED_VERSION` konstans. `SqliteStorageBackend.seedExercises` a
+  `seed_state` latchre épül (verzió elérve → no-op, akkor is, ha közben minden gyakorlat törölve),
+  a „katalógus már nem üres" check megmarad; `HttpStorageBackend` `localStorage` latch-e a
+  `seed_version`-t tárolja — web és natív szimmetrikus. Érintett spec: [[Backend-offline first]].
+  Kód: `frontend/core/storage/local-database.service.ts`, `core/data/exercise-seed.ts`, `core/storage/{sqlite,http}-storage-backend.ts`.
 - **2026-09-03 — #056** Tombstone-retenció cleanup + horizon-frissítő ütemezett job. A
   `410 CURSOR_TOO_OLD` ág és a `sync_meta.tombstone_horizon` olvasása eddig is megvolt, de nem
   tolta senki a horizontot és nem törölte fizikailag a 180 napnál régebbi tombstone-okat. Új

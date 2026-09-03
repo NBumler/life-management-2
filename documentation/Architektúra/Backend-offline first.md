@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-03
-verifikalt_commit: b8699cf
+verifikalt_commit: f3f888e
 ---
 
 # Backend-offline first
@@ -107,7 +107,7 @@ Nincs nyitott kérdés.
 - **Nincs bináris tartalom** a helyi store-ban az első körben (nincs kép / fájl feltöltés).
 - **A helyi DB nem titkosított** az első körben (nincs SQLCipher): a készülék OS-szintű lemeztitkosítására és app-sandboxára támaszkodunk. Az auth tokenek ettől függetlenül platform secure store-ban vannak ([[Bejelentkezés]]).
 - `sync_state` tábla: `cursor`, `last_pull_at`, `last_pull_status`, `first_pull_completed`.
-- `seed_state` tábla (melyik seed-verzió futott már le): a helyi SQLite sémából jelenleg **hiányzik** (a seed-latch weben localStorage-ban, natívon az üres-store-check adja) — tervezett: `backlog/057-backend-offline-seed-state-tabla-hianya-a-helyi-sqlite-semabol.md`.
+- `seed_state` tábla (`seed_key`, `seed_version`, `applied_at`): melyik seed melyik verziója futott már le ezen az eszközön. Ez a **natív seed-latch** (`SqliteStorageBackend.seedExercises` olvassa/írja); a web oldali analóg a per-user `localStorage` kulcs, ami szintén a `seed_version`-t tárolja. Lásd §15.
 
 #### 4. Outbox — adatmodell
 
@@ -434,7 +434,7 @@ Elv: a külső integrációk **soha nincsenek** a saját backenden proxyzva ([[B
 - **Build asset** (Full-offline is elérhető): nehézségi konverziós mátrix JSON, `Exercise` seed fájl, i18n (`hu.json` / `en.json`), enumok, feature flag konfiguráció.
 - Az `Exercise` seed sorai **user-owned másolatok determinisztikus v5 ID-vel** (§9) → többeszközös első indulás nem duplikálja a katalógust és nem ütközik a `name` egyediségbe.
 - A seed create-ek **normál outbox tételek** (offline első indulásnál is működik).
-- A seed nem fut újra minden induláskor: a latch jelenleg weben localStorage, natívon az üres-store-check. A dedikált `seed_state` tábla tervezett — `backlog/057-backend-offline-seed-state-tabla-hianya-a-helyi-sqlite-semabol.md`.
+- A seed nem fut újra minden induláskor: a latch natívon a `seed_state` tábla (`seed_key = 'exercise'`; ha a tárolt `seed_version` eléri az `EXERCISE_SEED_VERSION`-t → no-op, akkor is, ha a user közben minden gyakorlatot törölt), weben a per-user `localStorage` kulcs, ami ugyanazt a `seed_version`-t tárolja. Mindkét oldalon a „katalógus már nem üres" check is rövidre zárja a másik eszközről beszinkronizált katalógust, a determinisztikus v5 ID pedig idempotenssé tesz minden maradék ismételt írást.
 
 #### 16. UI elvárások offline állapotban
 
