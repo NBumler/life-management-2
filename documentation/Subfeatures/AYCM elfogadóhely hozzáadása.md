@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: 279a21b
+verifikalva: 2026-09-03
+verifikalt_commit: 26dce3d
 ---
 
 # AYCM elfogadóhely hozzáadása
@@ -90,7 +90,7 @@ Nincs találat → Check-In: `visitValueHuf = 0`, `listPriceHuf = 0`, `coPayment
 #### CRUD — partner
 
 - Lista, create, edit, törlés. **Duplikálás nincs.**
-- Create: notes opcionális; szabályok utána a szerkesztőn (0 szabállyal is menthető). (A `name` mező auto-focusa jelenleg nincs bekötve — tervezett: `backlog/038-aycm-partner-create-name-mezo-auto-focus.md`.)
+- Create: notes opcionális; szabályok utána a szerkesztőn (0 szabállyal is menthető). A `name` mező **auto-focusált** create-módban (`[autofocus]="!isEdit"` az `ion-input`-on), edit-módban nem.
 - **Törlés:** megerősítés a névvel + élő sávok száma. Soft delete a partnerre **és** az összes élő szabályára (cascade). [[AYCM Check-In]] sorok **nem** törlődnek (snapshot). Pickerből kiesik.
 
 #### CRUD — szabály
@@ -107,7 +107,7 @@ Soft delete szerződés: [[Backend-offline first]] (tombstone, idempotens `DELET
 - **Belépés:** [[AYCM tracker]] hub → elfogadóhelyek. Flag: **AYCM tracker**.
 - Route pl. `/tabs/menu/aycm/partners`, `/tabs/menu/aycm/partners/new`, `…/:id`.
 - **Lista:** kereső ([[Szöveges keresés]], `name` + `notes`); sor: név, élő sávok száma. Sorrend: `name`. Üres: CTA új partnerre. Szűrt üres ≠ globális üres.
-- Create / edit: név, notes; alatta sávok (hozzáadás / szerkesztés / törlés). Idő: platformos time picker; `endTime`-nál **Nap vége (`24:00`)** opció. Árak: egész Ft. Napok: 7 checkbox, i18n ([[Nyelv választás]]).
+- Create / edit: név (create-nél auto-focusált), notes; alatta sávok (hozzáadás / szerkesztés / törlés). Idő: platformos time picker; `endTime`-nál **Nap vége (`24:00`)** opció. Árak: egész Ft. Napok: 7 checkbox, i18n ([[Nyelv választás]]).
 - Check-In picker: csak `deleted = false`; üres lista → CTA **erre** a listára (nincs inline create).
 - Törlés: confirmation. Kontraszt: [[Dark&Light mode]].
 

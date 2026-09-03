@@ -14,6 +14,11 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-03 — #038** AYCM partner-create név-mező auto-focus. A spec name auto-focust ír, az
+  `aycm-partner-edit` `ion-input`-ján nem volt bekötve. `[autofocus]="!isEdit"` — a codebase bevett
+  „create-nél fókusz" mintája (`food-edit`, `event-edit`, `packing-template-editor`, stb.);
+  edit-módban nincs fókusz. Érintett spec: [[AYCM elfogadóhely hozzáadása]].
+  Kód: `frontend/pages/menu/aycm/aycm-partner-edit.page.html`.
 - **2026-09-03 — #026** Gear: sablon-lista soronkénti élő tételszám. A `[[Sablonok]]` UI/UX explicit
   kérte a tételszámot minden soron; eddig csak name + notes látszott. Új származtatott, csak-olvasható
   `itemCount` a `PackingTemplate` lista-DTO-n: `PackingTemplateService.list` állítja be
