@@ -189,6 +189,28 @@ describe('AycmStatsPage', () => {
     expect(component.summary().visitValueSumHuf).toBe(5000);
   });
 
+  it('hides the monthly chart for a single-month window, shows it once the span is ≥ 2 months', async () => {
+    await setup(true);
+    expect(component.window()).toBe('THIS_MONTH');
+    expect(component.showChart()).toBe(false);
+    expect(component.chartBuckets().length).toBe(1);
+
+    checkInRepo.checkIns.set([
+      checkIn({ id: 'jan', checkInDate: '2026-01-10', visitValueHuf: 1000 }),
+      checkIn({ id: 'mar', checkInDate: '2026-03-10', visitValueHuf: 4000 }),
+    ]);
+    component.setWindow('CUSTOM');
+    component.setCustomFrom('2026-01-01');
+    component.setCustomTo('2026-03-31');
+    expect(component.showChart()).toBe(true);
+    expect(component.chartBuckets().map((b) => [b.month, b.visitCount])).toEqual([
+      ['2026-01', 1],
+      ['2026-02', 0],
+      ['2026-03', 1],
+    ]);
+    expect(component.chartMaxHuf()).toBe(4000);
+  });
+
   it('opens the Check-In editor for a tapped visit date', async () => {
     await setup(true);
     const router = TestBed.inject(Router);

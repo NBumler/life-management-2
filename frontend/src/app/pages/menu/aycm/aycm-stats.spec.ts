@@ -5,6 +5,7 @@ import {
   customRange,
   filterCheckIns,
   groupByPartner,
+  monthlyBuckets,
   monthsSpanned,
   summarize,
   visitList,
@@ -143,6 +144,38 @@ describe('aycm-stats summarize', () => {
         checkIn({ visitValueHuf: 3000, coPaymentHuf: 500 }),
       ]),
     ).toEqual({ visitCount: 2, visitValueSumHuf: 3000, coPaymentSumHuf: 700 });
+  });
+});
+
+describe('aycm-stats monthlyBuckets', () => {
+  it('emits one chronological row per calendar month, zero-filling the gaps', () => {
+    const rows = [
+      checkIn({ id: 'a', checkInDate: '2026-01-05', visitValueHuf: 1000 }),
+      checkIn({ id: 'b', checkInDate: '2026-01-20', visitValueHuf: 2000 }),
+      checkIn({ id: 'c', checkInDate: '2026-03-10', visitValueHuf: 4000 }),
+    ];
+    expect(monthlyBuckets(rows, '2026-01-01', '2026-03-31')).toEqual([
+      { month: '2026-01', visitCount: 2, visitValueSumHuf: 3000 },
+      { month: '2026-02', visitCount: 0, visitValueSumHuf: 0 },
+      { month: '2026-03', visitCount: 1, visitValueSumHuf: 4000 },
+    ]);
+  });
+
+  it('spans a year boundary and ignores rows outside the range', () => {
+    const rows = [
+      checkIn({ id: 'in', checkInDate: '2025-12-31', visitValueHuf: 500 }),
+      checkIn({ id: 'out', checkInDate: '2026-03-01', visitValueHuf: 999 }),
+    ];
+    expect(monthlyBuckets(rows, '2025-12-01', '2026-02-28').map((b) => b.month)).toEqual([
+      '2025-12',
+      '2026-01',
+      '2026-02',
+    ]);
+    expect(monthlyBuckets(rows, '2025-12-01', '2026-02-28')[0].visitCount).toBe(1);
+  });
+
+  it('is empty when from is after to', () => {
+    expect(monthlyBuckets([], '2026-05-01', '2026-04-01')).toEqual([]);
   });
 });
 

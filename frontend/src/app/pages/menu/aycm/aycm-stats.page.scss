@@ -1,0 +1,39 @@
+// documentation/Subfeatures/AYCM Statisztikák.md "Havi bontás diagram" — a dependency-free CSS bar
+// list (no chart library; must render Full-offline). One row per calendar month in the window; the
+// bar length is Σ visitValueHuf scaled to the window's busiest month. Colours are Ionic theme
+// tokens so light / dark both stay legible.
+.chart-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 1rem;
+  font-size: 0.85rem;
+}
+
+.chart-month {
+  flex: 0 0 3.75rem;
+  color: var(--ion-color-medium);
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-bar-track {
+  flex: 1 1 auto;
+  height: 0.75rem;
+  border-radius: 0.375rem;
+  background: var(--ion-color-step-150, #e0e0e0);
+  overflow: hidden;
+}
+
+.chart-bar {
+  display: block;
+  height: 100%;
+  min-width: 2px;
+  border-radius: inherit;
+  background: var(--ion-color-primary);
+}
+
+.chart-value {
+  flex: 0 0 auto;
+  color: var(--ion-color-medium);
+  font-variant-numeric: tabular-nums;
+}

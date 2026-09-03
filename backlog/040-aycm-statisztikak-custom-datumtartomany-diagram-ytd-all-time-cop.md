@@ -109,14 +109,19 @@ sorrend is. A 1. szelet a legkisebb, önmagában is érték.
       üresen); `aycm-stats.page.spec.ts`: `ALL_TIME` a folyó hónapon kívüli sorokat is
       tartja.
 
-### 4. Diagram (időbeli trend)
+### 4. Diagram (időbeli trend) — **KÉSZ (2026-09-03)**
 
-- [ ] A választott ablakra havi bontású oszlop/vonaldiagram: alkalmak száma és/vagy
-      Σ látogatásérték hónaponként.
-- [ ] Rövid ablakoknál (pl. `THIS_MONTH`) döntendő a bontás granularitása (nap vs.
-      hónap) vagy a diagram elrejtése.
-- [ ] Megjelenítés a kaja-statisztika, ill. az edzésnapló-statisztika (ha addigra
-      van) diagram-megoldásával konzisztensen; [[Dark&Light mode]] kontraszt.
+- [x] A választott ablakra havi bontású vízszintes sáv-lista: hónaponként az alkalmak
+      száma **és** a Σ látogatásérték; a sáv hossza a Σ érték az ablak legerősebb
+      hónapjához skálázva (`monthlyBuckets()` — üres hónapok 0-s sorként bent).
+- [x] Rövid ablaknál (`THIS_MONTH` / `PREV_MONTH` → 1 hónap) a diagram **rejtve**
+      (`showChart = chartBuckets().length >= 2`) — egy sáv nem trend.
+- [x] Nincs chart-könyvtár (a kaja- és edzés-statisztikának sincs): függőség nélküli
+      CSS-sávok, Ionic téma-tokenekkel (`--ion-color-primary` / `--ion-color-step-150`)
+      → [[Dark&Light mode]] mindkét témában olvasható. `aycm-stats.page.scss` (új).
+- [x] `aycm-stats.spec.ts`: `monthlyBuckets` (zero-fill, évhatár, tartományon kívüli
+      sor, `from > to`); `aycm-stats.page.spec.ts`: `showChart` 1 hónapnál false,
+      több hónapnál true + `chartMaxHuf`.
 
 ### 5. Külön copay- (önrész-) kártya — **KÉSZ (2026-09-03)**
 
@@ -151,8 +156,12 @@ sorrend is. A 1. szelet a legkisebb, önmagában is érték.
   `allTimeRange`; `summarize` kiegészítve `coPaymentSumHuf`-fal. Page: `customFrom` /
   `customTo` signal, `customRangeReversed`, `range` computed 3-ágú, `coPaymentAvgHuf`.
   HTML: `CUSTOM` dátumbevitel + önrész-kártya. i18n: `WINDOW.ALL_TIME/CUSTOM`,
-  `CUSTOM_FROM/TO`, `CUSTOM_RANGE_REVERSED`, `CARD_COPAY`, `COPAY_AVG`. Hátra: 4.
-  szelet (diagram) + spec-átírás + jegy-archiválás.
+  `CUSTOM_FROM/TO`, `CUSTOM_RANGE_REVERSED`, `CARD_COPAY`, `COPAY_AVG`.
+- **4. szelet leszállítva (2026-09-03):** havi bontás diagram. `monthlyBuckets()`
+  pure-TS; page `chartBuckets` / `showChart` (≥ 2 hónap) / `chartMaxHuf`; HTML
+  CSS-sáv lista; új `aycm-stats.page.scss` (`styleUrl`). i18n `CHART_TITLE` /
+  `CHART_MONTH_SUMMARY` (a C1-ben előre felvéve). Hátra: az [[AYCM Statisztikák]]
+  spec teljes átírása + jegy `done` + archiválás (egy commit).
 - **Szállíthatóság:** az 5 szelet külön PR-ben mehet; a THIS_YEAR a legkisebb,
   önmagában is érték, javasolt elsőnek.
 - **`monthCount` döntés (`THIS_YEAR`, nyitott):**

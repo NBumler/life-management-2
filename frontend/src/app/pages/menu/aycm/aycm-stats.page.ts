@@ -38,6 +38,7 @@ import {
   customRange,
   filterCheckIns,
   groupByPartner,
+  monthlyBuckets,
   summarize,
   visitList,
   windowRange,
@@ -54,6 +55,7 @@ const CHECK_IN_URL = '/tabs/menu/aycm/check-in';
 @Component({
   selector: 'app-aycm-stats',
   templateUrl: 'aycm-stats.page.html',
+  styleUrl: 'aycm-stats.page.scss',
   imports: [
     DecimalPipe,
     IonHeader,
@@ -127,6 +129,18 @@ export class AycmStatsPage implements OnInit, ViewWillEnter {
     const { visitCount, coPaymentSumHuf } = this.summary();
     return visitCount === 0 ? null : Math.round(coPaymentSumHuf / visitCount);
   });
+
+  /** One row per calendar month in the window — the monthly-breakdown chart. */
+  readonly chartBuckets = computed(() => {
+    const { from, to } = this.range();
+    return monthlyBuckets(this.windowCheckIns(), from, to);
+  });
+  /** A single bar carries no trend — the chart is only shown once the window spans ≥ 2 months. */
+  readonly showChart = computed(() => this.chartBuckets().length >= 2);
+  /** Largest Σ value across the buckets, the 100%-bar reference (≥ 1 so the width math never divides by 0). */
+  readonly chartMaxHuf = computed(() =>
+    Math.max(1, ...this.chartBuckets().map((b) => b.visitValueSumHuf)),
+  );
 
   private readonly financeEnabled = this.featureFlags.isEnabled('menu.penzugyek');
 

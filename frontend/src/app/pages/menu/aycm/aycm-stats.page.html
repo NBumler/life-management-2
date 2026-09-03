@@ -85,6 +85,26 @@
     </ion-card-content>
   </ion-card>
 
+  @if (showChart()) {
+    <ion-list>
+      <ion-list-header>{{ 'AYCM.STATS.CHART_TITLE' | translate }}</ion-list-header>
+      @for (bucket of chartBuckets(); track bucket.month) {
+        <div class="chart-row">
+          <span class="chart-month">{{ bucket.month }}</span>
+          <span class="chart-bar-track">
+            <span class="chart-bar" [style.width.%]="(bucket.visitValueSumHuf / chartMaxHuf()) * 100"></span>
+          </span>
+          <span class="chart-value">
+            {{
+              'AYCM.STATS.CHART_MONTH_SUMMARY'
+                | translate: { count: bucket.visitCount, amount: (bucket.visitValueSumHuf | number: '1.0-0') }
+            }}
+          </span>
+        </div>
+      }
+    </ion-list>
+  }
+
   <ion-list>
     <ion-list-header>{{ 'AYCM.STATS.BREAKDOWN_TITLE' | translate }}</ion-list-header>
     @if (breakdown().length === 0) {

@@ -46,6 +46,13 @@ export interface VisitListRow {
   visitValueHuf: number;
 }
 
+export interface MonthBucket {
+  /** `YYYY-MM`. */
+  month: string;
+  visitCount: number;
+  visitValueSumHuf: number;
+}
+
 function pad2(value: number): string {
   return String(value).padStart(2, '0');
 }
@@ -197,6 +204,34 @@ export function groupByPartner(
   return [...byId.values()].sort(
     (a, b) => b.visitValueSumHuf - a.visitValueSumHuf || a.displayName.localeCompare(b.displayName),
   );
+}
+
+/**
+ * documentation/Subfeatures/AYCM Statisztikák.md "Havi bontás diagram". One row per calendar month
+ * in the inclusive `[fromIso, toIso]` range — months with no visit stay as zero rows so the chart
+ * has no gaps. Chronological order. `checkIns` is the window's already-filtered set; rows outside
+ * the range (should be none) are ignored.
+ */
+export function monthlyBuckets(
+  checkIns: readonly AycmCheckIn[],
+  fromIso: string,
+  toIso: string,
+): MonthBucket[] {
+  const [fromYear, fromMonth] = fromIso.split('-').map(Number);
+  const [toYear, toMonth] = toIso.split('-').map(Number);
+  const buckets = new Map<string, MonthBucket>();
+  for (let ym = fromYear * 12 + (fromMonth - 1); ym <= toYear * 12 + (toMonth - 1); ym++) {
+    const month = `${Math.floor(ym / 12)}-${pad2((ym % 12) + 1)}`;
+    buckets.set(month, { month, visitCount: 0, visitValueSumHuf: 0 });
+  }
+  for (const c of checkIns) {
+    const bucket = buckets.get(c.checkInDate.slice(0, 7));
+    if (bucket) {
+      bucket.visitCount += 1;
+      bucket.visitValueSumHuf += c.visitValueHuf;
+    }
+  }
+  return [...buckets.values()];
 }
 
 /**
