@@ -12,11 +12,15 @@ export type ThemeMode = 'system' | 'light' | 'dark';
 export class ThemeService {
   private readonly media = window.matchMedia('(prefers-color-scheme: dark)');
 
+  /** Mirrors `media.matches` as a signal so `isDark` recomputes on a live OS scheme change, not just on `mode` changes. */
+  private readonly systemDark = signal(this.media.matches);
+
   readonly mode = signal<ThemeMode>('system');
-  readonly isDark = computed(() => this.mode() === 'dark' || (this.mode() === 'system' && this.media.matches));
+  readonly isDark = computed(() => this.mode() === 'dark' || (this.mode() === 'system' && this.systemDark()));
 
   constructor() {
     this.media.addEventListener('change', () => {
+      this.systemDark.set(this.media.matches);
       if (this.mode() === 'system') {
         this.apply();
       }

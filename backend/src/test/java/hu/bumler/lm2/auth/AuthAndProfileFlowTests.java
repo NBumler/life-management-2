@@ -18,6 +18,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import hu.bumler.lm2.TestcontainersConfiguration;
 import hu.bumler.lm2.api.model.AdminCreateUserRequest;
+import hu.bumler.lm2.api.model.AdminSetPasswordRequest;
 import hu.bumler.lm2.api.model.ApiError;
 import hu.bumler.lm2.api.model.AuthTokens;
 import hu.bumler.lm2.api.model.LoginRequest;
@@ -114,6 +115,32 @@ class AuthAndProfileFlowTests {
 		mockMvc.perform(post("/api/auth/refresh").contentType(MediaType.APPLICATION_JSON)
 				.content(json(new RefreshRequest(tokens.getRefreshToken()))))
 				.andExpect(status().isUnauthorized());
+	}
+
+	@Test
+	void adminPasswordChange_revokesEverySession_thenNewPasswordWorks() throws Exception {
+		String username = uniqueUsername("pwchange");
+		createUser(username, "correct-horse-battery");
+		// Two independent "devices" — both refresh tokens must die on the password change.
+		AuthTokens deviceA = login(username, "correct-horse-battery");
+		AuthTokens deviceB = login(username, "correct-horse-battery");
+
+		mockMvc.perform(put("/api/admin/users/" + username + "/password").contentType(MediaType.APPLICATION_JSON)
+				.header("X-Admin-Api-Key", "test-admin-api-key")
+				.content(json(new AdminSetPasswordRequest("brand-new-passphrase"))))
+				.andExpect(status().isNoContent());
+
+		for (AuthTokens device : new AuthTokens[] { deviceA, deviceB }) {
+			mockMvc.perform(post("/api/auth/refresh").contentType(MediaType.APPLICATION_JSON)
+					.content(json(new RefreshRequest(device.getRefreshToken()))))
+					.andExpect(status().isUnauthorized());
+		}
+
+		mockMvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+				.content(json(new LoginRequest(username, "correct-horse-battery"))))
+				.andExpect(status().isUnauthorized());
+		AuthTokens afterChange = login(username, "brand-new-passphrase");
+		assertThat(afterChange.getAccessToken()).isNotBlank();
 	}
 
 	@Test
