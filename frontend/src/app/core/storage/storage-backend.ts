@@ -84,6 +84,14 @@ export interface FoodReferenceCounts {
   shoppingListItemCount: number;
 }
 
+/**
+ * documentation/Subfeatures/Recept.md "CRUD / törlés": live meal items referencing a shared catalog
+ * Recipe, for the delete-confirm dialog. Across every user (shared catalog).
+ */
+export interface RecipeReferenceCounts {
+  mealItemCount: number;
+}
+
 export interface PackingSessionStartDraft {
   id: string;
   destination: string | null;
@@ -681,6 +689,8 @@ export interface StorageBackend {
   saveRecipe(draft: RecipeDraft): Promise<Recipe>;
   /** documentation/Subfeatures/Recept.md "CRUD / törlés": cascades to every live ingredient on this recipe. */
   deleteRecipe(id: string): Promise<Recipe>;
+  /** documentation/Subfeatures/Recept.md "CRUD / törlés": referencing-meal count for the confirm dialog; `null` if not computable (web). */
+  countRecipeReferences(id: string): Promise<RecipeReferenceCounts | null>;
 
   /** documentation/Subfeatures/Étkezés.md: per-user meal log. Every row (incl. list entries) embeds its full live+tombstoned item set. */
   listMeals(): Promise<Meal[]>;

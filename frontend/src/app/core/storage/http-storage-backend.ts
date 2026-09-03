@@ -82,6 +82,7 @@ import {
   PackingSessionStartDraft,
   PackingTemplateDraft,
   RecipeDraft,
+  RecipeReferenceCounts,
   ShoppingListCompleteDraft,
   ShoppingListCompleteResult,
   ShoppingListDraft,
@@ -409,6 +410,11 @@ export class HttpStorageBackend implements StorageBackend {
 
   deleteRecipe(id: string): Promise<Recipe> {
     return firstValueFrom(this.recipesApi.deleteRecipe(id));
+  }
+
+  /** No local store on web to query — the delete confirmation shows the generic shared-catalog message instead. */
+  countRecipeReferences(): Promise<RecipeReferenceCounts | null> {
+    return Promise.resolve(null);
   }
 
   listWorkoutSessions(): Promise<WorkoutSession[]> {

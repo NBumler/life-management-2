@@ -204,6 +204,7 @@ import {
   PackingSessionStartDraft,
   PackingTemplateDraft,
   RecipeDraft,
+  RecipeReferenceCounts,
   ShoppingListCompleteDraft,
   ShoppingListCompleteResult,
   ShoppingListDraft,
@@ -2035,6 +2036,18 @@ export class SqliteStorageBackend implements StorageBackend {
       [id],
     );
     return { ...recipeRowToDto(recipeRows[0]), ingredients: ingredientRows.map(recipeIngredientRowToDto) };
+  }
+
+  /**
+   * documentation/Subfeatures/Recept.md "CRUD / törlés": live meal items a Recipe DELETE cascades
+   * to (via the server's MealCascade). Local store only; `HttpStorageBackend` returns `null`.
+   */
+  async countRecipeReferences(id: string): Promise<RecipeReferenceCounts> {
+    const mealItem = await this.db.query<{ c: number }>(
+      'SELECT COUNT(*) AS c FROM meal_item WHERE recipe_id = ? AND deleted = 0',
+      [id],
+    );
+    return { mealItemCount: mealItem[0]?.c ?? 0 };
   }
 
   async listWorkoutSessions(): Promise<WorkoutSession[]> {

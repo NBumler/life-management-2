@@ -25,8 +25,8 @@ import { Food } from '../../../api/model/food';
 import { FoodRepository } from '../../../core/data/food.repository';
 import { compareRank, matchesSearch } from '../../../shared/text-search';
 import { navigateFoodSection } from '../food-sections';
+import { buildFoodDeleteConfirmMessage } from '../shared-catalog-delete-confirm';
 import { FoodBarcodeScannerService } from './food-barcode-scanner.service';
-import { buildFoodDeleteConfirmMessage } from './food-delete-confirm';
 import { FoodPrefillService } from './food-prefill.service';
 import { OpenFoodFactsService } from './open-food-facts.service';
 

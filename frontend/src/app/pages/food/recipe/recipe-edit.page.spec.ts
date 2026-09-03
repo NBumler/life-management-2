@@ -20,13 +20,16 @@ function recipe(overrides: Partial<Recipe> = {}): Recipe {
 
 describe('RecipeEditPage', () => {
   let fixture: ComponentFixture<RecipeEditPage>;
-  let repository: jasmine.SpyObj<Pick<RecipeRepository, 'load' | 'save' | 'remove'>> & { items: ReturnType<typeof signal<Recipe[]>> };
+  let repository: jasmine.SpyObj<Pick<RecipeRepository, 'load' | 'save' | 'remove' | 'countReferences'>> & {
+    items: ReturnType<typeof signal<Recipe[]>>;
+  };
   let foodRepository: jasmine.SpyObj<Pick<FoodRepository, 'load'>> & { items: ReturnType<typeof signal<Food[]>> };
   let alertController: jasmine.SpyObj<AlertController>;
 
   async function createFixture(routeId: string): Promise<void> {
-    repository = jasmine.createSpyObj('RecipeRepository', ['load', 'save', 'remove']) as never;
+    repository = jasmine.createSpyObj('RecipeRepository', ['load', 'save', 'remove', 'countReferences']) as never;
     repository.load.and.resolveTo();
+    repository.countReferences.and.resolveTo(null);
     repository.items = signal<Recipe[]>([]);
     foodRepository = jasmine.createSpyObj('FoodRepository', ['load']) as never;
     foodRepository.load.and.resolveTo();

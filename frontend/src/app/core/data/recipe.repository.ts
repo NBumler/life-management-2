@@ -3,7 +3,7 @@ import { Capacitor } from '@capacitor/core';
 
 import { Recipe } from '../../api/model/recipe';
 import { normalizeName } from '../../shared/name-normalization';
-import { RecipeDraft, STORAGE_BACKEND } from '../storage/storage-backend';
+import { RecipeDraft, RecipeReferenceCounts, STORAGE_BACKEND } from '../storage/storage-backend';
 import { DataChangeNotifier } from '../sync/data-change-notifier';
 import { SyncEngineService } from '../sync/sync-engine.service';
 import { uuidV4 } from '../sync/uuid';
@@ -187,6 +187,11 @@ export class RecipeRepository {
     this.items.update((list) => list.filter((item) => item.id !== id));
     this.lastSignature = recipeSetSignature(this.items());
     this.requestDrainIfNative();
+  }
+
+  /** documentation/Subfeatures/Recept.md "CRUD / törlés": referencing-meal count for the confirm dialog; `null` on web. */
+  countReferences(id: string): Promise<RecipeReferenceCounts | null> {
+    return this.storage.countRecipeReferences(id);
   }
 
   private requestDrainIfNative(): void {

@@ -22,6 +22,7 @@ import { Recipe } from '../../../api/model/recipe';
 import { RecipeRepository } from '../../../core/data/recipe.repository';
 import { compareRank, matchesSearch } from '../../../shared/text-search';
 import { navigateFoodSection } from '../food-sections';
+import { buildRecipeDeleteConfirmMessage } from '../shared-catalog-delete-confirm';
 
 /**
  * documentation/Subfeatures/Recept.md — shared/global recipe catalog list with search and soft
@@ -94,9 +95,10 @@ export class RecipeListPage implements OnInit {
   }
 
   async delete(item: Recipe): Promise<void> {
+    const counts = await this.repository.countReferences(item.id);
     const alert = await this.alertController.create({
       header: this.translate.instant('FOOD.RECIPE.DELETE_CONFIRM_TITLE'),
-      message: this.translate.instant('FOOD.RECIPE.DELETE_CONFIRM_MESSAGE', { name: item.name }),
+      message: buildRecipeDeleteConfirmMessage(this.translate, item.name, counts),
       buttons: [
         { text: this.translate.instant('COMMON.CANCEL'), role: 'cancel' },
         { text: this.translate.instant('COMMON.DELETE'), role: 'destructive', handler: () => void this.repository.remove(item.id) },

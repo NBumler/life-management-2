@@ -31,6 +31,7 @@ import { ParsedQuantity, QuantityUnit } from '../../../shared/quantity';
 import { QuantityInputComponent } from '../../../shared/quantity-input/quantity-input.component';
 import { ReorderListComponent } from '../../../shared/reorder-list/reorder-list.component';
 import { compareRank, matchesSearch } from '../../../shared/text-search';
+import { buildRecipeDeleteConfirmMessage } from '../shared-catalog-delete-confirm';
 import { computeRecipeSummary, formatIngredientQuantity } from './recipe-summary';
 
 const NO_QUANTITY: ParsedQuantity<QuantityUnit> = { amount: null, unit: null };
@@ -244,9 +245,10 @@ export class RecipeEditPage implements OnInit {
     if (id === null) {
       return;
     }
+    const counts = await this.repository.countReferences(id);
     const alert = await this.alertController.create({
       header: this.translate.instant('FOOD.RECIPE.DELETE_CONFIRM_TITLE'),
-      message: this.translate.instant('FOOD.RECIPE.DELETE_CONFIRM_MESSAGE', { name: this.form.controls.name.value }),
+      message: buildRecipeDeleteConfirmMessage(this.translate, this.form.controls.name.value, counts),
       buttons: [
         { text: this.translate.instant('COMMON.CANCEL'), role: 'cancel' },
         { text: this.translate.instant('COMMON.DELETE'), role: 'destructive', handler: () => void this.deleteAndNavigateBack(id) },

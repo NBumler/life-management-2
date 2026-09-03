@@ -74,7 +74,7 @@ describe('RecipeRepository', () => {
   let syncEngine: jasmine.SpyObj<Pick<SyncEngineService, 'requestDrainDebounced'>>;
 
   beforeEach(() => {
-    storage = jasmine.createSpyObj('StorageBackend', ['listRecipes', 'saveRecipe', 'deleteRecipe']);
+    storage = jasmine.createSpyObj('StorageBackend', ['listRecipes', 'saveRecipe', 'deleteRecipe', 'countRecipeReferences']);
     syncEngine = jasmine.createSpyObj('SyncEngineService', ['requestDrainDebounced']);
 
     TestBed.configureTestingModule({
@@ -127,6 +127,13 @@ describe('RecipeRepository', () => {
     expect(storage.deleteRecipe).toHaveBeenCalledWith('a');
   });
 
+  it('countReferences(): delegates to the storage backend', async () => {
+    storage.countRecipeReferences.and.resolveTo({ mealItemCount: 3 });
+
+    await expectAsync(repository.countReferences('a')).toBeResolvedTo({ mealItemCount: 3 });
+    expect(storage.countRecipeReferences).toHaveBeenCalledWith('a');
+  });
+
   it('triggers a debounced drain on native for both save and remove', async () => {
     spyOn(Capacitor, 'isNativePlatform').and.returnValue(true);
     storage.listRecipes.and.resolveTo([]);
@@ -159,7 +166,7 @@ describe('RecipeRepository caching', () => {
 
   function configure(native: boolean): void {
     spyOn(Capacitor, 'isNativePlatform').and.returnValue(native);
-    storage = jasmine.createSpyObj('StorageBackend', ['listRecipes', 'saveRecipe', 'deleteRecipe']);
+    storage = jasmine.createSpyObj('StorageBackend', ['listRecipes', 'saveRecipe', 'deleteRecipe', 'countRecipeReferences']);
     storage.listRecipes.and.resolveTo([recipe({ id: 'a', name: 'Alma torta' })]);
     TestBed.configureTestingModule({
       providers: [

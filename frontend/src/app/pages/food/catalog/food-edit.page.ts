@@ -26,7 +26,7 @@ import { Food } from '../../../api/model/food';
 import { FoodDuplicateError, FoodRepository } from '../../../core/data/food.repository';
 import { ParsedQuantity } from '../../../shared/quantity';
 import { QuantityInputComponent } from '../../../shared/quantity-input/quantity-input.component';
-import { buildFoodDeleteConfirmMessage } from './food-delete-confirm';
+import { buildFoodDeleteConfirmMessage } from '../shared-catalog-delete-confirm';
 import { FoodPrefillService } from './food-prefill.service';
 import { OpenFoodFactsMappedFields, computeOffDiff } from './open-food-facts';
 import { OpenFoodFactsService } from './open-food-facts.service';

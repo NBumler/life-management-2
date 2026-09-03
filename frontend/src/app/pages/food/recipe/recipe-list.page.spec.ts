@@ -14,12 +14,15 @@ function recipe(overrides: Partial<Recipe> = {}): Recipe {
 
 describe('RecipeListPage', () => {
   let fixture: ComponentFixture<RecipeListPage>;
-  let repository: jasmine.SpyObj<Pick<RecipeRepository, 'load' | 'remove'>> & { items: ReturnType<typeof signal<Recipe[]>> };
+  let repository: jasmine.SpyObj<Pick<RecipeRepository, 'load' | 'remove' | 'countReferences'>> & {
+    items: ReturnType<typeof signal<Recipe[]>>;
+  };
   let alertController: jasmine.SpyObj<AlertController>;
 
   beforeEach(async () => {
-    repository = jasmine.createSpyObj('RecipeRepository', ['load', 'remove']) as never;
+    repository = jasmine.createSpyObj('RecipeRepository', ['load', 'remove', 'countReferences']) as never;
     repository.items = signal<Recipe[]>([]);
+    repository.countReferences.and.resolveTo(null);
     alertController = jasmine.createSpyObj('AlertController', ['create']);
 
     await TestBed.configureTestingModule({
