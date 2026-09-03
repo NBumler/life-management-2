@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-03
-verifikalt_commit: b9d7577
+verifikalt_commit: b56be9c
 ---
 
 # Élelmiszerek
@@ -55,7 +55,7 @@ A `store` jelenleg szabad szöveg a `Food` soron; külön bolt-entitásra bontá
 
 - Soft delete + megerősítés — [[Backend-offline first]] (tombstone, ne 404). Soha nem szinkronizált helyi draft → helyi hard remove + outbox tisztítás.
 - A megerősítő dialógus **jelenleg** egy generikus közös-katalógus figyelmeztetést mutat („más felhasználók tárolását, receptjeit, bevásárlólistáit és étkezéseit is érintheti"). A konkrét hivatkozás-lista tételes felsorolása még nincs bekötve — tervezett: `backlog/009-katalogus-recept-etkezes-torles-megerosito-nem-sorolja-fel-a-cas.md`.
-- Törléskor a hivatkozó elemek is soft delete (cascade a szerveren: `stored_food`, `recipe_ingredient`, `meal_item`, `shopping_list_item`, + cascade után üres étkezés is soft delete — [[Étkezés]]). A **helyi** (offline) cascade jelenleg csak `stored_food` + `recipe_ingredient` sorokra fut; a `meal_item` / `shopping_list_item` a következő delta pull-ig marad helyben — tervezett: `backlog/010-offline-food-torles-helyi-cascade-nem-terjed-ki-meal-item-shoppi.md`.
+- Törléskor a hivatkozó elemek is soft delete: a cascade a `stored_food`, `recipe_ingredient`, `meal_item` és `shopping_list_item` sorokra fut, majd a cascade után 0 élő tétellel maradó étkezés is soft delete-elődik (a bevásárlólista üresen is megmarad — [[Étkezés]], [[Bevásárlás]]). A **helyi** (offline) cascade ugyanezt a négy táblát + az üresre fogyott étkezéseket kezeli, tükrözve a szerveroldali cascade-et; a drain utáni delta pull soronként megerősíti.
 - **Shared katalógus:** a cascade **minden user** hivatkozó adataira vonatkozik; a megerősítő szöveg jelezze, hogy közös katalóguselem törlése más felhasználók adatait is érintheti.
 - Duplikáció-ellenőrzés csak **élő** (`deleted = false`) sorokra. Nincs undelete UI.
 - Backend-offline állapotban is elérhető (helyi `deleted` + outbox `DELETE`).
@@ -90,7 +90,7 @@ Nincs nyitott kérdés.
 
 #### Backend-offline
 
-- Katalógus CRUD, keresés, duplikáció-ellenőrzés: helyi adatokból (Backend-offline / Full-offline). Listák `deleted = false`. A helyi törlés-cascade jelenleg `stored_food` + `recipe_ingredient` (lásd „Törlés"); tételes cascade-előnézet UI nincs.
+- Katalógus CRUD, keresés, duplikáció-ellenőrzés: helyi adatokból (Backend-offline / Full-offline). Listák `deleted = false`. A helyi törlés-cascade a szerveroldalival azonos négy táblát (`stored_food`, `recipe_ingredient`, `meal_item`, `shopping_list_item`) + az üresre fogyott étkezéseket fedi (lásd „Törlés"); tételes cascade-előnézet UI nincs.
 - Mutációk outboxba; kliens UUID. OFF sync a gyerek specekben.
 - Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
 

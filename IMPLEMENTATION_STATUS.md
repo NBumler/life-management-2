@@ -14,6 +14,13 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-03 — #010** Offline Food-törlés helyi cascade a `meal_item` + `shopping_list_item`
+  sorokra. A `SqliteStorageBackend.deleteFood` eddig csak `stored_food` + `recipe_ingredient`
+  sorokat cascade-elt helyben; a backend `FoodService.delete` mind a négy hivatkozó táblát kezeli,
+  majd soft-delete-eli az üresre fogyott étkezéseket (`MealCascade`). Mostantól a helyi cascade is
+  fedi a `meal_item` + `shopping_list_item` sorokat és a 0 élő tétellel maradó `meal`-eket (a
+  bevásárlólistát üresen is meghagyva) — az offline store nem inkonzisztens a következő delta
+  pull-ig. Érintett spec: [[Élelmiszerek]]. Kód: `frontend/src/app/core/storage/sqlite-storage-backend.ts`.
 - **2026-09-03 — #011** Aktív `/login` átirányítás sikertelen csendes refresh után. Eddig egy
   sikertelen token-refresh (coordinator catch-ág / 401 a sync drainben) csak törölte a session-t
   (`AuthSessionService.clear()`), de a user a nem-autentikált képernyőn maradt a következő guardolt
