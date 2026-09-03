@@ -14,6 +14,13 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-03 — #011** Aktív `/login` átirányítás sikertelen csendes refresh után. Eddig egy
+  sikertelen token-refresh (coordinator catch-ág / 401 a sync drainben) csak törölte a session-t
+  (`AuthSessionService.clear()`), de a user a nem-autentikált képernyőn maradt a következő guardolt
+  navigációig. Az `AppComponent` mostantól egy `isAuthenticated()` `effect`-tel figyeli a session-t,
+  és autentikált → nem-autentikált átmenetkor azonnal `/login`-ra navigál (átmenet-szűréssel, hogy a
+  kijelentkezett cold startot ne duplázza). Érintett spec: [[Bejelentkezés]].
+  Kód: `frontend/src/app/app.component.ts` (+ `.spec.ts`).
 - **2026-09-03 — #064** `featureFlagGuard` a `/tabs/menu/gear` route-fán. A #012 párja: a
   `menu.gearcheck` flag eddig csak a menü-csempét rejtette, a `gear` route-fa guard nélkül maradt
   (deep link → letiltott feature). A `gear` node tetejére felkerül a `featureFlagGuard('menu.gearcheck')`

@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: f9ca94e
+verifikalva: 2026-09-03
+verifikalt_commit: a72c86f
 ---
 
 # Bejelentkezés
@@ -53,7 +53,7 @@ Felhasználói autentikáció és authorizáció: a személyes (user-owned) adat
 
 - Nincs idle timeout, nincs periodikus forced re-login, nincs „session lejárt, jelentkezz be újra” a mindennapi használatban.
 - **Új alkalmazásverzió telepítése / frissítése** (Capacitor / store update): a biztonságos token-tároló **megmarad** → a user bejelentkezve marad.
-- Access token lejárat: a `401` válasz után az interceptor **átlátszóan** frissít refresh tokennel és újrapróbálja a kérést (single-flight koordinátor). A frissítés jelenleg **reaktív** (nincs proaktív, lejárat előtti megújítás) — tervezett: `backlog/018-auth-proaktiv-csendes-access-token-frissites-lejarat-elott.md`. Sikertelen refresh után a session törlődik; az aktív `/login` átirányítás a következő guardolt navigációkor lép életbe — tervezett: `backlog/011-auth-sikertelen-csendes-refresh-utan-nincs-aktiv-atiranyitas-a-l.md`.
+- Access token lejárat: a `401` válasz után az interceptor **átlátszóan** frissít refresh tokennel és újrapróbálja a kérést (single-flight koordinátor). A frissítés jelenleg **reaktív** (nincs proaktív, lejárat előtti megújítás) — tervezett: `backlog/018-auth-proaktiv-csendes-access-token-frissites-lejarat-elott.md`. Sikertelen refresh után a session törlődik (`AuthSessionService.clear()`), és az app-shell (`AppComponent`) egy `isAuthenticated()` effect-tel **azonnal** a `/login` képernyőre navigál — nem várja meg a következő guardolt navigációt. A navigáció csak az autentikált → nem-autentikált átmenetre lép, és nem fut le, ha a user már a `/login`-on van.
 - Explicit kijelentkezés, admin általi user törlés / jelszócsere utáni összes token revoke, vagy refresh token érvénytelenítése: ezek **szándékos** kiléptetések.
 
 #### Több eszköz
@@ -87,7 +87,7 @@ Nincs nyitott kérdés.
 ### Frontend
 
 - Login page; auth guard / interceptor: védett route-ok csak bejelentkezve.
-- Generált OpenAPI kliens: `Authorization: Bearer <accessToken>`; 401 → refresh → retry (single-flight `token-refresh-coordinator`); refresh fail → session `clear()` + login a következő guardolt navigációkor.
+- Generált OpenAPI kliens: `Authorization: Bearer <accessToken>`; 401 → refresh → retry (single-flight `token-refresh-coordinator`); refresh fail → session `clear()`, majd az `AppComponent` `isAuthenticated()` effect **azonnal** `/login`-ra navigál (nem a következő guardolt navigációkor).
 - Token tárolás: **platform secure storage** — `@aparajita/capacitor-secure-storage` (natív: Keychain / EncryptedSharedPreferences; web: a plugin web-fallbackja, nem httpOnly cookie — a web build amúgy is online-only). App update után megmarad.
 - Helyi SQLite / store: **userId-hoz kötött**. Más user bejelentkezése előtt az előző user helyi adatai ne keveredjenek (izolált DB / kulcstér, vagy wipe + full pull).
 - Menü → Kijelentkezés: [[Frontend]] navigáció.
