@@ -272,8 +272,10 @@ touch it.
 - The MVP is delivered: `documentation/` describes the current, implemented behavior (audited against
   code — `backlog/audit/ROLLUP.md`). Check a feature's own spec under `documentation/Features/` or
   `documentation/Subfeatures/` for its concrete contract before touching it; its `verifikalt_commit`
-  frontmatter says which commit it was last verified against — if `git log -1 --format=%h -- <spec>`
-  has moved past that, the spec may have drifted and needs re-checking.
+  frontmatter says which commit it was last verified against — if the feature's **code** has changed
+  since then, the spec may have drifted and needs re-checking. (A later docs-only edit to the spec
+  file itself is not drift — and the stamp is routinely written by the commit just before the one
+  that finishes the spec rewrite, so a one- or two-commit gap on the spec file alone is expected.)
 - [`IMPLEMENTATION_STATUS.md`](IMPLEMENTATION_STATUS.md) (repo root) is a thin **changelog** of
   completed rounds and closed `backlog/` tickets — not a "what's done / what's not" state table
   (that role is gone; the vault is the current-state SSOT and `backlog/` holds the open work).

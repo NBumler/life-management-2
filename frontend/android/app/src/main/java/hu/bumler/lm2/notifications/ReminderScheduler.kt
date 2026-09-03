@@ -10,10 +10,10 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 
 /**
- * documentation/Features/Értesítések.md "08:00 / 20:00 háttér-értesítés worker" — arms two inexact
+ * documentation/Features/Értesítések.md "09:00 / 20:00 háttér-értesítés worker" — arms two inexact
  * daily alarms, device-local: a **morning** one at 09:00 (the fixed notification time for
  * FOOD_* / CALORIE_STREAK / HOUSEHOLD_TASK_DUE, and also when yesterday's step total is stashed —
- * the spec's separate "08:00 step worker" is folded into this one 09:00 run) and an **evening** one
+ * the spec's separate "09:00 step worker" is folded into this one 09:00 run) and an **evening** one
  * at 20:00 (STEPS_LOW). Deliberately NOT exact: the spec accepts drift (the local notifications are
  * already scheduled `isExactNotification: false`, and the app-open reconcile is the safety net), so
  * we use `setAndAllowWhileIdle` and skip the Android 12+ SCHEDULE_EXACT_ALARM permission and its

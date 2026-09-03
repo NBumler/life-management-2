@@ -455,7 +455,9 @@ Elv: a külső integrációk **soha nincsenek** a saját backenden proxyzva ([[B
 - **Kizárólag online műveletek** (első login, Google OAuth): a gomb `disabled` + rövid magyarázat, miért.
 - **Tilos adatvesztő UI:** sikertelen sync miatt űrlapot, listát, begépelt szöveget nem ürítünk.
 
-#### 17. Nem scope (első kör)
+#### 17. Tudatos korlátok (nem cél)
+
+Az alábbiak **tudatosan** kívül esnek az offline-first kontacton — nem halasztott munka, hanem elfogadott határ:
 
 - Realtime / push alapú sync (websocket, FCM adatüzenet) — a pull trigger-alapú.
 - Mezőszintű merge, CRDT, ETag / verziószám / optimistic locking.
