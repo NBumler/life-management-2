@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: f605541
+verifikalva: 2026-09-03
+verifikalt_commit: 18da204
 ---
 
 # Bevásárlás
@@ -55,7 +55,7 @@ Nincs nyitott kérdés.
 
 ### Frontend
 
-- Menü alatti Bevásárlás belépő; feature flag: `menu.bevasarlas`. A flag kikapcsolása jelenleg a menüpontot rejti, de a `/tabs/menu/shopping*` route maga még nincs `featureFlagGuard` mögött (deep link elérhető marad) — tervezett: `backlog/012-feature-flag-route-guard-hianyzik-a-shopping-tasks-al-route-okon.md`.
+- Menü alatti Bevásárlás belépő; feature flag: `menu.bevasarlas`. A flag kikapcsolása a menüpontot rejti **és** a `/tabs/menu/shopping` route-fát a tetején `featureFlagGuard('menu.bevasarlas')` blokkolja (a `finance` / `aycm` minta): deep link → `/tabs/menu`.
 - Közös UI: [[Mennyiség mező]], [[Szöveges keresés]].
 
 #### Backend-offline

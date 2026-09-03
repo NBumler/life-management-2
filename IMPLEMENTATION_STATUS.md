@@ -14,6 +14,14 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-03 — #012** `featureFlagGuard` a menü- / Feladatok-al-route-fákon. A `menu.bevasarlas`
+  és a `feladatok.{eletTervek,esemenyek,naptar}` flag eddig csak a hub-csempét rejtette; a
+  `/tabs/menu/shopping*` és a `/tabs/tasks/{life-plans,events,calendar}` route-fák guard nélkül
+  maradtak (deep link → letiltott feature). Mind a négy fa tetejére felkerül a megfelelő
+  `featureFlagGuard` (a `finance` / `aycm` minta), új `app.routes.spec.ts` regresszió-fedéssel.
+  A `household` al-route-nak nincs saját flagje — a `tab.feladatok` fedi. A `gear`
+  (`menu.gearcheck`) ugyanezt a hibát mutatja → `backlog/064`. Érintett specek:
+  [[Bevásárlás]], [[Tennivalók]], [[Frontend]]. Kód: `frontend/src/app/app.routes.ts` (+ `.spec.ts`).
 - **2026-09-03 — #013** Climbing szín-sáv közép-index `floor`. Az indoor-boulder napló
   `resolveIndex()`-e a shared `colorBandMidIndex()` helpert hívja az inline
   `Math.round((low + high) / 2)` helyett — a mátrix-spec által kliensre és szerverre kötelezővé

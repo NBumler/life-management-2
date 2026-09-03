@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: 8819b52
+verifikalva: 2026-09-03
+verifikalt_commit: 18da204
 ---
 
 # Tennivalók
@@ -37,9 +37,7 @@ A háztartási CRUD, naptár-előfordulás és `HOUSEHOLD_TASK_DUE` digest a [[H
 
 ### Megjegyzések
 
-A `feladatok.eletTervek` / `feladatok.esemenyek` / `feladatok.naptar` flag jelenleg csak a hub-csempét rejti; a `/tabs/tasks/{life-plans,events,calendar}` al-route-ok maguk még nincsenek `featureFlagGuard` mögött, így deep link megnyithatja a letiltott feature-t.
-
-> Tervezett: `backlog/012-feature-flag-route-guard-hianyzik-a-shopping-tasks-al-route-okon.md`
+A `feladatok.eletTervek` / `feladatok.esemenyek` / `feladatok.naptar` flag a hub-csempét rejti **és** a `/tabs/tasks/{life-plans,events,calendar}` al-route-fát a tetején külön `featureFlagGuard` blokkolja (deep link → `/tabs/menu`). A `household` al-route-nak nincs saját flagje — a `tab.feladatok` fedi, ami már a `tasks` tab-gyökéren guardol.
 
 ### Nyitott kérdések
 
@@ -50,6 +48,8 @@ Nincs nyitott kérdés.
 ### Frontend
 
 Feladatok tab → hub (négy csempe) → gyerek képernyők. Naptár aggregáció: [[Naptár]]. Háztartási API: [[Háztartási feladatok]]. Esemény API: [[Események]]. Élet terv API: [[Élet tervek]].
+
+A `tasks` tab-gyökér `featureFlagGuard('tab.feladatok')` mögött van; a saját flaggel bíró gyerekfák (`life-plans` / `events` / `calendar`) a route-fájuk tetején külön `featureFlagGuard('feladatok.eletTervek' | 'feladatok.esemenyek' | 'feladatok.naptar')` guardot kapnak (a `finance` / `aycm` minta), így letiltott feature-re a deep link is `/tabs/menu`-re esik vissza. A `household` gyerekfa saját flag nélkül a `tab.feladatok`-on osztozik.
 
 #### Backend-offline
 

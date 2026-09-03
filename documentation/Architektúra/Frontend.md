@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: 9a41447
+verifikalva: 2026-09-03
+verifikalt_commit: 18da204
 ---
 
 # Frontend
@@ -161,7 +161,7 @@ A [[Backend-offline first]] §16 globális állapotjelzője **app-shell chrome m
 
 - **Build-time ship config**, nem in-app user-toggle: `src/assets/config/features.json` build asset (Full-offline is elérhető — [[Backend-offline first]] §15), tipizált `FeatureFlags` root service olvassa **szinkronban**, az app init első lépéseként.
 - A config a **teljes** kulcslistát tartalmazza; hiányzó vagy ismeretlen kulcs fejlesztői hiba: dev buildben hangos hiba, prod buildben a kulcs `false`.
-- Kikapcsolt feature esetén nem csak a UI rejtett: a route **guard** blokkol (deep link → default tab), a feature seedje, ütemezője ([[Értesítések]]) és háttérfeladata sem indul.
+- Kikapcsolt feature esetén nem csak a UI rejtett: a route **guard** blokkol (deep link → default tab), a feature seedje, ütemezője ([[Értesítések]]) és háttérfeladata sem indul. A `featureFlagGuard(flag)` a **route-fa tetején** ül (a `finance` / `aycm` minta): nem csak a tab-gyökereken, hanem a saját flaggel bíró menü-al-oldalakon (`/tabs/menu/shopping` → `menu.bevasarlas`) és a Feladatok hub gyerekfáin (`/tabs/tasks/{life-plans,events,calendar}` → `feladatok.{eletTervek,esemenyek,naptar}`) is; a `household` al-route-nak nincs saját flagje, azt a `tab.feladatok` fedi.
 - A delta pull **nem** szűr flag szerint (`types` nélkül): a letiltott feature adata lehúzódhat a helyi store-ba, csak nincs hozzá UI. Így a flag visszakapcsolása nem igényel full re-pullt.
 - Az [[Értesítések]] típus-kapcsolói **nem** feature flag-ek: device-local user beállítások, és a forrás-feature flagje fedi őket (forrás ki → a típus nem jelenik meg és nem ütemez).
 
