@@ -110,7 +110,12 @@ public final class QuantityConverter {
 		return scaledEqual(canonicalQuantityAmount(amountA, unitA), canonicalQuantityAmount(amountB, unitB));
 	}
 
-	/** Canonical amounts are equal iff they match once scaled to {@link #EQUALITY_DECIMAL_SCALE} places (HALF_UP). */
+	/**
+	 * Canonical amounts are equal iff they match once scaled to {@link #EQUALITY_DECIMAL_SCALE} places
+	 * (HALF_UP — round half away from zero). quantity.ts mirrors this exact rule
+	 * (`roundHalfAwayFromZero`); canonical amounts are always ≥ 0 here (the parser rejects a leading
+	 * {@code -}), so HALF_UP only ever differs from a naive round-half-up on a hypothetical negative.
+	 */
 	private static boolean scaledEqual(BigDecimal a, BigDecimal b) {
 		return a.setScale(EQUALITY_DECIMAL_SCALE, RoundingMode.HALF_UP)
 				.compareTo(b.setScale(EQUALITY_DECIMAL_SCALE, RoundingMode.HALF_UP)) == 0;

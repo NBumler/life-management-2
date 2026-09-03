@@ -94,6 +94,13 @@ describe('parseQuantityInput', () => {
     expect(() => parseQuantityInput('5', 'quantity')).toThrowError(QuantityParseError);
   });
 
+  it('C-8: rejects a negative amount uniformly (decimal and fraction alike)', () => {
+    expect(() => parseQuantityInput('-1cs', 'quantity')).toThrowError(QuantityParseError);
+    expect(() => parseQuantityInput('-1.5kg', 'quantity')).toThrowError(QuantityParseError);
+    expect(() => parseQuantityInput('-1/2cs', 'quantity')).toThrowError(QuantityParseError);
+    expect(() => parseQuantityInput('-3nap', 'duration')).toThrowError(QuantityParseError);
+  });
+
   describe('fraction input (documentation/Architektúra/Mennyiség mező.md "Tört bevitel")', () => {
     for (const { input, amount } of fixture.fractionExamples) {
       it(`parses "${input}cs" as ${amount}cs (rounded to ${EQUALITY_DECIMAL_SCALE} places)`, () => {

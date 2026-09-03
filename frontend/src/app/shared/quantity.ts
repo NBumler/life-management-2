@@ -77,16 +77,31 @@ export const EQUALITY_DECIMAL_SCALE = 4;
 
 const SCALE_FACTOR = 10 ** EQUALITY_DECIMAL_SCALE;
 
-/** Number part: a decimal (`120`, `1.5`, `0,4`) or a simple fraction (`1/6`, `5/2`) — no mixed fractions (`1 1/2`). */
-const INPUT_PATTERN = /^(-?\d+(?:[.,]\d+)?|\d+\/\d+)\s*([a-zA-Zóőúűáéíöü]+)$/;
+/**
+ * Number part: a non-negative decimal (`120`, `1.5`, `0,4`) or a simple fraction (`1/6`, `5/2`) — no
+ * mixed fractions (`1 1/2`), and no leading `-`: a negative quantity or duration is meaningless, so
+ * both forms reject it uniformly rather than the decimal accepting `-1cs` while the fraction rejects
+ * `-1/2cs` (GIGA-REVIEW C-8).
+ */
+const INPUT_PATTERN = /^(\d+(?:[.,]\d+)?|\d+\/\d+)\s*([a-zA-Zóőúűáéíöü]+)$/;
+
+/**
+ * Round half away from zero, matching Java's `RoundingMode.HALF_UP` (QuantityConverter). Canonical
+ * amounts are always ≥ 0 (the input pattern rejects `-`), so this only differs from a plain
+ * `Math.round` — which rounds half toward +∞ — on a hypothetical negative half; keeping the rule
+ * identical on both sides guards the parity if that ever changes (GIGA-REVIEW C-6).
+ */
+function roundHalfAwayFromZero(value: number): number {
+  return Math.sign(value) * Math.round(Math.abs(value));
+}
 
 function roundToScale(value: number): number {
-  return Math.round(value * SCALE_FACTOR) / SCALE_FACTOR;
+  return roundHalfAwayFromZero(value * SCALE_FACTOR) / SCALE_FACTOR;
 }
 
 /** Canonical amounts are equal iff they match once scaled to `EQUALITY_DECIMAL_SCALE` places (integer compare). */
 function scaledEqual(a: number, b: number): boolean {
-  return Math.round(a * SCALE_FACTOR) === Math.round(b * SCALE_FACTOR);
+  return roundHalfAwayFromZero(a * SCALE_FACTOR) === roundHalfAwayFromZero(b * SCALE_FACTOR);
 }
 
 /**
