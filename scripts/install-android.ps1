@@ -157,15 +157,33 @@ if (-not (Test-Path $apkPath)) {
 
 if ($Deliver) {
     # Egy allando 'dev-apk' GitHub prerelease-re toltjuk fel; minden futas feluliria az asset-et
-    # (--clobber), igy nem szaporodnak a release-ek. A repo publikus -> a letolto URL bejelentkezes
-    # nelkul el. Cel: LAN-on kivuli (pl. telefonrol vezerelt) session-bol is teszthelheto legyen az
-    # app - offline-first funkciok; a backend ilyenkor nem elerheto.
+    # (--clobber), igy nem szaporodnak a release-ek. Publikus repon a letolto URL bejelentkezes
+    # nelkul el; privat repon a script figyelmeztet, hogy csak bejelentkezessel toltheto. Cel:
+    # LAN-on kivuli (pl. telefonrol vezerelt) session-bol is teszthelheto legyen az app -
+    # offline-first funkciok; a backend ilyenkor nem elerheto.
     if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
         throw "A -Deliver a GitHub CLI-t igenyli, ami nincs a PATH-on. Telepites: winget install --id GitHub.cli ; majd egyszer: gh auth login"
     }
 
-    $originUrl = (git -C $repoRoot remote get-url origin).Trim()
-    $repoSlug = $originUrl -replace '^git@github\.com:', '' -replace '^https://github\.com/', '' -replace '\.git$', ''
+    # Ez a hivas is a script-szintu $ErrorActionPreference = "Stop" alatt fut; 'origin' remote nelkul
+    # a git stderr-je PS 5.1-ben terminalo NativeCommanderror lenne a tiszta throw helyett.
+    $savedEapGit = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    try {
+        $originUrl = (& git -C $repoRoot remote get-url origin 2>&1 | Out-String).Trim()
+        $gitExit = $LASTEXITCODE
+    } finally {
+        $ErrorActionPreference = $savedEapGit
+    }
+    if ($gitExit -ne 0) {
+        throw "Nem sikerult az 'origin' remote-ot kiolvasni (van beallitva 'origin'?): $originUrl"
+    }
+    $repoSlug = $originUrl `
+        -replace '^git@github\.com:', '' `
+        -replace '^ssh://git@github\.com/', '' `
+        -replace '^git://github\.com/', '' `
+        -replace '^https://github\.com/', '' `
+        -replace '\.git$', ''
     if (-not $repoSlug -or $repoSlug -eq $originUrl) {
         throw "Nem sikerult a repo slug-ot kiolvasni az origin remote-bol: $originUrl"
     }
@@ -179,8 +197,13 @@ if ($Deliver) {
     $savedEap = $ErrorActionPreference
     $ErrorActionPreference = "Continue"
     try {
-        & gh release view $tag --repo $repoSlug 2>&1 | Out-Null
+        $viewOutput = (& gh release view $tag --repo $repoSlug 2>&1 | Out-String)
         if ($LASTEXITCODE -ne 0) {
+            # Csak a "nincs ilyen release" agra megyunk tovabb; barmi mas (auth, halozat, rossz repo)
+            # valodi hiba -> allj meg, ne fedje el egy kesobbi 'gh release create' hibauzenete.
+            if ($viewOutput -notmatch '(?i)release not found|not found') {
+                throw "gh release view sikertelen ($repoSlug): $($viewOutput.Trim())"
+            }
             Write-Host "'$tag' prerelease letrehozasa ($repoSlug)..."
             $notes = "Legfrissebb debug APK telefonos teszteleshez. Minden 'install-android.ps1 -Deliver' futas feluliria."
             & gh release create $tag --repo $repoSlug --prerelease --title "Dev APK builds" --notes $notes
@@ -190,13 +213,20 @@ if ($Deliver) {
         Write-Host "APK feltoltese: $tag <- $apkPath"
         & gh release upload $tag $apkPath --repo $repoSlug --clobber
         if ($LASTEXITCODE -ne 0) { throw "gh release upload sikertelen (exit $LASTEXITCODE)" }
+
+        $visibility = (& gh repo view $repoSlug --json visibility --jq .visibility 2>&1 | Out-String).Trim()
+        $repoIsPublic = ($LASTEXITCODE -eq 0 -and $visibility -eq 'PUBLIC')
     } finally {
         $ErrorActionPreference = $savedEap
     }
 
     $downloadUrl = "https://github.com/$repoSlug/releases/download/$tag/app-debug.apk"
     Write-Host ""
-    Write-Host "Kesz. Toltsd le a telefonon (bejelentkezes nelkul is mukodik):"
+    if ($repoIsPublic) {
+        Write-Host "Kesz. Toltsd le a telefonon (bejelentkezes nelkul is mukodik):"
+    } else {
+        Write-Host "Kesz. A repo lathatosaga '$visibility' (nem PUBLIC) -> a lenti URL csak bejelentkezessel toltheto:"
+    }
     Write-Host "  $downloadUrl"
     if (-not $ApiHost -and -not $Usb) {
         Write-Host ""
