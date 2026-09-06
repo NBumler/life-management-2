@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-03
-verifikalt_commit: f3f888e
+verifikalva: 2026-09-06
+verifikalt_commit: 651f710
 ---
 
 # Backend-offline first
@@ -253,6 +253,10 @@ Az outbox tételek **túlélik az alkalmazás frissítését** ([[Bejelentkezés
 - A drain előtt: ha `payloadVersion < SCHEMA_VERSION`, egy `OutboxMigrator` lépésenként (v1→v2→…) átalakítja a payloadot és az `url`-t. **Mechanizmus:** egy registry, `Map<string, MigrationStep>`, ahol a kulcs `"<entityType>:<fromVersion>"` (pl. `"HouseholdTask:1"`), az érték egy pure függvény `(payload: unknown, url: string) => { payload: unknown; url: string }` szignatúrával. A migráció egy tételre lépésenként fut (`fromVersion → fromVersion+1 → … → SCHEMA_VERSION`); minden sikeres lépés után a tétel helyi `payloadVersion`-je eggyel nő, mielőtt a következő lépés kulcsát keresné a registry.
 - Ha az adott lépéshez **nincs** regisztrált migráció, a tétel `ERROR` lesz, egyértelmű üzenettel („az alkalmazás frissült, a tételt kézzel kell újraküldeni”). A begépelt adat nem veszik el: a [[Szinkronizációs központ]] payload-nézete megmutatja a raw JSON-t.
 - **Fejlesztői szabály:** minden breaking DTO- vagy útvonal-változáshoz vagy outbox migrációt írunk, vagy tudatosan vállaljuk az `ERROR`-t. Ez a döntés a PR-ban explicit.
+- **Két mechanikus őr a szabály mögött** (`backlog/080` — korábban csak próza volt, és a `#77` `failurePoint`→`notes` mezőtörléséhez lemaradt a migrátor-lépés, ami egy telefonon beragadt egy `ClimbingSession` POST-ot):
+  - **Séma-drift check** — `npm run verify:outbox` (`scripts/verify-outbox-payload-schema.mjs`) minden outbox-hordozott DTO OpenAPI-alakját (a `$ref`-tranzitív fájlzárt tartalmának hashe) egy commitolt snapshothoz (`outbox-payload-schema.snapshot.json`) veti. Mezőalak-változás **piros**, amíg az `OUTBOX_PAYLOAD_SCHEMA_VERSION` bump + a migrátor-lépés + a `--write` (snapshot újra-elfogadás, a PR diffben látszik) meg nem történt. Része a zöld-check kapunak ([[Fejlesztői környezet]]).
+  - **Verzió→lépések teljesség** — az `outbox-migrator.ts` `MIGRATIONS` map generatívan épül (`STEPS_BY_VERSION` per-verzió `default` + `overrides`, minden entitástípusra minden `v < VERSION`-ra), így nem lehet lyuk; bumpolt verzió `STEPS_BY_VERSION` bejegyzés nélkül modultöltéskor dob, és `outbox-migrator.spec.ts` is asszertálja a per-kulcs teljességet.
+- **Szerver-oldali tolerancia** (`backlog/080`): a backend `ObjectMapper` `FAIL_ON_UNKNOWN_PROPERTIES` **ki van kapcsolva** — egy régi offline payloadból eltávolított / átnevezett mezőt a szerver csendben elhagy, nem `500`-zik (a `@Valid` a hiányzó **kötelező** mezőt így is elkapja). Egy tényleg parse-olhatatlan body `400 MALFORMED_REQUEST` (nem az általános `500` fallback, amit a drain `5×` újrapróbálna). Így egy migrátorból kimaradt mező a legrosszabb esetben is **átmegy**, nem bénítja meg a tételt.
 
 #### 8. Olvasási út — pull (delta sync)
 

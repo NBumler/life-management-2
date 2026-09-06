@@ -7,6 +7,7 @@ import org.springframework.core.MethodParameter;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -141,6 +142,21 @@ class GlobalExceptionHandlerTest {
 
 	@SuppressWarnings("unused")
 	private static void dummyTarget(String ignored) {
+	}
+
+	@Test
+	void handleUnreadableBody_returns400WithStableCode_notThe500Fallback() {
+		// backlog/080: a stale offline payload with an unknown field used to fall through to the
+		// generic 500 fallback (retried 5× by the client's outbox). It must now be a clean 400.
+		HttpMessageNotReadableException ex = new HttpMessageNotReadableException("JSON parse error",
+				new RuntimeException("Unrecognized field \"failurePoint\""), null);
+
+		ResponseEntity<ApiError> response = handler.handleUnreadableBody(ex);
+
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+		ApiError body = response.getBody();
+		assertThat(body.getCode()).isEqualTo("MALFORMED_REQUEST");
+		assertThat(body.getMessage()).doesNotContain("failurePoint");
 	}
 
 	@Test

@@ -9,6 +9,7 @@ import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -29,7 +30,15 @@ class JacksonConfig implements WebMvcConfigurer {
 		return new ObjectMapper()
 				.registerModule(new JavaTimeModule())
 				.registerModule(new JsonNullableModule())
-				.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+				.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+				// backlog/080: an offline-first API must accept request bodies built by an older app
+				// version. When a spec change removes or renames a field (e.g. #77 folded
+				// AscentAttempt.failurePoint into notes), a still-pending outbox payload on a phone
+				// that has not app-updated yet carries the old field. Ignoring it here — rather than
+				// 500-ing on FAIL_ON_UNKNOWN_PROPERTIES — lets that write drain instead of bricking.
+				// jakarta @Valid still rejects a genuinely missing REQUIRED field, so a real typo in a
+				// required key is still caught; only extra/stale keys are silently dropped.
+				.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 	}
 
 	@Override

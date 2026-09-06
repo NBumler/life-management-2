@@ -96,9 +96,99 @@ function rewriteNode(node: unknown): unknown {
   return out;
 }
 
-const MIGRATIONS: ReadonlyMap<string, MigrationStep> = new Map<string, MigrationStep>(
-  ALL_ENTITY_TYPES.map((entityType) => [`${entityType}:1`, rewriteDbUnitToCs] as const),
-);
+/** A pure pass-through — the step for an entity type a given version bump does not touch. */
+export function identityStep(payload: unknown, url: string): { payload: unknown; url: string } {
+  return { payload, url };
+}
+
+/**
+ * v2 → v3 (backlog/080): #77 folded `AscentAttempt.failurePoint` ("hol akadt el") into `notes` and
+ * removed the field (`V31__ascent_attempt_merge_failure_point_into_notes.sql`). A `ClimbingSession`
+ * write still pending on a phone from before that app update carries `attempts[].failurePoint`,
+ * which the (post-#77) server now rejects. Strip it from every attempt, folding any non-blank text
+ * into `notes` with the same rule the migration used: both present → `notes\nfailurePoint`; only one
+ * → that one. DELETE items (null payload) and any non-session-shaped payload pass through untouched.
+ */
+export function stripClimbingSessionFailurePoint(payload: unknown, url: string): { payload: unknown; url: string } {
+  if (payload === null || typeof payload !== 'object') {
+    return { payload, url };
+  }
+  const session = payload as { attempts?: unknown };
+  if (!Array.isArray(session.attempts)) {
+    return { payload, url };
+  }
+  const attempts = session.attempts.map((attempt) => {
+    if (attempt === null || typeof attempt !== 'object' || !('failurePoint' in attempt)) {
+      return attempt;
+    }
+    const { failurePoint, ...rest } = attempt as Record<string, unknown> & { failurePoint?: unknown };
+    const salvaged = typeof failurePoint === 'string' ? failurePoint.trim() : '';
+    if (salvaged === '') {
+      return rest;
+    }
+    const existingNotes = typeof rest['notes'] === 'string' ? (rest['notes'] as string) : '';
+    return { ...rest, notes: existingNotes.trim() !== '' ? `${existingNotes}\n${salvaged}` : salvaged };
+  });
+  return { payload: { ...session, attempts }, url };
+}
+
+/**
+ * Per global version step: the function every entity type gets for that `N → N+1` bump, plus
+ * per-entity `overrides`. `MIGRATIONS` is built by walking 1 … `OUTBOX_PAYLOAD_SCHEMA_VERSION`-1 and
+ * registering `<entityType>:<v>` for *every* entity type — so a version can never leave a hole for a
+ * known type, and a bump with no `STEPS_BY_VERSION` entry throws at module load (guard for
+ * "bumped the version but forgot the steps"; the schema-drift guard `npm run verify:outbox` covers
+ * the other direction).
+ */
+interface VersionSteps {
+  default: MigrationStep;
+  overrides?: Partial<Record<OutboxEntityType, MigrationStep>>;
+}
+
+const STEPS_BY_VERSION: Readonly<Record<number, VersionSteps>> = {
+  1: { default: rewriteDbUnitToCs },
+  2: { default: identityStep, overrides: { ClimbingSession: stripClimbingSessionFailurePoint } },
+};
+
+function buildMigrations(): ReadonlyMap<string, MigrationStep> {
+  const map = new Map<string, MigrationStep>();
+  for (let version = 1; version < OUTBOX_PAYLOAD_SCHEMA_VERSION; version += 1) {
+    const steps = STEPS_BY_VERSION[version];
+    if (!steps) {
+      throw new Error(
+        `outbox-migrator: OUTBOX_PAYLOAD_SCHEMA_VERSION is ${OUTBOX_PAYLOAD_SCHEMA_VERSION} but no STEPS_BY_VERSION entry ` +
+          `for the v${version} → v${version + 1} step. Add one (default: identityStep, plus overrides for any ` +
+          `entity whose payload shape actually changed).`,
+      );
+    }
+    for (const entityType of ALL_ENTITY_TYPES) {
+      map.set(`${entityType}:${version}`, steps.overrides?.[entityType] ?? steps.default);
+    }
+  }
+  return map;
+}
+
+const MIGRATIONS: ReadonlyMap<string, MigrationStep> = buildMigrations();
+
+/**
+ * Every `<entityType>:<v>` key the registry must hold for the current `OUTBOX_PAYLOAD_SCHEMA_VERSION`
+ * (`v` = 1 … version-1). Exported so `outbox-migrator.spec.ts` can assert `MIGRATIONS` covers all of
+ * them — the runtime half of the "a version bump registers a step for every entity type" guard.
+ */
+export function expectedMigrationKeys(targetVersion: number = OUTBOX_PAYLOAD_SCHEMA_VERSION): string[] {
+  const keys: string[] = [];
+  for (let version = 1; version < targetVersion; version += 1) {
+    for (const entityType of ALL_ENTITY_TYPES) {
+      keys.push(`${entityType}:${version}`);
+    }
+  }
+  return keys;
+}
+
+/** Read-only view of the production registry, for the completeness assertion in the spec. */
+export function registeredMigrationKeys(): string[] {
+  return [...MIGRATIONS.keys()];
+}
 
 export interface OutboxMigrationResult {
   /** false when the item was already at the target version — nothing to do, nothing to persist. */

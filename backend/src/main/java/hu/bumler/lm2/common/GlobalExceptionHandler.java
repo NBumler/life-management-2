@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -138,6 +139,17 @@ public class GlobalExceptionHandler {
 	ResponseEntity<ApiError> handleValidation(ValidationException ex) {
 		return ResponseEntity.badRequest()
 				.body(new ApiError("VALIDATION_ERROR", ex.getMessage()).field(ex.getField()));
+	}
+
+	// backlog/080: a body Jackson cannot bind (malformed JSON, or — before the FAIL_ON_UNKNOWN_PROPERTIES
+	// change — an unknown field from a stale offline payload). Without this it fell through to the
+	// generic 500 fallback, which the client's outbox drain then retried 5× as a "server fault" before
+	// giving up. A malformed body is a permanent client-side condition: map it to a clean 400 with a
+	// stable code (no stack trace, warn not error) so the outbox sends it straight to ERROR.
+	@ExceptionHandler(HttpMessageNotReadableException.class)
+	ResponseEntity<ApiError> handleUnreadableBody(HttpMessageNotReadableException ex) {
+		log.warn("Unreadable request body: {}", ex.getMostSpecificCause().getMessage());
+		return ResponseEntity.badRequest().body(new ApiError("MALFORMED_REQUEST", "Request body could not be parsed"));
 	}
 
 	@ExceptionHandler(MethodArgumentNotValidException.class)

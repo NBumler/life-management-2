@@ -14,6 +14,23 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-06 — #080** Outbox stale-payload robusztusság. Egy telefonon beragadt egy
+  `ClimbingSession` POST, mert a payloadja még a #77 (`failurePoint` → `notes` beolvasztás) előtti
+  appal készült, és a backend `HttpMessageNotReadableException`-nel (`Unrecognized field
+  "failurePoint"`) → **500**-zal utasította el, amit a drain 5× újrapróbált. Három rétegű fix +
+  két mechanikus őr: **(1)** backend `JacksonConfig` `FAIL_ON_UNKNOWN_PROPERTIES` **off** — régi
+  offline payload extra mezőjét a szerver csendben eldobja (a `@Valid` a hiányzó kötelezőt így is
+  fogja); **(2)** `GlobalExceptionHandler` `HttpMessageNotReadableException` → `400
+  MALFORMED_REQUEST` (nem az általános 500 fallback); **(3)** `OUTBOX_PAYLOAD_SCHEMA_VERSION` 2 → 3
+  + `ClimbingSession:2` migrátor-lépés, ami kiszedi a `attempts[].failurePoint`-ot (nem üres
+  szöveget a #77 szabálya szerint a `notes`-ba forgatva) — a beragadt elem a következő
+  app-frissítéskor magától átmegy. **Őr A:** `npm run verify:outbox`
+  (`scripts/verify-outbox-payload-schema.mjs` + `outbox-payload-schema.snapshot.json`) — minden
+  outbox-hordozott DTO `$ref`-tranzitív OpenAPI-alakját hasheli, mezőalak-drift piros, amíg a
+  verzió-bump + migrátor-lépés + `--write` meg nem történt; a zöld-check kapu része. **Őr B:** a
+  `MIGRATIONS` map generatívan épül (`STEPS_BY_VERSION` per-verzió `default` + `overrides`), a
+  `buildMigrations()` dob egy hiányzó verzió-bejegyzésre, az `outbox-migrator.spec.ts` a per-kulcs
+  teljességet asszertálja. Érintett specek: [[Backend-offline first]] §7, [[Mászónapló]].
 - **2026-09-06 — #065** `ExerciseCategory` finomabb felbontás — az enumot **helyben** bővítettük:
   `ARMS` → `BICEPS` + `TRICEPS`, `CORE` → `ABS` + `LOWER_BACK` + `OBLIQUES` (új teljes lista 11
   érték). Backend: `V35__exercise_category_split_arms_core.sql` — mindhárom táblán

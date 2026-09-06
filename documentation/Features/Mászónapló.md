@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-06
-verifikalt_commit: 8dbfb13
+verifikalt_commit: 651f710
 ---
 
 # Mászónapló
@@ -198,6 +198,8 @@ Nincs nyitott kérdés.
 #### Backend-offline
 
 Olvasás/írás helyi store; mutációk outbox + kliens UUID; soft delete synchelhető; draft helyi. A mászótárs-javaslatok forrása a helyi `climbing_session` tábla, így a combobox Full-offline is teljes értékű. Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
+
+A `#77` (`AscentAttempt.failurePoint` → `notes` beolvasztás) egy még nem frissített telefonon beragaszthatott egy `ClimbingSession` POST-ot (a payload a törölt mezőt hordozta). `backlog/080`: `OUTBOX_PAYLOAD_SCHEMA_VERSION` v2 → v3 `ClimbingSession:2` migrátor-lépéssel kiszedi a `failurePoint`-ot minden `attempt`-ből (nem üres szöveget a `#77` szabálya szerint a `notes`-ba forgatva), a backend pedig az ismeretlen mezőt már úgyis eldobná (`FAIL_ON_UNKNOWN_PROPERTIES` off) — lásd [[Backend-offline first]] §7.
 
 ### Backend
 

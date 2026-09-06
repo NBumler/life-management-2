@@ -1,6 +1,14 @@
 import { OUTBOX_PAYLOAD_SCHEMA_VERSION } from './offline-queue.service';
 import { OutboxItem } from './outbox-item';
-import { ALL_ENTITY_TYPES_EXHAUSTIVE, MigrationStep, migrateOutboxItem, rewriteDbUnitToCs } from './outbox-migrator';
+import {
+  ALL_ENTITY_TYPES_EXHAUSTIVE,
+  MigrationStep,
+  expectedMigrationKeys,
+  migrateOutboxItem,
+  registeredMigrationKeys,
+  rewriteDbUnitToCs,
+  stripClimbingSessionFailurePoint,
+} from './outbox-migrator';
 
 // documentation/Architektúra/Backend-offline first.md §7 "Payload-verziózás (app frissítés)".
 // The mechanism tests use synthetic registries passed explicitly; the production-registry tests at
@@ -176,5 +184,90 @@ describe('migrateOutboxItem', () => {
     // The real enforcement is the type of ALL_ENTITY_TYPES_EXHAUSTIVE — a missing union member makes
     // outbox-migrator.ts fail to compile. This just pins the runtime value so the symbol stays used.
     expect(ALL_ENTITY_TYPES_EXHAUSTIVE).toBe(true);
+  });
+
+  // backlog/080 guard B: bumping OUTBOX_PAYLOAD_SCHEMA_VERSION without registering a step for every
+  // (entityType, version) pair must fail here rather than on a user's phone. `buildMigrations()`
+  // already throws at module load for a missing whole-version entry; this pins per-key completeness.
+  it('the production registry holds a step for every entity type at every version below the target', () => {
+    const registered = new Set(registeredMigrationKeys());
+    const missing = expectedMigrationKeys().filter((key) => !registered.has(key));
+
+    expect(missing).toEqual([]);
+    expect(registered.size).toBe(expectedMigrationKeys().length);
+  });
+
+  describe('stripClimbingSessionFailurePoint (v2 → v3, backlog/080 / #77)', () => {
+    it('folds a non-blank failurePoint into an existing notes value and drops the key', () => {
+      const { payload } = stripClimbingSessionFailurePoint(
+        { id: 's1', attempts: [{ id: 'a1', notes: 'kifutottam az erőből', failurePoint: 'a kulcsmozdulatnál' }] },
+        '/api/climbing/sessions/s1',
+      );
+
+      const attempt = (payload as { attempts: Record<string, unknown>[] }).attempts[0];
+      expect(attempt['failurePoint']).toBeUndefined();
+      expect(attempt['notes']).toBe('kifutottam az erőből\na kulcsmozdulatnál');
+    });
+
+    it('uses failurePoint as notes when notes is empty / missing', () => {
+      const { payload } = stripClimbingSessionFailurePoint(
+        { attempts: [{ id: 'a1', failurePoint: '  a lábam lecsúszott  ' }, { id: 'a2', notes: '', failurePoint: 'x' }] },
+        '/url',
+      );
+      const attempts = (payload as { attempts: Record<string, unknown>[] }).attempts;
+      expect(attempts[0]['notes']).toBe('a lábam lecsúszott');
+      expect(attempts[0]['failurePoint']).toBeUndefined();
+      expect(attempts[1]['notes']).toBe('x');
+    });
+
+    it('just drops a blank / non-string failurePoint, leaving notes untouched', () => {
+      const { payload } = stripClimbingSessionFailurePoint(
+        { attempts: [{ id: 'a1', notes: 'megvolt', failurePoint: '   ' }, { id: 'a2', notes: null, failurePoint: null }] },
+        '/url',
+      );
+      const attempts = (payload as { attempts: Record<string, unknown>[] }).attempts;
+      expect(attempts[0]).toEqual({ id: 'a1', notes: 'megvolt' });
+      expect(attempts[1]).toEqual({ id: 'a2', notes: null });
+    });
+
+    it('passes through a null payload (DELETE) and a payload with no attempts array', () => {
+      expect(stripClimbingSessionFailurePoint(null, '/url')).toEqual({ payload: null, url: '/url' });
+      expect(stripClimbingSessionFailurePoint({ id: 's1' }, '/url')).toEqual({ payload: { id: 's1' }, url: '/url' });
+    });
+  });
+
+  describe('production registry — v2 → v3 (backlog/080, ClimbingSession.failurePoint)', () => {
+    it('strips failurePoint from a stale ClimbingSession write walked v1 → v3', () => {
+      const stale = item({
+        payloadVersion: 1,
+        entityType: 'ClimbingSession',
+        url: '/api/climbing/sessions/s1',
+        payload: { id: 's1', attempts: [{ id: 'a1', notes: 'ok', failurePoint: 'a tetőnél' }] },
+      });
+
+      const result = migrateOutboxItem(stale, OUTBOX_PAYLOAD_SCHEMA_VERSION);
+
+      expect(result.migrated).toBe(true);
+      expect(result.errorMessage).toBeNull();
+      expect(result.payloadVersion).toBe(OUTBOX_PAYLOAD_SCHEMA_VERSION);
+      const attempt = (result.payload as { attempts: Record<string, unknown>[] }).attempts[0];
+      expect(attempt['failurePoint']).toBeUndefined();
+      expect(attempt['notes']).toBe('ok\na tetőnél');
+    });
+
+    it('is a content no-op for every non-ClimbingSession entity at the v2 → v3 step', () => {
+      const stale = item({
+        payloadVersion: 2,
+        entityType: 'Food',
+        url: '/api/foods/f1',
+        payload: { id: 'f1', name: 'Alma', netUnit: 'g' },
+      });
+
+      const result = migrateOutboxItem(stale, OUTBOX_PAYLOAD_SCHEMA_VERSION);
+
+      expect(result.migrated).toBe(true);
+      expect(result.payload).toEqual({ id: 'f1', name: 'Alma', netUnit: 'g' });
+      expect(result.payloadVersion).toBe(OUTBOX_PAYLOAD_SCHEMA_VERSION);
+    });
   });
 });

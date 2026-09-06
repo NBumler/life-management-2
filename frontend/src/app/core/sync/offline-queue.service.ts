@@ -5,12 +5,21 @@ import { EnqueueRequest, OutboxItem, OutboxMethod, OutboxRow, rowToOutboxItem } 
 import { uuidV4 } from './uuid';
 
 /**
- * v2 (backlog/063): the `db` quantity unit was renamed to `cs` everywhere. Every pending payload
- * that still carries `netUnit: 'db'` / `quantityUnit: 'db'` is rewritten to `'cs'` before drain —
- * see `outbox-migrator.ts`. All other entity types get an identity step at `:1` so a stale pending
- * write of any kind survives the version bump instead of going to ERROR.
+ * Bumped whenever a schema change alters the shape of an outbox-carried payload (a field removed or
+ * renamed on a DTO that a POST/PUT body — or a nested row of it — serializes). Every bump needs a
+ * registered `<entityType>:<n>` step in `outbox-migrator.ts` for **every** entity type (identity
+ * where the change doesn't touch it), so a still-pending write survives the bump instead of going
+ * to ERROR. Two mechanical guards keep this honest (backlog/080): `npm run verify:outbox` fails when
+ * a DTO's OpenAPI shape drifts without a bump here, and `outbox-migrator.spec.ts` fails when a bump
+ * here leaves a `<type>:<n>` step unregistered.
+ *
+ * - v1 → v2 (backlog/063): the `db` quantity unit renamed to `cs` — pending `netUnit`/`quantityUnit`
+ *   `'db'` rewritten to `'cs'`.
+ * - v2 → v3 (backlog/080): #77 folded `AscentAttempt.failurePoint` into `notes` and removed the
+ *   field. A pending `ClimbingSession` write from before that app update strips `failurePoint` from
+ *   each attempt (folding any text into `notes` per the #77 rule); every other type is identity.
  */
-export const OUTBOX_PAYLOAD_SCHEMA_VERSION = 2;
+export const OUTBOX_PAYLOAD_SCHEMA_VERSION = 3;
 
 /** documentation/Architektúra/Backend-offline first.md §6 "Tétel-újrapróbálkozási backoff" (jitter omitted — not load-bearing for correctness). */
 const RETRY_BACKOFF_MS = [2000, 8000, 30000, 120000, 600000];

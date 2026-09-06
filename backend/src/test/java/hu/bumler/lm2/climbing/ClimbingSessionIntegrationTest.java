@@ -16,6 +16,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import hu.bumler.lm2.TestcontainersConfiguration;
 import hu.bumler.lm2.api.model.AdminCreateUserRequest;
@@ -206,6 +207,37 @@ class ClimbingSessionIntegrationTest {
 		assertThat(body).contains(id.toString()).contains("\"entityType\":\"ClimbingSession\"");
 		assertThat(body).contains(attemptId.toString()).contains("\"entityType\":\"AscentAttempt\"");
 		assertThat(body).contains(pitchId.toString()).contains("\"entityType\":\"PitchLog\"");
+	}
+
+	@Test
+	void create_ignoresUnknownFieldFromAStaleOfflinePayload() throws Exception {
+		// backlog/080: a phone that has not app-updated since #77 (failurePoint folded into notes) still
+		// has a pending ClimbingSession POST whose attempt carries the removed `failurePoint` key. The
+		// server must ignore the unknown key and store the write, not 500 on FAIL_ON_UNKNOWN_PROPERTIES.
+		String token = registerAndLogin("cs-stale-field");
+		UUID id = UUID.randomUUID();
+		UUID attemptId = UUID.randomUUID();
+		ObjectNode payload = objectMapper.valueToTree(
+				indoorBoulderSession(id, List.of(attempt(attemptId, id, 0, false, List.of()))));
+		((ObjectNode) payload.get("attempts").get(0)).put("failurePoint", "lecsúszott a lábam");
+
+		mockMvc.perform(post("/api/climbing/sessions").contentType(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + token).content(objectMapper.writeValueAsString(payload)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.attempts.length()").value(1))
+				.andExpect(jsonPath("$.attempts[0].failurePoint").doesNotExist());
+	}
+
+	@Test
+	void create_returnsMalformedRequest_forSyntacticallyBrokenJson() throws Exception {
+		// backlog/080: an unparseable body is a permanent client condition — a clean 400 with a stable
+		// code, not the generic 500 fallback the outbox drain would retry 5× as a server fault.
+		String token = registerAndLogin("cs-broken-json");
+
+		mockMvc.perform(post("/api/climbing/sessions").contentType(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + token).content("{ \"id\": "))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.code").value("MALFORMED_REQUEST"));
 	}
 
 	private ResultActions createSession(String token, ClimbingSession dto) throws Exception {

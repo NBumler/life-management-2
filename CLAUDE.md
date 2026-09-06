@@ -49,8 +49,15 @@ cd frontend && npm run build
 cd frontend && npm test                      # interactive Karma, watch mode, Chrome
 cd frontend && npm run test:ci                # non-interactive, single run — use this in CI / agent sessions
 cd frontend && npm run lint
+cd frontend && npm run verify:outbox          # outbox payload-schema drift guard (backlog/080); -- --write re-accepts the snapshot
 cd frontend && npm run gen:api                # regenerate the Angular API client from backend/src/main/resources/openapi.yaml
 ```
+`verify:outbox` hashes every outbox-carried DTO's OpenAPI shape against
+`frontend/src/app/core/sync/outbox-payload-schema.snapshot.json`. If it fails, a spec change altered
+an outbox payload's shape: bump `OUTBOX_PAYLOAD_SCHEMA_VERSION` (`offline-queue.service.ts`) and add a
+migration step per affected entity in `outbox-migrator.ts` (`STEPS_BY_VERSION`) — then
+`npm run verify:outbox -- --write` and commit the snapshot. This is part of the green gate below (it
+needs no Node build, just `node`).
 `test:ci` uses the `ChromeHeadlessCI` Karma launcher, which does not auto-discover Chrome on this
 machine — set `CHROME_BIN` explicitly. From the Bash tool:
 ```
@@ -267,7 +274,7 @@ touch it.
 ## Notes
 
 - **Git workflow: work directly on `master`.** This is a solo repo — do **not** create feature
-  branches. Commit each finished, green (tests + lint + build) slice straight to `master` with a
+  branches. Commit each finished, green (tests + lint + build + `verify:outbox`) slice straight to `master` with a
   descriptive message. This overrides the default "if on the default branch, branch first" behavior.
 - The MVP is delivered: `documentation/` describes the current, implemented behavior (audited against
   code — `backlog/audit/ROLLUP.md`). Check a feature's own spec under `documentation/Features/` or
