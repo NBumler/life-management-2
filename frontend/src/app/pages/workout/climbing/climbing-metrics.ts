@@ -6,15 +6,28 @@
  *
  * The model is NOT `duration × MET`. Each logged attempt contributes an *active* zone (seconds that
  * depend on discipline / safety style / lead-or-second); whatever is left of the session duration is
- * a *rest* zone at MET 2.0. `totalSessionDurationMinutes`, when missing or non-positive, is replaced
- * by a per-discipline fallback derived from the number of logged attempt rows.
+ * a *rest* zone (belaying / hanging at the crag). `totalSessionDurationMinutes`, when missing or
+ * non-positive, is replaced by a per-discipline fallback derived from the number of logged attempt
+ * rows.
+ *
+ * Every zone is charged at **net METs** — `(grossMET − 1)`, the ACSM convention — because this figure
+ * feeds `activityExtraKcal`, which is ADDED on top of the day's TDEE (TDEE already counts the resting
+ * metabolic rate for all 24 h). Charging the gross MET would double-count ~1 MET over the whole
+ * session; the rest zone in particular (gross 2.0 → net 1.0) is the part that used to look
+ * surprisingly large.
  */
 import { ClimbingDiscipline } from '../../../shared/climbing/grade-scale';
 
 export type { ClimbingDiscipline };
 export type ClimbingSafetyStyle = 'TOPROPE' | 'LEAD' | 'TRAD';
 
-/** Mászónapló.md "MET" table. */
+/**
+ * Mászónapló.md "MET" table — **gross** METs, aligned with the Compendium of Physical Activities
+ * (Ainsworth et al. 2011): "rock climbing, ascending, high difficulty" ≈ 7.5; "…low-to-moderate" ≈
+ * 5.8; "rappelling" 5.0; belaying / standing light effort ≈ 2.0. Boulder movement is charged a touch
+ * above the "high difficulty" code (bouldering is maximal-effort in short bursts); rope lead sits
+ * between the two ascending codes.
+ */
 export const CLIMBING_MET = {
   ACTIVE_BOULDER: 8.0,
   ACTIVE_ROPE_LEAD: 7.0,
@@ -23,6 +36,16 @@ export const CLIMBING_MET = {
    *  deliberate double 0.8, ≈0.64× the leader). */
   SECOND_CLIMBER_FACTOR: 0.8,
 } as const;
+
+/**
+ * 1 MET ≈ the resting metabolic rate. Every zone is charged `(grossMET − RESTING_MET)` so the result
+ * is energy **above rest** — the correct thing to add to a TDEE that already includes 24 h of RMR.
+ */
+export const RESTING_MET = 1.0;
+
+function netMet(grossMet: number): number {
+  return Math.max(0, grossMet - RESTING_MET);
+}
 
 /** Mászónapló.md "Aktív idő" — fixed 60 s per logged boulder attempt (successful or not). */
 export const BOULDER_ACTIVE_SECONDS = 60;
@@ -114,7 +137,7 @@ function attemptEnergy(
 ): AttemptEnergy {
   if (discipline === 'BOULDER') {
     const activeMinutes = BOULDER_ACTIVE_SECONDS / 60;
-    const activeKcal = CLIMBING_MET.ACTIVE_BOULDER * pump * bodyWeightKg * (activeMinutes / 60);
+    const activeKcal = netMet(CLIMBING_MET.ACTIVE_BOULDER * pump) * bodyWeightKg * (activeMinutes / 60);
     return { activeMinutes, activeKcal };
   }
 
@@ -133,20 +156,20 @@ function attemptEnergy(
         ? CLIMBING_MET.ACTIVE_ROPE_LEAD
         : CLIMBING_MET.ACTIVE_ROPE_LEAD * CLIMBING_MET.SECOND_CLIMBER_FACTOR;
       activeMinutes += pitchMinutes;
-      activeKcal += met * pump * activeWeightKg * (pitchMinutes / 60);
+      activeKcal += netMet(met * pump) * activeWeightKg * (pitchMinutes / 60);
     }
     return { activeMinutes, activeKcal };
   }
 
   const activeMinutes = (ropeClimbedMeters(attempt) * secondsPerMeter) / 60;
-  const activeKcal = CLIMBING_MET.ACTIVE_ROPE_LEAD * pump * activeWeightKg * (activeMinutes / 60);
+  const activeKcal = netMet(CLIMBING_MET.ACTIVE_ROPE_LEAD * pump) * activeWeightKg * (activeMinutes / 60);
   return { activeMinutes, activeKcal };
 }
 
 /**
  * Mászónapló.md canonical climbing kcal: Σ per-attempt active energy + a single rest term at
- * MET 2.0 over `max(0, sessionDuration − Σ activeMinutes)`. Body weight `m` is the CURRENT profile
- * weight, never frozen. Returns 0 when weight is missing / non-positive.
+ * net MET `(2.0 − 1.0)` over `max(0, sessionDuration − Σ activeMinutes)`. Body weight `m` is the
+ * CURRENT profile weight, never frozen. Returns 0 when weight is missing / non-positive.
  */
 export function climbingKcal(input: ClimbingKcalInput, bodyWeightKg: number | null): number {
   if (bodyWeightKg == null || bodyWeightKg <= 0) {
@@ -163,7 +186,7 @@ export function climbingKcal(input: ClimbingKcalInput, bodyWeightKg: number | nu
   }
 
   const restMinutes = Math.max(0, resolveSessionDurationMinutes(input) - totalActiveMinutes);
-  const restKcal = CLIMBING_MET.REST * bodyWeightKg * (restMinutes / 60);
+  const restKcal = netMet(CLIMBING_MET.REST) * bodyWeightKg * (restMinutes / 60);
   return activeKcal + restKcal;
 }
 

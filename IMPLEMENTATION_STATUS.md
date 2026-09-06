@@ -14,6 +14,15 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-06 — #072** Mászás kalória-modell felülvizsgálat. A MET-alapú modell marad, de minden
+  zóna (aktív + rest) ezután **nettó MET** = `(bruttó MET − 1)` értéken számol (ACSM konvenció):
+  a mászás-kcal a napi TDEE fölé adódik, a TDEE viszont a nyugalmi anyagcserét (≈1 MET) már
+  tartalmazza, így a bruttó MET ~1 MET-nyit duplázott a session teljes hosszán — ez okozta a
+  „meglepően nagy" számot, főleg a rest zónában (bruttó 2.0 → nettó 1.0). A bruttó MET-értékek a
+  Compendium of Physical Activities (2011) mászás-kódjaival egyeznek, nem kellett hangolni.
+  `climbing-metrics.ts`: `RESTING_MET` export + `netMet()` helper; múltbeli sessionök kcal-ja
+  retroaktívan csökken (élőben számol). Nincs séma/OpenAPI-változás. Érintett specek:
+  [[Mászónapló]], [[Tápérték kalkulátor]].
 - **2026-09-06 — #076** Kísérletek vizuális elkülönítése. Mind a 4 kontextus napló-formban minden
   `AscentAttempt` blokk önálló kártya: térköz + keret + lekerekítés, a bal élen 4px színsáv a
   sikerállapothoz (zöld = sikeres, piros = sikertelen), tintázott + félkövér kártyafejléc. Tisztán

@@ -1,12 +1,18 @@
 import {
   CLIMBING_MET,
   ClimbingKcalInput,
+  RESTING_MET,
   climbingKcal,
   climbingVolume,
   durationFallbackMinutes,
   pumpMultiplier,
   resolveSessionDurationMinutes,
 } from './climbing-metrics';
+
+/** Every zone is charged `(grossMET − RESTING_MET)` (ACSM net-energy convention — see climbing-metrics.ts). */
+const BOULDER_NET = CLIMBING_MET.ACTIVE_BOULDER - RESTING_MET;
+const ROPE_LEAD_NET = CLIMBING_MET.ACTIVE_ROPE_LEAD - RESTING_MET;
+const REST_NET = CLIMBING_MET.REST - RESTING_MET;
 
 describe('climbing-metrics', () => {
   describe('pumpMultiplier', () => {
@@ -72,7 +78,7 @@ describe('climbing-metrics', () => {
       expect(climbingKcal(input, 0)).toBe(0);
     });
 
-    it('sums 60 s active boulder zones (MET 8.0) plus a MET 2.0 rest zone', () => {
+    it('sums 60 s active boulder zones plus a rest zone, both at net METs (grossMET − 1)', () => {
       const input: ClimbingKcalInput = {
         discipline: 'BOULDER',
         totalSessionDurationMinutes: 60,
@@ -83,8 +89,21 @@ describe('climbing-metrics', () => {
           { isSuccess: true, absoluteDifficultyIndex: 16 },
         ],
       };
-      const active = 3 * (CLIMBING_MET.ACTIVE_BOULDER * 70 * (1 / 60)); // 3 min active
-      const rest = CLIMBING_MET.REST * 70 * (57 / 60); // 60 − 3 min rest
+      const active = 3 * (BOULDER_NET * 70 * (1 / 60)); // 3 min active
+      const rest = REST_NET * 70 * (57 / 60); // 60 − 3 min rest
+      expect(climbingKcal(input, 70)).toBeCloseTo(active + rest, 6);
+    });
+
+    it('a mostly-rest crag session is charged only ~1 net MET for the idle time', () => {
+      const input: ClimbingKcalInput = {
+        discipline: 'ROPE',
+        totalSessionDurationMinutes: 120, // 2 h at the crag…
+        pumpRating: null,
+        attempts: [{ isSuccess: true, absoluteDifficultyIndex: 14, safetyStyle: 'LEAD', lengthInMeters: 20 }], // …15 min of it climbing
+      };
+      const activeMin = (20 * 45) / 60;
+      const rest = REST_NET * 70 * ((120 - activeMin) / 60); // net 1.0, not gross 2.0
+      const active = ROPE_LEAD_NET * 70 * (activeMin / 60);
       expect(climbingKcal(input, 70)).toBeCloseTo(active + rest, 6);
     });
 
@@ -96,8 +115,8 @@ describe('climbing-metrics', () => {
         attempts: [{ isSuccess: true, absoluteDifficultyIndex: 14, safetyStyle: 'LEAD', lengthInMeters: 20 }],
       };
       const activeMin = (20 * 45) / 60; // 15
-      const active = CLIMBING_MET.ACTIVE_ROPE_LEAD * 70 * (activeMin / 60);
-      const rest = CLIMBING_MET.REST * 70 * ((120 - activeMin) / 60);
+      const active = ROPE_LEAD_NET * 70 * (activeMin / 60);
+      const rest = REST_NET * 70 * ((120 - activeMin) / 60);
       expect(climbingKcal(input, 70)).toBeCloseTo(active + rest, 6);
     });
 
@@ -109,8 +128,8 @@ describe('climbing-metrics', () => {
         attempts: [{ isSuccess: true, absoluteDifficultyIndex: 20, safetyStyle: 'TRAD', lengthInMeters: 10 }],
       };
       const activeMin = (10 * 60) / 60; // 10
-      const active = CLIMBING_MET.ACTIVE_ROPE_LEAD * (70 + 6) * (activeMin / 60);
-      const rest = CLIMBING_MET.REST * 70 * ((60 - activeMin) / 60);
+      const active = ROPE_LEAD_NET * (70 + 6) * (activeMin / 60);
+      const rest = REST_NET * 70 * ((60 - activeMin) / 60);
       expect(climbingKcal(input, 70)).toBeCloseTo(active + rest, 6);
     });
 
@@ -134,9 +153,9 @@ describe('climbing-metrics', () => {
       const leadMin = (30 * 45) / 60; // 22.5
       const secondMin = (30 * 45 * 0.8) / 60; // 18
       const active =
-        CLIMBING_MET.ACTIVE_ROPE_LEAD * 70 * (leadMin / 60) +
-        CLIMBING_MET.ACTIVE_ROPE_LEAD * 0.8 * 70 * (secondMin / 60);
-      const rest = CLIMBING_MET.REST * 70 * ((100 - leadMin - secondMin) / 60);
+        ROPE_LEAD_NET * 70 * (leadMin / 60) +
+        (CLIMBING_MET.ACTIVE_ROPE_LEAD * 0.8 - RESTING_MET) * 70 * (secondMin / 60);
+      const rest = REST_NET * 70 * ((100 - leadMin - secondMin) / 60);
       expect(climbingKcal(input, 70)).toBeCloseTo(active + rest, 6);
     });
 
@@ -151,8 +170,8 @@ describe('climbing-metrics', () => {
         ],
       };
       // fallback = 2 × 5 = 10 min; active = 2 min; rest = 8 min
-      const active = 2 * (CLIMBING_MET.ACTIVE_BOULDER * 70 * (1 / 60));
-      const rest = CLIMBING_MET.REST * 70 * (8 / 60);
+      const active = 2 * (BOULDER_NET * 70 * (1 / 60));
+      const rest = REST_NET * 70 * (8 / 60);
       expect(climbingKcal(input, 70)).toBeCloseTo(active + rest, 6);
     });
 
@@ -163,7 +182,7 @@ describe('climbing-metrics', () => {
         pumpRating: null,
         attempts: Array.from({ length: 5 }, () => ({ isSuccess: true, absoluteDifficultyIndex: 14 })),
       };
-      const active = 5 * (CLIMBING_MET.ACTIVE_BOULDER * 70 * (1 / 60));
+      const active = 5 * (BOULDER_NET * 70 * (1 / 60));
       expect(climbingKcal(input, 70)).toBeCloseTo(active, 6);
     });
   });

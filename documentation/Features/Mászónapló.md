@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-06
-verifikalt_commit: 1cbd4d5
+verifikalt_commit: 4f46538
 ---
 
 # Mászónapló
@@ -101,14 +101,21 @@ elvetve: telefonon, a szikla alatt egy projektútra 6 sort felvenni kezelhetetle
 \(t_{\text{activeMin}} = \sum \text{aktív s} / 60\);  
 \(t_{\text{restMin}} = \max(0,\; \text{totalSessionDurationMinutes} - t_{\text{activeMin}})\).
 
-**MET:**
+**MET (bruttó, a [Compendium of Physical Activities](https://pacompendium.com) — Ainsworth et al. 2011 — sziklamászás-kódjaihoz igazítva: „ascending, high difficulty" ≈ 7.5; „low-to-moderate" ≈ 5.8; „rappelling" 5.0; állás / biztosítás ≈ 2.0):**
 
-| | MET |
+| | Bruttó MET |
 |---|---|
 | Aktív boulder | 8.0 |
 | Aktív kötél (elöl) | 7.0 |
 | Aktív kötél másod | \(7.0 \times 0.8\) |
 | Rest / üresjárat / biztosítás a földön | **2.0** |
+
+**Nettó MET-számítás:** minden zóna `(bruttó MET − 1)` értéken számol (`RESTING_MET = 1.0`, az ACSM
+nettó-energia konvenció). Ez azért kell, mert a mászás-kcal a [[Tápérték kalkulátor]]
+`activityExtraKcal` összegébe megy, ami a napi **TDEE fölé adódik** — a TDEE viszont a 24 órás
+nyugalmi anyagcserét (RMR ≈ 1 MET) már tartalmazza. Bruttó MET-tel egy hosszú, sok
+biztosítással / szikla alatti pihenéssel töltött session ~1 MET-nyit dupláz a teljes hosszán; a
+rest zóna (bruttó 2.0 → **nettó 1.0**) az, ami eddig meglepően nagynak tűnt.
 
 **Szándékos kettős szorzás másodmászónál:** a 80%-os aktív idő **és** a 80%-os MET **egyszerre** érvényesül (≈0.64× a vezető energiaköltségéhez képest). Ez **nem** hiba: a két tényező két különböző hatást fejez ki — az aktív idő csökkenése azt modellezi, hogy a másodmászó nem rak/tisztít biztosítást (gyorsabban halad), a MET csökkenése pedig azt, hogy a mozgás per-másodperc kevésbé megterhelő (nincs anyag cipelése / helyezése közben). A két tényező összeszorzása szándékos modellezési döntés, nem ugyanannak a jelenségnek a duplikált leszámítolása.
 
@@ -124,7 +131,7 @@ Hiányzó `pumpRating` → szorzó **1.0**.
 
 Testsúly \(m\): [[Profile]] aktuális kg — **nem** fagyasztódik. TRAD: \(m_{\text{eff}} = m + 6\) (hardver) az **aktív** kötél ágon; rest ágon marad \(m\).
 
-\[\text{kcal} = (\text{MET}_{\text{active}} \times \text{pump}) \times m_{\text{eff}} \times \frac{t_{\text{activeMin}}}{60} + 2.0 \times m \times \frac{t_{\text{restMin}}}{60}\]
+\[\text{kcal} = \max(0,\; \text{MET}_{\text{active}} \times \text{pump} - 1) \times m_{\text{eff}} \times \frac{t_{\text{activeMin}}}{60} + (2.0 - 1) \times m \times \frac{t_{\text{restMin}}}{60}\]
 
 - A session **nem tárol** SSOT `calculatedCalories` mezőt (mint [[Úszás napló]] / [[Edzésnapló]]); a [[Tápérték kalkulátor]] utility számol.
 - UI élő előnézet ugyanazzal a pure TS képlettel; szerver opcionális paritás.
