@@ -882,6 +882,8 @@
       "FIELD_REST_SECONDS_PLACEHOLDER": "e.g. 120",
       "FIELD_EQUIPMENT": "Equipment",
       "FIELD_EQUIPMENT_PLACEHOLDER": "e.g. Barbell + bench",
+      "FIELD_DESCRIPTION": "Description / notes",
+      "FIELD_DESCRIPTION_PLACEHOLDER": "e.g. grip width, variant, target — anything that won't fit in the name",
       "FIELD_FAVORITE": "Favorite",
       "CATEGORY": {
         "CHEST": "Chest",

@@ -14,6 +14,7 @@ import {
   IonNote,
   IonSelect,
   IonSelectOption,
+  IonTextarea,
   IonTitle,
   IonToggle,
   IonToolbar,
@@ -53,6 +54,7 @@ import {
     IonNote,
     IonSelect,
     IonSelectOption,
+    IonTextarea,
     IonToggle,
     TranslatePipe,
   ],
@@ -80,6 +82,7 @@ export class ExerciseEditPage implements OnInit {
     kind: this.fb.nonNullable.control<Exercise.KindEnum>(Exercise.KindEnum.WeightedReps, [Validators.required]),
     defaultRestTimeSeconds: this.fb.control<number | null>(null, [Validators.min(1)]),
     equipment: this.fb.control<string | null>(null),
+    description: this.fb.control<string | null>(null, [Validators.maxLength(1000)]),
     isFavorite: this.fb.nonNullable.control(false),
   });
 
@@ -104,6 +107,7 @@ export class ExerciseEditPage implements OnInit {
           kind: existing.kind,
           defaultRestTimeSeconds: existing.defaultRestTimeSeconds ?? null,
           equipment: existing.equipment ?? null,
+          description: existing.description ?? null,
           isFavorite: existing.isFavorite,
         });
         this.kindValue.set(existing.kind);
@@ -116,7 +120,7 @@ export class ExerciseEditPage implements OnInit {
       this.form.markAllAsTouched();
       return;
     }
-    const { name, category, kind, defaultRestTimeSeconds, equipment, isFavorite } = this.form.getRawValue();
+    const { name, category, kind, defaultRestTimeSeconds, equipment, description, isFavorite } = this.form.getRawValue();
     try {
       await this.repository.save({
         id: this.exerciseId() ?? undefined,
@@ -125,6 +129,7 @@ export class ExerciseEditPage implements OnInit {
         kind,
         defaultRestTimeSeconds: defaultRestTimeSeconds ?? null,
         equipment: equipment?.trim() ? equipment.trim() : null,
+        description: description?.trim() ? description.trim() : null,
         isFavorite,
       });
       this.nameConflictError.set(null);

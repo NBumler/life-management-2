@@ -273,6 +273,7 @@ export interface ExerciseRow {
   default_rest_time_seconds: number | null;
   is_favorite: number;
   equipment: string | null;
+  description: string | null;
   created_at: string | null;
   updated_at: string | null;
   deleted: number;
@@ -292,6 +293,7 @@ export function exerciseRowToDto(row: ExerciseRow): Exercise {
     defaultRestTimeSeconds: row.default_rest_time_seconds,
     isFavorite: row.is_favorite === 1,
     equipment: row.equipment,
+    description: row.description,
     deleted: row.deleted === 1,
     deletedAt: row.deleted_at,
     createdAt: row.created_at ?? undefined,
@@ -306,12 +308,12 @@ export function exerciseLocalWriteTask(dto: Exercise): SqlTask {
     // uniqueness check only sees live rows). Re-creating a *known* id only happens for seed rows,
     // which `seedExercises` already gates on the full (incl. tombstoned) row count.
     statement: `
-      INSERT INTO exercise_catalog (id, name, category, kind, default_rest_time_seconds, is_favorite, equipment, _dirty, _local_only)
-      VALUES (?, ?, ?, ?, ?, ?, ?, 1, 1)
+      INSERT INTO exercise_catalog (id, name, category, kind, default_rest_time_seconds, is_favorite, equipment, description, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
       ON CONFLICT(id) DO UPDATE SET
         name = excluded.name, category = excluded.category, kind = excluded.kind,
         default_rest_time_seconds = excluded.default_rest_time_seconds, is_favorite = excluded.is_favorite,
-        equipment = excluded.equipment, _dirty = 1`,
+        equipment = excluded.equipment, description = excluded.description, _dirty = 1`,
     values: [
       dto.id,
       dto.name,
@@ -320,6 +322,7 @@ export function exerciseLocalWriteTask(dto: Exercise): SqlTask {
       dto.defaultRestTimeSeconds ?? null,
       dto.isFavorite ? 1 : 0,
       dto.equipment ?? null,
+      dto.description ?? null,
     ],
   };
 }
@@ -327,12 +330,12 @@ export function exerciseLocalWriteTask(dto: Exercise): SqlTask {
 export function exerciseServerApplyTask(dto: Exercise): SqlTask {
   return {
     statement: `
-      INSERT INTO exercise_catalog (id, name, category, kind, default_rest_time_seconds, is_favorite, equipment, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      INSERT INTO exercise_catalog (id, name, category, kind, default_rest_time_seconds, is_favorite, equipment, description, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET
         name = excluded.name, category = excluded.category, kind = excluded.kind,
         default_rest_time_seconds = excluded.default_rest_time_seconds, is_favorite = excluded.is_favorite,
-        equipment = excluded.equipment, created_at = excluded.created_at, updated_at = excluded.updated_at,
+        equipment = excluded.equipment, description = excluded.description, created_at = excluded.created_at, updated_at = excluded.updated_at,
         deleted = excluded.deleted, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0, _needs_refetch = 0
       WHERE exercise_catalog._dirty = 0`,
     values: [
@@ -343,6 +346,7 @@ export function exerciseServerApplyTask(dto: Exercise): SqlTask {
       dto.defaultRestTimeSeconds ?? null,
       dto.isFavorite ? 1 : 0,
       dto.equipment ?? null,
+      dto.description ?? null,
       dto.createdAt ?? null,
       dto.updatedAt ?? null,
       dto.deleted ? 1 : 0,

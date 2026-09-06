@@ -13,6 +13,7 @@ class ExerciseMapper {
 				entity.isFavorite(), entity.isDeleted());
 		dto.defaultRestTimeSeconds(entity.getDefaultRestTimeSeconds());
 		dto.equipment(entity.getEquipment());
+		dto.description(entity.getDescription());
 		dto.deletedAt(entity.getDeletedAt());
 		dto.createdAt(entity.getCreatedAt());
 		dto.updatedAt(entity.getUpdatedAt());

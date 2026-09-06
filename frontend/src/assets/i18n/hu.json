@@ -936,6 +936,8 @@
       "FIELD_REST_SECONDS_PLACEHOLDER": "pl. 120",
       "FIELD_EQUIPMENT": "Eszközigény",
       "FIELD_EQUIPMENT_PLACEHOLDER": "pl. Rúd + pad",
+      "FIELD_DESCRIPTION": "Leírás / megjegyzés",
+      "FIELD_DESCRIPTION_PLACEHOLDER": "pl. fogásszélesség, variáns, cél — bármi, ami nem fér el a névben",
       "FIELD_FAVORITE": "Kedvenc",
       "CATEGORY": {
         "CHEST": "Mell",

@@ -20,6 +20,10 @@ export interface Exercise {
     defaultRestTimeSeconds?: number | null;
     isFavorite: boolean;
     equipment?: string | null;
+    /**
+     * backlog/066 — optional free-text cue / variant note (grip width, tool, target). NOT part of the name-uniqueness comparison and NOT snapshotted by an Edzésnapló session entry.
+     */
+    description?: string | null;
     deleted: boolean;
     readonly deletedAt?: string | null;
     readonly createdAt?: string;

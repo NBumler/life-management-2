@@ -46,6 +46,13 @@ properties:
   equipment:
     type: string
     nullable: true
+  description:
+    type: string
+    maxLength: 1000
+    nullable: true
+    description: >-
+      backlog/066 — optional free-text cue / variant note (grip width, tool, target). NOT part of the
+      name-uniqueness comparison and NOT snapshotted by an Edzésnapló session entry.
   deleted:
     type: boolean
   deletedAt:

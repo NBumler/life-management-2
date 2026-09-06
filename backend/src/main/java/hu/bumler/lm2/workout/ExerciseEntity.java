@@ -43,6 +43,10 @@ public class ExerciseEntity {
 	@Column
 	private String equipment;
 
+	/** backlog/066 — opcionális szabad szöveges leírás / cue; nem része a névegyediségnek, a napló nem snapshotolja. */
+	@Column
+	private String description;
+
 	@Generated(event = EventType.INSERT)
 	@Column(name = "created_at", insertable = false, updatable = false)
 	private OffsetDateTime createdAt;
@@ -101,6 +105,10 @@ public class ExerciseEntity {
 		return equipment;
 	}
 
+	public String getDescription() {
+		return description;
+	}
+
 	public OffsetDateTime getCreatedAt() {
 		return createdAt;
 	}
@@ -141,6 +149,10 @@ public class ExerciseEntity {
 
 	public void setEquipment(String equipment) {
 		this.equipment = equipment;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
 	}
 
 	public void softDelete() {

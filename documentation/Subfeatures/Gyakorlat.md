@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: 39829a9
+verifikalva: 2026-09-06
+verifikalt_commit: e1ed261
 ---
 
 # Gyakorlat
@@ -59,6 +59,7 @@ Meghatározza az [[Edzésnapló]] szett beviteli mezőit:
 | `defaultRestTimeSeconds` | Opcionális egész `> 0`; élő Rest Timer alapértelmezés az [[Edzésnapló]]ban |
 | `isFavorite` | Boolean; default `false` |
 | `equipment` | Opcionális szöveg (eszközigény) |
+| `description` | Opcionális szabad szöveg (cue / variáns / cél; max. **1000** karakter). **Nem** része a [[Névegyediség]] összehasonlításnak, és az [[Edzésnapló]] session entry **nem snapshotolja** — nem viselkedést befolyásoló adat (szemben a `category` / `kind` mezőkkel). |
 | `deleted` | Soft delete flag (`false` default); listák szűrik |
 | `createdAt` / `updatedAt` | Audit |
 
@@ -74,8 +75,8 @@ CRUD: lista (nem töröltek), létrehozás, szerkesztés, soft delete (megerős�
 
 ### UI/UX elvárások
 
-- Katalógus lista: kereső, `category` chipek, Kedvencek szűrő; soron: név, kategória, kind jelölés.
-- Create / edit: név, `category`, `kind`, opcionális `defaultRestTimeSeconds`, `equipment`, kedvenc toggle.
+- Katalógus lista: kereső, `category` chipek, Kedvencek szűrő; soron: név, kategória, kind jelölés, és — ha van — a `description` első **1–2 sora** csonkolással. A kereső a névre, az `equipment`-re és a `description`-re is illeszt.
+- Create / edit: név, `category`, `kind`, opcionális `defaultRestTimeSeconds`, `equipment`, `description` (többsoros, auto-növő mező), kedvenc toggle.
 - `kind` választás után rövid hint, mely szett-mezők jelennek meg az [[Edzésnapló]]ban.
 - Megosztott picker komponens a naplóval / hetí tervvel (search + chipek + kedvencek + ad-hoc).
 - Törlés: megerősítés → soft delete.
@@ -105,7 +106,7 @@ Nincs nyitott kérdés.
 
 ### Backend
 
-- Tábla: `exercise_catalog` (`id` UUID, `name`, `category`, `kind`, `default_rest_time_seconds`, `is_favorite`, `equipment`, `deleted` / `deleted_at`, audit).
+- Tábla: `exercise_catalog` (`id` UUID, `name`, `category`, `kind`, `default_rest_time_seconds`, `is_favorite`, `equipment`, `description` (`text`, `CHECK char_length ≤ 1000`), `deleted` / `deleted_at`, audit). A `sync_changes` view érintetlen (csak `id` / `user_id` / `updated_at` / `deleted` oszlopokat vetít).
 - OpenAPI CRUD; listák alapból `deleted = false`.
 - Auth / user scope: a bejelentkezett user saját katalógusa (seed = userhez másolt sorok).
 

@@ -58,7 +58,7 @@ class ExerciseServiceTest {
 
 		Exercise input = dto(id, "Guggolás");
 		input.category(Exercise.CategoryEnum.LEGS).kind(Exercise.KindEnum.WEIGHTED_REPS).defaultRestTimeSeconds(180).isFavorite(true)
-				.equipment("Rúd + tárcsák");
+				.equipment("Rúd + tárcsák").description("Alacsony bar, széles állás");
 		Exercise saved = service.create(userId, input);
 
 		assertThat(saved.getId()).isEqualTo(id);
@@ -66,6 +66,7 @@ class ExerciseServiceTest {
 		assertThat(saved.getCategory()).isEqualTo(Exercise.CategoryEnum.LEGS);
 		assertThat(saved.getDefaultRestTimeSeconds().get()).isEqualTo(180);
 		assertThat(saved.getIsFavorite()).isTrue();
+		assertThat(saved.getDescription().get()).isEqualTo("Alacsony bar, széles állás");
 
 		ArgumentCaptor<ExerciseEntity> captor = ArgumentCaptor.forClass(ExerciseEntity.class);
 		verify(repository).saveAndFlush(captor.capture());

@@ -81,6 +81,18 @@
       </ion-item>
 
       <ion-item>
+        <ion-textarea
+          label="{{ 'WORKOUT.EXERCISES.FIELD_DESCRIPTION' | translate }}"
+          labelPlacement="stacked"
+          formControlName="description"
+          [placeholder]="'WORKOUT.EXERCISES.FIELD_DESCRIPTION_PLACEHOLDER' | translate"
+          [autoGrow]="true"
+          rows="3"
+          maxlength="1000"
+        ></ion-textarea>
+      </ion-item>
+
+      <ion-item>
         <ion-toggle formControlName="isFavorite">{{ 'WORKOUT.EXERCISES.FIELD_FAVORITE' | translate }}</ion-toggle>
       </ion-item>
     </ion-list>

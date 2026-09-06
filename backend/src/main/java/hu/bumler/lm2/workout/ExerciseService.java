@@ -82,6 +82,7 @@ class ExerciseService {
 		entity.setDefaultRestTimeSeconds(dto.getDefaultRestTimeSeconds().orElse(null));
 		entity.setFavorite(Boolean.TRUE.equals(dto.getIsFavorite()));
 		entity.setEquipment(dto.getEquipment().orElse(null));
+		entity.setDescription(dto.getDescription().orElse(null));
 	}
 
 	/**

@@ -48,13 +48,18 @@ describe('ExerciseEditPage', () => {
     fixture = TestBed.createComponent(ExerciseEditPage);
   }
 
-  function fillForm(overrides: Partial<Record<'name' | 'category' | 'kind' | 'defaultRestTimeSeconds' | 'equipment' | 'isFavorite', unknown>> = {}): void {
+  function fillForm(
+    overrides: Partial<
+      Record<'name' | 'category' | 'kind' | 'defaultRestTimeSeconds' | 'equipment' | 'description' | 'isFavorite', unknown>
+    > = {},
+  ): void {
     fixture.componentInstance.form.setValue({
       name: 'Guggolás',
       category: Exercise.CategoryEnum.Legs,
       kind: Exercise.KindEnum.WeightedReps,
       defaultRestTimeSeconds: 120,
       equipment: 'Rúd',
+      description: null,
       isFavorite: true,
       ...overrides,
     } as never);
@@ -102,10 +107,10 @@ describe('ExerciseEditPage', () => {
     expect(repository.save).not.toHaveBeenCalled();
   });
 
-  it('save(): trims equipment, persists the form and navigates back to the list', async () => {
+  it('save(): trims equipment and description, persists the form and navigates back to the list', async () => {
     await createFixture('new');
     await fixture.componentInstance.ngOnInit();
-    fillForm({ equipment: '  Rúd + állvány  ' });
+    fillForm({ equipment: '  Rúd + állvány  ', description: '  Széles fogás, lassú excentrikus  ' });
     repository.save.and.resolveTo(exercise({ id: 'new-1' }));
     const navigateSpy = spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
 
@@ -118,9 +123,31 @@ describe('ExerciseEditPage', () => {
       kind: Exercise.KindEnum.WeightedReps,
       defaultRestTimeSeconds: 120,
       equipment: 'Rúd + állvány',
+      description: 'Széles fogás, lassú excentrikus',
       isFavorite: true,
     });
     expect(navigateSpy).toHaveBeenCalledWith('/tabs/workout/exercises');
+  });
+
+  it('save(): a blank description is persisted as null', async () => {
+    await createFixture('new');
+    await fixture.componentInstance.ngOnInit();
+    fillForm({ description: '   ' });
+    repository.save.and.resolveTo(exercise({ id: 'new-1' }));
+    spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
+
+    await fixture.componentInstance.save();
+
+    expect(repository.save).toHaveBeenCalledWith(jasmine.objectContaining({ description: null }));
+  });
+
+  it('edit mode: patches the description from the loaded item', async () => {
+    await createFixture('e1');
+    repository.items.set([exercise({ id: 'e1', description: 'Könyök közel a törzshöz' })]);
+
+    await fixture.componentInstance.ngOnInit();
+
+    expect(fixture.componentInstance.form.controls.description.value).toBe('Könyök közel a törzshöz');
   });
 
   it('save(): on a name conflict, surfaces the error and stays on the page', async () => {

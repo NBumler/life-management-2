@@ -156,6 +156,7 @@ export class ExercisePickerComponent implements OnInit {
             defaultRestTimeSeconds: null,
             isFavorite: false,
             equipment: null,
+            description: null,
           });
           exerciseId = saved.id;
         } catch {

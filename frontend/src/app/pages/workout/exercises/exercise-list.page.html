@@ -71,6 +71,9 @@
               · {{ exercise.equipment }}
             }
           </p>
+          @if (exercise.description) {
+            <p class="exercise-desc">{{ exercise.description }}</p>
+          }
         </ion-label>
       </ion-item>
     }

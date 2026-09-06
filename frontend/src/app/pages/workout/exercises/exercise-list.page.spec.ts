@@ -79,10 +79,11 @@ describe('ExerciseListPage', () => {
     expect(fixture.componentInstance.filtered().map((e) => e.id)).toEqual(['a']);
   });
 
-  it('searches both the name and the equipment field', () => {
+  it('searches the name, the equipment and the description field', () => {
     repository.items.set([
       exercise({ id: 'a', name: 'Guggolás', equipment: 'Rúd + állvány' }),
       exercise({ id: 'b', name: 'Plank', equipment: null }),
+      exercise({ id: 'c', name: 'Húzódzkodás', description: 'Széles, pronált fogás' }),
     ]);
 
     fixture.componentInstance.query.set('állvány');
@@ -90,6 +91,9 @@ describe('ExerciseListPage', () => {
 
     fixture.componentInstance.query.set('plank');
     expect(fixture.componentInstance.filtered().map((e) => e.id)).toEqual(['b']);
+
+    fixture.componentInstance.query.set('pronált');
+    expect(fixture.componentInstance.filtered().map((e) => e.id)).toEqual(['c']);
   });
 
   it('toggleFavorite(): suppresses the row navigation and flips the flag via the repository', () => {

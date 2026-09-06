@@ -1113,7 +1113,16 @@ const SCHEMA_V30_STATEMENTS: string[] = [
    WHERE failure_point IS NOT NULL AND TRIM(failure_point) <> ''`,
 ];
 
-const SCHEMA_VERSION = 30;
+/**
+ * backlog/066 — opcionális `description` szabad szöveges cue mező a gyakorlat törzsadaton (on-device
+ * tükre a backend `V32__exercise_catalog_description.sql`-nek). Nem része a névegyediségnek, a napló
+ * nem snapshotolja. Régi soroknál `NULL`.
+ */
+const SCHEMA_V31_STATEMENTS: string[] = [
+  `ALTER TABLE exercise_catalog ADD COLUMN description TEXT`,
+];
+
+const SCHEMA_VERSION = 31;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -1146,7 +1155,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 27, statements: SCHEMA_V27_STATEMENTS },
   { toVersion: 28, statements: SCHEMA_V28_STATEMENTS },
   { toVersion: 29, statements: SCHEMA_V29_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V30_STATEMENTS },
+  { toVersion: 30, statements: SCHEMA_V30_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V31_STATEMENTS },
 ];
 
 export interface SqlTask {

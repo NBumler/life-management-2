@@ -11,6 +11,7 @@ export interface ExerciseSeed {
   defaultRestTimeSeconds: number | null;
   isFavorite: boolean;
   equipment: string | null;
+  description?: string | null;
 }
 
 export const EXERCISE_SEED: readonly ExerciseSeed[] = exerciseSeedJson as ExerciseSeed[];
@@ -59,6 +60,7 @@ export async function buildSeedExercises(userId: string): Promise<Exercise[]> {
       defaultRestTimeSeconds: seed.defaultRestTimeSeconds,
       isFavorite: seed.isFavorite,
       equipment: seed.equipment,
+      description: seed.description ?? null,
       deleted: false,
     });
   }

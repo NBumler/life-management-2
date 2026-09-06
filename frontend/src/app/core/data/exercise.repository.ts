@@ -33,6 +33,7 @@ export interface ExerciseSaveInput {
   defaultRestTimeSeconds: number | null;
   isFavorite: boolean;
   equipment: string | null;
+  description: string | null;
 }
 
 /** documentation/Architektúra/Névegyediség.md: thrown by save() before any write when another live exercise already has this name. */
@@ -153,6 +154,7 @@ export class ExerciseRepository {
       defaultRestTimeSeconds: input.defaultRestTimeSeconds,
       isFavorite: input.isFavorite,
       equipment: input.equipment,
+      description: input.description,
       deleted: false,
     };
     const saved = await this.storage.upsertExercise(draft);
@@ -181,6 +183,7 @@ export class ExerciseRepository {
       defaultRestTimeSeconds: current.defaultRestTimeSeconds ?? null,
       isFavorite,
       equipment: current.equipment ?? null,
+      description: current.description ?? null,
     });
   }
 

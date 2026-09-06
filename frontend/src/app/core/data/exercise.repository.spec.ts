@@ -48,6 +48,7 @@ describe('ExerciseRepository', () => {
       defaultRestTimeSeconds: null,
       isFavorite: false,
       equipment: null,
+      description: null,
       ...overrides,
     };
   }

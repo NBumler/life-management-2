@@ -30,6 +30,18 @@ import { EXERCISE_CATEGORIES, EXERCISE_CATEGORY_LABEL_KEYS, EXERCISE_KIND_LABEL_
 @Component({
   selector: 'app-exercise-list',
   templateUrl: 'exercise-list.page.html',
+  styles: [
+    `
+    .exercise-desc {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      white-space: normal;
+      color: var(--ion-color-medium);
+    }
+  `,
+  ],
   imports: [
     IonHeader,
     IonToolbar,
@@ -71,7 +83,11 @@ export class ExerciseListPage implements OnInit {
       if (favoritesOnly && !exercise.isFavorite) {
         return false;
       }
-      return matchesSearch(query, exercise.name) || matchesSearch(query, exercise.equipment ?? '');
+      return (
+        matchesSearch(query, exercise.name) ||
+        matchesSearch(query, exercise.equipment ?? '') ||
+        matchesSearch(query, exercise.description ?? '')
+      );
     });
   });
 

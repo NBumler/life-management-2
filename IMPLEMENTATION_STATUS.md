@@ -14,6 +14,14 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-06 — #066** Gyakorlatnak opcionális `description` (cue / variáns / cél) szabad szöveges
+  mező, max. 1000 karakter. **Nem** része a névegyediségnek, és az [[Edzésnapló]] session entry
+  **nem snapshotolja** (nem viselkedést befolyásoló adat). Backend: `V32__exercise_catalog_description.sql`
+  (`text` + `CHECK char_length ≤ 1000`), `ExerciseEntity` / `ExerciseMapper` / `ExerciseService`,
+  OpenAPI `Exercise` séma. Frontend: `SCHEMA_V31` (`ALTER TABLE … ADD COLUMN description`,
+  `SCHEMA_VERSION = 31`), `ExerciseRow` + write / server-apply taskok, `ExerciseSaveInput`,
+  szerkesztő űrlap `<ion-textarea>` (auto-grow, 1000 limit), katalógus lista 2 soros csonkolt sor +
+  kereső-illesztés. `sync_changes` view érintetlen. Érintett spec: [[Gyakorlat]].
 - **2026-09-06 — #072** Mászás kalória-modell felülvizsgálat. A MET-alapú modell marad, de minden
   zóna (aktív + rest) ezután **nettó MET** = `(bruttó MET − 1)` értéken számol (ACSM konvenció):
   a mászás-kcal a napi TDEE fölé adódik, a TDEE viszont a nyugalmi anyagcserét (≈1 MET) már
