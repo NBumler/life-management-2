@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: 39829a9
+verifikalva: 2026-09-06
+verifikalt_commit: 6ca6bc6
 ---
 
 # Edzésnapló
@@ -65,7 +65,7 @@ CRUD: lista (`deleted = false`), létrehozás, szerkesztés, törlés (megerős�
 | `id` | UUID, kliens |
 | `exerciseId` | Opcionális UUID → [[Gyakorlat]] master (ad-hoc esetén null) |
 | `exerciseName` | **Snapshot** — kötelező; a mentéskori név (master átnevezés / törlés nem írja felül) |
-| `exerciseCategory` | **Snapshot** — `ExerciseCategory` enum ([[Gyakorlat]]) |
+| `exerciseCategory` | **Snapshot** — `ExerciseCategory` enum ([[Gyakorlat]]). `text` + `workout_exercise_entry_exercise_category_check` CHECK a 11 értékre. A `V35` (backlog/065) a régi snapshot-értékeket megfeleltette: `ARMS` → `BICEPS`, `CORE` → `ABS` (lossy — [[Gyakorlat]] migrációs jegyzet). |
 | `exerciseKind` | **Snapshot** — `ExerciseKind` enum ([[Gyakorlat]]); szett UI mezők ehhez igazodnak |
 | `orderIndex` | Egész; drag & drop sorrend |
 | `supersetGroup` | Opcionális egész; azonos érték = vizuális szuperszett / kör-csoport (nincs bonyolult per-szett szuperszett UI) |

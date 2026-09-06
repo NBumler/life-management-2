@@ -14,6 +14,18 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-06 — #065** `ExerciseCategory` finomabb felbontás — az enumot **helyben** bővítettük:
+  `ARMS` → `BICEPS` + `TRICEPS`, `CORE` → `ABS` + `LOWER_BACK` + `OBLIQUES` (új teljes lista 11
+  érték). Backend: `V35__exercise_category_split_arms_core.sql` — mindhárom táblán
+  (`exercise_catalog`, `workout_exercise_entry`, `workout_plan_exercise`) régi CHECK
+  `DROP … IF EXISTS` + **lossy** megfeleltetés a meglévő sorokra **és** a snapshotokra (`ARMS` →
+  `BICEPS`, `CORE` → `ABS`) + új CHECK a 11 értékre; OpenAPI `Exercise` / `WorkoutExerciseEntry` /
+  `WorkoutPlanExercise` `enum` bővítés. Frontend: `gen:api`, `exercise-labels.ts` +
+  `workout-fields.ts` (`PLAN_TO_ENTRY_CATEGORY`) új értékek, `exercise-seed.json` 3 sora a pontos új
+  értéket kapja (a `category` nem része a v5 seed-id-nek → nincs id-hatás), `SCHEMA_V34` (6 `UPDATE`,
+  `SCHEMA_VERSION = 34`), i18n `hu`/`en`. A `category` `text` marad, `sync_changes` view érintetlen;
+  nincs (nem-mászó) per-kategória statisztika, amit érintene. Érintett specek: [[Gyakorlat]],
+  [[Edzésnapló]].
 - **2026-09-06 — #068** Sziklamászó fekvés (`aspect`) — a `sector.default_aspect` / `route.aspect` /
   `climbing_session.aspect` eddigi szabad szövege helyett **8 irányú égtáj-enum** (`N`, `NE`, `E`,
   `SE`, `S`, `SW`, `W`, `NW`; `null` = ismeretlen, nincs `UNKNOWN` tag). Új `app-aspect-picker`

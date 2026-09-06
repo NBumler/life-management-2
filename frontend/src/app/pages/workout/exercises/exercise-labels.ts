@@ -6,8 +6,11 @@ export const EXERCISE_CATEGORY_LABEL_KEYS: Record<Exercise.CategoryEnum, string>
   [Exercise.CategoryEnum.Back]: 'WORKOUT.EXERCISES.CATEGORY.BACK',
   [Exercise.CategoryEnum.Legs]: 'WORKOUT.EXERCISES.CATEGORY.LEGS',
   [Exercise.CategoryEnum.Shoulders]: 'WORKOUT.EXERCISES.CATEGORY.SHOULDERS',
-  [Exercise.CategoryEnum.Arms]: 'WORKOUT.EXERCISES.CATEGORY.ARMS',
-  [Exercise.CategoryEnum.Core]: 'WORKOUT.EXERCISES.CATEGORY.CORE',
+  [Exercise.CategoryEnum.Biceps]: 'WORKOUT.EXERCISES.CATEGORY.BICEPS',
+  [Exercise.CategoryEnum.Triceps]: 'WORKOUT.EXERCISES.CATEGORY.TRICEPS',
+  [Exercise.CategoryEnum.Abs]: 'WORKOUT.EXERCISES.CATEGORY.ABS',
+  [Exercise.CategoryEnum.LowerBack]: 'WORKOUT.EXERCISES.CATEGORY.LOWER_BACK',
+  [Exercise.CategoryEnum.Obliques]: 'WORKOUT.EXERCISES.CATEGORY.OBLIQUES',
   [Exercise.CategoryEnum.ForearmFingers]: 'WORKOUT.EXERCISES.CATEGORY.FOREARM_FINGERS',
   [Exercise.CategoryEnum.FullBody]: 'WORKOUT.EXERCISES.CATEGORY.FULL_BODY',
 };

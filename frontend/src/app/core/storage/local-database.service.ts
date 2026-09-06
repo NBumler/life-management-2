@@ -1166,7 +1166,23 @@ const SCHEMA_V33_STATEMENTS: string[] = [
   `UPDATE climbing_session ${aspectMapCase('aspect')}`,
 ];
 
-const SCHEMA_VERSION = 33;
+/**
+ * backlog/065 — az `ExerciseCategory` enum helyben bővül: `ARMS` → `BICEPS`/`TRICEPS`, `CORE` →
+ * `ABS`/`LOWER_BACK`/`OBLIQUES`. On-device tükre a backend `V35__exercise_category_split_arms_core.sql`-nek:
+ * a meglévő sorokat és az Edzésnapló / Heti terv **snapshotokat** a legvalószínűbb új értékre képezi —
+ * `ARMS` → `BICEPS`, `CORE` → `ABS` — mindhárom táblán. Tudatosan lossy (a felhasználó utólag
+ * átállíthatja); a `category` `TEXT` marad (natíven nincs CHECK), a `sync_changes` view érintetlen.
+ */
+const SCHEMA_V34_STATEMENTS: string[] = [
+  `UPDATE exercise_catalog SET category = 'BICEPS' WHERE category = 'ARMS'`,
+  `UPDATE exercise_catalog SET category = 'ABS' WHERE category = 'CORE'`,
+  `UPDATE workout_exercise_entry SET exercise_category = 'BICEPS' WHERE exercise_category = 'ARMS'`,
+  `UPDATE workout_exercise_entry SET exercise_category = 'ABS' WHERE exercise_category = 'CORE'`,
+  `UPDATE workout_plan_exercise SET exercise_category = 'BICEPS' WHERE exercise_category = 'ARMS'`,
+  `UPDATE workout_plan_exercise SET exercise_category = 'ABS' WHERE exercise_category = 'CORE'`,
+];
+
+const SCHEMA_VERSION = 34;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -1202,7 +1218,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 30, statements: SCHEMA_V30_STATEMENTS },
   { toVersion: 31, statements: SCHEMA_V31_STATEMENTS },
   { toVersion: 32, statements: SCHEMA_V32_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V33_STATEMENTS },
+  { toVersion: 33, statements: SCHEMA_V33_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V34_STATEMENTS },
 ];
 
 export interface SqlTask {

@@ -968,8 +968,11 @@
         "BACK": "Hát",
         "LEGS": "Láb",
         "SHOULDERS": "Váll",
-        "ARMS": "Kar",
-        "CORE": "Törzs",
+        "BICEPS": "Bicepsz",
+        "TRICEPS": "Tricepsz",
+        "ABS": "Has",
+        "LOWER_BACK": "Mélyhát",
+        "OBLIQUES": "Oldalsó törzs",
         "FOREARM_FINGERS": "Alkar, ujjak",
         "FULL_BODY": "Egész test"
       },

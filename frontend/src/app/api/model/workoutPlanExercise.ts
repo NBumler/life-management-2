@@ -43,8 +43,11 @@ export namespace WorkoutPlanExercise {
         Back: 'BACK',
         Legs: 'LEGS',
         Shoulders: 'SHOULDERS',
-        Arms: 'ARMS',
-        Core: 'CORE',
+        Biceps: 'BICEPS',
+        Triceps: 'TRICEPS',
+        Abs: 'ABS',
+        LowerBack: 'LOWER_BACK',
+        Obliques: 'OBLIQUES',
         ForearmFingers: 'FOREARM_FINGERS',
         FullBody: 'FULL_BODY'
     } as const;

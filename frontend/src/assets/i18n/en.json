@@ -914,8 +914,11 @@
         "BACK": "Back",
         "LEGS": "Legs",
         "SHOULDERS": "Shoulders",
-        "ARMS": "Arms",
-        "CORE": "Core",
+        "BICEPS": "Biceps",
+        "TRICEPS": "Triceps",
+        "ABS": "Abs",
+        "LOWER_BACK": "Lower back",
+        "OBLIQUES": "Obliques",
         "FOREARM_FINGERS": "Forearm, fingers",
         "FULL_BODY": "Full body"
       },

@@ -26,8 +26,11 @@ export const PLAN_TO_ENTRY_CATEGORY: Record<WorkoutPlanExercise.ExerciseCategory
   [WorkoutPlanExercise.ExerciseCategoryEnum.Back]: WorkoutExerciseEntry.ExerciseCategoryEnum.Back,
   [WorkoutPlanExercise.ExerciseCategoryEnum.Legs]: WorkoutExerciseEntry.ExerciseCategoryEnum.Legs,
   [WorkoutPlanExercise.ExerciseCategoryEnum.Shoulders]: WorkoutExerciseEntry.ExerciseCategoryEnum.Shoulders,
-  [WorkoutPlanExercise.ExerciseCategoryEnum.Arms]: WorkoutExerciseEntry.ExerciseCategoryEnum.Arms,
-  [WorkoutPlanExercise.ExerciseCategoryEnum.Core]: WorkoutExerciseEntry.ExerciseCategoryEnum.Core,
+  [WorkoutPlanExercise.ExerciseCategoryEnum.Biceps]: WorkoutExerciseEntry.ExerciseCategoryEnum.Biceps,
+  [WorkoutPlanExercise.ExerciseCategoryEnum.Triceps]: WorkoutExerciseEntry.ExerciseCategoryEnum.Triceps,
+  [WorkoutPlanExercise.ExerciseCategoryEnum.Abs]: WorkoutExerciseEntry.ExerciseCategoryEnum.Abs,
+  [WorkoutPlanExercise.ExerciseCategoryEnum.LowerBack]: WorkoutExerciseEntry.ExerciseCategoryEnum.LowerBack,
+  [WorkoutPlanExercise.ExerciseCategoryEnum.Obliques]: WorkoutExerciseEntry.ExerciseCategoryEnum.Obliques,
   [WorkoutPlanExercise.ExerciseCategoryEnum.ForearmFingers]: WorkoutExerciseEntry.ExerciseCategoryEnum.ForearmFingers,
   [WorkoutPlanExercise.ExerciseCategoryEnum.FullBody]: WorkoutExerciseEntry.ExerciseCategoryEnum.FullBody,
 };
