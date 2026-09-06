@@ -1,4 +1,4 @@
-import { Injectable, effect, inject, signal, untracked } from '@angular/core';
+import { Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 
 import { ClimbingSession } from '../../api/model/climbingSession';
@@ -57,6 +57,45 @@ export class ClimbingSessionRepository {
 
   readonly items = signal<ClimbingSession[]>([]);
   readonly loaded = signal(false);
+
+  /**
+   * backlog/069 — every distinct climbing-partner name from the user's live sessions, most-used
+   * first (most recent session as the tiebreak). Feeds the partner combobox on the session-edit
+   * forms; purely client-side aggregation, no separate `Partner` entity, works fully offline.
+   */
+  readonly partnerSuggestions = computed<string[]>(() => {
+    const seen = new Map<string, { name: string; count: number; lastDate: string }>();
+    for (const session of this.items()) {
+      if (session.deleted) {
+        continue;
+      }
+      for (const raw of session.climbingPartners ?? []) {
+        const name = raw.trim();
+        if (name === '') {
+          continue;
+        }
+        // `items()` is newest-first, so the first spelling seen for a key is the most recently used one — keep it.
+        const key = name.toLowerCase();
+        const entry = seen.get(key);
+        if (entry) {
+          entry.count += 1;
+          if (session.date > entry.lastDate) {
+            entry.lastDate = session.date;
+          }
+        } else {
+          seen.set(key, { name, count: 1, lastDate: session.date });
+        }
+      }
+    }
+    return [...seen.values()]
+      .sort(
+        (a, b) =>
+          b.count - a.count ||
+          (a.lastDate < b.lastDate ? 1 : a.lastDate > b.lastDate ? -1 : 0) ||
+          a.name.localeCompare(b.name),
+      )
+      .map((entry) => entry.name);
+  });
 
   /** See WorkoutSessionRepository — native serves repeat reads from memory; web re-fetches but the signature guard still shields downstream `computed()`s. */
   private readonly cacheEnabled = Capacitor.isNativePlatform();

@@ -73,6 +73,7 @@ describe('IndoorRopeSessionEditPage', () => {
           useValue: {
             load: () => Promise.resolve(),
             items: signal<ClimbingSession[]>([]),
+            partnerSuggestions: signal<string[]>(['Anna', 'Béla']),
             byId: () => undefined,
             forContext: () => [],
             save: saveSpy,

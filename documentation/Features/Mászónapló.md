@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-06
-verifikalt_commit: 7906e67
+verifikalt_commit: 499b4aa
 ---
 
 # Mászónapló
@@ -50,7 +50,7 @@ Kontextus váltás **aktív session közben tilos** — lezárás / mentés, maj
 | `pumpRating` | Opcionális 1–5; kalória módosító |
 | `headspaceRating` | Opcionális 1–5; rögzítve, de jelenleg egyetlen statisztikai nézet sem olvassa — megjelenítés tervezett: `backlog/025-climbing-headspacerating-megjelenitese-valamelyik-statisztikaban.md` |
 | `notes` | Opcionális |
-| `climbingPartners` | Opcionális string lista |
+| `climbingPartners` | Opcionális string lista. A napló-formon **combobox** (`app-partner-combobox`): a felvett nevek chip-ként; a beviteli mező a user korábbi társait (az összes élő `ClimbingSession.climbingPartners` értékéből, gyakoriság szerint, [[Szöveges keresés]] normalizálással) szűri **és** enged új nevet felvenni („+ Hozzáadás: …"). Nincs külön `Partner` entitás — tisztán kliens-oldali aggregáció a helyi `climbing_session` táblából (`ClimbingSessionRepository.partnerSuggestions`), így Full-offline is működik. |
 | `weatherConditions` | Opcionális enum (`COLD_DRY`, `HOT_HUMID`, `WINDY`, `WET`); a „csak outdoor" korlát **kliens-oldalon** kényszerített (az indoor form fixen `null`-t küld), a szerver laza (mint `workout_session`) |
 | `gymId` / crag–sector hivatkozások | Kontextus szerint — gyerek specek |
 | `attempts` | `AscentAttempt[]` |
@@ -153,6 +153,7 @@ Minden mászó entitás: soft delete ([[Backend-offline first]]). Nested session
 - Belépés: [[Edzés]] tab → Mászónapló hub → 4 csempe.
 - 1-tap chip-ek, grade pre-parser, legutóbbi terem/helyszín előtöltés.
 - Sikeres kísérletnél a **Stílus** választó mellett súgó (ⓘ) gomb — felugró magyarázat az onsight / flash / redpoint jelentéséről és arról, miért választható egyszerre csak egy (mind a 4 kontextus napló-formban, `app-help-button`).
+- **Mászótársak** combobox (mind a 4 kontextus napló-formban, `app-partner-combobox`): üres mezőnél a korábbi társak tap-elhető chip-ként; gépelésre szűrt lista + „+ Hozzáadás: »…«" új névhez; a felvett társak chip-jei törölhetők.
 - Per-kontextus session lista (a közös, szűrő-tabos listát a `backlog/022-...` jegy fedi).
 
 ### Megjegyzések
@@ -169,11 +170,12 @@ Nincs nyitott kérdés.
 
 - Hub dashboard; per-kontextus session listák; 4 kontextus route → gyerek napló screenek.
 - Shared grade parser komponens (`shared/grade-input/`); climbing calorie + volume pure TS (`shared/climbing/` + `pages/workout/climbing/climbing-metrics.ts` / `climbing-stats.ts`).
+- Mászótárs combobox: `shared/partner-combobox/` (presentational, nincs injektált repo); a javaslatlista a `ClimbingSessionRepository.partnerSuggestions` derived signal (élő sessionök `climbingPartners` értékei, gyakoriság + recency szerint).
 - Draft: jelenleg csak in-memory form-state; perzisztálás tervezett (`backlog/021-...`).
 
 #### Backend-offline
 
-Olvasás/írás helyi store; mutációk outbox + kliens UUID; soft delete synchelhető; draft helyi. Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
+Olvasás/írás helyi store; mutációk outbox + kliens UUID; soft delete synchelhető; draft helyi. A mászótárs-javaslatok forrása a helyi `climbing_session` tábla, így a combobox Full-offline is teljes értékű. Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
 
 ### Backend
 

@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-06
-verifikalt_commit: 8d66db3
+verifikalt_commit: 499b4aa
 ---
 
 # Indoor boulder napló
@@ -28,7 +28,8 @@ Közös session modell: [[Mászónapló]] (`locationType=INDOOR`, `discipline=BO
 | `date`, `totalSessionDurationMinutes` | [[Mászónapló]]; fallback: kísérletek × 5 perc |
 | `gymId` | Kötelező választás [[Indoor boulder admin]] teremből (legutóbbi terem előtöltés). A picker csak azokat a termeket listázza, amelyek `Gym.disciplines`-e tartalmazza a boulder jelölést. |
 | `gymName` | Snapshot |
-| `pumpRating` / `headspaceRating` / `notes` / `climbingPartners` | [[Mászónapló]] — pump ajánlott, többi opcionális |
+| `pumpRating` / `headspaceRating` / `notes` | [[Mászónapló]] — pump ajánlott, többi opcionális |
+| `climbingPartners` | Opcionális; **combobox** (`app-partner-combobox`) — korábbi társak chip-választóból vagy gépelve, új név is felvehető. Forrás: `ClimbingSessionRepository.partnerSuggestions`. Lásd [[Mászónapló]]. |
 | `attempts` | ≥0; élő pipálás vagy utólag |
 
 `weatherConditions` **nincs** (indoor).
@@ -57,6 +58,7 @@ CRUD: nested session mentés; soft delete; draft élő sessionhez.
 - Flow: Hub → Indoor Boulder csempe → Active session (vagy utólagos) → kísérlet hozzáadás (szín chip / parser) → pipa → Befejezés.
 - Szín-sáv chip-ek a kiválasztott teremből; mellettük szöveges grade.
 - Sikeres kísérletnél a **Stílus** választó mellett súgó (ⓘ) gomb (`app-help-button`) — onsight / flash / redpoint magyarázat; részletek: [[Mászónapló]] „Kísérlet stílus súgó”.
+- **Mászótársak** combobox (`app-partner-combobox`): korábbi társak tap-elhető chip-ként, gépelve szűrhető + új név felvehető; részletek: [[Mászónapló]].
 - Thumb-zone: új kísérlet / siker toggle / session vége.
 - Lista: közös Mászónapló lista, szűrő: Indoor Boulder.
 - Admin: jobb felső → [[Indoor boulder admin]].

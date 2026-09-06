@@ -1,0 +1,34 @@
+.partner-combobox {
+  display: block;
+  padding-inline: 16px;
+  padding-block: 8px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.picked-chips {
+  margin-block-end: 8px;
+}
+
+.quick-chips {
+  margin-block-start: 8px;
+}
+
+.suggestions {
+  margin-block-start: 4px;
+  border: 1px solid var(--ion-color-step-150, #d7d8da);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.suggestions ion-item {
+  --min-height: 40px;
+}
+
+.add-new ion-label {
+  font-style: italic;
+}

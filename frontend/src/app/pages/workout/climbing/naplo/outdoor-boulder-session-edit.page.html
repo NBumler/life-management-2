@@ -127,14 +127,13 @@
         </ion-select>
       </ion-item>
 
-      <ion-item>
-        <ion-input
-          formControlName="climbingPartners"
-          [label]="'WORKOUT.CLIMBING.SESSION.FIELD_PARTNERS' | translate"
-          labelPlacement="stacked"
-          [placeholder]="'WORKOUT.CLIMBING.SESSION.PARTNERS_PLACEHOLDER' | translate"
-        />
-      </ion-item>
+      <app-partner-combobox
+        [label]="'WORKOUT.CLIMBING.SESSION.FIELD_PARTNERS' | translate"
+        [placeholder]="'WORKOUT.CLIMBING.SESSION.PARTNERS_PLACEHOLDER' | translate"
+        [suggestions]="partnerSuggestions()"
+        [partners]="partners()"
+        (partnersChange)="partners.set($event)"
+      />
 
       <ion-item>
         <ion-textarea

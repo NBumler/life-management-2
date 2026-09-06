@@ -39,6 +39,7 @@ import { uuidV4 } from '../../../../core/sync/uuid';
 import { parseGrade } from '../../../../shared/climbing/grade-scale';
 import { GradeInputComponent } from '../../../../shared/grade-input/grade-input.component';
 import { HelpButtonComponent } from '../../../../shared/help-button/help-button.component';
+import { PartnerComboboxComponent } from '../../../../shared/partner-combobox/partner-combobox.component';
 import { today } from '../../../../shared/local-date';
 import { climbingKcal, climbingVolume } from '../climbing-metrics';
 
@@ -133,6 +134,7 @@ const WEATHER_CONDITIONS: readonly ClimbingSession.WeatherConditionsEnum[] = [
     TranslatePipe,
     GradeInputComponent,
     HelpButtonComponent,
+    PartnerComboboxComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -156,6 +158,10 @@ export class OutdoorRopeSessionEditPage implements OnInit {
   readonly sessionId = signal<string | null>(null);
   readonly attempts = signal<AttemptRow[]>([]);
 
+  /** backlog/069 — picked partner names (own signal, not a form control); suggestions from the log. */
+  readonly partners = signal<string[]>([]);
+  readonly partnerSuggestions = this.repository.partnerSuggestions;
+
   readonly form = this.fb.nonNullable.group({
     date: this.fb.nonNullable.control(today(), [Validators.required]),
     cragId: this.fb.nonNullable.control('', [Validators.required]),
@@ -166,7 +172,6 @@ export class OutdoorRopeSessionEditPage implements OnInit {
     totalSessionDurationMinutes: this.fb.control<number | null>(null, [Validators.min(1)]),
     pumpRating: this.fb.control<number | null>(null),
     headspaceRating: this.fb.control<number | null>(null),
-    climbingPartners: this.fb.control<string | null>(null),
     notes: this.fb.control<string | null>(null),
   });
 
@@ -257,9 +262,9 @@ export class OutdoorRopeSessionEditPage implements OnInit {
         totalSessionDurationMinutes: existing.totalSessionDurationMinutes ?? null,
         pumpRating: existing.pumpRating ?? null,
         headspaceRating: existing.headspaceRating ?? null,
-        climbingPartners: (existing.climbingPartners ?? []).join(', ') || null,
         notes: existing.notes ?? null,
       });
+      this.partners.set([...(existing.climbingPartners ?? [])]);
       this.attempts.set(
         existing.attempts
           .filter((attempt) => !attempt.deleted)
@@ -535,8 +540,7 @@ export class OutdoorRopeSessionEditPage implements OnInit {
     const value = this.form.getRawValue();
     const crag = this.crags().find((entry) => entry.id === value.cragId);
     const sector = this.sectorsForCrag().find((entry) => entry.id === value.sectorId);
-    const partners = (value.climbingPartners ?? '')
-      .split(',')
+    const partners = this.partners()
       .map((name) => name.trim())
       .filter((name) => name.length > 0);
     return {

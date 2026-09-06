@@ -14,6 +14,16 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-06 — #069** Mászótársak bevitele combobox-szal. Új shared presentational komponens
+  (`shared/partner-combobox/`): a felvett nevek törölhető chip-ként; a beviteli mező üresen a
+  korábbi társakat tap-elhető chipként ajánlja, gépelésre [[Szöveges keresés]]-normalizálással
+  szűr és „+ Hozzáadás: »…«" sorral enged új nevet. A javaslatlista a
+  `ClimbingSessionRepository.partnerSuggestions` derived signal (élő sessionök `climbingPartners`
+  értékei, gyakoriság majd recency szerint; a legutóbb használt írásmód nyer a dedupnál). Mind a 4
+  kontextus napló-form a form-control helyett saját `partners` signalt használ. Tisztán
+  kliens-oldali, Full-offline. Érintett specek: [[Mászónapló]], [[Indoor boulder napló]]. Kód:
+  `frontend/shared/partner-combobox/`, `core/data/climbing-session.repository.ts`, climbing
+  `*-session-edit.page.{ts,html}`, `assets/i18n/{hu,en}.json`.
 - **2026-09-06 — #078** „Teljes volumen" mászó-statisztika: érthetőbb címke + magyarázat. A
   Statisztika képernyőn az összesített sor „Mászási volumen · mind a 4 kontextus", a per-kontextus
   sor „Mászási volumen" (nem a puszta „Összes volumen"), az összesített sor mellett `app-help-button`

@@ -1,0 +1,49 @@
+<div class="partner-combobox">
+  @if (selected().length > 0) {
+    <div class="chips picked-chips">
+      @for (name of selected(); track name) {
+        <ion-chip (click)="remove(name)" [attr.aria-label]="name">
+          <ion-label>{{ name }}</ion-label>
+          <ion-icon name="close-outline" aria-hidden="true"></ion-icon>
+        </ion-chip>
+      }
+    </div>
+  }
+
+  <ion-input
+    fill="outline"
+    labelPlacement="stacked"
+    [label]="label"
+    [placeholder]="placeholder"
+    [value]="query()"
+    (ionInput)="onQuery($any($event.target).value)"
+    (keyup.enter)="commitTyped()"
+  />
+
+  @if (query().trim() === '') {
+    @if (quickPicks().length > 0) {
+      <div class="chips quick-chips">
+        @for (name of quickPicks(); track name) {
+          <ion-chip outline (click)="add(name)">
+            <ion-icon name="add-outline" aria-hidden="true"></ion-icon>
+            <ion-label>{{ name }}</ion-label>
+          </ion-chip>
+        }
+      </div>
+    }
+  } @else {
+    <ion-list class="suggestions" lines="full">
+      @for (name of filteredSuggestions(); track name) {
+        <ion-item button detail="false" (click)="add(name)">
+          <ion-label>{{ name }}</ion-label>
+        </ion-item>
+      }
+      @if (addableNew(); as newName) {
+        <ion-item button detail="false" class="add-new" (click)="add(newName)">
+          <ion-icon name="add-outline" slot="start" aria-hidden="true"></ion-icon>
+          <ion-label>{{ 'WORKOUT.CLIMBING.SESSION.PARTNERS_ADD_NEW' | translate: { name: newName } }}</ion-label>
+        </ion-item>
+      }
+    </ion-list>
+  }
+</div>

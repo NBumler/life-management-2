@@ -62,6 +62,7 @@ describe('IndoorBoulderSessionEditPage', () => {
           useValue: {
             load: () => Promise.resolve(),
             items: signal<ClimbingSession[]>([]),
+            partnerSuggestions: signal<string[]>(['Anna', 'Béla']),
             byId: () => undefined,
             forContext: () => [],
             save: saveSpy,
@@ -126,6 +127,25 @@ describe('IndoorBoulderSessionEditPage', () => {
     // A valid free-text Font grade resolves a matrix index.
     expect(draft.attempts[0].absoluteDifficultyIndex).not.toBeNull();
     expect(draft.attempts[0].pitches).toEqual([]);
+  });
+
+  it('save() forwards the picked climbing partners, trimming blanks (backlog 069)', async () => {
+    await setup();
+    component.form.patchValue({ gymId: 'g1', totalSessionDurationMinutes: 60 });
+    component.partners.set(['Anna', '  ', 'Béla']);
+
+    await component.save();
+
+    expect(saveSpy.calls.mostRecent().args[0].climbingPartners).toEqual(['Anna', 'Béla']);
+  });
+
+  it('save() sends null climbingPartners when none are picked (backlog 069)', async () => {
+    await setup();
+    component.form.patchValue({ gymId: 'g1', totalSessionDurationMinutes: 60 });
+
+    await component.save();
+
+    expect(saveSpy.calls.mostRecent().args[0].climbingPartners).toBeNull();
   });
 
   it('an attempt with only a colour band takes the band mid index', async () => {

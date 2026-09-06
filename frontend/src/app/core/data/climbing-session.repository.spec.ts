@@ -91,6 +91,20 @@ describe('ClimbingSessionRepository', () => {
     expect(rows.map((s) => s.id)).toEqual(['ib']);
   });
 
+  it('partnerSuggestions(): distinct live-session partner names, most-used first then most-recent (backlog 069)', async () => {
+    storage.listClimbingSessions.and.resolveTo([
+      session({ id: 'a', date: '2026-08-01', climbingPartners: ['Anna', 'Béla'] }),
+      session({ id: 'b', date: '2026-08-10', climbingPartners: ['anna', '  Cecil  '] }),
+      session({ id: 'c', date: '2026-09-01', climbingPartners: ['Dóra'], deleted: true }),
+      session({ id: 'd', date: '2026-08-20', climbingPartners: ['Béla', ' '] }),
+    ]);
+    await repository.load();
+
+    // Anna/anna 2×; Béla 2× but its latest session (08-20) is newer than anna's (08-10); Cecil 1×; Dóra excluded (tombstone).
+    // The most-recently-used spelling wins the dedup ('anna' from the 08-10 session, not 'Anna' from 08-01).
+    expect(repository.partnerSuggestions()).toEqual(['Béla', 'anna', 'Cecil']);
+  });
+
   it('save(): assigns a fresh id for a create and keeps the list sorted', async () => {
     storage.listClimbingSessions.and.resolveTo([session({ id: 'a', date: '2026-08-10' })]);
     await repository.load();
