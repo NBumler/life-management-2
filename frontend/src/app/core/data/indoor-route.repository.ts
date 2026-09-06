@@ -2,6 +2,7 @@ import { Injectable, effect, inject, signal, untracked } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 
 import { IndoorRoute } from '../../api/model/indoorRoute';
+import { compareTopoNumber } from '../../shared/natural-sort';
 import { STORAGE_BACKEND } from '../storage/storage-backend';
 import { DataChangeNotifier } from '../sync/data-change-notifier';
 import { SyncEngineService } from '../sync/sync-engine.service';
@@ -17,6 +18,7 @@ export interface IndoorRouteSaveInput {
   grade: string;
   absoluteDifficultyIndex: number;
   sector: string | null;
+  topoNumber: string | null;
 }
 
 /**
@@ -58,11 +60,14 @@ export class IndoorRouteRepository {
     this.loaded.set(true);
   }
 
-  /** Live routes of one gym, by name. */
+  /**
+   * Live routes of one gym, ordered by topo number (backlog/079 natural alphanumeric sort), rows
+   * without one falling to the end by name.
+   */
   forGym(gymId: string): IndoorRoute[] {
     return this.items()
       .filter((route) => route.gymId === gymId && !route.deleted)
-      .sort((a, b) => a.name.localeCompare(b.name));
+      .sort((a, b) => compareTopoNumber(a.topoNumber, b.topoNumber) || a.name.localeCompare(b.name));
   }
 
   async save(input: IndoorRouteSaveInput): Promise<IndoorRoute> {
@@ -74,6 +79,7 @@ export class IndoorRouteRepository {
       grade: input.grade,
       absoluteDifficultyIndex: input.absoluteDifficultyIndex,
       sector: input.sector,
+      topoNumber: input.topoNumber,
       deleted: false,
     };
     const saved = await this.storage.upsertIndoorRoute(draft);

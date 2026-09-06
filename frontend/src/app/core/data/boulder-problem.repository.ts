@@ -2,6 +2,7 @@ import { Injectable, effect, inject, signal, untracked } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 
 import { BoulderProblem } from '../../api/model/boulderProblem';
+import { compareTopoNumber } from '../../shared/natural-sort';
 import { STORAGE_BACKEND } from '../storage/storage-backend';
 import { DataChangeNotifier } from '../sync/data-change-notifier';
 import { SyncEngineService } from '../sync/sync-engine.service';
@@ -14,6 +15,7 @@ export interface BoulderProblemSaveInput {
   sectorId: string;
   name: string;
   guidebookGrade: string;
+  topoNumber: string | null;
 }
 
 /**
@@ -54,11 +56,14 @@ export class BoulderProblemRepository {
     this.loaded.set(true);
   }
 
-  /** Live problems of one sector, by name. */
+  /**
+   * Live problems of one sector, ordered by topo number (backlog/079 natural alphanumeric sort),
+   * rows without one falling to the end by name.
+   */
   forSector(sectorId: string): BoulderProblem[] {
     return this.items()
       .filter((problem) => problem.sectorId === sectorId && !problem.deleted)
-      .sort((a, b) => a.name.localeCompare(b.name));
+      .sort((a, b) => compareTopoNumber(a.topoNumber, b.topoNumber) || a.name.localeCompare(b.name));
   }
 
   async save(input: BoulderProblemSaveInput): Promise<BoulderProblem> {
@@ -67,6 +72,7 @@ export class BoulderProblemRepository {
       sectorId: input.sectorId,
       name: input.name,
       guidebookGrade: input.guidebookGrade,
+      topoNumber: input.topoNumber,
       deleted: false,
     };
     const saved = await this.storage.upsertBoulderProblem(draft);

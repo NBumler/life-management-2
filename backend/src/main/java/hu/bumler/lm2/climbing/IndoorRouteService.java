@@ -77,6 +77,7 @@ class IndoorRouteService {
 		entity.setGrade(dto.getGrade());
 		entity.setAbsoluteDifficultyIndex(dto.getAbsoluteDifficultyIndex());
 		entity.setSector(dto.getSector().orElse(null));
+		entity.setTopoNumber(dto.getTopoNumber().orElse(null));
 	}
 
 	private static IndoorRouteEntity requireOwner(IndoorRouteEntity entity, UUID userId) {

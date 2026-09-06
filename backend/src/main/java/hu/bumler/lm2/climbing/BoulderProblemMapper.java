@@ -10,6 +10,7 @@ class BoulderProblemMapper {
 	BoulderProblem toDto(BoulderProblemEntity entity) {
 		BoulderProblem dto = new BoulderProblem(entity.getId(), entity.getSectorId(), entity.getName(),
 				entity.getGuidebookGrade(), entity.isDeleted());
+		dto.topoNumber(entity.getTopoNumber());
 		dto.deletedAt(entity.getDeletedAt());
 		dto.createdAt(entity.getCreatedAt());
 		dto.updatedAt(entity.getUpdatedAt());

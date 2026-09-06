@@ -44,6 +44,10 @@ public class IndoorRouteEntity {
 	@Column
 	private String sector;
 
+	/** backlog/079 — optional guidebook / topo ordinal ("12", "5/a", "5b"); gym-scoped, not unique. */
+	@Column(name = "topo_number")
+	private String topoNumber;
+
 	@Generated(event = EventType.INSERT)
 	@Column(name = "created_at", insertable = false, updatable = false)
 	private OffsetDateTime createdAt;
@@ -117,6 +121,14 @@ public class IndoorRouteEntity {
 
 	public void setSector(String sector) {
 		this.sector = sector;
+	}
+
+	public String getTopoNumber() {
+		return topoNumber;
+	}
+
+	public void setTopoNumber(String topoNumber) {
+		this.topoNumber = topoNumber;
 	}
 
 	public OffsetDateTime getCreatedAt() {

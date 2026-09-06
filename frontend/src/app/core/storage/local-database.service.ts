@@ -1122,7 +1122,19 @@ const SCHEMA_V31_STATEMENTS: string[] = [
   `ALTER TABLE exercise_catalog ADD COLUMN description TEXT`,
 ];
 
-const SCHEMA_VERSION = 31;
+/**
+ * backlog/079 — opcionális `topo_number` (guidebook / topó-sorszám) az utakon / problémákon (on-device
+ * tükre a backend `V33__climbing_route_topo_number.sql`-nek). Rövid szabad szöveg, nem uniqueness-
+ * kényszerített; a kliens természetes alfanumerikus rendezésre használja a picker-ekben. Régi soroknál
+ * `NULL`.
+ */
+const SCHEMA_V32_STATEMENTS: string[] = [
+  `ALTER TABLE route ADD COLUMN topo_number TEXT`,
+  `ALTER TABLE boulder_problem ADD COLUMN topo_number TEXT`,
+  `ALTER TABLE indoor_route ADD COLUMN topo_number TEXT`,
+];
+
+const SCHEMA_VERSION = 32;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -1156,7 +1168,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 28, statements: SCHEMA_V28_STATEMENTS },
   { toVersion: 29, statements: SCHEMA_V29_STATEMENTS },
   { toVersion: 30, statements: SCHEMA_V30_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V31_STATEMENTS },
+  { toVersion: 31, statements: SCHEMA_V31_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V32_STATEMENTS },
 ];
 
 export interface SqlTask {

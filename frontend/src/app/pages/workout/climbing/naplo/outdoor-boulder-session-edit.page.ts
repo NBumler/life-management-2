@@ -411,7 +411,7 @@ export class OutdoorBoulderSessionEditPage implements OnInit {
       if (!name || !grade) {
         continue;
       }
-      const created = await this.boulderProblemRepository.save({ sectorId, name, guidebookGrade: grade });
+      const created = await this.boulderProblemRepository.save({ sectorId, name, guidebookGrade: grade, topoNumber: null });
       row.boulderProblemId.set(created.id);
       row.saveToCatalog.set(false);
     }

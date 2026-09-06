@@ -79,6 +79,7 @@ class RouteService {
 		entity.setTotalPitches(dto.getTotalPitches().orElse(null));
 		entity.setRockType(dto.getRockType().orElse(null));
 		entity.setAspect(dto.getAspect().orElse(null));
+		entity.setTopoNumber(dto.getTopoNumber().orElse(null));
 	}
 
 	private static RouteEntity requireOwner(RouteEntity entity, UUID userId) {

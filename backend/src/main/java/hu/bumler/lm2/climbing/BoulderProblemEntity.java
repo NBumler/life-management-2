@@ -36,6 +36,10 @@ public class BoulderProblemEntity {
 	@Column(name = "guidebook_grade", nullable = false)
 	private String guidebookGrade;
 
+	/** backlog/079 — optional guidebook / topo ordinal ("12", "5/a", "5b"); sector-scoped, not unique. */
+	@Column(name = "topo_number")
+	private String topoNumber;
+
 	@Generated(event = EventType.INSERT)
 	@Column(name = "created_at", insertable = false, updatable = false)
 	private OffsetDateTime createdAt;
@@ -85,6 +89,14 @@ public class BoulderProblemEntity {
 
 	public void setGuidebookGrade(String guidebookGrade) {
 		this.guidebookGrade = guidebookGrade;
+	}
+
+	public String getTopoNumber() {
+		return topoNumber;
+	}
+
+	public void setTopoNumber(String topoNumber) {
+		this.topoNumber = topoNumber;
 	}
 
 	public OffsetDateTime getCreatedAt() {

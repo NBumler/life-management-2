@@ -59,6 +59,7 @@ class RouteServiceTest {
 		input.totalPitches(2);
 		input.rockType("mészkő");
 		input.aspect("kelet");
+		input.topoNumber("12/a");
 
 		Route saved = service.create(userId, input);
 
@@ -69,6 +70,7 @@ class RouteServiceTest {
 		assertThat(saved.getTotalPitches().orElse(null)).isEqualTo(2);
 		assertThat(saved.getRockType().orElse(null)).isEqualTo("mészkő");
 		assertThat(saved.getAspect().orElse(null)).isEqualTo("kelet");
+		assertThat(saved.getTopoNumber().orElse(null)).isEqualTo("12/a");
 	}
 
 	@Test

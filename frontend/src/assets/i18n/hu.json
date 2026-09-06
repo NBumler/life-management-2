@@ -1129,6 +1129,8 @@
         "FIELD_DISCIPLINE": "Ágazat",
         "FIELD_GRADE": "Fokozat",
         "FIELD_SECTOR": "Szektor / falszakasz",
+        "FIELD_TOPO_NUMBER": "Topó-sorszám (opcionális)",
+        "FIELD_TOPO_NUMBER_PLACEHOLDER": "pl. 12, 5/a, 5b",
         "DELETE_CONFIRM_TITLE": "Beltéri út törlése",
         "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd ezt a beltéri utat?"
       },
@@ -1166,6 +1168,8 @@
         "FIELD_PITCHES": "Kötélhosszak száma",
         "FIELD_ROCK_TYPE": "Kőzet (felülírja a szektor/szikla alapot)",
         "FIELD_ASPECT": "Fekvés (felülírja a szektor alapot)",
+        "FIELD_TOPO_NUMBER": "Topó-sorszám (opcionális)",
+        "FIELD_TOPO_NUMBER_PLACEHOLDER": "pl. 12, 5/a, 5b",
         "DELETE_CONFIRM_TITLE": "Út törlése",
         "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd ezt az utat?"
       },
@@ -1176,6 +1180,8 @@
         "EDIT_TITLE": "Boulder szerkesztése",
         "FIELD_NAME": "Név",
         "FIELD_GRADE": "Kalauz-fokozat",
+        "FIELD_TOPO_NUMBER": "Topó-sorszám (opcionális)",
+        "FIELD_TOPO_NUMBER_PLACEHOLDER": "pl. 12, 5/a, 5b",
         "DELETE_CONFIRM_TITLE": "Boulder törlése",
         "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd ezt a bouldert?"
       },

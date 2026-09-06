@@ -72,6 +72,7 @@ export class IndoorRouteEditPage implements OnInit {
     discipline: this.fb.nonNullable.control<IndoorRoute.DisciplineEnum>(IndoorRoute.DisciplineEnum.Rope),
     grade: this.fb.nonNullable.control('', [Validators.required]),
     sector: this.fb.control<string | null>(null),
+    topoNumber: this.fb.control<string | null>(null, [Validators.maxLength(32)]),
   });
 
   private readonly value = toSignal(this.form.valueChanges, { initialValue: this.form.getRawValue() });
@@ -100,6 +101,7 @@ export class IndoorRouteEditPage implements OnInit {
         discipline: existing.discipline,
         grade: existing.grade,
         sector: existing.sector ?? null,
+        topoNumber: existing.topoNumber ?? null,
       });
     }
   }
@@ -119,6 +121,7 @@ export class IndoorRouteEditPage implements OnInit {
       grade: this.gradeParse().normalized,
       absoluteDifficultyIndex: index,
       sector: v.sector?.trim() ? v.sector.trim() : null,
+      topoNumber: v.topoNumber?.trim() ? v.topoNumber.trim() : null,
     };
     await this.repository.save(input);
     await this.navigateBack();

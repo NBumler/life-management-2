@@ -33,6 +33,10 @@ export interface Route {
      * Optional per-route aspect; when set it wins over the Sector default.
      */
     aspect?: string | null;
+    /**
+     * backlog/079 — optional guidebook / topo ordinal (\"12\", \"5/a\", \"5b\"). Sector-scoped, not unique. Clients order route pickers by a natural (numeric-prefix + letter) sort on this, falling back to name; the server never orders by it.
+     */
+    topoNumber?: string | null;
     deleted: boolean;
     readonly deletedAt?: string | null;
     readonly createdAt?: string;

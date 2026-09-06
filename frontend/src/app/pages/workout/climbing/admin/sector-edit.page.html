@@ -42,7 +42,7 @@
         @for (r of routes(); track r.id) {
           <ion-item button [routerLink]="['routes', r.id]" detail="true">
             <ion-label>
-              <h2>{{ r.name }}</h2>
+              <h2>@if (r.topoNumber) { {{ r.topoNumber }} · }{{ r.name }}</h2>
               <p>
                 {{ r.guidebookGrade }}@if (r.lengthInMeters) { · {{ r.lengthInMeters }}m }@if (r.totalPitches) { · {{ r.totalPitches }}p }
               </p>
@@ -66,7 +66,7 @@
         @for (p of problems(); track p.id) {
           <ion-item button [routerLink]="['problems', p.id]" detail="true">
             <ion-label>
-              <h2>{{ p.name }}</h2>
+              <h2>@if (p.topoNumber) { {{ p.topoNumber }} · }{{ p.name }}</h2>
               <p>{{ p.guidebookGrade }}</p>
             </ion-label>
           </ion-item>

@@ -12,6 +12,7 @@ class IndoorRouteMapper {
 				IndoorRoute.DisciplineEnum.fromValue(entity.getDiscipline()), entity.getGrade(),
 				entity.getAbsoluteDifficultyIndex(), entity.isDeleted());
 		dto.sector(entity.getSector());
+		dto.topoNumber(entity.getTopoNumber());
 		dto.deletedAt(entity.getDeletedAt());
 		dto.createdAt(entity.getCreatedAt());
 		dto.updatedAt(entity.getUpdatedAt());

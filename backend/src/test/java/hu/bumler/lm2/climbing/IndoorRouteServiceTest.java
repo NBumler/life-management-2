@@ -55,6 +55,7 @@ class IndoorRouteServiceTest {
 
 		IndoorRoute input = dto(id, gymId, "Overhang line");
 		input.sector("Jobb szektor");
+		input.topoNumber("7b");
 
 		IndoorRoute saved = service.create(userId, input);
 
@@ -62,6 +63,7 @@ class IndoorRouteServiceTest {
 		assertThat(saved.getGymId()).isEqualTo(gymId);
 		assertThat(saved.getDiscipline()).isEqualTo(IndoorRoute.DisciplineEnum.ROPE);
 		assertThat(saved.getSector().orElse(null)).isEqualTo("Jobb szektor");
+		assertThat(saved.getTopoNumber().orElse(null)).isEqualTo("7b");
 	}
 
 	@Test

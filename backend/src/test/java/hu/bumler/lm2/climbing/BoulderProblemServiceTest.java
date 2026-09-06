@@ -50,11 +50,14 @@ class BoulderProblemServiceTest {
 		when(repository.findById(id)).thenReturn(Optional.empty());
 		when(repository.saveAndFlush(any())).thenAnswer(inv -> inv.getArgument(0));
 
-		BoulderProblem saved = service.create(userId, dto(id, sectorId, "Traverz blokk"));
+		BoulderProblem input = dto(id, sectorId, "Traverz blokk");
+		input.topoNumber("3");
+		BoulderProblem saved = service.create(userId, input);
 
 		assertThat(saved.getId()).isEqualTo(id);
 		assertThat(saved.getSectorId()).isEqualTo(sectorId);
 		assertThat(saved.getGuidebookGrade()).isEqualTo("7A");
+		assertThat(saved.getTopoNumber().orElse(null)).isEqualTo("3");
 	}
 
 	@Test

@@ -495,6 +495,7 @@ export class OutdoorRopeSessionEditPage implements OnInit {
         totalPitches: row.pitches().length > 0 ? row.pitches().length : null,
         rockType: null,
         aspect: null,
+        topoNumber: null,
       });
       row.routeId.set(created.id);
       row.saveToCatalog.set(false);

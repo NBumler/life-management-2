@@ -106,7 +106,7 @@
         @for (route of indoorRoutes(); track route.id) {
           <ion-item button [routerLink]="['routes', route.id]" detail="true">
             <ion-label>
-              <h2>{{ route.name }}</h2>
+              <h2>@if (route.topoNumber) { {{ route.topoNumber }} · }{{ route.name }}</h2>
               <p>{{ route.discipline }} · {{ route.grade }}@if (route.sector) { · {{ route.sector }} }</p>
             </ion-label>
           </ion-item>

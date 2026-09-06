@@ -70,4 +70,16 @@ describe('RouteEditPage', () => {
     await component.save();
     expect(saveSpy).not.toHaveBeenCalled();
   });
+
+  it('save() forwards a trimmed topo number, or null when blank (backlog/079)', async () => {
+    await setup();
+    component.form.patchValue({ name: 'Sárkányfészek', guidebookGrade: '7a', topoNumber: '  12  ' });
+    await component.save();
+    expect(saveSpy).toHaveBeenCalledWith(jasmine.objectContaining({ topoNumber: '12' }));
+
+    saveSpy.calls.reset();
+    component.form.patchValue({ topoNumber: '   ' });
+    await component.save();
+    expect(saveSpy).toHaveBeenCalledWith(jasmine.objectContaining({ topoNumber: null }));
+  });
 });

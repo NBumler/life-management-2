@@ -61,6 +61,7 @@ export class RouteEditPage implements OnInit {
     totalPitches: this.fb.control<number | null>(null, [Validators.min(1)]),
     rockType: this.fb.control<string | null>(null),
     aspect: this.fb.control<string | null>(null),
+    topoNumber: this.fb.control<string | null>(null, [Validators.maxLength(32)]),
   });
 
   async ngOnInit(): Promise<void> {
@@ -83,6 +84,7 @@ export class RouteEditPage implements OnInit {
         totalPitches: existing.totalPitches ?? null,
         rockType: existing.rockType ?? null,
         aspect: existing.aspect ?? null,
+        topoNumber: existing.topoNumber ?? null,
       });
     }
   }
@@ -102,6 +104,7 @@ export class RouteEditPage implements OnInit {
       totalPitches: v.totalPitches ?? null,
       rockType: v.rockType?.trim() ? v.rockType.trim() : null,
       aspect: v.aspect?.trim() ? v.aspect.trim() : null,
+      topoNumber: v.topoNumber?.trim() ? v.topoNumber.trim() : null,
     };
     await this.repository.save(input);
     await this.navigateBack();

@@ -24,6 +24,15 @@
       </ion-item>
       <ion-item>
         <ion-input
+          formControlName="topoNumber"
+          [label]="'WORKOUT.CLIMBING.PROBLEM.FIELD_TOPO_NUMBER' | translate"
+          [placeholder]="'WORKOUT.CLIMBING.PROBLEM.FIELD_TOPO_NUMBER_PLACEHOLDER' | translate"
+          label-placement="stacked"
+          maxlength="32"
+        ></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input
           formControlName="guidebookGrade"
           [label]="'WORKOUT.CLIMBING.PROBLEM.FIELD_GRADE' | translate"
           label-placement="stacked"

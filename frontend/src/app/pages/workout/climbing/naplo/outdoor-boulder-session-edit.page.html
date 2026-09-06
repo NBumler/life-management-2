@@ -181,7 +181,9 @@
             >
               <ion-select-option [value]="null">—</ion-select-option>
               @for (problem of problemsForSector(); track problem.id) {
-                <ion-select-option [value]="problem.id">{{ problem.name }} ({{ problem.guidebookGrade }})</ion-select-option>
+                <ion-select-option [value]="problem.id"
+                  >@if (problem.topoNumber) { {{ problem.topoNumber }} · }{{ problem.name }} ({{ problem.guidebookGrade }})</ion-select-option
+                >
               }
             </ion-select>
           </ion-item>

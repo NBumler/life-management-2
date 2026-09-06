@@ -23,6 +23,10 @@ export interface IndoorRoute {
      * Free-text sector / wall-strip label.
      */
     sector?: string | null;
+    /**
+     * backlog/079 — optional guidebook / topo ordinal (\"12\", \"5/a\", \"5b\"). Gym-scoped, not unique. Clients order route pickers by a natural (numeric-prefix + letter) sort on this, falling back to name; the server never orders by it.
+     */
+    topoNumber?: string | null;
     deleted: boolean;
     readonly deletedAt?: string | null;
     readonly createdAt?: string;

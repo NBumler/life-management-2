@@ -17,6 +17,10 @@ export interface BoulderProblem {
     sectorId: string;
     name: string;
     guidebookGrade: string;
+    /**
+     * backlog/079 — optional guidebook / topo ordinal (\"12\", \"5/a\", \"5b\"). Sector-scoped, not unique. Clients order problem pickers by a natural (numeric-prefix + letter) sort on this, falling back to name; the server never orders by it.
+     */
+    topoNumber?: string | null;
     deleted: boolean;
     readonly deletedAt?: string | null;
     readonly createdAt?: string;

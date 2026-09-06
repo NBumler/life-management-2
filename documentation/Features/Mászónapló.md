@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-06
-verifikalt_commit: 4f46538
+verifikalt_commit: 99ba651
 ---
 
 # Mászónapló
@@ -167,6 +167,7 @@ Minden mászó entitás: soft delete ([[Backend-offline first]]). Nested session
 - Sikeres kísérletnél a **Stílus** választó mellett súgó (ⓘ) gomb — felugró magyarázat az onsight / flash / redpoint jelentéséről és arról, miért választható egyszerre csak egy (mind a 4 kontextus napló-formban, `app-help-button`).
 - **Mászótársak** combobox (mind a 4 kontextus napló-formban, `app-partner-combobox`): üres mezőnél a korábbi társak tap-elhető chip-ként; gépelésre szűrt lista + „+ Hozzáadás: »…«" új névhez; a felvett társak chip-jei törölhetők.
 - Kísérlet-jegyzet: egyetlen **többsoros, auto-grow** mező. Sikernél „Jegyzet"; sikertelennél „Jegyzet / hol akadt el?" címkével + promttal (nincs külön „Hol akadt el" input).
+- „Kísérlet hozzáadása" út / probléma **select**: a `Route` / `BoulderProblem` / `IndoorRoute` opciók a `topoNumber` (topó-sorszám) szerint, **természetes alfanumerikus** rendezésben (`2` < `5/a` < `5/b` < `10`); sorszám nélküli utak a lista végén, név szerint. A meglévő sorszám az opció-címke elé kerül (`12 · Sárga áthajlás (6b)`). Kliensoldali rendezés (`shared/natural-sort.ts`); részletek: [[Outdoor köteles admin]] / [[Outdoor boulder admin]] / [[Indoor köteles admin]].
 - Minden kísérlet **önálló kártya** (`.attempt-card`, mind a 4 kontextus napló-formban): térköz + keret + lekerekítés, a bal élen **színsáv** a sikerállapothoz (zöld = sikeres, piros = sikertelen), kiemelt kártyafejléc („N. kísérlet" + siker-toggle).
 - Per-kontextus session lista (a közös, szűrő-tabos listát a `backlog/022-...` jegy fedi).
 
@@ -200,7 +201,7 @@ Olvasás/írás helyi store; mutációk outbox + kliens UUID; soft delete synche
 ### Backend
 
 - OpenAPI: `POST` / `PUT` / `GET` / `DELETE /api/climbing/sessions` (+ `-item`). **Egy flat `climbing_session` tábla** nullable kontextus-mezőkkel; a diszkriminátor a `locationType` + `discipline` pár.
-- Master külön, per-entitás endpoint: `/api/climbing/{gyms,gym-color-bands,indoor-routes,crags,sectors,routes,boulder-problems}` — `Gym` + `GymColorBand` + `IndoorRoute` (`V22`), `Crag` + `Sector` + `Route` + `BoulderProblem` (`V23`).
+- Master külön, per-entitás endpoint: `/api/climbing/{gyms,gym-color-bands,indoor-routes,crags,sectors,routes,boulder-problems}` — `Gym` + `GymColorBand` + `IndoorRoute` (`V22`), `Crag` + `Sector` + `Route` + `BoulderProblem` (`V23`). A `route` / `boulder_problem` / `indoor_route` táblákon opcionális `topo_number text CHECK (char_length ≤ 32)` (`V33`) — a szerver tárolja, de **soha nem rendez rá** (a lista-végpontok név szerint maradnak); a topó szerinti rendezés kliensoldali (`shared/natural-sort.ts`, `shared/fixtures/natural-sort.json`).
 - UUID kliens; soft delete; nested session body (`ClimbingSessionService.saveTree`, `NestedChildResolver`).
 - A szerver **sosem** számol / validál grade indexet vagy kcal-t: az `absoluteDifficultyIndex` és a `guidebookGrade` verbatim tárolódik. Szerveroldali paritás tervezett — `backlog/024-climbing-grade-matrix-kozos-generalt-json-asset-backend-index-uj.md`.
 

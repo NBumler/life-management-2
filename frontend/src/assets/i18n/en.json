@@ -1129,6 +1129,8 @@
         "FIELD_DISCIPLINE": "Discipline",
         "FIELD_GRADE": "Grade",
         "FIELD_SECTOR": "Sector / wall strip",
+        "FIELD_TOPO_NUMBER": "Topo number (optional)",
+        "FIELD_TOPO_NUMBER_PLACEHOLDER": "e.g. 12, 5/a, 5b",
         "DELETE_CONFIRM_TITLE": "Delete indoor route",
         "DELETE_CONFIRM_MESSAGE": "Delete this indoor route?"
       },
@@ -1166,6 +1168,8 @@
         "FIELD_PITCHES": "Total pitches",
         "FIELD_ROCK_TYPE": "Rock type (overrides sector/crag default)",
         "FIELD_ASPECT": "Aspect (overrides sector default)",
+        "FIELD_TOPO_NUMBER": "Topo number (optional)",
+        "FIELD_TOPO_NUMBER_PLACEHOLDER": "e.g. 12, 5/a, 5b",
         "DELETE_CONFIRM_TITLE": "Delete route",
         "DELETE_CONFIRM_MESSAGE": "Delete this route?"
       },
@@ -1176,6 +1180,8 @@
         "EDIT_TITLE": "Edit boulder problem",
         "FIELD_NAME": "Name",
         "FIELD_GRADE": "Guidebook grade",
+        "FIELD_TOPO_NUMBER": "Topo number (optional)",
+        "FIELD_TOPO_NUMBER_PLACEHOLDER": "e.g. 12, 5/a, 5b",
         "DELETE_CONFIRM_TITLE": "Delete boulder problem",
         "DELETE_CONFIRM_MESSAGE": "Delete this boulder problem?"
       },

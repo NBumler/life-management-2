@@ -215,7 +215,7 @@ describe('OutdoorBoulderSessionEditPage', () => {
 
     await component.save();
 
-    expect(bpSaveSpy).toHaveBeenCalledWith({ sectorId: 's1', name: 'Új projekt', guidebookGrade: '7B' });
+    expect(bpSaveSpy).toHaveBeenCalledWith({ sectorId: 's1', name: 'Új projekt', guidebookGrade: '7B', topoNumber: null });
     const draft = saveSpy.calls.mostRecent().args[0];
     expect(draft.attempts[0].boulderProblemId).toBe('p-new');
     expect(draft.attempts[0].routeName).toBe('Új projekt');

@@ -12,7 +12,7 @@ function problem(overrides: Partial<BoulderProblem> = {}): BoulderProblem {
 }
 
 function saveInput(overrides: Partial<BoulderProblemSaveInput> = {}): BoulderProblemSaveInput {
-  return { sectorId: 's1', name: 'Kockakő', guidebookGrade: '7A', ...overrides };
+  return { sectorId: 's1', name: 'Kockakő', guidebookGrade: '7A', topoNumber: null, ...overrides };
 }
 
 describe('BoulderProblemRepository', () => {

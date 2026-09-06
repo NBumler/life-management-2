@@ -56,6 +56,7 @@ export class BoulderProblemEditPage implements OnInit {
   readonly form = this.fb.nonNullable.group({
     name: this.fb.nonNullable.control('', [Validators.required]),
     guidebookGrade: this.fb.nonNullable.control('', [Validators.required]),
+    topoNumber: this.fb.control<string | null>(null, [Validators.maxLength(32)]),
   });
 
   async ngOnInit(): Promise<void> {
@@ -71,7 +72,11 @@ export class BoulderProblemEditPage implements OnInit {
         return;
       }
       this.problemId.set(idParam);
-      this.form.reset({ name: existing.name, guidebookGrade: existing.guidebookGrade });
+      this.form.reset({
+        name: existing.name,
+        guidebookGrade: existing.guidebookGrade,
+        topoNumber: existing.topoNumber ?? null,
+      });
     }
   }
 
@@ -86,6 +91,7 @@ export class BoulderProblemEditPage implements OnInit {
       sectorId: this.sectorId(),
       name: v.name.trim(),
       guidebookGrade: v.guidebookGrade.trim(),
+      topoNumber: v.topoNumber?.trim() ? v.topoNumber.trim() : null,
     };
     await this.repository.save(input);
     await this.navigateBack();

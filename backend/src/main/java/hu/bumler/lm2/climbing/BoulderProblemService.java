@@ -75,6 +75,7 @@ class BoulderProblemService {
 	private void applyFields(BoulderProblemEntity entity, BoulderProblem dto) {
 		entity.setName(dto.getName());
 		entity.setGuidebookGrade(dto.getGuidebookGrade());
+		entity.setTopoNumber(dto.getTopoNumber().orElse(null));
 	}
 
 	private static BoulderProblemEntity requireOwner(BoulderProblemEntity entity, UUID userId) {

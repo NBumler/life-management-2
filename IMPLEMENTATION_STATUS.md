@@ -14,6 +14,19 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-06 — #079** Mászó admin — opcionális `topoNumber` (topó / felmászókönyv-sorszám) a
+  `Route` / `BoulderProblem` / `IndoorRoute` entitásokon (rövid szabad szöveg, max. 32 kar., nem
+  uniqueness-kényszerített). A route- / probléma-pickerek (admin szektor/terem lista + mind a 3
+  napló út-select) **természetes alfanumerikus** rendezéssel rendeznek rá (`2` < `5/a` < `5/b` <
+  `10`), a sorszám nélküli sorok a lista végén név szerint; a sorszám az opció-címke elé kerül
+  (`12 · Név`). Backend: `V33__climbing_route_topo_number.sql` (3 tábla `text` + `CHECK char_length
+  ≤ 32`), entity/mapper/service, OpenAPI sémák; a szerver **nem** rendez `topoNumber` szerint (a
+  lista-végpontok név szerint maradnak), így nincs Java komparátor. Frontend: új
+  `shared/natural-sort.ts` (`compareNatural` / `compareTopoNumber`) + `shared/fixtures/natural-sort.json`
+  paritás-fixture, `SCHEMA_V32` (3 `ALTER TABLE … ADD COLUMN`, `SCHEMA_VERSION = 32`), row + task +
+  repository (`forSector`/`forGym` seam) + 3 admin űrlap + picker-megjelenítés + i18n. `sync_changes`
+  view érintetlen. Érintett specek: [[Outdoor köteles admin]], [[Outdoor boulder admin]],
+  [[Indoor köteles admin]], [[Mászónapló]].
 - **2026-09-06 — #066** Gyakorlatnak opcionális `description` (cue / variáns / cél) szabad szöveges
   mező, max. 1000 karakter. **Nem** része a névegyediségnek, és az [[Edzésnapló]] session entry
   **nem snapshotolja** (nem viselkedést befolyásoló adat). Backend: `V32__exercise_catalog_description.sql`

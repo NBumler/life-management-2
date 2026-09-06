@@ -29,6 +29,7 @@ function saveInput(overrides: Partial<IndoorRouteSaveInput> = {}): IndoorRouteSa
     grade: '7a',
     absoluteDifficultyIndex: 50,
     sector: null,
+    topoNumber: null,
     ...overrides,
   };
 }

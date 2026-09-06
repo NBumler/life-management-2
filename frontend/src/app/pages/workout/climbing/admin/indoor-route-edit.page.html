@@ -55,6 +55,16 @@
           label-placement="stacked"
         ></ion-input>
       </ion-item>
+
+      <ion-item>
+        <ion-input
+          formControlName="topoNumber"
+          [label]="'WORKOUT.CLIMBING.INDOOR_ROUTE.FIELD_TOPO_NUMBER' | translate"
+          [placeholder]="'WORKOUT.CLIMBING.INDOOR_ROUTE.FIELD_TOPO_NUMBER_PLACEHOLDER' | translate"
+          label-placement="stacked"
+          maxlength="32"
+        ></ion-input>
+      </ion-item>
     </ion-list>
 
     @if (routeId()) {

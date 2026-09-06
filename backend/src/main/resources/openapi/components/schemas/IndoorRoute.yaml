@@ -36,6 +36,14 @@ properties:
     type: string
     nullable: true
     description: Free-text sector / wall-strip label.
+  topoNumber:
+    type: string
+    maxLength: 32
+    nullable: true
+    description: >-
+      backlog/079 — optional guidebook / topo ordinal ("12", "5/a", "5b"). Gym-scoped, not unique.
+      Clients order route pickers by a natural (numeric-prefix + letter) sort on this, falling back
+      to name; the server never orders by it.
   deleted:
     type: boolean
   deletedAt:

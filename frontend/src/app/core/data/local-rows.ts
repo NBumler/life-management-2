@@ -1966,6 +1966,7 @@ export interface IndoorRouteRow {
   grade: string;
   absolute_difficulty_index: number;
   sector: string | null;
+  topo_number: string | null;
   created_at: string | null;
   updated_at: string | null;
   deleted: number;
@@ -1985,6 +1986,7 @@ export function indoorRouteRowToDto(row: IndoorRouteRow): IndoorRoute {
     grade: row.grade,
     absoluteDifficultyIndex: row.absolute_difficulty_index,
     sector: row.sector,
+    topoNumber: row.topo_number,
     deleted: row.deleted === 1,
     deletedAt: row.deleted_at,
     createdAt: row.created_at ?? undefined,
@@ -1995,23 +1997,33 @@ export function indoorRouteRowToDto(row: IndoorRouteRow): IndoorRoute {
 export function indoorRouteLocalWriteTask(dto: IndoorRoute): SqlTask {
   return {
     statement: `
-      INSERT INTO indoor_route (id, gym_id, name, discipline, grade, absolute_difficulty_index, sector, _dirty, _local_only)
-      VALUES (?, ?, ?, ?, ?, ?, ?, 1, 1)
+      INSERT INTO indoor_route (id, gym_id, name, discipline, grade, absolute_difficulty_index, sector, topo_number, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
       ON CONFLICT(id) DO UPDATE SET
         gym_id = excluded.gym_id, name = excluded.name, discipline = excluded.discipline, grade = excluded.grade,
-        absolute_difficulty_index = excluded.absolute_difficulty_index, sector = excluded.sector, _dirty = 1`,
-    values: [dto.id, dto.gymId, dto.name, dto.discipline, dto.grade, dto.absoluteDifficultyIndex, dto.sector ?? null],
+        absolute_difficulty_index = excluded.absolute_difficulty_index, sector = excluded.sector,
+        topo_number = excluded.topo_number, _dirty = 1`,
+    values: [
+      dto.id,
+      dto.gymId,
+      dto.name,
+      dto.discipline,
+      dto.grade,
+      dto.absoluteDifficultyIndex,
+      dto.sector ?? null,
+      dto.topoNumber ?? null,
+    ],
   };
 }
 
 export function indoorRouteServerApplyTask(dto: IndoorRoute): SqlTask {
   return {
     statement: `
-      INSERT INTO indoor_route (id, gym_id, name, discipline, grade, absolute_difficulty_index, sector, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      INSERT INTO indoor_route (id, gym_id, name, discipline, grade, absolute_difficulty_index, sector, topo_number, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET
         gym_id = excluded.gym_id, name = excluded.name, discipline = excluded.discipline, grade = excluded.grade,
-        absolute_difficulty_index = excluded.absolute_difficulty_index, sector = excluded.sector,
+        absolute_difficulty_index = excluded.absolute_difficulty_index, sector = excluded.sector, topo_number = excluded.topo_number,
         created_at = excluded.created_at, updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at,
         _dirty = 0, _local_only = 0, _needs_refetch = 0
       WHERE indoor_route._dirty = 0`,
@@ -2023,6 +2035,7 @@ export function indoorRouteServerApplyTask(dto: IndoorRoute): SqlTask {
       dto.grade,
       dto.absoluteDifficultyIndex,
       dto.sector ?? null,
+      dto.topoNumber ?? null,
       dto.createdAt ?? null,
       dto.updatedAt ?? null,
       dto.deleted ? 1 : 0,
@@ -2207,6 +2220,7 @@ export interface RouteRow {
   total_pitches: number | null;
   rock_type: string | null;
   aspect: string | null;
+  topo_number: string | null;
   created_at: string | null;
   updated_at: string | null;
   deleted: number;
@@ -2227,6 +2241,7 @@ export function routeRowToDto(row: RouteRow): Route {
     totalPitches: row.total_pitches,
     rockType: row.rock_type,
     aspect: row.aspect,
+    topoNumber: row.topo_number,
     deleted: row.deleted === 1,
     deletedAt: row.deleted_at,
     createdAt: row.created_at ?? undefined,
@@ -2237,12 +2252,12 @@ export function routeRowToDto(row: RouteRow): Route {
 export function routeLocalWriteTask(dto: Route): SqlTask {
   return {
     statement: `
-      INSERT INTO route (id, sector_id, name, guidebook_grade, length_in_meters, total_pitches, rock_type, aspect, _dirty, _local_only)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
+      INSERT INTO route (id, sector_id, name, guidebook_grade, length_in_meters, total_pitches, rock_type, aspect, topo_number, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
       ON CONFLICT(id) DO UPDATE SET
         sector_id = excluded.sector_id, name = excluded.name, guidebook_grade = excluded.guidebook_grade,
         length_in_meters = excluded.length_in_meters, total_pitches = excluded.total_pitches,
-        rock_type = excluded.rock_type, aspect = excluded.aspect, _dirty = 1`,
+        rock_type = excluded.rock_type, aspect = excluded.aspect, topo_number = excluded.topo_number, _dirty = 1`,
     values: [
       dto.id,
       dto.sectorId,
@@ -2252,6 +2267,7 @@ export function routeLocalWriteTask(dto: Route): SqlTask {
       dto.totalPitches ?? null,
       dto.rockType ?? null,
       dto.aspect ?? null,
+      dto.topoNumber ?? null,
     ],
   };
 }
@@ -2259,12 +2275,12 @@ export function routeLocalWriteTask(dto: Route): SqlTask {
 export function routeServerApplyTask(dto: Route): SqlTask {
   return {
     statement: `
-      INSERT INTO route (id, sector_id, name, guidebook_grade, length_in_meters, total_pitches, rock_type, aspect, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      INSERT INTO route (id, sector_id, name, guidebook_grade, length_in_meters, total_pitches, rock_type, aspect, topo_number, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET
         sector_id = excluded.sector_id, name = excluded.name, guidebook_grade = excluded.guidebook_grade,
         length_in_meters = excluded.length_in_meters, total_pitches = excluded.total_pitches,
-        rock_type = excluded.rock_type, aspect = excluded.aspect,
+        rock_type = excluded.rock_type, aspect = excluded.aspect, topo_number = excluded.topo_number,
         created_at = excluded.created_at, updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at,
         _dirty = 0, _local_only = 0, _needs_refetch = 0
       WHERE route._dirty = 0`,
@@ -2277,6 +2293,7 @@ export function routeServerApplyTask(dto: Route): SqlTask {
       dto.totalPitches ?? null,
       dto.rockType ?? null,
       dto.aspect ?? null,
+      dto.topoNumber ?? null,
       dto.createdAt ?? null,
       dto.updatedAt ?? null,
       dto.deleted ? 1 : 0,
@@ -2301,6 +2318,7 @@ export interface BoulderProblemRow {
   sector_id: string;
   name: string;
   guidebook_grade: string;
+  topo_number: string | null;
   created_at: string | null;
   updated_at: string | null;
   deleted: number;
@@ -2317,6 +2335,7 @@ export function boulderProblemRowToDto(row: BoulderProblemRow): BoulderProblem {
     sectorId: row.sector_id,
     name: row.name,
     guidebookGrade: row.guidebook_grade,
+    topoNumber: row.topo_number,
     deleted: row.deleted === 1,
     deletedAt: row.deleted_at,
     createdAt: row.created_at ?? undefined,
@@ -2327,21 +2346,22 @@ export function boulderProblemRowToDto(row: BoulderProblemRow): BoulderProblem {
 export function boulderProblemLocalWriteTask(dto: BoulderProblem): SqlTask {
   return {
     statement: `
-      INSERT INTO boulder_problem (id, sector_id, name, guidebook_grade, _dirty, _local_only)
-      VALUES (?, ?, ?, ?, 1, 1)
+      INSERT INTO boulder_problem (id, sector_id, name, guidebook_grade, topo_number, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, 1, 1)
       ON CONFLICT(id) DO UPDATE SET
-        sector_id = excluded.sector_id, name = excluded.name, guidebook_grade = excluded.guidebook_grade, _dirty = 1`,
-    values: [dto.id, dto.sectorId, dto.name, dto.guidebookGrade],
+        sector_id = excluded.sector_id, name = excluded.name, guidebook_grade = excluded.guidebook_grade,
+        topo_number = excluded.topo_number, _dirty = 1`,
+    values: [dto.id, dto.sectorId, dto.name, dto.guidebookGrade, dto.topoNumber ?? null],
   };
 }
 
 export function boulderProblemServerApplyTask(dto: BoulderProblem): SqlTask {
   return {
     statement: `
-      INSERT INTO boulder_problem (id, sector_id, name, guidebook_grade, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      INSERT INTO boulder_problem (id, sector_id, name, guidebook_grade, topo_number, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET
-        sector_id = excluded.sector_id, name = excluded.name, guidebook_grade = excluded.guidebook_grade,
+        sector_id = excluded.sector_id, name = excluded.name, guidebook_grade = excluded.guidebook_grade, topo_number = excluded.topo_number,
         created_at = excluded.created_at, updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at,
         _dirty = 0, _local_only = 0, _needs_refetch = 0
       WHERE boulder_problem._dirty = 0`,
@@ -2350,6 +2370,7 @@ export function boulderProblemServerApplyTask(dto: BoulderProblem): SqlTask {
       dto.sectorId,
       dto.name,
       dto.guidebookGrade,
+      dto.topoNumber ?? null,
       dto.createdAt ?? null,
       dto.updatedAt ?? null,
       dto.deleted ? 1 : 0,

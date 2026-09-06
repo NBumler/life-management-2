@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: dac7f81
+verifikalva: 2026-09-06
+verifikalt_commit: 99ba651
 ---
 
 # Indoor köteles admin
@@ -26,7 +26,9 @@ Beltéri köteles terem-master. **Ugyanaz a `Gym` entitás**, mint a [[Indoor bo
 | `defaultWallHeightMeters` | Átlagos falmagasság; napló `lengthInMeters` default |
 | `availableSafetyStyles` | `TOPROPE` / `LEAD` (TRAD nincs indoor) |
 | `GymColorBand` | **Nem** kötelező kötélnél |
-| `IndoorRoute` (opcionális) | Név, grade, szektor/sáv; fix termi út katalógus |
+| `IndoorRoute` (opcionális) | Név, grade, szektor/sáv, `topoNumber`; fix termi út katalógus |
+
+`topoNumber` — opcionális topó / sorszám (rövid szabad szöveg, max. 32 kar.; pl. „12", „5/a", „5b"). Nem uniqueness-kényszerített, terem-scope-ban. Az `IndoorRoute` pickerek (admin terem-lista **és** [[Indoor köteles napló]] select) **természetes alfanumerikus** rendezéssel rendeznek rá (`2` < `5/a` < `5/b` < `10`), a `topoNumber` nélküli sorok a lista végén név szerint (`shared/natural-sort.ts`, fixture: `shared/fixtures/natural-sort.json`). A szerver nem rendez rá; a picker a sorszámot a név elé fűzi.
 
 Nincs multi-pitch master. Soft delete: [[Mászónapló]].
 
@@ -54,7 +56,7 @@ Helyi store + outbox; kliens UUID; soft delete. Lásd [[Backend-offline first]].
 
 ### Backend
 
-`gym` bővített mezők; `indoor_route` opcionális tábla. API: [[Mászónapló]] master.
+`gym` bővített mezők; `indoor_route` opcionális tábla (`topo_number text CHECK (char_length ≤ 32)` a `V33__climbing_route_topo_number.sql`-ből; `sync_changes` view érintetlen). API: [[Mászónapló]] master.
 
 ### Nyitott kérdések
 

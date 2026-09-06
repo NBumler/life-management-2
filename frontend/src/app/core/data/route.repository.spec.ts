@@ -31,6 +31,7 @@ function saveInput(overrides: Partial<RouteSaveInput> = {}): RouteSaveInput {
     totalPitches: null,
     rockType: null,
     aspect: null,
+    topoNumber: null,
     ...overrides,
   };
 }
@@ -62,7 +63,7 @@ describe('RouteRepository', () => {
     expect(repository.loaded()).toBe(true);
   });
 
-  it('forSector(): returns only the live routes of that sector, by name', async () => {
+  it('forSector(): returns only the live routes of that sector, by name when no topo numbers', async () => {
     storage.listRoutes.and.resolveTo([
       route({ id: 'b', sectorId: 's1', name: 'Béta' }),
       route({ id: 'a', sectorId: 's1', name: 'Alfa' }),
@@ -72,6 +73,19 @@ describe('RouteRepository', () => {
     await repository.load();
 
     expect(repository.forSector('s1').map((r) => r.id)).toEqual(['a', 'b']);
+  });
+
+  it('forSector(): orders by topo number (natural sort), rows without one last by name (backlog/079)', async () => {
+    storage.listRoutes.and.resolveTo([
+      route({ id: 'noTopoB', sectorId: 's1', name: 'Zebra', topoNumber: null }),
+      route({ id: 'ten', sectorId: 's1', name: 'Tíz', topoNumber: '10' }),
+      route({ id: 'twoA', sectorId: 's1', name: 'Kettő-á', topoNumber: '2/a' }),
+      route({ id: 'noTopoA', sectorId: 's1', name: 'Alma', topoNumber: null }),
+      route({ id: 'two', sectorId: 's1', name: 'Kettő', topoNumber: '2' }),
+    ]);
+    await repository.load();
+
+    expect(repository.forSector('s1').map((r) => r.id)).toEqual(['two', 'twoA', 'ten', 'noTopoA', 'noTopoB']);
   });
 
   it('save(): stores the guidebook grade verbatim and creates a fresh id (a duplicate name is allowed)', async () => {

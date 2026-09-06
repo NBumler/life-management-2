@@ -2,6 +2,7 @@ import { Injectable, effect, inject, signal, untracked } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 
 import { Route } from '../../api/model/route';
+import { compareTopoNumber } from '../../shared/natural-sort';
 import { STORAGE_BACKEND } from '../storage/storage-backend';
 import { DataChangeNotifier } from '../sync/data-change-notifier';
 import { SyncEngineService } from '../sync/sync-engine.service';
@@ -18,6 +19,7 @@ export interface RouteSaveInput {
   totalPitches: number | null;
   rockType: string | null;
   aspect: string | null;
+  topoNumber: string | null;
 }
 
 /**
@@ -59,11 +61,14 @@ export class RouteRepository {
     this.loaded.set(true);
   }
 
-  /** Live routes of one sector, by name. */
+  /**
+   * Live routes of one sector, ordered by topo number (backlog/079 natural alphanumeric sort:
+   * "2" < "5/a" < "5/b" < "10"), rows without one falling to the end by name.
+   */
   forSector(sectorId: string): Route[] {
     return this.items()
       .filter((route) => route.sectorId === sectorId && !route.deleted)
-      .sort((a, b) => a.name.localeCompare(b.name));
+      .sort((a, b) => compareTopoNumber(a.topoNumber, b.topoNumber) || a.name.localeCompare(b.name));
   }
 
   async save(input: RouteSaveInput): Promise<Route> {
@@ -76,6 +81,7 @@ export class RouteRepository {
       totalPitches: input.totalPitches,
       rockType: input.rockType,
       aspect: input.aspect,
+      topoNumber: input.topoNumber,
       deleted: false,
     };
     const saved = await this.storage.upsertRoute(draft);

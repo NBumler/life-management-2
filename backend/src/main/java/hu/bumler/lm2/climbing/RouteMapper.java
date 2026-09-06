@@ -14,6 +14,7 @@ class RouteMapper {
 		dto.totalPitches(entity.getTotalPitches());
 		dto.rockType(entity.getRockType());
 		dto.aspect(entity.getAspect());
+		dto.topoNumber(entity.getTopoNumber());
 		dto.deletedAt(entity.getDeletedAt());
 		dto.createdAt(entity.getCreatedAt());
 		dto.updatedAt(entity.getUpdatedAt());
