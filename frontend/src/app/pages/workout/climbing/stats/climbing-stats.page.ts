@@ -19,6 +19,7 @@ import {
 import { TranslatePipe } from '@ngx-translate/core';
 
 import { ClimbingSessionRepository } from '../../../../core/data/climbing-session.repository';
+import { HelpButtonComponent } from '../../../../shared/help-button/help-button.component';
 import { today } from '../../../../shared/local-date';
 import { CLIMBING_STATS_PERIODS, ClimbingStatsPeriodDays, computeClimbingStats } from '../climbing-stats';
 import { CLIMBING_CONTEXTS } from '../climbing-contexts';
@@ -76,6 +77,7 @@ interface ContextView {
     IonNote,
     IonProgressBar,
     TranslatePipe,
+    HelpButtonComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

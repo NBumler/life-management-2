@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-03
-verifikalt_commit: b9d7577
+verifikalva: 2026-09-06
+verifikalt_commit: 7906e67
 ---
 
 # Bevásárlólista írás
@@ -26,11 +26,12 @@ Aktív bevásárlólista(ák) összeállítása és szerkesztése vásárlás el
   - **Nem-élelmiszer:** név (kötelező) + mennyiség ([[Mennyiség mező]]) + egy szabad szöveges mező (bolt, megjegyzés, egyéb — egy mezőben).
 - Lista és tételek **szerkeszthetők** vásárlás közben is (hozzáadás, módosítás, törlés, átnevezés).
 - Tételek **pipálhatók** („megvettem” jelzés). A pipa csak UI / állapot a listán; semmi sem történik a [[Bevásárlás teljesítve]] megnyomásáig.
+- A kipipált tételek **külön, halványított szekcióba** kerülnek a lista alján (`Kosárban (N)` fejléc), a pipálatlanok maradnak felül a húzható listában, változatlan relatív sorrendben. Vissza-pipálásra a tétel visszakerül a felső listába az eredeti helyére. A csoportosítás tisztán UI / származtatott állapot — a mentett `sortOrder` és a `checked` mező nem változik tőle.
 - Aktív lista **törlés** megerősítő dialógussal: soft delete (nem kerül az [[Bevásárlás előzmény]]be). Soha nem szinkronizált helyi draft → helyi hard remove + outbox tisztítás — [[Backend-offline first]]. Nincs undelete UI.
 
 ### UI/UX elvárások
 
-- Lista részlete: név (opcionális szerkesztés), tételek listája, pipa kontroll tételenként.
+- Lista részlete: név (opcionális szerkesztés), pipálatlan tételek húzható listája, alatta a kipipált („Kosárban") tételek halványított, áthúzott nevű szekciója (fejléc + darabszám); pipa kontroll mindkét csoportban, törlés a kipipált soron is.
 - Élelmiszer hozzáadás: katalógus választó (keresés: [[Szöveges keresés]], ha a választó keresőmezőt ad).
 - Mennyiség mezők: [[Mennyiség mező]] (összeragasztott input, pl. `120dkg`, `3cs`, `2l`). Élelmiszer-tételnél nincs `db`-chip; ha egy legacy / más eszközről szinkronizált sor mégis `db` egységű, a [[Bevásárlás teljesítve]] a teljesítéskor egész csomagra felfelé kerekíti.
 - Nem-élelmiszer: név + mennyiség + szabad szöveg mező.
@@ -49,7 +50,7 @@ Nincs nyitott kérdés.
 
 ### Frontend
 
-Aktív lista képernyő(k); tétel szerkesztő; pipa state; navigáció a teljesítés flow-ra. Mennyiség: [[Mennyiség mező]].
+Aktív lista képernyő(k); tétel szerkesztő; pipa state (a pipálatlan / kipipált csoport a `checked` signalokból származtatott computed, a kipipáltak külön szekcióban); navigáció a teljesítés flow-ra. Mennyiség: [[Mennyiség mező]].
 
 #### Backend-offline
 

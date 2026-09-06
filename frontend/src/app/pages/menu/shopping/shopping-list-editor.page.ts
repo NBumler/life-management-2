@@ -10,8 +10,10 @@ import {
   IonContent,
   IonFooter,
   IonHeader,
+  IonIcon,
   IonInput,
   IonItem,
+  IonItemDivider,
   IonLabel,
   IonList,
   IonSearchbar,
@@ -94,11 +96,23 @@ function toSaveItem(row: ItemRow, sortOrder: number): ShoppingListItemSaveItem {
     IonFooter,
     IonList,
     IonItem,
+    IonItemDivider,
+    IonIcon,
     IonInput,
     IonLabel,
     IonCheckbox,
     IonSearchbar,
     TranslatePipe,
+  ],
+  styles: [
+    `
+      .checked-row {
+        opacity: 0.55;
+      }
+      .checked-row h3 {
+        text-decoration: line-through;
+      }
+    `,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -123,6 +137,15 @@ export class ShoppingListEditorPage implements OnInit {
   });
 
   readonly foodIds = computed(() => this.items().filter((row): row is FoodItemRow => row.type === 'FOOD').map((row) => row.foodId));
+
+  /**
+   * documentation/Subfeatures/Bevásárlólista írás.md — a kipipált tételek külön, halványított
+   * szekcióba kerülnek a lista alján; a pipálatlanok maradnak a húzható `app-reorder-list`-ben,
+   * változatlan relatív sorrendben. Mindkét lista a kanonikus, sorrendtartó `items()` signalból
+   * származtatott (a `row.checked()` olvasása miatt a computed újrafut pipáláskor).
+   */
+  readonly uncheckedItems = computed(() => this.items().filter((row) => !row.checked()));
+  readonly checkedItems = computed(() => this.items().filter((row) => row.checked()));
 
   readonly foodPickerResults = computed(() => {
     const query = this.pickerQuery();
@@ -196,8 +219,21 @@ export class ShoppingListEditorPage implements OnInit {
     this.items.update((rows) => [...rows, row]);
   }
 
-  onItemsReordered(reordered: ItemRow[]): void {
-    this.items.set(reordered);
+  /**
+   * The reorder-list only holds the unchecked rows, so splice the reordered subset back into the
+   * canonical `items()` list without disturbing the checked rows' absolute positions.
+   */
+  onUncheckedReordered(reordered: ItemRow[]): void {
+    const queue = [...reordered];
+    this.items.update((rows) => rows.map((row) => (row.checked() ? row : (queue.shift() ?? row))));
+  }
+
+  /** Display name for a row in the checked ("in cart") section. */
+  nameOf(row: ItemRow): string {
+    if (row.type === 'FOOD') {
+      return this.foodOf(row)?.name ?? '—';
+    }
+    return row.name().trim() || '—';
   }
 
   removeItem(row: ItemRow): void {

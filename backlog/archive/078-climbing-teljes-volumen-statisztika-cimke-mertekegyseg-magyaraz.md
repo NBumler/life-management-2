@@ -1,13 +1,13 @@
 ---
 id: 78
 type: change-request
-status: backlog
+status: done
 title: „Teljes volumen” mászó-statisztika — címke, mértékegység és magyarázat (nagy nyers szám)
 specs:
   - "[[Mászónapló]]"
 flag:
 created: 2026-09-06
-closed:
+closed: 2026-09-06
 ---
 
 # 78 — „Teljes volumen” mászó-statisztika — címke, mértékegység és magyarázat (nagy nyers szám)
@@ -48,6 +48,14 @@ kiírást is érdemes visszafogni / kontextusba tenni._
 
 ## Lezáráskor (on-done)
 
-- Frissített specek: [[Mászónapló]] (`#### Volumen` / `#### Statisztikák` — megjelenítés, címke)
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — <mit>
-- Kód: `frontend` `climbing-stats.ts` fogyasztói (stats page, session list/detail) + i18n
+- Statisztika képernyő: az összesített sor címkéje „Mászási volumen · mind a 4 kontextus", a
+  per-kontextus sor „Mászási volumen" (nem a puszta „Összes volumen" / „Total volume"); az
+  összesített sor mellett `app-help-button` (ⓘ) — `VOLUME_HELP_TITLE` / `VOLUME_HELP_TEXT`
+  (hu + en): „mászott méter × nehézségi index" összeg, edzésterhelési mutató, nem kalória, nem
+  méter, nincs mértékegysége.
+- Session-szerkesztő élő előnézet: a rejtélyes `· V 4567` helyett `· volumen 4567` (a szó kiírva),
+  mind a 4 kontextus formban (`WORKOUT.CLIMBING.SESSION.VOLUME_SHORT`).
+- Frissített specek: [[Mászónapló]] (`#### Volumen` / `#### Statisztikák` — címke + súgó + előnézet)
+- `IMPLEMENTATION_STATUS.md` sor: 2026-09-06 — „Teljes volumen" statisztika: érthető címke + súgó (#78)
+- Kód: `frontend/pages/workout/climbing/stats/climbing-stats.page.{ts,html}`,
+  climbing `*-session-edit.page.html` (footer), `assets/i18n/{hu,en}.json`

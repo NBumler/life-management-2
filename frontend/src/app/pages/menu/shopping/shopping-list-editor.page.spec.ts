@@ -112,6 +112,48 @@ describe('ShoppingListEditorPage', () => {
     expect(row.type === 'NON_FOOD' && row.name()).toBe('');
   });
 
+  it('splits rows into unchecked / checked ("in cart") groups reactively (backlog 067)', async () => {
+    await createFixture('sl1');
+    repository.items.set([
+      shoppingList({
+        items: [
+          { id: 'i1', shoppingListId: 'sl1', type: 'NON_FOOD', name: 'Kenyér', checked: false, sortOrder: 0, deleted: false },
+          { id: 'i2', shoppingListId: 'sl1', type: 'NON_FOOD', name: 'Tej', checked: true, sortOrder: 1, deleted: false },
+          { id: 'i3', shoppingListId: 'sl1', type: 'NON_FOOD', name: 'Alma', checked: false, sortOrder: 2, deleted: false },
+        ],
+      }),
+    ]);
+    await fixture.componentInstance.ngOnInit();
+
+    expect(fixture.componentInstance.uncheckedItems().map((r) => r.id)).toEqual(['i1', 'i3']);
+    expect(fixture.componentInstance.checkedItems().map((r) => r.id)).toEqual(['i2']);
+
+    // checking a row moves it to the checked group without touching canonical order
+    fixture.componentInstance.items()[0].checked.set(true);
+    expect(fixture.componentInstance.uncheckedItems().map((r) => r.id)).toEqual(['i3']);
+    expect(fixture.componentInstance.checkedItems().map((r) => r.id)).toEqual(['i1', 'i2']);
+    expect(fixture.componentInstance.items().map((r) => r.id)).toEqual(['i1', 'i2', 'i3']);
+  });
+
+  it('onUncheckedReordered(): reorders the unchecked rows, leaving checked rows in place (backlog 067)', async () => {
+    await createFixture('sl1');
+    repository.items.set([
+      shoppingList({
+        items: [
+          { id: 'a', shoppingListId: 'sl1', type: 'NON_FOOD', name: 'A', checked: false, sortOrder: 0, deleted: false },
+          { id: 'b', shoppingListId: 'sl1', type: 'NON_FOOD', name: 'B', checked: true, sortOrder: 1, deleted: false },
+          { id: 'c', shoppingListId: 'sl1', type: 'NON_FOOD', name: 'C', checked: false, sortOrder: 2, deleted: false },
+        ],
+      }),
+    ]);
+    await fixture.componentInstance.ngOnInit();
+    const [a, , c] = fixture.componentInstance.items();
+
+    fixture.componentInstance.onUncheckedReordered([c, a]);
+
+    expect(fixture.componentInstance.items().map((r) => r.id)).toEqual(['c', 'b', 'a']);
+  });
+
   it('removeItem(): drops the row', async () => {
     await createFixture('new');
     await fixture.componentInstance.ngOnInit();

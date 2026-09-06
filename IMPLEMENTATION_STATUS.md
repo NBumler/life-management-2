@@ -14,6 +14,18 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-06 — #078** „Teljes volumen" mászó-statisztika: érthetőbb címke + magyarázat. A
+  Statisztika képernyőn az összesített sor „Mászási volumen · mind a 4 kontextus", a per-kontextus
+  sor „Mászási volumen" (nem a puszta „Összes volumen"), az összesített sor mellett `app-help-button`
+  (ⓘ) — „mászott méter × nehézségi index" összeg, edzésterhelési mutató, nem kalória / nem méter /
+  nincs mértékegysége (`VOLUME_HELP_*`). A session-szerkesztő élő előnézetében a rejtélyes `· V N`
+  helyett `· volumen N`. Érintett spec: [[Mászónapló]]. Kód: `frontend/pages/workout/climbing/stats/`,
+  climbing `*-session-edit.page.html`, `assets/i18n/{hu,en}.json`.
+- **2026-09-06 — #067** Bevásárlólistán a kipipált tételek külön, halványított „Kosárban (N)"
+  szekcióba kerülnek a lista alján; a pipálatlanok maradnak a húzható listában, változatlan relatív
+  sorrendben; vissza-pipálásra a tétel visszaáll az eredeti helyére. Származtatott csoportok a
+  kanonikus `items()` signalból; `sortOrder` / `checked` nem változik (nincs backend hatás).
+  Érintett spec: [[Bevásárlólista írás]]. Kód: `frontend/pages/menu/shopping/shopping-list-editor.page.*`.
 - **2026-09-06 — #074 (bug)** Mászó kísérletben az út módosításakor a nehézségi index nem frissült.
   Ok: `pickRoute` / `pickProblem` csak üres fokozatot töltött elő, és a `resolveIndex` a
   `userRawInput`-ot előrébb sorolta a kiválasztott útnál → útváltáskor az előző út fokozata/indexe

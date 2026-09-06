@@ -1,13 +1,13 @@
 ---
 id: 67
 type: change-request
-status: backlog
+status: done
 title: Bevásárlólistán a kipipált tétel legyen vizuálisan elkülönítve
 specs:
   - "[[Bevásárlólista írás]]"
 flag:
 created: 2026-09-06
-closed:
+closed: 2026-09-06
 ---
 
 # 67 — Bevásárlólistán a kipipált tétel legyen vizuálisan elkülönítve
@@ -41,6 +41,13 @@ _Döntés: külön szekció + fejléc vs. csak rendezés + stílus. Előbbi tisz
 
 ## Lezáráskor (on-done)
 
-- Frissített specek: [[Bevásárlólista írás]] (`### UI/UX elvárások`)
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — <mit>
-- Kód: `frontend` aktív bevásárlólista képernyő
+- A `shopping-list-editor` a tételeket két származtatott csoportra bontja: `uncheckedItems()` a
+  húzható `app-reorder-list`-ben (változatlan), `checkedItems()` egy külön `ion-list`-ben a lista
+  alján `Kosárban (N)` (`SHOPPING.LIST.CHECKED_HEADER`) `ion-item-divider` fejléccel, halványítva
+  (`opacity`) + áthúzott névvel. Vissza-pipálásra a tétel visszakerül az eredeti helyére.
+- A kanonikus, sorrendtartó `items()` signal nem változik a pipálástól; `onUncheckedReordered`
+  a húzott sorrendet visszafűzi az `items()`-be a kipipáltak abszolút pozíciójának megtartásával.
+  A mentett `sortOrder` / `checked` érintetlen — nincs backend / outbox hatás.
+- Frissített specek: [[Bevásárlólista írás]] (`### Funkcionális leírás`, `### UI/UX elvárások`, `### Frontend`)
+- `IMPLEMENTATION_STATUS.md` sor: 2026-09-06 — Bevásárlólistán a kipipált tételek külön szekcióba (#67)
+- Kód: `frontend/src/app/pages/menu/shopping/shopping-list-editor.page.{ts,html}` (+ 2 új teszt)

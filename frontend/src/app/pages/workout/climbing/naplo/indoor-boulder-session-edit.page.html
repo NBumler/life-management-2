@@ -212,7 +212,7 @@
       } @else {
         <span>{{ 'WORKOUT.CLIMBING.SESSION.NO_BODY_WEIGHT' | translate }}</span>
       }
-      <span>· V {{ previewVolume() | number: '1.0-0' }}</span>
+      <span>· {{ 'WORKOUT.CLIMBING.SESSION.VOLUME_SHORT' | translate }} {{ previewVolume() | number: '1.0-0' }}</span>
     </div>
     <ion-button slot="end" (click)="save()" [disabled]="form.invalid || !minFieldsMet()">{{ 'COMMON.SAVE' | translate }}</ion-button>
   </ion-toolbar>

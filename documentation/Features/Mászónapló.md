@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-06
-verifikalt_commit: 8d66db3
+verifikalt_commit: 7906e67
 ---
 
 # Mászónapló
@@ -136,9 +136,11 @@ Testsúly \(m\): [[Profile]] aktuális kg — **nem** fagyasztódik. TRAD: \(m_{
 - Kötél: \(\text{Volume} = \sum_{\text{sikeres kísérletek}} \text{mászott méter}_i \times I_{\text{grade},i}\) (a „mászott méter” kísérletenként: `lengthInMeters`, vagy a pitch-ek összege multi-pitchnél)
 - Boulder: 1 sikeres kísérlet ≡ **4 m**; \(\text{Volume} = \sum_{\text{sikeres kísérletek}} 4 \times I_{\text{grade},i}\)
 
+A Volumen **edzésterhelési mutató, nem kalória és nem megmászott méter**; nincs mértékegysége (relatív pontszám), ezért nagy számok is normálisak. A felületen „Mászási volumen" címkével jelenik meg (nem csak „V" / „volumen"), és a Statisztika képernyőn egy súgó (ⓘ) gomb elmondja, mit jelent (`WORKOUT.CLIMBING.STATS_PAGE.VOLUME_HELP_*`). A session-szerkesztő élő előnézetében `~kcal · volumen N` formában (a „volumen" szó kiírva, nem „V").
+
 #### Statisztikák
 
-Max grade kontextusonként (a legnehezebb **sikeres** kísérlet); összes Volume; sikerarány-bontás (Onsight / Flash / Redpoint / sikertelen — a rögzített `ascentStyle` nélküli sikeres kísérlet redpointként számít); grade piramis (30 / 90 / 365 nap ablak; a többi mutató all-time). `computeClimbingStats` (`climbing-stats.ts`).
+Max grade kontextusonként (a legnehezebb **sikeres** kísérlet); összes Volume; sikerarány-bontás (Onsight / Flash / Redpoint / sikertelen — a rögzített `ascentStyle` nélküli sikeres kísérlet redpointként számít); grade piramis (30 / 90 / 365 nap ablak; a többi mutató all-time). `computeClimbingStats` (`climbing-stats.ts`). A „Mászási volumen · mind a 4 kontextus" összesített sor mellett súgó (ⓘ) gomb (`app-help-button`).
 
 #### Soft delete / offline
 

@@ -65,7 +65,7 @@
         <ion-label color="medium">{{ 'SHOPPING.LIST.NO_ITEMS' | translate }}</ion-label>
       </ion-item>
     } @else {
-      <app-reorder-list [items]="items()" (reorder)="onItemsReordered($event)" (remove)="removeItem($event)">
+      <app-reorder-list [items]="uncheckedItems()" (reorder)="onUncheckedReordered($event)" (remove)="removeItem($event)">
         <ng-template let-row>
           <ion-checkbox slot="start" [checked]="row.checked()" (ionChange)="row.checked.set($any($event.target).checked)"></ion-checkbox>
           @if (row.type === 'FOOD') {
@@ -98,6 +98,25 @@
           }
         </ng-template>
       </app-reorder-list>
+
+      @if (checkedItems().length > 0) {
+        <ion-list class="checked-list">
+          <ion-item-divider>
+            <ion-label>{{ 'SHOPPING.LIST.CHECKED_HEADER' | translate: { count: checkedItems().length } }}</ion-label>
+          </ion-item-divider>
+          @for (row of checkedItems(); track row.id) {
+            <ion-item class="checked-row">
+              <ion-checkbox slot="start" [checked]="row.checked()" (ionChange)="row.checked.set($any($event.target).checked)"></ion-checkbox>
+              <ion-label>
+                <h3>{{ nameOf(row) }}</h3>
+              </ion-label>
+              <ion-button slot="end" fill="clear" color="danger" [attr.aria-label]="'COMMON.REMOVE' | translate" (click)="removeItem(row)">
+                <ion-icon name="close-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+              </ion-button>
+            </ion-item>
+          }
+        </ion-list>
+      }
     }
   </ion-list>
 </ion-content>

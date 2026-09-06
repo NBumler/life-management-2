@@ -21,6 +21,11 @@
     <ion-item lines="none">
       <ion-label>{{ 'WORKOUT.CLIMBING.STATS_PAGE.OVERALL_VOLUME' | translate }}</ion-label>
       <ion-note slot="end">{{ totalVolume() | number: '1.0-0' }}</ion-note>
+      <app-help-button
+        slot="end"
+        titleKey="WORKOUT.CLIMBING.STATS_PAGE.VOLUME_HELP_TITLE"
+        textKey="WORKOUT.CLIMBING.STATS_PAGE.VOLUME_HELP_TEXT"
+      ></app-help-button>
     </ion-item>
     <ion-item lines="none">
       <ion-note>{{ 'WORKOUT.CLIMBING.STATS_PAGE.PERIOD_HINT' | translate: { days: period() } }}</ion-note>
