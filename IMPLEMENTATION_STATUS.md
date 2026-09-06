@@ -14,6 +14,14 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-06 — #070 + #075** Kísérlet-mező üzleti review. **#070**: rögzítve, hogy egy
+  `AscentAttempt` sor = egy út/probléma **ebben a sessionben** (nem egy-egy „go"); az `attemptCount`
+  marad, de a napló-form címkéje „Próbák (ebben a sessionben)" / „Tries (this session)", és a
+  Volumen / sikerarány / duration-fallback egyike sem szoroz vele. Mezőnkénti döntési tábla a
+  ticketben; a failurePoint-merge és a vizuális elkülönítés külön jegy (#077 / #076). **#075**:
+  `dropped` — az `ascentStyle` egyválasztós marad (a három érték definíció szerint kizáró),
+  `#### Tudatos korlát` bekerült a [[Mászónapló]] specbe. Kód: 4× `*-session-edit.page.html`
+  címke, `assets/i18n/{hu,en}.json`. Érintett specek: [[Mászónapló]], [[Indoor boulder napló]].
 - **2026-09-06 — #069** Mászótársak bevitele combobox-szal. Új shared presentational komponens
   (`shared/partner-combobox/`): a felvett nevek törölhető chip-ként; a beviteli mező üresen a
   korábbi társakat tap-elhető chipként ajánlja, gépelésre [[Szöveges keresés]]-normalizálással

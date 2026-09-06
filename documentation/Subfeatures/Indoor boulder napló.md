@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-06
-verifikalt_commit: 499b4aa
+verifikalt_commit: 5410314
 ---
 
 # Indoor boulder napló
@@ -43,7 +43,7 @@ Közös session modell: [[Mászónapló]] (`locationType=INDOOR`, `discipline=BO
 | `userRawInput` | Opcionális / alternatív: [[Nehézségi szint skálája]] Font/V parser |
 | `absoluteDifficultyIndex` | Szín-sávból: a `[Lower, Upper]` index **lefelé kerekített** közepe (`resolveIndex()` → `colorBandMidIndex`, `floor` — determinisztikus, klienst és szervert egyaránt köti); parser esetén a parsed grade indexe. |
 | `isSuccess` | Boolean |
-| `attemptCount` | Opcionális `≥ 1` (próbák az adott problémán) |
+| `attemptCount` | Opcionális `≥ 1` — próbák (gólok) száma **ebben a sessionben** ezen a problémán (napló-form címke: „Próbák (ebben a sessionben)"). Tájékoztató; a képletek nem szoroznak vele. Lásd [[Mászónapló]]. |
 | `ascentStyle` | Ha siker: `FLASH` \| `REDPOINT` \| `ONSIGHT` (ONSIGHT megengedett fallback) |
 | `notes` | Opcionális (pl. top fogás) — sikertelennél `failurePoint` helyett / mellett rövid note |
 

@@ -1205,7 +1205,7 @@
         "FIELD_BAND": "Colour band",
         "FIELD_GRADE": "Grade (Font / V)",
         "GRADE_PLACEHOLDER": "e.g. 6B or V4",
-        "FIELD_ATTEMPT_COUNT": "Number of tries",
+        "FIELD_ATTEMPT_COUNT": "Tries (this session)",
         "FIELD_STYLE": "Style",
         "FIELD_ATTEMPT_NOTES": "Notes",
         "REMOVE_ATTEMPT": "Remove attempt",

@@ -1,14 +1,14 @@
 ---
 id: 70
 type: change-request
-status: backlog
+status: done
 title: Kísérletek (AscentAttempt) UI/UX üzleti-logikai átvizsgálás — az attemptCount jelentése
 specs:
   - "[[Mászónapló]]"
   - "[[Indoor boulder napló]]"
 flag:
 created: 2026-09-06
-closed:
+closed: 2026-09-06
 ---
 
 # 70 — Kísérletek (AscentAttempt) UI/UX üzleti-logikai átvizsgálás — az attemptCount jelentése
@@ -61,7 +61,30 @@ konkrét, önállóan is szállítható darabok._
 
 ## Lezáráskor (on-done)
 
-- Frissített specek: [[Mászónapló]] (`AscentAttempt` tábla + Volumen/statisztika szakasz),
-  [[Indoor boulder napló]] attempt-mezők, érintett napló specek
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — <mit>
-- Kód: `hu.bumler.lm2.climbing`, `frontend` climbing attempt input + stats
+Elemzés + döntések (a konkrét kód a gyerekjegyekben: #071 kész, #074 kész, #075 dropped,
+#076 vizuális elkülönítés, #077 failurePoint→notes).
+
+### Döntési tábla — mit jelent egy `AscentAttempt` sor
+
+**Egy sor = egy út/probléma ebben a sessionben** (nem egy-egy „go"). Aki ugyanazt az utat
+többször mászta egy alkalommal, **egy** sort vesz fel, és az `attemptCount`-tal jelzi, hány
+próbát tett — nem 6 közel azonos sort. (Ez a felhasználói workflow-döntés; a per-go modell
+elvetve, mert telefonon a crag alatt kezelhetetlen.)
+
+| Mező | Kötelező? | Feltételes? | Döntés |
+|---|---|---|---|
+| `isSuccess` | igen | — | Toggle. |
+| grade (`userRawInput` / `absoluteDifficultyIndex` / `colorBandId`) | opcionális | — | Marad; az útváltás-re-derive szabályt a #074 rendezte. |
+| `ascentStyle` | opcionális | csak `isSuccess` | Egyválasztós, szándékos (#075). Súgó: #071. |
+| `safetyStyle` | opcionális | csak kötél (indoor: TRAD rejtve) | Marad. |
+| `attemptCount` | opcionális `≥ 1` | — | **Marad**, de az UI címke egyértelműsít: „Próbák (ebben a sessionben)". Tájékoztató mező — a Volumen / sikerarány / duration-fallback **nem** szoroz vele (sor-alapú). |
+| `failurePoint` | — | — | **Megszűnik** (#077): beolvad a `notes`-ba; sikertelennél a `notes` mező kapja a „hol akadt el?" promptot. Egy szabad szöveg mező kísérletenként. |
+| `lengthInMeters` | opcionális | csak kötél | Marad (default: route / fal magasság). |
+| `notes` | opcionális | — | Marad; sikertelennél ez az egyetlen szabadszöveg (failurePoint helyett is). |
+
+- Frissített specek: [[Mászónapló]] (`AscentAttempt` tábla + `attemptCount` / duration-fallback
+  szöveg + `### Megjegyzések` döntési tábla), [[Indoor boulder napló]] (`attemptCount` sor).
+  `verifikalt_commit` bump.
+- `IMPLEMENTATION_STATUS.md` sor: 2026-09-06 — #70 kísérlet-mező review: modell + attemptCount címke tisztázva
+- Kód: 4× `*-session-edit.page.html` — `FIELD_ATTEMPT_COUNT` címke; `assets/i18n/{hu,en}.json`.
+  (A failurePoint-merge és a vizuális elkülönítés külön jegy: #077 / #076.)

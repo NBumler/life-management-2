@@ -1,13 +1,13 @@
 ---
 id: 75
 type: change-request
-status: backlog
+status: dropped
 title: Kísérlet stílus — tisztázás: flash / onsight / redpoint egyszerre lehet-e (jelenleg 1 select)
 specs:
   - "[[Mászónapló]]"
 flag:
 created: 2026-09-06
-closed:
+closed: 2026-09-06
 ---
 
 # 75 — Kísérlet stílus — tisztázás: flash / onsight / redpoint egyszerre lehet-e (jelenleg 1 select)
@@ -43,6 +43,12 @@ zárható._
 
 ## Lezáráskor (on-done)
 
-- Frissített specek: [[Mászónapló]] (`AscentAttempt.ascentStyle` — indoklás / Tudatos korlát)
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — <mit>
-- Kód: nincs, vagy `frontend` attempt input + statisztika
+**`dropped` — nincs kódváltás.** Az elemzés eredménye: a három érték (`ONSIGHT` / `FLASH` /
+`REDPOINT`) definíció szerint egymást kizárja — mindegyik egy sikeres kísérlet **egyetlen**
+minősítése, nem egymásra rakható címkék. Az egyválasztós `ascentStyle` helyes; a #071 súgószövege
+(`WORKOUT.CLIMBING.ASCENT_STYLE.HELP_*`) elmagyarázza, miért. Ha később elkülönült „clean / no
+falls" jelző kell (a stílustól függetlenül), az önálló mező lesz, nem az `ascentStyle` set-esítése.
+
+- Frissített spec: [[Mászónapló]] `### Megjegyzések` → `#### Tudatos korlát — egy ascent-style / kísérlet`
+- `IMPLEMENTATION_STATUS.md` sor: 2026-09-06 — #75 dropped (egyválasztós ascentStyle szándékos)
+- Kód: nincs

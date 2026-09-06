@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-06
-verifikalt_commit: 499b4aa
+verifikalt_commit: 5410314
 ---
 
 # Mászónapló
@@ -69,13 +69,18 @@ Egy napon **több** session megengedett (akár ugyanarra a kontextusra is). Egy 
 | `absoluteDifficultyIndex` | Integer; mátrixból ([[Nehézségi szint skálája (konverziós mátrix)]]). Kliens-oldalon mindig a `userRawInput` (ha van) vagy a kiválasztott út fokozatából számítva — lásd fent az útváltás-szabályt. |
 | `ascentStyle` | Opcionális, ha `isSuccess`: `ONSIGHT` \| `FLASH` \| `REDPOINT` (kontextus szerinti whitelist). A választó mellett súgó (ⓘ) gomb: a három stílus definíciója + miért zárják ki egymást (`WORKOUT.CLIMBING.ASCENT_STYLE.HELP_*`). |
 | `safetyStyle` | Csak kötél: `TOPROPE` \| `LEAD` \| `TRAD` (indoor: TRAD rejtve) |
-| `failurePoint` | Opcionális; sikertelennél |
-| `attemptCount` | Opcionális egész `≥ 1` — próbák száma az adott mászáson / úton, **kontextustól függetlenül** (indoor/outdoor, boulder/kötél egyaránt; pl. redpoint próbák száma egy köteles úton). Tájékoztató mező: a Volumen- és a sikerarány-képlet **attempt-soronként** számol, egyikük sem szoroz vele; a statisztikai nézetek megjeleníthetik |
+| `failurePoint` | Opcionális; sikertelennél. Külön szabadszöveg mező, egysoros. |
+| `attemptCount` | Opcionális egész `≥ 1` — **próbák (gólok) száma ebben a sessionben ezen az úton**, kontextustól függetlenül (pl. redpoint-próbák egy köteles úton). A napló-form címkéje: „Próbák (ebben a sessionben)". Tájékoztató mező: a Volumen-, a sikerarány- és a duration-fallback képlet is **kísérlet-soronként** (nem `Σ attemptCount`) számol, egyikük sem szoroz vele; a statisztikai nézetek megjeleníthetik. |
 | `colorBandId` / `routeId` / `boulderProblemId` | Opcionális FK + **snapshot** mezők (gyerek specek) |
 | `lengthInMeters` | Kötél; opcionális (default: terem / route) |
 | `pitches` | `PitchLog[]` — csak outdoor multi-pitch |
 | `orderIndex` | Sorrend |
 | `deleted` | Soft delete (parent cascade soft) |
+
+**Egy `AscentAttempt` sor = egy út / probléma ebben a sessionben** (nem egy-egy „go"). Aki ugyanazt
+az utat egy alkalommal többször mászta, **egy** sort vesz fel, és az `attemptCount`-tal jelzi a
+próbák számát — nem több közel azonos sort. Ez a felhasználói workflow-döntés (a per-go modell
+elvetve: telefonon, a szikla alatt egy projektútra 6 sort felvenni kezelhetetlen).
 
 `AscentAttempt.deleted` **kizárólag** a szülő `ClimbingSession` cascade soft delete-jéhez kell (ha a teljes sessiont törlik, az attempt-jei is tombstone-osak lesznek — [[Backend-offline first]] §9 cascade). A **nested PUT** (teljes fa cseréje egy body-ban — lásd „Soft delete / offline" lent) miatt egy session szerkesztésekor egy-egy kísérlet **eltávolítása** nem külön `deleted = true` írás, hanem egyszerűen kimarad a mentett `attempts` tömbből; a szerver a hiányzó gyerekeket állítja `deleted = true`-ra a nested-write feldolgozásakor (nem a kliens jelöli meg egyenként).
 
@@ -158,7 +163,13 @@ Minden mászó entitás: soft delete ([[Backend-offline first]]). Nested session
 
 ### Megjegyzések
 
-_Nincs megjegyzés._
+#### Tudatos korlát — egy ascent-style / sikeres kísérlet
+
+Az `ascentStyle` **egyválasztós** (`ONSIGHT` \| `FLASH` \| `REDPOINT`), nem egymásra rakható
+címkék halmaza. A három érték definíció szerint kizárja egymást: onsight = nulla előzetes infó,
+flash = volt béta, redpoint = korábbi próbák után. Egy sikeres kísérletnek pontosan egy
+minősítése van. Ha később a stílustól **független** „clean / no falls" jelzés kell, az önálló
+mező lesz, nem az `ascentStyle` set-esítése. (Háttér: `backlog/archive/075-...`, súgószöveg: #071.)
 
 ### Nyitott kérdések
 

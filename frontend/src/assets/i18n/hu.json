@@ -1205,7 +1205,7 @@
         "FIELD_BAND": "Szín-sáv",
         "FIELD_GRADE": "Fokozat (Font / V)",
         "GRADE_PLACEHOLDER": "pl. 6B vagy V4",
-        "FIELD_ATTEMPT_COUNT": "Próbák száma",
+        "FIELD_ATTEMPT_COUNT": "Próbák (ebben a sessionben)",
         "FIELD_STYLE": "Stílus",
         "FIELD_ATTEMPT_NOTES": "Jegyzet",
         "REMOVE_ATTEMPT": "Kísérlet törlése",
