@@ -1245,7 +1245,9 @@
       "ASCENT_STYLE": {
         "FLASH": "Flash",
         "REDPOINT": "Redpoint",
-        "ONSIGHT": "Onsight"
+        "ONSIGHT": "Onsight",
+        "HELP_TITLE": "Mászás stílusok",
+        "HELP_TEXT": "Onsight: első próbára, előzetes információ nélkül (nem láttad mászni, nem kaptál bétát).\nFlash: első próbára, de volt előzetes információ (láttad valakinek a mászását vagy kaptál bétát).\nRedpoint: sikeres, összefüggő átmászás korábbi próbák után.\n\nOnsight és flash csak az adott úton az első próbálkozásra érvényes; utána már redpoint. Ezért egyszerre csak az egyik választható."
       },
       "WEATHER": {
         "COLD_DRY": "Hideg, száraz",

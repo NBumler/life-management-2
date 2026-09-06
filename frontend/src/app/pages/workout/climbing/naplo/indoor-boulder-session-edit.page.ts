@@ -38,6 +38,7 @@ import { today } from '../../../../shared/local-date';
 import { colorBandMidIndex } from '../../../../shared/climbing/climbing-grade-matrix';
 import { parseGrade } from '../../../../shared/climbing/grade-scale';
 import { GradeInputComponent } from '../../../../shared/grade-input/grade-input.component';
+import { HelpButtonComponent } from '../../../../shared/help-button/help-button.component';
 import { climbingKcal, climbingVolume } from '../climbing-metrics';
 
 /** One editable ascent-attempt row (mutable signals, mirrors the workout edit page's SetRow). */
@@ -89,6 +90,7 @@ const ASCENT_STYLES: readonly AscentAttempt.AscentStyleEnum[] = [
     IonToggle,
     TranslatePipe,
     GradeInputComponent,
+    HelpButtonComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

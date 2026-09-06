@@ -37,6 +37,7 @@ import { AscentAttemptSaveItem, ClimbingSessionDraft } from '../../../../core/st
 import { uuidV4 } from '../../../../core/sync/uuid';
 import { parseGrade } from '../../../../shared/climbing/grade-scale';
 import { GradeInputComponent } from '../../../../shared/grade-input/grade-input.component';
+import { HelpButtonComponent } from '../../../../shared/help-button/help-button.component';
 import { today } from '../../../../shared/local-date';
 import { climbingKcal, climbingVolume } from '../climbing-metrics';
 
@@ -46,6 +47,8 @@ interface AttemptRow {
   boulderProblemId: WritableSignal<string | null>;
   problemName: WritableSignal<string | null>;
   userRawInput: WritableSignal<string | null>;
+  /** `userRawInput` currently mirrors the picked problem's grade (not hand-typed) → a problem switch refills it. */
+  gradeAutoFilled: WritableSignal<boolean>;
   isSuccess: WritableSignal<boolean>;
   ascentStyle: WritableSignal<AscentAttempt.AscentStyleEnum | null>;
   attemptCount: WritableSignal<number | null>;
@@ -103,6 +106,7 @@ const WEATHER_CONDITIONS: readonly ClimbingSession.WeatherConditionsEnum[] = [
     IonToggle,
     TranslatePipe,
     GradeInputComponent,
+    HelpButtonComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -304,11 +308,21 @@ export class OutdoorBoulderSessionEditPage implements OnInit {
     const problem = this.problemById(problemId);
     if (problem) {
       row.problemName.set(problem.name);
-      if (!row.userRawInput()?.trim()) {
+      // Refill grade from the newly picked problem unless the user typed their own — switching problems
+      // must not leave the previous problem's grade (and its derived difficulty index) behind.
+      if (!row.userRawInput()?.trim() || row.gradeAutoFilled()) {
         row.userRawInput.set(problem.guidebookGrade);
+        row.gradeAutoFilled.set(true);
       }
       row.saveToCatalog.set(false);
     }
+    this.touchAttempts();
+  }
+
+  /** Manual grade edit → drop the "came from the problem" flag so a later problem switch won't overwrite it. */
+  onRawGradeInput(row: AttemptRow, value: string): void {
+    row.userRawInput.set(value);
+    row.gradeAutoFilled.set(false);
     this.touchAttempts();
   }
 
@@ -462,11 +476,16 @@ export class OutdoorBoulderSessionEditPage implements OnInit {
   }
 
   private rowFrom(attempt: AscentAttempt): AttemptRow {
+    // Treat the stored grade as problem-derived only if it still matches the linked problem, so
+    // switching problems refills it — a value the user had hand-edited (no longer matching) is kept.
+    const problem = this.problemById(attempt.boulderProblemId ?? null);
+    const raw = attempt.userRawInput?.trim() ?? '';
     return {
       id: attempt.id,
       boulderProblemId: signal(attempt.boulderProblemId ?? null),
       problemName: signal(attempt.routeName ?? null),
       userRawInput: signal(attempt.userRawInput ?? null),
+      gradeAutoFilled: signal(problem != null && raw !== '' && raw === (problem.guidebookGrade?.trim() ?? '')),
       isSuccess: signal(attempt.isSuccess),
       ascentStyle: signal(attempt.ascentStyle ?? null),
       attemptCount: signal(attempt.attemptCount ?? null),
@@ -481,6 +500,7 @@ export class OutdoorBoulderSessionEditPage implements OnInit {
       boulderProblemId: signal<string | null>(null),
       problemName: signal<string | null>(null),
       userRawInput: signal<string | null>(null),
+      gradeAutoFilled: signal(false),
       isSuccess: signal(false),
       ascentStyle: signal<AscentAttempt.AscentStyleEnum | null>(null),
       attemptCount: signal<number | null>(null),

@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: dac7f81
+verifikalva: 2026-09-06
+verifikalt_commit: 8d66db3
 ---
 
 # Outdoor boulder napló
@@ -24,7 +24,7 @@ Kültéri boulder session + kísérletek. Dashboard: **Outdoor Boulder**.
 | Szempont | Outdoor boulder |
 |---|---|
 | Helyszín | `cragId` + `sectorId` (+ snapshot nevek) |
-| Probléma | Master `BoulderProblem` **vagy** ad-hoc név (+ opcionális `saveToCatalog`) |
+| Probléma | Master `BoulderProblem` **vagy** ad-hoc név (+ opcionális `saveToCatalog`). Probléma kiválasztásakor a fokozat abból töltődik; **másik problémára váltáskor újratöltődik** (és vele a nehézségi index) — kivéve ha a user kézzel átírta ([[Mászónapló]] `AscentAttempt`). |
 | Grade | `guidebookGrade` / `userRawInput` + `absoluteDifficultyIndex` |
 | `rockType` | Crag default, **session szinten** felülírható (nincs attempt-szintű mező — egy sessionben egy sziklatípus) |
 | `aspect` | Sector default, öröklődik |
@@ -35,7 +35,7 @@ Kültéri boulder session + kísérletek. Dashboard: **Outdoor Boulder**.
 
 ### UI/UX elvárások
 
-Hub → Outdoor Boulder; crag/sector picker; grade parser; időjárás chip. Admin → [[Outdoor boulder admin]].
+Hub → Outdoor Boulder; crag/sector picker; grade parser; időjárás chip. Sikeres kísérletnél a Stílus választó mellett súgó (ⓘ) gomb (`app-help-button` — [[Mászónapló]]). Admin → [[Outdoor boulder admin]].
 
 ### Megjegyzések
 

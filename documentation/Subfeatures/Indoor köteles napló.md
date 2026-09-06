@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: dac7f81
+verifikalva: 2026-09-06
+verifikalt_commit: 8d66db3
 ---
 
 # Indoor köteles napló
@@ -24,7 +24,7 @@ Beltéri köteles session + kísérletek. Dashboard: **Indoor Kötél**. Közös
 | Szempont | Indoor kötél (vs indoor boulder) |
 |---|---|
 | Helyszín | `gymId` + snapshot; legutóbbi terem előtöltés. A picker csak azokat a termeket listázza, amelyek `Gym.disciplines`-e tartalmazza a kötél jelölést ([[Indoor köteles admin]]). |
-| Út | Kézi grade + magasság **vagy** opcionális `IndoorRoute` választás / ad-hoc név |
+| Út | Kézi grade + magasság **vagy** opcionális `IndoorRoute` választás / ad-hoc név. `IndoorRoute` kiválasztásakor a fokozat abból töltődik; **másik útra váltáskor újratöltődik** (és vele a nehézségi index) — kivéve ha a user kézzel átírta ([[Mászónapló]] `AscentAttempt`). |
 | `safetyStyle` | `TOPROPE` \| `LEAD` (TRAD **rejtve**; default `LEAD`) |
 | `lengthInMeters` | Opcionális; default = terem `defaultWallHeightMeters` |
 | `PitchLog` | **Nincs** |
@@ -37,7 +37,7 @@ Beltéri köteles session + kísérletek. Dashboard: **Indoor Kötél**. Közös
 
 ### UI/UX elvárások
 
-Hub → Indoor Kötél csempe → session form (safety chip-ek, grade parser, magasság). Admin link → [[Indoor köteles admin]].
+Hub → Indoor Kötél csempe → session form (safety chip-ek, grade parser, magasság). Sikeres kísérletnél a Stílus választó mellett súgó (ⓘ) gomb (`app-help-button` — [[Mászónapló]]). Admin link → [[Indoor köteles admin]].
 
 ### Megjegyzések
 

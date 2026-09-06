@@ -32,7 +32,7 @@ function boulderGym(): Gym {
   return { id: 'gb', name: 'Blokk', address: null, disciplines: [Gym.DisciplinesEnum.Boulder], defaultWallHeightMeters: null, availableSafetyStyles: null, deleted: false };
 }
 
-function ropeRoute(): IndoorRoute {
+function ropeRoute(overrides: Partial<IndoorRoute> = {}): IndoorRoute {
   return {
     id: 'r1',
     gymId: 'g1',
@@ -42,6 +42,7 @@ function ropeRoute(): IndoorRoute {
     absoluteDifficultyIndex: 14,
     sector: null,
     deleted: false,
+    ...overrides,
   };
 }
 
@@ -50,7 +51,11 @@ describe('IndoorRopeSessionEditPage', () => {
   let component: IndoorRopeSessionEditPage;
   let saveSpy: jasmine.Spy<(draft: ClimbingSessionDraft) => Promise<ClimbingSession>>;
 
-  async function setup(idParam = 'new', gymList: Gym[] = [ropeGym(), boulderGym()]): Promise<void> {
+  async function setup(
+    idParam = 'new',
+    gymList: Gym[] = [ropeGym(), boulderGym()],
+    routes: IndoorRoute[] = [ropeRoute()],
+  ): Promise<void> {
     saveSpy = jasmine.createSpy('save').and.callFake(async (d: ClimbingSessionDraft) => ({
       ...d,
       id: d.id || 's1',
@@ -75,7 +80,7 @@ describe('IndoorRopeSessionEditPage', () => {
           },
         },
         { provide: GymRepository, useValue: { load: () => Promise.resolve(), items: signal<Gym[]>(gymList) } },
-        { provide: IndoorRouteRepository, useValue: { load: () => Promise.resolve(), forGym: () => [ropeRoute()] } },
+        { provide: IndoorRouteRepository, useValue: { load: () => Promise.resolve(), forGym: () => routes } },
         { provide: ProfileRepository, useValue: { load: () => Promise.resolve(), profile: signal({ currentWeightKg: 70 }) } },
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: idParam }) } } },
         { provide: AlertController, useValue: { create: () => Promise.resolve({ present: () => Promise.resolve() }) } },
@@ -161,6 +166,26 @@ describe('IndoorRopeSessionEditPage', () => {
     expect(draft.attempts[0].indoorRouteId).toBe('r1');
     expect(draft.attempts[0].routeName).toBe('Sárga sáv');
     expect(draft.attempts[0].absoluteDifficultyIndex).toBe(14);
+  });
+
+  it('switching the picked route refills an auto-filled grade but keeps a hand-typed grade (backlog 074)', async () => {
+    await setup('new', [ropeGym(), boulderGym()], [
+      ropeRoute(),
+      ropeRoute({ id: 'r2', name: 'Kék sáv', grade: '7a', absoluteDifficultyIndex: 30 }),
+    ]);
+    component.form.patchValue({ gymId: 'g1' });
+    component.addAttempt();
+    const row = component.attempts()[0];
+
+    component.pickRoute(row, 'r1');
+    expect(row.userRawInput()).toBe('6a');
+
+    component.pickRoute(row, 'r2');
+    expect(row.userRawInput()).toBe('7a');
+
+    component.onRawGradeInput(row, '8a');
+    component.pickRoute(row, 'r1');
+    expect(row.userRawInput()).toBe('8a');
   });
 
   it('keeps a typed failure point on a missed attempt and drops the ascent style', async () => {

@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-03
-verifikalt_commit: 3db8536
+verifikalva: 2026-09-06
+verifikalt_commit: 8d66db3
 ---
 
 # Indoor boulder napló
@@ -56,6 +56,7 @@ CRUD: nested session mentés; soft delete; draft élő sessionhez.
 
 - Flow: Hub → Indoor Boulder csempe → Active session (vagy utólagos) → kísérlet hozzáadás (szín chip / parser) → pipa → Befejezés.
 - Szín-sáv chip-ek a kiválasztott teremből; mellettük szöveges grade.
+- Sikeres kísérletnél a **Stílus** választó mellett súgó (ⓘ) gomb (`app-help-button`) — onsight / flash / redpoint magyarázat; részletek: [[Mászónapló]] „Kísérlet stílus súgó”.
 - Thumb-zone: új kísérlet / siker toggle / session vége.
 - Lista: közös Mászónapló lista, szűrő: Indoor Boulder.
 - Admin: jobb felső → [[Indoor boulder admin]].

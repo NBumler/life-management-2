@@ -38,6 +38,7 @@ import { AscentAttemptSaveItem, ClimbingSessionDraft, PitchLogSaveItem } from '.
 import { uuidV4 } from '../../../../core/sync/uuid';
 import { parseGrade } from '../../../../shared/climbing/grade-scale';
 import { GradeInputComponent } from '../../../../shared/grade-input/grade-input.component';
+import { HelpButtonComponent } from '../../../../shared/help-button/help-button.component';
 import { today } from '../../../../shared/local-date';
 import { climbingKcal, climbingVolume } from '../climbing-metrics';
 
@@ -55,7 +56,11 @@ interface AttemptRow {
   routeId: WritableSignal<string | null>;
   routeName: WritableSignal<string | null>;
   userRawInput: WritableSignal<string | null>;
+  /** `userRawInput` currently mirrors the picked route's grade (not hand-typed) → a route switch refills it. */
+  gradeAutoFilled: WritableSignal<boolean>;
   lengthInMeters: WritableSignal<number | null>;
+  /** `lengthInMeters` currently mirrors the picked route's length (not hand-typed) → a route switch refills it. */
+  lengthAutoFilled: WritableSignal<boolean>;
   safetyStyle: WritableSignal<AscentAttempt.SafetyStyleEnum>;
   isSuccess: WritableSignal<boolean>;
   ascentStyle: WritableSignal<AscentAttempt.AscentStyleEnum | null>;
@@ -127,6 +132,7 @@ const WEATHER_CONDITIONS: readonly ClimbingSession.WeatherConditionsEnum[] = [
     IonToggle,
     TranslatePipe,
     GradeInputComponent,
+    HelpButtonComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -341,11 +347,16 @@ export class OutdoorRopeSessionEditPage implements OnInit {
     const route = this.routeById(routeId);
     if (route) {
       row.routeName.set(route.name);
-      if (!row.userRawInput()?.trim()) {
+      // Refill grade / length from the newly picked route unless the user typed their own — switching
+      // routes must not leave the previous route's grade / length (and its derived difficulty index)
+      // behind. `*AutoFilled` tracks provenance; a manual edit clears it (onRawGradeInput / onLengthInput).
+      if (!row.userRawInput()?.trim() || row.gradeAutoFilled()) {
         row.userRawInput.set(route.guidebookGrade);
+        row.gradeAutoFilled.set(true);
       }
-      if (route.lengthInMeters != null && row.lengthInMeters() == null) {
+      if (route.lengthInMeters != null && (row.lengthInMeters() == null || row.lengthAutoFilled())) {
         row.lengthInMeters.set(route.lengthInMeters);
+        row.lengthAutoFilled.set(true);
       }
       if (route.rockType) {
         this.form.patchValue({ rockType: route.rockType });
@@ -370,6 +381,20 @@ export class OutdoorRopeSessionEditPage implements OnInit {
 
   togglePitchLead(pitch: PitchRow): void {
     pitch.isLead.update((value) => !value);
+    this.touchAttempts();
+  }
+
+  /** Manual grade edit → drop the "came from the route" flag so a later route switch won't overwrite it. */
+  onRawGradeInput(row: AttemptRow, value: string): void {
+    row.userRawInput.set(value);
+    row.gradeAutoFilled.set(false);
+    this.touchAttempts();
+  }
+
+  /** Manual length edit → same provenance reset as the grade. */
+  onLengthInput(row: AttemptRow, raw: string): void {
+    row.lengthInMeters.set(raw ? +raw : null);
+    row.lengthAutoFilled.set(false);
     this.touchAttempts();
   }
 
@@ -576,12 +601,18 @@ export class OutdoorRopeSessionEditPage implements OnInit {
   }
 
   private rowFrom(attempt: AscentAttempt): AttemptRow {
+    // Treat the stored grade / length as route-derived only if it still matches the linked route, so
+    // switching routes refills it — but a value the user had hand-edited (no longer matching) is kept.
+    const route = this.routeById(attempt.routeId ?? null);
+    const raw = attempt.userRawInput?.trim() ?? '';
     return {
       id: attempt.id,
       routeId: signal(attempt.routeId ?? null),
       routeName: signal(attempt.routeName ?? null),
       userRawInput: signal(attempt.userRawInput ?? null),
+      gradeAutoFilled: signal(route != null && raw !== '' && raw === (route.guidebookGrade?.trim() ?? '')),
       lengthInMeters: signal(attempt.lengthInMeters ?? null),
+      lengthAutoFilled: signal(route != null && attempt.lengthInMeters != null && attempt.lengthInMeters === route.lengthInMeters),
       safetyStyle: signal(attempt.safetyStyle ?? DEFAULT_SAFETY_STYLE),
       isSuccess: signal(attempt.isSuccess),
       ascentStyle: signal(attempt.ascentStyle ?? null),
@@ -613,7 +644,9 @@ export class OutdoorRopeSessionEditPage implements OnInit {
       routeId: signal<string | null>(null),
       routeName: signal<string | null>(null),
       userRawInput: signal<string | null>(null),
+      gradeAutoFilled: signal(false),
       lengthInMeters: signal<number | null>(null),
+      lengthAutoFilled: signal(false),
       safetyStyle: signal<AscentAttempt.SafetyStyleEnum>(DEFAULT_SAFETY_STYLE),
       isSuccess: signal(false),
       ascentStyle: signal<AscentAttempt.AscentStyleEnum | null>(null),

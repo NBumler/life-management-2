@@ -203,7 +203,7 @@
             [label]="'WORKOUT.CLIMBING.SESSION.FIELD_GRADE_ROPE' | translate"
             [placeholder]="'WORKOUT.CLIMBING.SESSION.GRADE_PLACEHOLDER_ROPE' | translate"
             [value]="row.userRawInput() ?? ''"
-            (valueChange)="row.userRawInput.set($event); touchAttempts()"
+            (valueChange)="onRawGradeInput(row, $event)"
           />
         </ion-item>
 
@@ -214,7 +214,7 @@
             [label]="'WORKOUT.CLIMBING.SESSION.FIELD_LENGTH' | translate"
             labelPlacement="stacked"
             [value]="row.lengthInMeters()"
-            (ionInput)="row.lengthInMeters.set($any($event.target).value ? +$any($event.target).value : null); touchAttempts()"
+            (ionInput)="onLengthInput(row, $any($event.target).value)"
           />
         </ion-item>
 
@@ -255,6 +255,11 @@
                 <ion-select-option [value]="style">{{ 'WORKOUT.CLIMBING.ASCENT_STYLE.' + style | translate }}</ion-select-option>
               }
             </ion-select>
+            <app-help-button
+              slot="end"
+              titleKey="WORKOUT.CLIMBING.ASCENT_STYLE.HELP_TITLE"
+              textKey="WORKOUT.CLIMBING.ASCENT_STYLE.HELP_TEXT"
+            ></app-help-button>
           </ion-item>
         } @else {
           <ion-item>

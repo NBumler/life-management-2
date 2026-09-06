@@ -37,6 +37,7 @@ import { uuidV4 } from '../../../../core/sync/uuid';
 import { today } from '../../../../shared/local-date';
 import { parseGrade } from '../../../../shared/climbing/grade-scale';
 import { GradeInputComponent } from '../../../../shared/grade-input/grade-input.component';
+import { HelpButtonComponent } from '../../../../shared/help-button/help-button.component';
 import { climbingKcal, climbingVolume } from '../climbing-metrics';
 
 /** One editable ascent-attempt row (mutable signals, mirrors the indoor-boulder edit page's AttemptRow). */
@@ -45,6 +46,8 @@ interface AttemptRow {
   indoorRouteId: WritableSignal<string | null>;
   routeName: WritableSignal<string | null>;
   userRawInput: WritableSignal<string | null>;
+  /** `userRawInput` currently mirrors the picked route's grade (not hand-typed) → a route switch refills it. */
+  gradeAutoFilled: WritableSignal<boolean>;
   lengthInMeters: WritableSignal<number | null>;
   safetyStyle: WritableSignal<AscentAttempt.SafetyStyleEnum>;
   isSuccess: WritableSignal<boolean>;
@@ -104,6 +107,7 @@ const DEFAULT_SAFETY_STYLE = AscentAttempt.SafetyStyleEnum.Lead;
     IonToggle,
     TranslatePipe,
     GradeInputComponent,
+    HelpButtonComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -275,10 +279,20 @@ export class IndoorRopeSessionEditPage implements OnInit {
     const route = this.routeById(routeId);
     if (route) {
       row.routeName.set(route.name);
-      if (!row.userRawInput()?.trim()) {
+      // Refill grade from the newly picked route unless the user typed their own — switching routes
+      // must not leave the previous route's grade (and its derived difficulty index) behind.
+      if (!row.userRawInput()?.trim() || row.gradeAutoFilled()) {
         row.userRawInput.set(route.grade);
+        row.gradeAutoFilled.set(true);
       }
     }
+    this.touchAttempts();
+  }
+
+  /** Manual grade edit → drop the "came from the route" flag so a later route switch won't overwrite it. */
+  onRawGradeInput(row: AttemptRow, value: string): void {
+    row.userRawInput.set(value);
+    row.gradeAutoFilled.set(false);
     this.touchAttempts();
   }
 
@@ -422,11 +436,16 @@ export class IndoorRopeSessionEditPage implements OnInit {
   }
 
   private rowFrom(attempt: AscentAttempt): AttemptRow {
+    // Treat the stored grade as route-derived only if it still matches the linked route, so switching
+    // routes refills it — a value the user had hand-edited (no longer matching) is kept.
+    const route = this.routeById(attempt.indoorRouteId ?? null);
+    const raw = attempt.userRawInput?.trim() ?? '';
     return {
       id: attempt.id,
       indoorRouteId: signal(attempt.indoorRouteId ?? null),
       routeName: signal(attempt.routeName ?? null),
       userRawInput: signal(attempt.userRawInput ?? null),
+      gradeAutoFilled: signal(route != null && raw !== '' && raw === (route.grade?.trim() ?? '')),
       lengthInMeters: signal(attempt.lengthInMeters ?? null),
       safetyStyle: signal(attempt.safetyStyle ?? DEFAULT_SAFETY_STYLE),
       isSuccess: signal(attempt.isSuccess),
@@ -443,6 +462,7 @@ export class IndoorRopeSessionEditPage implements OnInit {
       indoorRouteId: signal<string | null>(null),
       routeName: signal<string | null>(null),
       userRawInput: signal<string | null>(null),
+      gradeAutoFilled: signal(false),
       lengthInMeters: signal<number | null>(null),
       safetyStyle: signal<AscentAttempt.SafetyStyleEnum>(DEFAULT_SAFETY_STYLE),
       isSuccess: signal(false),

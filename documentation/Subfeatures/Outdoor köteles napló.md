@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: dac7f81
+verifikalva: 2026-09-06
+verifikalt_commit: 8d66db3
 ---
 
 # Outdoor köteles napló
@@ -23,9 +23,9 @@ Kültéri köteles session + kísérletek / multi-pitch. Dashboard: **Outdoor K�
 
 | Szempont | Outdoor kötél |
 |---|---|
-| Út | `Route` master **vagy** ad-hoc (+ `saveToCatalog`) |
+| Út | `Route` master **vagy** ad-hoc (+ `saveToCatalog`). Út kiválasztásakor a fokozat és a hossz a Route-ból töltődik; **másik Route-ra váltáskor újratöltődik** az újból (és vele a levezetett nehézségi index) — kivéve ha a user közben kézzel átírta, akkor a kézi érték marad ([[Mászónapló]] `AscentAttempt`). |
 | `safetyStyle` | `TOPROPE` \| `LEAD` \| `TRAD` (TRAD: +6 kg aktív kalóriánál) |
-| `lengthInMeters` | Route-ból vagy kézi |
+| `lengthInMeters` | Route-ból vagy kézi (lásd az útváltás-szabályt az `Út` sornál) |
 | `PitchLog` | **Opcionális** lista: `pitchNumber`, `isLead`, `rawGrade`, index, `lengthInMeters` — ha nincs kitöltve, elég session + teljes úthossz |
 | Másodmászó | `isLead=false` → aktív MET ×0.8 |
 | `weatherConditions` | Session |
@@ -34,7 +34,7 @@ Kültéri köteles session + kísérletek / multi-pitch. Dashboard: **Outdoor K�
 
 ### UI/UX elvárások
 
-Hub → Outdoor Kötél; route picker; safety; opcionális pitch szerkesztő (összecsukható). Admin → [[Outdoor köteles admin]].
+Hub → Outdoor Kötél; route picker; safety; opcionális pitch szerkesztő (összecsukható). Sikeres kísérletnél a Stílus választó mellett súgó (ⓘ) gomb (`app-help-button` — [[Mászónapló]]). Admin → [[Outdoor köteles admin]].
 
 ### Megjegyzések
 

@@ -1,14 +1,14 @@
 ---
 id: 71
 type: feature
-status: backlog
+status: done
 title: Kísérlet stílus (onsight / flash / redpoint) mellé súgó gomb a jelentésekkel
 specs:
   - "[[Mászónapló]]"
   - "[[Indoor boulder napló]]"
 flag:
 created: 2026-09-06
-closed:
+closed: 2026-09-06
 ---
 
 # 71 — Kísérlet stílus (onsight / flash / redpoint) mellé súgó gomb a jelentésekkel
@@ -42,6 +42,15 @@ kérdés jó eséllyel itt, a súgószövegben oldódik meg (a három stílus eg
 
 ## Lezáráskor (on-done)
 
-- Frissített specek: [[Mászónapló]] / [[Indoor boulder napló]] (`### UI/UX elvárások` — súgó)
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — <mit>
-- Kód: `frontend` climbing attempt input + i18n
+- Új `app-help-button` shared komponens (bare trailing ⓘ gomb → `AlertController` a kapott
+  i18n kulcsokkal); a `HelpInputComponent` testvére, de érték nélkül, így `ion-select` mellé is
+  tehető. Bekötve mind a 4 mászó session-edit form Stílus választójába.
+- Súgószöveg: `WORKOUT.CLIMBING.ASCENT_STYLE.HELP_TITLE` / `HELP_TEXT` (hu + en) — onsight / flash /
+  redpoint definíció + miért zárják ki egymást.
+- A 075-ös jegy (flash + onsight egyszerre?) kérdését ez a súgószöveg megválaszolja; a 075 külön zárul.
+- Frissített specek: [[Mászónapló]] (`AscentAttempt.ascentStyle` sor + `### UI/UX elvárások`),
+  [[Indoor boulder napló]] / [[Outdoor köteles napló]] / [[Outdoor boulder napló]] /
+  [[Indoor köteles napló]] (`### UI/UX elvárások` — súgó gomb)
+- `IMPLEMENTATION_STATUS.md` sor: 2026-09-06 — Kísérlet stílus súgó gomb (#71)
+- Kód: `frontend/src/app/shared/help-button/` (+ spec), `pages/workout/climbing/naplo/*-session-edit.page.{ts,html}`,
+  `assets/i18n/{hu,en}.json`

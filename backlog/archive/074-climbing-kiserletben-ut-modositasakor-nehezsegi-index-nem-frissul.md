@@ -1,16 +1,16 @@
 ---
 id: 74
 type: bug
-status: backlog
+status: done
 title: Kísérletben az út módosításakor a nehézség (absoluteDifficultyIndex) nem frissül
 specs:
   - "[[Mászónapló]]"
   - "[[Outdoor köteles napló]]"
   - "[[Outdoor boulder napló]]"
-  - "[[Indoor boulder napló]]"
+  - "[[Indoor köteles napló]]"
 flag:
 created: 2026-09-06
-closed:
+closed: 2026-09-06
 ---
 
 # 74 — Kísérletben az út módosításakor a nehézség (absoluteDifficultyIndex) nem frissül
@@ -47,12 +47,25 @@ szerkesztésekor is.
 
 ## Terv / döntési napló
 
-_Scoping: reprodukció + a hibás signal/effect azonosítása a 4 session-edit page valamelyikében
-(közös komponens?). Valószínű ok: az index számítás csak a picker `(ionChange)` első ágán fut,
-nem derived a kiválasztott entitásból._
+Reprodukció megvolt a `Route` / `BoulderProblem` / `IndoorRoute` mestert használó 3 formban
+(`outdoor-rope`, `outdoor-boulder`, `indoor-rope`). Ok: a `pickRoute` / `pickProblem` a fokozatot
+csak akkor töltötte elő, ha az üres volt (`if (!row.userRawInput()?.trim())`), és a `resolveIndex`
+a `userRawInput`-ot előrébb sorolta a kiválasztott út fokozatánál — így útváltáskor az előző út
+fokozata (és indexe) bennragadt. Az `indoor-boulder` **nem érintett**: ott a `resolveIndex` mindig
+élőben számol a `colorBandId` / `userRawInput` signalokból, és a `pickBand` nem ír `userRawInput`-ot.
+
+Javítás: per-attempt-sor `gradeAutoFilled` (+ `lengthAutoFilled` az outdoor-rope hossznál)
+provenance-flag. Útváltáskor a fokozat/hossz újratöltődik, ha az érték még az előző útból származik
+(flag = true) vagy üres; kézi szerkesztés (`onRawGradeInput` / `onLengthInput`) törli a flaget, így
+a kézzel megadott érték megmarad. Betöltött (mentett) sornál a flag heurisztikából jön: igaz, ha a
+tárolt fokozat még pontosan egyezik a linkelt út fokozatával — így egy korábban kézzel átírt érték
+nem íródik felül némán.
 
 ## Lezáráskor (on-done)
 
-- Frissített specek: [[Mászónapló]] (`AscentAttempt` / index számítás — ha a leírás pontosítandó)
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — <mit>
-- Kód: `frontend/src/app/pages/workout/climbing/naplo/*-session-edit.page.ts` + climbing-attempt-input
+- Frissített specek: [[Mászónapló]] (`AscentAttempt` `userRawInput` / `absoluteDifficultyIndex`
+  sorok — útváltás-szabály), [[Outdoor köteles napló]] / [[Outdoor boulder napló]] /
+  [[Indoor köteles napló]] (`Út` / `Probléma` sor + `### UI/UX elvárások`)
+- `IMPLEMENTATION_STATUS.md` sor: 2026-09-06 — Útváltáskor a nehézségi index nem frissült (#74, bug)
+- Kód: `frontend/src/app/pages/workout/climbing/naplo/{outdoor-rope,outdoor-boulder,indoor-rope}-session-edit.page.{ts,html}`
+  (+ specek: 3 új regressziós teszt)

@@ -14,6 +14,22 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-06 — #074 (bug)** Mászó kísérletben az út módosításakor a nehézségi index nem frissült.
+  Ok: `pickRoute` / `pickProblem` csak üres fokozatot töltött elő, és a `resolveIndex` a
+  `userRawInput`-ot előrébb sorolta a kiválasztott útnál → útváltáskor az előző út fokozata/indexe
+  bennragadt (`outdoor-rope`, `outdoor-boulder`, `indoor-rope`; az `indoor-boulder` élőben számol,
+  nem érintett). Fix: per-sor `gradeAutoFilled` / `lengthAutoFilled` provenance-flag — útváltáskor
+  újratölt, kézi szerkesztés után nem. Érintett specek: [[Mászónapló]], [[Outdoor köteles napló]],
+  [[Outdoor boulder napló]], [[Indoor köteles napló]]. Kód:
+  `frontend/pages/workout/climbing/naplo/{outdoor-rope,outdoor-boulder,indoor-rope}-session-edit.page.*`.
+- **2026-09-06 — #071** Mászó kísérlet Stílus (onsight / flash / redpoint) választó mellé súgó (ⓘ)
+  gomb. Új `app-help-button` shared komponens (a `HelpInputComponent` érték nélküli testvére,
+  `ion-select` mellé is tehető), bekötve mind a 4 climbing session-edit formba;
+  `WORKOUT.CLIMBING.ASCENT_STYLE.HELP_TITLE` / `HELP_TEXT` (hu + en). A #075 kérdését (flash +
+  onsight egyszerre?) a súgószöveg megválaszolja. Érintett specek: [[Mászónapló]],
+  [[Indoor boulder napló]], [[Outdoor köteles napló]], [[Outdoor boulder napló]],
+  [[Indoor köteles napló]]. Kód: `frontend/shared/help-button/`, climbing `*-session-edit.page.*`,
+  `assets/i18n/{hu,en}.json`.
 - **2026-09-03 — #020** Hiányzó teszt-lefedettség: `ThemeService` unit teszt + admin-jelszócsere
   token-revoke teszt. Új `theme.service.spec.ts` (8 eset). A `system`-mód élő OS-váltás tesztje
   **valódi hibát fedett fel**: az `isDark` computed csak a `mode()` signalra frissült, a

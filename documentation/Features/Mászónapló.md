@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: dac7f81
+verifikalva: 2026-09-06
+verifikalt_commit: 8d66db3
 ---
 
 # Mászónapló
@@ -65,9 +65,9 @@ Egy napon **több** session megengedett (akár ugyanarra a kontextusra is). Egy 
 |---|---|
 | `id` | UUID |
 | `isSuccess` | Boolean |
-| `userRawInput` / `rawGrade` | Szöveges grade (parser) |
-| `absoluteDifficultyIndex` | Integer; mátrixból ([[Nehézségi szint skálája (konverziós mátrix)]]) |
-| `ascentStyle` | Opcionális, ha `isSuccess`: `ONSIGHT` \| `FLASH` \| `REDPOINT` (kontextus szerinti whitelist) |
+| `userRawInput` / `rawGrade` | Szöveges grade (parser). Egy `Route` / `BoulderProblem` / `IndoorRoute` kiválasztásakor a mező a kiválasztott út fokozatával töltődik; **másik útra váltáskor újratöltődik** az új út fokozatával (és vele az `absoluteDifficultyIndex` is), kivéve ha a user közben kézzel átírta — a kézzel megadott érték megmarad. |
+| `absoluteDifficultyIndex` | Integer; mátrixból ([[Nehézségi szint skálája (konverziós mátrix)]]). Kliens-oldalon mindig a `userRawInput` (ha van) vagy a kiválasztott út fokozatából számítva — lásd fent az útváltás-szabályt. |
+| `ascentStyle` | Opcionális, ha `isSuccess`: `ONSIGHT` \| `FLASH` \| `REDPOINT` (kontextus szerinti whitelist). A választó mellett súgó (ⓘ) gomb: a három stílus definíciója + miért zárják ki egymást (`WORKOUT.CLIMBING.ASCENT_STYLE.HELP_*`). |
 | `safetyStyle` | Csak kötél: `TOPROPE` \| `LEAD` \| `TRAD` (indoor: TRAD rejtve) |
 | `failurePoint` | Opcionális; sikertelennél |
 | `attemptCount` | Opcionális egész `≥ 1` — próbák száma az adott mászáson / úton, **kontextustól függetlenül** (indoor/outdoor, boulder/kötél egyaránt; pl. redpoint próbák száma egy köteles úton). Tájékoztató mező: a Volumen- és a sikerarány-képlet **attempt-soronként** számol, egyikük sem szoroz vele; a statisztikai nézetek megjeleníthetik |
@@ -150,6 +150,7 @@ Minden mászó entitás: soft delete ([[Backend-offline first]]). Nested session
 
 - Belépés: [[Edzés]] tab → Mászónapló hub → 4 csempe.
 - 1-tap chip-ek, grade pre-parser, legutóbbi terem/helyszín előtöltés.
+- Sikeres kísérletnél a **Stílus** választó mellett súgó (ⓘ) gomb — felugró magyarázat az onsight / flash / redpoint jelentéséről és arról, miért választható egyszerre csak egy (mind a 4 kontextus napló-formban, `app-help-button`).
 - Per-kontextus session lista (a közös, szűrő-tabos listát a `backlog/022-...` jegy fedi).
 
 ### Megjegyzések

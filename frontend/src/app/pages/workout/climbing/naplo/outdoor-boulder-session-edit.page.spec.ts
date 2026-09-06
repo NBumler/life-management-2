@@ -42,7 +42,7 @@ describe('OutdoorBoulderSessionEditPage', () => {
   let saveSpy: jasmine.Spy<(draft: ClimbingSessionDraft) => Promise<ClimbingSession>>;
   let bpSaveSpy: jasmine.Spy;
 
-  async function setup(idParam = 'new', crags: Crag[] = [crag()]): Promise<void> {
+  async function setup(idParam = 'new', crags: Crag[] = [crag()], problems: BoulderProblem[] = [problem()]): Promise<void> {
     saveSpy = jasmine.createSpy('save').and.callFake(async (d: ClimbingSessionDraft) => ({
       ...d,
       id: d.id || 's1',
@@ -77,7 +77,7 @@ describe('OutdoorBoulderSessionEditPage', () => {
         { provide: SectorRepository, useValue: { load: () => Promise.resolve(), forCrag: () => [sector()] } },
         {
           provide: BoulderProblemRepository,
-          useValue: { load: () => Promise.resolve(), forSector: () => [problem()], save: bpSaveSpy },
+          useValue: { load: () => Promise.resolve(), forSector: () => problems, save: bpSaveSpy },
         },
         { provide: ProfileRepository, useValue: { load: () => Promise.resolve(), profile: signal({ currentWeightKg: 70 }) } },
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: idParam }) } } },
@@ -180,6 +180,25 @@ describe('OutdoorBoulderSessionEditPage', () => {
     expect(draft.attempts[0].routeName).toBe('Traverz');
     // "6B" is a valid Font grade → a matrix index.
     expect(draft.attempts[0].absoluteDifficultyIndex).not.toBeNull();
+  });
+
+  it('switching the picked problem refills an auto-filled grade but keeps a hand-typed grade (backlog 074)', async () => {
+    await setup('new', [crag()], [problem(), problem({ id: 'p2', name: 'Lap', guidebookGrade: '7A' })]);
+    component.form.patchValue({ cragId: 'c1' });
+    component.onSectorChange('s1');
+    component.form.patchValue({ sectorId: 's1' });
+    component.addAttempt();
+    const row = component.attempts()[0];
+
+    component.pickProblem(row, 'p1');
+    expect(row.userRawInput()).toBe('6B');
+
+    component.pickProblem(row, 'p2');
+    expect(row.userRawInput()).toBe('7A');
+
+    component.onRawGradeInput(row, '7C');
+    component.pickProblem(row, 'p1');
+    expect(row.userRawInput()).toBe('7C');
   });
 
   it('saveToCatalog on an ad-hoc row creates a BoulderProblem master under the sector and links it', async () => {

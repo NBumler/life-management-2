@@ -54,7 +54,7 @@ describe('OutdoorRopeSessionEditPage', () => {
   let saveSpy: jasmine.Spy<(draft: ClimbingSessionDraft) => Promise<ClimbingSession>>;
   let routeSaveSpy: jasmine.Spy;
 
-  async function setup(idParam = 'new', crags: Crag[] = [crag()]): Promise<void> {
+  async function setup(idParam = 'new', crags: Crag[] = [crag()], routes: Route[] = [route()]): Promise<void> {
     saveSpy = jasmine.createSpy('save').and.callFake(async (d: ClimbingSessionDraft) => ({
       ...d,
       id: d.id || 's1',
@@ -95,7 +95,7 @@ describe('OutdoorRopeSessionEditPage', () => {
         { provide: SectorRepository, useValue: { load: () => Promise.resolve(), forCrag: () => [sector()] } },
         {
           provide: RouteRepository,
-          useValue: { load: () => Promise.resolve(), forSector: () => [route()], save: routeSaveSpy },
+          useValue: { load: () => Promise.resolve(), forSector: () => routes, save: routeSaveSpy },
         },
         { provide: ProfileRepository, useValue: { load: () => Promise.resolve(), profile: signal({ currentWeightKg: 70 }) } },
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: idParam }) } } },
@@ -207,6 +207,32 @@ describe('OutdoorRopeSessionEditPage', () => {
     expect(draft.attempts[0].lengthInMeters).toBe(40);
     expect(draft.rockType).toBe('mészkő');
     expect(draft.aspect).toBe('déli');
+  });
+
+  it('switching the picked route refills an auto-filled grade + length but keeps a hand-typed grade (backlog 074)', async () => {
+    await setup('new', [crag()], [
+      route(),
+      route({ id: 'rt2', name: 'Másik vonal', guidebookGrade: '7c', lengthInMeters: 25, rockType: null, aspect: null }),
+    ]);
+    component.form.patchValue({ cragId: 'c1' });
+    component.onSectorChange('s1');
+    component.form.patchValue({ sectorId: 's1' });
+    component.addAttempt();
+    const row = component.attempts()[0];
+
+    component.pickRoute(row, 'rt1');
+    expect(row.userRawInput()).toBe('6a');
+    expect(row.lengthInMeters()).toBe(40);
+
+    // grade/length still mirror rt1 → switching to rt2 follows the new route
+    component.pickRoute(row, 'rt2');
+    expect(row.userRawInput()).toBe('7c');
+    expect(row.lengthInMeters()).toBe(25);
+
+    // a hand-typed grade is preserved across a later switch
+    component.onRawGradeInput(row, '8a');
+    component.pickRoute(row, 'rt1');
+    expect(row.userRawInput()).toBe('8a');
   });
 
   it('forwards a TRAD safety style', async () => {
