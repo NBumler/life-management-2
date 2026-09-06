@@ -183,7 +183,6 @@ export interface AscentAttemptSaveItem {
   absoluteDifficultyIndex: number | null;
   ascentStyle: AscentAttempt.AscentStyleEnum | null;
   safetyStyle: AscentAttempt.SafetyStyleEnum | null;
-  failurePoint: string | null;
   attemptCount: number | null;
   colorBandId: string | null;
   colorName: string | null;

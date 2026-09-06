@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-06
-verifikalt_commit: 5410314
+verifikalt_commit: 1cd8d04
 ---
 
 # Mászónapló
@@ -69,10 +69,10 @@ Egy napon **több** session megengedett (akár ugyanarra a kontextusra is). Egy 
 | `absoluteDifficultyIndex` | Integer; mátrixból ([[Nehézségi szint skálája (konverziós mátrix)]]). Kliens-oldalon mindig a `userRawInput` (ha van) vagy a kiválasztott út fokozatából számítva — lásd fent az útváltás-szabályt. |
 | `ascentStyle` | Opcionális, ha `isSuccess`: `ONSIGHT` \| `FLASH` \| `REDPOINT` (kontextus szerinti whitelist). A választó mellett súgó (ⓘ) gomb: a három stílus definíciója + miért zárják ki egymást (`WORKOUT.CLIMBING.ASCENT_STYLE.HELP_*`). |
 | `safetyStyle` | Csak kötél: `TOPROPE` \| `LEAD` \| `TRAD` (indoor: TRAD rejtve) |
-| `failurePoint` | Opcionális; sikertelennél. Külön szabadszöveg mező, egysoros. |
 | `attemptCount` | Opcionális egész `≥ 1` — **próbák (gólok) száma ebben a sessionben ezen az úton**, kontextustól függetlenül (pl. redpoint-próbák egy köteles úton). A napló-form címkéje: „Próbák (ebben a sessionben)". Tájékoztató mező: a Volumen-, a sikerarány- és a duration-fallback képlet is **kísérlet-soronként** (nem `Σ attemptCount`) számol, egyikük sem szoroz vele; a statisztikai nézetek megjeleníthetik. |
 | `colorBandId` / `routeId` / `boulderProblemId` | Opcionális FK + **snapshot** mezők (gyerek specek) |
 | `lengthInMeters` | Kötél; opcionális (default: terem / route) |
+| `notes` | Opcionális szabad szöveg, többsoros (auto-grow). **Nincs külön `failurePoint` mező** — sikertelen kísérletnél ugyanez a `notes` mező kapja a „Jegyzet / hol akadt el?" címkét és a „Hol akadt el? Mi ment / nem ment?" promptot. A régi `failurePoint` szöveg a `V31` migrációval (backend) + a helyi `SCHEMA_V30` upgrade-del (natív) a `notes`-ba olvadt. |
 | `pitches` | `PitchLog[]` — csak outdoor multi-pitch |
 | `orderIndex` | Sorrend |
 | `deleted` | Soft delete (parent cascade soft) |
@@ -159,6 +159,7 @@ Minden mászó entitás: soft delete ([[Backend-offline first]]). Nested session
 - 1-tap chip-ek, grade pre-parser, legutóbbi terem/helyszín előtöltés.
 - Sikeres kísérletnél a **Stílus** választó mellett súgó (ⓘ) gomb — felugró magyarázat az onsight / flash / redpoint jelentéséről és arról, miért választható egyszerre csak egy (mind a 4 kontextus napló-formban, `app-help-button`).
 - **Mászótársak** combobox (mind a 4 kontextus napló-formban, `app-partner-combobox`): üres mezőnél a korábbi társak tap-elhető chip-ként; gépelésre szűrt lista + „+ Hozzáadás: »…«" új névhez; a felvett társak chip-jei törölhetők.
+- Kísérlet-jegyzet: egyetlen **többsoros, auto-grow** mező. Sikernél „Jegyzet"; sikertelennél „Jegyzet / hol akadt el?" címkével + promttal (nincs külön „Hol akadt el" input).
 - Per-kontextus session lista (a közös, szűrő-tabos listát a `backlog/022-...` jegy fedi).
 
 ### Megjegyzések

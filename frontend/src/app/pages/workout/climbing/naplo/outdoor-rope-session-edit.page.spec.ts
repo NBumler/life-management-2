@@ -306,19 +306,19 @@ describe('OutdoorRopeSessionEditPage', () => {
     expect(saveSpy.calls.mostRecent().args[0].attempts[0].routeId).toBeNull();
   });
 
-  it('keeps a typed failure point on a missed attempt and drops the ascent style', async () => {
+  it('keeps the notes text on a missed attempt and drops the ascent style (backlog 077 — failurePoint merged into notes)', async () => {
     await setup();
     component.form.patchValue({ cragId: 'c1' });
     component.addAttempt();
     const row = component.attempts()[0];
     row.ascentStyle.set(AscentAttempt.AscentStyleEnum.Redpoint);
-    row.failurePoint.set('kulcsmozdulat');
+    row.notes.set('kulcsmozdulatnál kicsúszott a láb');
 
     await component.save();
 
     const draft = saveSpy.calls.mostRecent().args[0];
     expect(draft.attempts[0].isSuccess).toBe(false);
     expect(draft.attempts[0].ascentStyle).toBeNull();
-    expect(draft.attempts[0].failurePoint).toBe('kulcsmozdulat');
+    expect(draft.attempts[0].notes).toBe('kulcsmozdulatnál kicsúszott a láb');
   });
 });

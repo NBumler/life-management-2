@@ -14,6 +14,14 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-06 — #077** Sikertelen kísérlet „hol akadt el" mezője beolvad a `notes`-ba. Nincs
+  többé külön `failurePoint`: egyetlen többsoros, auto-grow jegyzet, ami sikertelennél „Jegyzet /
+  hol akadt el?" címkével + prompttal jelenik meg. Migráció a meglévő szöveg megőrzésével:
+  backend `V31__ascent_attempt_merge_failure_point_into_notes.sql` (`UPDATE` összefűzés → `DROP
+  COLUMN`), frontend natív `SCHEMA_V30` (ugyanaz az `UPDATE`; az oszlop üresen marad, mert nem
+  minden on-device SQLite tud `DROP COLUMN`-t). OpenAPI `AscentAttempt` property törölve →
+  `gen:api`; backend entity/mapper/service + frontend storage/local-rows/2 rope napló-form +
+  i18n. Érintett specek: [[Mászónapló]], [[Indoor boulder napló]], [[Indoor köteles napló]].
 - **2026-09-06 — #070 + #075** Kísérlet-mező üzleti review. **#070**: rögzítve, hogy egy
   `AscentAttempt` sor = egy út/probléma **ebben a sessionben** (nem egy-egy „go"); az `attemptCount`
   marad, de a napló-form címkéje „Próbák (ebben a sessionben)" / „Tries (this session)", és a

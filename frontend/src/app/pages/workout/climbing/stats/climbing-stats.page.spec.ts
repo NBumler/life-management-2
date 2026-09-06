@@ -17,7 +17,6 @@ function attempt(overrides: Partial<AscentAttempt> = {}): AscentAttempt {
     absoluteDifficultyIndex: null,
     ascentStyle: null,
     safetyStyle: null,
-    failurePoint: null,
     attemptCount: null,
     colorBandId: null,
     colorName: null,

@@ -513,7 +513,6 @@ export class HttpStorageBackend implements StorageBackend {
         absoluteDifficultyIndex: attempt.absoluteDifficultyIndex,
         ascentStyle: attempt.ascentStyle,
         safetyStyle: attempt.safetyStyle,
-        failurePoint: attempt.failurePoint,
         attemptCount: attempt.attemptCount,
         colorBandId: attempt.colorBandId,
         colorName: attempt.colorName,

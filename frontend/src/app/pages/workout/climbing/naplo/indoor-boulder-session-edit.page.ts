@@ -352,7 +352,6 @@ export class IndoorBoulderSessionEditPage implements OnInit {
       absoluteDifficultyIndex: this.resolveIndex(row),
       ascentStyle: row.isSuccess() ? row.ascentStyle() : null,
       safetyStyle: null,
-      failurePoint: null,
       attemptCount: row.attemptCount(),
       colorBandId: row.colorBandId(),
       colorName: band?.name ?? null,

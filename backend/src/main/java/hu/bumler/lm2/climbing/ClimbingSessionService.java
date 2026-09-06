@@ -222,7 +222,6 @@ class ClimbingSessionService {
 		entity.setAscentStyle(ascentStyle == null ? null : ascentStyle.getValue());
 		AscentAttempt.SafetyStyleEnum safetyStyle = dto.getSafetyStyle().orElse(null);
 		entity.setSafetyStyle(safetyStyle == null ? null : safetyStyle.getValue());
-		entity.setFailurePoint(dto.getFailurePoint().orElse(null));
 		entity.setAttemptCount(dto.getAttemptCount().orElse(null));
 		entity.setColorBandId(dto.getColorBandId().orElse(null));
 		entity.setColorName(dto.getColorName().orElse(null));

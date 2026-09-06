@@ -1095,7 +1095,25 @@ const SCHEMA_V29_STATEMENTS: string[] = [
   )`,
 ];
 
-const SCHEMA_VERSION = 29;
+/**
+ * backlog/077 — `ascent_attempt.failure_point` beolvad a `notes`-ba (on-device tükre a backend
+ * `V31__ascent_attempt_merge_failure_point_into_notes.sql`-nek). Az oszlopot **nem** dobjuk el
+ * (nem minden on-device SQLite build támogatja az `ALTER TABLE ... DROP COLUMN`-t); üresen,
+ * használaton kívül marad, új írás soha nem tölti. Egyesítési szabály: mindkettő kitöltve →
+ * `notes` <newline> `failure_point`; csak az egyik → az. Nem állít `_dirty`-t (nincs trigger),
+ * a szerver a V31 után úgyis ugyanezt a `notes`-t tölti vissza a delta-pullban.
+ */
+const SCHEMA_V30_STATEMENTS: string[] = [
+  `UPDATE ascent_attempt
+     SET notes = CASE
+       WHEN notes IS NOT NULL AND TRIM(notes) <> ''
+         THEN notes || char(10) || TRIM(failure_point)
+       ELSE TRIM(failure_point)
+     END
+   WHERE failure_point IS NOT NULL AND TRIM(failure_point) <> ''`,
+];
+
+const SCHEMA_VERSION = 30;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -1127,7 +1145,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 26, statements: SCHEMA_V26_STATEMENTS },
   { toVersion: 27, statements: SCHEMA_V27_STATEMENTS },
   { toVersion: 28, statements: SCHEMA_V28_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V29_STATEMENTS },
+  { toVersion: 29, statements: SCHEMA_V29_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V30_STATEMENTS },
 ];
 
 export interface SqlTask {

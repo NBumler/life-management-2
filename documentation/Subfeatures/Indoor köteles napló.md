@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-06
-verifikalt_commit: 8d66db3
+verifikalt_commit: 1cd8d04
 ---
 
 # Indoor köteles napló
@@ -30,8 +30,8 @@ Beltéri köteles session + kísérletek. Dashboard: **Indoor Kötél**. Közös
 | `PitchLog` | **Nincs** |
 | Szín-sáv | Nincs (boulder-only) |
 | `ascentStyle` | Siker esetén: ONSIGHT / FLASH / REDPOINT |
-| Sikertelen | `failurePoint` opcionális |
-| `attemptCount` | [[Mászónapló]] közös mező, kontextusfüggetlen — itt is használható (pl. redpoint próbák száma) |
+| Sikertelen | Nincs külön mező — a `notes` (többsoros) kapja a „hol akadt el" promptot ([[Mászónapló]], `backlog/archive/077`) |
+| `attemptCount` | [[Mászónapló]] közös mező — próbák (gólok) száma **ebben a sessionben** ezen az úton (napló-form címke: „Próbák (ebben a sessionben)") |
 | Duration fallback | utak/kísérletek × 15 perc |
 | Kalória | kötél aktív s/m + rest — [[Mászónapló]] |
 

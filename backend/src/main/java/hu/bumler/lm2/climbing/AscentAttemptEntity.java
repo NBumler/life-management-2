@@ -45,9 +45,6 @@ public class AscentAttemptEntity {
 	@Column(name = "safety_style")
 	private String safetyStyle;
 
-	@Column(name = "failure_point")
-	private String failurePoint;
-
 	@Column(name = "attempt_count")
 	private Integer attemptCount;
 
@@ -152,14 +149,6 @@ public class AscentAttemptEntity {
 
 	public void setSafetyStyle(String safetyStyle) {
 		this.safetyStyle = safetyStyle;
-	}
-
-	public String getFailurePoint() {
-		return failurePoint;
-	}
-
-	public void setFailurePoint(String failurePoint) {
-		this.failurePoint = failurePoint;
 	}
 
 	public Integer getAttemptCount() {

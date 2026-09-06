@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-06
-verifikalt_commit: 5410314
+verifikalt_commit: 1cd8d04
 ---
 
 # Indoor boulder napló
@@ -45,7 +45,7 @@ Közös session modell: [[Mászónapló]] (`locationType=INDOOR`, `discipline=BO
 | `isSuccess` | Boolean |
 | `attemptCount` | Opcionális `≥ 1` — próbák (gólok) száma **ebben a sessionben** ezen a problémán (napló-form címke: „Próbák (ebben a sessionben)"). Tájékoztató; a képletek nem szoroznak vele. Lásd [[Mászónapló]]. |
 | `ascentStyle` | Ha siker: `FLASH` \| `REDPOINT` \| `ONSIGHT` (ONSIGHT megengedett fallback) |
-| `notes` | Opcionális (pl. top fogás) — sikertelennél `failurePoint` helyett / mellett rövid note |
+| `notes` | Opcionális, többsoros szabad szöveg (pl. top fogás). Sikertelennél ugyanez a mező a „hol akadt el" jegyzet — **nincs külön `failurePoint`** ([[Mászónapló]], `backlog/archive/077`). |
 
 Nincs `safetyStyle`, `lengthInMeters`, `PitchLog`.
 

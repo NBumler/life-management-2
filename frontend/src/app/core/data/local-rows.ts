@@ -2531,7 +2531,6 @@ export interface AscentAttemptRow {
   absolute_difficulty_index: number | null;
   ascent_style: string | null;
   safety_style: string | null;
-  failure_point: string | null;
   attempt_count: number | null;
   color_band_id: string | null;
   color_name: string | null;
@@ -2564,7 +2563,6 @@ export function ascentAttemptRowToDto(row: AscentAttemptRow): Omit<AscentAttempt
     absoluteDifficultyIndex: row.absolute_difficulty_index,
     ascentStyle: (row.ascent_style as AscentAttempt.AscentStyleEnum | null) ?? null,
     safetyStyle: (row.safety_style as AscentAttempt.SafetyStyleEnum | null) ?? null,
-    failurePoint: row.failure_point,
     attemptCount: row.attempt_count,
     colorBandId: row.color_band_id,
     colorName: row.color_name,
@@ -2589,12 +2587,12 @@ export type AscentAttemptWriteInput = Omit<AscentAttempt, 'pitches' | 'deleted' 
 export function ascentAttemptLocalWriteTask(dto: AscentAttemptWriteInput): SqlTask {
   return {
     statement: `
-      INSERT INTO ascent_attempt (id, session_id, is_success, user_raw_input, absolute_difficulty_index, ascent_style, safety_style, failure_point, attempt_count, color_band_id, color_name, hex_color, grade_range, indoor_route_id, route_id, boulder_problem_id, route_name, length_in_meters, notes, order_index, _dirty, _local_only)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
+      INSERT INTO ascent_attempt (id, session_id, is_success, user_raw_input, absolute_difficulty_index, ascent_style, safety_style, attempt_count, color_band_id, color_name, hex_color, grade_range, indoor_route_id, route_id, boulder_problem_id, route_name, length_in_meters, notes, order_index, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
       ON CONFLICT(id) DO UPDATE SET
         session_id = excluded.session_id, is_success = excluded.is_success, user_raw_input = excluded.user_raw_input,
         absolute_difficulty_index = excluded.absolute_difficulty_index, ascent_style = excluded.ascent_style,
-        safety_style = excluded.safety_style, failure_point = excluded.failure_point, attempt_count = excluded.attempt_count,
+        safety_style = excluded.safety_style, attempt_count = excluded.attempt_count,
         color_band_id = excluded.color_band_id, color_name = excluded.color_name, hex_color = excluded.hex_color,
         grade_range = excluded.grade_range, indoor_route_id = excluded.indoor_route_id, route_id = excluded.route_id,
         boulder_problem_id = excluded.boulder_problem_id, route_name = excluded.route_name, length_in_meters = excluded.length_in_meters,
@@ -2607,7 +2605,6 @@ export function ascentAttemptLocalWriteTask(dto: AscentAttemptWriteInput): SqlTa
       dto.absoluteDifficultyIndex ?? null,
       dto.ascentStyle ?? null,
       dto.safetyStyle ?? null,
-      dto.failurePoint ?? null,
       dto.attemptCount ?? null,
       dto.colorBandId ?? null,
       dto.colorName ?? null,
@@ -2635,12 +2632,12 @@ export function ascentAttemptLocalRemoveTask(id: string): SqlTask {
 export function ascentAttemptServerApplyTask(dto: Omit<AscentAttempt, 'pitches'>): SqlTask {
   return {
     statement: `
-      INSERT INTO ascent_attempt (id, session_id, is_success, user_raw_input, absolute_difficulty_index, ascent_style, safety_style, failure_point, attempt_count, color_band_id, color_name, hex_color, grade_range, indoor_route_id, route_id, boulder_problem_id, route_name, length_in_meters, notes, order_index, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      INSERT INTO ascent_attempt (id, session_id, is_success, user_raw_input, absolute_difficulty_index, ascent_style, safety_style, attempt_count, color_band_id, color_name, hex_color, grade_range, indoor_route_id, route_id, boulder_problem_id, route_name, length_in_meters, notes, order_index, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET
         session_id = excluded.session_id, is_success = excluded.is_success, user_raw_input = excluded.user_raw_input,
         absolute_difficulty_index = excluded.absolute_difficulty_index, ascent_style = excluded.ascent_style,
-        safety_style = excluded.safety_style, failure_point = excluded.failure_point, attempt_count = excluded.attempt_count,
+        safety_style = excluded.safety_style, attempt_count = excluded.attempt_count,
         color_band_id = excluded.color_band_id, color_name = excluded.color_name, hex_color = excluded.hex_color,
         grade_range = excluded.grade_range, indoor_route_id = excluded.indoor_route_id, route_id = excluded.route_id,
         boulder_problem_id = excluded.boulder_problem_id, route_name = excluded.route_name, length_in_meters = excluded.length_in_meters,
@@ -2655,7 +2652,6 @@ export function ascentAttemptServerApplyTask(dto: Omit<AscentAttempt, 'pitches'>
       dto.absoluteDifficultyIndex ?? null,
       dto.ascentStyle ?? null,
       dto.safetyStyle ?? null,
-      dto.failurePoint ?? null,
       dto.attemptCount ?? null,
       dto.colorBandId ?? null,
       dto.colorName ?? null,

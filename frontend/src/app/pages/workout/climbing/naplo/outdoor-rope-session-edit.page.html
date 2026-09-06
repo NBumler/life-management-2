@@ -260,15 +260,6 @@
               textKey="WORKOUT.CLIMBING.ASCENT_STYLE.HELP_TEXT"
             ></app-help-button>
           </ion-item>
-        } @else {
-          <ion-item>
-            <ion-input
-              [label]="'WORKOUT.CLIMBING.SESSION.FIELD_FAILURE_POINT' | translate"
-              labelPlacement="stacked"
-              [value]="row.failurePoint()"
-              (ionInput)="row.failurePoint.set($any($event.target).value)"
-            />
-          </ion-item>
         }
 
         @if (!row.routeId() && form.controls.sectorId.value) {
@@ -325,9 +316,12 @@
         }
 
         <ion-item>
-          <ion-input
-            [label]="'WORKOUT.CLIMBING.SESSION.FIELD_ATTEMPT_NOTES' | translate"
+          <ion-textarea
+            [label]="(row.isSuccess() ? 'WORKOUT.CLIMBING.SESSION.FIELD_ATTEMPT_NOTES' : 'WORKOUT.CLIMBING.SESSION.FIELD_ATTEMPT_NOTES_FAIL') | translate"
             labelPlacement="stacked"
+            autoGrow="true"
+            rows="2"
+            [placeholder]="row.isSuccess() ? null : ('WORKOUT.CLIMBING.SESSION.ATTEMPT_NOTES_FAIL_PLACEHOLDER' | translate)"
             [value]="row.notes()"
             (ionInput)="row.notes.set($any($event.target).value)"
           />

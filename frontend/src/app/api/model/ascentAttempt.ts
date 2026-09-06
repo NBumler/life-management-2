@@ -34,10 +34,6 @@ export interface AscentAttempt {
      */
     safetyStyle?: AscentAttempt.SafetyStyleEnum | null;
     /**
-     * Optional; on an unsuccessful attempt.
-     */
-    failurePoint?: string | null;
-    /**
      * Number of goes on this problem / route, context-independent. Statistics (volume, success rate) only — NOT the duration fallback, which counts logged attempt rows.
      */
     attemptCount?: number | null;
@@ -71,6 +67,9 @@ export interface AscentAttempt {
      * Rope: attempt length. Default from the route / gym wall height, resolved client-side.
      */
     lengthInMeters?: number | null;
+    /**
+     * Free text on the attempt. On an unsuccessful attempt this is also where the \"where did you get stuck\" note goes — there is no separate `failurePoint` field (merged in as of V31).
+     */
     notes?: string | null;
     orderIndex: number;
     /**

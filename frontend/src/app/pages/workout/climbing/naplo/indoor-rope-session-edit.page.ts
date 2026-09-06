@@ -53,8 +53,8 @@ interface AttemptRow {
   safetyStyle: WritableSignal<AscentAttempt.SafetyStyleEnum>;
   isSuccess: WritableSignal<boolean>;
   ascentStyle: WritableSignal<AscentAttempt.AscentStyleEnum | null>;
-  failurePoint: WritableSignal<string | null>;
   attemptCount: WritableSignal<number | null>;
+  /** On a miss this also holds the "where did you get stuck" note — there is no separate failurePoint field (backlog/077). */
   notes: WritableSignal<string | null>;
 }
 
@@ -80,8 +80,9 @@ const DEFAULT_SAFETY_STYLE = AscentAttempt.SafetyStyleEnum.Lead;
  * form (`id` route param is an existing session's uuid or `new`). Differs from the boulder reference
  * (documentation/Subfeatures/Indoor boulder napló.md) by: no colour bands, a manual grade + height
  * OR an optional `IndoorRoute` pick / ad-hoc name, a `TOPROPE | LEAD` safety chip (TRAD hidden), an
- * optional `lengthInMeters` defaulting to the gym wall height, an optional `failurePoint` on a miss,
- * and no PitchLog. Duration fallback is attempts × 15 min (handled by `climbing-metrics`).
+ * optional `lengthInMeters` defaulting to the gym wall height, a single free-text `notes` field
+ * (on a miss it doubles as the "where did you get stuck" note — backlog/077), and no PitchLog.
+ * Duration fallback is attempts × 15 min (handled by `climbing-metrics`).
  */
 @Component({
   selector: 'app-indoor-rope-session-edit',
@@ -271,9 +272,7 @@ export class IndoorRopeSessionEditPage implements OnInit {
 
   toggleSuccess(row: AttemptRow): void {
     row.isSuccess.update((value) => !value);
-    if (row.isSuccess()) {
-      row.failurePoint.set(null);
-    } else {
+    if (!row.isSuccess()) {
       row.ascentStyle.set(null);
     }
     this.touchAttempts();
@@ -422,7 +421,6 @@ export class IndoorRopeSessionEditPage implements OnInit {
       absoluteDifficultyIndex: this.resolveIndex(row),
       ascentStyle: row.isSuccess() ? row.ascentStyle() : null,
       safetyStyle: row.safetyStyle(),
-      failurePoint: row.isSuccess() ? null : row.failurePoint()?.trim() || null,
       attemptCount: row.attemptCount(),
       colorBandId: null,
       colorName: null,
@@ -454,7 +452,6 @@ export class IndoorRopeSessionEditPage implements OnInit {
       safetyStyle: signal(attempt.safetyStyle ?? DEFAULT_SAFETY_STYLE),
       isSuccess: signal(attempt.isSuccess),
       ascentStyle: signal(attempt.ascentStyle ?? null),
-      failurePoint: signal(attempt.failurePoint ?? null),
       attemptCount: signal(attempt.attemptCount ?? null),
       notes: signal(attempt.notes ?? null),
     };
@@ -471,7 +468,6 @@ export class IndoorRopeSessionEditPage implements OnInit {
       safetyStyle: signal<AscentAttempt.SafetyStyleEnum>(DEFAULT_SAFETY_STYLE),
       isSuccess: signal(false),
       ascentStyle: signal<AscentAttempt.AscentStyleEnum | null>(null),
-      failurePoint: signal<string | null>(null),
       attemptCount: signal<number | null>(null),
       notes: signal<string | null>(null),
     };

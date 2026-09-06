@@ -65,7 +65,6 @@ interface AttemptRow {
   safetyStyle: WritableSignal<AscentAttempt.SafetyStyleEnum>;
   isSuccess: WritableSignal<boolean>;
   ascentStyle: WritableSignal<AscentAttempt.AscentStyleEnum | null>;
-  failurePoint: WritableSignal<string | null>;
   attemptCount: WritableSignal<number | null>;
   /** Ad-hoc routes only — write this row's name + grade to the sector's Route catalog on save. */
   saveToCatalog: WritableSignal<boolean>;
@@ -104,8 +103,9 @@ const WEATHER_CONDITIONS: readonly ClimbingSession.WeatherConditionsEnum[] = [
  * form (`id` route param is an existing session's uuid or `new`). Combines the outdoor boulder
  * napló's crag + sector location picker (snapshot names, session-level `rockType` / `aspect`,
  * `weatherConditions` chip, optional master `Route` OR an ad-hoc name with "save to catalog") with
- * the indoor rope napló's grade parser, `TOPROPE | LEAD | TRAD` safety chip, `lengthInMeters` and
- * `failurePoint` on a miss. New here: an optional per-attempt `PitchLog` editor (`isLead = false`
+ * the indoor rope napló's grade parser, `TOPROPE | LEAD | TRAD` safety chip, `lengthInMeters`, and a
+ * single free-text `notes` field (on a miss it also holds the "where did you get stuck" note —
+ * backlog/077). New here: an optional per-attempt `PitchLog` editor (`isLead = false`
  * marks a following climber → active MET ×0.8 in the kcal). Duration fallback is attempts × 15 min.
  */
 @Component({
@@ -325,9 +325,7 @@ export class OutdoorRopeSessionEditPage implements OnInit {
 
   toggleSuccess(row: AttemptRow): void {
     row.isSuccess.update((value) => !value);
-    if (row.isSuccess()) {
-      row.failurePoint.set(null);
-    } else {
+    if (!row.isSuccess()) {
       row.ascentStyle.set(null);
     }
     this.touchAttempts();
@@ -575,7 +573,6 @@ export class OutdoorRopeSessionEditPage implements OnInit {
       absoluteDifficultyIndex: this.resolveIndex(row),
       ascentStyle: row.isSuccess() ? row.ascentStyle() : null,
       safetyStyle: row.safetyStyle(),
-      failurePoint: row.isSuccess() ? null : row.failurePoint()?.trim() || null,
       attemptCount: row.attemptCount(),
       colorBandId: null,
       colorName: null,
@@ -620,7 +617,6 @@ export class OutdoorRopeSessionEditPage implements OnInit {
       safetyStyle: signal(attempt.safetyStyle ?? DEFAULT_SAFETY_STYLE),
       isSuccess: signal(attempt.isSuccess),
       ascentStyle: signal(attempt.ascentStyle ?? null),
-      failurePoint: signal(attempt.failurePoint ?? null),
       attemptCount: signal(attempt.attemptCount ?? null),
       saveToCatalog: signal(false),
       pitches: signal(
@@ -654,7 +650,6 @@ export class OutdoorRopeSessionEditPage implements OnInit {
       safetyStyle: signal<AscentAttempt.SafetyStyleEnum>(DEFAULT_SAFETY_STYLE),
       isSuccess: signal(false),
       ascentStyle: signal<AscentAttempt.AscentStyleEnum | null>(null),
-      failurePoint: signal<string | null>(null),
       attemptCount: signal<number | null>(null),
       saveToCatalog: signal(false),
       pitches: signal<PitchRow[]>([]),

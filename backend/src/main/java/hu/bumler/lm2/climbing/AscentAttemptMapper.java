@@ -25,7 +25,6 @@ class AscentAttemptMapper {
 		if (entity.getSafetyStyle() != null) {
 			dto.safetyStyle(AscentAttempt.SafetyStyleEnum.fromValue(entity.getSafetyStyle()));
 		}
-		dto.failurePoint(entity.getFailurePoint());
 		dto.attemptCount(entity.getAttemptCount());
 		dto.colorBandId(entity.getColorBandId());
 		dto.colorName(entity.getColorName());

@@ -50,10 +50,6 @@ properties:
       - TRAD
     nullable: true
     description: Rope only (indoor hides TRAD client-side); null for boulder.
-  failurePoint:
-    type: string
-    nullable: true
-    description: Optional; on an unsuccessful attempt.
   attemptCount:
     type: integer
     minimum: 1
@@ -105,6 +101,9 @@ properties:
   notes:
     type: string
     nullable: true
+    description: >-
+      Free text on the attempt. On an unsuccessful attempt this is also where the "where did you get
+      stuck" note goes — there is no separate `failurePoint` field (merged in as of V31).
   orderIndex:
     type: integer
   pitches:
