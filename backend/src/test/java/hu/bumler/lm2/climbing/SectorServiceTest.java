@@ -38,7 +38,7 @@ class SectorServiceTest {
 	private static SectorEntity entity(UUID id, UUID userId, UUID cragId) {
 		SectorEntity e = new SectorEntity(id, userId, cragId);
 		e.setName("Főfal");
-		e.setDefaultAspect("észak");
+		e.setDefaultAspect("N");
 		return e;
 	}
 
@@ -51,13 +51,13 @@ class SectorServiceTest {
 		when(repository.saveAndFlush(any())).thenAnswer(inv -> inv.getArgument(0));
 
 		Sector input = dto(id, cragId, "Alsó szektor");
-		input.defaultAspect("dél");
+		input.defaultAspect(Sector.DefaultAspectEnum.S);
 
 		Sector saved = service.create(userId, input);
 
 		assertThat(saved.getId()).isEqualTo(id);
 		assertThat(saved.getCragId()).isEqualTo(cragId);
-		assertThat(saved.getDefaultAspect().orElse(null)).isEqualTo("dél");
+		assertThat(saved.getDefaultAspect().orElse(null)).isEqualTo(Sector.DefaultAspectEnum.S);
 	}
 
 	@Test

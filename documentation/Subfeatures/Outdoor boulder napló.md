@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-06
-verifikalt_commit: 8d66db3
+verifikalt_commit: 8dbfb13
 ---
 
 # Outdoor boulder napló
@@ -27,7 +27,7 @@ Kültéri boulder session + kísérletek. Dashboard: **Outdoor Boulder**.
 | Probléma | Master `BoulderProblem` **vagy** ad-hoc név (+ opcionális `saveToCatalog`). Probléma kiválasztásakor a fokozat abból töltődik; **másik problémára váltáskor újratöltődik** (és vele a nehézségi index) — kivéve ha a user kézzel átírta ([[Mászónapló]] `AscentAttempt`). |
 | Grade | `guidebookGrade` / `userRawInput` + `absoluteDifficultyIndex` |
 | `rockType` | Crag default, **session szinten** felülírható (nincs attempt-szintű mező — egy sessionben egy sziklatípus) |
-| `aspect` | Sector default, öröklődik |
+| `aspect` | Sector default, öröklődik; session szinten felülírható. **8 irányú égtáj-enum** (`N`..`NW`, üres = ismeretlen), `app-aspect-picker` vizuális választóval — [[Mászónapló]] |
 | `weatherConditions` | Session szint, aznapi |
 | `ascentStyle` | ONSIGHT / FLASH / REDPOINT |
 | Szín-sáv | Nincs |

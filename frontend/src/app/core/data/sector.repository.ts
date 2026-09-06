@@ -2,6 +2,7 @@ import { Injectable, effect, inject, signal, untracked } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 
 import { Sector } from '../../api/model/sector';
+import { Aspect } from '../../shared/aspect';
 import { STORAGE_BACKEND } from '../storage/storage-backend';
 import { DataChangeNotifier } from '../sync/data-change-notifier';
 import { SyncEngineService } from '../sync/sync-engine.service';
@@ -13,7 +14,7 @@ export interface SectorSaveInput {
   id?: string;
   cragId: string;
   name: string;
-  defaultAspect: string | null;
+  defaultAspect: Aspect | null;
 }
 
 /** documentation/Subfeatures/Outdoor boulder admin.md — a sector under a Crag. No name-uniqueness. */

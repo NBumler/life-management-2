@@ -65,9 +65,9 @@ export interface ClimbingSession {
      */
     rockType?: string | null;
     /**
-     * Outdoor: inherited from the Sector (or the selected Route), overridable here. Free-text.
+     * backlog/068 — outdoor: 8-wind compass token inherited from the Sector (or the selected Route), overridable here. `null` = unknown.
      */
-    aspect?: string | null;
+    aspect?: ClimbingSession.AspectEnum | null;
     attempts: Array<AscentAttempt>;
     deleted: boolean;
     readonly deletedAt?: string | null;
@@ -92,6 +92,17 @@ export namespace ClimbingSession {
         Wet: 'WET'
     } as const;
     export type WeatherConditionsEnum = typeof WeatherConditionsEnum[keyof typeof WeatherConditionsEnum];
+    export const AspectEnum = {
+        N: 'N',
+        Ne: 'NE',
+        E: 'E',
+        Se: 'SE',
+        S: 'S',
+        Sw: 'SW',
+        W: 'W',
+        Nw: 'NW'
+    } as const;
+    export type AspectEnum = typeof AspectEnum[keyof typeof AspectEnum];
 }
 
 

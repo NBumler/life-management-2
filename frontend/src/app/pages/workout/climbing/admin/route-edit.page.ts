@@ -17,6 +17,8 @@ import {
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 import { RouteRepository, RouteSaveInput } from '../../../../core/data/route.repository';
+import { Aspect } from '../../../../shared/aspect';
+import { AspectPickerComponent } from '../../../../shared/aspect-picker/aspect-picker.component';
 
 /**
  * documentation/Subfeatures/Outdoor köteles admin.md — the rope-route editor. `guidebookGrade` is a
@@ -39,6 +41,7 @@ import { RouteRepository, RouteSaveInput } from '../../../../core/data/route.rep
     IonItem,
     IonInput,
     TranslatePipe,
+    AspectPickerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -60,7 +63,7 @@ export class RouteEditPage implements OnInit {
     lengthInMeters: this.fb.control<number | null>(null, [Validators.min(0.01)]),
     totalPitches: this.fb.control<number | null>(null, [Validators.min(1)]),
     rockType: this.fb.control<string | null>(null),
-    aspect: this.fb.control<string | null>(null),
+    aspect: this.fb.control<Aspect | null>(null),
     topoNumber: this.fb.control<string | null>(null, [Validators.maxLength(32)]),
   });
 
@@ -103,7 +106,7 @@ export class RouteEditPage implements OnInit {
       lengthInMeters: v.lengthInMeters ?? null,
       totalPitches: v.totalPitches ?? null,
       rockType: v.rockType?.trim() ? v.rockType.trim() : null,
-      aspect: v.aspect?.trim() ? v.aspect.trim() : null,
+      aspect: v.aspect ?? null,
       topoNumber: v.topoNumber?.trim() ? v.topoNumber.trim() : null,
     };
     await this.repository.save(input);

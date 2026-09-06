@@ -53,10 +53,10 @@ describe('SectorEditPage', () => {
 
   it('save() forwards the trimmed name pinned to the crag', async () => {
     await setup();
-    component.form.patchValue({ name: '  Főfal  ', defaultAspect: 'észak' });
+    component.form.patchValue({ name: '  Főfal  ', defaultAspect: 'N' });
     await component.save();
     expect(saveSpy).toHaveBeenCalledWith(
-      jasmine.objectContaining({ cragId: 'c1', name: 'Főfal', defaultAspect: 'észak' }),
+      jasmine.objectContaining({ cragId: 'c1', name: 'Főfal', defaultAspect: 'N' }),
     );
   });
 

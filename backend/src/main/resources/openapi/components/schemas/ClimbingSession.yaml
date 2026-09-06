@@ -105,7 +105,10 @@ properties:
   aspect:
     type: string
     nullable: true
-    description: 'Outdoor: inherited from the Sector (or the selected Route), overridable here. Free-text.'
+    enum: [N, NE, E, SE, S, SW, W, NW]
+    description: >-
+      backlog/068 — outdoor: 8-wind compass token inherited from the Sector (or the selected Route),
+      overridable here. `null` = unknown.
   attempts:
     type: array
     items:

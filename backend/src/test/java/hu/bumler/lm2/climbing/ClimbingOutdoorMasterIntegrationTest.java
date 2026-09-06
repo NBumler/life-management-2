@@ -284,7 +284,7 @@ class ClimbingOutdoorMasterIntegrationTest {
 
 	private static Sector sector(UUID id, UUID cragId, String name) {
 		Sector sector = new Sector(id, cragId, name, false);
-		sector.defaultAspect("észak");
+		sector.defaultAspect(Sector.DefaultAspectEnum.N);
 		return sector;
 	}
 

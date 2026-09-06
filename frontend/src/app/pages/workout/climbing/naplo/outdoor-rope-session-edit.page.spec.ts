@@ -30,7 +30,7 @@ function crag(overrides: Partial<Crag> = {}): Crag {
 }
 
 function sector(overrides: Partial<Sector> = {}): Sector {
-  return { id: 's1', cragId: 'c1', name: 'Főfal', defaultAspect: 'északi', deleted: false, ...overrides };
+  return { id: 's1', cragId: 'c1', name: 'Főfal', defaultAspect: 'N', deleted: false, ...overrides };
 }
 
 function route(overrides: Partial<Route> = {}): Route {
@@ -42,7 +42,7 @@ function route(overrides: Partial<Route> = {}): Route {
     lengthInMeters: 40,
     totalPitches: 3,
     rockType: 'mészkő',
-    aspect: 'déli',
+    aspect: 'S',
     deleted: false,
     ...overrides,
   };
@@ -149,7 +149,7 @@ describe('OutdoorRopeSessionEditPage', () => {
     await setup();
     component.form.patchValue({ cragId: 'c1' });
     component.onSectorChange('s1');
-    expect(component.form.controls.aspect.value).toBe('északi');
+    expect(component.form.controls.aspect.value).toBe('N');
   });
 
   it('save() forwards the OUTDOOR + ROPE context, the crag/sector snapshots and a LEAD attempt', async () => {
@@ -207,7 +207,7 @@ describe('OutdoorRopeSessionEditPage', () => {
     expect(draft.attempts[0].absoluteDifficultyIndex).not.toBeNull();
     expect(draft.attempts[0].lengthInMeters).toBe(40);
     expect(draft.rockType).toBe('mészkő');
-    expect(draft.aspect).toBe('déli');
+    expect(draft.aspect).toBe('S');
   });
 
   it('switching the picked route refills an auto-filled grade + length but keeps a hand-typed grade (backlog 074)', async () => {

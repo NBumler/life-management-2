@@ -33,7 +33,9 @@ class ClimbingSessionMapper {
 		dto.sectorId(entity.getSectorId());
 		dto.sectorName(entity.getSectorName());
 		dto.rockType(entity.getRockType());
-		dto.aspect(entity.getAspect());
+		if (entity.getAspect() != null) {
+			dto.aspect(ClimbingSession.AspectEnum.fromValue(entity.getAspect()));
+		}
 		dto.deletedAt(entity.getDeletedAt());
 		dto.createdAt(entity.getCreatedAt());
 		dto.updatedAt(entity.getUpdatedAt());

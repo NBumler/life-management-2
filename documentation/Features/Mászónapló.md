@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-06
-verifikalt_commit: 99ba651
+verifikalt_commit: 8dbfb13
 ---
 
 # Mászónapló
@@ -169,6 +169,7 @@ Minden mászó entitás: soft delete ([[Backend-offline first]]). Nested session
 - Kísérlet-jegyzet: egyetlen **többsoros, auto-grow** mező. Sikernél „Jegyzet"; sikertelennél „Jegyzet / hol akadt el?" címkével + promttal (nincs külön „Hol akadt el" input).
 - „Kísérlet hozzáadása" út / probléma **select**: a `Route` / `BoulderProblem` / `IndoorRoute` opciók a `topoNumber` (topó-sorszám) szerint, **természetes alfanumerikus** rendezésben (`2` < `5/a` < `5/b` < `10`); sorszám nélküli utak a lista végén, név szerint. A meglévő sorszám az opció-címke elé kerül (`12 · Sárga áthajlás (6b)`). Kliensoldali rendezés (`shared/natural-sort.ts`); részletek: [[Outdoor köteles admin]] / [[Outdoor boulder admin]] / [[Indoor köteles admin]].
 - Minden kísérlet **önálló kártya** (`.attempt-card`, mind a 4 kontextus napló-formban): térköz + keret + lekerekítés, a bal élen **színsáv** a sikerállapothoz (zöld = sikeres, piros = sikertelen), kiemelt kártyafejléc („N. kísérlet" + siker-toggle).
+- **Fekvés (`aspect`)** — a szektor / út / session égtáj-orientációja **8 irányú égtáj-enum** (`N`/`NE`/`E`/`SE`/`S`/`SW`/`W`/`NW`; üres = ismeretlen), **vizuális választóval** (`app-aspect-picker`): négyzet kerületén a 8 irány, É felül, egy tap; a kijelölt irányra újra tap → törlés. Felmászókönyv-fokból (iránytű) a `degreesToAspect` binnel (`shared/aspect.ts`, fixture: `shared/fixtures/aspect-degrees.json`, backend-paritás: `hu.bumler.lm2.common.AspectDirection`). Használat: [[Outdoor boulder admin]] `Sector`, [[Outdoor köteles admin]] `Route`, és az outdoor napló-formok session szintje (a [[Outdoor köteles napló]] / [[Outdoor boulder napló]] öröklési sorrenddel).
 - Per-kontextus session lista (a közös, szűrő-tabos listát a `backlog/022-...` jegy fedi).
 
 ### Megjegyzések
@@ -202,6 +203,7 @@ Olvasás/írás helyi store; mutációk outbox + kliens UUID; soft delete synche
 
 - OpenAPI: `POST` / `PUT` / `GET` / `DELETE /api/climbing/sessions` (+ `-item`). **Egy flat `climbing_session` tábla** nullable kontextus-mezőkkel; a diszkriminátor a `locationType` + `discipline` pár.
 - Master külön, per-entitás endpoint: `/api/climbing/{gyms,gym-color-bands,indoor-routes,crags,sectors,routes,boulder-problems}` — `Gym` + `GymColorBand` + `IndoorRoute` (`V22`), `Crag` + `Sector` + `Route` + `BoulderProblem` (`V23`). A `route` / `boulder_problem` / `indoor_route` táblákon opcionális `topo_number text CHECK (char_length ≤ 32)` (`V33`) — a szerver tárolja, de **soha nem rendez rá** (a lista-végpontok név szerint maradnak); a topó szerinti rendezés kliensoldali (`shared/natural-sort.ts`, `shared/fixtures/natural-sort.json`).
+- `sector.default_aspect` / `route.aspect` / `climbing_session.aspect`: 8 irányú égtáj-token (`N`,`NE`,`E`,`SE`,`S`,`SW`,`W`,`NW`; `NULL` = ismeretlen), OpenAPI `enum` + DB CHECK a `V34__climbing_aspect_compass_enum.sql`-ből (a korábbi szabad szöveget best-effort megfeleltette, a felismerhetetlent NULL-ra állította — lossy, elfogadott). A token szövegoszlopban marad, a `sync_changes` view érintetlen.
 - UUID kliens; soft delete; nested session body (`ClimbingSessionService.saveTree`, `NestedChildResolver`).
 - A szerver **sosem** számol / validál grade indexet vagy kcal-t: az `absoluteDifficultyIndex` és a `guidebookGrade` verbatim tárolódik. Szerveroldali paritás tervezett — `backlog/024-climbing-grade-matrix-kozos-generalt-json-asset-backend-index-uj.md`.
 

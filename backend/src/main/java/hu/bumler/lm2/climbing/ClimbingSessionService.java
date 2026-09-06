@@ -211,7 +211,8 @@ class ClimbingSessionService {
 		entity.setSectorId(dto.getSectorId().orElse(null));
 		entity.setSectorName(dto.getSectorName().orElse(null));
 		entity.setRockType(dto.getRockType().orElse(null));
-		entity.setAspect(dto.getAspect().orElse(null));
+		ClimbingSession.AspectEnum aspect = dto.getAspect().orElse(null);
+		entity.setAspect(aspect == null ? null : aspect.getValue());
 	}
 
 	private void applyAttemptFields(AscentAttemptEntity entity, AscentAttempt dto) {

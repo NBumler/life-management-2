@@ -216,7 +216,7 @@ export interface ClimbingSessionDraft {
   sectorId: string | null;
   sectorName: string | null;
   rockType: string | null;
-  aspect: string | null;
+  aspect: ClimbingSession.AspectEnum | null;
   attempts: AscentAttemptSaveItem[];
 }
 

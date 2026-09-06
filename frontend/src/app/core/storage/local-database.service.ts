@@ -1134,7 +1134,39 @@ const SCHEMA_V32_STATEMENTS: string[] = [
   `ALTER TABLE indoor_route ADD COLUMN topo_number TEXT`,
 ];
 
-const SCHEMA_VERSION = 32;
+/**
+ * backlog/068 — a "fekvés" (aspect) eddig szabad szöveg volt a `sector.default_aspect` /
+ * `route.aspect` / `climbing_session.aspect` oszlopokban; mostantól 8 irányú égtáj-token
+ * (`N`,`NE`,`E`,`SE`,`S`,`SW`,`W`,`NW`; `NULL` = ismeretlen). On-device tükre a backend
+ * `V34__climbing_aspect_compass_enum.sql`-nek: best-effort megfelelteti a meglévő magyar/angol
+ * szabad szöveget (szóköz / kötőjel toleránsan), amit nem ismer fel, `NULL`-ra állítja (lossy,
+ * elfogadott — a fekvés bármikor újraválasztható a vizuális választóból). Nem állít `_dirty`-t; a
+ * szerver a delta-pullban úgyis a kanonikus tokent tölti vissza. CHECK-et nem teszünk (a natív
+ * SQLite build nem mindig engedi utólag); az érvényességet a backend CHECK + a kliens típusok adják.
+ */
+const aspectMapCase = (col: string): string => {
+  const norm = `replace(replace(replace(lower(trim(${col})), ' ', ''), '-', ''), '_', '')`;
+  return `SET ${col} = CASE ${norm}
+      WHEN 'n' THEN 'N' WHEN 'north' THEN 'N' WHEN 'é' THEN 'N' WHEN 'eszak' THEN 'N' WHEN 'észak' THEN 'N' WHEN 'eszaki' THEN 'N' WHEN 'északi' THEN 'N'
+      WHEN 'ne' THEN 'NE' WHEN 'northeast' THEN 'NE' WHEN 'ék' THEN 'NE' WHEN 'ek' THEN 'NE' WHEN 'eszakkelet' THEN 'NE' WHEN 'északkelet' THEN 'NE' WHEN 'eszakkeleti' THEN 'NE' WHEN 'északkeleti' THEN 'NE'
+      WHEN 'e' THEN 'E' WHEN 'east' THEN 'E' WHEN 'k' THEN 'E' WHEN 'kelet' THEN 'E' WHEN 'keleti' THEN 'E'
+      WHEN 'se' THEN 'SE' WHEN 'southeast' THEN 'SE' WHEN 'dk' THEN 'SE' WHEN 'delkelet' THEN 'SE' WHEN 'délkelet' THEN 'SE' WHEN 'delkeleti' THEN 'SE' WHEN 'délkeleti' THEN 'SE'
+      WHEN 's' THEN 'S' WHEN 'south' THEN 'S' WHEN 'd' THEN 'S' WHEN 'del' THEN 'S' WHEN 'dél' THEN 'S' WHEN 'deli' THEN 'S' WHEN 'déli' THEN 'S'
+      WHEN 'sw' THEN 'SW' WHEN 'southwest' THEN 'SW' WHEN 'dny' THEN 'SW' WHEN 'delnyugat' THEN 'SW' WHEN 'délnyugat' THEN 'SW' WHEN 'delnyugati' THEN 'SW' WHEN 'délnyugati' THEN 'SW'
+      WHEN 'w' THEN 'W' WHEN 'west' THEN 'W' WHEN 'ny' THEN 'W' WHEN 'nyugat' THEN 'W' WHEN 'nyugati' THEN 'W'
+      WHEN 'nw' THEN 'NW' WHEN 'northwest' THEN 'NW' WHEN 'ény' THEN 'NW' WHEN 'eny' THEN 'NW' WHEN 'eszaknyugat' THEN 'NW' WHEN 'északnyugat' THEN 'NW' WHEN 'eszaknyugati' THEN 'NW' WHEN 'északnyugati' THEN 'NW'
+      ELSE NULL
+    END
+    WHERE ${col} IS NOT NULL`;
+};
+
+const SCHEMA_V33_STATEMENTS: string[] = [
+  `UPDATE sector ${aspectMapCase('default_aspect')}`,
+  `UPDATE route ${aspectMapCase('aspect')}`,
+  `UPDATE climbing_session ${aspectMapCase('aspect')}`,
+];
+
+const SCHEMA_VERSION = 33;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -1169,7 +1201,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 29, statements: SCHEMA_V29_STATEMENTS },
   { toVersion: 30, statements: SCHEMA_V30_STATEMENTS },
   { toVersion: 31, statements: SCHEMA_V31_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V32_STATEMENTS },
+  { toVersion: 32, statements: SCHEMA_V32_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V33_STATEMENTS },
 ];
 
 export interface SqlTask {

@@ -10,19 +10,33 @@
 
 
 /**
- * documentation/Subfeatures/Outdoor boulder admin.md — a user-owned sector under a Crag. `defaultAspect` is a free-text default wall orientation (\"fekvés\") inherited by routes and the outdoor napló. The crag link is fixed at create time.
+ * documentation/Subfeatures/Outdoor boulder admin.md — a user-owned sector under a Crag. `defaultAspect` is the default wall orientation (\"fekvés\") as an 8-wind compass token, inherited by routes and the outdoor napló. The crag link is fixed at create time.
  */
 export interface Sector { 
     id: string;
     cragId: string;
     name: string;
     /**
-     * Free-text default aspect / wall orientation, inherited by routes and the napló.
+     * backlog/068 — default wall aspect (\"fekvés\") as an 8-wind compass token, inherited by routes and the outdoor napló. `null` = unknown / not given.
      */
-    defaultAspect?: string | null;
+    defaultAspect?: Sector.DefaultAspectEnum | null;
     deleted: boolean;
     readonly deletedAt?: string | null;
     readonly createdAt?: string;
     readonly updatedAt?: string;
 }
+export namespace Sector {
+    export const DefaultAspectEnum = {
+        N: 'N',
+        Ne: 'NE',
+        E: 'E',
+        Se: 'SE',
+        S: 'S',
+        Sw: 'SW',
+        W: 'W',
+        Nw: 'NW'
+    } as const;
+    export type DefaultAspectEnum = typeof DefaultAspectEnum[keyof typeof DefaultAspectEnum];
+}
+
 

@@ -29,7 +29,7 @@ function crag(overrides: Partial<Crag> = {}): Crag {
 }
 
 function sector(overrides: Partial<Sector> = {}): Sector {
-  return { id: 's1', cragId: 'c1', name: 'Főfal', defaultAspect: 'északi', deleted: false, ...overrides };
+  return { id: 's1', cragId: 'c1', name: 'Főfal', defaultAspect: 'N', deleted: false, ...overrides };
 }
 
 function problem(overrides: Partial<BoulderProblem> = {}): BoulderProblem {
@@ -122,7 +122,7 @@ describe('OutdoorBoulderSessionEditPage', () => {
     await setup();
     component.form.patchValue({ cragId: 'c1' });
     component.onSectorChange('s1');
-    expect(component.form.controls.aspect.value).toBe('északi');
+    expect(component.form.controls.aspect.value).toBe('N');
   });
 
   it('save() forwards the OUTDOOR + BOULDER context, the crag/sector snapshots and session metadata', async () => {
@@ -132,7 +132,7 @@ describe('OutdoorBoulderSessionEditPage', () => {
     component.form.patchValue({
       sectorId: 's1',
       rockType: 'gránit',
-      aspect: 'északi',
+      aspect: 'N',
       weatherConditions: ClimbingSession.WeatherConditionsEnum.ColdDry,
       totalSessionDurationMinutes: 90,
     });
@@ -153,7 +153,7 @@ describe('OutdoorBoulderSessionEditPage', () => {
         sectorId: 's1',
         sectorName: 'Főfal',
         rockType: 'gránit',
-        aspect: 'északi',
+        aspect: 'N',
         weatherConditions: ClimbingSession.WeatherConditionsEnum.ColdDry,
         gymId: null,
       }),

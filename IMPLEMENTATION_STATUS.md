@@ -14,6 +14,23 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-06 — #068** Sziklamászó fekvés (`aspect`) — a `sector.default_aspect` / `route.aspect` /
+  `climbing_session.aspect` eddigi szabad szövege helyett **8 irányú égtáj-enum** (`N`, `NE`, `E`,
+  `SE`, `S`, `SW`, `W`, `NW`; `null` = ismeretlen, nincs `UNKNOWN` tag). Új `app-aspect-picker`
+  vizuális választó (`shared/aspect-picker/`): négyzet kerületén a 8 irány, É felül, egy tap, a
+  kijelöltre újra tap → törlés; `ControlValueAccessor` + `[value]`/`(valueChange)` duál API,
+  `role="radiogroup"`/`radio` akadálymentességgel. Fok ↔ enum mapper (`shared/aspect.ts`
+  `degreesToAspect`, 45°-os cikkek, az alsó határ felfelé kerekít) **kliens + backend** paritással
+  (`hu.bumler.lm2.common.AspectDirection`), pinnelve `shared/fixtures/aspect-degrees.json`. Backend:
+  `V34__climbing_aspect_compass_enum.sql` — best-effort free-text→token megfeleltetés (a
+  felismerhetetlen `NULL`, lossy, vállalt) + `*_aspect_check` CHECK 3 oszlopon; OpenAPI inline `enum`
+  a `Sector` / `Route` / `ClimbingSession` sémán; mapper + service `applyFields`. Frontend:
+  `SCHEMA_V33` (3 `UPDATE` free-text→token, `SCHEMA_VERSION = 33`), `local-rows` cast +
+  `ClimbingSessionDraft` + `*SaveInput` típusok, `Sector` / `Route` admin + outdoor boulder / rope
+  napló szerkesztő (`<ion-input>` → `<app-aspect-picker>`), i18n `SHARED.ASPECT_PICKER.*`. A token
+  `text` oszlopban marad, `sync_changes` view érintetlen; az indoor napló-formok / `IndoorRoute` nem
+  kaptak aspect mezőt. Érintett specek: [[Outdoor boulder admin]], [[Outdoor köteles admin]],
+  [[Outdoor köteles napló]], [[Outdoor boulder napló]], [[Mászónapló]].
 - **2026-09-06 — #079** Mászó admin — opcionális `topoNumber` (topó / felmászókönyv-sorszám) a
   `Route` / `BoulderProblem` / `IndoorRoute` entitásokon (rövid szabad szöveg, max. 32 kar., nem
   uniqueness-kényszerített). A route- / probléma-pickerek (admin szektor/terem lista + mind a 3

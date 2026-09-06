@@ -9,7 +9,9 @@ class SectorMapper {
 
 	Sector toDto(SectorEntity entity) {
 		Sector dto = new Sector(entity.getId(), entity.getCragId(), entity.getName(), entity.isDeleted());
-		dto.defaultAspect(entity.getDefaultAspect());
+		if (entity.getDefaultAspect() != null) {
+			dto.defaultAspect(Sector.DefaultAspectEnum.fromValue(entity.getDefaultAspect()));
+		}
 		dto.deletedAt(entity.getDeletedAt());
 		dto.createdAt(entity.getCreatedAt());
 		dto.updatedAt(entity.getUpdatedAt());

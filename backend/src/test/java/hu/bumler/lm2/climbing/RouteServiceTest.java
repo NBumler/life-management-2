@@ -42,7 +42,7 @@ class RouteServiceTest {
 		e.setLengthInMeters(28.0);
 		e.setTotalPitches(1);
 		e.setRockType("gránit");
-		e.setAspect("nyugat");
+		e.setAspect("W");
 		return e;
 	}
 
@@ -58,7 +58,7 @@ class RouteServiceTest {
 		input.lengthInMeters(35.0);
 		input.totalPitches(2);
 		input.rockType("mészkő");
-		input.aspect("kelet");
+		input.aspect(Route.AspectEnum.E);
 		input.topoNumber("12/a");
 
 		Route saved = service.create(userId, input);
@@ -69,7 +69,7 @@ class RouteServiceTest {
 		assertThat(saved.getLengthInMeters().orElse(null)).isEqualTo(35.0);
 		assertThat(saved.getTotalPitches().orElse(null)).isEqualTo(2);
 		assertThat(saved.getRockType().orElse(null)).isEqualTo("mészkő");
-		assertThat(saved.getAspect().orElse(null)).isEqualTo("kelet");
+		assertThat(saved.getAspect().orElse(null)).isEqualTo(Route.AspectEnum.E);
 		assertThat(saved.getTopoNumber().orElse(null)).isEqualTo("12/a");
 	}
 

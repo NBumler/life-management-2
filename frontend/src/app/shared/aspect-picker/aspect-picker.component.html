@@ -1,0 +1,36 @@
+<div class="aspect-picker">
+  @if (label) {
+    <div class="aspect-picker__label">{{ label }}</div>
+  }
+
+  <div
+    class="aspect-picker__grid"
+    role="radiogroup"
+    [attr.aria-label]="label || ('SHARED.ASPECT_PICKER.GROUP_LABEL' | translate)"
+    [class.aspect-picker__grid--disabled]="disabled()"
+  >
+    @for (dir of directions; track dir) {
+      <button
+        type="button"
+        role="radio"
+        class="aspect-picker__dir"
+        [style.grid-area]="dir"
+        [attr.aria-checked]="selected() === dir"
+        [attr.aria-label]="fullKey(dir) | translate"
+        [class.aspect-picker__dir--on]="selected() === dir"
+        [disabled]="disabled()"
+        (click)="pick(dir)"
+      >
+        {{ shortKey(dir) | translate }}
+      </button>
+    }
+
+    <div class="aspect-picker__center" aria-hidden="true">
+      @if (selectedFullKey(); as key) {
+        {{ key | translate }}
+      } @else {
+        {{ 'SHARED.ASPECT_PICKER.UNKNOWN' | translate }}
+      }
+    </div>
+  </div>
+</div>

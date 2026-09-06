@@ -36,6 +36,8 @@ import { RouteRepository } from '../../../../core/data/route.repository';
 import { SectorRepository } from '../../../../core/data/sector.repository';
 import { AscentAttemptSaveItem, ClimbingSessionDraft, PitchLogSaveItem } from '../../../../core/storage/storage-backend';
 import { uuidV4 } from '../../../../core/sync/uuid';
+import { Aspect } from '../../../../shared/aspect';
+import { AspectPickerComponent } from '../../../../shared/aspect-picker/aspect-picker.component';
 import { parseGrade } from '../../../../shared/climbing/grade-scale';
 import { GradeInputComponent } from '../../../../shared/grade-input/grade-input.component';
 import { HelpButtonComponent } from '../../../../shared/help-button/help-button.component';
@@ -135,6 +137,7 @@ const WEATHER_CONDITIONS: readonly ClimbingSession.WeatherConditionsEnum[] = [
     GradeInputComponent,
     HelpButtonComponent,
     PartnerComboboxComponent,
+    AspectPickerComponent,
   ],
   styles: [
     `
@@ -194,7 +197,7 @@ export class OutdoorRopeSessionEditPage implements OnInit {
     cragId: this.fb.nonNullable.control('', [Validators.required]),
     sectorId: this.fb.nonNullable.control(''),
     rockType: this.fb.control<string | null>(null),
-    aspect: this.fb.control<string | null>(null),
+    aspect: this.fb.control<Aspect | null>(null),
     weatherConditions: this.fb.control<ClimbingSession.WeatherConditionsEnum | null>(null),
     totalSessionDurationMinutes: this.fb.control<number | null>(null, [Validators.min(1)]),
     pumpRating: this.fb.control<number | null>(null),
@@ -587,7 +590,7 @@ export class OutdoorRopeSessionEditPage implements OnInit {
       sectorId: value.sectorId || null,
       sectorName: sector?.name ?? null,
       rockType: value.rockType?.trim() ? value.rockType.trim() : null,
-      aspect: value.aspect?.trim() ? value.aspect.trim() : null,
+      aspect: value.aspect ?? null,
       attempts: this.attempts().map((row, index) => this.rowToSaveItem(row, index)),
     };
   }

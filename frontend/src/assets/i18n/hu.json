@@ -601,6 +601,30 @@
       "HELP_ROPE": "Francia: szám + betű (a–c), opcionális +. Példa: 6a, 6a+, 7b. YDS: 5. + fok, 5.10 felett a–d. Példa: 5.9, 5.10a. UIAA: római szám, opcionális +/−. Példa: VI-, VII+. A 3, 4, 5 betű nélkül is jó; 6-tól kötelező a betű.",
       "ERROR_UNKNOWN": "A fokozat nem ismerhető fel. Nézd meg a súgót a példákért.",
       "ERROR_AMBIGUOUS": "Egészítsd ki a fokozatot (pl. 6 → 6a), vagy válassz a javaslatokból."
+    },
+    "ASPECT_PICKER": {
+      "GROUP_LABEL": "Fekvés (égtáj)",
+      "UNKNOWN": "Nincs megadva",
+      "SHORT": {
+        "N": "É",
+        "NE": "ÉK",
+        "E": "K",
+        "SE": "DK",
+        "S": "D",
+        "SW": "DNy",
+        "W": "Ny",
+        "NW": "ÉNy"
+      },
+      "FULL": {
+        "N": "észak",
+        "NE": "északkelet",
+        "E": "kelet",
+        "SE": "délkelet",
+        "S": "dél",
+        "SW": "délnyugat",
+        "W": "nyugat",
+        "NW": "északnyugat"
+      }
     }
   },
   "FOOD": {

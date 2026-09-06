@@ -94,7 +94,7 @@ class ClimbingSessionIntegrationTest {
 		ClimbingSession dto = outdoorRopeSession(id, List.of());
 		dto.weatherConditions(ClimbingSession.WeatherConditionsEnum.COLD_DRY);
 		dto.rockType("gránit");
-		dto.aspect("észak");
+		dto.aspect(ClimbingSession.AspectEnum.N);
 		dto.climbingPartners(List.of("Anna", "Béla"));
 		dto.totalSessionDurationMinutes(120);
 
@@ -103,7 +103,7 @@ class ClimbingSessionIntegrationTest {
 				.andExpect(jsonPath("$.discipline").value("ROPE"))
 				.andExpect(jsonPath("$.weatherConditions").value("COLD_DRY"))
 				.andExpect(jsonPath("$.rockType").value("gránit"))
-				.andExpect(jsonPath("$.aspect").value("észak"))
+				.andExpect(jsonPath("$.aspect").value("N"))
 				.andExpect(jsonPath("$.climbingPartners[1]").value("Béla"))
 				.andExpect(jsonPath("$.totalSessionDurationMinutes").value(120));
 	}

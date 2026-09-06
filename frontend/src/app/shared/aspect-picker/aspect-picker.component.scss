@@ -1,0 +1,75 @@
+.aspect-picker {
+  display: block;
+}
+
+.aspect-picker__label {
+  font-size: 0.8rem;
+  color: var(--ion-color-medium, #6b6b6b);
+  margin-bottom: 6px;
+}
+
+.aspect-picker__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  grid-template-areas:
+    'NW N  NE'
+    'W  mid E'
+    'SW S  SE';
+  gap: 6px;
+  width: 100%;
+  max-width: 220px;
+  aspect-ratio: 1;
+}
+
+.aspect-picker__dir {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--ion-color-step-300, #cfcfcf);
+  border-radius: 10px;
+  background: var(--ion-color-step-50, #f3f3f3);
+  color: var(--ion-text-color, #1a1a1a);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease;
+}
+
+.aspect-picker__dir:hover:not(:disabled) {
+  border-color: var(--ion-color-primary, #3880ff);
+}
+
+.aspect-picker__dir--on {
+  background: var(--ion-color-primary, #3880ff);
+  border-color: var(--ion-color-primary, #3880ff);
+  color: var(--ion-color-primary-contrast, #fff);
+}
+
+.aspect-picker__dir:focus-visible {
+  outline: 2px solid var(--ion-color-primary, #3880ff);
+  outline-offset: 2px;
+}
+
+.aspect-picker__center {
+  grid-area: mid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 0.75rem;
+  line-height: 1.1;
+  color: var(--ion-color-medium, #6b6b6b);
+  pointer-events: none;
+}
+
+.aspect-picker__grid--disabled {
+  opacity: 0.5;
+}
+
+.aspect-picker__dir:disabled {
+  cursor: default;
+}

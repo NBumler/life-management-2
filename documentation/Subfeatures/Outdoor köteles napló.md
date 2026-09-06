@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-06
-verifikalt_commit: 8d66db3
+verifikalt_commit: 8dbfb13
 ---
 
 # Outdoor köteles napló
@@ -29,7 +29,7 @@ Kültéri köteles session + kísérletek / multi-pitch. Dashboard: **Outdoor K�
 | `PitchLog` | **Opcionális** lista: `pitchNumber`, `isLead`, `rawGrade`, index, `lengthInMeters` — ha nincs kitöltve, elég session + teljes úthossz |
 | Másodmászó | `isLead=false` → aktív MET ×0.8 |
 | `weatherConditions` | Session |
-| `rockType` / `aspect` | Öröklési sorrend: **1.** ha van kiválasztott `Route` és annak van saját `rockType`/`aspect`-je → onnan; **2.** különben `Sector.aspect` / `Crag.rockType` default ([[Outdoor boulder admin]] mintájára); **3.** session szinten mindig felülírható |
+| `rockType` / `aspect` | Öröklési sorrend: **1.** ha van kiválasztott `Route` és annak van saját `rockType`/`aspect`-je → onnan; **2.** különben `Sector.aspect` / `Crag.rockType` default ([[Outdoor boulder admin]] mintájára); **3.** session szinten mindig felülírható. Az `aspect` **8 irányú égtáj-enum** (`N`..`NW`, üres = ismeretlen), a session-form a `Sector`-éval azonos `app-aspect-picker` vizuális választóval szerkeszti — [[Mászónapló]] |
 | Multi-pitch indoor | N/A (csak itt) |
 
 ### UI/UX elvárások

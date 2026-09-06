@@ -1,0 +1,43 @@
+{
+  "_comment": "backlog/068 — compass degree ↔ 8-wind aspect enum parity fixture. Consumed by frontend/src/app/shared/aspect.spec.ts (degreesToAspect) and backend hu.bumler.lm2.common.AspectDirectionTest (fromDegrees). Bin: each of the 8 directions owns a 45° wedge centred on its cardinal degree; the lower boundary rounds up (22.5° → NE, not N). Degrees are normalised into [0,360) first, so negatives and values ≥ 360 are valid inputs.",
+  "toAspect": [
+    { "degrees": 0, "aspect": "N" },
+    { "degrees": 10, "aspect": "N" },
+    { "degrees": 22.4, "aspect": "N" },
+    { "degrees": 22.5, "aspect": "NE" },
+    { "degrees": 45, "aspect": "NE" },
+    { "degrees": 67.4, "aspect": "NE" },
+    { "degrees": 67.5, "aspect": "E" },
+    { "degrees": 90, "aspect": "E" },
+    { "degrees": 112.5, "aspect": "SE" },
+    { "degrees": 135, "aspect": "SE" },
+    { "degrees": 157.5, "aspect": "S" },
+    { "degrees": 180, "aspect": "S" },
+    { "degrees": 202.5, "aspect": "SW" },
+    { "degrees": 225, "aspect": "SW" },
+    { "degrees": 247.5, "aspect": "W" },
+    { "degrees": 270, "aspect": "W" },
+    { "degrees": 292.5, "aspect": "NW" },
+    { "degrees": 315, "aspect": "NW" },
+    { "degrees": 337.4, "aspect": "NW" },
+    { "degrees": 337.5, "aspect": "N" },
+    { "degrees": 359.9, "aspect": "N" },
+    { "degrees": 360, "aspect": "N" },
+    { "degrees": 405, "aspect": "NE" },
+    { "degrees": 720, "aspect": "N" },
+    { "degrees": -22.5, "aspect": "N" },
+    { "degrees": -45, "aspect": "NW" },
+    { "degrees": -90, "aspect": "W" },
+    { "degrees": -1, "aspect": "N" }
+  ],
+  "centerDegrees": [
+    { "aspect": "N", "degrees": 0 },
+    { "aspect": "NE", "degrees": 45 },
+    { "aspect": "E", "degrees": 90 },
+    { "aspect": "SE", "degrees": 135 },
+    { "aspect": "S", "degrees": 180 },
+    { "aspect": "SW", "degrees": 225 },
+    { "aspect": "W", "degrees": 270 },
+    { "aspect": "NW", "degrees": 315 }
+  ]
+}

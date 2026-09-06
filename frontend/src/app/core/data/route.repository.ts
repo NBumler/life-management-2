@@ -2,6 +2,7 @@ import { Injectable, effect, inject, signal, untracked } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 
 import { Route } from '../../api/model/route';
+import { Aspect } from '../../shared/aspect';
 import { compareTopoNumber } from '../../shared/natural-sort';
 import { STORAGE_BACKEND } from '../storage/storage-backend';
 import { DataChangeNotifier } from '../sync/data-change-notifier';
@@ -18,7 +19,7 @@ export interface RouteSaveInput {
   lengthInMeters: number | null;
   totalPitches: number | null;
   rockType: string | null;
-  aspect: string | null;
+  aspect: Aspect | null;
   topoNumber: string | null;
 }
 

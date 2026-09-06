@@ -73,7 +73,8 @@ class SectorService {
 
 	private void applyFields(SectorEntity entity, Sector dto) {
 		entity.setName(dto.getName());
-		entity.setDefaultAspect(dto.getDefaultAspect().orElse(null));
+		Sector.DefaultAspectEnum aspect = dto.getDefaultAspect().orElse(null);
+		entity.setDefaultAspect(aspect == null ? null : aspect.getValue());
 	}
 
 	private static SectorEntity requireOwner(SectorEntity entity, UUID userId) {

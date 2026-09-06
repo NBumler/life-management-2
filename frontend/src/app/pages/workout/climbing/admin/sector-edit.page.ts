@@ -23,6 +23,8 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { BoulderProblemRepository } from '../../../../core/data/boulder-problem.repository';
 import { RouteRepository } from '../../../../core/data/route.repository';
 import { SectorRepository, SectorSaveInput } from '../../../../core/data/sector.repository';
+import { Aspect } from '../../../../shared/aspect';
+import { AspectPickerComponent } from '../../../../shared/aspect-picker/aspect-picker.component';
 
 /**
  * documentation/Subfeatures/Outdoor boulder admin.md + Outdoor köteles admin.md — the sector editor.
@@ -50,6 +52,7 @@ import { SectorRepository, SectorSaveInput } from '../../../../core/data/sector.
     IonNote,
     IonIcon,
     TranslatePipe,
+    AspectPickerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -68,7 +71,7 @@ export class SectorEditPage implements OnInit {
 
   readonly form = this.fb.nonNullable.group({
     name: this.fb.nonNullable.control('', [Validators.required]),
-    defaultAspect: this.fb.control<string | null>(null),
+    defaultAspect: this.fb.control<Aspect | null>(null),
   });
 
   readonly routes = computed(() => {
@@ -106,7 +109,7 @@ export class SectorEditPage implements OnInit {
       id: this.sectorId() ?? undefined,
       cragId: this.cragId(),
       name: v.name.trim(),
-      defaultAspect: v.defaultAspect?.trim() ? v.defaultAspect.trim() : null,
+      defaultAspect: v.defaultAspect ?? null,
     };
     const saved = await this.repository.save(input);
     if (this.sectorId() === null) {

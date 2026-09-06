@@ -43,7 +43,10 @@ properties:
   aspect:
     type: string
     nullable: true
-    description: Optional per-route aspect; when set it wins over the Sector default.
+    enum: [N, NE, E, SE, S, SW, W, NW]
+    description: >-
+      backlog/068 — optional per-route aspect as an 8-wind compass token; when set it wins over the
+      Sector default in the napló. `null` = unknown / inherit.
   topoNumber:
     type: string
     maxLength: 32

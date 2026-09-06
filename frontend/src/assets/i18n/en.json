@@ -601,6 +601,30 @@
       "HELP_ROPE": "French: number + letter (a–c), optional +. Example: 6a, 6a+, 7b. YDS: 5. + grade, a–d above 5.10. Example: 5.9, 5.10a. UIAA: roman numeral, optional +/−. Example: VI-, VII+. Bare 3, 4, 5 are fine; from 6 the letter is required.",
       "ERROR_UNKNOWN": "Grade not recognised. Check the help for examples.",
       "ERROR_AMBIGUOUS": "Complete the grade (e.g. 6 → 6a), or pick one of the suggestions."
+    },
+    "ASPECT_PICKER": {
+      "GROUP_LABEL": "Aspect (compass direction)",
+      "UNKNOWN": "Not set",
+      "SHORT": {
+        "N": "N",
+        "NE": "NE",
+        "E": "E",
+        "SE": "SE",
+        "S": "S",
+        "SW": "SW",
+        "W": "W",
+        "NW": "NW"
+      },
+      "FULL": {
+        "N": "north",
+        "NE": "northeast",
+        "E": "east",
+        "SE": "southeast",
+        "S": "south",
+        "SW": "southwest",
+        "W": "west",
+        "NW": "northwest"
+      }
     }
   },
   "FOOD": {

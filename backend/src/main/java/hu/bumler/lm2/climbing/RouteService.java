@@ -78,7 +78,8 @@ class RouteService {
 		entity.setLengthInMeters(dto.getLengthInMeters().orElse(null));
 		entity.setTotalPitches(dto.getTotalPitches().orElse(null));
 		entity.setRockType(dto.getRockType().orElse(null));
-		entity.setAspect(dto.getAspect().orElse(null));
+		Route.AspectEnum aspect = dto.getAspect().orElse(null);
+		entity.setAspect(aspect == null ? null : aspect.getValue());
 		entity.setTopoNumber(dto.getTopoNumber().orElse(null));
 	}
 

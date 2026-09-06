@@ -1,8 +1,8 @@
 type: object
 description: >-
   documentation/Subfeatures/Outdoor boulder admin.md — a user-owned sector under a Crag. `defaultAspect`
-  is a free-text default wall orientation ("fekvés") inherited by routes and the outdoor napló. The
-  crag link is fixed at create time.
+  is the default wall orientation ("fekvés") as an 8-wind compass token, inherited by routes and the
+  outdoor napló. The crag link is fixed at create time.
 required:
   - id
   - cragId
@@ -21,7 +21,10 @@ properties:
   defaultAspect:
     type: string
     nullable: true
-    description: Free-text default aspect / wall orientation, inherited by routes and the napló.
+    enum: [N, NE, E, SE, S, SW, W, NW]
+    description: >-
+      backlog/068 — default wall aspect ("fekvés") as an 8-wind compass token, inherited by routes
+      and the outdoor napló. `null` = unknown / not given.
   deleted:
     type: boolean
   deletedAt:

@@ -30,9 +30,9 @@ export interface Route {
      */
     rockType?: string | null;
     /**
-     * Optional per-route aspect; when set it wins over the Sector default.
+     * backlog/068 — optional per-route aspect as an 8-wind compass token; when set it wins over the Sector default in the napló. `null` = unknown / inherit.
      */
-    aspect?: string | null;
+    aspect?: Route.AspectEnum | null;
     /**
      * backlog/079 — optional guidebook / topo ordinal (\"12\", \"5/a\", \"5b\"). Sector-scoped, not unique. Clients order route pickers by a natural (numeric-prefix + letter) sort on this, falling back to name; the server never orders by it.
      */
@@ -42,4 +42,18 @@ export interface Route {
     readonly createdAt?: string;
     readonly updatedAt?: string;
 }
+export namespace Route {
+    export const AspectEnum = {
+        N: 'N',
+        Ne: 'NE',
+        E: 'E',
+        Se: 'SE',
+        S: 'S',
+        Sw: 'SW',
+        W: 'W',
+        Nw: 'NW'
+    } as const;
+    export type AspectEnum = typeof AspectEnum[keyof typeof AspectEnum];
+}
+
 
