@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-06
-verifikalt_commit: 1cd8d04
+verifikalt_commit: 1cbd4d5
 ---
 
 # Indoor boulder napló
@@ -59,6 +59,7 @@ CRUD: nested session mentés; soft delete; draft élő sessionhez.
 - Szín-sáv chip-ek a kiválasztott teremből; mellettük szöveges grade.
 - Sikeres kísérletnél a **Stílus** választó mellett súgó (ⓘ) gomb (`app-help-button`) — onsight / flash / redpoint magyarázat; részletek: [[Mászónapló]] „Kísérlet stílus súgó”.
 - **Mászótársak** combobox (`app-partner-combobox`): korábbi társak tap-elhető chip-ként, gépelve szűrhető + új név felvehető; részletek: [[Mászónapló]].
+- Minden kísérlet önálló kártya (keret + térköz, bal élen zöld/piros színsáv a sikerállapothoz) — [[Mászónapló]] `### UI/UX elvárások`.
 - Thumb-zone: új kísérlet / siker toggle / session vége.
 - Lista: közös Mászónapló lista, szűrő: Indoor Boulder.
 - Admin: jobb felső → [[Indoor boulder admin]].

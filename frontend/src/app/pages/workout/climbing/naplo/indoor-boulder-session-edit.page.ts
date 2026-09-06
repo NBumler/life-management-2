@@ -94,6 +94,27 @@ const ASCENT_STYLES: readonly AscentAttempt.AscentStyleEnum[] = [
     HelpButtonComponent,
     PartnerComboboxComponent,
   ],
+  styles: [
+    `
+      .attempt-card {
+        margin: 12px 8px;
+        border: 1px solid var(--ion-color-step-150, #d7d8da);
+        border-inline-start: 4px solid var(--ion-color-medium);
+        border-radius: 10px;
+        overflow: hidden;
+      }
+      .attempt-card--success {
+        border-inline-start-color: var(--ion-color-success);
+      }
+      .attempt-card--fail {
+        border-inline-start-color: var(--ion-color-danger);
+      }
+      .attempt-card > ion-item:first-child {
+        --background: var(--ion-color-step-50, #f7f7f7);
+        font-weight: 600;
+      }
+    `,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class IndoorBoulderSessionEditPage implements OnInit {

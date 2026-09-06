@@ -1,14 +1,14 @@
 ---
 id: 76
 type: change-request
-status: backlog
+status: done
 title: Kísérletek vizuális elkülönítése a session-listában (elválasztó / háttér / border)
 specs:
   - "[[Mászónapló]]"
   - "[[Indoor boulder napló]]"
 flag:
 created: 2026-09-06
-closed:
+closed: 2026-09-06
 ---
 
 # 76 — Kísérletek vizuális elkülönítése a session-listában (elválasztó / háttér / border)
@@ -42,6 +42,18 @@ csinálni (ugyanaz a blokk-layout)._
 
 ## Lezáráskor (on-done)
 
-- Frissített specek: [[Mászónapló]] / [[Indoor boulder napló]] (`### UI/UX elvárások`)
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — <mit>
-- Kód: `frontend` climbing session edit / detail komponensek + esetleg shared attempt-card
+Mind a 4 kontextus napló-form (`indoor-boulder`, `indoor-rope`, `outdoor-boulder`, `outdoor-rope`)
+minden kísérlet-blokkja (`<ion-list class="attempt-card">`) önálló kártya: `12px 8px` térköz,
+`1px` keret + `10px` lekerekítés, a **bal élen 4px színsáv** (`--ion-color-medium` alap,
+`--ion-color-success` ha `isSuccess`, `--ion-color-danger` ha nem — `[class.attempt-card--success]`
+/ `[class.attempt-card--fail]`), és a kártyafejléc (`ion-item:first-child`, a meglévő „N. kísérlet"
++ siker-toggle) halványan tintázott + félkövér. Tisztán CSS, komponensenkénti `styles:` tömb
+(a `shopping-list-editor` #67 mintája), nincs adatmodell-változás, OnPush-kompatibilis. Az
+`outdoor-rope` `.pitch-card` is kapott halvány keretet + behúzást a beágyazott olvashatóságért.
+Külön session-részlet nézet nincs (a szerkesztő maga a részlet), a session-lista a közös
+`ClimbingSessionListPage`.
+
+- Frissített specek: [[Mászónapló]] (`### UI/UX elvárások`), [[Indoor boulder napló]]
+  (`### UI/UX elvárások`). `verifikalt_commit` bump.
+- `IMPLEMENTATION_STATUS.md` sor: 2026-09-06 — #76 kísérlet-kártya (keret + siker-színsáv)
+- Kód: 4× `frontend/src/app/pages/workout/climbing/naplo/*-session-edit.page.{ts,html}`

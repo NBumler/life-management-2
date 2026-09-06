@@ -116,7 +116,7 @@
     }
 
     @for (row of attempts(); track row.id; let i = $index) {
-      <ion-list class="attempt-card">
+      <ion-list class="attempt-card" [class.attempt-card--success]="row.isSuccess()" [class.attempt-card--fail]="!row.isSuccess()">
         <ion-item>
           <ion-label>{{ 'WORKOUT.CLIMBING.SESSION.ATTEMPT_N' | translate: { n: i + 1 } }}</ion-label>
           <ion-toggle

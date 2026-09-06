@@ -14,6 +14,11 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-06 — #076** Kísérletek vizuális elkülönítése. Mind a 4 kontextus napló-formban minden
+  `AscentAttempt` blokk önálló kártya: térköz + keret + lekerekítés, a bal élen 4px színsáv a
+  sikerállapothoz (zöld = sikeres, piros = sikertelen), tintázott + félkövér kártyafejléc. Tisztán
+  CSS (`styles:` tömb komponensenként), nincs adatmodell-változás. Érintett specek: [[Mászónapló]],
+  [[Indoor boulder napló]].
 - **2026-09-06 — #077** Sikertelen kísérlet „hol akadt el" mezője beolvad a `notes`-ba. Nincs
   többé külön `failurePoint`: egyetlen többsoros, auto-grow jegyzet, ami sikertelennél „Jegyzet /
   hol akadt el?" címkével + prompttal jelenik meg. Migráció a meglévő szöveg megőrzésével:
