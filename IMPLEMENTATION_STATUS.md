@@ -14,6 +14,22 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-07 — #081** STEPS_LOW értesítés előtt friss lépésszám-sync. A `STEPS_LOW`
+  (20:00) eddig a helyi `DailyStepLog`-ból döntött, ami reggel óta nem syncelt eszközön
+  elavult lehetett → valótlan „kevés lépés" értesítés. **(1)**
+  `ActivityStepSyncService.syncTodayForNotification()` — fókuszált „csak ma" Health
+  Connect olvasás + `maxWinsUpsert`, a 7 napos backfill / `lastSyncAt` / natív-stash-drain
+  nélkül; no-op weben / kijelentkezve / `READ_STEPS` grant nélkül; párhuzamos teljes
+  `syncNow()`-t egy `inFlight` promise-szal megvár új olvasás helyett. **(2)**
+  `NotificationScheduler.reevaluate()` minden refresh-ágú újraértékelés (app-nyitás /
+  előtérbe jövés / reconcile) előtt — ha a `STEPS_LOW` aktív — megvárja ezt a sync-et,
+  utána a `refreshSources()` újratölti a megemelt helyi értéket, és a küszöböt abból
+  dönti el (determinisztikus sorrend a két független `resume`-listener helyett).
+  Elfogadott korlát: a natív háttér-worker `READ_HEALTH_DATA_IN_BACKGROUND` grant nélkül
+  továbbra sem tud friss olvasást végezni — marad az utolsó ismert helyi érték
+  (`#### Tudatos korlát` az [[Értesítések]] specben). Érintett specek: [[Értesítések]],
+  [[Lépésszám követés]], [[Lépésszám átszinkronizálása a Samsung Health-ből]]; kód:
+  `frontend/src/app/core/health`, `frontend/src/app/core/notifications`.
 - **2026-09-06 — #080** Outbox stale-payload robusztusság. Egy telefonon beragadt egy
   `ClimbingSession` POST, mert a payloadja még a #77 (`failurePoint` → `notes` beolvasztás) előtti
   appal készült, és a backend `HttpMessageNotReadableException`-nel (`Unrecognized field

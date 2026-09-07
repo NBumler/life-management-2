@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: 6acbd9d
+verifikalva: 2026-09-07
+verifikalt_commit: 2de9087
 ---
 
 # Lépésszám átszinkronizálása a Samsung Health-ből
@@ -23,6 +23,7 @@ Android **Health Connect** (Samsung Health adatforrás) lépésszámának átvé
 
 1. **App megnyitás:** lekéri a **mai** napi lépésszámot Health Connectből, **és** önjavító backfill: megnézi az elmúlt **7 naptári napot** (ma nélkül), és amelyikre **nincs** helyi `DailyStepLog` sor (sem manuális, sem korábbi sync nem írta), arra is lekéri és max-wins upsertolja a Health Connect adatot. Ez a lépés véd az ellen, hogy a 09:00-as háttérfeladat OS-szintű elhalasztása / kilövése (Doze mode, gyártói agresszív akkumulátor-optimalizálás) miatt egy nap véglegesen kimaradjon: legkésőbb a következő app-nyitáskor pótlódik, amíg a Health Connect helyi retenciója fedi (jellemzően jóval 7 napnál hosszabb).
 2. **Napi 09:00** (kliens TZ) háttérfeladat: lekéri a **tegnapi** lépésszámot (ha tegnap elfelejtett menteni). A mai napot a futás **nem** érinti. Ez az elsődleges, gyors út; az 1. pont a tartalék, ha ez nem fut le. Az implementáció ezt az [[Értesítések]] 08:00 / 20:00 háttér-workerével közös 09:00-as `AlarmManager` futásba vonja össze (a tegnapi összeg stabil, a percpontosság irreleváns). A háttér-worker Kotlinból csak a `@capacitor/preferences` (`steps.pendingHealthConnect.<dátum>`) kulcsba **stasheli** a tegnapi értéket — nem ír közvetlenül az SQLite-ba / outboxba; a következő app-nyitáskor az `ActivityStepSyncService` olvassa be és `maxWinsUpsert`-eli (a live HC-olvasás előtt, hogy az még feljebb vihesse).
+3. **`STEPS_LOW` értesítés előtt:** az [[Értesítések]] `NotificationScheduler` minden refresh-ágú újraértékelés (app-nyitás / előtérbe jövés / reconcile) előtt — ha a `STEPS_LOW` aktív — meghívja az `ActivityStepSyncService.syncTodayForNotification()`-t: **csak a mai nap** friss Health Connect olvasása + max-wins upsert, **backfill és `lastSyncAt` nélkül**. Cél: egy reggel óta nem syncelt helyi `DailyStepLog` ne küldjön valótlan „kevés lépés" értesítést. Foreground `READ_STEPS` grant nélkül no-op; ha épp fut egy teljes app-nyitáskori `syncNow()`, azt megvárja új olvasás helyett. A háttér-worker (zárt app) engedély nélküli ága ezt nem tudja pótolni — elfogadott korlát, lásd [[Értesítések]] „Tudatos korlát".
 
 #### Mikor kell felülírni
 
@@ -61,6 +62,7 @@ Nincs nyitott kérdés.
 - Health Connect plugin / Capacitor bridge: app-lokális Capacitor plugin (`HealthConnectStepsPlugin`, Kotlin, `androidx.health.connect:connect-client`), csak olvasás — elérhetőség, READ_STEPS grant, napi lépés-aggregátum (`StepsRecord.COUNT_TOTAL`). `ActivityStepSyncService`: max-wins upsert a helyi `DailyStepLog`-ra (`DailyStepLogRepository.maxWinsUpsert`).
 - App lifecycle: cold/warm start → a `steps.pendingHealthConnect.*` háttér-stashek beolvasása → mai sync + 7 napos hiánypótló backfill (csak a `DailyStepLog`-gal nem rendelkező napokra).
 - Scheduled 09:00 háttér-worker (natív `AlarmManager` + `WorkManager`, [[Értesítések]]) → tegnapi lépésszám `steps.pendingHealthConnect.<dátum>` prefbe stashelése (nincs közvetlen store-írás).
+- `ActivityStepSyncService.syncTodayForNotification()`: a `NotificationScheduler` hívja a `STEPS_LOW` küszöb kiértékelése előtt — csak a mai nap élő HC-olvasása + `maxWinsUpsert`, a backfill / `lastSyncAt` / stash-drain kihagyásával. Egy `inFlight` promise-t tart nyilván a `syncNow()`-ról, hogy párhuzamos hívásnál azt megvárja új olvasás helyett; grant / user hiányában no-op.
 - TDEE újraszámolás sikeres nagyobb upsert után.
 
 #### Backend-offline

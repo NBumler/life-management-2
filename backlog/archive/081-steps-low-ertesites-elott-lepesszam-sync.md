@@ -1,7 +1,7 @@
 ---
 id: 81
 type: change-request          # feature | change-request | bug
-status: backlog               # backlog | deferred | ready | in-progress | blocked | done | dropped
+status: done                  # backlog | deferred | ready | in-progress | blocked | done | dropped
 title: STEPS_LOW értesítés előtt friss lépésszám-sync
 specs:
   - "[[Értesítések]]"
@@ -9,7 +9,7 @@ specs:
   - "[[Lépésszám átszinkronizálása a Samsung Health-ből]]"
 flag:
 created: 2026-09-07
-closed:
+closed: 2026-09-07
 ---
 
 # 81 — STEPS_LOW értesítés előtt friss lépésszám-sync
@@ -46,22 +46,23 @@ Kiváltó helyzetek:
 
 ## Elfogadási kritériumok
 
-- [ ] A `STEPS_LOW` küszöb kiértékelése előtt (bármelyik ág: app-open reconcile,
-      foreground újraértékelés, háttér-worker) lefut egy friss lépésszám-sync
+- [x] A `STEPS_LOW` küszöb kiértékelése előtt (foreground: app-open reconcile /
+      előtérbe jövés / minden refresh-ágú reevaluate) lefut egy friss lépésszám-sync
       (Health Connect mai lépés-olvasás + max-wins upsert a `DailyStepLog`-ra), és a
       küszöböt a frissített helyi érték alapján döntjük el.
-- [ ] Az app-open path determinisztikus sorrend: előbb a mai lépés-sync
-      (`ActivityStepSyncService`) fejeződik be, csak utána értékel a
-      `NotificationScheduler` a `STEPS_LOW`-ra.
-- [ ] Ha a Health Connect nem elérhető / engedély nincs / az olvasás hibázik: a
-      viselkedés a mai (helyi store-alapú) fallback marad, nincs regresszió és nincs
-      dupla tüzelés.
-- [ ] A háttér-worker ágon a viselkedés változatlan marad ott, ahol már ma is élő
-      HC-olvasásból dönt; a változás a fallback (engedély nélküli) ágat célozza,
-      amennyiben ott technikailag lehetséges friss adatot szerezni.
-- [ ] A dedup („1 / naptári nap") és a „nem vonjuk vissza a kiment értesítést"
+- [x] Az app-open path determinisztikus sorrend: a `NotificationScheduler` maga várja
+      meg az `ActivityStepSyncService.syncTodayForNotification()`-t, majd a
+      `refreshSources()` újratölti a megemelt értéket — nem a két független
+      resume-listener sorrendjére hagyatkozik.
+- [x] Ha a Health Connect nem elérhető / engedély nincs / az olvasás hibázik: a
+      `syncTodayForNotification()` no-op / catch, a viselkedés a helyi store-alapú
+      fallback marad; nincs regresszió, a dupla tüzelést a meglévő dedupe fogja.
+- [x] A háttér-worker esti ága változatlan (ahol van háttér-grant, már élő
+      HC-olvasásból dönt); a grant nélküli fallback ága marad az utolsó ismert helyi
+      érték → `#### Tudatos korlát` bejegyzés az [[Értesítések]] specben.
+- [x] A dedup („1 / naptári nap") és a „nem vonjuk vissza a kiment értesítést"
       szabály változatlan.
-- [ ] Érintett specek frissítve (lásd Lezáráskor).
+- [x] Érintett specek frissítve (lásd Lezáráskor).
 
 ## Terv / döntési napló
 
@@ -74,8 +75,17 @@ Kiváltó helyzetek:
 
 ## Lezáráskor (on-done)
 
-- Frissített specek: [[Értesítések]] (§3 + Architektúra/Frontend — sync-a-küszöb-előtt
-  sorrend), [[Lépésszám követés]] (Értesítés szakasz), [[Lépésszám átszinkronizálása a
-  Samsung Health-ből]] („Mikor kell sync" — a `STEPS_LOW` előtti sync)
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — <mit>
-- Kód: `core/sync` / `NotificationScheduler`, `ActivityStepSyncService`, `ReminderWorker`
+- Frissített specek:
+  - [[Értesítések]] — §3 `STEPS_LOW` új „Friss lépésszám a küszöb előtt" bullet;
+    Architektúra/Frontend `READ_HEALTH_DATA_IN_BACKGROUND` bullet kiegészítve a
+    foreground pre-sync-kel; új `#### Tudatos korlát`: „`STEPS_LOW` háttér-worker
+    friss olvasás nélkül".
+  - [[Lépésszám követés]] — „Értesítés" szakasz: a küszöb előtti friss HC-olvasás.
+  - [[Lépésszám átszinkronizálása a Samsung Health-ből]] — „Mikor kell sync" 3. pont
+    (`syncTodayForNotification()`); Architektúra/Frontend a metódus leírásával.
+- `IMPLEMENTATION_STATUS.md` sor: 2026-09-07 — STEPS_LOW értesítés előtt friss
+  lépésszám-sync (#81).
+- Kód (commit `2de9087`): `frontend/src/app/core/health/activity-step-sync.service.ts`
+  (`syncTodayForNotification()` + `inFlight`), `frontend/src/app/core/notifications/
+  notification-scheduler.service.ts` (`reevaluate` pre-sync). A natív `ReminderWorker`
+  nem változott (a grant nélküli ága elfogadott korlát).

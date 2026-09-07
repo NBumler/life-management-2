@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: 6acbd9d
+verifikalva: 2026-09-07
+verifikalt_commit: 2de9087
 ---
 
 # Lépésszám követés
@@ -51,7 +51,7 @@ Hiányzó nap = **0** lépés a Tápérték és az összehasonlítások szempont
 
 #### Értesítés
 
-20:00-kor, ha a **mai** `stepCount` a küszöb alatt van → [[Értesítések]]. A küszöb alapértéke 2000, az [[Értesítések]] finomhangolásában állítható.
+20:00-kor, ha a **mai** `stepCount` a küszöb alatt van → [[Értesítések]]. A küszöb alapértéke 2000, az [[Értesítések]] finomhangolásában állítható. Az [[Értesítések]] a küszöb kiértékelése előtt (app-nyitás / előtérbe jövés / reconcile) friss Health Connect lépés-olvasást futtat a **mai** napra, hogy egy reggel óta nem syncelt helyi érték ne küldjön valótlan értesítést — lásd [[Lépésszám átszinkronizálása a Samsung Health-ből]].
 
 ### UI/UX elvárások
 
