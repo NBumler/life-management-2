@@ -20,6 +20,7 @@ import { SwimLogRepository } from '../data/swim-log.repository';
 import { WorkoutSessionRepository } from '../data/workout-session.repository';
 import { FeatureFlagsService } from '../config/feature-flags.service';
 import { LanguageService } from '../config/language.service';
+import { ActivityStepSyncService } from '../health/activity-step-sync.service';
 import { addDaysIso, today } from '../../shared/local-date';
 import { computeTdee } from '../../shared/tdee-calculator';
 import { calendarDayInZone, deviceTimeZoneId } from '../../shared/timezone';
@@ -116,6 +117,7 @@ export class NotificationSchedulerService {
   private readonly language = inject(LanguageService);
   private readonly dataChange = inject(DataChangeNotifier);
   private readonly router = inject(Router);
+  private readonly stepSync = inject(ActivityStepSyncService);
 
   private readonly storedFood = inject(StoredFoodRepository);
   private readonly food = inject(FoodRepository);
@@ -322,6 +324,16 @@ export class NotificationSchedulerService {
     this.running = true;
     try {
       if (refresh) {
+        // backlog/081-steps-low-ertesites-elott-lepesszam-sync.md — before a refresh-driven reconcile
+        // can fire STEPS_LOW, pull today's Health Connect count so `refreshSources()` reloads the
+        // raised value. Without this, an app-open in the evening evaluates the threshold against a
+        // local `DailyStepLog` that may not have been synced since the morning and fires a false
+        // "kevés lépés" banner. The native background worker's own 20:00 path already reads Health
+        // Connect live (when the background grant is present); this closes the foreground path.
+        // No-op without the READ_STEPS grant / on web — then the local value is used as before.
+        if (this.activeTypes().includes('STEPS_LOW')) {
+          await this.stepSync.syncTodayForNotification();
+        }
         await this.refreshSources();
       }
       await this.runReconcile();

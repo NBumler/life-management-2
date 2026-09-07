@@ -43,6 +43,9 @@ export class ActivityStepSyncService {
   readonly backgroundPermission = signal<StepSyncPermission>('unknown');
   readonly lastSyncAt = signal<string | null>(null);
   private running = false;
+  /** The in-flight {@link syncNow} run, so {@link syncTodayForNotification} can await it instead of
+   *  issuing a redundant second Health Connect read. Null unless a full sync is running. */
+  private inFlight: Promise<void> | null = null;
   private resumeListenerBound = false;
 
   /**
@@ -140,6 +143,16 @@ export class ActivityStepSyncService {
       return;
     }
     this.running = true;
+    this.inFlight = this.runSyncNow();
+    try {
+      await this.inFlight;
+    } finally {
+      this.running = false;
+      this.inFlight = null;
+    }
+  }
+
+  private async runSyncNow(): Promise<void> {
     try {
       await this.repository.load();
       const todayIso = today();
@@ -178,6 +191,44 @@ export class ActivityStepSyncService {
       // syncNow() is invoked fire-and-forget (main.ts, the resume listener, requestPermission) — a
       // transient SQLite/HTTP failure or a mid-logout race must not surface as an unhandled rejection.
       console.error('[steps] Health Connect sync failed', error);
+    }
+  }
+
+  /**
+   * documentation/Features/Értesítések.md §3 STEPS_LOW +
+   * backlog/081-steps-low-ertesites-elott-lepesszam-sync.md — a focused "today only" Health Connect
+   * read + max-wins upsert, awaited by `NotificationScheduler` right before it evaluates the
+   * STEPS_LOW threshold, so a local `DailyStepLog` that has gone stale since the last app-open
+   * sync can't trigger a false "kevés lépés" banner. Lighter than {@link syncNow}: no 7-day
+   * backfill, no `lastSyncAt` bookkeeping, no native-stash drain.
+   *
+   * No-op on web / logged out / without the foreground READ_STEPS grant — the caller then just
+   * evaluates the last known local value, exactly as before (the accepted limit in backlog/081: an
+   * ungranted background worker still can't do this). If a full {@link syncNow} is already in flight
+   * (concurrent cold-start / resume), it awaits that run instead of issuing a second read.
+   */
+  async syncTodayForNotification(): Promise<void> {
+    if (this.authSession.userId() === null) {
+      return;
+    }
+    if (this.inFlight !== null) {
+      await this.inFlight;
+      return;
+    }
+    // `permission` is `unavailable` on web / when Health Connect is missing — so this also covers the
+    // non-native build without a separate `isNativePlatform` gate (matches `syncNow`).
+    if (this.running || this.permission() !== 'granted') {
+      return;
+    }
+    this.running = true;
+    try {
+      const todayIso = today();
+      const steps = await this.source.readDailySteps(todayIso);
+      if (steps !== null) {
+        await this.repository.maxWinsUpsert(todayIso, steps);
+      }
+    } catch (error) {
+      console.error('[steps] STEPS_LOW pre-notification Health Connect read failed', error);
     } finally {
       this.running = false;
     }

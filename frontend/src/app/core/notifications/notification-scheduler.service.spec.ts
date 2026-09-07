@@ -19,6 +19,7 @@ import { SwimLogRepository } from '../data/swim-log.repository';
 import { WorkoutSessionRepository } from '../data/workout-session.repository';
 import { FeatureFlagsService } from '../config/feature-flags.service';
 import { LanguageService } from '../config/language.service';
+import { ActivityStepSyncService } from '../health/activity-step-sync.service';
 import { addDaysIso, today } from '../../shared/local-date';
 import { DataChangeNotifier } from '../sync/data-change-notifier';
 import { LocalNotificationsGateway } from './local-notifications.gateway';
@@ -34,6 +35,20 @@ function repoStub(extra: Record<string, unknown> = {}): unknown {
   return { items: () => [], load: () => Promise.resolve(), ...extra };
 }
 
+/** All notification `type`s the gateway was asked to schedule/fire, across every call. */
+function scheduledTypes(gateway: jasmine.SpyObj<LocalNotificationsGateway>): string[] {
+  const types: string[] = [];
+  for (const args of gateway.schedule.calls.allArgs()) {
+    const opts = args[0] as { notifications: { extra?: { type?: string } }[] };
+    for (const n of opts.notifications) {
+      if (typeof n.extra?.type === 'string') {
+        types.push(n.extra.type);
+      }
+    }
+  }
+  return types;
+}
+
 describe('NotificationSchedulerService', () => {
   let gateway: jasmine.SpyObj<LocalNotificationsGateway>;
   let dedupeHas: jasmine.Spy;
@@ -41,10 +56,12 @@ describe('NotificationSchedulerService', () => {
   let historyRecord: jasmine.Spy;
   let settingsEnabled: Record<NotificationType, boolean>;
   let flagOn: (key: string) => boolean;
+  let stepSyncToday: jasmine.Spy;
 
   let storedFoodItems: unknown[];
   let householdItems: unknown[];
   let eventItems: unknown[];
+  let stepsForDay: number;
 
   function build(): NotificationSchedulerService {
     settingsEnabled = {
@@ -88,7 +105,13 @@ describe('NotificationSchedulerService', () => {
         { provide: RecipeRepository, useValue: repoStub() },
         { provide: MealRepository, useValue: repoStub() },
         { provide: ProfileRepository, useValue: repoStub({ profile: () => null }) },
-        { provide: DailyStepLogRepository, useValue: repoStub({ stepsForDay: () => 5000 }) },
+        { provide: DailyStepLogRepository, useValue: repoStub({ stepsForDay: () => stepsForDay }) },
+        {
+          provide: ActivityStepSyncService,
+          useValue: {
+            syncTodayForNotification: (stepSyncToday = jasmine.createSpy('syncTodayForNotification').and.resolveTo()),
+          },
+        },
         { provide: HouseholdTaskRepository, useValue: repoStub({ items: () => householdItems }) },
         { provide: CalendarEventRepository, useValue: repoStub({ items: () => eventItems }) },
         { provide: WorkoutSessionRepository, useValue: repoStub() },
@@ -105,6 +128,7 @@ describe('NotificationSchedulerService', () => {
     storedFoodItems = [];
     householdItems = [];
     eventItems = [];
+    stepsForDay = 5000;
 
     jasmine.clock().install();
     jasmine.clock().mockDate(new Date('2026-09-01T10:00:00'));
@@ -183,6 +207,61 @@ describe('NotificationSchedulerService', () => {
     expect(historyRecord).toHaveBeenCalledWith(
       jasmine.objectContaining({ type: 'HOUSEHOLD_TASK_DUE', key: today(), route: '/tabs/tasks/household' }),
     );
+  });
+
+  // backlog/081 — a stale local DailyStepLog must not fire a false STEPS_LOW banner.
+  it('pulls a fresh Health Connect step count before evaluating STEPS_LOW on a refresh reconcile', async () => {
+    const service = build();
+    service.permission.set('granted');
+
+    await service.reevaluate('resume', true);
+
+    expect(stepSyncToday).toHaveBeenCalled();
+  });
+
+  it('does not pull a fresh step count on a non-refresh reconcile', async () => {
+    const service = build();
+    service.permission.set('granted');
+
+    await service.reevaluate('type-switch', false);
+
+    expect(stepSyncToday).not.toHaveBeenCalled();
+  });
+
+  it('does not pull a fresh step count when STEPS_LOW is disabled', async () => {
+    const service = build();
+    service.permission.set('granted');
+    settingsEnabled.STEPS_LOW = false;
+
+    await service.reevaluate('resume', true);
+
+    expect(stepSyncToday).not.toHaveBeenCalled();
+  });
+
+  it('evaluates STEPS_LOW against the Health-Connect-updated count, not the stale local value', async () => {
+    const service = build();
+    service.permission.set('granted');
+    stepsForDay = 1000; // stale local value — below the 2000 default threshold, would fire
+    stepSyncToday.and.callFake(async () => {
+      stepsForDay = 5000; // Health Connect knows the user already walked enough today
+    });
+
+    await service.reevaluate('resume', true);
+
+    expect(scheduledTypes(gateway)).not.toContain('STEPS_LOW');
+  });
+
+  it('still fires STEPS_LOW when the fresh Health Connect count is also below the threshold', async () => {
+    const service = build();
+    service.permission.set('granted');
+    stepsForDay = 1000;
+    stepSyncToday.and.callFake(async () => {
+      stepsForDay = 1500; // raised, but still under 2000
+    });
+
+    await service.reevaluate('resume', true);
+
+    expect(scheduledTypes(gateway)).toContain('STEPS_LOW');
   });
 
   it('does not re-fire a past-due notification that is already in the dedupe log', async () => {

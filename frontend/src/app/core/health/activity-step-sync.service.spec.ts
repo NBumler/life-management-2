@@ -238,4 +238,77 @@ describe('ActivityStepSyncService', () => {
 
     expect(repo.maxWinsUpsert).toHaveBeenCalledWith(loggedDay, 5000);
   });
+
+  // backlog/081-steps-low-ertesites-elott-lepesszam-sync.md — focused pre-STEPS_LOW-notification sync.
+  it('syncTodayForNotification(): reads today and max-wins upserts, without the 7-day backfill', async () => {
+    service.permission.set('granted');
+    const todayIso = today();
+    source.readDailySteps.and.resolveTo(1800);
+
+    await service.syncTodayForNotification();
+
+    expect(source.readDailySteps).toHaveBeenCalledOnceWith(todayIso);
+    expect(repo.maxWinsUpsert).toHaveBeenCalledOnceWith(todayIso, 1800);
+    expect(repo.allKnownDates).not.toHaveBeenCalled();
+    expect(service.lastSyncAt()).toBeNull();
+  });
+
+  it('syncTodayForNotification(): no-op without the foreground grant', async () => {
+    service.permission.set('denied');
+
+    await service.syncTodayForNotification();
+
+    expect(source.readDailySteps).not.toHaveBeenCalled();
+    expect(repo.maxWinsUpsert).not.toHaveBeenCalled();
+  });
+
+  it('syncTodayForNotification(): no-op while logged out', async () => {
+    service.permission.set('granted');
+    userId = null;
+
+    await service.syncTodayForNotification();
+
+    expect(source.readDailySteps).not.toHaveBeenCalled();
+  });
+
+  it('syncTodayForNotification(): skips the upsert when Health Connect can not answer', async () => {
+    service.permission.set('granted');
+    source.readDailySteps.and.resolveTo(null);
+
+    await service.syncTodayForNotification();
+
+    expect(repo.maxWinsUpsert).not.toHaveBeenCalled();
+  });
+
+  it('syncTodayForNotification(): awaits an in-flight syncNow() instead of issuing a second read', async () => {
+    service.permission.set('granted');
+    const todayIso = today();
+    let releaseRead: (steps: number) => void = () => undefined;
+    source.readDailySteps.and.callFake((date: string) =>
+      date === todayIso
+        ? new Promise<number | null>((resolve) => {
+            releaseRead = resolve;
+          })
+        : Promise.resolve(0),
+    );
+
+    const full = service.syncNow();
+    // Let syncNow() progress past repository.load() / the native-stash drain to its today read.
+    await new Promise((r) => setTimeout(r, 0));
+    const piggyback = service.syncTodayForNotification();
+    releaseRead(4000);
+    await Promise.all([full, piggyback]);
+
+    // Only syncNow()'s own read for today happened — syncTodayForNotification() rode along.
+    const todayReads = source.readDailySteps.calls.allArgs().filter(([d]) => d === todayIso);
+    expect(todayReads.length).toBe(1);
+    expect(repo.maxWinsUpsert).toHaveBeenCalledWith(todayIso, 4000);
+  });
+
+  it('syncTodayForNotification(): swallows a read failure instead of rejecting', async () => {
+    service.permission.set('granted');
+    source.readDailySteps.and.rejectWith(new Error('boom'));
+
+    await expectAsync(service.syncTodayForNotification()).toBeResolved();
+  });
 });
