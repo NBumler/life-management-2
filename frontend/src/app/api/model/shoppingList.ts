@@ -18,6 +18,10 @@ export interface ShoppingList {
     name?: string | null;
     readonly status?: ShoppingList.StatusEnum;
     readonly completedAt?: string | null;
+    /**
+     * backlog/099 — when false, `POST .../complete` archives the list and spins off the leftover items but creates NO StoredFood rows (a list written for somewhere other than home). Writable through the nested aggregate PUT/POST like `name`; omitted on input is treated as true. Default true = the historical behaviour.
+     */
+    saveToStorage?: boolean;
     items: Array<ShoppingListItem>;
     deleted: boolean;
     readonly deletedAt?: string | null;

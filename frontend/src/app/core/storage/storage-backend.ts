@@ -400,6 +400,8 @@ export type ShoppingListItemSaveItem =
 export interface ShoppingListDraft {
   id: string;
   name: string | null;
+  /** backlog/099 — false = completion archives the list but writes no StoredFood rows. Default true. */
+  saveToStorage: boolean;
   items: ShoppingListItemSaveItem[];
 }
 
@@ -454,6 +456,12 @@ export interface ShoppingListCompleteStorageEntryDraft {
 export interface ShoppingListCompleteNewListDraft {
   id: string;
   name: string | null;
+  /**
+   * backlog/099 — local-only: the spun-off list inherits the archived list's `saveToStorage` so the
+   * local `shopping_list` row matches what the server computes. Not sent on the wire — the backend
+   * reads the parent list's value itself (ShoppingListService.createSpunOffList).
+   */
+  saveToStorage: boolean;
   items: ShoppingListItemSaveItem[];
 }
 

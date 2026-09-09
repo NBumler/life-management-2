@@ -18,8 +18,11 @@ import { uuidV4 } from './uuid';
  * - v2 → v3 (backlog/080): #77 folded `AscentAttempt.failurePoint` into `notes` and removed the
  *   field. A pending `ClimbingSession` write from before that app update strips `failurePoint` from
  *   each attempt (folding any text into `notes` per the #77 rule); every other type is identity.
+ * - v3 → v4 (backlog/099): `ShoppingList` gained `saveToStorage`. A pending `ShoppingList` write
+ *   from before that app update has no such key — default it to `true` (the historical behaviour);
+ *   every other type is identity.
  */
-export const OUTBOX_PAYLOAD_SCHEMA_VERSION = 3;
+export const OUTBOX_PAYLOAD_SCHEMA_VERSION = 4;
 
 /** documentation/Architektúra/Backend-offline first.md §6 "Tétel-újrapróbálkozási backoff" (jitter omitted — not load-bearing for correctness). */
 const RETRY_BACKOFF_MS = [2000, 8000, 30000, 120000, 600000];

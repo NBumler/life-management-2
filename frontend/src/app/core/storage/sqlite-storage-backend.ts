@@ -2780,7 +2780,7 @@ export class SqliteStorageBackend implements StorageBackend {
     const existingItemRows = await this.db.query<ShoppingListItemRow>('SELECT * FROM shopping_list_item WHERE shopping_list_id = ?', [draft.id]);
     const incomingIds = new Set(draft.items.map((item) => item.id));
 
-    const localTasks: SqlTask[] = [shoppingListLocalWriteTask({ id: draft.id, name: draft.name })];
+    const localTasks: SqlTask[] = [shoppingListLocalWriteTask({ id: draft.id, name: draft.name, saveToStorage: draft.saveToStorage })];
     for (const item of draft.items) {
       localTasks.push(shoppingListItemLocalWriteTask(expandShoppingListItemSaveItem(item, draft.id)));
     }
@@ -2798,6 +2798,7 @@ export class SqliteStorageBackend implements StorageBackend {
     const payload: ShoppingList = {
       id: draft.id,
       name: draft.name,
+      saveToStorage: draft.saveToStorage,
       deleted: false,
       items: draft.items.map((item) => ({ ...expandShoppingListItemSaveItem(item, draft.id), deleted: false }) as ShoppingList['items'][number]),
     };
@@ -2877,7 +2878,13 @@ export class SqliteStorageBackend implements StorageBackend {
     }
     const foodIdsForDependsOn = draft.storageEntries.map((entry) => entry.foodId);
     if (draft.newActiveList) {
-      localTasks.push(shoppingListLocalWriteTask({ id: draft.newActiveList.id, name: draft.newActiveList.name }));
+      localTasks.push(
+        shoppingListLocalWriteTask({
+          id: draft.newActiveList.id,
+          name: draft.newActiveList.name,
+          saveToStorage: draft.newActiveList.saveToStorage,
+        }),
+      );
       for (const item of draft.newActiveList.items) {
         localTasks.push(shoppingListItemLocalWriteTask(expandShoppingListItemSaveItem(item, draft.newActiveList.id)));
         if (item.type === 'FOOD') {

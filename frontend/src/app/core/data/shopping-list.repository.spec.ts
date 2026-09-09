@@ -13,7 +13,7 @@ function shoppingList(overrides: Partial<ShoppingList> = {}): ShoppingList {
 }
 
 function draft(overrides: Partial<ShoppingListDraft> = {}): ShoppingListDraft {
-  return { id: '', name: null, items: [], ...overrides };
+  return { id: '', name: null, saveToStorage: true, items: [], ...overrides };
 }
 
 function completeDraft(overrides: Partial<ShoppingListCompleteDraft> = {}): ShoppingListCompleteDraft {

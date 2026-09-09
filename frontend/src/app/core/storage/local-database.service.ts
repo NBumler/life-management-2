@@ -1182,7 +1182,16 @@ const SCHEMA_V34_STATEMENTS: string[] = [
   `UPDATE workout_plan_exercise SET exercise_category = 'ABS' WHERE exercise_category = 'CORE'`,
 ];
 
-const SCHEMA_VERSION = 34;
+/**
+ * backlog/099 — per-list "save purchases to storage" toggle. On-device mirror of the backend
+ * `V36__shopping_list_save_to_storage.sql`: adds `save_to_storage` (default 1 = the historical
+ * behaviour). The `sync_changes` view is untouched (new column, not a new entity).
+ */
+const SCHEMA_V35_STATEMENTS: string[] = [
+  `ALTER TABLE shopping_list ADD COLUMN save_to_storage INTEGER NOT NULL DEFAULT 1`,
+];
+
+const SCHEMA_VERSION = 35;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -1219,7 +1228,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 31, statements: SCHEMA_V31_STATEMENTS },
   { toVersion: 32, statements: SCHEMA_V32_STATEMENTS },
   { toVersion: 33, statements: SCHEMA_V33_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V34_STATEMENTS },
+  { toVersion: 34, statements: SCHEMA_V34_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V35_STATEMENTS },
 ];
 
 export interface SqlTask {

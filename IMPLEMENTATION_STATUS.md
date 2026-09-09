@@ -14,6 +14,16 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-09 — #99** Bevásárlólista — „tárolóba mentés" kapcsoló. Lista-szintű, perzisztált
+  `ShoppingList.saveToStorage` boolean (alapból `true`): kikapcsolva a teljesítés archiválja a
+  listát + spinoff-olja a maradékot, de **egy** `StoredFood` sort sem hoz létre. Backend: `V36`
+  DB-oszlop, `ShoppingListEntity`/`Mapper`/`Service` (`saveTree` írja, `runComplete` ága, spinoff
+  örökli), OpenAPI `default: true`. Frontend: `SCHEMA_V35` on-device oszlop, `local-rows` + mindkét
+  storage backend, `ShoppingListDraft`/`ShoppingListCompleteNewListDraft`, editor `ion-toggle`,
+  complete wizard skip + tájékoztató szöveg, „Újralistázás" + spinoff örökli, i18n hu/en.
+  Outbox: `OUTBOX_PAYLOAD_SCHEMA_VERSION` v3 → v4 + `ShoppingList` migrátor-lépés (hiányzó kulcs →
+  `true`) + snapshot újra-elfogadva. Spec: [[Bevásárlólista írás]], [[Bevásárlás teljesítve]],
+  [[Élelmiszer tárolás]], [[Bevásárlás]]. **(change-request)**
 - **2026-09-09 — #85** Mászás — a kalauz-fokozat „/"-elválasztott alakja (`VIII/VIII+`, `6c/6c+`,
   `7a/+`, `6a/b`) átváltáskor: a `grade-scale.ts` `parseSlashRange` a két végpont mátrix-indexének
   lefelé kerekített közepét adja `absoluteDifficultyIndex`-nek (ugyanaz a `⌊(a+b)/2⌋` szabály, mint a

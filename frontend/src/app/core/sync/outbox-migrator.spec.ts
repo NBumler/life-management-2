@@ -270,4 +270,43 @@ describe('migrateOutboxItem', () => {
       expect(result.payloadVersion).toBe(OUTBOX_PAYLOAD_SCHEMA_VERSION);
     });
   });
+
+  describe('production registry — v3 → v4 (backlog/099, ShoppingList.saveToStorage)', () => {
+    it('defaults saveToStorage to true on a stale ShoppingList write walked v1 → v4', () => {
+      const stale = item({
+        payloadVersion: 1,
+        entityType: 'ShoppingList',
+        url: '/api/shopping-lists/l1',
+        payload: { id: 'l1', name: 'Heti', items: [], deleted: false },
+      });
+
+      const result = migrateOutboxItem(stale, OUTBOX_PAYLOAD_SCHEMA_VERSION);
+
+      expect(result.migrated).toBe(true);
+      expect(result.errorMessage).toBeNull();
+      expect(result.payloadVersion).toBe(OUTBOX_PAYLOAD_SCHEMA_VERSION);
+      expect((result.payload as Record<string, unknown>)['saveToStorage']).toBe(true);
+    });
+
+    it('leaves an explicit saveToStorage untouched', () => {
+      const stale = item({
+        payloadVersion: 3,
+        entityType: 'ShoppingList',
+        url: '/api/shopping-lists/l1',
+        payload: { id: 'l1', saveToStorage: false, items: [], deleted: false },
+      });
+
+      const result = migrateOutboxItem(stale, OUTBOX_PAYLOAD_SCHEMA_VERSION);
+
+      expect((result.payload as Record<string, unknown>)['saveToStorage']).toBe(false);
+    });
+
+    it('is a content no-op for a non-ShoppingList entity and for a DELETE (null payload)', () => {
+      const other = item({ payloadVersion: 3, entityType: 'Food', url: '/api/foods/f1', payload: { id: 'f1', name: 'Alma' } });
+      expect(migrateOutboxItem(other, OUTBOX_PAYLOAD_SCHEMA_VERSION).payload).toEqual({ id: 'f1', name: 'Alma' });
+
+      const del = item({ payloadVersion: 3, entityType: 'ShoppingList', url: '/api/shopping-lists/l1', payload: null });
+      expect(migrateOutboxItem(del, OUTBOX_PAYLOAD_SCHEMA_VERSION).payload).toBeNull();
+    });
+  });
 });

@@ -835,6 +835,7 @@ export class HttpStorageBackend implements StorageBackend {
     const dto: ShoppingList = {
       id: draft.id,
       name: draft.name,
+      saveToStorage: draft.saveToStorage,
       deleted: false,
       items: draft.items.map((item) => ({ ...expandShoppingListItemSaveItem(item, draft.id), deleted: false }) as ShoppingList['items'][number]),
     };

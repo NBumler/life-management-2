@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-03
-verifikalt_commit: b9d7577
+verifikalva: 2026-09-09
+verifikalt_commit: 1d1b15c
 ---
 
 # Bevásárlás teljesítve
@@ -20,6 +20,12 @@ A felhasználó „Bevásárlás vége” gombjára a pipált / pipálatlan tét
 ### Funkcionális leírás
 
 A folyamat **csak** a „Bevásárlás vége” megnyomásakor indul (a pipálás önmagában nem indít semmit).
+
+> **`saveToStorage = false`** ([[Bevásárlólista írás]] lista-szintű kapcsoló): a pipált élelmiszerek
+> **nem** kerülnek a tárolóba — az áttekintő képernyő hely/lejárat lépése kimarad, a kliens **üres**
+> `checkedFoodEntries`-t küld, a szerver **egy** `StoredFood` sort sem hoz létre (nem üres
+> `checkedFoodEntries` ilyenkor `VALIDATION_ERROR`). Az archiválás és a pipálatlanokból születő új
+> aktív lista változatlan; az új lista **örökli** a `saveToStorage = false` értéket.
 
 1. **Pipált tételek = megvett**
    - **Élelmiszer:** egy áttekintő képernyő, soronként egy pipált élelmiszer:
@@ -50,6 +56,7 @@ Részleges teljesítés = a fenti szabályok együtt (pipált → archívum + t�
 - Dátum mező előtöltése: [[Élelmiszer tárolás]].
 - Üres aktív lista: a „Bevásárlás vége” **nem** elérhető / nem indítható; az üres listát törölni kell ([[Bevásárlólista írás]] — soft delete).
 - Ha van legalább egy tétel, de mind pipálatlan: teljesítéskor nincs tárolás-lépés; az eredeti lista archiválódik, és új aktív lista jön létre a pipálatlan tételekkel (üres pipákkal).
+- `saveToStorage = false` esetén a tárolás-lépés akkor is kimarad, ha vannak pipált élelmiszerek — helyette egy tájékoztató szöveg jelzi, hogy a megvett élelmiszerek nem kerülnek a készletbe.
 
 ### Megjegyzések
 
@@ -63,7 +70,7 @@ Nincs nyitott kérdés.
 
 ### Frontend
 
-`ShoppingListCompletePage` — egy áttekintő képernyő (`shopping-list-complete.page.ts` + `shopping-list-complete.ts` pure builder); a `cs`/legacy-`db` darabolás (`splitCountFor`), hely-feloldás és lejárat-előtöltés kliensoldali; új aktív lista létrehozása a pipálatlanokból; eredeti lista archiválása. Egy outbox tétel (`entityType: 'ShoppingListComplete'`), a spun-off lista / tételek / `StoredFood` sorok saját outbox tétel nélkül.
+`ShoppingListCompletePage` — egy áttekintő képernyő (`shopping-list-complete.page.ts` + `shopping-list-complete.ts` pure builder); a `cs`/legacy-`db` darabolás (`splitCountFor`), hely-feloldás és lejárat-előtöltés kliensoldali; új aktív lista létrehozása a pipálatlanokból; eredeti lista archiválása. Egy outbox tétel (`entityType: 'ShoppingListComplete'`), a spun-off lista / tételek / `StoredFood` sorok saját outbox tétel nélkül. Ha a lista `saveToStorage` mezője `false` (`backlog/099`), a képernyő a pipált-élelmiszer sorokat **nem** rendereli (üres `rows`), tájékoztató szöveget mutat, és a `buildCompleteDraft` üres `checkedFoodEntries`/`storageEntries`-t ad; a spun-off lista draftja a `saveToStorage`-ot a helyi `shopping_list` sorra is átviszi (a szerverrel egyező érték).
 
 #### Backend-offline
 
@@ -97,6 +104,8 @@ Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító 
 (`storageEntryIds` a kliens által generált `StoredFood` id-k, `cs`-darabolásnál soronként több; `newActiveList` `null`, ha nincs pipálatlan tétel.)
 
 `checkedFoodEntries` csak a pipált **élelmiszer** tételekhez tartalmaz sort (nem-élelmiszer és pipálatlan tételek nem szerepelnek benne — azok állapotát a lista már tárolt `checked` mezői adják, a kliens ezt nem duplikálja a body-ban). `storageLocation` csak akkor kötelező mezőnként, ha a katalógus szerint nem pontosan egy tárolási mód engedélyezett (a "Null engedélyezett" vagy "több engedélyezett" ág — a user választott helyet); pontosan egy engedélyezett módnál a szerver azt használja.
+
+**`saveToStorage` ág (`backlog/099`):** a szerver a **perzisztált** `ShoppingList.saveToStorage`-ot olvassa (nem a request body-ból). Ha `false`: `checkedFoodEntries`-nek **üresnek** kell lennie (különben `VALIDATION_ERROR` / `field: checkedFoodEntries`), a szerver egy `StoredFood` sort sem hoz létre, és a „minden pipált élelmiszerhez pontosan egy entry" ellenőrzés kimarad. A `newActiveList` spun-off lista a `saveToStorage`-ot az archivált szülőtől **örökli** (`createSpunOffList`).
 
 **Válasz (200):**
 

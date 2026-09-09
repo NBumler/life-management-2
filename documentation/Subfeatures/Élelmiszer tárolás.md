@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-03
-verifikalt_commit: b9d7577
+verifikalva: 2026-09-09
+verifikalt_commit: 1d1b15c
 ---
 
 # Élelmiszer tárolás
@@ -26,7 +26,9 @@ Otthon tárolt élelmiszer-készlet vezetése: tételenkénti mennyiség, tárol
 
 #### Létrehozás — bevásárlásból
 
-[[Bevásárlás teljesítve]]: pipált élelmiszer → tárolási tétel(ek).
+[[Bevásárlás teljesítve]]: pipált élelmiszer → tárolási tétel(ek). **Feltétel:** a bevásárlólista
+`saveToStorage` kapcsolója be van kapcsolva (alapból igen — [[Bevásárlólista írás]]). Ha ki van
+kapcsolva, a teljesítés egy `StoredFood` sort sem hoz létre (`backlog/099`).
 
 - Lejárat és tárolási hely szabályai: lásd lentebb + [[Bevásárlás teljesítve]].
 - **Darabolás:**

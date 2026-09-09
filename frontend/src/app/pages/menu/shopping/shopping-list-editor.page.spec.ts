@@ -235,10 +235,33 @@ describe('ShoppingListEditorPage', () => {
     expect(repository.save).toHaveBeenCalledWith(
       jasmine.objectContaining({
         name: 'Heti bevásárlás',
+        saveToStorage: true,
         items: [{ id: jasmine.any(String), type: 'FOOD', foodId: 'f1', quantityAmount: 2, quantityUnit: 'cs', checked: false, sortOrder: 0 }],
       }),
     );
     expect(navigateSpy).toHaveBeenCalledWith('/tabs/menu/shopping');
+  });
+
+  it('backlog/099: the saveToStorage toggle defaults to true on a new list and rides the draft on save', async () => {
+    await createFixture('new');
+    await fixture.componentInstance.ngOnInit();
+    expect(fixture.componentInstance.saveToStorage()).toBeTrue();
+
+    fixture.componentInstance.saveToStorage.set(false);
+    repository.save.and.resolveTo(shoppingList({ id: 'new-1' }));
+    spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
+
+    await fixture.componentInstance.save();
+
+    expect(repository.save).toHaveBeenCalledWith(jasmine.objectContaining({ saveToStorage: false }));
+  });
+
+  it('backlog/099: an existing list restores its stored saveToStorage value', async () => {
+    await createFixture('sl1');
+    repository.items.set([shoppingList({ id: 'sl1', saveToStorage: false, items: [] })]);
+    await fixture.componentInstance.ngOnInit();
+
+    expect(fixture.componentInstance.saveToStorage()).toBeFalse();
   });
 
   it('delete(): the confirmation handler removes the list via the repository', async () => {

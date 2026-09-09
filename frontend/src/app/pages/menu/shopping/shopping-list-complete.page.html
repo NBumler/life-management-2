@@ -8,7 +8,13 @@
 </ion-header>
 
 <ion-content class="ion-padding">
-  @if (!hasCheckedFood()) {
+  @if (!saveToStorage()) {
+    <p>
+      {{
+        (checkedFoodSkipped() ? 'SHOPPING.COMPLETE.STORAGE_OFF_WITH_FOOD_NOTE' : 'SHOPPING.COMPLETE.STORAGE_OFF_NOTE') | translate
+      }}
+    </p>
+  } @else if (!hasCheckedFood()) {
     <p>{{ 'SHOPPING.COMPLETE.NO_CHECKED_FOOD_NOTE' | translate }}</p>
   } @else {
     <ion-list>

@@ -86,6 +86,30 @@ describe('ShoppingListCompletePage', () => {
     expect(fixture.componentInstance.hasCheckedFood()).toBeFalse();
   });
 
+  it('backlog/099: a saveToStorage=false list skips the per-item rows and sends no checkedFoodEntries', async () => {
+    await createFixture('sl1');
+    foodRepository.items.set([food({ id: 'f1' })]);
+    repository.items.set([
+      shoppingList({ saveToStorage: false, items: [foodItem({ checked: true }), nonFoodItem({ id: 'i9', checked: false })] }),
+    ]);
+    const result: ShoppingListCompleteResult = { archivedListId: 'sl1', createdStorageEntryIds: [], newActiveListId: 'new-1' };
+    repository.complete.and.resolveTo(result);
+    spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
+
+    await fixture.componentInstance.ngOnInit();
+
+    expect(fixture.componentInstance.rows()).toEqual([]);
+    expect(fixture.componentInstance.saveToStorage()).toBeFalse();
+    expect(fixture.componentInstance.checkedFoodSkipped()).toBeTrue();
+
+    await fixture.componentInstance.confirm();
+
+    const draft = repository.complete.calls.mostRecent().args[0] as ShoppingListCompleteDraft;
+    expect(draft.checkedFoodEntries).toEqual([]);
+    expect(draft.storageEntries).toEqual([]);
+    expect(draft.newActiveList?.saveToStorage).toBeFalse();
+  });
+
   it('confirm(): calls repository.complete with a draft built from the current rows, then navigates back', async () => {
     await createFixture('sl1');
     foodRepository.items.set([food({ id: 'f1' })]);

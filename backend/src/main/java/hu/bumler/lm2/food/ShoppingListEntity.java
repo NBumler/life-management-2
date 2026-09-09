@@ -36,6 +36,14 @@ public class ShoppingListEntity {
 	@Column(name = "completed_at")
 	private OffsetDateTime completedAt;
 
+	/**
+	 * backlog/099 — when false, {@link ShoppingListService#complete} archives the list without
+	 * creating any {@code stored_food} rows (a list written for somewhere other than home). Default
+	 * true = the historical behaviour.
+	 */
+	@Column(name = "save_to_storage", nullable = false)
+	private boolean saveToStorage = true;
+
 	@Generated(event = EventType.INSERT)
 	@Column(name = "created_at", insertable = false, updatable = false)
 	private OffsetDateTime createdAt;
@@ -89,6 +97,14 @@ public class ShoppingListEntity {
 
 	public void setCompletedAt(OffsetDateTime completedAt) {
 		this.completedAt = completedAt;
+	}
+
+	public boolean isSaveToStorage() {
+		return saveToStorage;
+	}
+
+	public void setSaveToStorage(boolean saveToStorage) {
+		this.saveToStorage = saveToStorage;
 	}
 
 	public OffsetDateTime getCreatedAt() {

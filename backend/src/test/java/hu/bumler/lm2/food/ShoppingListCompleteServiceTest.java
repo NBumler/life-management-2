@@ -149,6 +149,72 @@ class ShoppingListCompleteServiceTest {
 	}
 
 	@Test
+	void complete_withSaveToStorageFalse_archivesButCreatesNoStoredFood() throws Exception {
+		// backlog/099 — the list opted out of storage: a checked FOOD item is "bought", not stored.
+		String token = registerAndLogin("no-storage-basic");
+		UUID foodId = createFoodWithSingleAllowedLocation(token, "Kefir");
+		UUID listId = UUID.randomUUID();
+		UUID itemId = UUID.randomUUID();
+		createListNotSavingToStorage(token, listId, foodItemDto(itemId, listId, foodId, BigDecimal.ONE, "kg", true));
+
+		// No checkedFoodEntries — there is nothing to store.
+		ShoppingListCompleteRequest request = new ShoppingListCompleteRequest(List.of());
+
+		complete(token, listId, UUID.randomUUID(), request)
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.archivedListId").value(listId.toString()))
+				.andExpect(jsonPath("$.createdStorageEntryIds").isEmpty());
+
+		mockMvc.perform(get("/api/shopping-lists/" + listId).header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.status").value("ARCHIVED"))
+				.andExpect(jsonPath("$.saveToStorage").value(false));
+
+		String storedFoods = mockMvc.perform(get("/api/stored-foods").header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+				.andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+		assertThat(storedFoods).doesNotContain(foodId.toString());
+	}
+
+	@Test
+	void complete_withSaveToStorageFalse_rejectsNonEmptyCheckedFoodEntries() throws Exception {
+		String token = registerAndLogin("no-storage-reject");
+		UUID foodId = createFoodWithSingleAllowedLocation(token, "Tejfol");
+		UUID listId = UUID.randomUUID();
+		UUID itemId = UUID.randomUUID();
+		createListNotSavingToStorage(token, listId, foodItemDto(itemId, listId, foodId, BigDecimal.ONE, "kg", true));
+
+		ShoppingListCompleteRequest request = new ShoppingListCompleteRequest(
+				List.of(new ShoppingListCompleteFoodEntry(itemId, List.of(UUID.randomUUID()))));
+
+		complete(token, listId, UUID.randomUUID(), request)
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+				.andExpect(jsonPath("$.field").value("checkedFoodEntries"));
+	}
+
+	@Test
+	void complete_spunOffList_inheritsSaveToStorageFromArchivedList() throws Exception {
+		String token = registerAndLogin("no-storage-spinoff");
+		UUID listId = UUID.randomUUID();
+		UUID uncheckedItemId = UUID.randomUUID();
+		createListNotSavingToStorage(token, listId, nonFoodItemDto(uncheckedItemId, listId, "Mosószer", false));
+
+		UUID newListId = UUID.randomUUID();
+		ShoppingListCompleteNewList newActiveList = new ShoppingListCompleteNewList(newListId,
+				List.of(nonFoodItemDto(UUID.randomUUID(), newListId, "Mosószer", false)));
+		ShoppingListCompleteRequest request = new ShoppingListCompleteRequest(List.of());
+		request.newActiveList(newActiveList);
+
+		complete(token, listId, UUID.randomUUID(), request)
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.newActiveListId").value(newListId.toString()));
+
+		mockMvc.perform(get("/api/shopping-lists/" + newListId).header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.saveToStorage").value(false));
+	}
+
+	@Test
 	void complete_returnsEntityDeleted_whenTheListIsNoLongerActive() throws Exception {
 		String token = registerAndLogin("complete-not-active");
 		UUID foodId = createFoodWithSingleAllowedLocation(token, "Joghurt");
@@ -302,6 +368,14 @@ class ShoppingListCompleteServiceTest {
 		mockMvc.perform(post("/api/shopping-lists").contentType(MediaType.APPLICATION_JSON)
 				.header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
 				.content(json(new ShoppingList(listId, items, false))))
+				.andExpect(status().isOk());
+	}
+
+	/** backlog/099 — a list with the "save purchases to storage" toggle off. */
+	private void createListNotSavingToStorage(String token, UUID listId, ShoppingListItem item) throws Exception {
+		mockMvc.perform(post("/api/shopping-lists").contentType(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+				.content(json(new ShoppingList(listId, List.of(item), false).saveToStorage(false))))
 				.andExpect(status().isOk());
 	}
 

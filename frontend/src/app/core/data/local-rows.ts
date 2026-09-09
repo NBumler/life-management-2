@@ -3804,6 +3804,7 @@ export interface ShoppingListRow {
   name: string | null;
   status: string;
   completed_at: string | null;
+  save_to_storage: number;
   created_at: string | null;
   updated_at: string | null;
   deleted: number;
@@ -3821,6 +3822,7 @@ export function shoppingListRowToDto(row: ShoppingListRow): Omit<ShoppingList, '
     name: row.name,
     status: row.status as ShoppingList.StatusEnum,
     completedAt: row.completed_at,
+    saveToStorage: row.save_to_storage === 1,
     deleted: row.deleted === 1,
     deletedAt: row.deleted_at,
     createdAt: row.created_at ?? undefined,
@@ -3828,24 +3830,30 @@ export function shoppingListRowToDto(row: ShoppingListRow): Omit<ShoppingList, '
   };
 }
 
-/** `status`/`completed_at` are never written from this write path (see ShoppingList.yaml "read-only") — left untouched on conflict, defaulted to ACTIVE/NULL on insert. */
-export function shoppingListLocalWriteTask(dto: { id: string; name: string | null }): SqlTask {
+/**
+ * `status`/`completed_at` are never written from this write path (see ShoppingList.yaml "read-only")
+ * — left untouched on conflict, defaulted to ACTIVE/NULL on insert. `save_to_storage` (backlog/099)
+ * is writable like `name`; a `null`/`undefined` dto value means "keep the true default".
+ */
+export function shoppingListLocalWriteTask(dto: { id: string; name: string | null; saveToStorage?: boolean }): SqlTask {
+  const saveToStorage = dto.saveToStorage === false ? 0 : 1;
   return {
     statement: `
-      INSERT INTO shopping_list (id, name, _dirty, _local_only)
-      VALUES (?, ?, 1, 1)
-      ON CONFLICT(id) DO UPDATE SET name = excluded.name, _dirty = 1`,
-    values: [dto.id, dto.name],
+      INSERT INTO shopping_list (id, name, save_to_storage, _dirty, _local_only)
+      VALUES (?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET name = excluded.name, save_to_storage = excluded.save_to_storage, _dirty = 1`,
+    values: [dto.id, dto.name, saveToStorage],
   };
 }
 
 export function shoppingListServerApplyTask(dto: Omit<ShoppingList, 'items'>): SqlTask {
   return {
     statement: `
-      INSERT INTO shopping_list (id, name, status, completed_at, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      INSERT INTO shopping_list (id, name, status, completed_at, save_to_storage, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET
-        name = excluded.name, status = excluded.status, completed_at = excluded.completed_at, created_at = excluded.created_at,
+        name = excluded.name, status = excluded.status, completed_at = excluded.completed_at, save_to_storage = excluded.save_to_storage,
+        created_at = excluded.created_at,
         updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0, _needs_refetch = 0
       WHERE shopping_list._dirty = 0`,
     values: [
@@ -3853,6 +3861,7 @@ export function shoppingListServerApplyTask(dto: Omit<ShoppingList, 'items'>): S
       dto.name ?? null,
       dto.status ?? 'ACTIVE',
       dto.completedAt ?? null,
+      dto.saveToStorage === false ? 0 : 1,
       dto.createdAt ?? null,
       dto.updatedAt ?? null,
       dto.deleted ? 1 : 0,

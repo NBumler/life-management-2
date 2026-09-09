@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-03
-verifikalt_commit: 18da204
+verifikalva: 2026-09-09
+verifikalt_commit: 1d1b15c
 ---
 
 # Bevásárlás
@@ -70,7 +70,7 @@ OpenAPI scope a Bevásárlás feature alatt (közös a subfeature-ökkel):
 
 | Entitás | Fő mezők |
 |---|---|
-| `ShoppingList` | `id` (UUID, kliens), `name` (opcionális), `status` (`ACTIVE` \| `ARCHIVED`), `deleted` / `deleted_at`, `createdAt`, `completedAt` (archívumnál), tételek |
+| `ShoppingList` | `id` (UUID, kliens), `name` (opcionális), `status` (`ACTIVE` \| `ARCHIVED`), `saveToStorage` (`boolean`, alapból `true` — teljesítéskor a pipált élelmiszerek tárolóba kerülnek-e; `backlog/099`), `deleted` / `deleted_at`, `createdAt`, `completedAt` (archívumnál), tételek |
 | `ShoppingListItem` | `id` (UUID), `type` (`FOOD` \| `NON_FOOD`), `foodId` (FOOD), `name` (NON_FOOD), `note` (NON_FOOD, szabad szöveg), `quantityAmount`, `quantityUnit`, `checked`, sorrend |
 
 Műveletek (elvárás):

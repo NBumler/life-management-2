@@ -68,6 +68,7 @@ export function buildCompleteDraft(
   listId: string,
   allItems: readonly ShoppingListItem[],
   wizardInputs: readonly CheckedFoodWizardInput[],
+  saveToStorage = true,
 ): ShoppingListCompleteDraft {
   const checkedFoodEntries: ShoppingListCompleteFoodEntryDraft[] = [];
   const storageEntries: ShoppingListCompleteStorageEntryDraft[] = [];
@@ -100,7 +101,9 @@ export function buildCompleteDraft(
 
   const { leftover } = partitionItems(allItems);
   const newActiveList: ShoppingListCompleteNewListDraft | null =
-    leftover.length === 0 ? null : { id: uuidV4(), name: null, items: leftover.map((item, index) => toSaveItem(item, index)) };
+    leftover.length === 0
+      ? null
+      : { id: uuidV4(), name: null, saveToStorage, items: leftover.map((item, index) => toSaveItem(item, index)) };
 
   return { shoppingListId: listId, checkedFoodEntries, storageEntries, newActiveList };
 }

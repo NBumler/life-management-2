@@ -75,6 +75,10 @@ export class ShoppingListCompletePage implements OnInit {
 
   readonly listId = signal<string | null>(null);
   readonly rows = signal<CheckedFoodRow[]>([]);
+  /** backlog/099 — false: the list opted out of storage, so completion just archives + spins off leftovers. */
+  readonly saveToStorage = signal(true);
+  /** True when there ARE checked FOOD items but the list opted out of storing them. */
+  readonly checkedFoodSkipped = signal(false);
   readonly locationOptions = [StoredFood.StorageLocationEnum.Room, StoredFood.StorageLocationEnum.Fridge, StoredFood.StorageLocationEnum.Freezer];
   /** Guards against a double-tap running the completion twice (the web path has no outbox to dedupe it). */
   readonly submitting = signal(false);
@@ -90,8 +94,15 @@ export class ShoppingListCompletePage implements OnInit {
       return;
     }
     this.listId.set(list.id);
+    this.saveToStorage.set(list.saveToStorage ?? true);
 
     const { checkedFood } = partitionItems(list.items);
+    if (this.saveToStorage() === false) {
+      // backlog/099 — nothing to store: no per-item review, just archive + spin off leftovers.
+      this.checkedFoodSkipped.set(checkedFood.length > 0);
+      this.rows.set([]);
+      return;
+    }
     const todayIso = today();
     this.rows.set(
       checkedFood.map((item) => {
@@ -133,7 +144,7 @@ export class ShoppingListCompletePage implements OnInit {
         foodNetAmount: row.food?.netAmount ?? null,
         foodNetUnit: row.food?.netUnit ?? null,
       }));
-      const draft = buildCompleteDraft(listId, list.items, wizardInputs);
+      const draft = buildCompleteDraft(listId, list.items, wizardInputs, this.saveToStorage());
       await this.repository.complete(draft);
       await this.router.navigateByUrl('/tabs/menu/shopping');
     } finally {

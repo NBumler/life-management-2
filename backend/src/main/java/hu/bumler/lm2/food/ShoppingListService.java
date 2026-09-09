@@ -122,7 +122,8 @@ class ShoppingListService {
 	 * is the complete desired live tree — an item's presence/absence by id is the only signal.
 	 * Items missing from the incoming list are soft-deleted; the response always lists every row,
 	 * live or tombstoned (ShoppingList.yaml). {@code status}/{@code completedAt} are read-only here
-	 * (see class javadoc) — only {@code name} is ever written from this endpoint.
+	 * (see class javadoc) — only {@code name} and {@code saveToStorage} (backlog/099) are written
+	 * from this endpoint.
 	 */
 	private ShoppingList saveTree(ShoppingListEntity entity, ShoppingList dto) {
 		if (!"ACTIVE".equals(entity.getStatus())) {
@@ -132,6 +133,8 @@ class ShoppingListService {
 			throw new EntityDeletedException("Shopping list is archived and cannot be edited");
 		}
 		entity.setName(dto.getName().orElse(null));
+		// backlog/099 — writable like `name`; absent or null on input is treated as true.
+		entity.setSaveToStorage(!Boolean.FALSE.equals(dto.getSaveToStorage()));
 		repository.saveAndFlush(entity);
 
 		List<ShoppingListItemEntity> existingItems = itemRepository.findByShoppingListId(entity.getId());
@@ -220,8 +223,9 @@ class ShoppingListService {
 	/**
 	 * documentation/Subfeatures/Bevásárlás teljesítve.md — the atomic multi-entity completion flow
 	 * (documentation/Architektúra/Backend-offline first.md §11): creates StoredFood rows for the
-	 * checked FOOD items, archives this list, and optionally spins off a new active list from the
-	 * leftover unchecked items. Replay-safe via {@code idempotencyKey} — a second call with the same
+	 * checked FOOD items (unless the list's {@code saveToStorage} is false — backlog/099), archives
+	 * this list, and optionally spins off a new active list from the leftover unchecked items.
+	 * Replay-safe via {@code idempotencyKey} — a second call with the same
 	 * key returns the first call's stored response instead of running any of this again.
 	 */
 	@Transactional
@@ -269,20 +273,27 @@ class ShoppingListService {
 				.collect(Collectors.toSet());
 
 		List<UUID> createdStorageEntryIds = new ArrayList<>();
-		Set<UUID> coveredItemIds = new HashSet<>();
-		for (ShoppingListCompleteFoodEntry entry : request.getCheckedFoodEntries()) {
-			ShoppingListItemEntity item = liveItemsById.get(entry.getShoppingListItemId());
-			if (item == null || !checkedFoodItemIds.contains(item.getId())) {
-				throw new ValidationException("checkedFoodEntries references an item that isn't a checked FOOD item on this list",
-						"checkedFoodEntries");
+		if (list.isSaveToStorage()) {
+			Set<UUID> coveredItemIds = new HashSet<>();
+			for (ShoppingListCompleteFoodEntry entry : request.getCheckedFoodEntries()) {
+				ShoppingListItemEntity item = liveItemsById.get(entry.getShoppingListItemId());
+				if (item == null || !checkedFoodItemIds.contains(item.getId())) {
+					throw new ValidationException("checkedFoodEntries references an item that isn't a checked FOOD item on this list",
+							"checkedFoodEntries");
+				}
+				if (!coveredItemIds.add(item.getId())) {
+					throw new ValidationException("checkedFoodEntries has more than one entry for the same item", "checkedFoodEntries");
+				}
+				createdStorageEntryIds.addAll(createStorageEntries(userId, item, entry));
 			}
-			if (!coveredItemIds.add(item.getId())) {
-				throw new ValidationException("checkedFoodEntries has more than one entry for the same item", "checkedFoodEntries");
+			if (!coveredItemIds.equals(checkedFoodItemIds)) {
+				throw new ValidationException("Every checked FOOD item needs exactly one checkedFoodEntries entry", "checkedFoodEntries");
 			}
-			createdStorageEntryIds.addAll(createStorageEntries(userId, item, entry));
-		}
-		if (!coveredItemIds.equals(checkedFoodItemIds)) {
-			throw new ValidationException("Every checked FOOD item needs exactly one checkedFoodEntries entry", "checkedFoodEntries");
+		} else if (!request.getCheckedFoodEntries().isEmpty()) {
+			// backlog/099 — the list opted out of storage: nothing to store, so the client must send
+			// no entries. A non-empty list here means a stale client that didn't read saveToStorage.
+			throw new ValidationException("checkedFoodEntries must be empty when the list does not save purchases to storage",
+					"checkedFoodEntries");
 		}
 
 		list.setStatus("ARCHIVED");
@@ -290,7 +301,9 @@ class ShoppingListService {
 		repository.saveAndFlush(list);
 
 		ShoppingListCompleteNewList newActiveList = request.getNewActiveList();
-		UUID newActiveListId = newActiveList != null ? createSpunOffList(userId, newActiveList) : null;
+		// backlog/099 — the leftover-items list continues the same shopping context, so it inherits
+		// the archived list's saveToStorage rather than silently reverting to the true default.
+		UUID newActiveListId = newActiveList != null ? createSpunOffList(userId, newActiveList, list.isSaveToStorage()) : null;
 
 		ShoppingListCompleteResponse response = new ShoppingListCompleteResponse(id, createdStorageEntryIds);
 		response.newActiveListId(newActiveListId);
@@ -305,14 +318,16 @@ class ShoppingListService {
 	 * the idempotency guard, so it is rejected rather than merged — {@code JpaRepository.save()} on an
 	 * assigned id {@code merge()}s, which would otherwise hijack the colliding row's parent/owner.
 	 * Checkboxes always start empty ("üres pipákkal"), regardless of what the client sent.
+	 * {@code saveToStorage} is inherited from the archived parent list (backlog/099).
 	 */
-	private UUID createSpunOffList(UUID userId, ShoppingListCompleteNewList newActiveList) {
+	private UUID createSpunOffList(UUID userId, ShoppingListCompleteNewList newActiveList, boolean saveToStorage) {
 		UUID newListId = newActiveList.getId();
 		if (repository.existsById(newListId)) {
 			throw new ValidationException("newActiveList.id already exists", "newActiveList");
 		}
 		ShoppingListEntity newList = new ShoppingListEntity(newListId, userId);
 		newList.setName(newActiveList.getName().orElse(null));
+		newList.setSaveToStorage(saveToStorage);
 		repository.saveAndFlush(newList);
 
 		Set<UUID> seenItemIds = new HashSet<>();

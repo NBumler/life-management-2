@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-06
-verifikalt_commit: 7906e67
+verifikalva: 2026-09-09
+verifikalt_commit: 1d1b15c
 ---
 
 # Bevásárlólista írás
@@ -20,6 +20,11 @@ Aktív bevásárlólista(ák) összeállítása és szerkesztése vásárlás el
 ### Funkcionális leírás
 
 - Új aktív lista létrehozása; opcionális név.
+- **`saveToStorage` kapcsoló** (lista-szintű, perzisztált, alapból **be**): teljesítéskor a pipált
+  élelmiszerek bekerüljenek-e a saját tárolóba (`StoredFood`). Kikapcsolva a [[Bevásárlás teljesítve]]
+  **nem** hoz létre `StoredFood` sorokat (pl. ha nem otthonra írod a listát). A pipálatlanokból
+  születő új aktív lista (és az [[Bevásárlás előzmény]] „Újralistázás") **örökli** a kapcsoló
+  értékét. Részletek: [[Bevásárlás teljesítve]].
 - Több aktív lista párhuzamosan kezelhető (a [[Bevásárlás]] szülő szerint).
 - Tétel hozzáadása:
   - **Élelmiszer:** kizárólag az [[Élelmiszerek]] katalógusból (nincs „gyors létrehozás” a listáról). Mennyiség: [[Mennyiség mező]] — **`cs` (csomag) + súly/térfogat**; a `db` (darab) itt **nem** választható, mert a bevásárlás csomag-szintű (a katalógus ára is `Ft / csomag`, per-darab ár nincs). Részletek / indoklás: `backlog/063`.
@@ -31,7 +36,7 @@ Aktív bevásárlólista(ák) összeállítása és szerkesztése vásárlás el
 
 ### UI/UX elvárások
 
-- Lista részlete: név (opcionális szerkesztés), pipálatlan tételek húzható listája, alatta a kipipált („Kosárban") tételek halványított, áthúzott nevű szekciója (fejléc + darabszám); pipa kontroll mindkét csoportban, törlés a kipipált soron is.
+- Lista részlete: név (opcionális szerkesztés), alatta a **„Tárolóba mentés teljesítéskor"** `ion-toggle` (alapból be) rövid magyarázó `ion-note`-tal, majd a pipálatlan tételek húzható listája, alatta a kipipált („Kosárban") tételek halványított, áthúzott nevű szekciója (fejléc + darabszám); pipa kontroll mindkét csoportban, törlés a kipipált soron is.
 - Élelmiszer hozzáadás: katalógus választó (keresés: [[Szöveges keresés]], ha a választó keresőmezőt ad).
 - Mennyiség mezők: [[Mennyiség mező]] (összeragasztott input, pl. `120dkg`, `3cs`, `2l`). Élelmiszer-tételnél nincs `db`-chip; ha egy legacy / más eszközről szinkronizált sor mégis `db` egységű, a [[Bevásárlás teljesítve]] a teljesítéskor egész csomagra felfelé kerekíti.
 - Nem-élelmiszer: név + mennyiség + szabad szöveg mező.
@@ -58,7 +63,12 @@ Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító 
 
 ### Backend
 
-_Nincs backend érintettség._ (lista + tétel CRUD a [[Bevásárlás]] szülő OpenAPI scope-jában)
+`ShoppingList.saveToStorage` (`boolean`, OpenAPI default `true`, nem `readOnly`) — a nested aggregate
+PUT/POST írja, mint a `name`-et; hiányzó / `null` bemenet = `true`. DB: `shopping_list.save_to_storage
+boolean NOT NULL DEFAULT true` (`V36`), on-device tükre `SCHEMA_V35` (`INTEGER … DEFAULT 1`). A
+`sync_changes` view érintetlen (új oszlop, nem új entitás). Outbox: `OUTBOX_PAYLOAD_SCHEMA_VERSION`
+v3 → v4, a `ShoppingList` migrátor-lépés a hiányzó kulcsot `true`-ra tölti. Egyébként lista + tétel
+CRUD a [[Bevásárlás]] szülő OpenAPI scope-jában.
 
 ### Nyitott kérdések
 

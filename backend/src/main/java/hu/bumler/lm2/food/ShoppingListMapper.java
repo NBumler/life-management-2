@@ -19,6 +19,7 @@ class ShoppingListMapper {
 		dto.name(entity.getName());
 		dto.status(ShoppingList.StatusEnum.fromValue(entity.getStatus()));
 		dto.completedAt(entity.getCompletedAt());
+		dto.saveToStorage(entity.isSaveToStorage());
 		dto.deletedAt(entity.getDeletedAt());
 		dto.createdAt(entity.getCreatedAt());
 		dto.updatedAt(entity.getUpdatedAt());

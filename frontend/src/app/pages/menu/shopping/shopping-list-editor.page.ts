@@ -16,8 +16,10 @@ import {
   IonItemDivider,
   IonLabel,
   IonList,
+  IonNote,
   IonSearchbar,
   IonTitle,
+  IonToggle,
   IonToolbar,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
@@ -101,7 +103,9 @@ function toSaveItem(row: ItemRow, sortOrder: number): ShoppingListItemSaveItem {
     IonInput,
     IonLabel,
     IonCheckbox,
+    IonNote,
     IonSearchbar,
+    IonToggle,
     TranslatePipe,
   ],
   styles: [
@@ -127,6 +131,8 @@ export class ShoppingListEditorPage implements OnInit {
 
   readonly listId = signal<string | null>(null);
   readonly items = signal<ItemRow[]>([]);
+  /** backlog/099 — teljesítéskor a pipált tételek bekerüljenek-e a tárolóba. Alapból be. */
+  readonly saveToStorage = signal(true);
   readonly pickerOpen = signal(false);
   readonly pickerQuery = signal('');
   readonly pickedIds = signal<ReadonlySet<string>>(new Set());
@@ -168,6 +174,7 @@ export class ShoppingListEditorPage implements OnInit {
       }
       this.listId.set(idParam);
       this.form.reset({ name: existing.name ?? null }, { emitEvent: false });
+      this.saveToStorage.set(existing.saveToStorage ?? true);
       this.items.set(
         existing.items
           .filter((item) => !item.deleted)
@@ -270,7 +277,7 @@ export class ShoppingListEditorPage implements OnInit {
 
     const { name } = this.form.getRawValue();
     const items = this.items().map((row, index) => toSaveItem(row, index));
-    const draft: ShoppingListDraft = { id: this.listId() ?? '', name, items };
+    const draft: ShoppingListDraft = { id: this.listId() ?? '', name, saveToStorage: this.saveToStorage(), items };
 
     const saved = await this.repository.save(draft);
     this.listId.set(saved.id);

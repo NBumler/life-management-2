@@ -18,6 +18,12 @@
       <ion-item>
         <ion-input formControlName="name" [label]="'SHOPPING.LIST.NAME_LABEL' | translate" labelPlacement="stacked"></ion-input>
       </ion-item>
+      <ion-item lines="none">
+        <ion-toggle [checked]="saveToStorage()" (ionChange)="saveToStorage.set($any($event.detail.checked))">
+          {{ 'SHOPPING.LIST.SAVE_TO_STORAGE_LABEL' | translate }}
+        </ion-toggle>
+      </ion-item>
+      <ion-note class="ion-margin-start" color="medium">{{ 'SHOPPING.LIST.SAVE_TO_STORAGE_HINT' | translate }}</ion-note>
     </ion-list>
   </form>
 

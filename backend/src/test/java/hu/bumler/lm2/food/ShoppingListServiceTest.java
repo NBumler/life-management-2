@@ -100,6 +100,24 @@ class ShoppingListServiceTest {
 	}
 
 	@Test
+	void create_defaultsSaveToStorageTrue_andPersistsAnExplicitFalse() {
+		// backlog/099 — writable like `name`; absent → true, explicit false → stored.
+		UUID userId = UUID.randomUUID();
+		UUID idA = UUID.randomUUID();
+		UUID idB = UUID.randomUUID();
+		when(repository.findById(any())).thenReturn(Optional.empty());
+		when(itemRepository.findByShoppingListId(any())).thenReturn(List.of());
+
+		service.create(userId, new ShoppingList(idA, List.of(), false));
+		service.create(userId, new ShoppingList(idB, List.of(), false).saveToStorage(false));
+
+		ArgumentCaptor<ShoppingListEntity> captor = ArgumentCaptor.forClass(ShoppingListEntity.class);
+		verify(repository, times(2)).saveAndFlush(captor.capture());
+		assertThat(captor.getAllValues().get(0).isSaveToStorage()).isTrue();
+		assertThat(captor.getAllValues().get(1).isSaveToStorage()).isFalse();
+	}
+
+	@Test
 	void create_rejectsForeignList_whenIdBelongsToAnotherUser() {
 		UUID owner = UUID.randomUUID();
 		UUID attacker = UUID.randomUUID();

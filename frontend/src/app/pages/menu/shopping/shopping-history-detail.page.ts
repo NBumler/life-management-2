@@ -67,6 +67,8 @@ export class ShoppingHistoryDetailPage implements OnInit {
     const draft: ShoppingListDraft = {
       id: uuidV4(),
       name: list.name ?? null,
+      // backlog/099 — relisting continues the same shopping context, so carry the toggle over.
+      saveToStorage: list.saveToStorage ?? true,
       items: this.liveItems().map((item, index) => toSaveItem(item, index)),
     };
     const saved = await this.repository.save(draft);

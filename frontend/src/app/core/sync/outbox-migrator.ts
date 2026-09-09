@@ -133,6 +133,24 @@ export function stripClimbingSessionFailurePoint(payload: unknown, url: string):
 }
 
 /**
+ * v3 → v4 (backlog/099): `ShoppingList` gained `saveToStorage` (per-list "save purchases to
+ * storage" toggle). A `ShoppingList` create/update still pending from before that app update has no
+ * `saveToStorage` key; the post-#99 server treats a missing/null value as `true`, but make it
+ * explicit so the payload matches the current schema. Non-object (DELETE) and already-migrated
+ * payloads pass through untouched.
+ */
+export function addShoppingListSaveToStorageDefault(payload: unknown, url: string): { payload: unknown; url: string } {
+  if (payload === null || typeof payload !== 'object' || Array.isArray(payload)) {
+    return { payload, url };
+  }
+  const list = payload as Record<string, unknown>;
+  if ('saveToStorage' in list) {
+    return { payload, url };
+  }
+  return { payload: { ...list, saveToStorage: true }, url };
+}
+
+/**
  * Per global version step: the function every entity type gets for that `N → N+1` bump, plus
  * per-entity `overrides`. `MIGRATIONS` is built by walking 1 … `OUTBOX_PAYLOAD_SCHEMA_VERSION`-1 and
  * registering `<entityType>:<v>` for *every* entity type — so a version can never leave a hole for a
@@ -148,6 +166,7 @@ interface VersionSteps {
 const STEPS_BY_VERSION: Readonly<Record<number, VersionSteps>> = {
   1: { default: rewriteDbUnitToCs },
   2: { default: identityStep, overrides: { ClimbingSession: stripClimbingSessionFailurePoint } },
+  3: { default: identityStep, overrides: { ShoppingList: addShoppingListSaveToStorageDefault } },
 };
 
 function buildMigrations(): ReadonlyMap<string, MigrationStep> {
