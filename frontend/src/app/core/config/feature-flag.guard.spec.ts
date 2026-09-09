@@ -34,7 +34,7 @@ describe('featureFlagGuard', () => {
     expect(router.parseUrl).not.toHaveBeenCalled();
   });
 
-  it('redirects to the default tab when the flag is off', () => {
+  it('redirects to Menü when the flag is off and no other tab is enabled', () => {
     featureFlags.isEnabled.and.returnValue(false);
 
     const result = run();
@@ -42,5 +42,14 @@ describe('featureFlagGuard', () => {
     expect(featureFlags.isEnabled).toHaveBeenCalledWith('tab.edzes');
     expect(router.parseUrl).toHaveBeenCalledWith('/tabs/menu');
     expect((result as unknown as { url: string }).url).toBe('/tabs/menu');
+  });
+
+  it('redirects to the first enabled tab (backlog/096 default-tab chain), not always Menü', () => {
+    // tab.kezdolap on, tab.edzes (the guarded flag) off.
+    featureFlags.isEnabled.and.callFake((key) => key === 'tab.kezdolap');
+
+    run();
+
+    expect(router.parseUrl).toHaveBeenCalledWith('/tabs/home');
   });
 });

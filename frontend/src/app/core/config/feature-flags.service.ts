@@ -5,6 +5,7 @@ import featuresConfig from '../../../assets/config/features.json';
 
 // SSOT: documentation/Architektúra/Frontend.md "Flag registry".
 export type FeatureFlagKey =
+  | 'tab.kezdolap'
   | 'tab.kaja'
   | 'kaja.recept'
   | 'kaja.statisztika'
@@ -43,6 +44,7 @@ const FEATURE_FLAG_DEPENDENCIES: ReadonlyMap<FeatureFlagKey, FeatureFlagKey> = n
 ]);
 
 const FEATURE_FLAG_KEYS: readonly FeatureFlagKey[] = [
+  'tab.kezdolap',
   'tab.kaja',
   'kaja.recept',
   'kaja.statisztika',

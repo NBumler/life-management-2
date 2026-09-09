@@ -14,6 +14,18 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-09 — #96** Új feature — Kezdőlap / dashboard tab (az alsó tab-sor **első** eleme).
+  Új `tab.kezdolap` flag (a `features.json` első kulcsa, alapból **be**), új `Kezdőlap` `TabDef`
+  a registry élén (`/tabs/home`), `pages/home/home.page.ts` (standalone, OnPush) — minimális
+  tartalom: gyorslinkek a többi engedélyezett tabhoz (a widgetek külön jegy, `#95`). Új
+  `firstEnabledTabRoute(featureFlags)` a `tab-registry.ts`-ben: a `/tabs` üres útvonalának
+  `redirectTo`-ja **függvény alakú**, ezt hívja (login utáni default tab: Kezdőlap, ha be,
+  különben az első engedélyezett tab); a `featureFlagGuard` is erre irányít fix `/tabs/menu`
+  helyett. `SyncStatusButton` a Kezdőlap toolbar `end` slotjában. i18n `TABS.KEZDOLAP` +
+  `HOME.*` (hu/en). Tesztek: `tab-registry.spec.ts` (új), `home.page.spec.ts` (új),
+  `feature-flag.guard.spec.ts` + `app.routes.spec.ts` + `feature-flags.service.spec.ts`
+  frissítve. Nincs backend / outbox érintés. Spec: új [[Kezdőlap]], [[Frontend]] (tab registry,
+  route-térkép, flag registry, login utáni default tab). **(feature)**
 - **2026-09-09 — #88** Mászás — szektor-szintű alapértelmezett úthossz. `Sector` kap opcionális
   `defaultLengthInMeters` mezőt; a köteles napló úthossz-öröklése: **1.** `Route.lengthInMeters`
   → **2.** `Sector.defaultLengthInMeters` → **3.** kísérlet-szintű kézi felülírás (`lengthAutoFilled`

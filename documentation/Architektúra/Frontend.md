@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-03
-verifikalt_commit: 1917ba8
+verifikalva: 2026-09-09
+verifikalt_commit: 24ae531
 ---
 
 # Frontend
@@ -11,7 +11,7 @@ verifikalt_commit: 1917ba8
 |---|---|
 | **Státusz** | `Kész` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Backend]], [[Fejlesztői környezet]], [[Backend-offline first]], [[Szinkronizációs központ]], [[Bejelentkezés]], [[Kaja]], [[Edzés]], [[Tennivalók]], [[Nyelv választás]], [[Dark&Light mode]], [[Mennyiség mező]], [[Szöveges keresés]], [[Névegyediség]] |
+| **Kapcsolódó** | [[Backend]], [[Fejlesztői környezet]], [[Backend-offline first]], [[Szinkronizációs központ]], [[Bejelentkezés]], [[Kezdőlap]], [[Kaja]], [[Edzés]], [[Tennivalók]], [[Nyelv választás]], [[Dark&Light mode]], [[Mennyiség mező]], [[Szöveges keresés]], [[Névegyediség]] |
 
 ### Jelenlegi működés
 
@@ -88,14 +88,15 @@ A négy felső szintű mappa (`pages/`, `shared/`, `core/`, `api/`) a repóban l
 
 #### Navigáció — tab registry
 
-Alul **4 gomb** (Ionic tabs). A tab lista **konfigurációból** (feature-flagelt tab registry) épül, nem beégetett template-ből: az 5. gomb hozzáadása vagy a sorrend átrendezése konfigurációs változás, nem layout-újraírás.
+Alul **legfeljebb 5 gomb** (Ionic tabs). A tab lista **konfigurációból** (feature-flagelt tab registry) épül, nem beégetett template-ből: gomb hozzáadása/elvétele vagy a sorrend átrendezése konfigurációs változás, nem layout-újraírás.
 
 | # | Tab | Route | Gyökér | Belépők |
 |---|---|---|---|---|
-| 1 | **Kaja** | `/tabs/food` | [[Étkezés]] dashboard | szegmens: Étkezés · Tárolás · Katalógus · Recept · Stat |
-| 2 | **Edzés** | `/tabs/workout` | [[Edzésnapló]] | szegmens: Edzésnapló · Heti terv · Mászás · Úszás · Bicikli (+ [[Gyakorlat]] a fejlécben) |
-| 3 | **Feladatok** | `/tabs/tasks` | [[Tennivalók]] hub | 4 csempe: Háztartási · Élet tervek · Naptár · Események |
-| 4 | **Menü** | `/tabs/menu` | menülista | a többi feature + beállítások + Kijelentkezés |
+| 1 | **Kezdőlap** | `/tabs/home` | [[Kezdőlap]] | gyorslinkek a többi engedélyezett tabhoz (widgetek: `backlog/095`); `tab.kezdolap` flag |
+| 2 | **Kaja** | `/tabs/food` | [[Étkezés]] dashboard | szegmens: Étkezés · Tárolás · Katalógus · Recept · Stat |
+| 3 | **Edzés** | `/tabs/workout` | [[Edzésnapló]] | szegmens: Edzésnapló · Heti terv · Mászás · Úszás · Bicikli (+ [[Gyakorlat]] a fejlécben) |
+| 4 | **Feladatok** | `/tabs/tasks` | [[Tennivalók]] hub | 4 csempe: Háztartási · Élet tervek · Naptár · Események |
+| 5 | **Menü** | `/tabs/menu` | menülista | a többi feature + beállítások + Kijelentkezés |
 
 **Szándékos kivételek** (nem hiba, ne „javítsa” senki): a [[Bevásárlás]] a **Menü** tabon van, nem a Kaján; a [[Lépésszám követés]] a **Menü** tabon, nem az Edzésen; a [[Tápérték kalkulátor]] **nem képernyő**, hanem utility.
 
@@ -114,6 +115,7 @@ A gyerek route-ok pontos alakja a feature specekben marad; itt a gyökerek köte
 | Route | Képernyő | Spec |
 |---|---|---|
 | `/login` | Login (tabokon **kívül**) | [[Bejelentkezés]] |
+| `/tabs/home` | Kezdőlap (login utáni default, ha `tab.kezdolap` be) | [[Kezdőlap]] |
 | `/tabs/food/meals` | Étkezés dashboard (Kaja default) | [[Étkezés]] |
 | `/tabs/food/storage` | Készlet | [[Élelmiszer tárolás]] |
 | `/tabs/food/foods` | Élelmiszer katalógus | [[Élelmiszerek]] |
@@ -139,11 +141,11 @@ A gyerek route-ok pontos alakja a feature specekben marad; itt a gyökerek köte
 | `/tabs/menu/sync` | Szinkronizációs központ | [[Szinkronizációs központ]] |
 
 - **Kijelentkezés** a Menü lista akciója (megerősítéssel), nem route — [[Bejelentkezés]].
-- A [[Szinkronizációs központ]] korábbi `/tabs/dashboard/sync` útvonala **elavult**: nincs Dashboard tab, a képernyő a Menü alatt él.
+- A [[Szinkronizációs központ]] korábbi `/tabs/dashboard/sync` útvonala **elavult**: a képernyő a Menü alatt él. A `/tabs/home` [[Kezdőlap]] tab **nem** a sync dashboard — külön feature.
 
 ##### Login utáni default tab
 
-**Kaja → Étkezés dashboard** (`/tabs/food/meals`). Ha a `tab.kaja` flag ki van kapcsolva, a registry **első engedélyezett** tabja nyílik (a Menü mindig létezik, tehát mindig van hová lépni). Nincs „utolsó használt tab" emlékezet az első körben.
+Ha a `tab.kezdolap` engedélyezett → **[[Kezdőlap]]** (`/tabs/home`). Különben a registry **első engedélyezett** tabja (`firstEnabledTabRoute` a `tab-registry.ts`-ben: `Kezdőlap` → `Kaja` → `Edzés` → `Feladatok` → `Menü`; a Menü mindig létezik, tehát mindig van hová lépni). A `/tabs` üres útvonalának `redirectTo`-ja ezt a láncot számolja, és ugyanezt használja a `featureFlagGuard` is (letiltott flag deep linkje → első engedélyezett tab, nem fix Menü). Nincs „utolsó használt tab" emlékezet az első körben.
 
 #### Globális chrome (státuszbár)
 
@@ -183,6 +185,7 @@ Az `offlineCapable` **nem** feature flag, hanem platform-képesség (natív = `t
 
 | Kulcs | Mit fed | SSOT |
 |---|---|---|
+| `tab.kezdolap` | Kezdőlap tab (registry első eleme) + a login utáni default tab | [[Kezdőlap]] |
 | `tab.kaja` | Kaja tab + Étkezés, Tárolás, Katalógus szegmens (a tab magja) | [[Kaja]] |
 | `kaja.recept` | Recept szegmens + `RECIPE` étkezés-tételtípus | [[Recept]] |
 | `kaja.statisztika` | Stat szegmens | [[Kaja statisztika]] |
@@ -221,7 +224,7 @@ Szándékosan **független** párok: `menu.aycm` ↔ `menu.penzugyek` (Pénzügy
 
 ##### Tab-flag kikapcsolva
 
-A tab **eltűnik** a bar-ról, és a bar annyi gombos, ahány engedélyezett tab van (Ionic **1–5** gombot elbír; a Menü nem kapcsolható ki, tehát a gyakorlati minimum 1, ha mindhárom másik tab flag ki van kapcsolva) — nincs üres tab, és nincs „letiltott" szürke gomb. A Menü mindig ott van, tehát a bar sosem üres. A letiltott tab route-jai guardolva vannak: deep link → default tab.
+A tab **eltűnik** a bar-ról, és a bar annyi gombos, ahány engedélyezett tab van (Ionic **1–5** gombot elbír; a Menü nem kapcsolható ki, tehát a gyakorlati minimum 1, ha mind a négy másik tab flag — `tab.kezdolap`, `tab.kaja`, `tab.edzes`, `tab.feladatok` — ki van kapcsolva) — nincs üres tab, és nincs „letiltott" szürke gomb. A Menü mindig ott van, tehát a bar sosem üres. A letiltott tab route-jai guardolva vannak: deep link → default tab (a registry első engedélyezett tabja).
 
 #### Indulási sorrend (cold start)
 

@@ -4,6 +4,7 @@ import { FeatureFlagKey, FeatureFlagsService, validateFeatureFlags } from './fea
 
 // documentation/Architektúra/Frontend.md "Feature flag-ek" — flag registry + dependency table.
 const ALL_KEYS: FeatureFlagKey[] = [
+  'tab.kezdolap',
   'tab.kaja',
   'kaja.recept',
   'kaja.statisztika',

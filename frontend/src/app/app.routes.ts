@@ -1,6 +1,9 @@
+import { inject } from '@angular/core';
 import { Routes } from '@angular/router';
 
 import { featureFlagGuard } from './core/config/feature-flag.guard';
+import { FeatureFlagsService } from './core/config/feature-flags.service';
+import { firstEnabledTabRoute } from './core/config/tab-registry';
 import { authGuard } from './core/session/auth.guard';
 
 export const routes: Routes = [
@@ -13,6 +16,14 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./pages/tabs/tabs.page').then((m) => m.TabsPage),
     children: [
+      {
+        // documentation/Features/Kezdőlap.md — the bottom bar's first tab and, when `tab.kezdolap`
+        // is on, the post-login landing. Flag guard on the tree top (the `finance` / `aycm`
+        // pattern): a deep link with the flag off redirects to the next enabled tab.
+        path: 'home',
+        canActivate: [featureFlagGuard('tab.kezdolap')],
+        loadComponent: () => import('./pages/home/home.page').then((m) => m.HomePage),
+      },
       {
         path: 'menu',
         children: [
@@ -559,9 +570,13 @@ export const routes: Routes = [
           },
         ],
       },
-      // documentation/Architektúra/Frontend.md "Login utáni default tab": Menü is the only enabled
-      // tab until a feature flag turns Kaja/Edzés/Feladatok on.
-      { path: '', redirectTo: 'menu', pathMatch: 'full' },
+      // documentation/Architektúra/Frontend.md "Login utáni default tab": Kezdőlap when
+      // `tab.kezdolap` is on, otherwise the registry's first enabled tab (Menü always matches).
+      {
+        path: '',
+        pathMatch: 'full',
+        redirectTo: () => firstEnabledTabRoute(inject(FeatureFlagsService)),
+      },
     ],
   },
   { path: '', redirectTo: 'tabs', pathMatch: 'full' },

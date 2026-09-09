@@ -1,0 +1,22 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>{{ 'HOME.TITLE' | translate }}</ion-title>
+    <app-sync-status-button slot="end"></app-sync-status-button>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-list>
+    <ion-item lines="none">
+      <ion-label class="ion-text-wrap">
+        <ion-note>{{ 'HOME.INTRO' | translate }}</ion-note>
+      </ion-label>
+    </ion-item>
+    @for (link of quickLinks; track link.key) {
+      <ion-item button [routerLink]="link.route">
+        <ion-icon [name]="link.icon" slot="start" aria-hidden="true"></ion-icon>
+        <ion-label>{{ link.labelKey | translate }}</ion-label>
+      </ion-item>
+    }
+  </ion-list>
+</ion-content>

@@ -26,10 +26,15 @@
     "HIDE_PASSWORD": "Jelszó elrejtése"
   },
   "TABS": {
+    "KEZDOLAP": "Kezdőlap",
     "KAJA": "Kaja",
     "EDZES": "Edzés",
     "FELADATOK": "Feladatok",
     "MENU": "Menü"
+  },
+  "HOME": {
+    "TITLE": "Kezdőlap",
+    "INTRO": "Innen éred el gyorsan a többi részt. A widgetek és gyorsgombok később kerülnek ide."
   },
   "MENU": {
     "TITLE": "Menü",

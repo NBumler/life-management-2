@@ -26,10 +26,15 @@
     "HIDE_PASSWORD": "Hide password"
   },
   "TABS": {
+    "KEZDOLAP": "Home",
     "KAJA": "Food",
     "EDZES": "Workout",
     "FELADATOK": "Tasks",
     "MENU": "Menu"
+  },
+  "HOME": {
+    "TITLE": "Home",
+    "INTRO": "Quick access to the rest of the app. Widgets and quick actions will land here later."
   },
   "MENU": {
     "TITLE": "Menu",
