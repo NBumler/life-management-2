@@ -14,6 +14,27 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-09 — #82 / #83** Sötét mód: legacy `--ion-color-step-<n>` → `--ion-background-color-step-<n>`.
+  Az Ionic 8 `dark.class.css` csak az új nevű lépcsős színeket írja felül; a régi `--ion-color-step-*`
+  nincs definiálva, így a `var(--ion-color-step-50, #f7f7f7)` mindig a világos fallbackre esett →
+  sötét témában fehér-alapon-fehér az `app-aspect-picker` celláin (Sector/Route szerkesztő) és a
+  napló kísérlet-kártyák fejlécén. Érintett: `aspect-picker.component.scss`, 4× `*-session-edit.page.ts`
+  `styles:`, `gym-edit.page.ts` swatch, `aycm-stats.page.scss` (latens). Spec: [[Dark&Light mode]]. **(bug)**
+- **2026-09-09 — #89** `Route.totalPitches` (kötélhossz) az új Route űrlapon `null` helyett `1`
+  alapértékkel indul; betöltéskor `?? 1` megjelenítési fallback. Kliensoldali, nincs migráció.
+  Spec: [[Outdoor köteles admin]]. **(change-request)**
+- **2026-09-09 — #90** Szektor-lista: a `defaultAspect` a lokalizált égtáj-névvel jelenik meg
+  (`SHARED.ASPECT_PICKER.FULL.*`) a nyers enum-token helyett (`crag-edit.page.html`). Spec:
+  [[Outdoor boulder admin]], [[Outdoor köteles admin]]. **(bug)**
+- **2026-09-09 — #91** `AscentAttempt.attemptCount` az új kísérlet-sorban `null` helyett `1`
+  alapértékkel indul mind a 4 napló-formon; a betöltött sorok érintetlenek. Spec: [[Mászónapló]].
+  **(change-request)**
+- **2026-09-09 — #93** Fokozat-súgó: a „3, 4, 5 betű nélkül is érvényes; 6-tól kötelező a betű"
+  mondat a francia/Font példák mögé került (nem az UIAA rész után) — `HELP_ROPE` / `HELP_BOULDER`
+  i18n, hu + en. Spec: [[Nehézségi szint skálája]]. **(bug)**
+- **2026-09-09 — #97** Heti terv hét-navigátor: a nyilak + hét-felirat egy sorban (`.week-nav`
+  flex), eddig három sorba tördelt a stílus nélküli `<div>` + blokk-szintű `<ion-buttons>` miatt.
+  Spec: [[Heti terv]]. **(bug)**
 - **2026-09-09 — #98** Gyakorlat-picker modal teljes magasság. A megosztott
   `app-exercise-picker` `<ion-modal>`-ben önálló gyerek-komponensként jelenik meg; Ionic 8
   nem rak köré `.ion-page` wrappert, így a hoszt összeesett és az `<ion-content>` majdnem

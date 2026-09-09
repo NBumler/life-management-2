@@ -1,14 +1,13 @@
 ---
 id: 89
 type: change-request
-status: backlog
+status: done
 title: Mászás — a kötélhossz (totalPitches) alapértelmezett értéke legyen 1
 specs:
   - "[[Outdoor köteles admin]]"
-  - "[[Mászónapló]]"
 flag:
 created: 2026-09-09
-closed:
+closed: 2026-09-09
 ---
 
 # 89 — Mászás — a kötélhossz (totalPitches) alapértelmezett értéke legyen 1
@@ -43,7 +42,10 @@ jelenleg nem tűnik annak._
 
 ## Lezáráskor (on-done)
 
-- Frissített specek: [[Outdoor köteles admin]] (`Route.totalPitches` default 1),
-  [[Mászónapló]] (ha a fallback megjelenik a statisztikánál)
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — <mit>
-- Kód: frontend `route-edit` page (form init), esetleg backend `V<n>` backfill
+Tisztán kliensoldali: a `route-edit` form `totalPitches` kontrollja `null` helyett `1`-gyel
+indul, és meglévő Route betöltésekor `existing.totalPitches ?? 1` a megjelenítési fallback.
+Nincs migráció / séma / backend hatás; a `≥ 1` validáció változatlan.
+
+- Frissített specek: [[Outdoor köteles admin]] (`Route` mezőtábla — `totalPitches` default 1)
+- `IMPLEMENTATION_STATUS.md` sor: 2026-09-09 — #89 `totalPitches` form-default 1
+- Kód: `frontend/src/app/pages/workout/climbing/admin/route-edit.page.ts`. Zöld gate ✓.

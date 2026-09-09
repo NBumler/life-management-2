@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-03
-verifikalt_commit: 2f99631
+verifikalva: 2026-09-09
+verifikalt_commit: 27bf564
 ---
 
 # Dark&Light mode
@@ -37,6 +37,7 @@ A cél nem esztétikai: sötét háttéren fekete szöveg vagy gomb **tilos** (o
 
 - Szöveg kontraszt **≥ 4.5:1**, nagy szöveg és ikon **≥ 3:1** mindkét palettában (WCAG AA szint).
 - A komponensekben **nincs hardcode színérték**: minden szín téma-tokenből jön (`--ion-color-*`, `--ion-text-color`, `--ion-background-color`, saját szemantikus tokenek). Ez az egyetlen mód, hogy a témaváltás ne hagyjon ki komponenst.
+- **Lépcsős (stepped) színek:** csak az Ionic 8 aktuális neveit szabad használni — `--ion-background-color-step-<n>` és `--ion-text-color-step-<n>` —, ezeket a `dark.class.css` palettánként felülírja. A **régi `--ion-color-step-<n>` név Ionic 8-ban nincs definiálva**, tehát a `var(--ion-color-step-50, #f7f7f7)` alak mindig a világos fallbackre esik → sötét témában fehér-alapon-fehér. (Történeti hiba volt a mászó napló kísérlet-kártyáiban és az `app-aspect-picker`-ben — `backlog/082`, `backlog/083`.)
 - A **szemantikus állapotszínek mindkét palettában külön értéket kapnak**, nem ugyanazt a hexet: a light paletta pirosa / narancsa sötét háttéren nem elég kontrasztos. Érintett helyek: a szinkronizációs státuszjelző szürke / piros állapotai ([[Szinkronizációs központ]], [[Backend-offline first]] §16), az [[Étkezés]] progress bar sárga / zöld / narancs / piros skálája, a listák `_dirty` / `_sync_error` jelölése. Jelenleg a komponensek nagyrészt az Ionic alap-palettáira támaszkodnak, és nincs központi, `theme/variables.scss`-ben definiált per-paletta szemantikus token-készlet — tervezett: `backlog/017-dark-and-light-kozponti-szemantikus-szin-tokenek-kulon-light-dar.md`.
 - **A jelentés soha nem áll csak színen** (színvakság): a sync státusz ikonnal is jelöl, a progress bar mellett szöveges állapot van („hátra" / „túllépés") — ez már az érintett specek követelménye, itt csak megerősítjük.
 

@@ -38,7 +38,7 @@ import { IndoorRouteRepository } from '../../../../core/data/indoor-route.reposi
   selector: 'app-gym-edit',
   templateUrl: 'gym-edit.page.html',
   styles: [
-    '.swatch { display: inline-block; width: 1.25rem; height: 1.25rem; border-radius: 4px; margin-inline-end: 0.75rem; border: 1px solid var(--ion-color-step-300, #ccc); flex: none; }',
+    '.swatch { display: inline-block; width: 1.25rem; height: 1.25rem; border-radius: 4px; margin-inline-end: 0.75rem; border: 1px solid var(--ion-background-color-step-300, #ccc); flex: none; }',
   ],
   imports: [
     ReactiveFormsModule,

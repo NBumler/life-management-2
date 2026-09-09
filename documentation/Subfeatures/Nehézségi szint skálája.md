@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: dac7f81
+verifikalva: 2026-09-09
+verifikalt_commit: 27bf564
 ---
 
 # Nehézségi szint skálája
@@ -75,7 +75,7 @@ Megvalósítva:
 - **Shared komponens** — `shared/grade-input/` (`app-grade-input`), a közös `shared/help-input/` (`app-help-input`: `ion-input` + záró súgó-ikon gomb + opcionális badge + inline hiba-note) fölé építve, ugyanúgy, mint a [[Mennyiség mező]] `app-quantity-input`. Kettős API: `ControlValueAccessor` a reaktív-formos hívóknak (`formControlName`), és sima `[value]` / `(valueChange)` a signal-alapú napló-soroknak. `@Input() discipline` = `BOULDER` \| `ROPE` (a parent adja át a dashboard kontextusból).
   - Záró **badge**: `VALID` → `FRA` / `YDS` / `UIAA` / `FONT` / `V`; `UNKNOWN` → `?`.
   - **Chip-sor** kétértelműségre (`AMBIGUOUS`, ill. bare `4`/`5` az alternatívákkal): a `candidates` lista `ion-chip`-ként; koppintásra a mező a `candidate.label`-re áll és újraparse-ol.
-  - **Súgó modal** (`SHARED.GRADE_INPUT.HELP_*`, `AlertController`) a skálákkal + példákkal; az `UNKNOWN` / `AMBIGUOUS` állapot inline hibaüzenetet is ad (`SHARED.GRADE_INPUT.ERROR_*`).
+  - **Súgó modal** (`SHARED.GRADE_INPUT.HELP_*`, `AlertController`) a skálákkal + példákkal; az `UNKNOWN` / `AMBIGUOUS` állapot inline hibaüzenetet is ad (`SHARED.GRADE_INPUT.ERROR_*`). A „3, 4, 5 betű nélkül is érvényes; 6-tól kötelező a betű" mondat a **francia / Font** blokk példái után áll (nem az UIAA rész végén, ahová nem tartozik — `backlog/093`).
   - **250 ms debounce** csak a vizuális deriváción (badge / chip / hiba / `parseChange`); a form-érték minden leütésre propagál, így a szülő `save()` gate szinkron `parseGrade`-je pontos marad.
 - **Hívási helyek**: `admin/gym-color-band-edit` (alsó/felső fokozat), `admin/indoor-route-edit` (ágazatfüggő), és mind a 4 kontextus-napló szerkesztő (`naplo/*-session-edit`, kísérletenkénti + outdoor köteles per-pitch grade).
 

@@ -116,7 +116,7 @@ const DEFAULT_SAFETY_STYLE = AscentAttempt.SafetyStyleEnum.Lead;
     `
       .attempt-card {
         margin: 12px 8px;
-        border: 1px solid var(--ion-color-step-150, #d7d8da);
+        border: 1px solid var(--ion-background-color-step-150, #d7d8da);
         border-inline-start: 4px solid var(--ion-color-medium);
         border-radius: 10px;
         overflow: hidden;
@@ -128,7 +128,7 @@ const DEFAULT_SAFETY_STYLE = AscentAttempt.SafetyStyleEnum.Lead;
         border-inline-start-color: var(--ion-color-danger);
       }
       .attempt-card > ion-item:first-child {
-        --background: var(--ion-color-step-50, #f7f7f7);
+        --background: var(--ion-background-color-step-50, #f7f7f7);
         font-weight: 600;
       }
     `,
@@ -489,7 +489,7 @@ export class IndoorRopeSessionEditPage implements OnInit {
       safetyStyle: signal<AscentAttempt.SafetyStyleEnum>(DEFAULT_SAFETY_STYLE),
       isSuccess: signal(false),
       ascentStyle: signal<AscentAttempt.AscentStyleEnum | null>(null),
-      attemptCount: signal<number | null>(null),
+      attemptCount: signal<number | null>(1),
       notes: signal<string | null>(null),
     };
   }

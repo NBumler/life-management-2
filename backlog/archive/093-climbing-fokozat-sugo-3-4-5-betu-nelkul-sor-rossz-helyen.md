@@ -1,13 +1,13 @@
 ---
 id: 93
 type: bug
-status: backlog
+status: done
 title: Mászás — a fokozat-súgóban a „3, 4, 5 betű nélkül is jó; 6-tól kötelező a betű" sor rossz kontextusban van
 specs:
   - "[[Nehézségi szint skálája]]"
 flag:
 created: 2026-09-09
-closed:
+closed: 2026-09-09
 ---
 
 # 93 — Mászás — a fokozat-súgóban a „3, 4, 5 betű nélkül is jó; 6-tól kötelező a betű" sor rossz kontextusban van
@@ -43,6 +43,12 @@ _Tisztán szöveg / sorrend a súgó modalban; nincs logikai változás. Scoping
 
 ## Lezáráskor (on-done)
 
-- Frissített specek: [[Nehézségi szint skálája]] `### UI/UX elvárások` (súgó modal tartalma)
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — <mit>
-- Kód: frontend `shared/grade-input/*` (súgó összeállítás), `assets/i18n/{hu,en}.json`
+Csak i18n szöveg: a `SHARED.GRADE_INPUT.HELP_ROPE` / `HELP_BOULDER` kulcsokban a „3, 4, 5 betű
+nélkül is érvényes; 6-tól kötelező a betű" mondat a **francia / Font** példamondat mögé került
+(kötőjellel), nem a string végére az UIAA rész után. hu + en. A `HELP_TITLE` és a többi rész
+változatlan; a `grade-input` komponens kódja nem változott.
+
+- Frissített specek: [[Nehézségi szint skálája]] `## Architektúra > Frontend` — súgó modal
+  mondatrend jegyzet
+- `IMPLEMENTATION_STATUS.md` sor: 2026-09-09 — #93 fokozat-súgó mondatrend (i18n)
+- Kód: `frontend/src/assets/i18n/{hu,en}.json`. Zöld gate ✓.

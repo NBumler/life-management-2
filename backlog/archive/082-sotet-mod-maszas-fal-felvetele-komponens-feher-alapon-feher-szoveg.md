@@ -1,15 +1,13 @@
 ---
 id: 82
 type: bug
-status: backlog
+status: done
 title: Sötét mód — a mászás „fal felvétele" komponensben fehér alapon fehér a szöveg
 specs:
   - "[[Dark&Light mode]]"
-  - "[[Indoor köteles admin]]"
-  - "[[Indoor boulder admin]]"
 flag:
 created: 2026-09-09
-closed:
+closed: 2026-09-09
 ---
 
 # 82 — Sötét mód — a mászás „fal felvétele" komponensben fehér alapon fehér a szöveg
@@ -44,7 +42,16 @@ beazonosítása. Ha ugyanaz a minta több mászó admin formon is előfordul, k�
 
 ## Lezáráskor (on-done)
 
-- Frissített specek: [[Dark&Light mode]] (ha a token-jegyzék / lefedettség bővül), az érintett
-  admin spec `### UI/UX elvárások` (ha releváns)
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — <mit>
-- Kód: `frontend/src/app/pages/workout/climbing/admin/*` + esetleg globális téma SCSS
+**Gyökérok:** a legacy `--ion-color-step-<n>` CSS-változó Ionic 8-ban **nincs definiálva** (a
+`dark.class.css` csak a `--ion-background-color-step-<n>` / `--ion-text-color-step-<n>` neveket
+írja felül), így a `var(--ion-color-step-50, #f3f3f3)` alak mindig a világos fallbackre esik →
+sötét témában fehér cellák + fehér szöveg. Érintett: `app-aspect-picker` (a `Sector` / `Route`
+szerkesztő égtáj-választója) és a `gym-edit` szín-swatch kerete. Javítás: `--ion-color-step-*`
+→ `--ion-background-color-step-*` mindenhol.
+
+- Frissített specek: [[Dark&Light mode]] `#### Kontraszt` — új szabály a lépcsős színek Ionic 8
+  neveiről (`verifikalt_commit` bump)
+- `IMPLEMENTATION_STATUS.md` sor: 2026-09-09 — #82/#83 legacy `--ion-color-step-*` → theme-aware
+- Kód: `frontend/src/app/shared/aspect-picker/aspect-picker.component.scss`,
+  `pages/workout/climbing/admin/gym-edit.page.ts`, `pages/menu/aycm/aycm-stats.page.scss`
+  (ugyanaz a latens hiba). Zöld: lint + test:ci (1596) + build + verify:outbox.

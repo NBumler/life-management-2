@@ -1,17 +1,13 @@
 ---
 id: 91
 type: change-request
-status: backlog
+status: done
 title: Mászás — a „Próbák (ebben a sessionben)" (attemptCount) input alapértéke legyen 1
 specs:
   - "[[Mászónapló]]"
-  - "[[Indoor boulder napló]]"
-  - "[[Indoor köteles napló]]"
-  - "[[Outdoor boulder napló]]"
-  - "[[Outdoor köteles napló]]"
 flag:
 created: 2026-09-09
-closed:
+closed: 2026-09-09
 ---
 
 # 91 — Mászás — a „Próbák (ebben a sessionben)" (attemptCount) input alapértéke legyen 1
@@ -43,7 +39,11 @@ _Kliensoldali form-default; nincs backend / séma hatás. A statisztikai számí
 
 ## Lezáráskor (on-done)
 
-- Frissített specek: [[Mászónapló]] (`AscentAttempt.attemptCount` — default 1), a 4 napló spec
-  ha a UI/UX sor pontosul
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — <mit>
-- Kód: frontend `naplo/*-session-edit.page.ts` (attempt-sor init), érintett `*.spec.ts`
+Mind a 4 napló-form `emptyRow()` factory-jában az `attemptCount` signal `null` helyett `1`-gyel
+indul. A betöltött (mentett) sorok `attempt.attemptCount ?? null` maradnak — nem írjuk felül a
+tárolt adatot. Nincs séma / backend / statisztika hatás (a számítások eddig sem szoroztak vele).
+
+- Frissített specek: [[Mászónapló]] (`AscentAttempt.attemptCount` sor — új sor default `1`)
+- `IMPLEMENTATION_STATUS.md` sor: 2026-09-09 — #91 `attemptCount` új-sor default 1
+- Kód: `frontend/src/app/pages/workout/climbing/naplo/{indoor,outdoor}-{boulder,rope}-session-edit.page.ts`.
+  Zöld gate ✓.

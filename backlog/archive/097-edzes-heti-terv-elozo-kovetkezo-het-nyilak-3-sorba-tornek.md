@@ -1,13 +1,13 @@
 ---
 id: 97
 type: bug
-status: backlog
+status: done
 title: Edzés / Heti terv — az előző/következő hét nyilak és a hét-felirat 3 külön sorba törnek (UI bug)
 specs:
   - "[[Heti terv]]"
 flag:
 created: 2026-09-09
-closed:
+closed: 2026-09-09
 ---
 
 # 97 — Edzés / Heti terv — az előző/következő hét nyilak és a hét-felirat 3 külön sorba törnek (UI bug)
@@ -39,6 +39,11 @@ _Scoping: a `weekly-plan` page template — feltehetően egy `ion-toolbar` / `di
 
 ## Lezáráskor (on-done)
 
-- Frissített specek: [[Heti terv]] `### UI/UX elvárások` (ha a navigátor elrendezését rögzítjük)
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — <mit>
-- Kód: frontend `pages/workout/weekly-plan/*.{html,scss}`
+A hét-navigátor `<div>`-je stílus nélküli volt; a benne lévő két `<ion-buttons>` blokk-szintű
+flex-hoszt, ezért három sorba tördelt. Javítás: a `div` külön `.week-nav` osztályt kap, hozzá
+egy scoped `styles:` blokk (`display: flex; align-items: center`), a középső hét-felirat gomb
+`flex: 1`-gyel a nyilak közé feszül. Tiszta template + CSS.
+
+- Frissített specek: [[Heti terv]] `### UI/UX elvárások` — hét-navigátor egy sorban
+- `IMPLEMENTATION_STATUS.md` sor: 2026-09-09 — #97 Heti terv hét-navigátor egy sorban
+- Kód: `frontend/src/app/pages/workout/weekly-plan/weekly-plan.page.{html,ts}`. Zöld gate ✓.

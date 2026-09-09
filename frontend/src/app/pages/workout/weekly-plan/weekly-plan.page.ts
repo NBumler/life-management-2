@@ -43,6 +43,25 @@ interface DayCell {
 @Component({
   selector: 'app-weekly-plan',
   templateUrl: 'weekly-plan.page.html',
+  styles: [
+    `
+      /* Prev / week-label / next on one row — the wrapping <ion-buttons> are block-level flex
+         hosts, so without an explicit flex row they stacked into three lines. */
+      .week-nav {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 8px;
+      }
+      .week-nav > ion-button {
+        flex: 1;
+        min-width: 0;
+      }
+      .week-nav ion-buttons {
+        flex: none;
+      }
+    `,
+  ],
   imports: [
     RouterLink,
     IonHeader,

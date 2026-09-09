@@ -1,15 +1,14 @@
 ---
 id: 90
 type: bug
-status: backlog
+status: done
 title: Mászás — a szektorok listájában a tájolás (aspect) felirata nincs lefordítva
 specs:
   - "[[Outdoor boulder admin]]"
   - "[[Outdoor köteles admin]]"
-  - "[[Nyelv választás]]"
 flag:
 created: 2026-09-09
-closed:
+closed: 2026-09-09
 ---
 
 # 90 — Mászás — a szektorok listájában a tájolás (aspect) felirata nincs lefordítva
@@ -44,7 +43,13 @@ _Scoping: a szektor-lista template-jében a `sector.defaultAspect` interpoláci�
 
 ## Lezáráskor (on-done)
 
-- Frissített specek: [[Outdoor boulder admin]] / [[Outdoor köteles admin]] `### UI/UX elvárások`
-  (ha pontosítást igényel)
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — <mit>
-- Kód: frontend `pages/workout/climbing/admin/*sector*` template + `assets/i18n/{hu,en}.json`
+A `crag-edit.page.html` szektor-sora a nyers `sector.defaultAspect` tokent írta ki
+(`<p>{{ sector.defaultAspect }}</p>`). Javítás: `{{ 'SHARED.ASPECT_PICKER.FULL.' + sector.defaultAspect | translate }}`
+— a már meglévő `app-aspect-picker` fordítási kulcsokat használja (nincs új i18n kulcs).
+A `V34` migráció óta a `defaultAspect` mindig valid `N..NW` token vagy `null`, a `@if` guard a
+`null`-t kiszűri.
+
+- Frissített specek: [[Outdoor boulder admin]] / [[Outdoor köteles admin]] — szektor-lista a
+  lokalizált égtáj-nevet mutatja
+- `IMPLEMENTATION_STATUS.md` sor: 2026-09-09 — #90 szektor-lista aspect i18n
+- Kód: `frontend/src/app/pages/workout/climbing/admin/crag-edit.page.html`. Zöld gate ✓.

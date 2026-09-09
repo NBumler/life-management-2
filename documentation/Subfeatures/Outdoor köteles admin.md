@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-06
-verifikalt_commit: 8dbfb13
+verifikalva: 2026-09-09
+verifikalt_commit: 27bf564
 ---
 
 # Outdoor köteles admin
@@ -24,7 +24,7 @@ Kültéri köteles törzsadat: **Crag → Sector → Route**.
 | Entitás | Fő mezők |
 |---|---|
 | `Crag` / `Sector` | Mint [[Outdoor boulder admin]] (közös helyszín fa) |
-| `Route` | `name`, `guidebookGrade`, `lengthInMeters`, `totalPitches`, `rockType`, `aspect`, `topoNumber`, soft delete |
+| `Route` | `name`, `guidebookGrade`, `lengthInMeters`, `totalPitches` (kötélhossz; új Route űrlapon **alapból `1`** — az egyhosszos út a gyakori eset, tárolt `null` is `1`-ként jelenik meg), `rockType`, `aspect`, `topoNumber`, soft delete |
 
 `aspect` (fekvés) — **8 irányú égtáj-enum**: `N`, `NE`, `E`, `SE`, `S`, `SW`, `W`, `NW` (üres/`null` = ismeretlen; nincs `UNKNOWN` tag). Bevitel a `Route` és a `Sector` szerkesztőn a **vizuális választóval** (`app-aspect-picker`): négyzet kerületén a 8 irány, É felül, egy tap; a kijelöltre újra tap → törlés. Iránytű-fokból a `degreesToAspect` binnel (45°-os cikkek, az alsó határ felfelé kerekít — 22,5° = `NE`); paritás-fixture: `shared/fixtures/aspect-degrees.json` (kliens: `shared/aspect.ts`, backend: `hu.bumler.lm2.common.AspectDirection`). A Route saját `aspect`-je a naplóban felülírja a `Sector` defaultot.
 
@@ -34,7 +34,7 @@ Naplózáskor a Route kiválasztása előtölti hossz / pitch / grade **és** (h
 
 ### UI/UX elvárások
 
-Route CRUD a szektor alatt; grade a [[Nehézségi szint skálája]] komponenssel. A szerkesztő űrlapon opcionális `topoNumber` mező (a név alatt); a szektor route-listája és a napló picker a sorszámot a név elé fűzi (`12 · Sárga áthajlás`), és a fenti természetes rendezéssel rendez. A fekvés (`aspect`) mező helyén az `app-aspect-picker` négyzetes égtáj-választó áll (`ion-input` helyett), ugyanígy a `Sector` szerkesztőn is.
+Route CRUD a szektor alatt; grade a [[Nehézségi szint skálája]] komponenssel. A szerkesztő űrlapon opcionális `topoNumber` mező (a név alatt); a szektor route-listája és a napló picker a sorszámot a név elé fűzi (`12 · Sárga áthajlás`), és a fenti természetes rendezéssel rendez. A fekvés (`aspect`) mező helyén az `app-aspect-picker` négyzetes égtáj-választó áll (`ion-input` helyett), ugyanígy a `Sector` szerkesztőn is. A szektorok listájában a `defaultAspect` a **lokalizált** égtáj-névvel jelenik meg (`SHARED.ASPECT_PICKER.FULL.*`), nem nyers enum-kóddal.
 
 ### Megjegyzések
 

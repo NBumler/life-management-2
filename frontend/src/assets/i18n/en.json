@@ -597,8 +597,8 @@
     },
     "GRADE_INPUT": {
       "HELP_TITLE": "How to enter the grade",
-      "HELP_BOULDER": "Font: number + letter (A–C), optional +. Example: 6A, 6B+, 7C. V-scale: V + number. Example: V0–V17. Bare 3, 4, 5 are fine; from 6 the letter is required.",
-      "HELP_ROPE": "French: number + letter (a–c), optional +. Example: 6a, 6a+, 7b. YDS: 5. + grade, a–d above 5.10. Example: 5.9, 5.10a. UIAA: roman numeral, optional +/−. Example: VI-, VII+. Bare 3, 4, 5 are fine; from 6 the letter is required.",
+      "HELP_BOULDER": "Font: number + letter (A–C), optional +. Example: 6A, 6B+, 7C — bare 3, 4, 5 are also valid, from 6 the letter is required. V-scale: V + number. Example: V0–V17.",
+      "HELP_ROPE": "French: number + letter (a–c), optional +. Example: 6a, 6a+, 7b — bare 3, 4, 5 are also valid, from 6 the letter is required. YDS: 5. + grade, a–d above 5.10. Example: 5.9, 5.10a. UIAA: roman numeral, optional +/−. Example: VI-, VII+.",
       "ERROR_UNKNOWN": "Grade not recognised. Check the help for examples.",
       "ERROR_AMBIGUOUS": "Complete the grade (e.g. 6 → 6a), or pick one of the suggestions."
     },

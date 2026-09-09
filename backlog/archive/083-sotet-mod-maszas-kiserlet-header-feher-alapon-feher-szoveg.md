@@ -1,14 +1,13 @@
 ---
 id: 83
 type: bug
-status: backlog
+status: done
 title: Sötét mód — a kísérlet fejléce (sorszám + „sikeres" toggle) fehér alapon fehér
 specs:
   - "[[Dark&Light mode]]"
-  - "[[Mászónapló]]"
 flag:
 created: 2026-09-09
-closed:
+closed: 2026-09-09
 ---
 
 # 83 — Sötét mód — a kísérlet fejléce (sorszám + „sikeres" toggle) fehér alapon fehér
@@ -41,6 +40,12 @@ jeggyel, ha a gyökérok közös (mászó modul saját, témát nem követő SCS
 
 ## Lezáráskor (on-done)
 
-- Frissített specek: [[Mászónapló]] `### UI/UX elvárások` (ha releváns), [[Dark&Light mode]]
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — <mit>
-- Kód: `frontend/src/app/pages/workout/climbing/naplo/*-session-edit.{html,scss}`
+Közös gyökérok a [[082-sotet-mod-maszas-fal-felvetele-komponens-feher-alapon-feher-szoveg]]
+jeggyel: a `.attempt-card > ion-item:first-child { --background: var(--ion-color-step-50, #f7f7f7) }`
+inline stílus mind a 4 napló-formon a nem létező legacy változóra hivatkozott → fehér fejléc-sáv
+sötét témában, fehér szöveggel. Javítás: `--ion-color-step-50/150` → `--ion-background-color-step-50/150`.
+
+- Frissített specek: [[Dark&Light mode]] `#### Kontraszt` (közös a #82-vel)
+- `IMPLEMENTATION_STATUS.md` sor: 2026-09-09 — #82/#83 legacy `--ion-color-step-*` → theme-aware
+- Kód: `frontend/src/app/pages/workout/climbing/naplo/{indoor,outdoor}-{boulder,rope}-session-edit.page.ts`
+  (`styles:` blokk). Zöld: lint + test:ci (1596) + build + verify:outbox.
