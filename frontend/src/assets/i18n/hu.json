@@ -34,7 +34,22 @@
   },
   "HOME": {
     "TITLE": "Kezdőlap",
-    "INTRO": "Innen éred el gyorsan a többi részt. A widgetek és gyorsgombok később kerülnek ide."
+    "QUICK": {
+      "TITLE": "Gyorsgombok",
+      "NEW_MEAL": "Új étkezés",
+      "NEW_CLIMB": "Új mászás"
+    },
+    "NUTRITION": {
+      "TITLE": "Mai étkezés állása",
+      "CALORIES": "Kalória",
+      "PROTEIN": "Fehérje",
+      "CARBS": "Szénhidrát",
+      "FAT": "Zsír",
+      "REMAINING": "még {{amount}}",
+      "INCOMPLETE": "Egy mai tétel hivatkozott receptje/élelmiszere hiányzik — a napi összesítés hiányos.",
+      "NOT_COMPUTABLE": "Add meg a profil adataidat (súly, magasság, cél), hogy lásd a mai célt.",
+      "SET_UP_PROFILE": "Profil megnyitása"
+    }
   },
   "MENU": {
     "TITLE": "Menü",

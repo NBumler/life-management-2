@@ -14,6 +14,20 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-09 — #95** Kezdőképernyő — widgetek / gyorsgombok. A [[Kezdőlap]] (`#96`) tartalma
+  mostantól **config-vezérelt widget-verem** (`HOME_WIDGETS` a `core/config/home-widget-registry.ts`-ben,
+  a tab registry mintájára flag-elve): **(1) Gyorsgombok** widget — `HOME_QUICK_ACTIONS` gombonként
+  flag-elt gyors-belépők: „Új étkezés" → `/tabs/food/meal/new` (`tab.kaja`), „Új mászás" → a mászás-hub
+  (`edzes.maszonaplo`); üres listánál nem renderel. **(2) Mai étkezés állása** widget (`tab.kaja`) —
+  a mai bevitt kalória + makrók a mai célhoz képest, az [[Étkezés]] dashboarddal szám-szinten megegyező
+  `TodayNutritionService`-ből (`computeDailyNutrition` + `computeTdee` az aznapi aktivitás-kalóriával);
+  hiányos profilnál link a [[Profile]]-ra. Új: `core/data/today-nutrition.service.ts` (9 repository
+  signalból `computed` összegzés), `pages/home/widgets/{quick-actions,today-nutrition}-widget.component.*`,
+  `home.page` átírva a widget-veremre (`@switch`, `ionViewWillEnter` → `TodayNutritionService.load()`).
+  i18n `HOME.QUICK.*` / `HOME.NUTRITION.*` (hu/en). Nincs backend / outbox érintés. Tesztek:
+  `home-widget-registry.spec`, `today-nutrition.service.spec`, két widget-spec, `home.page.spec`
+  átírva — `test:ci` 1647 ✓. Spec: [[Kezdőlap]] (widget-verem), [[Frontend]] (tab tábla + route-térkép),
+  [[Étkezés]] + [[Mászónapló]] (gyors-belépő az UI/UX-ban). **(feature)**
 - **2026-09-09 — #96** Új feature — Kezdőlap / dashboard tab (az alsó tab-sor **első** eleme).
   Új `tab.kezdolap` flag (a `features.json` első kulcsa, alapból **be**), új `Kezdőlap` `TabDef`
   a registry élén (`/tabs/home`), `pages/home/home.page.ts` (standalone, OnPush) — minimális

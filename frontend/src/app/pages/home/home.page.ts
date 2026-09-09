@@ -1,17 +1,18 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
-import { IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonNote, IonTitle, IonToolbar } from '@ionic/angular/standalone';
+import { IonContent, IonHeader, IonTitle, IonToolbar, ViewWillEnter } from '@ionic/angular/standalone';
 import { TranslatePipe } from '@ngx-translate/core';
 
 import { FeatureFlagsService } from '../../core/config/feature-flags.service';
-import { TAB_REGISTRY, TabDef } from '../../core/config/tab-registry';
+import { HOME_WIDGETS, HomeWidgetDef } from '../../core/config/home-widget-registry';
+import { TodayNutritionService } from '../../core/data/today-nutrition.service';
 import { SyncStatusButtonComponent } from '../../shared/sync-status-button/sync-status-button.component';
+import { QuickActionsWidgetComponent } from './widgets/quick-actions-widget.component';
+import { TodayNutritionWidgetComponent } from './widgets/today-nutrition-widget.component';
 
 /**
  * documentation/Features/Kezdőlap.md — a login utáni kezdőképernyő és az alsó tab-sor első eleme.
- * Ez a jegy (`backlog/096`) a tab / route / flag / default-tab vázat szállítja: minimális
- * tartalomként a többi engedélyezett tabra mutató gyorslinkek. A tényleges widgetek / gyorsgombok
- * külön jegy (`backlog/095`). Kizárólag a helyi store-ból renderel — Full-offline is teljes értékű.
+ * Tartalma a config-vezérelt widget-verem (`HOME_WIDGETS`, `backlog/095`): gyorsgombok + a mai
+ * étkezés állása. Kizárólag a helyi store-ból renderel — Full-offline is teljes értékű.
  */
 @Component({
   selector: 'app-home',
@@ -21,22 +22,27 @@ import { SyncStatusButtonComponent } from '../../shared/sync-status-button/sync-
     IonToolbar,
     IonTitle,
     IonContent,
-    IonList,
-    IonItem,
-    IonLabel,
-    IonIcon,
-    IonNote,
-    RouterLink,
     SyncStatusButtonComponent,
+    QuickActionsWidgetComponent,
+    TodayNutritionWidgetComponent,
     TranslatePipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class HomePage {
+export class HomePage implements ViewWillEnter {
   private readonly featureFlags = inject(FeatureFlagsService);
+  private readonly todayNutrition = inject(TodayNutritionService);
 
-  /** Gyorslinkek: minden engedélyezett tab a Kezdőlapon kívül, a registry sorrendjében. */
-  readonly quickLinks: readonly TabDef[] = TAB_REGISTRY.filter(
-    (tab) => tab.key !== 'home' && (tab.flag === null || this.featureFlags.isEnabled(tab.flag)),
+  /** Widgets to render, in registry order, whose flag is on. */
+  readonly widgets: readonly HomeWidgetDef[] = HOME_WIDGETS.filter(
+    (widget) => widget.flag === null || this.featureFlags.isEnabled(widget.flag),
   );
+
+  private readonly nutritionShown = this.widgets.some((widget) => widget.key === 'today-nutrition');
+
+  async ionViewWillEnter(): Promise<void> {
+    if (this.nutritionShown) {
+      await this.todayNutrition.load();
+    }
+  }
 }

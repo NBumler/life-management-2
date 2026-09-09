@@ -11,7 +11,7 @@ verifikalt_commit: bdf5680
 |---|---|
 | **Státusz** | `Kész` |
 | **Szülő** | [[Kaja]] |
-| **Kapcsolódó** | [[Élelmiszer tárolás]], [[Tápérték kalkulátor]], [[Értesítések]], [[Recept forrású étkezés]], [[Élelmiszer forrású étkezés]], [[Egyéni forrású étkezés]], [[Recept]], [[Élelmiszerek]], [[Backend-offline first]], [[Szinkronizációs központ]] |
+| **Kapcsolódó** | [[Élelmiszer tárolás]], [[Tápérték kalkulátor]], [[Értesítések]], [[Recept forrású étkezés]], [[Élelmiszer forrású étkezés]], [[Egyéni forrású étkezés]], [[Recept]], [[Élelmiszerek]], [[Kezdőlap]], [[Backend-offline first]], [[Szinkronizációs központ]] |
 
 ### Jelenlegi működés
 
@@ -103,6 +103,8 @@ ID + mennyiség/szorzó; tápanyag az aktuális katalógusból. Katalógus-téte
 ### UI/UX elvárások
 
 - Kaja: Étkezés dashboard (fenti vékony layout).
+- Gyors-belépő a [[Kezdőlap]]-ról: „Új étkezés" gomb → `/tabs/food/meal/new` (`tab.kaja`); a
+  „Mai étkezés állása" widget a mai összesítést (kalória + makrók a célhoz képest) mutatja.
 - Fejléc: **Étkezés rögzítése**.
 - Űrlap: időpont, megjegyzés, tételek; mentés footer; iOS `16px`.
 - Tétellista: kompakt, csak-olvasható összegző sorok (cím + „mennyiség · adagszorzó · effektív kcal/ár"). A sorra koppintva teljes képernyős tétel-szerkesztő modal nyílik; átrendezés fel/le nyíllal (natív, egymás alatt) vagy fogantyúval (web), törlés a soron. Hiányos tétel a mentés blokkolásakor jelölést kap.

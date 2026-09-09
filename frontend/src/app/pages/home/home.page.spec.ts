@@ -1,35 +1,36 @@
-import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { provideTranslateService } from '@ngx-translate/core';
 
-import { HealthService } from '../../api/api/health.service';
-import { SyncService } from '../../api/api/sync.service';
-import { AuthSessionService } from '../../core/session/auth-session.service';
-import { LocalDatabaseService } from '../../core/storage/local-database.service';
+import { TodayNutritionService, TodayNutritionSummary } from '../../core/data/today-nutrition.service';
 import { OfflineQueueService } from '../../core/sync/offline-queue.service';
+import { SyncEngineService } from '../../core/sync/sync-engine.service';
 import { HomePage } from './home.page';
 
-// documentation/Features/Kezdőlap.md — the first bottom tab; minimal content = quick links to the
-// other enabled tabs. Widgets/quick actions are backlog/095.
+// documentation/Features/Kezdőlap.md — the config-driven widget stack (backlog/095).
+function summaryStub(): TodayNutritionSummary {
+  const p = { intake: 0, goal: 0 };
+  return { computable: false, incomplete: false, kcal: p, proteinG: p, carbsG: p, fatG: p };
+}
+
 describe('HomePage', () => {
   let fixture: ComponentFixture<HomePage>;
+  let load: jasmine.Spy;
 
   beforeEach(async () => {
+    load = jasmine.createSpy('load').and.resolveTo(undefined);
+
     await TestBed.configureTestingModule({
       imports: [HomePage],
       providers: [
         provideRouter([]),
         provideTranslateService(),
-        provideHttpClient(),
-        provideHttpClientTesting(),
-        // HomePage renders <app-sync-status-button>, whose real SyncEngineService pulls in this chain.
-        { provide: AuthSessionService, useValue: jasmine.createSpyObj('AuthSessionService', ['logout'], { userId: () => null }) },
-        { provide: HealthService, useValue: jasmine.createSpyObj('HealthService', ['getHealth']) },
-        { provide: SyncService, useValue: jasmine.createSpyObj('SyncService', ['getSyncChanges']) },
-        { provide: LocalDatabaseService, useValue: jasmine.createSpyObj('LocalDatabaseService', ['query', 'run', 'executeTransaction']) },
+        { provide: TodayNutritionService, useValue: { load, summary: signal(summaryStub()) } },
+        {
+          provide: SyncEngineService,
+          useValue: { connectionState: signal('online'), draining: signal(false) },
+        },
         { provide: OfflineQueueService, useValue: { pendingCount: signal(0), errorCount: signal(0) } },
       ],
     }).compileComponents();
@@ -37,22 +38,19 @@ describe('HomePage', () => {
     fixture = TestBed.createComponent(HomePage);
   });
 
-  it('creates and renders without throwing', () => {
+  it('renders the widget stack without throwing', () => {
     expect(() => fixture.detectChanges()).not.toThrow();
-    expect(fixture.componentInstance).toBeTruthy();
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.querySelector('app-quick-actions-widget')).not.toBeNull();
   });
 
-  it('lists the other enabled tabs as quick links, and never itself', () => {
+  it('shows the nutrition widget and loads its data on entry (tab.kaja is on in features.json)', async () => {
     fixture.detectChanges();
-    const keys = fixture.componentInstance.quickLinks.map((tab) => tab.key);
-    expect(keys).not.toContain('home');
-    // features.json ships tab.kaja / tab.edzes / tab.feladatok on, plus the always-on menu.
-    expect(keys).toEqual(['food', 'workout', 'tasks', 'menu']);
-  });
+    expect(fixture.componentInstance.widgets.map((w) => w.key)).toEqual(['quick-actions', 'today-nutrition']);
 
-  it('renders one button item per quick link', () => {
-    fixture.detectChanges();
-    const items = (fixture.nativeElement as HTMLElement).querySelectorAll('ion-content ion-item[button]');
-    expect(items.length).toBe(fixture.componentInstance.quickLinks.length);
+    await fixture.componentInstance.ionViewWillEnter();
+    expect(load).toHaveBeenCalledTimes(1);
+
+    expect((fixture.nativeElement as HTMLElement).querySelector('app-today-nutrition-widget')).not.toBeNull();
   });
 });

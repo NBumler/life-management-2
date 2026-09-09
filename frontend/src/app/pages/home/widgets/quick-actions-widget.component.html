@@ -1,0 +1,15 @@
+@if (actions.length > 0) {
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>{{ 'HOME.QUICK.TITLE' | translate }}</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      @for (action of actions; track action.key) {
+        <ion-button expand="block" fill="outline" [routerLink]="action.route">
+          <ion-icon [name]="action.icon" slot="start" aria-hidden="true"></ion-icon>
+          {{ action.labelKey | translate }}
+        </ion-button>
+      }
+    </ion-card-content>
+  </ion-card>
+}

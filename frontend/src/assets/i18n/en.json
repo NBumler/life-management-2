@@ -34,7 +34,22 @@
   },
   "HOME": {
     "TITLE": "Home",
-    "INTRO": "Quick access to the rest of the app. Widgets and quick actions will land here later."
+    "QUICK": {
+      "TITLE": "Quick actions",
+      "NEW_MEAL": "New meal",
+      "NEW_CLIMB": "New climb"
+    },
+    "NUTRITION": {
+      "TITLE": "Today's nutrition",
+      "CALORIES": "Calories",
+      "PROTEIN": "Protein",
+      "CARBS": "Carbs",
+      "FAT": "Fat",
+      "REMAINING": "{{amount}} left",
+      "INCOMPLETE": "A recipe/food referenced by one of today's items is missing — the daily total is incomplete.",
+      "NOT_COMPUTABLE": "Fill in your profile (weight, height, goal) to see today's target.",
+      "SET_UP_PROFILE": "Open profile"
+    }
   },
   "MENU": {
     "TITLE": "Menu",

@@ -11,7 +11,7 @@ verifikalt_commit: b5d1556
 |---|---|
 | **Státusz** | `Kész` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Edzés]], [[Tápérték kalkulátor]], [[Profile]], [[Nehézségi szint skálája]], [[Nehézségi szint skálája (konverziós mátrix)]], [[Indoor mászónapló]], [[Outdoor mászónapló]], [[Szinkronizációs központ]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Edzés]], [[Tápérték kalkulátor]], [[Profile]], [[Nehézségi szint skálája]], [[Nehézségi szint skálája (konverziós mátrix)]], [[Indoor mászónapló]], [[Outdoor mászónapló]], [[Kezdőlap]], [[Szinkronizációs központ]], [[Backend-offline first]] |
 
 ### Jelenlegi működés
 
@@ -163,7 +163,8 @@ Minden mászó entitás: soft delete ([[Backend-offline first]]). Nested session
 
 ### UI/UX elvárások
 
-- Belépés: [[Edzés]] tab → Mászónapló hub → 4 csempe.
+- Belépés: [[Edzés]] tab → Mászónapló hub → 4 csempe. A [[Kezdőlap]] „Új mászás" gyorsgombja
+  (`edzes.maszonaplo`) is ide, a hubra visz (a kontextust ott választja a user).
 - 1-tap chip-ek, grade pre-parser, legutóbbi terem/helyszín előtöltés.
 - Sikeres kísérletnél a **Stílus** választó mellett súgó (ⓘ) gomb — felugró magyarázat az onsight / flash / redpoint jelentéséről és arról, miért választható egyszerre csak egy (mind a 4 kontextus napló-formban, `app-help-button`).
 - **Mászótársak** combobox (mind a 4 kontextus napló-formban, `app-partner-combobox`): üres mezőnél a korábbi társak tap-elhető chip-ként; gépelésre szűrt lista + „+ Hozzáadás: »…«" új névhez; a felvett társak chip-jei törölhetők.

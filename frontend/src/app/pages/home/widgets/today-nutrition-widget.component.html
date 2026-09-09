@@ -1,0 +1,26 @@
+<ion-card>
+  <ion-card-header>
+    <ion-card-title>{{ 'HOME.NUTRITION.TITLE' | translate }}</ion-card-title>
+  </ion-card-header>
+  <ion-card-content>
+    @if (summary().computable) {
+      @for (row of rows(); track row.labelKey) {
+        <div class="nutrient-row">
+          <span class="nutrient-label">{{ row.labelKey | translate }}</span>
+          <span class="nutrient-value">
+            {{ row.intake | number: '1.0-0' }} / {{ row.goal | number: '1.0-0' }} {{ row.unit }}
+            <ion-note>({{ 'HOME.NUTRITION.REMAINING' | translate: { amount: (row.remaining | number: '1.0-0') + ' ' + row.unit } }})</ion-note>
+          </span>
+        </div>
+      }
+      @if (summary().incomplete) {
+        <ion-note color="warning">{{ 'HOME.NUTRITION.INCOMPLETE' | translate }}</ion-note>
+      }
+    } @else {
+      <ion-note>{{ 'HOME.NUTRITION.NOT_COMPUTABLE' | translate }}</ion-note>
+      <ion-button fill="clear" size="small" routerLink="/tabs/menu/profile">
+        {{ 'HOME.NUTRITION.SET_UP_PROFILE' | translate }}
+      </ion-button>
+    }
+  </ion-card-content>
+</ion-card>

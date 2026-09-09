@@ -1,0 +1,26 @@
+.nutrient-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 4px 0;
+
+  &:not(:last-child) {
+    border-bottom: 1px solid var(--ion-background-color-step-100, rgba(0, 0, 0, 0.08));
+  }
+}
+
+.nutrient-label {
+  color: var(--ion-text-color-step-300, #666);
+}
+
+.nutrient-value {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+ion-note {
+  display: block;
+  margin-top: 8px;
+  font-size: 0.85em;
+}

@@ -6,17 +6,14 @@
 </ion-header>
 
 <ion-content>
-  <ion-list>
-    <ion-item lines="none">
-      <ion-label class="ion-text-wrap">
-        <ion-note>{{ 'HOME.INTRO' | translate }}</ion-note>
-      </ion-label>
-    </ion-item>
-    @for (link of quickLinks; track link.key) {
-      <ion-item button [routerLink]="link.route">
-        <ion-icon [name]="link.icon" slot="start" aria-hidden="true"></ion-icon>
-        <ion-label>{{ link.labelKey | translate }}</ion-label>
-      </ion-item>
+  @for (widget of widgets; track widget.key) {
+    @switch (widget.key) {
+      @case ('quick-actions') {
+        <app-quick-actions-widget></app-quick-actions-widget>
+      }
+      @case ('today-nutrition') {
+        <app-today-nutrition-widget></app-today-nutrition-widget>
+      }
     }
-  </ion-list>
+  }
 </ion-content>

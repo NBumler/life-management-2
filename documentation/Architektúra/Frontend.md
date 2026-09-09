@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-09
-verifikalt_commit: 24ae531
+verifikalt_commit: 2d8fec8
 ---
 
 # Frontend
@@ -92,7 +92,7 @@ Alul **legfeljebb 5 gomb** (Ionic tabs). A tab lista **konfigurációból** (fea
 
 | # | Tab | Route | Gyökér | Belépők |
 |---|---|---|---|---|
-| 1 | **Kezdőlap** | `/tabs/home` | [[Kezdőlap]] | gyorslinkek a többi engedélyezett tabhoz (widgetek: `backlog/095`); `tab.kezdolap` flag |
+| 1 | **Kezdőlap** | `/tabs/home` | [[Kezdőlap]] | config-vezérelt widget-verem: gyorsgombok + „mai étkezés állása"; `tab.kezdolap` flag |
 | 2 | **Kaja** | `/tabs/food` | [[Étkezés]] dashboard | szegmens: Étkezés · Tárolás · Katalógus · Recept · Stat |
 | 3 | **Edzés** | `/tabs/workout` | [[Edzésnapló]] | szegmens: Edzésnapló · Heti terv · Mászás · Úszás · Bicikli (+ [[Gyakorlat]] a fejlécben) |
 | 4 | **Feladatok** | `/tabs/tasks` | [[Tennivalók]] hub | 4 csempe: Háztartási · Élet tervek · Naptár · Események |
@@ -115,7 +115,7 @@ A gyerek route-ok pontos alakja a feature specekben marad; itt a gyökerek köte
 | Route | Képernyő | Spec |
 |---|---|---|
 | `/login` | Login (tabokon **kívül**) | [[Bejelentkezés]] |
-| `/tabs/home` | Kezdőlap (login utáni default, ha `tab.kezdolap` be) | [[Kezdőlap]] |
+| `/tabs/home` | Kezdőlap — widget-verem (gyorsgombok + mai étkezés állása); login utáni default, ha `tab.kezdolap` be | [[Kezdőlap]] |
 | `/tabs/food/meals` | Étkezés dashboard (Kaja default) | [[Étkezés]] |
 | `/tabs/food/storage` | Készlet | [[Élelmiszer tárolás]] |
 | `/tabs/food/foods` | Élelmiszer katalógus | [[Élelmiszerek]] |
