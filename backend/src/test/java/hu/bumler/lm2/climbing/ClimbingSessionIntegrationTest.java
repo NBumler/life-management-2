@@ -23,8 +23,10 @@ import hu.bumler.lm2.api.model.AdminCreateUserRequest;
 import hu.bumler.lm2.api.model.AscentAttempt;
 import hu.bumler.lm2.api.model.AuthTokens;
 import hu.bumler.lm2.api.model.ClimbingSession;
+import hu.bumler.lm2.api.model.Crag;
 import hu.bumler.lm2.api.model.LoginRequest;
 import hu.bumler.lm2.api.model.PitchLog;
+import hu.bumler.lm2.api.model.Sector;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -92,10 +94,10 @@ class ClimbingSessionIntegrationTest {
 	void create_storesDiscriminatorsAndOutdoorFields_verbatim() throws Exception {
 		String token = registerAndLogin("cs-outdoor-fields");
 		UUID id = UUID.randomUUID();
+		// backlog/084: the sector is now a per-attempt soft link (round-tripped in
+		// create_storesTheAttemptLevelSector_verbatim, which sets up a real Sector for the FK).
 		ClimbingSession dto = outdoorRopeSession(id, List.of());
 		dto.weatherConditions(ClimbingSession.WeatherConditionsEnum.COLD_DRY);
-		dto.rockType("gránit");
-		dto.aspect(ClimbingSession.AspectEnum.N);
 		dto.climbingPartners(List.of("Anna", "Béla"));
 		dto.totalSessionDurationMinutes(120);
 
@@ -103,10 +105,35 @@ class ClimbingSessionIntegrationTest {
 				.andExpect(jsonPath("$.locationType").value("OUTDOOR"))
 				.andExpect(jsonPath("$.discipline").value("ROPE"))
 				.andExpect(jsonPath("$.weatherConditions").value("COLD_DRY"))
-				.andExpect(jsonPath("$.rockType").value("gránit"))
-				.andExpect(jsonPath("$.aspect").value("N"))
 				.andExpect(jsonPath("$.climbingPartners[1]").value("Béla"))
 				.andExpect(jsonPath("$.totalSessionDurationMinutes").value(120));
+	}
+
+	@Test
+	void create_storesTheAttemptLevelSector_verbatim() throws Exception {
+		String token = registerAndLogin("cs-attempt-sector");
+		UUID cragId = UUID.randomUUID();
+		UUID sectorId = UUID.randomUUID();
+		mockMvc.perform(post("/api/climbing/crags").contentType(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+				.content(json(new Crag(cragId, "Rókahegy", false)))).andExpect(status().isOk());
+		mockMvc.perform(post("/api/climbing/sectors").contentType(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+				.content(json(new Sector(sectorId, cragId, "Fő fal", false))))
+				.andExpect(status().isOk());
+
+		UUID id = UUID.randomUUID();
+		UUID attemptId = UUID.randomUUID();
+		AscentAttempt attemptDto = attempt(attemptId, id, 0, true, List.of());
+		attemptDto.sectorId(sectorId);
+		attemptDto.sectorName("Fő fal");
+		ClimbingSession dto = outdoorRopeSession(id, List.of(attemptDto));
+		dto.cragId(cragId);
+		dto.cragName("Rókahegy");
+
+		createSession(token, dto).andExpect(status().isOk())
+				.andExpect(jsonPath("$.attempts[0].sectorId").value(sectorId.toString()))
+				.andExpect(jsonPath("$.attempts[0].sectorName").value("Fő fal"));
 	}
 
 	@Test

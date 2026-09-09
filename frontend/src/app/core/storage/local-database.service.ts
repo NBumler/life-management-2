@@ -1191,7 +1191,27 @@ const SCHEMA_V35_STATEMENTS: string[] = [
   `ALTER TABLE shopping_list ADD COLUMN save_to_storage INTEGER NOT NULL DEFAULT 1`,
 ];
 
-const SCHEMA_VERSION = 35;
+/**
+ * backlog/084 — a szektor a `climbing_session` szintről az `ascent_attempt` szintre kerül (egy
+ * alkalom több szektort is érinthet). On-device tükre a backend `V37__climbing_sector_to_attempt.sql`-nek:
+ * `ascent_attempt` kap `sector_id` + `sector_name` oszlopot, és a meglévő session-szintű szektor
+ * lekerül minden kísérletére. A `climbing_session.sector_id` / `sector_name` / `rock_type` / `aspect`
+ * oszlopok a szerveren megszűnnek; helyben **nem** dobjuk el őket (a natív SQLite build nem mindig
+ * enged DROP COLUMN-t), csak dead NULL oszlopként maradnak — a row-mapperek már nem hivatkozzák.
+ * Nem állít `_dirty`-t; a delta-pull úgyis újratölti az érintett kísérleteket a `sector_id`-vel.
+ */
+const SCHEMA_V36_STATEMENTS: string[] = [
+  `ALTER TABLE ascent_attempt ADD COLUMN sector_id TEXT`,
+  `ALTER TABLE ascent_attempt ADD COLUMN sector_name TEXT`,
+  `UPDATE ascent_attempt
+     SET sector_id = (SELECT cs.sector_id FROM climbing_session cs WHERE cs.id = ascent_attempt.session_id),
+         sector_name = (SELECT cs.sector_name FROM climbing_session cs WHERE cs.id = ascent_attempt.session_id)
+   WHERE EXISTS (
+     SELECT 1 FROM climbing_session cs WHERE cs.id = ascent_attempt.session_id AND cs.sector_id IS NOT NULL
+   )`,
+];
+
+const SCHEMA_VERSION = 36;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -1229,7 +1249,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 32, statements: SCHEMA_V32_STATEMENTS },
   { toVersion: 33, statements: SCHEMA_V33_STATEMENTS },
   { toVersion: 34, statements: SCHEMA_V34_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V35_STATEMENTS },
+  { toVersion: 35, statements: SCHEMA_V35_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V36_STATEMENTS },
 ];
 
 export interface SqlTask {

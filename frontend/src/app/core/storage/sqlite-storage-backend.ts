@@ -2309,7 +2309,10 @@ export class SqliteStorageBackend implements StorageBackend {
     const dependsOn = [
       ...(await this.findLocalOnlyIds('gym', draft.gymId ? [draft.gymId] : [])),
       ...(await this.findLocalOnlyIds('crag', draft.cragId ? [draft.cragId] : [])),
-      ...(await this.findLocalOnlyIds('sector', draft.sectorId ? [draft.sectorId] : [])),
+      ...(await this.findLocalOnlyIds(
+        'sector',
+        draft.attempts.map((a) => a.sectorId).filter((id): id is string => id !== null),
+      )),
       ...(await this.findLocalOnlyIds(
         'gym_color_band',
         draft.attempts.map((a) => a.colorBandId).filter((id): id is string => id !== null),
@@ -3167,10 +3170,6 @@ function buildClimbingSessionPayload(draft: ClimbingSessionDraft): ClimbingSessi
     gymName: draft.gymName,
     cragId: draft.cragId,
     cragName: draft.cragName,
-    sectorId: draft.sectorId,
-    sectorName: draft.sectorName,
-    rockType: draft.rockType,
-    aspect: draft.aspect,
     deleted: false,
     attempts: draft.attempts.map((attempt) => ({
       id: attempt.id,
@@ -3188,6 +3187,8 @@ function buildClimbingSessionPayload(draft: ClimbingSessionDraft): ClimbingSessi
       indoorRouteId: attempt.indoorRouteId,
       routeId: attempt.routeId,
       boulderProblemId: attempt.boulderProblemId,
+      sectorId: attempt.sectorId,
+      sectorName: attempt.sectorName,
       routeName: attempt.routeName,
       lengthInMeters: attempt.lengthInMeters,
       notes: attempt.notes,

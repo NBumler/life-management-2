@@ -5,6 +5,7 @@ import {
   MigrationStep,
   expectedMigrationKeys,
   migrateOutboxItem,
+  moveClimbingSessionSectorToAttempts,
   registeredMigrationKeys,
   rewriteDbUnitToCs,
   stripClimbingSessionFailurePoint,
@@ -307,6 +308,75 @@ describe('migrateOutboxItem', () => {
 
       const del = item({ payloadVersion: 3, entityType: 'ShoppingList', url: '/api/shopping-lists/l1', payload: null });
       expect(migrateOutboxItem(del, OUTBOX_PAYLOAD_SCHEMA_VERSION).payload).toBeNull();
+    });
+  });
+
+  describe('moveClimbingSessionSectorToAttempts (v4 → v5, backlog/084)', () => {
+    it('pushes the session sector onto every attempt that has none and drops the removed session keys', () => {
+      const { payload } = moveClimbingSessionSectorToAttempts(
+        {
+          id: 's1',
+          sectorId: 'sec-1',
+          sectorName: 'Fő fal',
+          rockType: 'mészkő',
+          aspect: 'S',
+          attempts: [
+            { id: 'a1', notes: 'x' },
+            { id: 'a2', sectorId: 'sec-2', sectorName: 'Bal fal' },
+          ],
+        },
+        '/api/climbing/sessions/s1',
+      );
+
+      const session = payload as Record<string, unknown>;
+      expect(session['sectorId']).toBeUndefined();
+      expect(session['sectorName']).toBeUndefined();
+      expect(session['rockType']).toBeUndefined();
+      expect(session['aspect']).toBeUndefined();
+      const attempts = session['attempts'] as Record<string, unknown>[];
+      expect(attempts[0]).toEqual({ id: 'a1', notes: 'x', sectorId: 'sec-1', sectorName: 'Fő fal' });
+      expect(attempts[1]).toEqual({ id: 'a2', sectorId: 'sec-2', sectorName: 'Bal fal' });
+    });
+
+    it('passes through null (DELETE) and non-session-shaped payloads', () => {
+      expect(moveClimbingSessionSectorToAttempts(null, '/url')).toEqual({ payload: null, url: '/url' });
+      expect(moveClimbingSessionSectorToAttempts({ id: 's1' }, '/url')).toEqual({ payload: { id: 's1' }, url: '/url' });
+    });
+  });
+
+  describe('production registry — v4 → v5 (backlog/084, ClimbingSession sector → attempt)', () => {
+    it('moves the sector down onto the attempts of a stale ClimbingSession write walked v1 → v5', () => {
+      const stale = item({
+        payloadVersion: 1,
+        entityType: 'ClimbingSession',
+        url: '/api/climbing/sessions/s1',
+        payload: { id: 's1', sectorId: 'sec-1', sectorName: 'Fő fal', attempts: [{ id: 'a1' }] },
+      });
+
+      const result = migrateOutboxItem(stale, OUTBOX_PAYLOAD_SCHEMA_VERSION);
+
+      expect(result.migrated).toBe(true);
+      expect(result.errorMessage).toBeNull();
+      expect(result.payloadVersion).toBe(OUTBOX_PAYLOAD_SCHEMA_VERSION);
+      const session = result.payload as Record<string, unknown>;
+      expect(session['sectorId']).toBeUndefined();
+      const attempt = (session['attempts'] as Record<string, unknown>[])[0];
+      expect(attempt['sectorId']).toBe('sec-1');
+      expect(attempt['sectorName']).toBe('Fő fal');
+    });
+
+    it('is a content no-op for every non-ClimbingSession entity at the v4 → v5 step', () => {
+      const stale = item({
+        payloadVersion: 4,
+        entityType: 'ShoppingList',
+        url: '/api/shopping-lists/l1',
+        payload: { id: 'l1', saveToStorage: true, items: [], deleted: false },
+      });
+
+      const result = migrateOutboxItem(stale, OUTBOX_PAYLOAD_SCHEMA_VERSION);
+
+      expect(result.payload).toEqual({ id: 'l1', saveToStorage: true, items: [], deleted: false });
+      expect(result.payloadVersion).toBe(OUTBOX_PAYLOAD_SCHEMA_VERSION);
     });
   });
 });

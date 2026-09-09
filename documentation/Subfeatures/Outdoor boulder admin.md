@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-09
-verifikalt_commit: 27bf564
+verifikalt_commit: 05094a4
 ---
 
 # Outdoor boulder admin
@@ -27,7 +27,7 @@ Kültéri boulder törzsadat: **Crag → Sector → (opcionális) BoulderProblem
 | `Sector` | `cragId`, `name`, default `aspect` (fekvés — 8 irányú égtáj-enum), soft delete |
 | `BoulderProblem` | Opcionális master: név, `guidebookGrade`, `sectorId`, `topoNumber`; ad-hoc a naplóban is születhet |
 
-`aspect` (fekvés) — **8 irányú égtáj-enum**: `N`, `NE`, `E`, `SE`, `S`, `SW`, `W`, `NW` (üres/`null` = ismeretlen; nincs `UNKNOWN` tag). Bevitel a `Sector` szerkesztőn a **vizuális választóval** (`app-aspect-picker`): négyzet kerületén a 8 irány, É felül, egy tap; a kijelöltre újra tap → törlés. A szektor-listában a `defaultAspect` a **lokalizált** égtáj-névvel jelenik meg (`SHARED.ASPECT_PICKER.FULL.*`), nem nyers enum-kóddal. Iránytű-fokból a `degreesToAspect` binnel (bin: 45°-os cikkek, az alsó határ felfelé kerekít — 22,5° = `NE`); paritás-fixture: `shared/fixtures/aspect-degrees.json` (kliens: `shared/aspect.ts`, backend: `hu.bumler.lm2.common.AspectDirection`). Öröklődik a napló session szintjére ([[Outdoor boulder napló]]).
+`aspect` (fekvés) — **8 irányú égtáj-enum**: `N`, `NE`, `E`, `SE`, `S`, `SW`, `W`, `NW` (üres/`null` = ismeretlen; nincs `UNKNOWN` tag). Bevitel a `Sector` szerkesztőn a **vizuális választóval** (`app-aspect-picker`): négyzet kerületén a 8 irány, É felül, egy tap; a kijelöltre újra tap → törlés. A szektor-listában a `defaultAspect` a **lokalizált** égtáj-névvel jelenik meg (`SHARED.ASPECT_PICKER.FULL.*`), nem nyers enum-kóddal. Iránytű-fokból a `degreesToAspect` binnel (bin: 45°-os cikkek, az alsó határ felfelé kerekít — 22,5° = `NE`); paritás-fixture: `shared/fixtures/aspect-degrees.json` (kliens: `shared/aspect.ts`, backend: `hu.bumler.lm2.common.AspectDirection`). A napló **nem szerkeszti** a fekvést (`backlog/084` — nincs session-szintű `aspect` / `rockType` felülírás); legfeljebb megjeleníti, a kísérlet szektorából / sziklájából származtatva ([[Outdoor boulder napló]]).
 
 `topoNumber` — opcionális topó / felmászókönyv-sorszám (rövid szabad szöveg, max. 32 kar.; pl. „12", „5/a", „5b"). Nem uniqueness-kényszerített, szektor-scope-ban. A probléma-pickerek (admin szektor-lista **és** napló select) **természetes alfanumerikus** rendezéssel rendeznek rá (`2` < `5/a` < `5/b` < `10`), a `topoNumber` nélküli sorok a lista végén név szerint. Kliensoldali rendezés (`shared/natural-sort.ts`, fixture: `shared/fixtures/natural-sort.json`); a szerver nem rendez rá. A picker a sorszámot a név elé fűzi (`12 · …`).
 

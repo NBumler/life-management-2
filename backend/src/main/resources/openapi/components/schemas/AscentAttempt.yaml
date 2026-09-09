@@ -87,6 +87,17 @@ properties:
     format: uuid
     nullable: true
     description: 'Outdoor boulder: → BoulderProblem. Soft link.'
+  sectorId:
+    type: string
+    format: uuid
+    nullable: true
+    description: >-
+      backlog/084 — outdoor: → Sector. Soft link, per attempt (one session can touch several sectors);
+      the Crag stays session-level. `sectorName` is the snapshot the napló renders. Null for indoor.
+  sectorName:
+    type: string
+    nullable: true
+    description: Sector name snapshot (backlog/084).
   routeName:
     type: string
     nullable: true

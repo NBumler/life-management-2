@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-09
-verifikalt_commit: ca19d1e
+verifikalt_commit: 05094a4
 ---
 
 # Outdoor köteles napló
@@ -23,18 +23,19 @@ Kültéri köteles session + kísérletek / multi-pitch. Dashboard: **Outdoor K�
 
 | Szempont | Outdoor kötél |
 |---|---|
-| Út | `Route` master **vagy** ad-hoc (+ `saveToCatalog`). Út kiválasztásakor a fokozat és a hossz a Route-ból töltődik; **másik Route-ra váltáskor újratöltődik** az újból (és vele a levezetett nehézségi index) — kivéve ha a user közben kézzel átírta, akkor a kézi érték marad ([[Mászónapló]] `AscentAttempt`). |
+| Helyszín | `Crag` **session szinten** (egy alkalom = egy szikla); a **szektor kísérletenként** (`backlog/084`) — egy alkalom több szektort is érinthet. Új kísérlet-sor a szektort az **előző kísérletéből** tölti elő (első sornál az utolsó outdoor-kötél session utolsó kísérletének szektorából); a `Crag` váltása minden sor szektorát törli. |
+| Út | `Route` master **vagy** ad-hoc (+ `saveToCatalog`) — a `Route` opciók a kísérlet szektorából jönnek, a `saveToCatalog` a kísérlet szektorába ír. Út kiválasztásakor a fokozat és a hossz a Route-ból töltődik; **másik Route-ra váltáskor újratöltődik** az újból (és vele a levezetett nehézségi index) — kivéve ha a user közben kézzel átírta, akkor a kézi érték marad ([[Mászónapló]] `AscentAttempt`). |
 | `safetyStyle` | `TOPROPE` \| `LEAD` \| `TRAD` (TRAD: +6 kg aktív kalóriánál) |
 | `lengthInMeters` | Route-ból vagy kézi (lásd az útváltás-szabályt az `Út` sornál) |
 | `PitchLog` | **Opcionális** lista: `pitchNumber`, `isLead`, `rawGrade`, index, `lengthInMeters` — ha nincs kitöltve, elég session + teljes úthossz |
 | Másodmászó | `isLead=false` → aktív MET ×0.8 |
 | `weatherConditions` | Session |
-| `rockType` / `aspect` | Öröklési sorrend: **1.** ha van kiválasztott `Route` és annak van saját `rockType`/`aspect`-je → onnan; **2.** különben `Sector.aspect` / `Crag.rockType` default ([[Outdoor boulder admin]] mintájára); **3.** session szinten mindig felülírható. Az `aspect` **8 irányú égtáj-enum** (`N`..`NW`, üres = ismeretlen), a session-form a `Sector`-éval azonos `app-aspect-picker` vizuális választóval szerkeszti — [[Mászónapló]] |
+| `rockType` / `aspect` | **Nem napló-mező** (`backlog/084` — a session-szintű felülírás megszűnt). A szikla helyben marad; a kőzettípus és a fekvés a törzsadat tulajdonsága: `rockType` a `Crag.defaultRockType` (opcionálisan a `Route.rockType`), `aspect` a `Sector.defaultAspect` (opcionálisan a `Route.aspect`) — szerkesztésük [[Outdoor köteles admin]]. A napló legfeljebb megjeleníti, a `Route` → `Sector` / `Crag` láncból származtatva. |
 | Multi-pitch indoor | N/A (csak itt) |
 
 ### UI/UX elvárások
 
-Hub → Outdoor Kötél; route picker; safety; opcionális pitch szerkesztő (összecsukható). Sikeres kísérletnél a Stílus választó mellett súgó (ⓘ) gomb (`app-help-button` — [[Mászónapló]]). Ha sikeres `ONSIGHT` / `FLASH` egy olyan `Route`-ra, amit a user korábbi dátumú sessionben már megmászott, a stílus alatt nem blokkoló figyelmeztetés jelenik meg a legutóbbi megmászás dátumával (a mentés engedélyezett) — részletek: [[Mászónapló]] `ascentStyle`. Admin → [[Outdoor köteles admin]].
+Hub → Outdoor Kötél; session szintű `Crag` picker; minden kísérlet-kártyán **szektor select** (a `Crag` szektorai közül, az előző kísérletéből előtöltve), majd — ha a szektorban van `Route` — út select; safety; opcionális pitch szerkesztő (összecsukható). Sikeres kísérletnél a Stílus választó mellett súgó (ⓘ) gomb (`app-help-button` — [[Mászónapló]]). Ha sikeres `ONSIGHT` / `FLASH` egy olyan `Route`-ra, amit a user korábbi dátumú sessionben már megmászott, a stílus alatt nem blokkoló figyelmeztetés jelenik meg a legutóbbi megmászás dátumával (a mentés engedélyezett) — részletek: [[Mászónapló]] `ascentStyle`. Admin → [[Outdoor köteles admin]].
 
 ### Megjegyzések
 
@@ -56,7 +57,7 @@ Mint [[Mászónapló]].
 
 ### Backend
 
-Sessions + nested pitches; `routeId` + snapshot.
+Sessions + nested attempts + nested pitches; `routeId` + snapshot. `AscentAttempt.sectorId` (valós FK a `sector`-re) + `sectorName` snapshot — `backlog/084`, `V37__climbing_sector_to_attempt.sql`. A `climbing_session` szintjén megszűnt `sector_id` / `sector_name` / `rock_type` / `aspect` oszlop; a nested PUT az attempt szektorát a szokásos fa-diff szerint menti. Outbox payload-séma: `v4 → v5` (`OUTBOX_PAYLOAD_SCHEMA_VERSION`), a `ClimbingSession` migrátor-lépés a függő írások session-szektorát leviszi a kísérletekre.
 
 ### Nyitott kérdések
 

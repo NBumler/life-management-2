@@ -69,6 +69,12 @@ public class AscentAttemptEntity {
 	@Column(name = "boulder_problem_id")
 	private UUID boulderProblemId;
 
+	@Column(name = "sector_id")
+	private UUID sectorId;
+
+	@Column(name = "sector_name")
+	private String sectorName;
+
 	@Column(name = "route_name")
 	private String routeName;
 
@@ -213,6 +219,22 @@ public class AscentAttemptEntity {
 
 	public void setBoulderProblemId(UUID boulderProblemId) {
 		this.boulderProblemId = boulderProblemId;
+	}
+
+	public UUID getSectorId() {
+		return sectorId;
+	}
+
+	public void setSectorId(UUID sectorId) {
+		this.sectorId = sectorId;
+	}
+
+	public String getSectorName() {
+		return sectorName;
+	}
+
+	public void setSectorName(String sectorName) {
+		this.sectorName = sectorName;
 	}
 
 	public String getRouteName() {

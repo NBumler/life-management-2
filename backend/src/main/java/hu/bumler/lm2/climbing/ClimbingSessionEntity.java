@@ -24,9 +24,11 @@ import jakarta.persistence.Table;
  * calculations (documentation/Features/Tápérték kalkulátor.md).
  *
  * <p>{@code locationType} + {@code discipline} are discriminator columns — one flat table, the
- * context-specific fields ({@code gymId} vs {@code cragId}/{@code sectorId}, {@code weatherConditions},
- * {@code rockType}/{@code aspect}) are all nullable and which apply to which context is enforced
- * client-side.
+ * context-specific fields ({@code gymId} vs {@code cragId}, {@code weatherConditions}) are all
+ * nullable and which apply to which context is enforced client-side. The sector moved to
+ * {@code AscentAttemptEntity} (one session can touch several sectors — backlog/084); {@code rockType}
+ * / {@code aspect} are no longer stored here — they are properties of the route / sector / crag master
+ * data, resolved client-side for display.
  */
 @Entity
 @Table(name = "climbing_session")
@@ -77,18 +79,6 @@ public class ClimbingSessionEntity {
 
 	@Column(name = "crag_name")
 	private String cragName;
-
-	@Column(name = "sector_id")
-	private UUID sectorId;
-
-	@Column(name = "sector_name")
-	private String sectorName;
-
-	@Column(name = "rock_type")
-	private String rockType;
-
-	@Column
-	private String aspect;
 
 	@Generated(event = EventType.INSERT)
 	@Column(name = "created_at", insertable = false, updatable = false)
@@ -222,38 +212,6 @@ public class ClimbingSessionEntity {
 
 	public void setCragName(String cragName) {
 		this.cragName = cragName;
-	}
-
-	public UUID getSectorId() {
-		return sectorId;
-	}
-
-	public void setSectorId(UUID sectorId) {
-		this.sectorId = sectorId;
-	}
-
-	public String getSectorName() {
-		return sectorName;
-	}
-
-	public void setSectorName(String sectorName) {
-		this.sectorName = sectorName;
-	}
-
-	public String getRockType() {
-		return rockType;
-	}
-
-	public void setRockType(String rockType) {
-		this.rockType = rockType;
-	}
-
-	public String getAspect() {
-		return aspect;
-	}
-
-	public void setAspect(String aspect) {
-		this.aspect = aspect;
 	}
 
 	public OffsetDateTime getCreatedAt() {

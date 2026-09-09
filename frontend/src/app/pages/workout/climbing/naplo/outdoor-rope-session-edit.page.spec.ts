@@ -96,7 +96,12 @@ describe('OutdoorRopeSessionEditPage', () => {
         { provide: SectorRepository, useValue: { load: () => Promise.resolve(), forCrag: () => [sector()] } },
         {
           provide: RouteRepository,
-          useValue: { load: () => Promise.resolve(), forSector: () => routes, save: routeSaveSpy },
+          useValue: {
+            load: () => Promise.resolve(),
+            items: signal<Route[]>(routes),
+            forSector: () => routes,
+            save: routeSaveSpy,
+          },
         },
         { provide: ProfileRepository, useValue: { load: () => Promise.resolve(), profile: signal({ currentWeightKg: 70 }) } },
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: idParam }) } } },
@@ -137,32 +142,39 @@ describe('OutdoorRopeSessionEditPage', () => {
     expect(saveSpy).not.toHaveBeenCalled();
   });
 
-  it('changing crag prefills the rock type from the crag default and clears the sector', async () => {
-    await setup();
-    component.form.patchValue({ cragId: 'c1', sectorId: 's1', rockType: 'mészkő' });
-    component.onCragChange('c1');
-    expect(component.form.controls.rockType.value).toBe('gránit');
-    expect(component.form.controls.sectorId.value).toBe('');
-  });
-
-  it('choosing a sector inherits its default aspect', async () => {
+  it('backlog/084: changing crag clears every attempt row sector', async () => {
     await setup();
     component.form.patchValue({ cragId: 'c1' });
-    component.onSectorChange('s1');
-    expect(component.form.controls.aspect.value).toBe('N');
+    component.addAttempt();
+    component.pickSector(component.attempts()[0], 's1');
+    expect(component.attempts()[0].sectorId()).toBe('s1');
+
+    component.form.patchValue({ cragId: 'c2' });
+    component.onCragChange();
+    expect(component.attempts()[0].sectorId()).toBeNull();
+    expect(component.attempts()[0].sectorName()).toBeNull();
   });
 
-  it('save() forwards the OUTDOOR + ROPE context, the crag/sector snapshots and a LEAD attempt', async () => {
+  it('backlog/084: a new attempt row prefills the sector from the previous row', async () => {
     await setup();
     component.form.patchValue({ cragId: 'c1' });
-    component.onSectorChange('s1');
+    component.addAttempt();
+    component.pickSector(component.attempts()[0], 's1');
+    component.addAttempt();
+    expect(component.attempts()[1].sectorId()).toBe('s1');
+    expect(component.attempts()[1].sectorName()).toBe('Főfal');
+  });
+
+  it('save() forwards the OUTDOOR + ROPE context, the crag snapshot and a LEAD attempt with its sector', async () => {
+    await setup();
     component.form.patchValue({
-      sectorId: 's1',
+      cragId: 'c1',
       weatherConditions: ClimbingSession.WeatherConditionsEnum.Windy,
       totalSessionDurationMinutes: 120,
     });
     component.addAttempt();
     const row = component.attempts()[0];
+    component.pickSector(row, 's1');
     row.isSuccess.set(true);
     row.routeName.set('Sarok');
     row.userRawInput.set('6b');
@@ -176,14 +188,14 @@ describe('OutdoorRopeSessionEditPage', () => {
         discipline: ClimbingSession.DisciplineEnum.Rope,
         cragId: 'c1',
         cragName: 'Sikló-sziklák',
-        sectorId: 's1',
-        sectorName: 'Főfal',
         weatherConditions: ClimbingSession.WeatherConditionsEnum.Windy,
         gymId: null,
       }),
     );
     const draft = saveSpy.calls.mostRecent().args[0];
     expect(draft.attempts.length).toBe(1);
+    expect(draft.attempts[0].sectorId).toBe('s1');
+    expect(draft.attempts[0].sectorName).toBe('Főfal');
     expect(draft.attempts[0].safetyStyle).toBe(AscentAttempt.SafetyStyleEnum.Lead);
     expect(draft.attempts[0].lengthInMeters).toBe(30);
     expect(draft.attempts[0].absoluteDifficultyIndex).not.toBeNull();
@@ -191,12 +203,11 @@ describe('OutdoorRopeSessionEditPage', () => {
     expect(draft.attempts[0].pitches).toEqual([]);
   });
 
-  it('picking a master route snapshots its name + grade, prefills the length and lets its rock type / aspect win', async () => {
+  it('picking a master route snapshots its name + grade and prefills the length', async () => {
     await setup();
     component.form.patchValue({ cragId: 'c1' });
-    component.onSectorChange('s1');
-    component.form.patchValue({ sectorId: 's1' });
     component.addAttempt();
+    component.pickSector(component.attempts()[0], 's1');
     component.pickRoute(component.attempts()[0], 'rt1');
 
     await component.save();
@@ -206,8 +217,6 @@ describe('OutdoorRopeSessionEditPage', () => {
     expect(draft.attempts[0].routeName).toBe('Központi pillér');
     expect(draft.attempts[0].absoluteDifficultyIndex).not.toBeNull();
     expect(draft.attempts[0].lengthInMeters).toBe(40);
-    expect(draft.rockType).toBe('mészkő');
-    expect(draft.aspect).toBe('S');
   });
 
   it('switching the picked route refills an auto-filled grade + length but keeps a hand-typed grade (backlog 074)', async () => {
@@ -216,10 +225,9 @@ describe('OutdoorRopeSessionEditPage', () => {
       route({ id: 'rt2', name: 'Másik vonal', guidebookGrade: '7c', lengthInMeters: 25, rockType: null, aspect: null }),
     ]);
     component.form.patchValue({ cragId: 'c1' });
-    component.onSectorChange('s1');
-    component.form.patchValue({ sectorId: 's1' });
     component.addAttempt();
     const row = component.attempts()[0];
+    component.pickSector(row, 's1');
 
     component.pickRoute(row, 'rt1');
     expect(row.userRawInput()).toBe('6a');
@@ -270,13 +278,12 @@ describe('OutdoorRopeSessionEditPage', () => {
     expect(pitches[1].isLead).toBe(false);
   });
 
-  it('saveToCatalog on an ad-hoc row creates a Route master under the sector and links it', async () => {
+  it('saveToCatalog on an ad-hoc row creates a Route master under that row sector and links it', async () => {
     await setup();
     component.form.patchValue({ cragId: 'c1' });
-    component.onSectorChange('s1');
-    component.form.patchValue({ sectorId: 's1' });
     component.addAttempt();
     const row = component.attempts()[0];
+    component.pickSector(row, 's1');
     row.routeName.set('Új vonal');
     row.userRawInput.set('7a');
     row.saveToCatalog.set(true);
@@ -291,7 +298,7 @@ describe('OutdoorRopeSessionEditPage', () => {
     expect(draft.attempts[0].routeName).toBe('Új vonal');
   });
 
-  it('saveToCatalog without a sector does not create a catalog route', async () => {
+  it('saveToCatalog without a sector on the row does not create a catalog route', async () => {
     await setup();
     component.form.patchValue({ cragId: 'c1' });
     component.addAttempt();

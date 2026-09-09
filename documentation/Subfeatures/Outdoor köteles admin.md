@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-09
-verifikalt_commit: 27bf564
+verifikalt_commit: 05094a4
 ---
 
 # Outdoor köteles admin
@@ -26,11 +26,11 @@ Kültéri köteles törzsadat: **Crag → Sector → Route**.
 | `Crag` / `Sector` | Mint [[Outdoor boulder admin]] (közös helyszín fa) |
 | `Route` | `name`, `guidebookGrade`, `lengthInMeters`, `totalPitches` (kötélhossz; új Route űrlapon **alapból `1`** — az egyhosszos út a gyakori eset, tárolt `null` is `1`-ként jelenik meg), `rockType`, `aspect`, `topoNumber`, soft delete |
 
-`aspect` (fekvés) — **8 irányú égtáj-enum**: `N`, `NE`, `E`, `SE`, `S`, `SW`, `W`, `NW` (üres/`null` = ismeretlen; nincs `UNKNOWN` tag). Bevitel a `Route` és a `Sector` szerkesztőn a **vizuális választóval** (`app-aspect-picker`): négyzet kerületén a 8 irány, É felül, egy tap; a kijelöltre újra tap → törlés. Iránytű-fokból a `degreesToAspect` binnel (45°-os cikkek, az alsó határ felfelé kerekít — 22,5° = `NE`); paritás-fixture: `shared/fixtures/aspect-degrees.json` (kliens: `shared/aspect.ts`, backend: `hu.bumler.lm2.common.AspectDirection`). A Route saját `aspect`-je a naplóban felülírja a `Sector` defaultot.
+`aspect` (fekvés) — **8 irányú égtáj-enum**: `N`, `NE`, `E`, `SE`, `S`, `SW`, `W`, `NW` (üres/`null` = ismeretlen; nincs `UNKNOWN` tag). Bevitel a `Route` és a `Sector` szerkesztőn a **vizuális választóval** (`app-aspect-picker`): négyzet kerületén a 8 irány, É felül, egy tap; a kijelöltre újra tap → törlés. Iránytű-fokból a `degreesToAspect` binnel (45°-os cikkek, az alsó határ felfelé kerekít — 22,5° = `NE`); paritás-fixture: `shared/fixtures/aspect-degrees.json` (kliens: `shared/aspect.ts`, backend: `hu.bumler.lm2.common.AspectDirection`). A `Route` saját `aspect`-je a `Sector` defaultja fölött nyer — de ez **törzsadat**: a napló nem tárolja és nem szerkeszti (`backlog/084` — nincs session-szintű felülírás), legfeljebb megjeleníti a feloldott értéket.
 
 `topoNumber` — opcionális topó / felmászókönyv-sorszám (rövid szabad szöveg, max. 32 kar.; pl. „12", „5/a", „5b"). Nem uniqueness-kényszerített, szektor-scope-ban értelmezett. A Route pickerek (admin szektor-lista **és** a napló „kísérlet hozzáadása" select-je) **természetes alfanumerikus** rendezéssel rendeznek rá (`2` < `5/a` < `5/b` < `10`), a `topoNumber` nélküli sorok a lista végére kerülnek név szerint. Kliensoldali rendezés (`shared/natural-sort.ts`, fixture: `shared/fixtures/natural-sort.json`); a szerver soha nem rendez `topoNumber` szerint (a lista-végpontok név szerint maradnak).
 
-Naplózáskor a Route kiválasztása előtölti hossz / pitch / grade **és** (ha a Route-on ki van töltve) `rockType` / `aspect` értékeket; ha a Route-on üres, a napló a Sector/Crag defaultra esik vissza — [[Outdoor köteles napló]]. Soft delete: [[Mászónapló]].
+Naplózáskor a Route kiválasztása előtölti a **hossz / pitch / grade** értékeket (kézi felülírásig — `lengthAutoFilled` / grade provenance). A `rockType` / `aspect` **nem** kerül a naplóba (`backlog/084` — megszűnt a session-szintű mező); ezek a törzsadaton maradnak (`Route` → `Sector` / `Crag`), a napló legfeljebb megjeleníti a feloldott értéket. Soft delete: [[Mászónapló]].
 
 ### UI/UX elvárások
 

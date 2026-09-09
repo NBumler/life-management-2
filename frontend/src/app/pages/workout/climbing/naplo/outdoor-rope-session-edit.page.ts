@@ -36,8 +36,6 @@ import { RouteRepository } from '../../../../core/data/route.repository';
 import { SectorRepository } from '../../../../core/data/sector.repository';
 import { AscentAttemptSaveItem, ClimbingSessionDraft, PitchLogSaveItem } from '../../../../core/storage/storage-backend';
 import { uuidV4 } from '../../../../core/sync/uuid';
-import { Aspect } from '../../../../shared/aspect';
-import { AspectPickerComponent } from '../../../../shared/aspect-picker/aspect-picker.component';
 import { parseGrade } from '../../../../shared/climbing/grade-scale';
 import { GradeInputComponent } from '../../../../shared/grade-input/grade-input.component';
 import { HelpButtonComponent } from '../../../../shared/help-button/help-button.component';
@@ -56,6 +54,9 @@ interface PitchRow {
 /** One editable ascent-attempt row (mutable signals, mirrors the indoor-rope edit page's AttemptRow). */
 interface AttemptRow {
   id: string;
+  /** backlog/084 — the sector, per attempt (one session can touch several); prefilled from the previous attempt. */
+  sectorId: WritableSignal<string | null>;
+  sectorName: WritableSignal<string | null>;
   routeId: WritableSignal<string | null>;
   routeName: WritableSignal<string | null>;
   userRawInput: WritableSignal<string | null>;
@@ -111,13 +112,15 @@ const WEATHER_CONDITIONS: readonly ClimbingSession.WeatherConditionsEnum[] = [
 
 /**
  * documentation/Subfeatures/Outdoor köteles napló.md — the OUTDOOR + ROPE kontextus-napló create/edit
- * form (`id` route param is an existing session's uuid or `new`). Combines the outdoor boulder
- * napló's crag + sector location picker (snapshot names, session-level `rockType` / `aspect`,
- * `weatherConditions` chip, optional master `Route` OR an ad-hoc name with "save to catalog") with
- * the indoor rope napló's grade parser, `TOPROPE | LEAD | TRAD` safety chip, `lengthInMeters`, and a
- * single free-text `notes` field (on a miss it also holds the "where did you get stuck" note —
- * backlog/077). New here: an optional per-attempt `PitchLog` editor (`isLead = false`
- * marks a following climber → active MET ×0.8 in the kcal). Duration fallback is attempts × 15 min.
+ * form (`id` route param is an existing session's uuid or `new`). A session-level crag picker
+ * (snapshot name) + `weatherConditions` chip; the **sector is chosen per attempt** (backlog/084 — one
+ * session can touch several sectors), prefilled from the previous attempt. Each attempt takes an
+ * optional master `Route` OR an ad-hoc name with "save to catalog", the indoor rope napló's grade
+ * parser, a `TOPROPE | LEAD | TRAD` safety chip, `lengthInMeters`, a single free-text `notes` field
+ * (on a miss it also holds the "where did you get stuck" note — backlog/077), and an optional
+ * `PitchLog` editor (`isLead = false` marks a following climber → active MET ×0.8 in the kcal).
+ * `rockType` / `aspect` are master-data properties (route / sector / crag) — not stored on the log.
+ * Duration fallback is attempts × 15 min.
  */
 @Component({
   selector: 'app-outdoor-rope-session-edit',
@@ -146,7 +149,6 @@ const WEATHER_CONDITIONS: readonly ClimbingSession.WeatherConditionsEnum[] = [
     GradeInputComponent,
     HelpButtonComponent,
     PartnerComboboxComponent,
-    AspectPickerComponent,
   ],
   styles: [
     `
@@ -197,6 +199,10 @@ export class OutdoorRopeSessionEditPage implements OnInit {
   readonly sessionId = signal<string | null>(null);
   readonly attempts = signal<AttemptRow[]>([]);
 
+  /** backlog/084 — sector of the most recent prior session's last attempt; seeds the first new attempt row. */
+  private lastUsedSectorId: string | null = null;
+  private lastUsedSectorName: string | null = null;
+
   /** backlog/069 — picked partner names (own signal, not a form control); suggestions from the log. */
   readonly partners = signal<string[]>([]);
   readonly partnerSuggestions = this.repository.partnerSuggestions;
@@ -204,9 +210,6 @@ export class OutdoorRopeSessionEditPage implements OnInit {
   readonly form = this.fb.nonNullable.group({
     date: this.fb.nonNullable.control(today(), [Validators.required]),
     cragId: this.fb.nonNullable.control('', [Validators.required]),
-    sectorId: this.fb.nonNullable.control(''),
-    rockType: this.fb.control<string | null>(null),
-    aspect: this.fb.control<Aspect | null>(null),
     weatherConditions: this.fb.control<ClimbingSession.WeatherConditionsEnum | null>(null),
     totalSessionDurationMinutes: this.fb.control<number | null>(null, [Validators.min(1)]),
     pumpRating: this.fb.control<number | null>(null),
@@ -216,9 +219,6 @@ export class OutdoorRopeSessionEditPage implements OnInit {
 
   private readonly cragIdValue = toSignal(this.form.controls.cragId.valueChanges, {
     initialValue: this.form.controls.cragId.value,
-  });
-  private readonly sectorIdValue = toSignal(this.form.controls.sectorId.valueChanges, {
-    initialValue: this.form.controls.sectorId.value,
   });
   private readonly durationValue = toSignal(this.form.controls.totalSessionDurationMinutes.valueChanges, {
     initialValue: this.form.controls.totalSessionDurationMinutes.value,
@@ -239,10 +239,11 @@ export class OutdoorRopeSessionEditPage implements OnInit {
     return cragId ? this.sectorRepository.forCrag(cragId) : [];
   });
 
-  readonly routesForSector = computed<Route[]>(() => {
-    const sectorId = this.sectorIdValue();
+  /** Routes under the sector picked on this attempt row (backlog/084 — sector is per attempt). */
+  routesForRow(row: AttemptRow): Route[] {
+    const sectorId = row.sectorId();
     return sectorId ? this.routeRepository.forSector(sectorId) : [];
-  });
+  }
 
   readonly previewKcal = computed(() => {
     this.attemptsRevision();
@@ -294,9 +295,6 @@ export class OutdoorRopeSessionEditPage implements OnInit {
       this.form.reset({
         date: existing.date,
         cragId: existing.cragId ?? '',
-        sectorId: existing.sectorId ?? '',
-        rockType: existing.rockType ?? null,
-        aspect: existing.aspect ?? null,
         weatherConditions: existing.weatherConditions ?? null,
         totalSessionDurationMinutes: existing.totalSessionDurationMinutes ?? null,
         pumpRating: existing.pumpRating ?? null,
@@ -313,22 +311,23 @@ export class OutdoorRopeSessionEditPage implements OnInit {
       return;
     }
 
-    // A fresh session prefills the most recently used crag + sector (documentation/Subfeatures/Outdoor köteles napló.md).
+    // A fresh session prefills the most recently used crag (documentation/Subfeatures/Outdoor köteles
+    // napló.md); the sector is per attempt (backlog/084) and seeds from that session's last attempt.
     const last = this.repository
       .forContext(ClimbingSession.LocationTypeEnum.Outdoor, ClimbingSession.DisciplineEnum.Rope)
       .sort((a, b) => (a.date < b.date ? 1 : -1))[0];
     if (last?.cragId) {
       this.form.patchValue({ cragId: last.cragId });
-      this.applyCragDefaults(last.cragId);
-      if (last.sectorId) {
-        this.form.patchValue({ sectorId: last.sectorId });
-        this.applySectorDefaults(last.sectorId);
-      }
+      const lastAttempt = [...(last.attempts ?? [])]
+        .filter((attempt) => !attempt.deleted && attempt.sectorId)
+        .sort((a, b) => b.orderIndex - a.orderIndex)[0];
+      this.lastUsedSectorId = lastAttempt?.sectorId ?? null;
+      this.lastUsedSectorName = lastAttempt?.sectorName ?? null;
     }
   }
 
   routeById(id: string | null): Route | undefined {
-    return id ? this.routesForSector().find((route) => route.id === id) : undefined;
+    return id ? this.routeRepository.items().find((route) => route.id === id && !route.deleted) : undefined;
   }
 
   /**
@@ -344,29 +343,34 @@ export class OutdoorRopeSessionEditPage implements OnInit {
     return this.repository.priorSuccessfulAscentDate(row.routeId(), this.form.controls.date.value, this.sessionId());
   }
 
-  onCragChange(cragId: string): void {
-    this.form.patchValue({ sectorId: '', aspect: null });
-    this.applyCragDefaults(cragId);
+  /** Changing the crag invalidates every attempt's sector (sectors belong to the old crag). */
+  onCragChange(): void {
+    for (const row of this.attempts()) {
+      row.sectorId.set(null);
+      row.sectorName.set(null);
+      row.routeId.set(null);
+      row.saveToCatalog.set(false);
+    }
+    this.lastUsedSectorId = null;
+    this.lastUsedSectorName = null;
+    this.touchAttempts();
   }
 
-  onSectorChange(sectorId: string): void {
-    this.applySectorDefaults(sectorId);
-  }
-
-  /** rockType is a session-level field, defaulted from the crag (overridable — Outdoor köteles napló.md). */
-  private applyCragDefaults(cragId: string): void {
-    const crag = this.crags().find((entry) => entry.id === cragId);
-    this.form.patchValue({ rockType: crag?.defaultRockType ?? null });
-  }
-
-  /** aspect is inherited from the sector (overridable). */
-  private applySectorDefaults(sectorId: string): void {
-    const sector = this.sectorsForCrag().find((entry) => entry.id === sectorId);
-    this.form.patchValue({ aspect: sector?.defaultAspect ?? null });
+  /** backlog/084 — a picked sector snapshots its name onto the row; a route no longer under it is cleared. */
+  pickSector(row: AttemptRow, sectorId: string | null): void {
+    row.sectorId.set(sectorId || null);
+    row.sectorName.set(this.sectorsForCrag().find((sector) => sector.id === sectorId)?.name ?? null);
+    if (row.routeId() && !this.routesForRow(row).some((route) => route.id === row.routeId())) {
+      row.routeId.set(null);
+    }
+    this.touchAttempts();
   }
 
   addAttempt(): void {
-    this.attempts.update((rows) => [...rows, this.emptyRow()]);
+    this.attempts.update((rows) => {
+      const prev = rows[rows.length - 1];
+      return [...rows, this.emptyRow(prev?.sectorId() ?? this.lastUsedSectorId, prev?.sectorName() ?? this.lastUsedSectorName)];
+    });
     this.touchAttempts();
   }
 
@@ -393,9 +397,9 @@ export class OutdoorRopeSessionEditPage implements OnInit {
   }
 
   /**
-   * documentation/Subfeatures/Outdoor köteles napló.md inheritance order — a picked `Route` snapshots
-   * its name + grade, prefills the length, and its own `rockType` / `aspect` (when set) win at
-   * session level over the Sector / Crag defaults.
+   * documentation/Subfeatures/Outdoor köteles napló.md — a picked `Route` snapshots its name + grade
+   * and prefills the length. `rockType` / `aspect` are no longer session fields (backlog/084) — they
+   * stay on the route / sector / crag master data.
    */
   pickRoute(row: AttemptRow, routeId: string | null): void {
     row.routeId.set(routeId);
@@ -412,12 +416,6 @@ export class OutdoorRopeSessionEditPage implements OnInit {
       if (route.lengthInMeters != null && (row.lengthInMeters() == null || row.lengthAutoFilled())) {
         row.lengthInMeters.set(route.lengthInMeters);
         row.lengthAutoFilled.set(true);
-      }
-      if (route.rockType) {
-        this.form.patchValue({ rockType: route.rockType });
-      }
-      if (route.aspect) {
-        this.form.patchValue({ aspect: route.aspect });
       }
       row.saveToCatalog.set(false);
     }
@@ -495,16 +493,13 @@ export class OutdoorRopeSessionEditPage implements OnInit {
 
   /**
    * documentation/Subfeatures/Outdoor köteles napló.md "ad-hoc (+ `saveToCatalog`)" — an ad-hoc row
-   * flagged for the catalog becomes a `Route` master under the selected sector; the new id is written
-   * back onto the row so `buildDraft()` links to it. No sector → nothing to attach to.
+   * flagged for the catalog becomes a `Route` master under **that row's** sector (backlog/084); the
+   * new id is written back onto the row so `buildDraft()` links to it. No sector → nothing to attach to.
    */
   private async persistNewCatalogRoutes(): Promise<void> {
-    const sectorId = this.form.getRawValue().sectorId;
-    if (!sectorId) {
-      return;
-    }
     for (const row of this.attempts()) {
-      if (!row.saveToCatalog() || row.routeId()) {
+      const sectorId = row.sectorId();
+      if (!sectorId || !row.saveToCatalog() || row.routeId()) {
         continue;
       }
       const name = row.routeName()?.trim();
@@ -590,7 +585,6 @@ export class OutdoorRopeSessionEditPage implements OnInit {
   private buildDraft(): ClimbingSessionDraft {
     const value = this.form.getRawValue();
     const crag = this.crags().find((entry) => entry.id === value.cragId);
-    const sector = this.sectorsForCrag().find((entry) => entry.id === value.sectorId);
     const partners = this.partners()
       .map((name) => name.trim())
       .filter((name) => name.length > 0);
@@ -609,16 +603,13 @@ export class OutdoorRopeSessionEditPage implements OnInit {
       gymName: null,
       cragId: value.cragId,
       cragName: crag?.name ?? null,
-      sectorId: value.sectorId || null,
-      sectorName: sector?.name ?? null,
-      rockType: value.rockType?.trim() ? value.rockType.trim() : null,
-      aspect: value.aspect ?? null,
       attempts: this.attempts().map((row, index) => this.rowToSaveItem(row, index)),
     };
   }
 
   private rowToSaveItem(row: AttemptRow, orderIndex: number): AscentAttemptSaveItem {
     const route = this.routeById(row.routeId());
+    const sectorId = row.sectorId();
     return {
       id: row.id,
       isSuccess: row.isSuccess(),
@@ -634,6 +625,10 @@ export class OutdoorRopeSessionEditPage implements OnInit {
       indoorRouteId: null,
       routeId: row.routeId(),
       boulderProblemId: null,
+      sectorId,
+      sectorName: sectorId
+        ? (this.sectorsForCrag().find((sector) => sector.id === sectorId)?.name ?? row.sectorName())
+        : null,
       routeName: row.routeName()?.trim() || route?.name || null,
       lengthInMeters: this.resolveLength(row),
       notes: row.notes()?.trim() ? row.notes()!.trim() : null,
@@ -661,6 +656,8 @@ export class OutdoorRopeSessionEditPage implements OnInit {
     const raw = attempt.userRawInput?.trim() ?? '';
     return {
       id: attempt.id,
+      sectorId: signal(attempt.sectorId ?? null),
+      sectorName: signal(attempt.sectorName ?? null),
       routeId: signal(attempt.routeId ?? null),
       routeName: signal(attempt.routeName ?? null),
       userRawInput: signal(attempt.userRawInput ?? null),
@@ -691,9 +688,11 @@ export class OutdoorRopeSessionEditPage implements OnInit {
     };
   }
 
-  private emptyRow(): AttemptRow {
+  private emptyRow(sectorId: string | null = null, sectorName: string | null = null): AttemptRow {
     return {
       id: uuidV4(),
+      sectorId: signal<string | null>(sectorId),
+      sectorName: signal<string | null>(sectorName),
       routeId: signal<string | null>(null),
       routeName: signal<string | null>(null),
       userRawInput: signal<string | null>(null),

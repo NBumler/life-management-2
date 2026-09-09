@@ -88,27 +88,6 @@ properties:
   cragName:
     type: string
     nullable: true
-  sectorId:
-    type: string
-    format: uuid
-    nullable: true
-    description: 'Outdoor context: → Sector (climbing/sectors). Soft link; `sectorName` is the snapshot.'
-  sectorName:
-    type: string
-    nullable: true
-  rockType:
-    type: string
-    nullable: true
-    description: >-
-      Outdoor: one rock type per session (Crag default, overridable here — there is no attempt-level
-      field). Free-text, matching the Crag/Route master columns.
-  aspect:
-    type: string
-    nullable: true
-    enum: [N, NE, E, SE, S, SW, W, NW]
-    description: >-
-      backlog/068 — outdoor: 8-wind compass token inherited from the Sector (or the selected Route),
-      overridable here. `null` = unknown.
   attempts:
     type: array
     items:

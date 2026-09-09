@@ -208,11 +208,6 @@ class ClimbingSessionService {
 		entity.setGymName(dto.getGymName().orElse(null));
 		entity.setCragId(dto.getCragId().orElse(null));
 		entity.setCragName(dto.getCragName().orElse(null));
-		entity.setSectorId(dto.getSectorId().orElse(null));
-		entity.setSectorName(dto.getSectorName().orElse(null));
-		entity.setRockType(dto.getRockType().orElse(null));
-		ClimbingSession.AspectEnum aspect = dto.getAspect().orElse(null);
-		entity.setAspect(aspect == null ? null : aspect.getValue());
 	}
 
 	private void applyAttemptFields(AscentAttemptEntity entity, AscentAttempt dto) {
@@ -231,6 +226,8 @@ class ClimbingSessionService {
 		entity.setIndoorRouteId(dto.getIndoorRouteId().orElse(null));
 		entity.setRouteId(dto.getRouteId().orElse(null));
 		entity.setBoulderProblemId(dto.getBoulderProblemId().orElse(null));
+		entity.setSectorId(dto.getSectorId().orElse(null));
+		entity.setSectorName(dto.getSectorName().orElse(null));
 		entity.setRouteName(dto.getRouteName().orElse(null));
 		entity.setLengthInMeters(dto.getLengthInMeters().orElse(null));
 		entity.setNotes(dto.getNotes().orElse(null));

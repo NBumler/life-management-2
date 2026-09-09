@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-09
-verifikalt_commit: b03e284
+verifikalt_commit: 05094a4
 ---
 
 # Mászónapló
@@ -52,7 +52,7 @@ Kontextus váltás **aktív session közben tilos** — lezárás / mentés, maj
 | `notes` | Opcionális |
 | `climbingPartners` | Opcionális string lista. A napló-formon **combobox** (`app-partner-combobox`): a felvett nevek chip-ként; a beviteli mező a user korábbi társait (az összes élő `ClimbingSession.climbingPartners` értékéből, gyakoriság szerint, [[Szöveges keresés]] normalizálással) szűri **és** enged új nevet felvenni („+ Hozzáadás: …"). Nincs külön `Partner` entitás — tisztán kliens-oldali aggregáció a helyi `climbing_session` táblából (`ClimbingSessionRepository.partnerSuggestions`), így Full-offline is működik. |
 | `weatherConditions` | Opcionális enum (`COLD_DRY`, `HOT_HUMID`, `WINDY`, `WET`); a „csak outdoor" korlát **kliens-oldalon** kényszerített (az indoor form fixen `null`-t küld), a szerver laza (mint `workout_session`) |
-| `gymId` / crag–sector hivatkozások | Kontextus szerint — gyerek specek |
+| `gymId` / `cragId` hivatkozás | Kontextus szerint — gyerek specek. Kültéri: **egy session = egy `Crag`**; a szektor a kísérlet (`AscentAttempt`) szintjén (`backlog/084`). Nincs session-szintű `rockType` / `aspect` — ezek a törzsadat (út / szektor / szikla) tulajdonságai, a napló megjelenítésre a `Route` → `Sector` → `Crag` láncból származtatja őket, nem tárol saját másolatot. |
 | `attempts` | `AscentAttempt[]` |
 | `deleted` | Soft delete |
 | `createdAt` / `updatedAt` | Audit |
@@ -71,6 +71,7 @@ Egy napon **több** session megengedett (akár ugyanarra a kontextusra is). Egy 
 | `safetyStyle` | Csak kötél: `TOPROPE` \| `LEAD` \| `TRAD` (indoor: TRAD rejtve) |
 | `attemptCount` | Opcionális egész `≥ 1` — **próbák (gólok) száma ebben a sessionben ezen az úton**, kontextustól függetlenül (pl. redpoint-próbák egy köteles úton). A napló-form címkéje: „Próbák (ebben a sessionben)"; új kísérlet-sor felvételekor a mező **alapból `1`** (a leggyakoribb eset egy próba), így ha a user nem módosítja, `1` mentődik. Tájékoztató mező: a Volumen-, a sikerarány- és a duration-fallback képlet is **kísérlet-soronként** (nem `Σ attemptCount`) számol, egyikük sem szoroz vele; a statisztikai nézetek megjeleníthetik. |
 | `colorBandId` / `routeId` / `boulderProblemId` | Opcionális FK + **snapshot** mezők (gyerek specek) |
+| `sectorId` / `sectorName` | **Kültéri**, opcionális FK + snapshot: a **kísérlet szektora** (`backlog/084`). Egy alkalom (session) több szektort is érinthet, ezért a szektor kísérletenként választható — a `Crag` marad session-szintű. Új kísérlet-sor felvételekor a szektor **előtöltődik az előző kísérletéből** (első sornál az utolsó ilyen kontextusú session utolsó kísérletének szektorából); a `Crag` váltása minden sor szektorát törli. Indoor kontextusban `null`. |
 | `lengthInMeters` | Kötél; opcionális (default: terem / route) |
 | `notes` | Opcionális szabad szöveg, többsoros (auto-grow). **Nincs külön `failurePoint` mező** — sikertelen kísérletnél ugyanez a `notes` mező kapja a „Jegyzet / hol akadt el?" címkét és a „Hol akadt el? Mi ment / nem ment?" promptot. A régi `failurePoint` szöveg a `V31` migrációval (backend) + a helyi `SCHEMA_V30` upgrade-del (natív) a `notes`-ba olvadt. |
 | `pitches` | `PitchLog[]` — csak outdoor multi-pitch |
@@ -169,7 +170,7 @@ Minden mászó entitás: soft delete ([[Backend-offline first]]). Nested session
 - Kísérlet-jegyzet: egyetlen **többsoros, auto-grow** mező. Sikernél „Jegyzet"; sikertelennél „Jegyzet / hol akadt el?" címkével + promttal (nincs külön „Hol akadt el" input).
 - „Kísérlet hozzáadása" út / probléma **select**: a `Route` / `BoulderProblem` / `IndoorRoute` opciók a `topoNumber` (topó-sorszám) szerint, **természetes alfanumerikus** rendezésben (`2` < `5/a` < `5/b` < `10`); sorszám nélküli utak a lista végén, név szerint. A meglévő sorszám az opció-címke elé kerül (`12 · Sárga áthajlás (6b)`). Kliensoldali rendezés (`shared/natural-sort.ts`); részletek: [[Outdoor köteles admin]] / [[Outdoor boulder admin]] / [[Indoor köteles admin]].
 - Minden kísérlet **önálló kártya** (`.attempt-card`, mind a 4 kontextus napló-formban): térköz + keret + lekerekítés, a bal élen **színsáv** a sikerállapothoz (zöld = sikeres, piros = sikertelen), kiemelt kártyafejléc („N. kísérlet" + siker-toggle).
-- **Fekvés (`aspect`)** — a szektor / út / session égtáj-orientációja **8 irányú égtáj-enum** (`N`/`NE`/`E`/`SE`/`S`/`SW`/`W`/`NW`; üres = ismeretlen), **vizuális választóval** (`app-aspect-picker`): négyzet kerületén a 8 irány, É felül, egy tap; a kijelölt irányra újra tap → törlés. Felmászókönyv-fokból (iránytű) a `degreesToAspect` binnel (`shared/aspect.ts`, fixture: `shared/fixtures/aspect-degrees.json`, backend-paritás: `hu.bumler.lm2.common.AspectDirection`). Használat: [[Outdoor boulder admin]] `Sector`, [[Outdoor köteles admin]] `Route`, és az outdoor napló-formok session szintje (a [[Outdoor köteles napló]] / [[Outdoor boulder napló]] öröklési sorrenddel).
+- **Fekvés (`aspect`)** — a szektor / út égtáj-orientációja **8 irányú égtáj-enum** (`N`/`NE`/`E`/`SE`/`S`/`SW`/`W`/`NW`; üres = ismeretlen), **vizuális választóval** (`app-aspect-picker`): négyzet kerületén a 8 irány, É felül, egy tap; a kijelölt irányra újra tap → törlés. Felmászókönyv-fokból (iránytű) a `degreesToAspect` binnel (`shared/aspect.ts`, fixture: `shared/fixtures/aspect-degrees.json`, backend-paritás: `hu.bumler.lm2.common.AspectDirection`). Használat: **kizárólag a törzsadaton** — [[Outdoor boulder admin]] `Sector`, [[Outdoor köteles admin]] `Route`. A napló-form nem szerkeszti (a session-szintű `aspect` / `rockType` felülírás megszűnt — `backlog/084`); ha megjeleníti, a kísérlet szektorából / útjából / sziklájából származtatja.
 - Per-kontextus session lista (a közös, szűrő-tabos listát a `backlog/022-...` jegy fedi).
 
 ### Megjegyzések
@@ -205,7 +206,7 @@ A `#77` (`AscentAttempt.failurePoint` → `notes` beolvasztás) egy még nem fri
 
 - OpenAPI: `POST` / `PUT` / `GET` / `DELETE /api/climbing/sessions` (+ `-item`). **Egy flat `climbing_session` tábla** nullable kontextus-mezőkkel; a diszkriminátor a `locationType` + `discipline` pár.
 - Master külön, per-entitás endpoint: `/api/climbing/{gyms,gym-color-bands,indoor-routes,crags,sectors,routes,boulder-problems}` — `Gym` + `GymColorBand` + `IndoorRoute` (`V22`), `Crag` + `Sector` + `Route` + `BoulderProblem` (`V23`). A `route` / `boulder_problem` / `indoor_route` táblákon opcionális `topo_number text CHECK (char_length ≤ 32)` (`V33`) — a szerver tárolja, de **soha nem rendez rá** (a lista-végpontok név szerint maradnak); a topó szerinti rendezés kliensoldali (`shared/natural-sort.ts`, `shared/fixtures/natural-sort.json`).
-- `sector.default_aspect` / `route.aspect` / `climbing_session.aspect`: 8 irányú égtáj-token (`N`,`NE`,`E`,`SE`,`S`,`SW`,`W`,`NW`; `NULL` = ismeretlen), OpenAPI `enum` + DB CHECK a `V34__climbing_aspect_compass_enum.sql`-ből (a korábbi szabad szöveget best-effort megfeleltette, a felismerhetetlent NULL-ra állította — lossy, elfogadott). A token szövegoszlopban marad, a `sync_changes` view érintetlen.
+- `sector.default_aspect` / `route.aspect`: 8 irányú égtáj-token (`N`,`NE`,`E`,`SE`,`S`,`SW`,`W`,`NW`; `NULL` = ismeretlen), OpenAPI `enum` + DB CHECK a `V34__climbing_aspect_compass_enum.sql`-ből (a korábbi szabad szöveget best-effort megfeleltette, a felismerhetetlent NULL-ra állította — lossy, elfogadott). A token szövegoszlopban marad, a `sync_changes` view érintetlen. A `climbing_session.aspect` / `rock_type` oszlop a `V37__climbing_sector_to_attempt.sql`-lel **megszűnt** (`backlog/084`) — a `sector_id` / `sector_name` az `ascent_attempt`-re költözött (valós FK + snapshot), a meglévő session-szintű szektor minden kísérletére lement.
 - UUID kliens; soft delete; nested session body (`ClimbingSessionService.saveTree`, `NestedChildResolver`).
 - A szerver **sosem** számol / validál grade indexet vagy kcal-t: az `absoluteDifficultyIndex` és a `guidebookGrade` verbatim tárolódik. Szerveroldali paritás tervezett — `backlog/024-climbing-grade-matrix-kozos-generalt-json-asset-backend-index-uj.md`.
 

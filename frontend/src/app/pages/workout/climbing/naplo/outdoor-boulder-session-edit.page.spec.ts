@@ -78,7 +78,12 @@ describe('OutdoorBoulderSessionEditPage', () => {
         { provide: SectorRepository, useValue: { load: () => Promise.resolve(), forCrag: () => [sector()] } },
         {
           provide: BoulderProblemRepository,
-          useValue: { load: () => Promise.resolve(), forSector: () => problems, save: bpSaveSpy },
+          useValue: {
+            load: () => Promise.resolve(),
+            items: signal<BoulderProblem[]>(problems),
+            forSector: () => problems,
+            save: bpSaveSpy,
+          },
         },
         { provide: ProfileRepository, useValue: { load: () => Promise.resolve(), profile: signal({ currentWeightKg: 70 }) } },
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: idParam }) } } },
@@ -110,34 +115,39 @@ describe('OutdoorBoulderSessionEditPage', () => {
     expect(saveSpy).not.toHaveBeenCalled();
   });
 
-  it('changing crag prefills the rock type from the crag default and clears the sector', async () => {
-    await setup();
-    component.form.patchValue({ cragId: 'c1', sectorId: 's1', rockType: 'mészkő' });
-    component.onCragChange('c1');
-    expect(component.form.controls.rockType.value).toBe('gránit');
-    expect(component.form.controls.sectorId.value).toBe('');
-  });
-
-  it('choosing a sector inherits its default aspect', async () => {
+  it('backlog/084: changing crag clears every attempt row sector', async () => {
     await setup();
     component.form.patchValue({ cragId: 'c1' });
-    component.onSectorChange('s1');
-    expect(component.form.controls.aspect.value).toBe('N');
+    component.addAttempt();
+    component.pickSector(component.attempts()[0], 's1');
+    expect(component.attempts()[0].sectorId()).toBe('s1');
+
+    component.form.patchValue({ cragId: 'c2' });
+    component.onCragChange();
+    expect(component.attempts()[0].sectorId()).toBeNull();
+    expect(component.attempts()[0].sectorName()).toBeNull();
   });
 
-  it('save() forwards the OUTDOOR + BOULDER context, the crag/sector snapshots and session metadata', async () => {
+  it('backlog/084: a new attempt row prefills the sector from the previous row', async () => {
     await setup();
     component.form.patchValue({ cragId: 'c1' });
-    component.onSectorChange('s1');
+    component.addAttempt();
+    component.pickSector(component.attempts()[0], 's1');
+    component.addAttempt();
+    expect(component.attempts()[1].sectorId()).toBe('s1');
+    expect(component.attempts()[1].sectorName()).toBe('Főfal');
+  });
+
+  it('save() forwards the OUTDOOR + BOULDER context, the crag snapshot and an attempt with its sector', async () => {
+    await setup();
     component.form.patchValue({
-      sectorId: 's1',
-      rockType: 'gránit',
-      aspect: 'N',
+      cragId: 'c1',
       weatherConditions: ClimbingSession.WeatherConditionsEnum.ColdDry,
       totalSessionDurationMinutes: 90,
     });
     component.addAttempt();
     const row = component.attempts()[0];
+    component.pickSector(row, 's1');
     row.isSuccess.set(true);
     row.problemName.set('Élmász');
     row.userRawInput.set('7A');
@@ -150,16 +160,14 @@ describe('OutdoorBoulderSessionEditPage', () => {
         discipline: ClimbingSession.DisciplineEnum.Boulder,
         cragId: 'c1',
         cragName: 'Sikló-sziklák',
-        sectorId: 's1',
-        sectorName: 'Főfal',
-        rockType: 'gránit',
-        aspect: 'N',
         weatherConditions: ClimbingSession.WeatherConditionsEnum.ColdDry,
         gymId: null,
       }),
     );
     const draft = saveSpy.calls.mostRecent().args[0];
     expect(draft.attempts.length).toBe(1);
+    expect(draft.attempts[0].sectorId).toBe('s1');
+    expect(draft.attempts[0].sectorName).toBe('Főfal');
     expect(draft.attempts[0].routeName).toBe('Élmász');
     expect(draft.attempts[0].absoluteDifficultyIndex).not.toBeNull();
     expect(draft.attempts[0].safetyStyle).toBeNull();
@@ -169,9 +177,8 @@ describe('OutdoorBoulderSessionEditPage', () => {
   it('picking a master boulder problem snapshots its name + grade and resolves its index', async () => {
     await setup();
     component.form.patchValue({ cragId: 'c1' });
-    component.onSectorChange('s1');
-    component.form.patchValue({ sectorId: 's1' });
     component.addAttempt();
+    component.pickSector(component.attempts()[0], 's1');
     component.pickProblem(component.attempts()[0], 'p1');
 
     await component.save();
@@ -186,10 +193,9 @@ describe('OutdoorBoulderSessionEditPage', () => {
   it('switching the picked problem refills an auto-filled grade but keeps a hand-typed grade (backlog 074)', async () => {
     await setup('new', [crag()], [problem(), problem({ id: 'p2', name: 'Lap', guidebookGrade: '7A' })]);
     component.form.patchValue({ cragId: 'c1' });
-    component.onSectorChange('s1');
-    component.form.patchValue({ sectorId: 's1' });
     component.addAttempt();
     const row = component.attempts()[0];
+    component.pickSector(row, 's1');
 
     component.pickProblem(row, 'p1');
     expect(row.userRawInput()).toBe('6B');
@@ -202,13 +208,12 @@ describe('OutdoorBoulderSessionEditPage', () => {
     expect(row.userRawInput()).toBe('7C');
   });
 
-  it('saveToCatalog on an ad-hoc row creates a BoulderProblem master under the sector and links it', async () => {
+  it('saveToCatalog on an ad-hoc row creates a BoulderProblem master under that row sector and links it', async () => {
     await setup();
     component.form.patchValue({ cragId: 'c1' });
-    component.onSectorChange('s1');
-    component.form.patchValue({ sectorId: 's1' });
     component.addAttempt();
     const row = component.attempts()[0];
+    component.pickSector(row, 's1');
     row.problemName.set('Új projekt');
     row.userRawInput.set('7B');
     row.saveToCatalog.set(true);
@@ -221,7 +226,7 @@ describe('OutdoorBoulderSessionEditPage', () => {
     expect(draft.attempts[0].routeName).toBe('Új projekt');
   });
 
-  it('saveToCatalog without a sector does not create a catalog problem', async () => {
+  it('saveToCatalog without a sector on the row does not create a catalog problem', async () => {
     await setup();
     component.form.patchValue({ cragId: 'c1' });
     component.addAttempt();

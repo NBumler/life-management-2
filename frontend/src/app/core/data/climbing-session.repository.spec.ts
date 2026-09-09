@@ -35,10 +35,6 @@ function draft(overrides: Partial<ClimbingSessionDraft> = {}): ClimbingSessionDr
     gymName: 'Blokk',
     cragId: null,
     cragName: null,
-    sectorId: null,
-    sectorName: null,
-    rockType: null,
-    aspect: null,
     attempts: [],
     ...overrides,
   };

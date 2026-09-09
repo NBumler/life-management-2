@@ -33,6 +33,8 @@ class AscentAttemptMapper {
 		dto.indoorRouteId(entity.getIndoorRouteId());
 		dto.routeId(entity.getRouteId());
 		dto.boulderProblemId(entity.getBoulderProblemId());
+		dto.sectorId(entity.getSectorId());
+		dto.sectorName(entity.getSectorName());
 		dto.routeName(entity.getRouteName());
 		dto.lengthInMeters(entity.getLengthInMeters());
 		dto.notes(entity.getNotes());

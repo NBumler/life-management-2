@@ -32,7 +32,7 @@
           [label]="'WORKOUT.CLIMBING.SESSION.FIELD_CRAG' | translate"
           labelPlacement="stacked"
           [placeholder]="'WORKOUT.CLIMBING.SESSION.CRAG_PLACEHOLDER' | translate"
-          (ionChange)="onCragChange($any($event.target).value)"
+          (ionChange)="onCragChange()"
         >
           @for (crag of crags(); track crag.id) {
             <ion-select-option [value]="crag.id">{{ crag.name }}</ion-select-option>
@@ -47,35 +47,6 @@
           {{ 'WORKOUT.CLIMBING.SESSION.NO_CRAG' | translate }}
         </ion-note>
       }
-
-      <ion-item>
-        <ion-select
-          formControlName="sectorId"
-          [label]="'WORKOUT.CLIMBING.SESSION.FIELD_SECTOR' | translate"
-          labelPlacement="stacked"
-          (ionChange)="onSectorChange($any($event.target).value)"
-        >
-          <ion-select-option [value]="''">—</ion-select-option>
-          @for (sector of sectorsForCrag(); track sector.id) {
-            <ion-select-option [value]="sector.id">{{ sector.name }}</ion-select-option>
-          }
-        </ion-select>
-      </ion-item>
-
-      <ion-item>
-        <ion-input
-          formControlName="rockType"
-          [label]="'WORKOUT.CLIMBING.SESSION.FIELD_ROCK_TYPE' | translate"
-          labelPlacement="stacked"
-        />
-      </ion-item>
-
-      <ion-item lines="none">
-        <app-aspect-picker
-          formControlName="aspect"
-          [label]="'WORKOUT.CLIMBING.SESSION.FIELD_ASPECT' | translate"
-        ></app-aspect-picker>
-      </ion-item>
 
       <ion-item>
         <ion-select
@@ -169,7 +140,21 @@
           >{{ 'WORKOUT.CLIMBING.SESSION.SUCCESS' | translate }}</ion-toggle>
         </ion-item>
 
-        @if (problemsForSector().length > 0) {
+        <ion-item>
+          <ion-select
+            [label]="'WORKOUT.CLIMBING.SESSION.FIELD_SECTOR' | translate"
+            labelPlacement="stacked"
+            [value]="row.sectorId()"
+            (ionChange)="pickSector(row, $any($event.target).value)"
+          >
+            <ion-select-option [value]="null">—</ion-select-option>
+            @for (sector of sectorsForCrag(); track sector.id) {
+              <ion-select-option [value]="sector.id">{{ sector.name }}</ion-select-option>
+            }
+          </ion-select>
+        </ion-item>
+
+        @if (problemsForRow(row).length > 0) {
           <ion-item>
             <ion-select
               [label]="'WORKOUT.CLIMBING.SESSION.FIELD_PROBLEM' | translate"
@@ -179,7 +164,7 @@
               (ionChange)="pickProblem(row, $any($event.target).value)"
             >
               <ion-select-option [value]="null">—</ion-select-option>
-              @for (problem of problemsForSector(); track problem.id) {
+              @for (problem of problemsForRow(row); track problem.id) {
                 <ion-select-option [value]="problem.id"
                   >@if (problem.topoNumber) { {{ problem.topoNumber }} · }{{ problem.name }} ({{ problem.guidebookGrade }})</ion-select-option
                 >
@@ -246,7 +231,7 @@
           }
         }
 
-        @if (!row.boulderProblemId() && form.controls.sectorId.value) {
+        @if (!row.boulderProblemId() && row.sectorId()) {
           <ion-item>
             <ion-toggle
               [checked]="row.saveToCatalog()"

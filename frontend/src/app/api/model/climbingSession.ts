@@ -55,19 +55,6 @@ export interface ClimbingSession {
      */
     cragId?: string | null;
     cragName?: string | null;
-    /**
-     * Outdoor context: → Sector (climbing/sectors). Soft link; `sectorName` is the snapshot.
-     */
-    sectorId?: string | null;
-    sectorName?: string | null;
-    /**
-     * Outdoor: one rock type per session (Crag default, overridable here — there is no attempt-level field). Free-text, matching the Crag/Route master columns.
-     */
-    rockType?: string | null;
-    /**
-     * backlog/068 — outdoor: 8-wind compass token inherited from the Sector (or the selected Route), overridable here. `null` = unknown.
-     */
-    aspect?: ClimbingSession.AspectEnum | null;
     attempts: Array<AscentAttempt>;
     deleted: boolean;
     readonly deletedAt?: string | null;
@@ -92,17 +79,6 @@ export namespace ClimbingSession {
         Wet: 'WET'
     } as const;
     export type WeatherConditionsEnum = typeof WeatherConditionsEnum[keyof typeof WeatherConditionsEnum];
-    export const AspectEnum = {
-        N: 'N',
-        Ne: 'NE',
-        E: 'E',
-        Se: 'SE',
-        S: 'S',
-        Sw: 'SW',
-        W: 'W',
-        Nw: 'NW'
-    } as const;
-    export type AspectEnum = typeof AspectEnum[keyof typeof AspectEnum];
 }
 
 

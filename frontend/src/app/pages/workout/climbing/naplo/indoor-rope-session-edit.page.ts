@@ -446,10 +446,6 @@ export class IndoorRopeSessionEditPage implements OnInit {
       gymName: gym?.name ?? null,
       cragId: null,
       cragName: null,
-      sectorId: null,
-      sectorName: null,
-      rockType: null,
-      aspect: null,
       attempts: this.attempts().map((row, index) => this.rowToSaveItem(row, index)),
     };
   }
@@ -473,6 +469,8 @@ export class IndoorRopeSessionEditPage implements OnInit {
       indoorRouteId: row.indoorRouteId(),
       routeId: null,
       boulderProblemId: null,
+      sectorId: null,
+      sectorName: null,
       routeName: name,
       lengthInMeters: this.resolveLength(row),
       notes: row.notes()?.trim() ? row.notes()!.trim() : null,

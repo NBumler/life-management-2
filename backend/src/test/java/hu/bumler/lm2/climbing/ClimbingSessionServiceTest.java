@@ -84,24 +84,27 @@ class ClimbingSessionServiceTest {
 		UUID sessionId = UUID.randomUUID();
 		UUID attemptId = UUID.randomUUID();
 		UUID pitchId = UUID.randomUUID();
+		UUID sectorId = UUID.randomUUID();
 		when(repository.findById(sessionId)).thenReturn(Optional.empty());
 		when(attemptRepository.findBySessionId(sessionId)).thenReturn(List.of());
 
-		ClimbingSession dto = session(sessionId,
-				List.of(attempt(attemptId, sessionId, 0, List.of(pitch(pitchId, attemptId, 1)))));
-		dto.rockType("mészkő");
+		AscentAttempt attemptDto = attempt(attemptId, sessionId, 0, List.of(pitch(pitchId, attemptId, 1)));
+		attemptDto.sectorId(sectorId);
+		attemptDto.sectorName("Fő fal");
+		ClimbingSession dto = session(sessionId, List.of(attemptDto));
 		ClimbingSession saved = service.create(userId, dto);
 
 		assertThat(saved.getId()).isEqualTo(sessionId);
 		ArgumentCaptor<ClimbingSessionEntity> sessionCaptor = ArgumentCaptor.forClass(ClimbingSessionEntity.class);
 		verify(repository).saveAndFlush(sessionCaptor.capture());
 		assertThat(sessionCaptor.getValue().getUserId()).isEqualTo(userId);
-		assertThat(sessionCaptor.getValue().getRockType()).isEqualTo("mészkő");
 
 		ArgumentCaptor<AscentAttemptEntity> attemptCaptor = ArgumentCaptor.forClass(AscentAttemptEntity.class);
 		verify(attemptRepository).save(attemptCaptor.capture());
 		assertThat(attemptCaptor.getValue().getId()).isEqualTo(attemptId);
 		assertThat(attemptCaptor.getValue().isSuccess()).isTrue();
+		assertThat(attemptCaptor.getValue().getSectorId()).isEqualTo(sectorId);
+		assertThat(attemptCaptor.getValue().getSectorName()).isEqualTo("Fő fal");
 
 		ArgumentCaptor<PitchLogEntity> pitchCaptor = ArgumentCaptor.forClass(PitchLogEntity.class);
 		verify(pitchRepository).save(pitchCaptor.capture());

@@ -60,6 +60,14 @@ export interface AscentAttempt {
      */
     boulderProblemId?: string | null;
     /**
+     * backlog/084 — outdoor: → Sector. Soft link, per attempt (one session can touch several sectors); the Crag stays session-level. `sectorName` is the snapshot the napló renders. Null for indoor.
+     */
+    sectorId?: string | null;
+    /**
+     * Sector name snapshot (backlog/084).
+     */
+    sectorName?: string | null;
+    /**
      * Snapshot name for whichever route / problem was selected (or an ad-hoc name).
      */
     routeName?: string | null;

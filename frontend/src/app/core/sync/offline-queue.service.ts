@@ -21,8 +21,13 @@ import { uuidV4 } from './uuid';
  * - v3 → v4 (backlog/099): `ShoppingList` gained `saveToStorage`. A pending `ShoppingList` write
  *   from before that app update has no such key — default it to `true` (the historical behaviour);
  *   every other type is identity.
+ * - v4 → v5 (backlog/084): the sector moved from `ClimbingSession` to `AscentAttempt`, and
+ *   `ClimbingSession.rockType` / `aspect` were removed. A pending `ClimbingSession` write from before
+ *   that app update carries a session-level `sectorId` / `sectorName` (+ `rockType` / `aspect`) and
+ *   attempts with no sector — push the session sector down onto every attempt that lacks one and drop
+ *   the four removed session keys; every other type is identity.
  */
-export const OUTBOX_PAYLOAD_SCHEMA_VERSION = 4;
+export const OUTBOX_PAYLOAD_SCHEMA_VERSION = 5;
 
 /** documentation/Architektúra/Backend-offline first.md §6 "Tétel-újrapróbálkozási backoff" (jitter omitted — not load-bearing for correctness). */
 const RETRY_BACKOFF_MS = [2000, 8000, 30000, 120000, 600000];

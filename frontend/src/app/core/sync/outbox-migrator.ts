@@ -151,6 +151,41 @@ export function addShoppingListSaveToStorageDefault(payload: unknown, url: strin
 }
 
 /**
+ * v4 → v5 (backlog/084): the sector moved from `ClimbingSession` to `AscentAttempt`, and
+ * `ClimbingSession.rockType` / `aspect` were removed. A `ClimbingSession` write still pending from
+ * before that app update carries a session-level `sectorId` / `sectorName` (and `rockType` /
+ * `aspect`), with attempts that have no sector of their own. Push the session sector down onto every
+ * attempt that lacks one (the old model was one session = one sector, so this is lossless), and strip
+ * the four removed session-level keys. Non-object (DELETE) and already-migrated payloads pass through.
+ */
+export function moveClimbingSessionSectorToAttempts(payload: unknown, url: string): { payload: unknown; url: string } {
+  if (payload === null || typeof payload !== 'object' || Array.isArray(payload)) {
+    return { payload, url };
+  }
+  const session: Record<string, unknown> = { ...(payload as Record<string, unknown>) };
+  const sectorId = session['sectorId'];
+  const sectorName = session['sectorName'];
+  delete session['sectorId'];
+  delete session['sectorName'];
+  delete session['rockType'];
+  delete session['aspect'];
+  if (Array.isArray(session['attempts'])) {
+    session['attempts'] = session['attempts'].map((attempt) => {
+      if (attempt === null || typeof attempt !== 'object' || Array.isArray(attempt)) {
+        return attempt;
+      }
+      const row = attempt as Record<string, unknown>;
+      return {
+        ...row,
+        sectorId: row['sectorId'] != null ? row['sectorId'] : (sectorId ?? null),
+        sectorName: row['sectorName'] != null ? row['sectorName'] : (sectorName ?? null),
+      };
+    });
+  }
+  return { payload: session, url };
+}
+
+/**
  * Per global version step: the function every entity type gets for that `N → N+1` bump, plus
  * per-entity `overrides`. `MIGRATIONS` is built by walking 1 … `OUTBOX_PAYLOAD_SCHEMA_VERSION`-1 and
  * registering `<entityType>:<v>` for *every* entity type — so a version can never leave a hole for a
@@ -167,6 +202,7 @@ const STEPS_BY_VERSION: Readonly<Record<number, VersionSteps>> = {
   1: { default: rewriteDbUnitToCs },
   2: { default: identityStep, overrides: { ClimbingSession: stripClimbingSessionFailurePoint } },
   3: { default: identityStep, overrides: { ShoppingList: addShoppingListSaveToStorageDefault } },
+  4: { default: identityStep, overrides: { ClimbingSession: moveClimbingSessionSectorToAttempts } },
 };
 
 function buildMigrations(): ReadonlyMap<string, MigrationStep> {

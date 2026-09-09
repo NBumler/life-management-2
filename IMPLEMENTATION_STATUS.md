@@ -14,6 +14,21 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-09 — #84** Mászás — a szektor a session szintről a kísérlet (`AscentAttempt`) szintre
+  került: egy alkalom több szektort is érinthet, a `Crag` marad session-szintű. `AscentAttempt`
+  kap `sectorId` (valós FK) + `sectorName` snapshot mezőt; új kísérlet-sor a szektort az előző
+  kísérletéből tölti elő. A session-szintű `sectorId` / `sectorName` **és** a `rockType` / `aspect`
+  felülírás megszűnt — az utóbbi kettő a törzsadat (út / szektor / szikla) tulajdonsága, a napló
+  legfeljebb megjeleníti. Backend: `V37__climbing_sector_to_attempt.sql` (oszlop-migráció + a
+  meglévő session-szektor lemegy minden kísérletre), `AscentAttemptEntity`/`Mapper`,
+  `ClimbingSessionEntity`/`Mapper`/`Service`, OpenAPI `AscentAttempt` + `ClimbingSession`.
+  Frontend: `gen:api`, `SCHEMA_V36` on-device oszlopok + backfill, `local-rows`, mindkét storage
+  backend, `ClimbingSessionDraft` / `AscentAttemptSaveItem`, az outdoor kötél + boulder napló-form
+  (per-kísérlet szektor select, előtöltés, `rockType` / `aspect` mezők eltávolítva). Outbox:
+  `OUTBOX_PAYLOAD_SCHEMA_VERSION` v4 → v5 + `ClimbingSession` migrátor-lépés (session-szektor le a
+  kísérletekre, a 4 megszűnt kulcs törlése) + snapshot újra-elfogadva. Spec: [[Mászónapló]],
+  [[Outdoor köteles napló]], [[Outdoor boulder napló]], [[Outdoor köteles admin]],
+  [[Outdoor boulder admin]]. **(change-request)**
 - **2026-09-09 — #99** Bevásárlólista — „tárolóba mentés" kapcsoló. Lista-szintű, perzisztált
   `ShoppingList.saveToStorage` boolean (alapból `true`): kikapcsolva a teljesítés archiválja a
   listát + spinoff-olja a maradékot, de **egy** `StoredFood` sort sem hoz létre. Backend: `V36`

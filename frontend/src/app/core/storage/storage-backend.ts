@@ -191,6 +191,9 @@ export interface AscentAttemptSaveItem {
   indoorRouteId: string | null;
   routeId: string | null;
   boulderProblemId: string | null;
+  /** backlog/084 — outdoor: the sector, chosen per attempt (one session can touch several). `sectorName` is the snapshot. */
+  sectorId: string | null;
+  sectorName: string | null;
   routeName: string | null;
   lengthInMeters: number | null;
   notes: string | null;
@@ -213,10 +216,6 @@ export interface ClimbingSessionDraft {
   gymName: string | null;
   cragId: string | null;
   cragName: string | null;
-  sectorId: string | null;
-  sectorName: string | null;
-  rockType: string | null;
-  aspect: ClimbingSession.AspectEnum | null;
   attempts: AscentAttemptSaveItem[];
 }
 
