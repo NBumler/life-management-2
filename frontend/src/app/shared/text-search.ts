@@ -31,6 +31,26 @@ export function matchesSearch(query: string, candidate: string): boolean {
 }
 
 /**
+ * Multi-field match with field priority (Szöveges keresés.md "Sorrendezés"): tries `fields` in
+ * order and returns the 1-based position of the first that matches the query, or `0` for no
+ * match. Usable both as a filter predicate (`> 0`) and as a primary sort key (lower = earlier
+ * field = better) — so a name hit sorts ahead of a note/store hit. Empty/blank query returns `1`
+ * (matches everything, best rank). `null`/`undefined` fields are skipped.
+ */
+export function searchFieldRank(query: string, fields: readonly (string | null | undefined)[]): number {
+  if (fold(query.trim()) === '') {
+    return 1;
+  }
+  for (let i = 0; i < fields.length; i++) {
+    const field = fields[i];
+    if (field != null && matchesSearch(query, field)) {
+      return i + 1;
+    }
+  }
+  return 0;
+}
+
+/**
  * Comparator for `Array.prototype.sort` (stable per spec since ES2019): when the query contains an
  * accented character, candidates whose accented form matches it exactly are pulled ahead of
  * fold-only matches; ties (including the no-accent-in-query case) keep their relative order, so

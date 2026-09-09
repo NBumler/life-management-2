@@ -23,7 +23,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 import { Food } from '../../../api/model/food';
 import { FoodRepository } from '../../../core/data/food.repository';
-import { compareRank, matchesSearch } from '../../../shared/text-search';
+import { compareRank, searchFieldRank } from '../../../shared/text-search';
 import { navigateFoodSection } from '../food-sections';
 import { buildFoodDeleteConfirmMessage } from '../shared-catalog-delete-confirm';
 import { FoodBarcodeScannerService } from './food-barcode-scanner.service';
@@ -84,9 +84,15 @@ export class FoodListPage implements OnInit, ViewWillEnter {
     if (query === '') {
       return base;
     }
-    // `filter` keeps the alphabetical order; `compareRank` is a stable no-op unless the query is
-    // accented, so it only reorders accent-exact matches ahead — no full re-sort.
-    return base.filter((item) => matchesSearch(query, item.name)).sort((a, b) => compareRank(query, a.name, b.name));
+    // backlog/100: match name / brand / store / note / barcode, in that priority order — a name
+    // hit sorts ahead of a store or note hit (`searchFieldRank` lower = earlier field). Within a
+    // field-rank tie the base list stays alphabetical; `compareRank` only reorders accent-exact
+    // matches ahead when the query itself is accented.
+    return base
+      .map((item) => ({ item, rank: searchFieldRank(query, [item.name, item.brand, item.store, item.note, item.barcode]) }))
+      .filter((entry) => entry.rank > 0)
+      .sort((a, b) => a.rank - b.rank || compareRank(query, a.item.name, b.item.name))
+      .map((entry) => entry.item);
   });
 
   async ngOnInit(): Promise<void> {

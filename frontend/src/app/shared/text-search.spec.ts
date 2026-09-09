@@ -1,4 +1,4 @@
-import { compareRank, matchesSearch } from './text-search';
+import { compareRank, matchesSearch, searchFieldRank } from './text-search';
 
 describe('matchesSearch', () => {
   it('is case-insensitive', () => {
@@ -37,5 +37,30 @@ describe('compareRank', () => {
   it('does not force an order when both or neither candidate matches exactly', () => {
     expect(compareRank('sör', 'Sör', 'Sör')).toBe(0);
     expect(compareRank('sör', 'Sor', 'Sor')).toBe(0);
+  });
+});
+
+describe('searchFieldRank', () => {
+  it('returns the 1-based position of the first matching field', () => {
+    expect(searchFieldRank('lidl', ['Lidl kenyér', 'Aldi', null])).toBe(1);
+    expect(searchFieldRank('lidl', ['Kenyér', 'Lidl', null])).toBe(2);
+    expect(searchFieldRank('lidl', ['Kenyér', 'Aldi', 'lidl akció'])).toBe(3);
+  });
+
+  it('returns 0 when no field matches', () => {
+    expect(searchFieldRank('spar', ['Kenyér', 'Aldi', null])).toBe(0);
+  });
+
+  it('skips null/undefined fields without matching them', () => {
+    expect(searchFieldRank('x', [null, undefined, 'y'])).toBe(0);
+  });
+
+  it('blank query returns 1 (matches everything, best rank)', () => {
+    expect(searchFieldRank('', ['whatever'])).toBe(1);
+    expect(searchFieldRank('   ', [null])).toBe(1);
+  });
+
+  it('is accent- and case-insensitive like matchesSearch', () => {
+    expect(searchFieldRank('arviz', ['Nincs', 'Árvíz utca'])).toBe(2);
   });
 });

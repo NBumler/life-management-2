@@ -14,6 +14,17 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-09 — #92** Mászás — onsight/flash figyelmeztetés korábbi megmászásnál. A napló kísérlet-sor
+  sikeres `ONSIGHT` / `FLASH` stílusánál, ha ugyanarra a linkelt útra (`indoorRouteId` / `routeId` /
+  `boulderProblemId`) van korábbi dátumú, sikeres kísérlet, a stílus alatt nem blokkoló `ion-note`
+  jelenik meg a legutóbbi megmászás dátumával; a mentés engedélyezett marad. Új repo-lekérdezés
+  `ClimbingSessionRepository.priorSuccessfulAscentDate` (tisztán kliens, Full-offline). Indoor
+  bouldernél nincs (a `colorBandId` nem azonosít problémát). Érintett: 3× `*-session-edit.page.{ts,html}`,
+  i18n. Spec: [[Mászónapló]], per-kontextus napló specek. **(change-request)**
+- **2026-09-09 — #100** Élelmiszer katalógus kereső: a `name` mellett `brand` / `store` / `note` /
+  `barcode` mezőkre is talál, mező-prioritásos rangsorral (névtalálat előre). Új közös utility
+  `shared/text-search.ts` `searchFieldRank(query, fields[])`. Kliensoldali. Spec: [[Élelmiszerek]],
+  [[Szöveges keresés]]. **(change-request)**
 - **2026-09-09 — #82 / #83** Sötét mód: legacy `--ion-color-step-<n>` → `--ion-background-color-step-<n>`.
   Az Ionic 8 `dark.class.css` csak az új nevű lépcsős színeket írja felül; a régi `--ion-color-step-*`
   nincs definiálva, így a `var(--ion-color-step-50, #f7f7f7)` mindig a világos fallbackre esett →

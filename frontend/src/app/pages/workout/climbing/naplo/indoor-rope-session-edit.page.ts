@@ -65,6 +65,16 @@ const ASCENT_STYLES: readonly AscentAttempt.AscentStyleEnum[] = [
 ];
 
 /**
+ * backlog/092 — styles that mean "never climbed this line before": onsight (no prior beta *or*
+ * attempts) and flash (prior beta, but no prior attempts). A prior successful ascent contradicts
+ * both, so both get the non-blocking warning; redpoint is by definition after prior attempts.
+ */
+const PRIOR_ASCENT_WARN_STYLES: ReadonlySet<AscentAttempt.AscentStyleEnum> = new Set([
+  AscentAttempt.AscentStyleEnum.Onsight,
+  AscentAttempt.AscentStyleEnum.Flash,
+]);
+
+/**
  * documentation/Subfeatures/Indoor köteles napló.md — indoor rope never offers TRAD; the picker is
  * further narrowed to the gym's `availableSafetyStyles` when the admin configured them.
  */
@@ -279,6 +289,19 @@ export class IndoorRopeSessionEditPage implements OnInit {
 
   routeById(id: string | null): IndoorRoute | undefined {
     return id ? this.indoorRoutes().find((route) => route.id === id) : undefined;
+  }
+
+  /**
+   * backlog/092 — the date of a prior successful ascent of this row's linked route when the row is
+   * a successful ONSIGHT / FLASH, else `null`. Drives a non-blocking inline warning; save stays
+   * enabled (the user may know better — mislink, different route, typo).
+   */
+  priorAscentWarningDate(row: AttemptRow): string | null {
+    const style = row.ascentStyle();
+    if (!row.isSuccess() || style === null || !PRIOR_ASCENT_WARN_STYLES.has(style)) {
+      return null;
+    }
+    return this.repository.priorSuccessfulAscentDate(row.indoorRouteId(), this.form.controls.date.value, this.sessionId());
   }
 
   addAttempt(): void {

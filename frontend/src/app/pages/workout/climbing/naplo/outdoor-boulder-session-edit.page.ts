@@ -66,6 +66,15 @@ const ASCENT_STYLES: readonly AscentAttempt.AscentStyleEnum[] = [
   AscentAttempt.AscentStyleEnum.Onsight,
 ];
 
+/**
+ * backlog/092 — styles that mean "never climbed this line before": onsight and flash. A prior
+ * successful ascent contradicts both, so both get the non-blocking warning; redpoint is fine.
+ */
+const PRIOR_ASCENT_WARN_STYLES: ReadonlySet<AscentAttempt.AscentStyleEnum> = new Set([
+  AscentAttempt.AscentStyleEnum.Onsight,
+  AscentAttempt.AscentStyleEnum.Flash,
+]);
+
 /** documentation/Features/Mászónapló.md — outdoor `weatherConditions` enum, session-level, that day's. */
 const WEATHER_CONDITIONS: readonly ClimbingSession.WeatherConditionsEnum[] = [
   ClimbingSession.WeatherConditionsEnum.ColdDry,
@@ -287,6 +296,19 @@ export class OutdoorBoulderSessionEditPage implements OnInit {
 
   problemById(id: string | null): BoulderProblem | undefined {
     return id ? this.problemsForSector().find((problem) => problem.id === id) : undefined;
+  }
+
+  /**
+   * backlog/092 — date of a prior successful ascent of this row's linked problem when the row is a
+   * successful ONSIGHT / FLASH, else `null`. Drives a non-blocking inline warning; save stays
+   * enabled.
+   */
+  priorAscentWarningDate(row: AttemptRow): string | null {
+    const style = row.ascentStyle();
+    if (!row.isSuccess() || style === null || !PRIOR_ASCENT_WARN_STYLES.has(style)) {
+      return null;
+    }
+    return this.repository.priorSuccessfulAscentDate(row.boulderProblemId(), this.form.controls.date.value, this.sessionId());
   }
 
   onCragChange(cragId: string): void {

@@ -105,6 +105,41 @@ describe('ClimbingSessionRepository', () => {
     expect(repository.partnerSuggestions()).toEqual(['Béla', 'anna', 'Cecil']);
   });
 
+  describe('priorSuccessfulAscentDate() (backlog 092)', () => {
+    function attempt(over: Partial<ClimbingSession['attempts'][number]> = {}): ClimbingSession['attempts'][number] {
+      return { id: 'a1', sessionId: 's', isSuccess: true, orderIndex: 0, pitches: [], deleted: false, ...over };
+    }
+
+    beforeEach(async () => {
+      storage.listClimbingSessions.and.resolveTo([
+        session({ id: 'sent1', date: '2026-06-01', attempts: [attempt({ routeId: 'R', isSuccess: true })] }),
+        session({ id: 'sent2', date: '2026-07-01', attempts: [attempt({ routeId: 'R', isSuccess: true })] }),
+        session({ id: 'fail', date: '2026-07-15', attempts: [attempt({ routeId: 'R', isSuccess: false })] }),
+        session({ id: 'other', date: '2026-06-10', attempts: [attempt({ routeId: 'OTHER', isSuccess: true })] }),
+        session({ id: 'tomb', date: '2026-06-20', deleted: true, attempts: [attempt({ routeId: 'R', isSuccess: true })] }),
+      ]);
+      await repository.load();
+    });
+
+    it('returns the most recent earlier successful ascent of the same linked route', () => {
+      expect(repository.priorSuccessfulAscentDate('R', '2026-08-01')).toBe('2026-07-01');
+    });
+
+    it('ignores sessions on or after the reference date, failures, and tombstones', () => {
+      // only sent1 (06-01) is strictly before 06-15; sent2/fail are later, tomb is deleted.
+      expect(repository.priorSuccessfulAscentDate('R', '2026-06-15')).toBe('2026-06-01');
+    });
+
+    it('excludes the session being edited', () => {
+      expect(repository.priorSuccessfulAscentDate('R', '2026-08-01', 'sent2')).toBe('2026-06-01');
+    });
+
+    it('returns null for an ad-hoc attempt (no ref) or an unclimbed route', () => {
+      expect(repository.priorSuccessfulAscentDate(null, '2026-08-01')).toBeNull();
+      expect(repository.priorSuccessfulAscentDate('NEVER', '2026-08-01')).toBeNull();
+    });
+  });
+
   it('save(): assigns a fresh id for a create and keeps the list sorted', async () => {
     storage.listClimbingSessions.and.resolveTo([session({ id: 'a', date: '2026-08-10' })]);
     await repository.load();

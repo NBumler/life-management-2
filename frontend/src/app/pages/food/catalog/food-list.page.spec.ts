@@ -63,6 +63,19 @@ describe('FoodListPage', () => {
     expect(fixture.componentInstance.filteredItems().map((i) => i.id)).toEqual(['accented', 'plain']);
   });
 
+  it('backlog/100: matches store and note, not just the name', () => {
+    repository.items.set([
+      food({ id: 'byName', name: 'Lidl kenyér' }),
+      food({ id: 'byStore', name: 'Kenyér', store: 'Lidl' }),
+      food({ id: 'byNote', name: 'Zsemle', note: 'lidl akció' }),
+      food({ id: 'noMatch', name: 'Tej', store: 'Aldi' }),
+    ]);
+    fixture.componentInstance.query.set('lidl');
+
+    // name hit first, then store, then note — field priority; noMatch dropped.
+    expect(fixture.componentInstance.filteredItems().map((i) => i.id)).toEqual(['byName', 'byStore', 'byNote']);
+  });
+
   it('subtitle(): joins brand and store, skipping missing parts', () => {
     expect(fixture.componentInstance.subtitle(food({ brand: 'Nestlé', store: 'Aldi' }))).toBe('Nestlé · Aldi');
     expect(fixture.componentInstance.subtitle(food({ brand: null, store: 'Aldi' }))).toBe('Aldi');

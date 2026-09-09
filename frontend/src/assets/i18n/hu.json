@@ -1242,6 +1242,7 @@
         "GRADE_PLACEHOLDER": "pl. 6B vagy V4",
         "FIELD_ATTEMPT_COUNT": "Próbák (ebben a sessionben)",
         "FIELD_STYLE": "Stílus",
+        "PRIOR_ASCENT_WARNING": "Ezt az utat korábban ({{date}}) már megmásztad — onsight/flash így nem pontos, de mentheted.",
         "FIELD_ATTEMPT_NOTES": "Jegyzet",
         "FIELD_ATTEMPT_NOTES_FAIL": "Jegyzet / hol akadt el?",
         "ATTEMPT_NOTES_FAIL_PLACEHOLDER": "Hol akadt el? Mi ment / nem ment?",

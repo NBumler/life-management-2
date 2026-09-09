@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-03
-verifikalt_commit: bdf5680
+verifikalva: 2026-09-09
+verifikalt_commit: ca19d1e
 ---
 
 # Élelmiszerek
@@ -27,7 +27,7 @@ verifikalt_commit: bdf5680
 
 #### Katalógus műveletek
 
-- **Lista** + **keresés** ([[Szöveges keresés]]).
+- **Lista** + **keresés** ([[Szöveges keresés]]). A keresőmező a **név**, **márka**, **üzlet** (`store`) és **egyéb** (`note`) mezők bármelyikére talál, `barcode`-ra is (részleges számjegy-egyezés) — pl. „Lidl" beírásra a Lidl-hez rögzített tételek is. **Mező-prioritásos rangsor:** a névtalálat előrébb, mint a márka- / üzlet- / egyéb-találat (`searchFieldRank`, [[Szöveges keresés]]); azonos mezőrangon belül a lista ábécésorrendben marad, ékezetes query esetén az ékezet-pontos találat előre.
 - **Részletek** megtekintése.
 - **Szerkesztés:** ugyanaz az űrlap, mint [[Élelmiszer manuális bevitele]].
 - **Létrehozás:** [[Élelmiszer hozzáadása]] → tipikusan [[Élelmiszer manuális bevitele]] (előtöltéssel vagy üresen).

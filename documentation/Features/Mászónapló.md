@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-09
-verifikalt_commit: 27bf564
+verifikalt_commit: ca19d1e
 ---
 
 # Mászónapló
@@ -67,7 +67,7 @@ Egy napon **több** session megengedett (akár ugyanarra a kontextusra is). Egy 
 | `isSuccess` | Boolean |
 | `userRawInput` / `rawGrade` | Szöveges grade (parser). Egy `Route` / `BoulderProblem` / `IndoorRoute` kiválasztásakor a mező a kiválasztott út fokozatával töltődik; **másik útra váltáskor újratöltődik** az új út fokozatával (és vele az `absoluteDifficultyIndex` is), kivéve ha a user közben kézzel átírta — a kézzel megadott érték megmarad. |
 | `absoluteDifficultyIndex` | Integer; mátrixból ([[Nehézségi szint skálája (konverziós mátrix)]]). Kliens-oldalon mindig a `userRawInput` (ha van) vagy a kiválasztott út fokozatából számítva — lásd fent az útváltás-szabályt. |
-| `ascentStyle` | Opcionális, ha `isSuccess`: `ONSIGHT` \| `FLASH` \| `REDPOINT` (kontextus szerinti whitelist). A választó mellett súgó (ⓘ) gomb: a három stílus definíciója + miért zárják ki egymást (`WORKOUT.CLIMBING.ASCENT_STYLE.HELP_*`). |
+| `ascentStyle` | Opcionális, ha `isSuccess`: `ONSIGHT` \| `FLASH` \| `REDPOINT` (kontextus szerinti whitelist). A választó mellett súgó (ⓘ) gomb: a három stílus definíciója + miért zárják ki egymást (`WORKOUT.CLIMBING.ASCENT_STYLE.HELP_*`). **Korábbi-megmászás figyelmeztetés:** ha a sor sikeres `ONSIGHT` / `FLASH`, **és** ugyanarra a linkelt útra (`indoorRouteId` / `routeId` / `boulderProblemId`) van korábbi, nem törölt, **sikeres** kísérlet egy korábbi dátumú sessionben, a stílus-választó alatt **nem blokkoló** figyelmeztető `ion-note` jelenik meg a legutóbbi megmászás dátumával (`WORKOUT.CLIMBING.SESSION.PRIOR_ASCENT_WARNING`) — a mentés engedélyezett marad (a user tudhatja jobban: elírt linkelés, más út). Tisztán kliensoldali, származtatott (`ClimbingSessionRepository.priorSuccessfulAscentDate`), Full-offline is fut. Ad-hoc (link nélküli) kísérletnél nincs mihez hasonlítani → nincs figyelmeztetés. Indoor bouldernél nincs (a `colorBandId` szín-sáv nem azonosít konkrét problémát). |
 | `safetyStyle` | Csak kötél: `TOPROPE` \| `LEAD` \| `TRAD` (indoor: TRAD rejtve) |
 | `attemptCount` | Opcionális egész `≥ 1` — **próbák (gólok) száma ebben a sessionben ezen az úton**, kontextustól függetlenül (pl. redpoint-próbák egy köteles úton). A napló-form címkéje: „Próbák (ebben a sessionben)"; új kísérlet-sor felvételekor a mező **alapból `1`** (a leggyakoribb eset egy próba), így ha a user nem módosítja, `1` mentődik. Tájékoztató mező: a Volumen-, a sikerarány- és a duration-fallback képlet is **kísérlet-soronként** (nem `Σ attemptCount`) számol, egyikük sem szoroz vele; a statisztikai nézetek megjeleníthetik. |
 | `colorBandId` / `routeId` / `boulderProblemId` | Opcionális FK + **snapshot** mezők (gyerek specek) |

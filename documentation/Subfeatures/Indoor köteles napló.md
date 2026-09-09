@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-06
-verifikalt_commit: 1cd8d04
+verifikalva: 2026-09-09
+verifikalt_commit: ca19d1e
 ---
 
 # Indoor köteles napló
@@ -37,7 +37,7 @@ Beltéri köteles session + kísérletek. Dashboard: **Indoor Kötél**. Közös
 
 ### UI/UX elvárások
 
-Hub → Indoor Kötél csempe → session form (safety chip-ek, grade parser, magasság). Sikeres kísérletnél a Stílus választó mellett súgó (ⓘ) gomb (`app-help-button` — [[Mászónapló]]). Admin link → [[Indoor köteles admin]].
+Hub → Indoor Kötél csempe → session form (safety chip-ek, grade parser, magasság). Sikeres kísérletnél a Stílus választó mellett súgó (ⓘ) gomb (`app-help-button` — [[Mászónapló]]). Ha sikeres `ONSIGHT` / `FLASH` egy olyan `IndoorRoute`-ra, amit a user korábbi dátumú sessionben már megmászott, a stílus alatt nem blokkoló figyelmeztetés jelenik meg a legutóbbi megmászás dátumával (a mentés engedélyezett) — részletek: [[Mászónapló]] `ascentStyle`. Admin link → [[Indoor köteles admin]].
 
 ### Megjegyzések
 

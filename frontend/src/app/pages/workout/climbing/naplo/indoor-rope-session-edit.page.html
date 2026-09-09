@@ -219,6 +219,13 @@
               textKey="WORKOUT.CLIMBING.ASCENT_STYLE.HELP_TEXT"
             ></app-help-button>
           </ion-item>
+          @if (priorAscentWarningDate(row); as priorDate) {
+            <ion-item lines="none">
+              <ion-note color="warning">
+                {{ 'WORKOUT.CLIMBING.SESSION.PRIOR_ASCENT_WARNING' | translate: { date: priorDate } }}
+              </ion-note>
+            </ion-item>
+          }
         }
 
         <ion-item>

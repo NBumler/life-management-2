@@ -164,6 +164,36 @@ export class ClimbingSessionRepository {
     return this.items().find((session) => session.id === id);
   }
 
+  /**
+   * backlog/092 — the date of the most recent *earlier* session in which the user successfully
+   * climbed this exact linked route / problem, or `null` if there is none. Purely local (works
+   * Full-offline); used only to warn — not block — when ONSIGHT / FLASH is picked for a line that
+   * was already sent. `ref` is whichever soft link the context uses (`indoorRouteId` / `routeId` /
+   * `boulderProblemId`); an ad-hoc attempt with no link (`ref` empty) never matches. Sessions on
+   * or after `beforeDate`, and `excludeSessionId` (the session being edited), are skipped.
+   */
+  priorSuccessfulAscentDate(ref: string | null | undefined, beforeDate: string, excludeSessionId?: string | null): string | null {
+    if (!ref) {
+      return null;
+    }
+    let latest: string | null = null;
+    for (const session of this.items()) {
+      if (session.deleted || session.date >= beforeDate || (excludeSessionId != null && session.id === excludeSessionId)) {
+        continue;
+      }
+      for (const attempt of session.attempts) {
+        if (attempt.deleted || !attempt.isSuccess) {
+          continue;
+        }
+        const key = attempt.indoorRouteId ?? attempt.routeId ?? attempt.boulderProblemId ?? null;
+        if (key === ref && (latest === null || session.date > latest)) {
+          latest = session.date;
+        }
+      }
+    }
+    return latest;
+  }
+
   /** Live sessions for one dashboard context (documentation/Features/Mászónapló.md — the 4 tiles), newest first. */
   forContext(
     locationType: ClimbingSession.LocationTypeEnum,

@@ -1242,6 +1242,7 @@
         "GRADE_PLACEHOLDER": "e.g. 6B or V4",
         "FIELD_ATTEMPT_COUNT": "Tries (this session)",
         "FIELD_STYLE": "Style",
+        "PRIOR_ASCENT_WARNING": "You already sent this route before ({{date}}) — onsight/flash won't be accurate, but you can still save.",
         "FIELD_ATTEMPT_NOTES": "Notes",
         "FIELD_ATTEMPT_NOTES_FAIL": "Notes / where did you get stuck?",
         "ATTEMPT_NOTES_FAIL_PLACEHOLDER": "Where did you get stuck? What worked / didn't?",

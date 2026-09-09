@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: 9a41447
+verifikalva: 2026-09-09
+verifikalt_commit: ca19d1e
 ---
 
 # Szöveges keresés
@@ -35,6 +35,10 @@ Minden olyan UI, ahol „keresőmező” van (előzmények, katalógusok, listá
 
 A konkrét „pontos ékezet egyezés” értelmezése: a találat mezőjének (vagy a releváns részének) ékezetes alakja közelebb áll / megegyezik a query ékezetes alakjával, mint a csak foldolt egyezés.
 
+#### Több mező, mező-prioritással
+
+Ha egy lista **több mezőre** is keres (pl. [[Élelmiszerek]] katalógus: név / márka / üzlet / egyéb), a mezőket **prioritási sorrendben** kell próbálni: egy korábbi mezőben talált sor a rangsorban a későbbi mezőben találó sorok elé kerül (a névtalálat a `note`-találat elé). A közös utility `searchFieldRank(query, [mező1, mező2, …])` a **találó mező 1-alapú sorszámát** adja vissza (`0` = nincs találat) — egyszerre szűrő-feltétel (`> 0`) és elsődleges rendezőkulcs (kisebb = jobb). Üres query → `1` (mindent enged, legjobb rang). A mezőrangon belüli holtversenyt a hívó saját elsődleges rendezése (pl. ábécé) + a fenti ékezet-pontos `compareRank` bontja.
+
 #### Alkalmazás
 
 Első fogyasztók többek között: [[Bevásárlás előzmény]], [[Élelmiszerek]] katalógus kereső, [[Pakolás]] kereső, [[Háztartási feladatok]], [[Rendszeres kiadások]], [[AYCM elfogadóhely hozzáadása]].
@@ -56,7 +60,7 @@ Nincs nyitott kérdés.
 
 ### Frontend
 
-- Pure TypeScript utility: ékezet-fold (pl. NFD + combining mark strip vagy magyar karaktertábla), case-fold, `matches(query, candidate)`, `compareRank(query, a, b)`.
+- Pure TypeScript utility (`shared/text-search.ts`): ékezet-fold (pl. NFD + combining mark strip vagy magyar karaktertábla), case-fold, `matchesSearch(query, candidate)`, `compareRank(query, a, b)`, `searchFieldRank(query, fields[])` (mező-prioritásos többmezős egyezés — lásd fent).
 - A listákat renderelő feature-ök ezt a utility-t hívják kliensoldali szűréshez / rendezéshez.
 - Nagy adathalmaznál később szerveroldali keresés is jöhet; akkor is ugyanez a **viselkedési** szerződés marad (ékezet / case / ranking).
 
