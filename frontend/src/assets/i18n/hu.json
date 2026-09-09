@@ -1185,6 +1185,8 @@
         "EDIT_TITLE": "Szektor szerkesztése",
         "FIELD_NAME": "Név",
         "FIELD_ASPECT": "Alapértelmezett fekvés",
+        "FIELD_DEFAULT_LENGTH": "Alapértelmezett úthossz (m)",
+        "DEFAULT_LENGTH_HINT": "A köteles napló ezt használja, ha a kiválasztott úton nincs saját hossz. A boulder napló nem használja.",
         "DELETE_CONFIRM_TITLE": "Szektor törlése",
         "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd ezt a szektort?"
       },

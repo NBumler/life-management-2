@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-09
-verifikalt_commit: 05094a4
+verifikalt_commit: b5d1556
 ---
 
 # Mászónapló
@@ -72,7 +72,7 @@ Egy napon **több** session megengedett (akár ugyanarra a kontextusra is). Egy 
 | `attemptCount` | Opcionális egész `≥ 1` — **próbák (gólok) száma ebben a sessionben ezen az úton**, kontextustól függetlenül (pl. redpoint-próbák egy köteles úton). A napló-form címkéje: „Próbák (ebben a sessionben)"; új kísérlet-sor felvételekor a mező **alapból `1`** (a leggyakoribb eset egy próba), így ha a user nem módosítja, `1` mentődik. Tájékoztató mező: a Volumen-, a sikerarány- és a duration-fallback képlet is **kísérlet-soronként** (nem `Σ attemptCount`) számol, egyikük sem szoroz vele; a statisztikai nézetek megjeleníthetik. |
 | `colorBandId` / `routeId` / `boulderProblemId` | Opcionális FK + **snapshot** mezők (gyerek specek) |
 | `sectorId` / `sectorName` | **Kültéri**, opcionális FK + snapshot: a **kísérlet szektora** (`backlog/084`). Egy alkalom (session) több szektort is érinthet, ezért a szektor kísérletenként választható — a `Crag` marad session-szintű. Új kísérlet-sor felvételekor a szektor **előtöltődik az előző kísérletéből** (első sornál az utolsó ilyen kontextusú session utolsó kísérletének szektorából); a `Crag` váltása minden sor szektorát törli. Indoor kontextusban `null`. |
-| `lengthInMeters` | Kötél; opcionális (default: terem / route) |
+| `lengthInMeters` | Kötél; opcionális. Öröklés: indoor a terem falmagasságából; outdoor `Route.lengthInMeters` → a kísérlet szektorának `Sector.defaultLengthInMeters`-e (`backlog/088`) → kézi. Provenance-jelölt (`lengthAutoFilled`): út- vagy szektorváltáskor az örökölt érték újratöltődik, kézi felülírásig. |
 | `notes` | Opcionális szabad szöveg, többsoros (auto-grow). **Nincs külön `failurePoint` mező** — sikertelen kísérletnél ugyanez a `notes` mező kapja a „Jegyzet / hol akadt el?" címkét és a „Hol akadt el? Mi ment / nem ment?" promptot. A régi `failurePoint` szöveg a `V31` migrációval (backend) + a helyi `SCHEMA_V30` upgrade-del (natív) a `notes`-ba olvadt. |
 | `pitches` | `PitchLog[]` — csak outdoor multi-pitch |
 | `orderIndex` | Sorrend |
@@ -207,6 +207,7 @@ A `#77` (`AscentAttempt.failurePoint` → `notes` beolvasztás) egy még nem fri
 - OpenAPI: `POST` / `PUT` / `GET` / `DELETE /api/climbing/sessions` (+ `-item`). **Egy flat `climbing_session` tábla** nullable kontextus-mezőkkel; a diszkriminátor a `locationType` + `discipline` pár.
 - Master külön, per-entitás endpoint: `/api/climbing/{gyms,gym-color-bands,indoor-routes,crags,sectors,routes,boulder-problems}` — `Gym` + `GymColorBand` + `IndoorRoute` (`V22`), `Crag` + `Sector` + `Route` + `BoulderProblem` (`V23`). A `route` / `boulder_problem` / `indoor_route` táblákon opcionális `topo_number text CHECK (char_length ≤ 32)` (`V33`) — a szerver tárolja, de **soha nem rendez rá** (a lista-végpontok név szerint maradnak); a topó szerinti rendezés kliensoldali (`shared/natural-sort.ts`, `shared/fixtures/natural-sort.json`).
 - `sector.default_aspect` / `route.aspect`: 8 irányú égtáj-token (`N`,`NE`,`E`,`SE`,`S`,`SW`,`W`,`NW`; `NULL` = ismeretlen), OpenAPI `enum` + DB CHECK a `V34__climbing_aspect_compass_enum.sql`-ből (a korábbi szabad szöveget best-effort megfeleltette, a felismerhetetlent NULL-ra állította — lossy, elfogadott). A token szövegoszlopban marad, a `sync_changes` view érintetlen. A `climbing_session.aspect` / `rock_type` oszlop a `V37__climbing_sector_to_attempt.sql`-lel **megszűnt** (`backlog/084`) — a `sector_id` / `sector_name` az `ascent_attempt`-re költözött (valós FK + snapshot), a meglévő session-szintű szektor minden kísérletére lement.
+- `sector.default_length_in_meters double precision CHECK (> 0 vagy NULL)` a `V38__sector_default_length.sql`-ből (`backlog/088`) — a köteles napló úthossz-fallbackja (`Route.lengthInMeters` → ez → kézi). `sync_changes` érintetlen. Outbox payload-séma `v5 → v6` (`Sector` mezőalak; identity).
 - UUID kliens; soft delete; nested session body (`ClimbingSessionService.saveTree`, `NestedChildResolver`).
 - A szerver **sosem** számol / validál grade indexet vagy kcal-t: az `absoluteDifficultyIndex` és a `guidebookGrade` verbatim tárolódik. Szerveroldali paritás tervezett — `backlog/024-climbing-grade-matrix-kozos-generalt-json-asset-backend-index-uj.md`.
 

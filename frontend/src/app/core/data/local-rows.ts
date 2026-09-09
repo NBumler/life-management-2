@@ -2143,6 +2143,7 @@ export interface SectorRow {
   crag_id: string;
   name: string;
   default_aspect: string | null;
+  default_length_in_meters: number | null;
   created_at: string | null;
   updated_at: string | null;
   deleted: number;
@@ -2159,6 +2160,7 @@ export function sectorRowToDto(row: SectorRow): Sector {
     cragId: row.crag_id,
     name: row.name,
     defaultAspect: (row.default_aspect as Sector.DefaultAspectEnum | null) ?? null,
+    defaultLengthInMeters: row.default_length_in_meters,
     deleted: row.deleted === 1,
     deletedAt: row.deleted_at,
     createdAt: row.created_at ?? undefined,
@@ -2169,21 +2171,23 @@ export function sectorRowToDto(row: SectorRow): Sector {
 export function sectorLocalWriteTask(dto: Sector): SqlTask {
   return {
     statement: `
-      INSERT INTO sector (id, crag_id, name, default_aspect, _dirty, _local_only)
-      VALUES (?, ?, ?, ?, 1, 1)
+      INSERT INTO sector (id, crag_id, name, default_aspect, default_length_in_meters, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, 1, 1)
       ON CONFLICT(id) DO UPDATE SET
-        crag_id = excluded.crag_id, name = excluded.name, default_aspect = excluded.default_aspect, _dirty = 1`,
-    values: [dto.id, dto.cragId, dto.name, dto.defaultAspect ?? null],
+        crag_id = excluded.crag_id, name = excluded.name, default_aspect = excluded.default_aspect,
+        default_length_in_meters = excluded.default_length_in_meters, _dirty = 1`,
+    values: [dto.id, dto.cragId, dto.name, dto.defaultAspect ?? null, dto.defaultLengthInMeters ?? null],
   };
 }
 
 export function sectorServerApplyTask(dto: Sector): SqlTask {
   return {
     statement: `
-      INSERT INTO sector (id, crag_id, name, default_aspect, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      INSERT INTO sector (id, crag_id, name, default_aspect, default_length_in_meters, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET
         crag_id = excluded.crag_id, name = excluded.name, default_aspect = excluded.default_aspect,
+        default_length_in_meters = excluded.default_length_in_meters,
         created_at = excluded.created_at, updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at,
         _dirty = 0, _local_only = 0, _needs_refetch = 0
       WHERE sector._dirty = 0`,
@@ -2192,6 +2196,7 @@ export function sectorServerApplyTask(dto: Sector): SqlTask {
       dto.cragId,
       dto.name,
       dto.defaultAspect ?? null,
+      dto.defaultLengthInMeters ?? null,
       dto.createdAt ?? null,
       dto.updatedAt ?? null,
       dto.deleted ? 1 : 0,

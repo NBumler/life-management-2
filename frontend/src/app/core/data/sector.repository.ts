@@ -15,6 +15,8 @@ export interface SectorSaveInput {
   cragId: string;
   name: string;
   defaultAspect: Aspect | null;
+  /** backlog/088 — optional default route length the rope napló falls back to. */
+  defaultLengthInMeters: number | null;
 }
 
 /** documentation/Subfeatures/Outdoor boulder admin.md — a sector under a Crag. No name-uniqueness. */
@@ -65,6 +67,7 @@ export class SectorRepository {
       cragId: input.cragId,
       name: input.name,
       defaultAspect: input.defaultAspect,
+      defaultLengthInMeters: input.defaultLengthInMeters,
       deleted: false,
     };
     const saved = await this.storage.upsertSector(draft);

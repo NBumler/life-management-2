@@ -1185,6 +1185,8 @@
         "EDIT_TITLE": "Edit sector",
         "FIELD_NAME": "Name",
         "FIELD_ASPECT": "Default aspect",
+        "FIELD_DEFAULT_LENGTH": "Default route length (m)",
+        "DEFAULT_LENGTH_HINT": "The rope log falls back to this when the picked route has no length of its own. Unused by the boulder log.",
         "DELETE_CONFIRM_TITLE": "Delete sector",
         "DELETE_CONFIRM_MESSAGE": "Delete this sector?"
       },

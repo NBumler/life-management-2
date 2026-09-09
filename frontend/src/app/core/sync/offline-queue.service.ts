@@ -26,8 +26,12 @@ import { uuidV4 } from './uuid';
  *   that app update carries a session-level `sectorId` / `sectorName` (+ `rockType` / `aspect`) and
  *   attempts with no sector — push the session sector down onto every attempt that lacks one and drop
  *   the four removed session keys; every other type is identity.
+ * - v5 → v6 (backlog/088): `Sector` gained an optional `defaultLengthInMeters`. A pending `Sector`
+ *   write from before that app update simply has no such key; the server treats a missing/null value
+ *   as "no default" — identical to the pre-migration behaviour — so every type (Sector included) is
+ *   identity here; the bump exists only to satisfy the schema-drift guard.
  */
-export const OUTBOX_PAYLOAD_SCHEMA_VERSION = 5;
+export const OUTBOX_PAYLOAD_SCHEMA_VERSION = 6;
 
 /** documentation/Architektúra/Backend-offline first.md §6 "Tétel-újrapróbálkozási backoff" (jitter omitted — not load-bearing for correctness). */
 const RETRY_BACKOFF_MS = [2000, 8000, 30000, 120000, 600000];

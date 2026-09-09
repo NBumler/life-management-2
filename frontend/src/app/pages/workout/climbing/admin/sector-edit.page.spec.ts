@@ -18,7 +18,7 @@ describe('SectorEditPage', () => {
   async function setup(sectorIdParam = 'new', cragId = 'c1'): Promise<void> {
     saveSpy = jasmine
       .createSpy('save')
-      .and.resolveTo({ id: 's1', cragId, name: 'Főfal', defaultAspect: null, deleted: false });
+      .and.resolveTo({ id: 's1', cragId, name: 'Főfal', defaultAspect: null, defaultLengthInMeters: null, deleted: false });
 
     await TestBed.configureTestingModule({
       imports: [SectorEditPage],
@@ -58,6 +58,18 @@ describe('SectorEditPage', () => {
     expect(saveSpy).toHaveBeenCalledWith(
       jasmine.objectContaining({ cragId: 'c1', name: 'Főfal', defaultAspect: 'N' }),
     );
+  });
+
+  it('backlog/088: save() forwards a positive defaultLengthInMeters, else null', async () => {
+    await setup();
+    component.form.patchValue({ name: 'Főfal', defaultLengthInMeters: 24 });
+    await component.save();
+    expect(saveSpy.calls.mostRecent().args[0].defaultLengthInMeters).toBe(24);
+
+    saveSpy.calls.reset();
+    component.form.patchValue({ defaultLengthInMeters: null });
+    await component.save();
+    expect(saveSpy.calls.mostRecent().args[0].defaultLengthInMeters).toBeNull();
   });
 
   it('save() does nothing when the required name is missing', async () => {

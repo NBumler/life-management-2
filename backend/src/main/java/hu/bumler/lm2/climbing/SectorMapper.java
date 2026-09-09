@@ -12,6 +12,7 @@ class SectorMapper {
 		if (entity.getDefaultAspect() != null) {
 			dto.defaultAspect(Sector.DefaultAspectEnum.fromValue(entity.getDefaultAspect()));
 		}
+		dto.defaultLengthInMeters(entity.getDefaultLengthInMeters());
 		dto.deletedAt(entity.getDeletedAt());
 		dto.createdAt(entity.getCreatedAt());
 		dto.updatedAt(entity.getUpdatedAt());

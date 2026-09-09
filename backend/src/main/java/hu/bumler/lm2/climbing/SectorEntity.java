@@ -13,8 +13,9 @@ import jakarta.persistence.Table;
 
 /**
  * documentation/Subfeatures/Outdoor boulder admin.md — a user-owned sector under a Crag. Flat,
- * user-owned CRUD, no name uniqueness. {@code defaultAspect} is a free-text default wall orientation
- * inherited by routes and the napló. The crag link is fixed at create time.
+ * user-owned CRUD, no name uniqueness. {@code defaultAspect} is a default wall orientation inherited
+ * by routes and the napló; {@code defaultLengthInMeters} (backlog/088) is an optional default route
+ * length the rope napló falls back to when a route has none. The crag link is fixed at create time.
  */
 @Entity
 @Table(name = "sector")
@@ -34,6 +35,9 @@ public class SectorEntity {
 
 	@Column(name = "default_aspect")
 	private String defaultAspect;
+
+	@Column(name = "default_length_in_meters")
+	private Double defaultLengthInMeters;
 
 	@Generated(event = EventType.INSERT)
 	@Column(name = "created_at", insertable = false, updatable = false)
@@ -84,6 +88,14 @@ public class SectorEntity {
 
 	public void setDefaultAspect(String defaultAspect) {
 		this.defaultAspect = defaultAspect;
+	}
+
+	public Double getDefaultLengthInMeters() {
+		return defaultLengthInMeters;
+	}
+
+	public void setDefaultLengthInMeters(Double defaultLengthInMeters) {
+		this.defaultLengthInMeters = defaultLengthInMeters;
 	}
 
 	public OffsetDateTime getCreatedAt() {

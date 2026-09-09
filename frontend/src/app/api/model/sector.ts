@@ -20,6 +20,10 @@ export interface Sector {
      * backlog/068 — default wall aspect (\"fekvés\") as an 8-wind compass token, inherited by routes and the outdoor napló. `null` = unknown / not given.
      */
     defaultAspect?: Sector.DefaultAspectEnum | null;
+    /**
+     * backlog/088 — optional default route length (metres). The rope napló uses it when a picked Route has no `lengthInMeters` of its own (order: Route → Sector default → manual). `null` = none. Shown on the shared sector editor but unused by the boulder napló.
+     */
+    defaultLengthInMeters?: number | null;
     deleted: boolean;
     readonly deletedAt?: string | null;
     readonly createdAt?: string;

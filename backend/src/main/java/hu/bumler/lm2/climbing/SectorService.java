@@ -75,6 +75,7 @@ class SectorService {
 		entity.setName(dto.getName());
 		Sector.DefaultAspectEnum aspect = dto.getDefaultAspect().orElse(null);
 		entity.setDefaultAspect(aspect == null ? null : aspect.getValue());
+		entity.setDefaultLengthInMeters(dto.getDefaultLengthInMeters().orElse(null));
 	}
 
 	private static SectorEntity requireOwner(SectorEntity entity, UUID userId) {

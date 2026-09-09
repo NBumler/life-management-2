@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-09
-verifikalt_commit: 05094a4
+verifikalt_commit: b5d1556
 ---
 
 # Outdoor boulder admin
@@ -24,12 +24,14 @@ Kültéri boulder törzsadat: **Crag → Sector → (opcionális) BoulderProblem
 | Entitás | Fő mezők |
 |---|---|
 | `Crag` | `name`, opcionális GPS, default `rockType`, soft delete |
-| `Sector` | `cragId`, `name`, default `aspect` (fekvés — 8 irányú égtáj-enum), soft delete |
+| `Sector` | `cragId`, `name`, default `aspect` (fekvés — 8 irányú égtáj-enum), **`defaultLengthInMeters`** (opcionális alapértelmezett úthossz — `backlog/088`), soft delete |
 | `BoulderProblem` | Opcionális master: név, `guidebookGrade`, `sectorId`, `topoNumber`; ad-hoc a naplóban is születhet |
 
 `aspect` (fekvés) — **8 irányú égtáj-enum**: `N`, `NE`, `E`, `SE`, `S`, `SW`, `W`, `NW` (üres/`null` = ismeretlen; nincs `UNKNOWN` tag). Bevitel a `Sector` szerkesztőn a **vizuális választóval** (`app-aspect-picker`): négyzet kerületén a 8 irány, É felül, egy tap; a kijelöltre újra tap → törlés. A szektor-listában a `defaultAspect` a **lokalizált** égtáj-névvel jelenik meg (`SHARED.ASPECT_PICKER.FULL.*`), nem nyers enum-kóddal. Iránytű-fokból a `degreesToAspect` binnel (bin: 45°-os cikkek, az alsó határ felfelé kerekít — 22,5° = `NE`); paritás-fixture: `shared/fixtures/aspect-degrees.json` (kliens: `shared/aspect.ts`, backend: `hu.bumler.lm2.common.AspectDirection`). A napló **nem szerkeszti** a fekvést (`backlog/084` — nincs session-szintű `aspect` / `rockType` felülírás); legfeljebb megjeleníti, a kísérlet szektorából / sziklájából származtatva ([[Outdoor boulder napló]]).
 
 `topoNumber` — opcionális topó / felmászókönyv-sorszám (rövid szabad szöveg, max. 32 kar.; pl. „12", „5/a", „5b"). Nem uniqueness-kényszerített, szektor-scope-ban. A probléma-pickerek (admin szektor-lista **és** napló select) **természetes alfanumerikus** rendezéssel rendeznek rá (`2` < `5/a` < `5/b` < `10`), a `topoNumber` nélküli sorok a lista végén név szerint. Kliensoldali rendezés (`shared/natural-sort.ts`, fixture: `shared/fixtures/natural-sort.json`); a szerver nem rendez rá. A picker a sorszámot a név elé fűzi (`12 · …`).
+
+`defaultLengthInMeters` (`backlog/088`) — opcionális szám-mező a `Sector` szerkesztőn (méter). A közös `sector` entitás miatt a boulder szektor-szerkesztőn is megjelenik, de a **boulder naplónak nincs hossz-fogyasztója**, ezért ott hatás nélküli (döntés: nem rejtjük el, a mező opcionális és a spec jelzi). A köteles napló öröklési sorrendje: `Route.lengthInMeters` → `Sector.defaultLengthInMeters` → kísérlet-szintű kézi felülírás — [[Outdoor köteles napló]].
 
 Nincs `GymColorBand`. Soft delete: [[Mászónapló]]. Térkép/fotó UI: **nem** 2.0 (csak opcionális GPS mező).
 
@@ -57,7 +59,7 @@ Outbox + UUID + soft delete. Lásd [[Backend-offline first]].
 
 ### Backend
 
-Táblák: `crag`, `sector`, `boulder_problem`. `boulder_problem.topo_number text CHECK (char_length ≤ 32)` a `V33`-ból. `sector.default_aspect`: 8 irányú égtáj-token (`N`..`NW`), OpenAPI `enum` + `sector_default_aspect_check` DB CHECK a `V34__climbing_aspect_compass_enum.sql`-ből (a korábbi szabad szöveget best-effort megfeleltette, a felismerhetetlent NULL-ra állította). A token szövegoszlopban marad, `sync_changes` view érintetlen. API: [[Mászónapló]] master. Auth / user scope ([[Bejelentkezés]]).
+Táblák: `crag`, `sector`, `boulder_problem`. `boulder_problem.topo_number text CHECK (char_length ≤ 32)` a `V33`-ból. `sector.default_aspect`: 8 irányú égtáj-token (`N`..`NW`), OpenAPI `enum` + `sector_default_aspect_check` DB CHECK a `V34__climbing_aspect_compass_enum.sql`-ből (a korábbi szabad szöveget best-effort megfeleltette, a felismerhetetlent NULL-ra állította). `sector.default_length_in_meters double precision CHECK (> 0 vagy NULL)` a `V38__sector_default_length.sql`-ből (`backlog/088`). A token szövegoszlopban marad, `sync_changes` view érintetlen (mindkét oszlop nem-scope). Outbox payload-séma `v5 → v6` (a `Sector` mezőalak-változás miatt; minden entitás identity — a hiányzó kulcs = „nincs default"). API: [[Mászónapló]] master. Auth / user scope ([[Bejelentkezés]]).
 
 ### Nyitott kérdések
 

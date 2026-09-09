@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-09
-verifikalt_commit: 05094a4
+verifikalt_commit: b5d1556
 ---
 
 # Outdoor köteles napló
@@ -26,7 +26,7 @@ Kültéri köteles session + kísérletek / multi-pitch. Dashboard: **Outdoor K�
 | Helyszín | `Crag` **session szinten** (egy alkalom = egy szikla); a **szektor kísérletenként** (`backlog/084`) — egy alkalom több szektort is érinthet. Új kísérlet-sor a szektort az **előző kísérletéből** tölti elő (első sornál az utolsó outdoor-kötél session utolsó kísérletének szektorából); a `Crag` váltása minden sor szektorát törli. |
 | Út | `Route` master **vagy** ad-hoc (+ `saveToCatalog`) — a `Route` opciók a kísérlet szektorából jönnek, a `saveToCatalog` a kísérlet szektorába ír. Út kiválasztásakor a fokozat és a hossz a Route-ból töltődik; **másik Route-ra váltáskor újratöltődik** az újból (és vele a levezetett nehézségi index) — kivéve ha a user közben kézzel átírta, akkor a kézi érték marad ([[Mászónapló]] `AscentAttempt`). |
 | `safetyStyle` | `TOPROPE` \| `LEAD` \| `TRAD` (TRAD: +6 kg aktív kalóriánál) |
-| `lengthInMeters` | Route-ból vagy kézi (lásd az útváltás-szabályt az `Út` sornál) |
+| `lengthInMeters` | Öröklési sorrend (`backlog/088`): **1.** `Route.lengthInMeters` → **2.** a kísérlet szektorának `defaultLengthInMeters`-e → **3.** kézi felülírás. A `lengthAutoFilled` provenance-flag a szektor-defaultra is kiterjed: út- vagy szektorváltáskor az örökölt hossz újratöltődik, kézi átírásig. A kötél-kalória (`lengthInMeters × {25\|45\|60}`) a feloldott hosszt használja. |
 | `PitchLog` | **Opcionális** lista: `pitchNumber`, `isLead`, `rawGrade`, index, `lengthInMeters` — ha nincs kitöltve, elég session + teljes úthossz |
 | Másodmászó | `isLead=false` → aktív MET ×0.8 |
 | `weatherConditions` | Session |
@@ -57,7 +57,7 @@ Mint [[Mászónapló]].
 
 ### Backend
 
-Sessions + nested attempts + nested pitches; `routeId` + snapshot. `AscentAttempt.sectorId` (valós FK a `sector`-re) + `sectorName` snapshot — `backlog/084`, `V37__climbing_sector_to_attempt.sql`. A `climbing_session` szintjén megszűnt `sector_id` / `sector_name` / `rock_type` / `aspect` oszlop; a nested PUT az attempt szektorát a szokásos fa-diff szerint menti. Outbox payload-séma: `v4 → v5` (`OUTBOX_PAYLOAD_SCHEMA_VERSION`), a `ClimbingSession` migrátor-lépés a függő írások session-szektorát leviszi a kísérletekre.
+Sessions + nested attempts + nested pitches; `routeId` + snapshot. `AscentAttempt.sectorId` (valós FK a `sector`-re) + `sectorName` snapshot — `backlog/084`, `V37__climbing_sector_to_attempt.sql`. A `climbing_session` szintjén megszűnt `sector_id` / `sector_name` / `rock_type` / `aspect` oszlop; a nested PUT az attempt szektorát a szokásos fa-diff szerint menti. `Sector.defaultLengthInMeters` (`V38__sector_default_length.sql`, `backlog/088`) — a köteles napló hossz-fallbackja. Outbox payload-séma: `v4 → v5` (`backlog/084` `ClimbingSession` migrátor-lépés) majd `v5 → v6` (`backlog/088` `Sector` mezőalak, identity).
 
 ### Nyitott kérdések
 

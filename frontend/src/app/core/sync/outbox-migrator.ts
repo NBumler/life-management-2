@@ -203,6 +203,9 @@ const STEPS_BY_VERSION: Readonly<Record<number, VersionSteps>> = {
   2: { default: identityStep, overrides: { ClimbingSession: stripClimbingSessionFailurePoint } },
   3: { default: identityStep, overrides: { ShoppingList: addShoppingListSaveToStorageDefault } },
   4: { default: identityStep, overrides: { ClimbingSession: moveClimbingSessionSectorToAttempts } },
+  // backlog/088: `Sector.defaultLengthInMeters` added as a new optional/nullable field — a missing key
+  // already means "no default" server-side, so no payload transform is needed for any entity.
+  5: { default: identityStep },
 };
 
 function buildMigrations(): ReadonlyMap<string, MigrationStep> {

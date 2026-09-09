@@ -1211,7 +1211,16 @@ const SCHEMA_V36_STATEMENTS: string[] = [
    )`,
 ];
 
-const SCHEMA_VERSION = 36;
+/**
+ * backlog/088 — szektor-szintű alapértelmezett úthossz. On-device tükre a backend
+ * `V38__sector_default_length.sql`-nek: `sector` kap `default_length_in_meters` oszlopot (a köteles
+ * napló ide esik vissza, ha a kiválasztott `route`-on nincs saját hossz). Régi soroknál `NULL`.
+ */
+const SCHEMA_V37_STATEMENTS: string[] = [
+  `ALTER TABLE sector ADD COLUMN default_length_in_meters REAL`,
+];
+
+const SCHEMA_VERSION = 37;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -1250,7 +1259,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 33, statements: SCHEMA_V33_STATEMENTS },
   { toVersion: 34, statements: SCHEMA_V34_STATEMENTS },
   { toVersion: 35, statements: SCHEMA_V35_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V36_STATEMENTS },
+  { toVersion: 36, statements: SCHEMA_V36_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V37_STATEMENTS },
 ];
 
 export interface SqlTask {

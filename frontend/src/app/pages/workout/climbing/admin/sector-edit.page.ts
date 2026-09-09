@@ -28,8 +28,10 @@ import { AspectPickerComponent } from '../../../../shared/aspect-picker/aspect-p
 
 /**
  * documentation/Subfeatures/Outdoor boulder admin.md + Outdoor köteles admin.md — the sector editor.
- * `defaultAspect` is a free-text wall orientation inherited by routes and the napló; the crag link is
- * fixed at create time. On an existing sector the route and boulder-problem sub-lists are shown.
+ * `defaultAspect` is a wall orientation inherited by routes and the napló; `defaultLengthInMeters`
+ * (backlog/088) is an optional default route length the rope napló falls back to when a route has
+ * none. The crag link is fixed at create time. On an existing sector the route and boulder-problem
+ * sub-lists are shown.
  */
 @Component({
   selector: 'app-sector-edit',
@@ -72,6 +74,7 @@ export class SectorEditPage implements OnInit {
   readonly form = this.fb.nonNullable.group({
     name: this.fb.nonNullable.control('', [Validators.required]),
     defaultAspect: this.fb.control<Aspect | null>(null),
+    defaultLengthInMeters: this.fb.control<number | null>(null, [Validators.min(1)]),
   });
 
   readonly routes = computed(() => {
@@ -95,7 +98,11 @@ export class SectorEditPage implements OnInit {
         return;
       }
       this.sectorId.set(idParam);
-      this.form.reset({ name: existing.name, defaultAspect: existing.defaultAspect ?? null });
+      this.form.reset({
+        name: existing.name,
+        defaultAspect: existing.defaultAspect ?? null,
+        defaultLengthInMeters: existing.defaultLengthInMeters ?? null,
+      });
     }
   }
 
@@ -110,6 +117,7 @@ export class SectorEditPage implements OnInit {
       cragId: this.cragId(),
       name: v.name.trim(),
       defaultAspect: v.defaultAspect ?? null,
+      defaultLengthInMeters: v.defaultLengthInMeters && v.defaultLengthInMeters > 0 ? v.defaultLengthInMeters : null,
     };
     const saved = await this.repository.save(input);
     if (this.sectorId() === null) {

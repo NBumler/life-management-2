@@ -30,7 +30,7 @@ function crag(overrides: Partial<Crag> = {}): Crag {
 }
 
 function sector(overrides: Partial<Sector> = {}): Sector {
-  return { id: 's1', cragId: 'c1', name: 'Főfal', defaultAspect: 'N', deleted: false, ...overrides };
+  return { id: 's1', cragId: 'c1', name: 'Főfal', defaultAspect: 'N', defaultLengthInMeters: null, deleted: false, ...overrides };
 }
 
 function route(overrides: Partial<Route> = {}): Route {
@@ -54,7 +54,12 @@ describe('OutdoorRopeSessionEditPage', () => {
   let saveSpy: jasmine.Spy<(draft: ClimbingSessionDraft) => Promise<ClimbingSession>>;
   let routeSaveSpy: jasmine.Spy;
 
-  async function setup(idParam = 'new', crags: Crag[] = [crag()], routes: Route[] = [route()]): Promise<void> {
+  async function setup(
+    idParam = 'new',
+    crags: Crag[] = [crag()],
+    routes: Route[] = [route()],
+    sectors: Sector[] = [sector()],
+  ): Promise<void> {
     saveSpy = jasmine.createSpy('save').and.callFake(async (d: ClimbingSessionDraft) => ({
       ...d,
       id: d.id || 's1',
@@ -93,7 +98,10 @@ describe('OutdoorRopeSessionEditPage', () => {
           },
         },
         { provide: CragRepository, useValue: { load: () => Promise.resolve(), items: signal<Crag[]>(crags) } },
-        { provide: SectorRepository, useValue: { load: () => Promise.resolve(), forCrag: () => [sector()] } },
+        {
+          provide: SectorRepository,
+          useValue: { load: () => Promise.resolve(), items: signal<Sector[]>(sectors), forCrag: () => sectors },
+        },
         {
           provide: RouteRepository,
           useValue: {
@@ -201,6 +209,32 @@ describe('OutdoorRopeSessionEditPage', () => {
     expect(draft.attempts[0].absoluteDifficultyIndex).not.toBeNull();
     expect(draft.attempts[0].colorBandId).toBeNull();
     expect(draft.attempts[0].pitches).toEqual([]);
+  });
+
+  it('backlog/088: with no route, picking a sector prefills its default length; a route length still wins', async () => {
+    await setup('new', [crag()], [route({ id: 'rt3', lengthInMeters: 33 })], [sector({ defaultLengthInMeters: 18 })]);
+    component.form.patchValue({ cragId: 'c1' });
+    component.addAttempt();
+    const row = component.attempts()[0];
+
+    component.pickSector(row, 's1');
+    expect(row.lengthInMeters()).toBe(18);
+
+    // a picked route's own length takes precedence over the sector default
+    component.pickRoute(row, 'rt3');
+    expect(row.lengthInMeters()).toBe(33);
+  });
+
+  it('backlog/088: a route without its own length falls back to the sector default', async () => {
+    await setup('new', [crag()], [route({ id: 'rt4', lengthInMeters: null })], [sector({ defaultLengthInMeters: 22 })]);
+    component.form.patchValue({ cragId: 'c1' });
+    component.addAttempt();
+    const row = component.attempts()[0];
+    component.pickSector(row, 's1');
+    component.pickRoute(row, 'rt4');
+
+    await component.save();
+    expect(saveSpy.calls.mostRecent().args[0].attempts[0].lengthInMeters).toBe(22);
   });
 
   it('picking a master route snapshots its name + grade and prefills the length', async () => {

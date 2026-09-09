@@ -12,7 +12,7 @@ function sector(overrides: Partial<Sector> = {}): Sector {
 }
 
 function saveInput(overrides: Partial<SectorSaveInput> = {}): SectorSaveInput {
-  return { cragId: 'c1', name: 'Főfal', defaultAspect: null, ...overrides };
+  return { cragId: 'c1', name: 'Főfal', defaultAspect: null, defaultLengthInMeters: null, ...overrides };
 }
 
 describe('SectorRepository', () => {

@@ -52,12 +52,28 @@ class SectorServiceTest {
 
 		Sector input = dto(id, cragId, "Alsó szektor");
 		input.defaultAspect(Sector.DefaultAspectEnum.S);
+		input.defaultLengthInMeters(24.0);
 
 		Sector saved = service.create(userId, input);
 
 		assertThat(saved.getId()).isEqualTo(id);
 		assertThat(saved.getCragId()).isEqualTo(cragId);
 		assertThat(saved.getDefaultAspect().orElse(null)).isEqualTo(Sector.DefaultAspectEnum.S);
+		assertThat(saved.getDefaultLengthInMeters().orElse(null)).isEqualTo(24.0);
+	}
+
+	@Test
+	void update_clearsDefaultLength_whenOmitted() {
+		UUID userId = UUID.randomUUID();
+		SectorEntity existing = entity(UUID.randomUUID(), userId, UUID.randomUUID());
+		existing.setDefaultLengthInMeters(30.0);
+		when(repository.findByIdAndUserId(existing.getId(), userId)).thenReturn(Optional.of(existing));
+		when(repository.saveAndFlush(any())).thenAnswer(inv -> inv.getArgument(0));
+
+		Sector updated = service.update(userId, existing.getId(),
+				dto(existing.getId(), existing.getCragId(), "renamed"));
+
+		assertThat(updated.getDefaultLengthInMeters().orElse(null)).isNull();
 	}
 
 	@Test

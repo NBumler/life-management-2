@@ -28,6 +28,18 @@
           [label]="'WORKOUT.CLIMBING.SECTOR.FIELD_ASPECT' | translate"
         ></app-aspect-picker>
       </ion-item>
+      <ion-item>
+        <ion-input
+          type="number"
+          inputmode="decimal"
+          formControlName="defaultLengthInMeters"
+          [label]="'WORKOUT.CLIMBING.SECTOR.FIELD_DEFAULT_LENGTH' | translate"
+          label-placement="stacked"
+        ></ion-input>
+      </ion-item>
+      <ion-note class="ion-margin-start" color="medium">
+        {{ 'WORKOUT.CLIMBING.SECTOR.DEFAULT_LENGTH_HINT' | translate }}
+      </ion-note>
     </ion-list>
 
     @if (sectorId()) {

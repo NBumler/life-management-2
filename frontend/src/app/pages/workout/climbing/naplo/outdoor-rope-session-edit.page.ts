@@ -29,6 +29,7 @@ import { AscentAttempt } from '../../../../api/model/ascentAttempt';
 import { ClimbingSession } from '../../../../api/model/climbingSession';
 import { PitchLog } from '../../../../api/model/pitchLog';
 import { Route } from '../../../../api/model/route';
+import { Sector } from '../../../../api/model/sector';
 import { ClimbingSessionRepository } from '../../../../core/data/climbing-session.repository';
 import { CragRepository } from '../../../../core/data/crag.repository';
 import { ProfileRepository } from '../../../../core/data/profile.repository';
@@ -359,11 +360,22 @@ export class OutdoorRopeSessionEditPage implements OnInit {
   /** backlog/084 — a picked sector snapshots its name onto the row; a route no longer under it is cleared. */
   pickSector(row: AttemptRow, sectorId: string | null): void {
     row.sectorId.set(sectorId || null);
-    row.sectorName.set(this.sectorsForCrag().find((sector) => sector.id === sectorId)?.name ?? null);
+    const sector = this.sectorsForCrag().find((entry) => entry.id === sectorId);
+    row.sectorName.set(sector?.name ?? null);
     if (row.routeId() && !this.routesForRow(row).some((route) => route.id === row.routeId())) {
       row.routeId.set(null);
     }
+    // backlog/088 — with no route picked, the sector's default length prefills the row (until a manual edit).
+    if (!row.routeId() && sector?.defaultLengthInMeters != null && (row.lengthInMeters() == null || row.lengthAutoFilled())) {
+      row.lengthInMeters.set(sector.defaultLengthInMeters);
+      row.lengthAutoFilled.set(true);
+    }
     this.touchAttempts();
+  }
+
+  /** backlog/088 — the row's own sector (per attempt), for the length-inheritance fallback. */
+  private sectorForRow(row: AttemptRow): Sector | undefined {
+    return row.sectorId() ? this.sectorsForCrag().find((sector) => sector.id === row.sectorId()) : undefined;
   }
 
   addAttempt(): void {
@@ -413,8 +425,10 @@ export class OutdoorRopeSessionEditPage implements OnInit {
         row.userRawInput.set(route.guidebookGrade);
         row.gradeAutoFilled.set(true);
       }
-      if (route.lengthInMeters != null && (row.lengthInMeters() == null || row.lengthAutoFilled())) {
-        row.lengthInMeters.set(route.lengthInMeters);
+      // backlog/088 length inheritance: Route.lengthInMeters → Sector.defaultLengthInMeters.
+      const inherited = route.lengthInMeters ?? this.sectorForRow(row)?.defaultLengthInMeters ?? null;
+      if (inherited != null && (row.lengthInMeters() == null || row.lengthAutoFilled())) {
+        row.lengthInMeters.set(inherited);
         row.lengthAutoFilled.set(true);
       }
       row.saveToCatalog.set(false);
@@ -573,13 +587,16 @@ export class OutdoorRopeSessionEditPage implements OnInit {
     return parsed.status === 'VALID' && parsed.absoluteDifficultyIndex !== null ? parsed.absoluteDifficultyIndex : null;
   }
 
-  /** The attempt length actually stored / used: the typed value, else the picked route's length. */
+  /**
+   * The attempt length actually stored / used (backlog/088 inheritance order):
+   * typed value → picked `Route.lengthInMeters` → the row's `Sector.defaultLengthInMeters`.
+   */
   private resolveLength(row: AttemptRow): number | null {
     const typed = row.lengthInMeters();
     if (typed != null && Number.isFinite(typed) && typed > 0) {
       return typed;
     }
-    return this.routeById(row.routeId())?.lengthInMeters ?? null;
+    return this.routeById(row.routeId())?.lengthInMeters ?? this.sectorForRow(row)?.defaultLengthInMeters ?? null;
   }
 
   private buildDraft(): ClimbingSessionDraft {
@@ -650,10 +667,14 @@ export class OutdoorRopeSessionEditPage implements OnInit {
   }
 
   private rowFrom(attempt: AscentAttempt): AttemptRow {
-    // Treat the stored grade / length as route-derived only if it still matches the linked route, so
-    // switching routes refills it — but a value the user had hand-edited (no longer matching) is kept.
+    // Treat the stored grade / length as route- / sector-derived only if it still matches, so switching
+    // route or sector refills it — but a value the user had hand-edited (no longer matching) is kept.
     const route = this.routeById(attempt.routeId ?? null);
+    const sectorDefaultLength = attempt.sectorId
+      ? (this.sectorRepository.items().find((s) => s.id === attempt.sectorId)?.defaultLengthInMeters ?? null)
+      : null;
     const raw = attempt.userRawInput?.trim() ?? '';
+    const storedLength = attempt.lengthInMeters ?? null;
     return {
       id: attempt.id,
       sectorId: signal(attempt.sectorId ?? null),
@@ -662,8 +683,10 @@ export class OutdoorRopeSessionEditPage implements OnInit {
       routeName: signal(attempt.routeName ?? null),
       userRawInput: signal(attempt.userRawInput ?? null),
       gradeAutoFilled: signal(route != null && raw !== '' && raw === (route.guidebookGrade?.trim() ?? '')),
-      lengthInMeters: signal(attempt.lengthInMeters ?? null),
-      lengthAutoFilled: signal(route != null && attempt.lengthInMeters != null && attempt.lengthInMeters === route.lengthInMeters),
+      lengthInMeters: signal(storedLength),
+      lengthAutoFilled: signal(
+        storedLength != null && (storedLength === route?.lengthInMeters || storedLength === sectorDefaultLength),
+      ),
       safetyStyle: signal(attempt.safetyStyle ?? DEFAULT_SAFETY_STYLE),
       isSuccess: signal(attempt.isSuccess),
       ascentStyle: signal(attempt.ascentStyle ?? null),

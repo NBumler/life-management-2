@@ -14,6 +14,18 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-09 — #88** Mászás — szektor-szintű alapértelmezett úthossz. `Sector` kap opcionális
+  `defaultLengthInMeters` mezőt; a köteles napló úthossz-öröklése: **1.** `Route.lengthInMeters`
+  → **2.** `Sector.defaultLengthInMeters` → **3.** kísérlet-szintű kézi felülírás (`lengthAutoFilled`
+  provenance kiterjesztve a szektor-defaultra — út/szektor váltáskor újratöltődik). A feloldott
+  hosszt a kötél-kalória is használja. Boulder-oldal: a mező a közös `sector` szerkesztőn megjelenik,
+  de a boulder naplónak nincs hossz-fogyasztója. Backend: `V38__sector_default_length.sql`,
+  `SectorEntity`/`Mapper`/`Service`, OpenAPI `Sector`. Frontend: `gen:api`, `SCHEMA_V37` on-device
+  oszlop, `local-rows`, `SectorSaveInput` + repo, `sector-edit` szám-input + hint (i18n hu/en),
+  `outdoor-rope-session-edit` öröklés (`pickSector` / `pickRoute` / `resolveLength` / `rowFrom`).
+  Outbox: `OUTBOX_PAYLOAD_SCHEMA_VERSION` v5 → v6 (identity — hiányzó kulcs = nincs default) +
+  snapshot. Spec: [[Outdoor köteles admin]], [[Outdoor boulder admin]], [[Outdoor köteles napló]],
+  [[Mászónapló]]. **(change-request)**
 - **2026-09-09 — #84** Mászás — a szektor a session szintről a kísérlet (`AscentAttempt`) szintre
   került: egy alkalom több szektort is érinthet, a `Crag` marad session-szintű. `AscentAttempt`
   kap `sectorId` (valós FK) + `sectorName` snapshot mezőt; új kísérlet-sor a szektort az előző
