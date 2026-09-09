@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-06
-verifikalt_commit: 6ca6bc6
+verifikalva: 2026-09-09
+verifikalt_commit: 5302b5b
 ---
 
 # Edzésnapló
@@ -161,7 +161,7 @@ Tervezett (`backlog/055-edzesnaplo-statisztika-felulet-1rm-max-suly-gorbe-heti-v
 - Belépés: [[Edzés]] tab → Edzésnapló (dashboard / lista).
 - Flow: Dashboard → Új edzés / Terv indítása / Ugyanaz mint legutóbb → Active Workout (vagy utólagos form) → gyakorlat modal → szettek → Befejezés → summary / dashboard frissülés.
 - **Lista:** időrend (újabb elöl); soron: dátum, cím vagy típus, időtartam, megjelenített kcal (utility).
-- **Gyakorlat picker:** `ion-searchbar` + `ExerciseCategory` chipek + Kedvencek; ad-hoc létrehozás.
+- **Gyakorlat picker:** `ion-searchbar` + `ExerciseCategory` chipek + Kedvencek; ad-hoc létrehozás. A `<ion-modal>`-ben megjelenő `app-exercise-picker` a modal **teljes magasságát** kitölti (`:host` `position: absolute; inset: 0`, flex-oszlop), így a találati lista a teljes rendelkezésre álló teret használja, nem egy-két sorra zsugorodik.
 - **Szettek:** gyakorlatonként egy átlátható lista/táblázat; `+ Új szett`; előző szett másolása; `+2.5 kg` / `+5 kg` / `+1 rep`; numerikus billentyűzet autofókusz.
 - **Thumb-zone:** szett-pipa és „Edzés befejezése” a képernyő alsó harmadában.
 - **HIIT:** körök (`roundsCount`); kör másolás gombokkal.

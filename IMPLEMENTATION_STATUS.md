@@ -14,6 +14,14 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-09 — #98** Gyakorlat-picker modal teljes magasság. A megosztott
+  `app-exercise-picker` `<ion-modal>`-ben önálló gyerek-komponensként jelenik meg; Ionic 8
+  nem rak köré `.ion-page` wrappert, így a hoszt összeesett és az `<ion-content>` majdnem
+  0 magas lett — Androidon üresnek tűnő, web-en 1 soros lista. Fix: új
+  `exercise-picker.component.scss` + `styleUrls`, a `:host` a `.ion-page` lényegét tükrözi
+  (`display: flex; flex-direction: column; position: absolute; inset: 0`) + `.chip-row`
+  flex-wrap. Nincs logikai / adat / outbox hatás; mindhárom fogyasztó (`plan-edit`,
+  `workout-session-edit`, `active-workout`) egyszerre javul. **(bug)**
 - **2026-09-07 — #081** STEPS_LOW értesítés előtt friss lépésszám-sync. A `STEPS_LOW`
   (20:00) eddig a helyi `DailyStepLog`-ból döntött, ami reggel óta nem syncelt eszközön
   elavult lehetett → valótlan „kevés lépés" értesítés. **(1)**

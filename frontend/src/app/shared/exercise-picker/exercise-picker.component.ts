@@ -47,6 +47,7 @@ export interface ExercisePickResult {
 @Component({
   selector: 'app-exercise-picker',
   templateUrl: 'exercise-picker.component.html',
+  styleUrls: ['exercise-picker.component.scss'],
   imports: [
     FormsModule,
     IonHeader,
