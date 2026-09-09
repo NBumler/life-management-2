@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: 0d07ce6
+verifikalva: 2026-09-09
+verifikalt_commit: efbf7ae
 ---
 
 # Pakolás
@@ -110,11 +110,20 @@ Egy tétel kártya:
 - `GearItem` törlés → cascade soft delete: kiesik minden futó session élő tételéből — [[Eszközök]].
 - Sablon törlés → session **érintetlen** — [[Sablonok]].
 
+#### Időjárás belépő
+
+A session képernyőn a `destination` mező mellett **„Időjárás"** gomb: megnyit egy külső böngészőt
+(natívon in-app / rendszer-böngésző a `@capacitor/browser`-rel, weben új tab) egy egyszerű
+Google-kereséssel: `https://www.google.com/search?q=<encodeURIComponent(destination + " időjárás")>`
+(pl. `Magas-Tátra időjárás`). **Nincs** időjárás-API, kulcs vagy tárolt időjárás-adat — csak a
+kereső-URL összeállítása és megnyitása. A keresőszó egyelőre fix magyar „időjárás"; üres úticélnál a
+gomb **nem jelenik meg**.
+
 ### UI/UX elvárások
 
 - Belépés: [[GearCheck]] hub → **Aktív pakolás** (lista a futó sessionökről + új indítás; korlátlan darabszám).
 - Lista soron cím: a `destination`, ha meg van adva; ha nincs, a `sourceTemplateIds` alapján a forrás-sablon(ok) neve, **vesszővel összefűzve** — csak ha egyik forrás-sablon neve sem oldható fel (pl. törölt sablon(ok)ból indult, üres lista), akkor esik vissza „Névtelen pakolás” feliratra.
-- Session képernyő: úticél szerkesztő; kereső; státusz-sort; manuális reorder; tételkártyák a fenti interakcióval; „eszköz hozzáadása” picker; lezárás gomb + confirmation. (A forrás-sablonok jelölése a session képernyőn tervezett: `backlog/027-gear-pakolas-session-kepernyo-forras-sablonok-torolt-sablon-jelz.md`.)
+- Session képernyő: úticél szerkesztő + a kitöltött úticélnál megjelenő **„Időjárás"** gomb; kereső; státusz-sort; manuális reorder; tételkártyák a fenti interakcióval; „eszköz hozzáadása” picker; lezárás gomb + confirmation. (A forrás-sablonok jelölése a session képernyőn tervezett: `backlog/027-gear-pakolas-session-kepernyo-forras-sablonok-torolt-sablon-jelz.md`.)
 - Indítás flow: multi-select sablon(ok) (≥1) + opcionális úticél.
 
 ### Megjegyzések
@@ -133,6 +142,7 @@ Nincs nyitott kérdés.
 - Élő név: join / select a helyi `gear_item` store-ból `gearItemId` alapján.
 - OpenAPI generált kliens; mutációk offline rétegen.
 - **Csak a session-létrehozás nested atomi írás** (session + kezdeti tételek egy requestben). A tétel-mutációk (status / sortOrder / extra tétel hozzáadása) **külön** outbox-műveletek a standalone item-végpontokon keresztül, nem nested session-mentés.
+- Időjárás belépő: `pages/menu/gear/sessions/weather-search.ts` (pure — `weatherSearchUrl(destination)`) + `core/config/external-browser.service.ts` (`ExternalBrowserService.open(url)` — natív: `@capacitor/browser`, web: `window.open(_blank, noopener)`). A gomb láthatóságát a `destination` input élő tükör-signalja vezérli.
 
 #### Backend-offline
 
@@ -140,6 +150,7 @@ Nincs nyitott kérdés.
 - Create session / update destination / item status / sortOrder / add item / delete session → outbox (`OfflineQueueService`) + kliens UUID; sync: [[Szinkronizációs központ]].
 - Lezárás: helyi `deleted = true` session + items; outbox `DELETE` (szerver soft delete). Soha nem syncelt draft: helyi hard remove + outbox purge.
 - Eszköz-cascade: [[Eszközök]] — helyi session itemek soft delete.
+- Az **„Időjárás"** gomb és a `destination` mező offline is látszik és szerkeszthető; maga a böngésző-megnyitás értelemszerűen hálózatot igényel, de a pakolás többi része offline változatlan.
 - Lásd [[Backend-offline first]].
 
 ### Backend

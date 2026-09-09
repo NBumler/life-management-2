@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-03
-verifikalt_commit: 1917ba8
+verifikalva: 2026-09-09
+verifikalt_commit: efbf7ae
 ---
 
 # GearCheck
@@ -47,7 +47,7 @@ Menü alatti GearCheck belépő; három subfeature képernyő ([[Eszközök]], [
 
 #### Backend-offline
 
-Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító kérések outboxba (`OfflineQueueService`), kliens UUID. Sync: [[Szinkronizációs központ]]. Részletek a gyerekekben. Lásd [[Backend-offline first]].
+Backend-offline és Full-offline: olvasás/írás a helyi store-on; módosító kérések outboxba (`OfflineQueueService`), kliens UUID. Sync: [[Szinkronizációs központ]]. Részletek a gyerekekben. Egyetlen kifelé mutató hívás a [[Pakolás]] „Időjárás" gombja — külső böngésző (`@capacitor/browser` / új tab) egy Google-keresésre; ez nyilván hálózatot igényel, de nem érinti a GearCheck offline működését. Lásd [[Backend-offline first]].
 
 ### Backend
 

@@ -14,6 +14,16 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-09 — #86** GearCheck — időjárás keresése felugró böngészőablakban az úticélra. A
+  [[Pakolás]] session képernyőn a `destination` mező mellett új **„Időjárás"** gomb (csak kitöltött
+  úticélnál látszik): megnyit egy külső böngészőt egy `https://www.google.com/search?q=<úticél
+  időjárás>` kereséssel — natívon `@capacitor/browser` (in-app / rendszer-böngésző), weben új tab.
+  Nincs időjárás-API / kulcs / tárolt adat; a keresőszó fix magyar „időjárás". Új:
+  `core/config/external-browser.service.ts` (`ExternalBrowserService`), `pages/menu/gear/sessions/
+  weather-search.ts` (pure `weatherSearchUrl`). `@capacitor/browser@8.0.4` a `package.json`-ban +
+  `npx cap sync android`. i18n `GEAR.PACKING.WEATHER_BUTTON` (hu/en). A `PackingSession.destination`
+  mező + backend már korábban létezett — nincs backend / migráció / outbox érintés. Tesztek:
+  `weather-search.spec`, `external-browser.service.spec`, `packing-session-detail.page.spec` (+3).
 - **2026-09-09 — #95** Kezdőképernyő — widgetek / gyorsgombok. A [[Kezdőlap]] (`#96`) tartalma
   mostantól **config-vezérelt widget-verem** (`HOME_WIDGETS` a `core/config/home-widget-registry.ts`-ben,
   a tab registry mintájára flag-elve): **(1) Gyorsgombok** widget — `HOME_QUICK_ACTIONS` gombonként

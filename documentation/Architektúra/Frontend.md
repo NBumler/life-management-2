@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-09
-verifikalt_commit: 2d8fec8
+verifikalt_commit: efbf7ae
 ---
 
 # Frontend
@@ -250,6 +250,7 @@ Az induláson **nincs blokkoló hálózati hívás** — [[Backend-offline first
 | **Saját Health Connect plugin** (`core/health/health-connect.plugin.ts` + `HealthConnectStepsPlugin.kt`, `androidx.health.connect:connect-client`) | Android lépésszám olvasás | [[Lépésszám átszinkronizálása a Samsung Health-ből]] |
 | `@aparajita/capacitor-secure-storage` | Access + refresh token; app-frissítés után is megmarad | [[Bejelentkezés]] |
 | `@capacitor/preferences` | Device-local beállítások: nyelv, téma, értesítés típus-kapcsolók | [[Bejelentkezés]] device-local tábla |
+| `@capacitor/browser` | Külső URL megnyitása in-app / rendszer-böngészőben (web: új tab) — `core/config/external-browser.service.ts` | [[Pakolás]] időjárás-belépő |
 
 Platform-kényelmi pluginok (splash screen, status bar, keyboard) szükség szerint; nem spec-döntés.
 

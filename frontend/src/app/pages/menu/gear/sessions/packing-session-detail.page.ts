@@ -26,6 +26,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { GearItem } from '../../../../api/model/gearItem';
 import { PackingSessionDetail } from '../../../../api/model/packingSessionDetail';
 import { PackingSessionItem } from '../../../../api/model/packingSessionItem';
+import { ExternalBrowserService } from '../../../../core/config/external-browser.service';
 import { GearItemRepository } from '../../../../core/data/gear-item.repository';
 import { PackingSessionRepository } from '../../../../core/data/packing-session.repository';
 import { GearItemPickerComponent } from '../../../../shared/gear-item-picker/gear-item-picker.component';
@@ -35,6 +36,7 @@ import {
   StatusCycleItem,
 } from '../../../../shared/status-cycle-card/status-cycle-card.component';
 import { matchesSearch } from '../../../../shared/text-search';
+import { weatherSearchUrl } from './weather-search';
 
 interface SessionItemView {
   id: string;
@@ -91,6 +93,7 @@ export class PackingSessionDetailPage implements OnInit {
   private readonly gearItemRepository = inject(GearItemRepository);
   private readonly alertController = inject(AlertController);
   private readonly translate = inject(TranslateService);
+  private readonly externalBrowser = inject(ExternalBrowserService);
 
   private readonly sessionId = this.route.snapshot.paramMap.get('id') ?? '';
 
@@ -102,6 +105,10 @@ export class PackingSessionDetailPage implements OnInit {
   readonly destinationForm = this.fb.nonNullable.group({
     destination: this.fb.control<string | null>(null),
   });
+
+  /** Mirrors the destination input live so the "Időjárás" entry can hide itself while it is blank. */
+  readonly destinationValue = signal('');
+  readonly canSearchWeather = computed(() => this.destinationValue().trim().length > 0);
 
   private readonly filteredItems = computed(() => {
     const query = this.query();
@@ -122,7 +129,20 @@ export class PackingSessionDetailPage implements OnInit {
     await this.gearItemRepository.load();
     const detail = await this.sessionRepository.getDetail(this.sessionId);
     this.destinationForm.setValue({ destination: detail.destination ?? null });
+    this.destinationValue.set(detail.destination ?? '');
     this.applyDetail(detail);
+  }
+
+  onDestinationInput(value: string): void {
+    this.destinationValue.set(value);
+  }
+
+  async openWeatherSearch(): Promise<void> {
+    const destination = this.destinationValue().trim();
+    if (destination.length === 0) {
+      return;
+    }
+    await this.externalBrowser.open(weatherSearchUrl(destination));
   }
 
   toStatusCycleItem(item: SessionItemView): StatusCycleItem {

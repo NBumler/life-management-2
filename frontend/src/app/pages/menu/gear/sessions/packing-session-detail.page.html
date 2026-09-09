@@ -15,8 +15,15 @@
           formControlName="destination"
           [label]="'GEAR.PACKING.DESTINATION' | translate"
           labelPlacement="stacked"
+          (ionInput)="onDestinationInput($any($event.target).value ?? '')"
           (ionBlur)="saveDestination()"
         ></ion-input>
+        @if (canSearchWeather()) {
+          <ion-button slot="end" type="button" fill="clear" (click)="openWeatherSearch()">
+            <ion-icon name="partly-sunny-outline" slot="start" aria-hidden="true"></ion-icon>
+            {{ 'GEAR.PACKING.WEATHER_BUTTON' | translate }}
+          </ion-button>
+        }
       </ion-item>
     </form>
   </ion-toolbar>

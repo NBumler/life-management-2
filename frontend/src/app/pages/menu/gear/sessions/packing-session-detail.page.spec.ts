@@ -7,6 +7,7 @@ import { provideTranslateService } from '@ngx-translate/core';
 import { GearItem } from '../../../../api/model/gearItem';
 import { PackingSessionDetail } from '../../../../api/model/packingSessionDetail';
 import { PackingSessionItem } from '../../../../api/model/packingSessionItem';
+import { ExternalBrowserService } from '../../../../core/config/external-browser.service';
 import { GearItemRepository } from '../../../../core/data/gear-item.repository';
 import { PackingSessionRepository } from '../../../../core/data/packing-session.repository';
 import { PackingSessionDetailPage } from './packing-session-detail.page';
@@ -31,6 +32,7 @@ describe('PackingSessionDetailPage', () => {
     Pick<PackingSessionRepository, 'getDetail' | 'updateDestination' | 'updateItemStatus' | 'reorderItems' | 'addItem' | 'close'>
   >;
   let gearItemRepository: { items: ReturnType<typeof signal<GearItem[]>>; load: jasmine.Spy };
+  let externalBrowser: jasmine.SpyObj<ExternalBrowserService>;
 
   async function createAndInit(detail: PackingSessionDetail, catalog: GearItem[]): Promise<void> {
     sessionRepository.getDetail.and.resolveTo(detail);
@@ -49,6 +51,8 @@ describe('PackingSessionDetailPage', () => {
       'close',
     ]);
     gearItemRepository = { items: signal<GearItem[]>([]), load: jasmine.createSpy('load').and.resolveTo() };
+    externalBrowser = jasmine.createSpyObj('ExternalBrowserService', ['open']);
+    externalBrowser.open.and.resolveTo();
 
     await TestBed.configureTestingModule({
       imports: [PackingSessionDetailPage],
@@ -58,6 +62,7 @@ describe('PackingSessionDetailPage', () => {
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 's1' }) } } },
         { provide: PackingSessionRepository, useValue: sessionRepository },
         { provide: GearItemRepository, useValue: gearItemRepository },
+        { provide: ExternalBrowserService, useValue: externalBrowser },
         { provide: AlertController, useValue: jasmine.createSpyObj('AlertController', ['create']) },
       ],
     }).compileComponents();
@@ -184,5 +189,37 @@ describe('PackingSessionDetailPage', () => {
     );
 
     expect(fixture.componentInstance.excludedGearItemIds()).toEqual(['g1', 'g2']);
+  });
+
+  it('backlog/086: the weather entry stays hidden while the destination is blank', async () => {
+    await createAndInit(sessionDetail({ destination: null }), [gearItem()]);
+
+    expect(fixture.componentInstance.canSearchWeather()).toBe(false);
+
+    await fixture.componentInstance.openWeatherSearch();
+    expect(externalBrowser.open).not.toHaveBeenCalled();
+  });
+
+  it('backlog/086: with a destination set, the weather entry opens a Google search for "<destination> időjárás"', async () => {
+    await createAndInit(sessionDetail({ destination: 'Magas-Tátra' }), [gearItem()]);
+
+    expect(fixture.componentInstance.canSearchWeather()).toBe(true);
+
+    await fixture.componentInstance.openWeatherSearch();
+    expect(externalBrowser.open).toHaveBeenCalledWith(
+      `https://www.google.com/search?q=${encodeURIComponent('Magas-Tátra időjárás')}`,
+    );
+  });
+
+  it('backlog/086: onDestinationInput() drives the entry visibility live before the value is saved', async () => {
+    await createAndInit(sessionDetail({ destination: null }), [gearItem()]);
+
+    fixture.componentInstance.onDestinationInput('  Bükk  ');
+    expect(fixture.componentInstance.canSearchWeather()).toBe(true);
+
+    await fixture.componentInstance.openWeatherSearch();
+    expect(externalBrowser.open).toHaveBeenCalledWith(
+      `https://www.google.com/search?q=${encodeURIComponent('Bükk időjárás')}`,
+    );
   });
 });
