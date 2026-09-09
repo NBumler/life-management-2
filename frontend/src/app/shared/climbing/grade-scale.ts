@@ -128,6 +128,61 @@ function bareNumberCandidates(digit: number, discipline: ClimbingDiscipline): Gr
 }
 
 /**
+ * backlog/085 — a guidebook (topo) grade often arrives as a `/`-separated range: `VIII/VIII+`,
+ * `6c/6c+`, `V4/V5`, or the shorthand `7a/+` / `VIII/+` where the right side is only the modifier.
+ * `guidebookGrade` stays an unvalidated free string; this is purely how the *derived*
+ * `absoluteDifficultyIndex` is resolved so an út-picker prefill isn't stuck `INVALID`.
+ *
+ * Rule (matches the `colorBandMidIndex` precedent): both endpoints must be the **same** scale;
+ * the index is the **floored midpoint** of the two endpoint indices. If only one endpoint is in
+ * the matrix, that one's index is used; if neither is, the string is `UNKNOWN`. A mixed-scale or
+ * malformed range (`6c/VIII`, `6c/`, `a/b/c`) is `UNKNOWN`.
+ */
+function parseSlashRange(normalized: string, discipline: ClimbingDiscipline): GradeParseResult {
+  const unknown: GradeParseResult = { status: 'UNKNOWN', normalized, scale: null, absoluteDifficultyIndex: null, candidates: [] };
+  const parts = normalized.split('/').map((part) => part.replace(/\s+/g, ''));
+  if (parts.length !== 2 || parts[0] === '' || parts[1] === '') {
+    return unknown;
+  }
+  const left = parts[0];
+  let right = parts[1];
+
+  const leftScales = scalesFor(discipline).filter((scale) => SCALE_PATTERNS[scale].test(left));
+  if (leftScales.length !== 1) {
+    return unknown;
+  }
+  const scale = leftScales[0];
+
+  // Shorthand right side: a bare `+`/`-`, or a bare sub-letter, replaces the tail of the left grade
+  // (`7a/+` → `7a`/`7a+`; `VIII/+` → `VIII`/`VIII+`; `6a/b` → `6a`/`6b`).
+  if (/^[-+]$/.test(right)) {
+    right = left.replace(/[-+]$/, '') + right;
+  } else if (scale === 'FONT' && /^[A-C]$/.test(right)) {
+    right = left.replace(/[A-C]\+?$/, '') + right;
+  } else if ((scale === 'FRENCH' || scale === 'YDS') && /^[a-d]$/.test(right)) {
+    right = left.replace(/[a-d]\+?$/, '') + right;
+  }
+  if (!SCALE_PATTERNS[scale].test(right)) {
+    return unknown;
+  }
+
+  const leftIndex = resolveIndex(scale, left);
+  const rightIndex = resolveIndex(scale, right);
+  const index =
+    leftIndex !== null && rightIndex !== null ? Math.floor((leftIndex + rightIndex) / 2) : (leftIndex ?? rightIndex);
+  if (index === null) {
+    return unknown;
+  }
+  return {
+    status: 'VALID',
+    normalized,
+    scale,
+    absoluteDifficultyIndex: index,
+    candidates: [{ scale, label: normalized, absoluteDifficultyIndex: index }],
+  };
+}
+
+/**
  * Parse a raw grade string in a dashboard discipline context. Never throws; an unparseable string is
  * `UNKNOWN`, not an error.
  */
@@ -135,6 +190,10 @@ export function parseGrade(raw: string, discipline: ClimbingDiscipline): GradePa
   const normalized = normalizeGradeInput(raw, discipline);
   if (normalized === '') {
     return { status: 'EMPTY', normalized, scale: null, absoluteDifficultyIndex: null, candidates: [] };
+  }
+
+  if (normalized.includes('/')) {
+    return parseSlashRange(normalized, discipline);
   }
 
   const matched = scalesFor(discipline).filter((scale) => SCALE_PATTERNS[scale].test(normalized));

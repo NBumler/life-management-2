@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-03
-verifikalt_commit: 3db8536
+verifikalva: 2026-09-09
+verifikalt_commit: b03e284
 ---
 
 # Nehézségi szint skálája (konverziós mátrix)
@@ -63,6 +63,14 @@ A skálák közti nehézség-egyeztetés eredendően szakértői-konszenzus kér
 \[I_{\text{grade}} = \left\lfloor \frac{lowIndex + highIndex}{2} \right\rfloor\]
 
 (egész **lefelé** kerekítés — determinisztikus, klienst és szervert egyaránt köti). A kötelező `floor` a `colorBandMidIndex()` helperben (`shared/climbing/climbing-grade-matrix.ts`) él és tesztelt; az `indoor-boulder-session-edit.page.ts` `resolveIndex()` ezt a helpert hívja (a volumen-modellhez és a mentett `absoluteDifficultyIndex` snapshothoz egyaránt), így páratlan `low+high` összegnél is a lefelé kerekített közép jön ki.
+
+**„/"-elválasztott kalauz-tartomány feloldása (kötelező szabály, `backlog/085`):** egy `VIII/VIII+`,
+`6c/6c+`, `V4/V5` (ill. rövidített `7a/+`, `6a/b`) alakú `guidebookGrade` átváltásakor a két végpont
+mátrix-indexének **lefelé kerekített közepe** a levezetett `absoluteDifficultyIndex` — ugyanaz a
+`⌊(a+b)/2⌋` szabály, mint a szín-sávnál. Mindkét végpont ugyanabban a skálában; ha csak az egyik van
+a mátrixban, az az index; egyik sem → nincs index (`UNKNOWN`). Kliensoldali (`grade-scale.ts`
+`parseSlashRange`); a `guidebookGrade` nyers string marad. Ha a szerver-oldali grade-index paritás
+elkészül (`backlog/024`), ez a szabály a mátrix-táblával együtt kerül át a megosztott fixture-be.
 
 ### UI/UX elvárások
 

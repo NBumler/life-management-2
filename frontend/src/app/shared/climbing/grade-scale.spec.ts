@@ -111,6 +111,63 @@ describe('grade-scale', () => {
     });
   });
 
+  describe('parseGrade — "/"-separated guidebook range (backlog/085)', () => {
+    it('resolves a same-scale range to the floored midpoint index', () => {
+      // UIAA VIII=22, VIII+=23 → floor(22.5)=22
+      expect(parseGrade('VIII/VIII+', 'ROPE')).toEqual(
+        jasmine.objectContaining({ status: 'VALID', scale: 'UIAA', absoluteDifficultyIndex: 22 }),
+      );
+      // French 6c=18, 7a=20 → 19
+      expect(parseGrade('6c/7a', 'ROPE')).toEqual(
+        jasmine.objectContaining({ status: 'VALID', scale: 'FRENCH', absoluteDifficultyIndex: 19 }),
+      );
+      // V-Scale V4=18, V5=20 → 19
+      expect(parseGrade('V4/V5', 'BOULDER')).toEqual(
+        jasmine.objectContaining({ status: 'VALID', scale: 'V_SCALE', absoluteDifficultyIndex: 19 }),
+      );
+      // Font 6A=16, 6B=18 → 17
+      expect(parseGrade('6A/6B', 'BOULDER')).toEqual(
+        jasmine.objectContaining({ status: 'VALID', scale: 'FONT', absoluteDifficultyIndex: 17 }),
+      );
+    });
+
+    it('expands the modifier / sub-letter shorthand on the right side', () => {
+      // 7a=20, 7a+=22 → 21
+      expect(parseGrade('7a/+', 'ROPE')).toEqual(
+        jasmine.objectContaining({ status: 'VALID', scale: 'FRENCH', absoluteDifficultyIndex: 21 }),
+      );
+      // VIII=22, VIII+=23 → 22
+      expect(parseGrade('VIII/+', 'ROPE')).toEqual(
+        jasmine.objectContaining({ status: 'VALID', scale: 'UIAA', absoluteDifficultyIndex: 22 }),
+      );
+      // French 6a=14, 6b=16 → 15
+      expect(parseGrade('6a/b', 'ROPE')).toEqual(
+        jasmine.objectContaining({ status: 'VALID', scale: 'FRENCH', absoluteDifficultyIndex: 15 }),
+      );
+    });
+
+    it('keeps the raw slash text as the normalized label and tolerates spaces around the slash', () => {
+      const r = parseGrade('viii / viii+', 'ROPE');
+      expect(r.status).toBe('VALID');
+      expect(r.normalized).toBe('VIII / VIII+');
+      expect(r.candidates[0].label).toBe('VIII / VIII+');
+    });
+
+    it('is UNKNOWN for a mixed-scale or malformed range', () => {
+      expect(parseGrade('6c/VIII', 'ROPE').status).toBe('UNKNOWN');
+      expect(parseGrade('6c/', 'ROPE').status).toBe('UNKNOWN');
+      expect(parseGrade('6a/6b/6c', 'ROPE').status).toBe('UNKNOWN');
+      expect(parseGrade('abc/def', 'BOULDER').status).toBe('UNKNOWN');
+    });
+
+    it('falls back to the single resolvable endpoint when the other is off-matrix', () => {
+      // French 9c=52 is the matrix ceiling; 9c+ is not a row → use 9c's index.
+      expect(parseGrade('9c/9c+', 'ROPE')).toEqual(
+        jasmine.objectContaining({ status: 'VALID', scale: 'FRENCH', absoluteDifficultyIndex: 52 }),
+      );
+    });
+  });
+
   describe('scalePostfix', () => {
     it('maps scales to their short badge', () => {
       expect(scalePostfix('FRENCH')).toBe('FRA');

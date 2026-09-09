@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-09
-verifikalt_commit: 27bf564
+verifikalt_commit: b03e284
 ---
 
 # Nehézségi szint skálája
@@ -46,6 +46,22 @@ Input: `discipline` = Boulder \| Köteles (a dashboard kontextusból — nem use
 - `^[IVXLCDM]+[-+]?$` → UIAA
 
 Sikeres egyértelmű parse → `absoluteDifficultyIndex` a [[Nehézségi szint skálája (konverziós mátrix)]] JSON-ból (kliens + szerver paritás).
+
+#### „/"-elválasztott kalauz-tartomány (`backlog/085`)
+
+A topó / felmászókönyv-fokozat gyakran tartomány: `VIII/VIII+`, `6c/6c+`, `V4/V5`, vagy a rövidített
+`7a/+` · `VIII/+` (a `/` után csak a módosító, ill. `6a/b` esetén csak az al-betű). A `guidebookGrade`
+**validálatlan szabad string marad** — ez a szabály csak a *levezetett* `absoluteDifficultyIndex`-re
+vonatkozik, hogy az út-pickerből előtöltött `userRawInput` ne ragadjon `UNKNOWN`-ban:
+
+- Mindkét végpontnak **ugyanabban a skálában** kell értelmezhetőnek lennie (a bal végpont skálája
+  dönt; a rövidített jobb oldal örökli). Kevert skála (`6c/VIII`), hiányos (`6c/`), több `/`
+  (`6a/6b/6c`) → `UNKNOWN`.
+- A levezetett index a két végpont mátrix-indexének **lefelé kerekített közepe** (`Math.floor`,
+  ugyanaz a minta, mint a szín-sáv `colorBandMidIndex`). Ha csak az egyik végpont van a mátrixban,
+  az az index; ha egyik sem → `UNKNOWN`.
+- A nyers szöveg (`normalized`) és a `guidebookGrade` érintetlen; a `/` a megjelenített értékben
+  marad. A státusz `VALID`, a záró badge a felismert skála (`FRA` / `UIAA` / …).
 
 ### UI/UX elvárások
 

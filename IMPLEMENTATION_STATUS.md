@@ -14,6 +14,13 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-09 — #85** Mászás — a kalauz-fokozat „/"-elválasztott alakja (`VIII/VIII+`, `6c/6c+`,
+  `7a/+`, `6a/b`) átváltáskor: a `grade-scale.ts` `parseSlashRange` a két végpont mátrix-indexének
+  lefelé kerekített közepét adja `absoluteDifficultyIndex`-nek (ugyanaz a `⌊(a+b)/2⌋` szabály, mint a
+  szín-sávnál); azonos skála kötelező, kevert/hiányos → `UNKNOWN`. A `guidebookGrade` validálatlan
+  szabad string marad; az út-pickerből előtöltött `userRawInput` nem ragad `UNKNOWN`-ban. Kliensoldali
+  (a mátrix `climbing-grade-matrix.ts` továbbra is client-only — `backlog/024`-ig nincs Java paritás).
+  Spec: [[Nehézségi szint skálája]], [[Nehézségi szint skálája (konverziós mátrix)]], [[Mászónapló]]. **(change-request)**
 - **2026-09-09 — #92** Mászás — onsight/flash figyelmeztetés korábbi megmászásnál. A napló kísérlet-sor
   sikeres `ONSIGHT` / `FLASH` stílusánál, ha ugyanarra a linkelt útra (`indoorRouteId` / `routeId` /
   `boulderProblemId`) van korábbi dátumú, sikeres kísérlet, a stílus alatt nem blokkoló `ion-note`

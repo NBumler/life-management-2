@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-09
-verifikalt_commit: ca19d1e
+verifikalt_commit: b03e284
 ---
 
 # Mászónapló
@@ -65,7 +65,7 @@ Egy napon **több** session megengedett (akár ugyanarra a kontextusra is). Egy 
 |---|---|
 | `id` | UUID |
 | `isSuccess` | Boolean |
-| `userRawInput` / `rawGrade` | Szöveges grade (parser). Egy `Route` / `BoulderProblem` / `IndoorRoute` kiválasztásakor a mező a kiválasztott út fokozatával töltődik; **másik útra váltáskor újratöltődik** az új út fokozatával (és vele az `absoluteDifficultyIndex` is), kivéve ha a user közben kézzel átírta — a kézzel megadott érték megmarad. |
+| `userRawInput` / `rawGrade` | Szöveges grade (parser). Egy `Route` / `BoulderProblem` / `IndoorRoute` kiválasztásakor a mező a kiválasztott út fokozatával töltődik; **másik útra váltáskor újratöltődik** az új út fokozatával (és vele az `absoluteDifficultyIndex` is), kivéve ha a user közben kézzel átírta — a kézzel megadott érték megmarad. Ha az előtöltött kalauz-fokozat **„/"-elválasztott tartomány** (`VIII/VIII+`, `6c/6c+`, `7a/+`), a parser nem dobja `UNKNOWN`-ba: a levezetett index a két végpont közepe (`floor`), a nyers szöveg megmarad — [[Nehézségi szint skálája]] „/"-elválasztott kalauz-tartomány. |
 | `absoluteDifficultyIndex` | Integer; mátrixból ([[Nehézségi szint skálája (konverziós mátrix)]]). Kliens-oldalon mindig a `userRawInput` (ha van) vagy a kiválasztott út fokozatából számítva — lásd fent az útváltás-szabályt. |
 | `ascentStyle` | Opcionális, ha `isSuccess`: `ONSIGHT` \| `FLASH` \| `REDPOINT` (kontextus szerinti whitelist). A választó mellett súgó (ⓘ) gomb: a három stílus definíciója + miért zárják ki egymást (`WORKOUT.CLIMBING.ASCENT_STYLE.HELP_*`). **Korábbi-megmászás figyelmeztetés:** ha a sor sikeres `ONSIGHT` / `FLASH`, **és** ugyanarra a linkelt útra (`indoorRouteId` / `routeId` / `boulderProblemId`) van korábbi, nem törölt, **sikeres** kísérlet egy korábbi dátumú sessionben, a stílus-választó alatt **nem blokkoló** figyelmeztető `ion-note` jelenik meg a legutóbbi megmászás dátumával (`WORKOUT.CLIMBING.SESSION.PRIOR_ASCENT_WARNING`) — a mentés engedélyezett marad (a user tudhatja jobban: elírt linkelés, más út). Tisztán kliensoldali, származtatott (`ClimbingSessionRepository.priorSuccessfulAscentDate`), Full-offline is fut. Ad-hoc (link nélküli) kísérletnél nincs mihez hasonlítani → nincs figyelmeztetés. Indoor bouldernél nincs (a `colorBandId` szín-sáv nem azonosít konkrét problémát). |
 | `safetyStyle` | Csak kötél: `TOPROPE` \| `LEAD` \| `TRAD` (indoor: TRAD rejtve) |
