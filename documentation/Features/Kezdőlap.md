@@ -11,7 +11,7 @@ verifikalt_commit: 2d8fec8
 |---|---|
 | **Státusz** | `Kész` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Frontend]], [[Backend-offline first]], [[Szinkronizációs központ]], [[Étkezés]], [[Tápérték kalkulátor]], [[Mászónapló]], [[Profile]] |
+| **Kapcsolódó** | [[Frontend]], [[Backend-offline first]], [[Szinkronizációs központ]], [[Étkezés]], [[Tápérték kalkulátor]], [[Mászónapló]], [[Profile]], [[Android kezdőképernyő widget]] |
 
 ### Jelenlegi működés
 
@@ -61,6 +61,9 @@ gyorsgombok a leggyakoribb létrehozó flow-khoz + a mai étkezés állása.
   szín-logikája nem került ide.
 - Nincs user által átrendezhető / testre szabható widget-sorrend az első körben (a `HOME_WIDGETS`
   tömb sorrendje fix, csak kód/config módosítja).
+- Az appon belüli Kezdőlap widget-verem **külön** dolog az [[Android kezdőképernyő widget]]-től
+  (launcher `AppWidgetProvider`) — az utóbbi a `TodayNutritionService` ugyanezt a számítását egy
+  natív-olvasható pillanatképen át rendereli.
 - A [[Szinkronizációs központ]] korábbi `/tabs/dashboard/sync` útvonala **továbbra is elavult** — a
   sync képernyő a `Menü` alatt él, nem ezen a tabon.
 

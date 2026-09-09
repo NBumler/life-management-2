@@ -11,7 +11,7 @@ verifikalt_commit: 2de9087
 |---|---|
 | **Státusz** | `Kész` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Tápérték kalkulátor]], [[Profile]], [[Értesítések]], [[Lépésszám kézzel manuálisan megadása]], [[Lépésszám átszinkronizálása a Samsung Health-ből]], [[Szinkronizációs központ]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Tápérték kalkulátor]], [[Profile]], [[Értesítések]], [[Lépésszám kézzel manuálisan megadása]], [[Lépésszám átszinkronizálása a Samsung Health-ből]], [[Android kezdőképernyő widget]], [[Szinkronizációs központ]], [[Backend-offline first]] |
 
 ### Jelenlegi működés
 

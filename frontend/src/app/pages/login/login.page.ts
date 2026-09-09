@@ -20,6 +20,7 @@ import { NotificationSchedulerService } from '../../core/notifications/notificat
 import { AuthSessionService } from '../../core/session/auth-session.service';
 import { LocalDatabaseService } from '../../core/storage/local-database.service';
 import { SyncEngineService } from '../../core/sync/sync-engine.service';
+import { WidgetSnapshotService } from '../../core/widget/widget-snapshot.service';
 
 /** documentation/Features/Bejelentkezés.md: username + password, generic error, no registration link. */
 @Component({
@@ -36,6 +37,7 @@ export class LoginPage {
   private readonly syncEngine = inject(SyncEngineService);
   private readonly stepSync = inject(ActivityStepSyncService);
   private readonly notificationScheduler = inject(NotificationSchedulerService);
+  private readonly widgetSnapshot = inject(WidgetSnapshotService);
   private readonly router = inject(Router);
 
   readonly form = this.fb.nonNullable.group({
@@ -80,6 +82,8 @@ export class LoginPage {
       // Same pattern: provideAppInitializer ran this while logged out. Re-invoke so the local
       // notification scheduler picks up this user's store without an app restart.
       void this.notificationScheduler.init();
+      // Same pattern — write a fresh home-screen-widget snapshot now that a user is logged in.
+      void this.widgetSnapshot.init();
       await this.router.navigateByUrl('/tabs');
     } catch (error) {
       const isNetworkError = error instanceof HttpErrorResponse && error.status === 0;

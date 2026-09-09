@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!-- documentation/Features/Android kezdőképernyő widget.md — English overrides for the launcher
+     widget-picker labels + the pre-first-run placeholder. Only these keys differ from values/. -->
+<resources>
+    <string name="widget_nutrition_label">Today\'s food</string>
+    <string name="widget_steps_label">Step count</string>
+    <string name="widget_quick_label">Quick actions</string>
+    <string name="widget_summary_label">Daily summary</string>
+    <string name="widget_placeholder">Open the app</string>
+</resources>

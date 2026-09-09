@@ -8,6 +8,7 @@ import com.getcapacitor.BridgeActivity;
 
 import hu.bumler.lm2.health.HealthConnectStepsPlugin;
 import hu.bumler.lm2.notifications.BackgroundRemindersPlugin;
+import hu.bumler.lm2.widget.Lm2WidgetPlugin;
 
 public class MainActivity extends BridgeActivity {
 
@@ -25,6 +26,7 @@ public class MainActivity extends BridgeActivity {
         // App-local plugins (not npm Capacitor packages), so they are registered by hand.
         registerPlugin(HealthConnectStepsPlugin.class);
         registerPlugin(BackgroundRemindersPlugin.class);
+        registerPlugin(Lm2WidgetPlugin.class);
         super.onCreate(savedInstanceState);
         stashNotificationRoute(getIntent());
     }

@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-09
-verifikalt_commit: efbf7ae
+verifikalt_commit: 914302f
 ---
 
 # Frontend
@@ -248,6 +248,7 @@ Az induláson **nincs blokkoló hálózati hívás** — [[Backend-offline first
 | `@capacitor/local-notifications` | 09:00 / 20:00 / esemény `startTime` ütemezés | [[Értesítések]] |
 | **Saját háttér-plugin** (`core/notifications/background-reminders.plugin.ts` + natív `AlarmManager` / `WorkManager` `ReminderWorker`) | 09:00 / 20:00 háttérfeladat (tegnapi lépésszám stash + `STEPS_LOW` esti értékelés) — a `@capacitor/background-runner` **nem** került be | [[Lépésszám átszinkronizálása a Samsung Health-ből]], [[Értesítések]] |
 | **Saját Health Connect plugin** (`core/health/health-connect.plugin.ts` + `HealthConnectStepsPlugin.kt`, `androidx.health.connect:connect-client`) | Android lépésszám olvasás | [[Lépésszám átszinkronizálása a Samsung Health-ből]] |
+| **Saját widget-plugin** (`core/widget/lm2-widget.plugin.ts` + natív `widget/Lm2WidgetPlugin.kt` + 4 `AppWidgetProvider` + `WidgetUpdateWorker`) | Android kezdőképernyő-widgetek: a `WidgetSnapshotService` a `CapacitorStorage` `lm2_widgetSnapshot` kulcsra írja a napi pillanatképet, a natív providerek ezt renderelik | [[Android kezdőképernyő widget]] |
 | `@aparajita/capacitor-secure-storage` | Access + refresh token; app-frissítés után is megmarad | [[Bejelentkezés]] |
 | `@capacitor/preferences` | Device-local beállítások: nyelv, téma, értesítés típus-kapcsolók | [[Bejelentkezés]] device-local tábla |
 | `@capacitor/browser` | Külső URL megnyitása in-app / rendszer-böngészőben (web: új tab) — `core/config/external-browser.service.ts` | [[Pakolás]] időjárás-belépő |

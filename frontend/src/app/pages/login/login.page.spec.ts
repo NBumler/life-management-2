@@ -7,6 +7,7 @@ import { NotificationSchedulerService } from '../../core/notifications/notificat
 import { AuthSessionService } from '../../core/session/auth-session.service';
 import { LocalDatabaseService } from '../../core/storage/local-database.service';
 import { SyncEngineService } from '../../core/sync/sync-engine.service';
+import { WidgetSnapshotService } from '../../core/widget/widget-snapshot.service';
 import { LoginPage } from './login.page';
 
 describe('LoginPage', () => {
@@ -31,6 +32,7 @@ describe('LoginPage', () => {
         { provide: SyncEngineService, useValue: jasmine.createSpyObj('SyncEngineService', ['requestDrain']) },
         { provide: ActivityStepSyncService, useValue: jasmine.createSpyObj('ActivityStepSyncService', ['init']) },
         { provide: NotificationSchedulerService, useValue: jasmine.createSpyObj('NotificationSchedulerService', ['init']) },
+        { provide: WidgetSnapshotService, useValue: jasmine.createSpyObj('WidgetSnapshotService', ['init']) },
       ],
     }).compileComponents();
 

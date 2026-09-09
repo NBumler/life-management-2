@@ -82,6 +82,58 @@
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
             </intent-filter>
         </receiver>
+
+        <!-- documentation/Features/Android kezdőképernyő widget.md — four home-screen AppWidget
+             providers. They render from the JS-written `lm2_widgetSnapshot` blob (widget/WidgetViews.kt)
+             and, when placed, receive the standard APPWIDGET_UPDATE broadcast; exported="true" is
+             required for the launcher to bind them. -->
+        <receiver
+            android:name=".widget.NutritionWidget"
+            android:exported="true"
+            android:label="@string/widget_nutrition_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_nutrition_info" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.StepsWidget"
+            android:exported="true"
+            android:label="@string/widget_steps_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_steps_info" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.QuickActionsWidget"
+            android:exported="true"
+            android:label="@string/widget_quick_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_quick_actions_info" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.SummaryWidget"
+            android:exported="true"
+            android:label="@string/widget_summary_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_summary_info" />
+        </receiver>
     </application>
 
     <!-- Permissions -->

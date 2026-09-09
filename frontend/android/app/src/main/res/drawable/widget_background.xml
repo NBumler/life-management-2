@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- documentation/Features/Android kezdőképernyő widget.md — a plain rounded light card. A
+     dark-mode-aware widget surface is a follow-up (Tudatos korlát in the spec). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="#FFFFFFFF" />
+    <corners android:radius="16dp" />
+    <padding
+        android:left="12dp"
+        android:top="12dp"
+        android:right="12dp"
+        android:bottom="12dp" />
+</shape>

@@ -14,6 +14,23 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-09 — #101** Android kezdőképernyő-widget (launcher `AppWidgetProvider`). Négy natív
+  widget: **Mai étkezés állása** (kcal + makrók a mai célhoz, a [[Kezdőlap]] / [[Étkezés]]
+  `TodayNutritionService`-éből), **Lépésszám** (mai lépés + `stepsLowThreshold` mint cél),
+  **Gyorsgombok** („Új étkezés" / „Új mászás" deep link), **Kombinált összegző** (átméretezhető).
+  A widget-folyamat nem futtat JS-t, ezért a `WidgetSnapshotService` (`core/widget/`) egy
+  `lm2_widgetSnapshot` JSON pillanatképet ír a `CapacitorStorage`-ba (a `lm2_notifBgPlan` mintája) —
+  minden szöveg előre lefordítva —, majd az app-local `Lm2Widget` plugin újrarajzoltatja a natív
+  `AppWidgetProvider`-eket. Frissítés: azonnali (debounce-olt `effect` a forrásjeleken + `resume` +
+  login), plusz `WidgetUpdateWorker` (`PeriodicWorkRequest`, ~30 perc) ami háttérben **csak a
+  lépésszámot** frissíti Health Connectből (a kcal-hoz JS+SQLite kell — tudatos korlát). Tap →
+  a meglévő `lm2_notifPendingRoute` deep-link mechanizmus. Csak Android (iOS külön jegy). Új:
+  `core/widget/{lm2-widget.plugin,widget-snapshot,widget-snapshot.service}.ts` + 2 spec,
+  `android/.../widget/*` (plugin + 4 provider + worker + scheduler + views), `res/layout/widget_*.xml`,
+  `res/xml/widget_*_info.xml`, `res/values{,-en}/strings.xml`, `MainActivity.java`, `AndroidManifest.xml`,
+  `main.ts` + `login.page.ts` init-hook, i18n `WIDGET.*`. Nincs backend / outbox érintés. A natív
+  réteg a JS zöld kapuban nem fordul; helyben `./gradlew assembleDebug` **BUILD SUCCESSFUL**, az
+  eszközön tesztelés külön.
 - **2026-09-09 — #86** GearCheck — időjárás keresése felugró böngészőablakban az úticélra. A
   [[Pakolás]] session képernyőn a `destination` mező mellett új **„Időjárás"** gomb (csak kitöltött
   úticélnál látszik): megnyit egy külső böngészőt egy `https://www.google.com/search?q=<úticél

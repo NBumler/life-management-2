@@ -4,4 +4,14 @@
     <string name="title_activity_main">Life Management 2.0</string>
     <string name="package_name">hu.bumler.lm2</string>
     <string name="custom_url_scheme">hu.bumler.lm2</string>
+
+    <!-- documentation/Features/Android kezdőképernyő widget.md — launcher widget-picker labels and the
+         pre-first-run placeholder. Dynamic widget text comes localized from `lm2_widgetSnapshot`;
+         these few static strings are the launcher chrome + the "app has never run" fallback. hu is the
+         default; values-en/ overrides for English. -->
+    <string name="widget_nutrition_label">Mai étkezés állása</string>
+    <string name="widget_steps_label">Lépésszám</string>
+    <string name="widget_quick_label">Gyorsgombok</string>
+    <string name="widget_summary_label">Napi összegző</string>
+    <string name="widget_placeholder">Nyisd meg az appot</string>
 </resources>

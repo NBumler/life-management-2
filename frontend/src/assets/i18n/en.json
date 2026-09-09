@@ -1338,5 +1338,21 @@
         "PYRAMID_EMPTY": "No sends in this period."
       }
     }
+  },
+  "WIDGET": {
+    "APP_TITLE": "Life Management",
+    "NUTRITION_TITLE": "Today's food",
+    "STEPS_TITLE": "Steps",
+    "QUICK_TITLE": "Quick actions",
+    "KCAL": "Calories",
+    "PROTEIN": "Protein",
+    "CARBS": "Carbs",
+    "FAT": "Fat",
+    "STEPS_UNIT": "steps",
+    "REMAINING": "{n} left",
+    "LOGGED_OUT": "Open the app",
+    "NO_PROFILE": "Set up your profile",
+    "NEW_MEAL": "New meal",
+    "NEW_CLIMB": "New climb"
   }
 }

@@ -1338,5 +1338,21 @@
         "PYRAMID_EMPTY": "Nincs sikeres mászás az időszakban."
       }
     }
+  },
+  "WIDGET": {
+    "APP_TITLE": "Life Management",
+    "NUTRITION_TITLE": "Mai étkezés",
+    "STEPS_TITLE": "Lépések",
+    "QUICK_TITLE": "Gyors műveletek",
+    "KCAL": "Kalória",
+    "PROTEIN": "Fehérje",
+    "CARBS": "Szénhidrát",
+    "FAT": "Zsír",
+    "STEPS_UNIT": "lépés",
+    "REMAINING": "még {n}",
+    "LOGGED_OUT": "Nyisd meg az appot",
+    "NO_PROFILE": "Állítsd be a profilod",
+    "NEW_MEAL": "Új étkezés",
+    "NEW_CLIMB": "Új mászás"
   }
 }

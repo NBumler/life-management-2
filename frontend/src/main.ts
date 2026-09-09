@@ -25,6 +25,7 @@ import { NotificationTuningService } from './app/core/notifications/notification
 import { LocalDatabaseService } from './app/core/storage/local-database.service';
 import { provideStorageBackend } from './app/core/storage/storage-backend.provider';
 import { SyncEngineService } from './app/core/sync/sync-engine.service';
+import { WidgetSnapshotService } from './app/core/widget/widget-snapshot.service';
 
 registerIcons();
 
@@ -62,6 +63,7 @@ bootstrapApplication(AppComponent, {
       const notificationTuning = inject(NotificationTuningService);
       const notificationHistory = inject(NotificationHistoryStore);
       const notificationScheduler = inject(NotificationSchedulerService);
+      const widgetSnapshot = inject(WidgetSnapshotService);
 
       await Promise.all([
         languageService.init(),
@@ -88,6 +90,10 @@ bootstrapApplication(AppComponent, {
       // from the local store. Not awaited. init() is a no-op on web; reconcile bails while logged
       // out / without notification permission, and LoginPage re-invokes it after an in-session login.
       void notificationScheduler.init();
+      // documentation/Features/Android kezdőképernyő widget.md — keep the home-screen widgets' local
+      // snapshot fresh. No-op on web; bails while logged out; LoginPage re-invokes it after an
+      // in-session login. Not awaited.
+      void widgetSnapshot.init();
     }),
   ],
 })
