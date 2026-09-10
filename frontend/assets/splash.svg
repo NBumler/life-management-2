@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Life Management 2.0 — light splash screen. Brand-blue field, centred "layered life-areas" mark. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="2732" height="2732" viewBox="0 0 2732 2732">
+  <rect width="2732" height="2732" fill="#3880ff"/>
+  <g transform="translate(1366,1366) scale(1.5) translate(-512,-512)">
+    <g fill="#ffffff" fill-opacity="0.82">
+      <rect x="100" y="100" width="470" height="470" rx="104" ry="104"/>
+      <rect x="277" y="277" width="470" height="470" rx="104" ry="104"/>
+      <rect x="454" y="454" width="470" height="470" rx="104" ry="104"/>
+    </g>
+  </g>
+</svg>

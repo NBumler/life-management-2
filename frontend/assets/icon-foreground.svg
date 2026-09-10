@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Life Management 2.0 — adaptive-icon foreground layer.
+     "Layered life-areas" mark: three rounded squares cascading along the diagonal (food / workout /
+     tasks / gear), white with translucent overlaps that composite into three brightness bands over
+     the blue background layer. The art fills most of the canvas; the launcher's adaptive safe-zone
+     comes from the 16.7% inset in mipmap-anydpi-v26/ic_launcher.xml. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <g fill="#ffffff" fill-opacity="0.72">
+    <rect x="56"  y="56"  width="520" height="520" rx="116" ry="116"/>
+    <rect x="252" y="252" width="520" height="520" rx="116" ry="116"/>
+    <rect x="448" y="448" width="520" height="520" rx="116" ry="116"/>
+  </g>
+</svg>

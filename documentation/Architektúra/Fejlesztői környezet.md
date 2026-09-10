@@ -61,6 +61,7 @@ A `frontend/` belső szervezése (`pages/`, `shared/`, `core/`, `api/`) és a r�
 | Backend | `cd backend && ./gradlew bootRun` (`local` profil) — `http://localhost:8080` |
 | Web frontend | `cd frontend && npm start` — a `/api` hívások a `proxy.conf.json`-on át mennek a 8080-ra |
 | API kliens generálás | `cd frontend && npm run gen:api` (a spec: `backend/src/main/resources/openapi.yaml`) |
+| App-ikonok / splash generálás | `cd frontend && npm run gen:assets` — a forrás SVG-k a `frontend/assets/`-ben (`icon-foreground.svg`, `icon-background.svg`, `icon-only.svg`, `splash.svg`, `splash-dark.svg`, `notification-icon.svg`); `@capacitor/assets` rendereli a launcher-adaptív ikont + splash-t, a `scripts/gen-notification-icons.mjs` a `ic_stat_notify` státuszsor-ikont és a web favicont. A kimenetek verziókövetettek. |
 | Tesztek | `./gradlew test` · `npm test` (interaktív, `ChromeHeadlessCI` helyett `Chrome`-mal, watch módban) · `npm run test:ci` (nem-interaktív, egyszeri futás — CI és agent-munkamenetek ezt használják) |
 
 - A **web** kliens **relatív** `/api` útvonalat hív (dev: proxy, prod: reverse proxy) — így nincs CORS a böngészős fejlesztésben.

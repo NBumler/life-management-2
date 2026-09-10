@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Life Management 2.0 — Android status-bar (small) notification icon.
+     Android uses only the alpha channel and tints the icon itself, so this is a pure white
+     silhouette on transparent. The "layered life-areas" mark is drawn as three outlined rounded
+     squares cascading along the diagonal (filled squares merge into a blob at 24dp; outlines stay
+     legible and read as interlocking layers).
+     Rasterised to res/drawable-*/ic_stat_notify.png by scripts/gen-notification-icons.mjs. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="108" height="108" viewBox="0 0 108 108">
+  <g fill="none" stroke="#ffffff" stroke-width="7">
+    <rect x="9"  y="9"  width="44" height="44" rx="12" ry="12"/>
+    <rect x="32" y="32" width="44" height="44" rx="12" ry="12"/>
+    <rect x="55" y="55" width="44" height="44" rx="12" ry="12"/>
+  </g>
+</svg>

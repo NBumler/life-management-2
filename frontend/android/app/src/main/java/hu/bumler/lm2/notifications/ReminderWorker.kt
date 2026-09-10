@@ -10,6 +10,7 @@ import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.aggregate.AggregationResult
 import androidx.health.connect.client.permission.HealthPermission
@@ -19,6 +20,7 @@ import androidx.health.connect.client.time.TimeRangeFilter
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import hu.bumler.lm2.MainActivity
+import hu.bumler.lm2.R
 import org.json.JSONArray
 import org.json.JSONObject
 import java.time.Instant
@@ -227,7 +229,8 @@ class ReminderWorker(context: Context, params: WorkerParameters) : CoroutineWork
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
         val notification = NotificationCompat.Builder(applicationContext, ReminderScheduler.CHANNEL_ID)
-            .setSmallIcon(applicationContext.applicationInfo.icon)
+            .setSmallIcon(R.drawable.ic_stat_notify)
+            .setColor(ContextCompat.getColor(applicationContext, R.color.notification_accent))
             .setContentTitle(title)
             .setContentText(body)
             .setStyle(NotificationCompat.BigTextStyle().bigText(body))

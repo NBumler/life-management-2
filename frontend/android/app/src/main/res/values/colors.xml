@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Notification accent — brand blue (Ionic primary). Used by the background ReminderWorker's
+         NotificationCompat.setColor(); the Capacitor-scheduled notifications get the same tint from
+         plugins.LocalNotifications.iconColor in capacitor.config.ts. -->
+    <color name="notification_accent">#3880FF</color>
+</resources>

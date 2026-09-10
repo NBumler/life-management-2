@@ -12,6 +12,7 @@
     "test:ci": "ng test --browsers=ChromeHeadlessCI --watch=false",
     "lint": "ng lint",
     "verify:outbox": "node scripts/verify-outbox-payload-schema.mjs",
+    "gen:assets": "capacitor-assets generate --android && node scripts/gen-notification-icons.mjs",
     "gen:api": "openapi-generator-cli generate -i ../backend/src/main/resources/openapi.yaml -g typescript-angular -o src/app/api --additional-properties=ngVersion=20.3.25,providedInRoot=true,withInterfaces=true,supportsES6=true --global-property=skipFormModel=false"
   },
   "private": true,
@@ -55,6 +56,7 @@
     "@angular/cli": "20.3.28",
     "@angular/compiler-cli": "20.3.25",
     "@angular/language-service": "20.3.25",
+    "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "8.5.0",
     "@ionic/angular-toolkit": "^12.0.0",
     "@openapitools/openapi-generator-cli": "^2.19.1",
