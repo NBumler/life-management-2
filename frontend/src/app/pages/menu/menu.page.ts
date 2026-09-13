@@ -37,6 +37,7 @@ export class MenuPage {
   readonly offlineCapable = Capacitor.isNativePlatform();
   readonly pendingCount = this.offlineQueue.pendingCount;
   readonly gearCheckEnabled = this.featureFlags.isEnabled('menu.gearcheck');
+  readonly turaEnabled = this.featureFlags.isEnabled('menu.tura');
   readonly bevasarlasEnabled = this.featureFlags.isEnabled('menu.bevasarlas');
   readonly penzugyekEnabled = this.featureFlags.isEnabled('menu.penzugyek');
   readonly aycmEnabled = this.featureFlags.isEnabled('menu.aycm');

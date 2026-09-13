@@ -194,6 +194,14 @@ export const routes: Routes = [
             ],
           },
           {
+            // backlog/tura-utvonaltervezo/102-... — Menü → Túra. One flag on the tree top guards the
+            // index route (the `finance` pattern); children are added phase-by-phase as the giga
+            // feature's sub-tickets land.
+            path: 'tura',
+            canActivate: [featureFlagGuard('menu.tura')],
+            children: [{ path: '', loadComponent: () => import('./pages/menu/tura/tura.page').then((m) => m.TuraPage) }],
+          },
+          {
             // documentation/Features/Lépésszám követés.md — Menü → Lépésszám shell + per-day editor.
             // One flag on the tree top guards the index route and the child (the `finance` pattern).
             path: 'steps',

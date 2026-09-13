@@ -24,6 +24,7 @@ const ALL_KEYS: FeatureFlagKey[] = [
   'menu.penzugyek',
   'menu.aycm',
   'menu.gearcheck',
+  'menu.tura',
 ];
 
 function allFalseConfig(): Record<string, boolean> {

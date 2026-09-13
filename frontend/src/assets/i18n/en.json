@@ -58,6 +58,7 @@
     "LANGUAGE": "Language",
     "SYNC": "Sync center",
     "GEARCHECK": "GearCheck",
+    "TURA": "Hiking",
     "BEVASARLAS": "Shopping",
     "PENZUGYEK": "Finance",
     "AYCM": "AYCM",
@@ -411,6 +412,9 @@
     "LAST_SYNC_NEVER": "No successful sync yet",
     "SYNC_NOW_OFFLINE": "No server available — the queue is unchanged.",
     "FIX_NAME_CONFLICT": "This name is already taken."
+  },
+  "TURA": {
+    "TITLE": "Hiking"
   },
   "GEAR": {
     "TITLE": "GearCheck",

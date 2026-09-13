@@ -55,6 +55,12 @@
         <ion-label>{{ 'MENU.GEARCHECK' | translate }}</ion-label>
       </ion-item>
     }
+    @if (turaEnabled) {
+      <ion-item button routerLink="tura">
+        <ion-icon name="trail-sign-outline" slot="start" aria-hidden="true"></ion-icon>
+        <ion-label>{{ 'MENU.TURA' | translate }}</ion-label>
+      </ion-item>
+    }
     @if (offlineCapable) {
       <ion-item button routerLink="sync">
         <ion-icon name="sync-outline" slot="start" aria-hidden="true"></ion-icon>

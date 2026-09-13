@@ -72,4 +72,11 @@ describe('MenuPage', () => {
     const aycmLink = (fixture.nativeElement as HTMLElement).querySelector('ion-item[routerLink="aycm"]');
     expect(aycmLink).not.toBeNull();
   });
+
+  it('renders the Túra entry when menu.tura is enabled (it is, in features.json)', () => {
+    fixture.detectChanges();
+    expect(fixture.componentInstance.turaEnabled).toBe(true);
+    const turaLink = (fixture.nativeElement as HTMLElement).querySelector('ion-item[routerLink="tura"]');
+    expect(turaLink).not.toBeNull();
+  });
 });

@@ -58,6 +58,7 @@
     "LANGUAGE": "Nyelv",
     "SYNC": "Szinkronizációs központ",
     "GEARCHECK": "GearCheck",
+    "TURA": "Túra",
     "BEVASARLAS": "Bevásárlás",
     "PENZUGYEK": "Pénzügyek",
     "AYCM": "AYCM",
@@ -411,6 +412,9 @@
     "LAST_SYNC_NEVER": "Még nem volt sikeres szinkronizálás",
     "SYNC_NOW_OFFLINE": "Nincs elérhető szerver — a sor változatlan marad.",
     "FIX_NAME_CONFLICT": "Ez a név már foglalt."
+  },
+  "TURA": {
+    "TITLE": "Túra"
   },
   "GEAR": {
     "TITLE": "GearCheck",

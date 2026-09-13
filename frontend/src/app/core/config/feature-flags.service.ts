@@ -24,7 +24,8 @@ export type FeatureFlagKey =
   | 'menu.ertesitesek'
   | 'menu.penzugyek'
   | 'menu.aycm'
-  | 'menu.gearcheck';
+  | 'menu.gearcheck'
+  | 'menu.tura';
 
 // documentation/Architektúra/Frontend.md "Függőségek": "Ha be van kapcsolva → Akkor kötelező".
 // Validated at load time (dev: hard error; the spec's "build-time validált, szabálysértés
@@ -64,6 +65,7 @@ const FEATURE_FLAG_KEYS: readonly FeatureFlagKey[] = [
   'menu.penzugyek',
   'menu.aycm',
   'menu.gearcheck',
+  'menu.tura',
 ];
 
 /**

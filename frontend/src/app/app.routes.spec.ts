@@ -46,6 +46,7 @@ describe('app.routes feature-flag guards', () => {
   const cases: { path: string; flag: FeatureFlagKey }[] = [
     { path: 'tabs/menu/shopping', flag: 'menu.bevasarlas' },
     { path: 'tabs/menu/gear', flag: 'menu.gearcheck' },
+    { path: 'tabs/menu/tura', flag: 'menu.tura' },
     { path: 'tabs/tasks/life-plans', flag: 'feladatok.eletTervek' },
     { path: 'tabs/tasks/events', flag: 'feladatok.esemenyek' },
     { path: 'tabs/tasks/calendar', flag: 'feladatok.naptar' },
