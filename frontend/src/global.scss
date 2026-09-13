@@ -39,3 +39,6 @@
    override actually win over the device theme — see documentation/Features/Dark&Light mode.md. */
 @import '@ionic/angular/css/palettes/dark.class.css';
 /* @import "@ionic/angular/css/palettes/dark.system.css"; */
+
+/* backlog/tura-utvonaltervezo/103-... 1. fázis: MapLibre GL JS alap-stílusa (kontrollok, popupok). */
+@import 'maplibre-gl/dist/maplibre-gl.css';

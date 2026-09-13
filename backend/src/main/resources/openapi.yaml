@@ -157,6 +157,10 @@ paths:
     $ref: 'openapi/paths/daily-step-logs.yaml'
   /api/daily-step-logs/{id}:
     $ref: 'openapi/paths/daily-step-logs-item.yaml'
+  /api/tura/trail-segments:
+    $ref: 'openapi/paths/tura-trail-segments.yaml'
+  /api/admin/tura/trail-segments/import:
+    $ref: 'openapi/paths/admin-tura-trail-segments-import.yaml'
 components:
   securitySchemes:
     bearerAuth:
@@ -356,3 +360,13 @@ components:
       $ref: 'openapi/components/schemas/DailyStepLog.yaml'
     DailyStepLogList:
       $ref: 'openapi/components/schemas/DailyStepLogList.yaml'
+    TrailSegment:
+      $ref: 'openapi/components/schemas/TrailSegment.yaml'
+    TrailSegmentList:
+      $ref: 'openapi/components/schemas/TrailSegmentList.yaml'
+    TrailSegmentImportItem:
+      $ref: 'openapi/components/schemas/TrailSegmentImportItem.yaml'
+    TrailSegmentImportRequest:
+      $ref: 'openapi/components/schemas/TrailSegmentImportRequest.yaml'
+    TrailSegmentImportResponse:
+      $ref: 'openapi/components/schemas/TrailSegmentImportResponse.yaml'

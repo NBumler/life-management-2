@@ -1,0 +1,22 @@
+post:
+  operationId: importTrailSegments
+  tags:
+    - tura
+  summary: >-
+    Kézi/admin-triggerelt import (backlog/tura-utvonaltervezo/104-...): a megadott országkódra
+    vonatkozó teljes szakaszkészletet lecseréli a kérésben küldött listára. Admin API — X-Admin-Api-Key.
+  security:
+    - adminApiKey: []
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/TrailSegmentImportRequest.yaml'
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/TrailSegmentImportResponse.yaml'

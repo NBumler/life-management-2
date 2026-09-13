@@ -1,0 +1,20 @@
+type: object
+required:
+  - symbol
+  - coordinates
+properties:
+  osmWayId:
+    type: integer
+    format: int64
+    nullable: true
+  symbol:
+    type: string
+  coordinates:
+    type: array
+    minItems: 2
+    items:
+      type: array
+      minItems: 2
+      maxItems: 2
+      items:
+        type: number

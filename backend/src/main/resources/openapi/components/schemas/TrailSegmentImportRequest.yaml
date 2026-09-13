@@ -1,0 +1,15 @@
+type: object
+description: >-
+  backlog/tura-utvonaltervezo/104-... — kézi/admin-triggerelt import: a teljes megadott ország-
+  kódra vonatkozó szakaszkészletet lecseréli (nem diffel, nem szinkronizált entitás).
+required:
+  - countryCode
+  - segments
+properties:
+  countryCode:
+    type: string
+    description: ISO 3166-1 alpha-2 országkód, pl. "HU".
+  segments:
+    type: array
+    items:
+      $ref: 'TrailSegmentImportItem.yaml'
