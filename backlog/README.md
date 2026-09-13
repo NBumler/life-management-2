@@ -22,6 +22,14 @@ backlog/
 Lapos lista, nem státusz-almappák: a jegy státusza a frontmatterben van, nem a
 helyében. Az egyetlen tényleges fájlmozgatás a lezáráskor `archive/`-ba.
 
+**Kivétel — nagy, sok-jegyes feature-mappák:** egy kivételesen nagy, sok ticketre bomló feature
+(ún. "giga feature") saját almappát kaphat a `backlog/` alatt (pl. `backlog/tura-utvonaltervezo/`),
+hogy a hozzá tartozó jegyek együtt maradjanak tervezési fázisban. Ez **nem** státusz szerinti
+almappa: a jegyek `NNN` sorszáma továbbra is a globális, egész `backlog/`-on (+ `archive/`-on)
+átívelő sorozatból jön — új jegy számozásakor ezeket az almappákat is át kell nézni a legnagyobb
+`NNN` megállapításához —, és `done`/`dropped` esetén a jegy ugyanúgy `archive/`-ba kerül (a
+feature-almappa csak addig csoportosít, amíg a jegyek aktívak).
+
 ## Mi kerül ide jegyként
 
 1. **Új feature** — a specben még nincs implementált állapotként.
