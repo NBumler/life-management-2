@@ -40,6 +40,7 @@ export * from './recipeIngredient';
 export * from './recurringExpense';
 export * from './refreshRequest';
 export * from './route';
+export * from './routeSuggestion';
 export * from './sector';
 export * from './shoppingList';
 export * from './shoppingListCompleteFoodEntry';

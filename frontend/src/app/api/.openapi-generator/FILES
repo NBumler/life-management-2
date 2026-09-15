@@ -130,6 +130,7 @@ model/recipeIngredient.ts
 model/recurringExpense.ts
 model/refreshRequest.ts
 model/route.ts
+model/routeSuggestion.ts
 model/sector.ts
 model/shoppingList.ts
 model/shoppingListCompleteFoodEntry.ts

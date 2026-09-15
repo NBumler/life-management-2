@@ -11,6 +11,7 @@ import { HttpHeaders }                                       from '@angular/comm
 
 import { Observable }                                        from 'rxjs';
 
+import { RouteSuggestion } from '../model/models';
 import { TrailSegment } from '../model/models';
 import { TrailSegmentImportRequest } from '../model/models';
 import { TrailSegmentImportResponse } from '../model/models';
@@ -43,5 +44,17 @@ export interface TuraServiceInterface {
      * @param maxLat 
      */
     listTrailSegmentsInBbox(country: string, minLon: number, minLat: number, maxLon: number, maxLat: number, extraHttpRequestParams?: any): Observable<Array<TrailSegment>>;
+
+    /**
+     * Automatikus útvonal-javaslat két pont közt a jelzett turistaút-hálózaton (backlog/tura-utvonaltervezo/103-... 2.2 fázis, saját A* a TrailSegment gráfon).
+     * 
+     * @endpoint get /api/tura/route-suggestion
+     * @param country ISO 3166-1 alpha-2 országkód, pl. \&quot;HU\&quot;.
+     * @param startLon 
+     * @param startLat 
+     * @param endLon 
+     * @param endLat 
+     */
+    suggestRoute(country: string, startLon: number, startLat: number, endLon: number, endLat: number, extraHttpRequestParams?: any): Observable<RouteSuggestion>;
 
 }

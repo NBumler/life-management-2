@@ -7,14 +7,22 @@
   </ion-toolbar>
   <ion-toolbar>
     <ion-buttons slot="start">
-      <ion-button [fill]="drawMode() ? 'solid' : 'clear'" (click)="toggleDrawMode()">
+      <ion-button [fill]="mode() === 'manual' ? 'solid' : 'clear'" (click)="toggleDrawMode()">
         <ion-icon slot="start" name="create-outline" aria-hidden="true"></ion-icon>
         {{ 'TURA.DRAW' | translate }}
       </ion-button>
-      <ion-button [disabled]="draft().length === 0" (click)="undoLastWaypoint()">
+      <ion-button [fill]="mode() === 'auto' ? 'solid' : 'clear'" (click)="toggleAutoMode()">
+        @if (routeSuggestion.loading()) {
+          <ion-spinner slot="start" name="dots"></ion-spinner>
+        } @else {
+          <ion-icon slot="start" name="navigate-outline" aria-hidden="true"></ion-icon>
+        }
+        {{ 'TURA.AUTO' | translate }}
+      </ion-button>
+      <ion-button [disabled]="draft().length === 0 && autoStart() === null" (click)="undoLastWaypoint()">
         <ion-icon slot="icon-only" name="arrow-undo-outline" [attr.aria-label]="'TURA.UNDO' | translate"></ion-icon>
       </ion-button>
-      <ion-button [disabled]="draft().length === 0" (click)="clearDraft()">
+      <ion-button [disabled]="draft().length === 0 && autoStart() === null" (click)="clearDraft()">
         <ion-icon slot="icon-only" name="trash-outline" [attr.aria-label]="'TURA.CLEAR' | translate"></ion-icon>
       </ion-button>
     </ion-buttons>
@@ -25,6 +33,11 @@
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
+  @if (mode() === 'auto' && draft().length === 0) {
+    <ion-toolbar>
+      <ion-title size="small">{{ (autoStart() === null ? 'TURA.AUTO_PICK_START' : 'TURA.AUTO_PICK_END') | translate }}</ion-title>
+    </ion-toolbar>
+  }
   @if (draft().length >= 2) {
     <ion-toolbar>
       <ion-input

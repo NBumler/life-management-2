@@ -13,7 +13,8 @@
     "MOVE_DOWN": "Mozgatás lefelé",
     "DONE": "Kész",
     "DECREASE": "Csökkentés",
-    "INCREASE": "Növelés"
+    "INCREASE": "Növelés",
+    "OK": "OK"
   },
   "LOGIN": {
     "TITLE": "Bejelentkezés",
@@ -416,13 +417,18 @@
   "TURA": {
     "TITLE": "Túra",
     "DRAW": "Rajzolás",
+    "AUTO": "Automatikus",
     "UNDO": "Visszavonás",
     "CLEAR": "Törlés",
     "MY_ROUTES": "Útvonalaim",
     "ROUTE_NAME_PLACEHOLDER": "Útvonal neve",
     "NO_ROUTES": "Még nincs mentett útvonal.",
     "DELETE_ROUTE_CONFIRM_TITLE": "Útvonal törlése",
-    "DELETE_ROUTE_CONFIRM_MESSAGE": "Biztosan törlöd a(z) „{{name}}” útvonalat?"
+    "DELETE_ROUTE_CONFIRM_MESSAGE": "Biztosan törlöd a(z) „{{name}}” útvonalat?",
+    "AUTO_PICK_START": "Válaszd ki a kezdőpontot a térképen.",
+    "AUTO_PICK_END": "Válaszd ki a végpontot a térképen.",
+    "ROUTE_NOT_FOUND_TITLE": "Nincs útvonal",
+    "ROUTE_NOT_FOUND_MESSAGE": "Nem található összeköttetés a két pont közt a jelzett turistaút-hálózaton."
   },
   "GEAR": {
     "TITLE": "GearCheck",

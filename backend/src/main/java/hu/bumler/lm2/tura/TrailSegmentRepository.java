@@ -20,4 +20,7 @@ interface TrailSegmentRepository extends JpaRepository<TrailSegmentEntity, UUID>
 			@Param("minLat") double minLat, @Param("maxLon") double maxLon, @Param("maxLat") double maxLat);
 
 	long deleteByCountryCode(String countryCode);
+
+	/** backlog/tura-utvonaltervezo/103-... 2.2 fázis — a teljes ország-hálózat a routing-gráf felépítéséhez. */
+	List<TrailSegmentEntity> findByCountryCode(String countryCode);
 }

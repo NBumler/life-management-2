@@ -1,0 +1,25 @@
+type: object
+description: >-
+  backlog/tura-utvonaltervezo/103-... 2.2 fázis — automatikus útvonal-javaslat két pont közt a
+  jelzett turistaút-hálózaton (saját A* a TrailSegment gráfon). Stateless számítás eredménye, nem
+  perzisztált entitás.
+required:
+  - found
+  - coordinates
+  - distanceMeters
+properties:
+  found:
+    type: boolean
+    description: Van-e a két pont közt összeköttetés a turistaút-hálózaton (mindkét pont ~2 km-en belül van egy ismert ösvényhez).
+  coordinates:
+    type: array
+    description: A javasolt útvonal [lon, lat] pontsorozata a kért kezdőponttól a végpontig. Üres, ha found=false.
+    items:
+      type: array
+      minItems: 2
+      maxItems: 2
+      items:
+        type: number
+  distanceMeters:
+    type: number
+    description: A javasolt útvonal teljes hossza méterben. 0, ha found=false.

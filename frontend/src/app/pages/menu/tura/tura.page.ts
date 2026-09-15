@@ -12,6 +12,7 @@ import {
 	IonLabel,
 	IonList,
 	IonModal,
+	IonSpinner,
 	IonTitle,
 	IonToolbar,
 } from '@ionic/angular/standalone';
@@ -21,6 +22,7 @@ import maplibregl from 'maplibre-gl';
 import { HikeRoute } from '../../../api/model/hikeRoute';
 import { Bbox, TrailSegmentRepository } from '../../../core/data/trail-segment.repository';
 import { HikeRouteRepository } from '../../../core/data/hike-route.repository';
+import { RouteSuggestionRepository } from '../../../core/data/route-suggestion.repository';
 import { draftRouteToFeatureCollection, draftWaypointsToFeatureCollection, hikeRoutesToFeatureCollection } from './hike-routes-geojson';
 import { trailSegmentSymbolColor } from './trail-segment-symbol-color';
 import { trailSegmentsToFeatureCollection } from './trail-segments-geojson';
@@ -33,6 +35,11 @@ const HIKE_ROUTE_DRAFT_SOURCE_ID = 'hike-route-draft';
 const HIKE_ROUTE_DRAFT_LAYER_ID = 'hike-route-draft-layer';
 const HIKE_ROUTE_DRAFT_POINTS_SOURCE_ID = 'hike-route-draft-points';
 const HIKE_ROUTE_DRAFT_POINTS_LAYER_ID = 'hike-route-draft-points-layer';
+const AUTO_ROUTE_START_SOURCE_ID = 'hike-route-auto-start';
+const AUTO_ROUTE_START_LAYER_ID = 'hike-route-auto-start-layer';
+
+/** backlog/tura-utvonaltervezo/103-... 2.2 fázis — a rajzolás-térkép aktuális interakciós módja. */
+type Mode = 'none' | 'manual' | 'auto';
 
 // backlog/tura-utvonaltervezo/103-... 1. fázis: MapLibre GL JS + nyers OSM raster csempe mint
 // alaptérkép (nem saját vektor-csempe szolgáltatás — ld. a ticket "térkép-alap technológia" nyitott
@@ -80,6 +87,7 @@ const COUNTRY_CODE = 'HU';
 		IonLabel,
 		IonModal,
 		IonContent,
+		IonSpinner,
 		TranslatePipe,
 	],
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -87,6 +95,7 @@ const COUNTRY_CODE = 'HU';
 export class TuraPage implements AfterViewInit, OnDestroy {
 	private readonly trailSegments = inject(TrailSegmentRepository);
 	protected readonly hikeRoutes = inject(HikeRouteRepository);
+	protected readonly routeSuggestion = inject(RouteSuggestionRepository);
 	private readonly alertController = inject(AlertController);
 	private readonly translate = inject(TranslateService);
 	private readonly mapContainer = viewChild.required<ElementRef<HTMLDivElement>>('mapContainer');
@@ -94,9 +103,11 @@ export class TuraPage implements AfterViewInit, OnDestroy {
 	private map?: maplibregl.Map;
 	private resizeObserver?: ResizeObserver;
 
-	protected readonly drawMode = signal(false);
-	/** [lon, lat] waypoints picked so far, in click order. */
+	protected readonly mode = signal<Mode>('none');
+	/** [lon, lat] waypoints picked so far, in click order (manual mode) or the generated path (auto mode). */
 	protected readonly draft = signal<number[][]>([]);
+	/** Auto mode: the first of the two picked points, waiting for the second click. */
+	protected readonly autoStart = signal<number[] | null>(null);
 	protected readonly routeName = signal('');
 	protected readonly showRoutesPanel = signal(false);
 
@@ -117,6 +128,11 @@ export class TuraPage implements AfterViewInit, OnDestroy {
 			lineSource?.setData(draftRouteToFeatureCollection(coordinates));
 			const pointsSource = this.map?.getSource(HIKE_ROUTE_DRAFT_POINTS_SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
 			pointsSource?.setData(draftWaypointsToFeatureCollection(coordinates));
+		});
+		effect(() => {
+			const start = this.autoStart();
+			const source = this.map?.getSource(AUTO_ROUTE_START_SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
+			source?.setData(draftWaypointsToFeatureCollection(start ? [start] : []));
 		});
 	}
 
@@ -163,14 +179,24 @@ export class TuraPage implements AfterViewInit, OnDestroy {
 				paint: { 'circle-color': '#ff6f00', 'circle-radius': 5, 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 1.5 },
 			});
 
+			map.addSource(AUTO_ROUTE_START_SOURCE_ID, { type: 'geojson', data: draftWaypointsToFeatureCollection([]) });
+			map.addLayer({
+				id: AUTO_ROUTE_START_LAYER_ID,
+				type: 'circle',
+				source: AUTO_ROUTE_START_SOURCE_ID,
+				paint: { 'circle-color': '#8e24aa', 'circle-radius': 6, 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 1.5 },
+			});
+
 			void this.loadCurrentViewport(map);
 		});
 		map.on('moveend', () => void this.loadCurrentViewport(map));
 		map.on('click', (event) => {
-			if (!this.drawMode()) {
-				return;
+			const point = [event.lngLat.lng, event.lngLat.lat];
+			if (this.mode() === 'manual') {
+				this.draft.update((coordinates) => [...coordinates, point]);
+			} else if (this.mode() === 'auto') {
+				this.handleAutoModeClick(point);
 			}
-			this.draft.update((coordinates) => [...coordinates, [event.lngLat.lng, event.lngLat.lat]]);
 		});
 
 		// MapLibre sizes its canvas from the container's dimensions at construction time. Inside an
@@ -189,16 +215,56 @@ export class TuraPage implements AfterViewInit, OnDestroy {
 	}
 
 	protected toggleDrawMode(): void {
-		this.drawMode.update((active) => !active);
+		this.mode.update((current) => (current === 'manual' ? 'none' : 'manual'));
+		this.autoStart.set(null);
+	}
+
+	protected toggleAutoMode(): void {
+		this.mode.update((current) => (current === 'auto' ? 'none' : 'auto'));
+		this.autoStart.set(null);
 	}
 
 	protected undoLastWaypoint(): void {
+		if (this.autoStart() !== null && this.draft().length === 0) {
+			this.autoStart.set(null);
+			return;
+		}
 		this.draft.update((coordinates) => coordinates.slice(0, -1));
 	}
 
 	protected clearDraft(): void {
 		this.draft.set([]);
 		this.routeName.set('');
+		this.autoStart.set(null);
+	}
+
+	private handleAutoModeClick(point: number[]): void {
+		if (this.routeSuggestion.loading()) {
+			return;
+		}
+		const start = this.autoStart();
+		if (start === null) {
+			this.autoStart.set(point);
+			return;
+		}
+		void this.generateAutoRoute(start, point);
+	}
+
+	private async generateAutoRoute(start: number[], end: number[]): Promise<void> {
+		const result = await this.routeSuggestion.suggest(COUNTRY_CODE, start, end);
+		this.autoStart.set(null);
+		if (!result.found) {
+			this.mode.set('none');
+			const alert = await this.alertController.create({
+				header: this.translate.instant('TURA.ROUTE_NOT_FOUND_TITLE'),
+				message: this.translate.instant('TURA.ROUTE_NOT_FOUND_MESSAGE'),
+				buttons: [this.translate.instant('COMMON.OK')],
+			});
+			await alert.present();
+			return;
+		}
+		this.draft.set(result.coordinates);
+		this.mode.set('none');
 	}
 
 	protected async saveDraft(): Promise<void> {
@@ -209,7 +275,7 @@ export class TuraPage implements AfterViewInit, OnDestroy {
 		await this.hikeRoutes.save({ name, coordinates: this.draft() });
 		this.draft.set([]);
 		this.routeName.set('');
-		this.drawMode.set(false);
+		this.mode.set('none');
 	}
 
 	protected toggleRoutesPanel(): void {

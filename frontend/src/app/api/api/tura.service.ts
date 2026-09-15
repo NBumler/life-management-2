@@ -17,6 +17,8 @@ import { Observable }                                        from 'rxjs';
 import { OpenApiHttpParams, QueryParamStyle } from '../query.params';
 
 // @ts-ignore
+import { RouteSuggestion } from '../model/routeSuggestion';
+// @ts-ignore
 import { TrailSegment } from '../model/trailSegment';
 // @ts-ignore
 import { TrailSegmentImportRequest } from '../model/trailSegmentImportRequest';
@@ -221,6 +223,129 @@ export class TuraService extends BaseService implements TuraServiceInterface {
         let localVarPath = `/api/tura/trail-segments`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<Array<TrailSegment>>('get', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                params: localVarQueryParameters.toHttpParams(),
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     * Automatikus útvonal-javaslat két pont közt a jelzett turistaút-hálózaton (backlog/tura-utvonaltervezo/103-... 2.2 fázis, saját A* a TrailSegment gráfon).
+     * @endpoint get /api/tura/route-suggestion
+     * @param country ISO 3166-1 alpha-2 országkód, pl. \&quot;HU\&quot;.
+     * @param startLon 
+     * @param startLat 
+     * @param endLon 
+     * @param endLat 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public suggestRoute(country: string, startLon: number, startLat: number, endLon: number, endLat: number, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<RouteSuggestion>;
+    public suggestRoute(country: string, startLon: number, startLat: number, endLon: number, endLat: number, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<RouteSuggestion>>;
+    public suggestRoute(country: string, startLon: number, startLat: number, endLon: number, endLat: number, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<RouteSuggestion>>;
+    public suggestRoute(country: string, startLon: number, startLat: number, endLon: number, endLat: number, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (country === null || country === undefined) {
+            throw new Error('Required parameter country was null or undefined when calling suggestRoute.');
+        }
+        if (startLon === null || startLon === undefined) {
+            throw new Error('Required parameter startLon was null or undefined when calling suggestRoute.');
+        }
+        if (startLat === null || startLat === undefined) {
+            throw new Error('Required parameter startLat was null or undefined when calling suggestRoute.');
+        }
+        if (endLon === null || endLon === undefined) {
+            throw new Error('Required parameter endLon was null or undefined when calling suggestRoute.');
+        }
+        if (endLat === null || endLat === undefined) {
+            throw new Error('Required parameter endLat was null or undefined when calling suggestRoute.');
+        }
+
+        let localVarQueryParameters = new OpenApiHttpParams(this.encoder);
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'country',
+            <any>country,
+            QueryParamStyle.Form,
+            false,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'startLon',
+            <any>startLon,
+            QueryParamStyle.Form,
+            false,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'startLat',
+            <any>startLat,
+            QueryParamStyle.Form,
+            false,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'endLon',
+            <any>endLon,
+            QueryParamStyle.Form,
+            false,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'endLat',
+            <any>endLat,
+            QueryParamStyle.Form,
+            false,
+        );
+
+
+        let localVarHeaders = this.defaultHeaders;
+
+        // authentication (bearerAuth) required
+        localVarHeaders = this.configuration.addCredentialToHeaders('bearerAuth', 'Authorization', localVarHeaders, 'Bearer ');
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/tura/route-suggestion`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<RouteSuggestion>('get', `${basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
                 params: localVarQueryParameters.toHttpParams(),

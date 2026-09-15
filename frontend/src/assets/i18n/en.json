@@ -13,7 +13,8 @@
     "MOVE_DOWN": "Move down",
     "DONE": "Done",
     "DECREASE": "Decrease",
-    "INCREASE": "Increase"
+    "INCREASE": "Increase",
+    "OK": "OK"
   },
   "LOGIN": {
     "TITLE": "Log in",
@@ -416,13 +417,18 @@
   "TURA": {
     "TITLE": "Hiking",
     "DRAW": "Draw",
+    "AUTO": "Auto",
     "UNDO": "Undo",
     "CLEAR": "Clear",
     "MY_ROUTES": "My routes",
     "ROUTE_NAME_PLACEHOLDER": "Route name",
     "NO_ROUTES": "No saved routes yet.",
     "DELETE_ROUTE_CONFIRM_TITLE": "Delete route",
-    "DELETE_ROUTE_CONFIRM_MESSAGE": "Delete the route \"{{name}}\"?"
+    "DELETE_ROUTE_CONFIRM_MESSAGE": "Delete the route \"{{name}}\"?",
+    "AUTO_PICK_START": "Pick the start point on the map.",
+    "AUTO_PICK_END": "Pick the end point on the map.",
+    "ROUTE_NOT_FOUND_TITLE": "No route found",
+    "ROUTE_NOT_FOUND_MESSAGE": "No connection found between the two points on the marked trail network."
   },
   "GEAR": {
     "TITLE": "GearCheck",
