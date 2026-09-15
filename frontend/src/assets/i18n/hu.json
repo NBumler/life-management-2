@@ -457,6 +457,15 @@
       "DISTANCE_MEDIUM": "Közepes (10–20 km)",
       "DISTANCE_LONG": "Hosszú (20 km felett)",
       "NO_RESULTS": "Nincs a szűrésnek megfelelő túra."
+    },
+    "LAYERS": {
+      "BUTTON": "Rétegek",
+      "MODAL_TITLE": "Térképrétegek",
+      "BASEMAP_LABEL": "Alaptérkép",
+      "BASEMAP_OSM": "Utcatérkép (OSM)",
+      "BASEMAP_TOPO": "Topográfiai",
+      "BASEMAP_SATELLITE": "Szatellit",
+      "HILLSHADE": "Domborzat-árnyékolás"
     }
   },
   "GEAR": {

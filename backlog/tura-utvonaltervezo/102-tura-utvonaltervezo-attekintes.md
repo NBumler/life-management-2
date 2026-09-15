@@ -45,7 +45,7 @@ túrázási funkció).
 | [[backlog/tura-utvonaltervezo/104-tura-adatforras-integracio]] | Magyar (majd több országos) turistaút-adatforrás (OSM), ország-kód particionálás | `ready` |
 | [[backlog/tura-utvonaltervezo/105-tura-offline-terkep-es-utvonalszamitas]] | Offline térkép-letöltés régiónként, **valódi offline útvonalszámítás** | `ready` |
 | [[backlog/tura-utvonaltervezo/106-tura-gps-navigacio-elo-helymegosztas]] | Élő GPS-navigáció, track-felvétel, turn-by-turn, letérés-figyelmeztetés, SOS | `ready` |
-| [[backlog/tura-utvonaltervezo/107-tura-domborzat-3d-terkepretegek]] | Domborzat/lejtő-réteg, alternatív térképrétegek (3D nézet kizárva) | `ready` |
+| `backlog/archive/107-tura-domborzat-3d-terkepretegek.md` | Domborzat/lejtő-réteg, alternatív térképrétegek (3D nézet kizárva) | `done` |
 | [[backlog/tura-utvonaltervezo/108-tura-poi-adatbazis-ketura-belyegzok]] | POI-adatbázis, keresés, gyűjtemények (fotók és Kéktúra-bélyegzők kizárva) | `ready` |
 | [[backlog/tura-utvonaltervezo/109-tura-idojaras-integracio]] | Időjárás-előrejelzés + riasztás (térkép-overlay kizárva) | `ready` |
 | `backlog/archive/110-tura-kozossegi-funkciok.md` | Közösségi funkciók — **dropped**, marad egyszemélyes app | `dropped` |

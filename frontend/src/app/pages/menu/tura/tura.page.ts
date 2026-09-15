@@ -29,6 +29,7 @@ import {
 	IonSelectOption,
 	IonSpinner,
 	IonTitle,
+	IonToggle,
 	IonToolbar,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
@@ -76,10 +77,27 @@ const CURATED_ROUTE_PREVIEW_LAYER_ID = 'curated-route-preview-layer';
 /** backlog/tura-utvonaltervezo/103-... 2.2 fázis — a rajzolás-térkép aktuális interakciós módja. */
 type Mode = 'none' | 'manual' | 'auto';
 
+/** backlog/tura-utvonaltervezo/107-... 3. fázis — az alternatív alaptérkép-rétegek közül a kiválasztott. */
+type Basemap = 'osm' | 'topo' | 'satellite';
+const BASEMAP_LAYER_IDS: Record<Basemap, string> = { osm: 'osm', topo: 'topo', satellite: 'satellite' };
+const TERRAIN_SOURCE_ID = 'terrain-rgb';
+const HILLSHADE_LAYER_ID = 'hillshade';
+
 // backlog/tura-utvonaltervezo/103-... 1. fázis: MapLibre GL JS + nyers OSM raster csempe mint
 // alaptérkép (nem saját vektor-csempe szolgáltatás — ld. a ticket "térkép-alap technológia" nyitott
 // kérdését). Egyszemélyes, személyes-célú használatra ez belefér az OSM tile usage policy-jába;
 // nagyobb léptékű/publikált verzióhoz saját csempe-hosting kellene.
+// backlog/tura-utvonaltervezo/107-... 3. fázis: két további, ugyanígy kulcs nélküli, ingyenes nyers
+// csempe-forrás — OpenTopoMap (topográfiai réteg) és Esri World Imagery (szatellit) —, valamint egy
+// raster-dem forrás (AWS "elevation-tiles-prod", Terrarium-kódolás, Mapzen nyílt terrain-adatkészlete)
+// a domborzat-árnyékoláshoz. A ticket "lejtő-réteg (szín szerinti meredekség-vizualizáció)" pontját ez
+// a MapLibre natívan támogatott `hillshade` réteg-típusa fedi le (fény/árnyék alapú domborzat-
+// kiemelés) — egy tényleges, önálló szín-skálás lejtőszög-réteghez saját, előre számolt lejtő-csempe
+// kellene, amihez nincs ingyenes, kulcs nélküli publikus szolgáltatás; ez a technikai döntés a ticket
+// "3D nézet nem kell" döntésével összhangban a legegyszerűbb, extra backend-munka nélküli megoldás.
+// Mindhárom alaptérkép-réteg és a hillshade is a kezdeti style részeként létezik (nem
+// map.setStyle()-lal cserélve), a láthatóság `visibility` layout-tulajdonsággal váltva — így a
+// többi (turistajelzés, útvonalak stb.) forrás/réteg érintetlen marad váltáskor.
 const BASE_STYLE: maplibregl.StyleSpecification = {
 	version: 8,
 	sources: {
@@ -89,8 +107,32 @@ const BASE_STYLE: maplibregl.StyleSpecification = {
 			tileSize: 256,
 			attribution: '© OpenStreetMap contributors',
 		},
+		topo: {
+			type: 'raster',
+			tiles: ['https://a.tile.opentopomap.org/{z}/{x}/{y}.png'],
+			tileSize: 256,
+			attribution: 'Map data: © OpenStreetMap contributors, SRTM | Map style: © OpenTopoMap (CC-BY-SA)',
+		},
+		satellite: {
+			type: 'raster',
+			tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+			tileSize: 256,
+			attribution: 'Esri, Maxar, Earthstar Geographics, and the GIS User Community',
+		},
+		[TERRAIN_SOURCE_ID]: {
+			type: 'raster-dem',
+			tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
+			tileSize: 256,
+			encoding: 'terrarium',
+			maxzoom: 15,
+		},
 	},
-	layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
+	layers: [
+		{ id: 'osm', type: 'raster', source: 'osm' },
+		{ id: 'topo', type: 'raster', source: 'topo', layout: { visibility: 'none' } },
+		{ id: 'satellite', type: 'raster', source: 'satellite', layout: { visibility: 'none' } },
+		{ id: HILLSHADE_LAYER_ID, type: 'hillshade', source: TERRAIN_SOURCE_ID, layout: { visibility: 'none' }, paint: { 'hillshade-exaggeration': 0.5 } },
+	],
 };
 
 // Magyarország nagyjábóli középpontja/zoomja (backlog/tura-utvonaltervezo/104-... — induláskor csak
@@ -127,6 +169,7 @@ const COUNTRY_CODE = 'HU';
 		IonContent,
 		IonFooter,
 		IonSpinner,
+		IonToggle,
 		TranslatePipe,
 	],
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -167,6 +210,10 @@ export class TuraPage implements AfterViewInit, OnDestroy {
 	protected readonly catalogDistanceBucket = signal<DistanceBucket>('any');
 	/** A térképen kiemelt katalógus-túra (ha a felhasználó rákattintott egy listaelemre) — null = nincs kiemelés. */
 	protected readonly previewedCuratedRoute = signal<number[][] | null>(null);
+	/** backlog/tura-utvonaltervezo/107-... 3. fázis — alaptérkép-váltó + domborzat-árnyékolás panel. */
+	protected readonly showLayersPanel = signal(false);
+	protected readonly activeBasemap = signal<Basemap>('osm');
+	protected readonly showHillshade = signal(false);
 	/** backlog/tura-utvonaltervezo/103-... 2.3 fázis — a draft() útvonalhoz tartozó, utoljára sikeresen kiszámolt metrika. */
 	protected readonly metrics = signal<RouteMetrics | null>(null);
 	protected readonly profilePoints = computed(() => {
@@ -444,6 +491,25 @@ export class TuraPage implements AfterViewInit, OnDestroy {
 			{ padding: 40 },
 		);
 		this.showCatalogPanel.set(false);
+	}
+
+	protected toggleLayersPanel(): void {
+		this.showLayersPanel.update((open) => !open);
+	}
+
+	protected setBasemap(basemap: Basemap): void {
+		this.activeBasemap.set(basemap);
+		if (!this.map) {
+			return;
+		}
+		for (const [id, layerId] of Object.entries(BASEMAP_LAYER_IDS)) {
+			this.map.setLayoutProperty(layerId, 'visibility', id === basemap ? 'visible' : 'none');
+		}
+	}
+
+	protected toggleHillshade(visible: boolean): void {
+		this.showHillshade.set(visible);
+		this.map?.setLayoutProperty(HILLSHADE_LAYER_ID, 'visibility', visible ? 'visible' : 'none');
 	}
 
 	private handleAutoModeClick(point: number[]): void {

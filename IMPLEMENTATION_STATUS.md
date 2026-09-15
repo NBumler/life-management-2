@@ -14,6 +14,15 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-16 — #107** Túra — domborzat-árnyékolás + alternatív alaptérkép-rétegek. A [[backlog/
+  tura-utvonaltervezo/103-tura-alapveto-utvonaltervezes-es-terkep]] MapLibre GL JS alaptérképéhez
+  két új, kulcs nélküli raster-forrás (OpenTopoMap topográfiai, Esri World Imagery szatellit) +
+  egy `hillshade` domborzat-árnyékolás réteg (AWS "elevation-tiles-prod" Terrarium raster-dem
+  csempék) — mindhárom/négy be/kikapcsolható egy új "Rétegek" panelről, a `visibility`
+  layout-tulajdonsággal váltva (nem `map.setStyle()`, hogy a turistajelzés-/útvonal-rétegek
+  érintetlenek maradjanak). 3D nézet tudatosan kimaradt. Nincs backend-változás. `documentation/`
+  spec nem készült (ua. a 102-es esernyő-ticket halasztása). Fázisbontás és részletek: `backlog/
+  archive/107-tura-domborzat-3d-terkepretegek.md`.
 - **2026-09-16 — #103** Túra — alapvető útvonaltervezés és turistajelzés-térkép. Menü → Túra új
   tab (`menu.tura` flag): MapLibre GL JS alaptérkép magyar turistajelzés-réteggel (megosztott,
   admin-importált `TrailSegment`, bbox-lekérdezés); kézi útvonal-rajzolás és automatikus

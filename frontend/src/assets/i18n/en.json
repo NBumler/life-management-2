@@ -457,6 +457,15 @@
       "DISTANCE_MEDIUM": "Medium (10-20 km)",
       "DISTANCE_LONG": "Long (over 20 km)",
       "NO_RESULTS": "No route matches the current filter."
+    },
+    "LAYERS": {
+      "BUTTON": "Layers",
+      "MODAL_TITLE": "Map layers",
+      "BASEMAP_LABEL": "Basemap",
+      "BASEMAP_OSM": "Street map (OSM)",
+      "BASEMAP_TOPO": "Topographic",
+      "BASEMAP_SATELLITE": "Satellite",
+      "HILLSHADE": "Terrain shading"
     }
   },
   "GEAR": {

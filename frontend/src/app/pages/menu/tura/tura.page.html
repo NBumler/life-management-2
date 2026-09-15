@@ -27,6 +27,9 @@
       </ion-button>
     </ion-buttons>
     <ion-buttons slot="end">
+      <ion-button (click)="toggleLayersPanel()">
+        <ion-icon slot="icon-only" name="layers-outline" [attr.aria-label]="'TURA.LAYERS.BUTTON' | translate"></ion-icon>
+      </ion-button>
       <ion-button (click)="toggleCatalogPanel()">
         <ion-icon slot="start" name="star-outline" aria-hidden="true"></ion-icon>
         {{ 'TURA.CATALOG.BUTTON' | translate }}
@@ -95,6 +98,49 @@
     </ion-toolbar>
   </ion-footer>
 }
+
+<ion-modal [isOpen]="showLayersPanel()" (didDismiss)="showLayersPanel.set(false)">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>{{ 'TURA.LAYERS.MODAL_TITLE' | translate }}</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="showLayersPanel.set(false)">{{ 'COMMON.CLOSE' | translate }}</ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content>
+      <ion-list>
+        <ion-item lines="none">
+          <ion-label>{{ 'TURA.LAYERS.BASEMAP_LABEL' | translate }}</ion-label>
+        </ion-item>
+        <ion-item button [detail]="false" (click)="setBasemap('osm')">
+          <ion-label>{{ 'TURA.LAYERS.BASEMAP_OSM' | translate }}</ion-label>
+          @if (activeBasemap() === 'osm') {
+            <ion-icon slot="end" name="checkmark-outline" aria-hidden="true"></ion-icon>
+          }
+        </ion-item>
+        <ion-item button [detail]="false" (click)="setBasemap('topo')">
+          <ion-label>{{ 'TURA.LAYERS.BASEMAP_TOPO' | translate }}</ion-label>
+          @if (activeBasemap() === 'topo') {
+            <ion-icon slot="end" name="checkmark-outline" aria-hidden="true"></ion-icon>
+          }
+        </ion-item>
+        <ion-item button [detail]="false" (click)="setBasemap('satellite')">
+          <ion-label>{{ 'TURA.LAYERS.BASEMAP_SATELLITE' | translate }}</ion-label>
+          @if (activeBasemap() === 'satellite') {
+            <ion-icon slot="end" name="checkmark-outline" aria-hidden="true"></ion-icon>
+          }
+        </ion-item>
+        <ion-item>
+          <ion-toggle [checked]="showHillshade()" (ionChange)="toggleHillshade($event.detail.checked)">
+            <ion-label>{{ 'TURA.LAYERS.HILLSHADE' | translate }}</ion-label>
+          </ion-toggle>
+        </ion-item>
+      </ion-list>
+    </ion-content>
+  </ng-template>
+</ion-modal>
 
 <ion-modal [isOpen]="showRoutesPanel()" (didDismiss)="showRoutesPanel.set(false)">
   <ng-template>
