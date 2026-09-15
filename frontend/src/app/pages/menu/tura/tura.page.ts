@@ -13,6 +13,7 @@ import {
 import {
 	AlertController,
 	IonBackButton,
+	IonBadge,
 	IonButton,
 	IonButtons,
 	IonContent,
@@ -24,6 +25,8 @@ import {
 	IonLabel,
 	IonList,
 	IonModal,
+	IonSelect,
+	IonSelectOption,
 	IonSpinner,
 	IonTitle,
 	IonToolbar,
@@ -32,6 +35,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import maplibregl from 'maplibre-gl';
 
 import { HikeRoute } from '../../../api/model/hikeRoute';
+import { HikeRouteDay } from '../../../api/model/hikeRouteDay';
 import { RouteMetrics } from '../../../api/model/routeMetrics';
 import { Bbox, TrailSegmentRepository } from '../../../core/data/trail-segment.repository';
 import { HikeRouteRepository } from '../../../core/data/hike-route.repository';
@@ -99,6 +103,7 @@ const COUNTRY_CODE = 'HU';
 		IonTitle,
 		IonButtons,
 		IonBackButton,
+		IonBadge,
 		IonButton,
 		IonIcon,
 		IonInput,
@@ -106,6 +111,8 @@ const COUNTRY_CODE = 'HU';
 		IonItem,
 		IonLabel,
 		IonModal,
+		IonSelect,
+		IonSelectOption,
 		IonContent,
 		IonFooter,
 		IonSpinner,
@@ -132,6 +139,15 @@ export class TuraPage implements AfterViewInit, OnDestroy {
 	protected readonly autoStart = signal<number[] | null>(null);
 	protected readonly routeName = signal('');
 	protected readonly showRoutesPanel = signal(false);
+	/**
+	 * backlog/tura-utvonaltervezo/103-... 2.4 fázis — szakaszokra bontás/éjszakázó pontok. Csak a
+	 * belső töréspontokat tárolja (az utolsó nap vége mindig implicit, a draft utolsó waypointja) —
+	 * ld. buildDaysPayload, ami a mentendő HikeRouteDay listát építi belőle.
+	 */
+	protected readonly dayBreaks = signal<{ waypointIndex: number; overnightName: string }[]>([]);
+	protected readonly showDaysPanel = signal(false);
+	protected readonly dayCount = computed(() => this.dayBreaks().length + 1);
+	protected readonly canAddDayBreak = computed(() => this.dayBreaks().length < Math.max(0, this.draft().length - 2));
 	/** backlog/tura-utvonaltervezo/103-... 2.3 fázis — a draft() útvonalhoz tartozó, utoljára sikeresen kiszámolt metrika. */
 	protected readonly metrics = signal<RouteMetrics | null>(null);
 	protected readonly profilePoints = computed(() => {
@@ -164,6 +180,12 @@ export class TuraPage implements AfterViewInit, OnDestroy {
 			const start = this.autoStart();
 			const source = this.map?.getSource(AUTO_ROUTE_START_SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
 			source?.setData(draftWaypointsToFeatureCollection(start ? [start] : []));
+		});
+		effect(() => {
+			// backlog/tura-utvonaltervezo/103-... 2.4 fázis — ha a draft zsugorodik (undo/clear), a most
+			// már érvénytelen (a végponton túli vagy azzal egybeeső) töréspontokat el kell dobni.
+			const length = this.draft().length;
+			this.dayBreaks.update((breaks) => breaks.filter((day) => day.waypointIndex < length - 1));
 		});
 		effect(() => {
 			const coordinates = this.draft();
@@ -278,6 +300,54 @@ export class TuraPage implements AfterViewInit, OnDestroy {
 		this.draft.set([]);
 		this.routeName.set('');
 		this.autoStart.set(null);
+		this.dayBreaks.set([]);
+	}
+
+	protected toggleDaysPanel(): void {
+		this.showDaysPanel.update((open) => !open);
+	}
+
+	/** A még nem használt belső waypoint-indexek (1..length-2), plusz a sor jelenlegi értéke — ez kerül az ion-select opciói közé. */
+	protected availableWaypointIndexes(currentValue: number): number[] {
+		const used = new Set(this.dayBreaks().map((day) => day.waypointIndex));
+		used.delete(currentValue);
+		const options: number[] = [];
+		for (let index = 1; index < this.draft().length - 1; index++) {
+			if (!used.has(index)) {
+				options.push(index);
+			}
+		}
+		return options;
+	}
+
+	protected addDayBreak(): void {
+		const used = new Set(this.dayBreaks().map((day) => day.waypointIndex));
+		for (let index = 1; index < this.draft().length - 1; index++) {
+			if (!used.has(index)) {
+				this.dayBreaks.update((breaks) => [...breaks, { waypointIndex: index, overnightName: '' }].sort((a, b) => a.waypointIndex - b.waypointIndex));
+				return;
+			}
+		}
+	}
+
+	protected updateDayBreakIndex(position: number, waypointIndex: number): void {
+		this.dayBreaks.update((breaks) => {
+			const next = [...breaks];
+			next[position] = { ...next[position], waypointIndex: Number(waypointIndex) };
+			return next.sort((a, b) => a.waypointIndex - b.waypointIndex);
+		});
+	}
+
+	protected updateDayBreakOvernightName(position: number, overnightName: string): void {
+		this.dayBreaks.update((breaks) => {
+			const next = [...breaks];
+			next[position] = { ...next[position], overnightName };
+			return next;
+		});
+	}
+
+	protected removeDayBreak(position: number): void {
+		this.dayBreaks.update((breaks) => breaks.filter((_, index) => index !== position));
 	}
 
 	private handleAutoModeClick(point: number[]): void {
@@ -315,6 +385,7 @@ export class TuraPage implements AfterViewInit, OnDestroy {
 			return;
 		}
 		const metrics = this.metrics();
+		const days = await this.buildDaysPayload();
 		await this.hikeRoutes.save({
 			name,
 			coordinates: this.draft(),
@@ -323,10 +394,54 @@ export class TuraPage implements AfterViewInit, OnDestroy {
 			elevationLossMeters: metrics?.elevationLossMeters,
 			estimatedDurationMinutes: metrics?.estimatedDurationMinutes,
 			elevationProfile: metrics?.profile,
+			days,
 		});
 		this.draft.set([]);
 		this.routeName.set('');
+		this.dayBreaks.set([]);
 		this.mode.set('none');
+	}
+
+	/**
+	 * backlog/tura-utvonaltervezo/103-... 2.4 fázis — a belső töréspontokból (dayBreaks) építi fel a
+	 * mentendő HikeRouteDay listát; minden napra külön meghívja az /api/tura/route-metrics-et a nap
+	 * saját szakaszára (online, best-effort — hiba esetén az adott nap metrika nélkül marad, ugyanaz
+	 * a minta, mint a route-szintű refreshMetrics-nél).
+	 */
+	private async buildDaysPayload(): Promise<HikeRouteDay[] | undefined> {
+		const breaks = this.dayBreaks();
+		if (breaks.length === 0) {
+			return undefined;
+		}
+		const coordinates = this.draft();
+		const boundaries = [...breaks.map((day) => day.waypointIndex), coordinates.length - 1];
+		const days: HikeRouteDay[] = [];
+		let start = 0;
+		for (let i = 0; i < boundaries.length; i++) {
+			const end = boundaries[i];
+			const dayMetrics = await this.computeDaySegmentMetrics(coordinates.slice(start, end + 1));
+			days.push({
+				endWaypointIndex: end,
+				overnightName: breaks[i]?.overnightName.trim() || null,
+				distanceMeters: dayMetrics?.distanceMeters,
+				elevationGainMeters: dayMetrics?.elevationGainMeters,
+				elevationLossMeters: dayMetrics?.elevationLossMeters,
+				estimatedDurationMinutes: dayMetrics?.estimatedDurationMinutes,
+			});
+			start = end;
+		}
+		return days;
+	}
+
+	private async computeDaySegmentMetrics(segment: number[][]): Promise<RouteMetrics | null> {
+		if (segment.length < 2) {
+			return null;
+		}
+		try {
+			return await this.routeMetrics.compute(segment);
+		} catch {
+			return null;
+		}
 	}
 
 	/** backlog/tura-utvonaltervezo/103-... 2.3 fázis — online, best-effort: hiba esetén a felhasználó metrika nélkül is menthet. */

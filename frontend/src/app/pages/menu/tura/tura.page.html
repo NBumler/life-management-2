@@ -47,6 +47,15 @@
         [autofocus]="true"
       ></ion-input>
       <ion-buttons slot="end">
+        @if (draft().length >= 3) {
+          <ion-button (click)="toggleDaysPanel()">
+            <ion-icon slot="start" name="moon-outline" aria-hidden="true"></ion-icon>
+            {{ 'TURA.DAYS.BUTTON' | translate }}
+            @if (dayCount() > 1) {
+              <ion-badge slot="end">{{ dayCount() }}</ion-badge>
+            }
+          </ion-button>
+        }
         <ion-button [disabled]="routeName().trim() === ''" (click)="saveDraft()">
           {{ 'COMMON.SAVE' | translate }}
         </ion-button>
@@ -102,7 +111,12 @@
         }
         @for (route of hikeRoutes.items(); track route.id) {
           <ion-item button (click)="flyToRoute(route)">
-            <ion-label>{{ route.name }}</ion-label>
+            <ion-label>
+              {{ route.name }}
+              @if (route.days && route.days.length > 1) {
+                <p>{{ 'TURA.DAYS.SUMMARY' | translate: { count: route.days.length } }}</p>
+              }
+            </ion-label>
             <ion-buttons slot="end">
               <ion-button (click)="confirmDeleteRoute(route); $event.stopPropagation()">
                 <ion-icon slot="icon-only" name="trash-outline" [attr.aria-label]="'COMMON.DELETE' | translate"></ion-icon>
@@ -111,6 +125,53 @@
           </ion-item>
         }
       </ion-list>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<ion-modal [isOpen]="showDaysPanel()" (didDismiss)="showDaysPanel.set(false)">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>{{ 'TURA.DAYS.MODAL_TITLE' | translate }}</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="showDaysPanel.set(false)">{{ 'COMMON.CLOSE' | translate }}</ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content>
+      <ion-list>
+        @for (dayBreak of dayBreaks(); track $index; let i = $index) {
+          <ion-item>
+            <ion-select
+              [label]="(i + 1) + '. ' + ('TURA.DAYS.DAY_END_LABEL' | translate)"
+              [value]="dayBreak.waypointIndex"
+              (ionChange)="updateDayBreakIndex(i, $any($event.target).value)"
+            >
+              @for (index of availableWaypointIndexes(dayBreak.waypointIndex); track index) {
+                <ion-select-option [value]="index">{{ 'TURA.DAYS.WAYPOINT_OPTION' | translate: { index: index + 1 } }}</ion-select-option>
+              }
+            </ion-select>
+          </ion-item>
+          <ion-item>
+            <ion-input
+              [value]="dayBreak.overnightName"
+              (ionInput)="updateDayBreakOvernightName(i, $any($event.target).value ?? '')"
+              [placeholder]="'TURA.DAYS.OVERNIGHT_PLACEHOLDER' | translate"
+            ></ion-input>
+            <ion-buttons slot="end">
+              <ion-button (click)="removeDayBreak(i)">
+                <ion-icon slot="icon-only" name="trash-outline" [attr.aria-label]="'TURA.DAYS.REMOVE_BREAK' | translate"></ion-icon>
+              </ion-button>
+            </ion-buttons>
+          </ion-item>
+        }
+      </ion-list>
+      <ion-button expand="block" fill="outline" [disabled]="!canAddDayBreak()" (click)="addDayBreak()">
+        <ion-icon slot="start" name="add-outline" aria-hidden="true"></ion-icon>
+        {{ 'TURA.DAYS.ADD_BREAK' | translate }}
+      </ion-button>
+      <p class="days-summary">{{ 'TURA.DAYS.SUMMARY' | translate: { count: dayCount() } }}</p>
     </ion-content>
   </ng-template>
 </ion-modal>

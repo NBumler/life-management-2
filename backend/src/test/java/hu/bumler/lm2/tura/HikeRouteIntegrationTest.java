@@ -22,6 +22,7 @@ import hu.bumler.lm2.api.model.AdminCreateUserRequest;
 import hu.bumler.lm2.api.model.AuthTokens;
 import hu.bumler.lm2.api.model.ElevationProfilePoint;
 import hu.bumler.lm2.api.model.HikeRoute;
+import hu.bumler.lm2.api.model.HikeRouteDay;
 import hu.bumler.lm2.api.model.LoginRequest;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -52,6 +53,15 @@ class HikeRouteIntegrationTest {
 		return new HikeRoute(id, "Kilátó túra",
 				List.of(List.of(BigDecimal.valueOf(19.0), BigDecimal.valueOf(47.0)),
 						List.of(BigDecimal.valueOf(19.1), BigDecimal.valueOf(47.1))),
+				false);
+	}
+
+	/** backlog/tura-utvonaltervezo/103-... 2.4 fázis — 3 waypoint, hogy legyen egy belső töréspont a napokra bontáshoz. */
+	private static HikeRoute threePointRoute(UUID id) {
+		return new HikeRoute(id, "Kétnapos túra",
+				List.of(List.of(BigDecimal.valueOf(19.0), BigDecimal.valueOf(47.0)),
+						List.of(BigDecimal.valueOf(19.1), BigDecimal.valueOf(47.1)),
+						List.of(BigDecimal.valueOf(19.2), BigDecimal.valueOf(47.2))),
 				false);
 	}
 
@@ -164,6 +174,63 @@ class HikeRouteIntegrationTest {
 		createRoute(token, body).andExpect(status().isOk())
 				.andExpect(jsonPath("$.distanceMeters").value(org.hamcrest.Matchers.nullValue()))
 				.andExpect(jsonPath("$.elevationProfile").value(org.hamcrest.Matchers.nullValue()));
+	}
+
+	@Test
+	void create_persistsAndReturnsMultiDaySplit_withOvernightPointAndPerDayMetrics() throws Exception {
+		String token = registerAndLogin("hr-days");
+		UUID id = UUID.randomUUID();
+		HikeRoute body = threePointRoute(id);
+		HikeRouteDay day1 = new HikeRouteDay(1);
+		day1.overnightName("Kékestetői turistaház");
+		day1.distanceMeters(BigDecimal.valueOf(800));
+		HikeRouteDay day2 = new HikeRouteDay(2);
+		day2.distanceMeters(BigDecimal.valueOf(600));
+		body.days(List.of(day1, day2));
+
+		createRoute(token, body).andExpect(status().isOk())
+				.andExpect(jsonPath("$.days.length()").value(2))
+				.andExpect(jsonPath("$.days[0].endWaypointIndex").value(1))
+				.andExpect(jsonPath("$.days[0].overnightName").value("Kékestetői turistaház"))
+				.andExpect(jsonPath("$.days[0].distanceMeters").value(800))
+				.andExpect(jsonPath("$.days[1].endWaypointIndex").value(2));
+
+		mockMvc.perform(get("/api/hike-routes/" + id).header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.days.length()").value(2));
+	}
+
+	@Test
+	void create_leavesDaysNull_whenTheRouteIsSingleDay() throws Exception {
+		String token = registerAndLogin("hr-no-days");
+		HikeRoute body = route(UUID.randomUUID());
+
+		createRoute(token, body).andExpect(status().isOk())
+				.andExpect(jsonPath("$.days").value(org.hamcrest.Matchers.nullValue()));
+	}
+
+	@Test
+	void create_rejectsDaySplit_whenEndWaypointIndexesAreNotStrictlyIncreasing() throws Exception {
+		String token = registerAndLogin("hr-days-not-increasing");
+		HikeRoute body = threePointRoute(UUID.randomUUID());
+		body.days(List.of(new HikeRouteDay(1), new HikeRouteDay(1)));
+
+		createRoute(token, body)
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+				.andExpect(jsonPath("$.field").value("days"));
+	}
+
+	@Test
+	void create_rejectsDaySplit_whenTheLastDayDoesNotReachTheRouteEnd() throws Exception {
+		String token = registerAndLogin("hr-days-short");
+		HikeRoute body = threePointRoute(UUID.randomUUID());
+		body.days(List.of(new HikeRouteDay(1)));
+
+		createRoute(token, body)
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+				.andExpect(jsonPath("$.field").value("days"));
 	}
 
 	@Test

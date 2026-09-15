@@ -216,6 +216,10 @@ const STEPS_BY_VERSION: Readonly<Record<number, VersionSteps>> = {
   // server-side (same reasoning as the Sector.defaultLengthInMeters precedent at step 5), so no
   // payload transform is needed for any entity.
   7: { default: identityStep },
+  // backlog/tura-utvonaltervezo/103-... 2.4 fázis: `HikeRoute` gained a new nullable/optional
+  // `days` field (szakaszokra bontás/éjszakázó pontok). A missing key already means "egynapos túra"
+  // server-side (same reasoning as step 5/7), so no payload transform is needed for any entity.
+  8: { default: identityStep },
 };
 
 function buildMigrations(): ReadonlyMap<string, MigrationStep> {

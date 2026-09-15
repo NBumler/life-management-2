@@ -111,6 +111,7 @@ model/gym.ts
 model/gymColorBand.ts
 model/healthResponse.ts
 model/hikeRoute.ts
+model/hikeRouteDay.ts
 model/householdRoom.ts
 model/householdTask.ts
 model/indoorRoute.ts

@@ -388,5 +388,7 @@ components:
       $ref: 'openapi/components/schemas/ElevationProfilePoint.yaml'
     HikeRoute:
       $ref: 'openapi/components/schemas/HikeRoute.yaml'
+    HikeRouteDay:
+      $ref: 'openapi/components/schemas/HikeRouteDay.yaml'
     HikeRouteList:
       $ref: 'openapi/components/schemas/HikeRouteList.yaml'

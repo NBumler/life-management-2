@@ -108,6 +108,34 @@ describe('HikeRouteRepository', () => {
     expect(withoutMetrics.elevationProfile).toBeNull();
   });
 
+  it('save(): passes through the days split when given, else null', async () => {
+    storage.upsertHikeRoute.and.callFake(async (draft) => draft);
+
+    await repository.save({
+      name: 'Kétnapos túra',
+      coordinates: [
+        [19.0, 47.0],
+        [19.1, 47.1],
+        [19.2, 47.2],
+      ],
+      days: [
+        { endWaypointIndex: 1, overnightName: 'Kékestetői turistaház' },
+        { endWaypointIndex: 2 },
+      ],
+    });
+    await repository.save({
+      name: 'Egynapos túra',
+      coordinates: [
+        [19.0, 47.0],
+        [19.1, 47.1],
+      ],
+    });
+
+    const [withDays, withoutDays] = storage.upsertHikeRoute.calls.allArgs().map((args) => args[0] as HikeRoute);
+    expect(withDays.days).toEqual([{ endWaypointIndex: 1, overnightName: 'Kékestetői turistaház' }, { endWaypointIndex: 2 }]);
+    expect(withoutDays.days).toBeNull();
+  });
+
   it('remove(): deletes via the storage backend and drops it from the signal', async () => {
     storage.listHikeRoutes.and.resolveTo([route({ id: 'a' })]);
     await repository.load();

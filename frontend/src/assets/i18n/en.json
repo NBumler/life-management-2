@@ -428,7 +428,17 @@
     "AUTO_PICK_START": "Pick the start point on the map.",
     "AUTO_PICK_END": "Pick the end point on the map.",
     "ROUTE_NOT_FOUND_TITLE": "No route found",
-    "ROUTE_NOT_FOUND_MESSAGE": "No connection found between the two points on the marked trail network."
+    "ROUTE_NOT_FOUND_MESSAGE": "No connection found between the two points on the marked trail network.",
+    "DAYS": {
+      "BUTTON": "Days",
+      "MODAL_TITLE": "Split into days",
+      "DAY_END_LABEL": "day ends at",
+      "WAYPOINT_OPTION": "Point {{index}}",
+      "OVERNIGHT_PLACEHOLDER": "Overnight point name (optional)",
+      "REMOVE_BREAK": "Remove day break",
+      "ADD_BREAK": "Add day break",
+      "SUMMARY": "{{count}} days"
+    }
   },
   "GEAR": {
     "TITLE": "GearCheck",

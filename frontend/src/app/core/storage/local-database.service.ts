@@ -1254,7 +1254,14 @@ const SCHEMA_V39_STATEMENTS: string[] = [
   `ALTER TABLE hike_route ADD COLUMN elevation_profile TEXT`,
 ];
 
-const SCHEMA_VERSION = 39;
+/**
+ * backlog/tura-utvonaltervezo/103-... 2.4 fázis — szakaszokra bontás/éjszakázó pontok. Nincs saját
+ * id/tombstone-ja egy napnak sem (nem hivatkozik más entitásra), ezért ugyanazt a JSON-encoded
+ * TEXT konvenciót követi, mint `elevation_profile` (V39), nem külön SQLite tábla.
+ */
+const SCHEMA_V40_STATEMENTS: string[] = [`ALTER TABLE hike_route ADD COLUMN days TEXT`];
+
+const SCHEMA_VERSION = 40;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -1296,7 +1303,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 36, statements: SCHEMA_V36_STATEMENTS },
   { toVersion: 37, statements: SCHEMA_V37_STATEMENTS },
   { toVersion: 38, statements: SCHEMA_V38_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V39_STATEMENTS },
+  { toVersion: 39, statements: SCHEMA_V39_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V40_STATEMENTS },
 ];
 
 export interface SqlTask {

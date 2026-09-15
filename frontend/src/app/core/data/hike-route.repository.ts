@@ -3,6 +3,7 @@ import { Capacitor } from '@capacitor/core';
 
 import { ElevationProfilePoint } from '../../api/model/elevationProfilePoint';
 import { HikeRoute } from '../../api/model/hikeRoute';
+import { HikeRouteDay } from '../../api/model/hikeRouteDay';
 import { STORAGE_BACKEND } from '../storage/storage-backend';
 import { SyncEngineService } from '../sync/sync-engine.service';
 import { uuidV4 } from '../sync/uuid';
@@ -22,6 +23,13 @@ export interface HikeRouteSaveInput {
   elevationLossMeters?: number;
   estimatedDurationMinutes?: number;
   elevationProfile?: ElevationProfilePoint[];
+  /**
+   * backlog/tura-utvonaltervezo/103-... 2.4 fázis — szakaszokra bontás/éjszakázó pontok; üres
+   * vagy hiányzó tömb = egynapos túra. A napi metrikákat a hívó számolja ki (a /api/tura/route-metrics
+   * hívás eredményéből, minden napra külön meghívva) — ugyanaz a "kliens tölti ki, opcionális"
+   * minta, mint a route-szintű metrikáknál.
+   */
+  days?: HikeRouteDay[];
 }
 
 /**
@@ -52,6 +60,7 @@ export class HikeRouteRepository {
       elevationLossMeters: input.elevationLossMeters ?? null,
       estimatedDurationMinutes: input.estimatedDurationMinutes ?? null,
       elevationProfile: input.elevationProfile ?? null,
+      days: input.days && input.days.length > 0 ? input.days : null,
     };
     const saved = await this.storage.upsertHikeRoute(draft);
     this.items.update((list) => {

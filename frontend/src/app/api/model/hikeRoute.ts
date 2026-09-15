@@ -7,6 +7,7 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import { HikeRouteDay } from './hikeRouteDay';
 import { ElevationProfilePoint } from './elevationProfilePoint';
 
 
@@ -32,5 +33,9 @@ export interface HikeRoute {
     elevationLossMeters?: number | null;
     estimatedDurationMinutes?: number | null;
     elevationProfile?: Array<ElevationProfilePoint> | null;
+    /**
+     * backlog/tura-utvonaltervezo/103-... 2.4 fázis — szakaszokra bontás/éjszakázó pontok; üres vagy hiányzó tömb = egynapos túra (nincs szakaszokra bontva). Nem required, visszamenőleg kompatibilis a korábbi fázisokban mentett útvonalakkal, amiken nincs ez a mező.
+     */
+    days?: Array<HikeRouteDay> | null;
 }
 

@@ -428,7 +428,17 @@
     "AUTO_PICK_START": "Válaszd ki a kezdőpontot a térképen.",
     "AUTO_PICK_END": "Válaszd ki a végpontot a térképen.",
     "ROUTE_NOT_FOUND_TITLE": "Nincs útvonal",
-    "ROUTE_NOT_FOUND_MESSAGE": "Nem található összeköttetés a két pont közt a jelzett turistaút-hálózaton."
+    "ROUTE_NOT_FOUND_MESSAGE": "Nem található összeköttetés a két pont közt a jelzett turistaút-hálózaton.",
+    "DAYS": {
+      "BUTTON": "Napok",
+      "MODAL_TITLE": "Napokra bontás",
+      "DAY_END_LABEL": "nap vége",
+      "WAYPOINT_OPTION": "{{index}}. pont",
+      "OVERNIGHT_PLACEHOLDER": "Éjszakázó pont neve (opcionális)",
+      "REMOVE_BREAK": "Töréspont törlése",
+      "ADD_BREAK": "Töréspont hozzáadása",
+      "SUMMARY": "{{count}} nap"
+    }
   },
   "GEAR": {
     "TITLE": "GearCheck",

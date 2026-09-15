@@ -56,6 +56,16 @@ public class HikeRouteEntity {
 	@Column(name = "elevation_profile")
 	private List<Double> elevationProfile;
 
+	/**
+	 * backlog/tura-utvonaltervezo/103-... 2.4 fázis — pre-szerializált JSON (a generált modellekkel
+	 * megegyező Jackson ObjectMapper-rel, ld. HikeRouteMapper), nem bespoke Java típusra mappelve
+	 * (ugyanaz a minta, mint {@code IdempotencyKeyEntity.responseBody}). Napi szakaszok listája;
+	 * null = egynapos túra.
+	 */
+	@JdbcTypeCode(SqlTypes.JSON)
+	@Column(name = "days")
+	private String daysJson;
+
 	@Generated(event = EventType.INSERT)
 	@Column(name = "created_at", insertable = false, updatable = false)
 	private OffsetDateTime createdAt;
@@ -140,6 +150,14 @@ public class HikeRouteEntity {
 
 	public void setElevationProfile(List<Double> elevationProfile) {
 		this.elevationProfile = elevationProfile;
+	}
+
+	public String getDaysJson() {
+		return daysJson;
+	}
+
+	public void setDaysJson(String daysJson) {
+		this.daysJson = daysJson;
 	}
 
 	public OffsetDateTime getCreatedAt() {

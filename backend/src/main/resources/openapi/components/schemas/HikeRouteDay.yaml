@@ -1,0 +1,33 @@
+type: object
+description: >-
+  backlog/tura-utvonaltervezo/103-... 2.4 fázis — egy HikeRoute egy napi szakasza. Nem önálló sync
+  entitás (nincs saját id/tombstone) — a szülő HikeRoute egy beágyazott, denormalizált mezője
+  (JSON oszlopban tárolva, ld. HikeRoute.yaml "days"), ugyanúgy, ahogy az elevationProfile
+  (ElevationProfilePoint.yaml) sem önálló entitás a 2.3 fázis óta.
+required:
+  - endWaypointIndex
+properties:
+  endWaypointIndex:
+    type: integer
+    minimum: 0
+    description: >-
+      A szülő HikeRoute.coordinates tömbjének indexe (0-alapú, inkluzív), ameddig ez a nap tart.
+      A napok endWaypointIndex-ei a listában szigorúan növekvők; az utolsó napé mindig
+      coordinates.length - 1 (a szerver validálja mentéskor).
+  overnightName:
+    type: string
+    nullable: true
+    description: Az éjszakázó pont neve/leírása (pl. "Kékestetői turistaház"); az utolsó napnál nincs jelentősége, de nem tiltott.
+  distanceMeters:
+    type: number
+    nullable: true
+    description: A kliens tölti ki, az /api/tura/route-metrics eredményéből, erre a napi szakaszra hívva. Opcionális, ld. HikeRoute.yaml distanceMeters.
+  elevationGainMeters:
+    type: number
+    nullable: true
+  elevationLossMeters:
+    type: number
+    nullable: true
+  estimatedDurationMinutes:
+    type: number
+    nullable: true
