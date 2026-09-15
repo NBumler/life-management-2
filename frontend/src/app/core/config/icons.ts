@@ -3,6 +3,7 @@ import {
   addOutline,
   airplaneOutline,
   alertCircle,
+  arrowUndoOutline,
   bagHandleOutline,
   barbellOutline,
   businessOutline,
@@ -47,6 +48,7 @@ import {
   storefrontOutline,
   syncOutline,
   timeOutline,
+  trailSignOutline,
   trashOutline,
   walletOutline,
 } from 'ionicons/icons';
@@ -63,6 +65,7 @@ export function registerIcons(): void {
     'add-outline': addOutline,
     'airplane-outline': airplaneOutline,
     'alert-circle': alertCircle,
+    'arrow-undo-outline': arrowUndoOutline,
     'bag-handle-outline': bagHandleOutline,
     'barbell-outline': barbellOutline,
     'business-outline': businessOutline,
@@ -107,6 +110,7 @@ export function registerIcons(): void {
     'storefront-outline': storefrontOutline,
     'sync-outline': syncOutline,
     'time-outline': timeOutline,
+    'trail-sign-outline': trailSignOutline,
     'trash-outline': trashOutline,
     'wallet-outline': walletOutline,
   });

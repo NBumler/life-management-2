@@ -20,6 +20,7 @@ export * from './gearItem';
 export * from './gym';
 export * from './gymColorBand';
 export * from './healthResponse';
+export * from './hikeRoute';
 export * from './householdRoom';
 export * from './householdTask';
 export * from './indoorRoute';

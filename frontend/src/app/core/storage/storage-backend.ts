@@ -4,6 +4,7 @@ import { CalendarEvent } from '../../api/model/calendarEvent';
 import { Exercise } from '../../api/model/exercise';
 import { Food } from '../../api/model/food';
 import { GearItem } from '../../api/model/gearItem';
+import { HikeRoute } from '../../api/model/hikeRoute';
 import { HouseholdRoom } from '../../api/model/householdRoom';
 import { HouseholdTask } from '../../api/model/householdTask';
 import { LifePlan } from '../../api/model/lifePlan';
@@ -722,6 +723,11 @@ export interface StorageBackend {
   listDailyStepLogDates(): Promise<string[]>;
   upsertDailyStepLog(log: DailyStepLog): Promise<DailyStepLog>;
   deleteDailyStepLog(id: string): Promise<DailyStepLog>;
+
+  /** backlog/tura-utvonaltervezo/103-... 2.1 fázis: per-user kézzel rajzolt túraútvonalak — flat CRUD, no nested rows. */
+  listHikeRoutes(): Promise<HikeRoute[]>;
+  upsertHikeRoute(route: HikeRoute): Promise<HikeRoute>;
+  deleteHikeRoute(id: string): Promise<HikeRoute>;
 }
 
 export const STORAGE_BACKEND = new InjectionToken<StorageBackend>('STORAGE_BACKEND');

@@ -45,6 +45,7 @@ import { WorkoutPlanSet } from '../../api/model/workoutPlanSet';
 import { WorkoutSession } from '../../api/model/workoutSession';
 import { WorkoutSetEntry } from '../../api/model/workoutSetEntry';
 import { DailyStepLog } from '../../api/model/dailyStepLog';
+import { HikeRoute } from '../../api/model/hikeRoute';
 
 /**
  * Row <-> DTO mapping and SQL task builders for the two local tables this phase covers.
@@ -4558,6 +4559,81 @@ export function dailyStepLogTombstoneTask(id: string, deletedAt: string | null, 
     statement: `
       INSERT INTO daily_step_log (id, log_date, step_count, updated_at, deleted, deleted_at, _dirty, _local_only)
       VALUES (?, '1970-01-01', 0, ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+// --- Túra: HikeRoute (backlog/tura-utvonaltervezo/103-... 2.1 fázis) ---
+// Flat, user-owned, mirrors recurring_expense. coordinates round-trips as a JSON-encoded array of
+// [lon, lat] pairs (same DTO shape server-side and client-side — no flatten/pairs conversion needed
+// here, unlike the Postgres native-array TrailSegmentEntity).
+
+export interface HikeRouteRow {
+  id: string;
+  name: string;
+  coordinates: string;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+export function hikeRouteRowToDto(row: HikeRouteRow): HikeRoute {
+  return {
+    id: row.id,
+    name: row.name,
+    coordinates: JSON.parse(row.coordinates) as number[][],
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+export function hikeRouteLocalWriteTask(dto: HikeRoute): SqlTask {
+  return {
+    statement: `
+      INSERT INTO hike_route (id, name, coordinates, _dirty, _local_only)
+      VALUES (?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET
+        name = excluded.name, coordinates = excluded.coordinates, _dirty = 1`,
+    values: [dto.id, dto.name, JSON.stringify(dto.coordinates)],
+  };
+}
+
+export function hikeRouteServerApplyTask(dto: HikeRoute): SqlTask {
+  return {
+    statement: `
+      INSERT INTO hike_route (id, name, coordinates, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        name = excluded.name, coordinates = excluded.coordinates,
+        created_at = excluded.created_at, updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at,
+        _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE hike_route._dirty = 0`,
+    values: [
+      dto.id,
+      dto.name,
+      JSON.stringify(dto.coordinates),
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function hikeRouteTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO hike_route (id, name, coordinates, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '', '[]', ?, 1, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
     values: [id, updatedAt, deletedAt],
   };

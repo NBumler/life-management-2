@@ -414,7 +414,15 @@
     "FIX_NAME_CONFLICT": "Ez a név már foglalt."
   },
   "TURA": {
-    "TITLE": "Túra"
+    "TITLE": "Túra",
+    "DRAW": "Rajzolás",
+    "UNDO": "Visszavonás",
+    "CLEAR": "Törlés",
+    "MY_ROUTES": "Útvonalaim",
+    "ROUTE_NAME_PLACEHOLDER": "Útvonal neve",
+    "NO_ROUTES": "Még nincs mentett útvonal.",
+    "DELETE_ROUTE_CONFIRM_TITLE": "Útvonal törlése",
+    "DELETE_ROUTE_CONFIRM_MESSAGE": "Biztosan törlöd a(z) „{{name}}” útvonalat?"
   },
   "GEAR": {
     "TITLE": "GearCheck",

@@ -5,8 +5,75 @@
     </ion-buttons>
     <ion-title>{{ 'TURA.TITLE' | translate }}</ion-title>
   </ion-toolbar>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button [fill]="drawMode() ? 'solid' : 'clear'" (click)="toggleDrawMode()">
+        <ion-icon slot="start" name="create-outline" aria-hidden="true"></ion-icon>
+        {{ 'TURA.DRAW' | translate }}
+      </ion-button>
+      <ion-button [disabled]="draft().length === 0" (click)="undoLastWaypoint()">
+        <ion-icon slot="icon-only" name="arrow-undo-outline" [attr.aria-label]="'TURA.UNDO' | translate"></ion-icon>
+      </ion-button>
+      <ion-button [disabled]="draft().length === 0" (click)="clearDraft()">
+        <ion-icon slot="icon-only" name="trash-outline" [attr.aria-label]="'TURA.CLEAR' | translate"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-buttons slot="end">
+      <ion-button (click)="toggleRoutesPanel()">
+        <ion-icon slot="start" name="list-outline" aria-hidden="true"></ion-icon>
+        {{ 'TURA.MY_ROUTES' | translate }}
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+  @if (draft().length >= 2) {
+    <ion-toolbar>
+      <ion-input
+        [value]="routeName()"
+        (ionInput)="routeName.set($any($event.target).value ?? '')"
+        [placeholder]="'TURA.ROUTE_NAME_PLACEHOLDER' | translate"
+        [autofocus]="true"
+      ></ion-input>
+      <ion-buttons slot="end">
+        <ion-button [disabled]="routeName().trim() === ''" (click)="saveDraft()">
+          {{ 'COMMON.SAVE' | translate }}
+        </ion-button>
+      </ion-buttons>
+    </ion-toolbar>
+  }
 </ion-header>
 
 <ion-content [fullscreen]="true">
   <div #mapContainer class="map-container"></div>
 </ion-content>
+
+<ion-modal [isOpen]="showRoutesPanel()" (didDismiss)="showRoutesPanel.set(false)">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>{{ 'TURA.MY_ROUTES' | translate }}</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="showRoutesPanel.set(false)">{{ 'COMMON.CLOSE' | translate }}</ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content>
+      <ion-list>
+        @if (hikeRoutes.items().length === 0) {
+          <ion-item lines="none">
+            <ion-label>{{ 'TURA.NO_ROUTES' | translate }}</ion-label>
+          </ion-item>
+        }
+        @for (route of hikeRoutes.items(); track route.id) {
+          <ion-item button (click)="flyToRoute(route)">
+            <ion-label>{{ route.name }}</ion-label>
+            <ion-buttons slot="end">
+              <ion-button (click)="confirmDeleteRoute(route); $event.stopPropagation()">
+                <ion-icon slot="icon-only" name="trash-outline" [attr.aria-label]="'COMMON.DELETE' | translate"></ion-icon>
+              </ion-button>
+            </ion-buttons>
+          </ion-item>
+        }
+      </ion-list>
+    </ion-content>
+  </ng-template>
+</ion-modal>

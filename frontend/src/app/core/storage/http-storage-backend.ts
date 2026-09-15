@@ -35,6 +35,7 @@ import { WeeklyPlansService } from '../../api/api/weeklyPlans.service';
 import { WorkoutPlansService } from '../../api/api/workoutPlans.service';
 import { WorkoutSessionsService } from '../../api/api/workoutSessions.service';
 import { DailyStepLogsService } from '../../api/api/dailyStepLogs.service';
+import { HikeRoutesService } from '../../api/api/hikeRoutes.service';
 import { CalendarEvent } from '../../api/model/calendarEvent';
 import { Exercise } from '../../api/model/exercise';
 import { Food } from '../../api/model/food';
@@ -72,6 +73,7 @@ import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 import { WorkoutPlan } from '../../api/model/workoutPlan';
 import { WorkoutSession } from '../../api/model/workoutSession';
 import { DailyStepLog } from '../../api/model/dailyStepLog';
+import { HikeRoute } from '../../api/model/hikeRoute';
 import { buildSeedExercises, EXERCISE_SEED_VERSION } from '../data/exercise-seed';
 import { AuthSessionService } from '../session/auth-session.service';
 import { uuidV4 } from '../sync/uuid';
@@ -133,6 +135,7 @@ export class HttpStorageBackend implements StorageBackend {
   private readonly boulderProblemsApi = inject(ClimbingBoulderProblemsService);
   private readonly climbingSessionsApi = inject(ClimbingSessionsService);
   private readonly dailyStepLogsApi = inject(DailyStepLogsService);
+  private readonly hikeRoutesApi = inject(HikeRoutesService);
   private readonly authSession = inject(AuthSessionService);
 
   async getProfile(): Promise<UserProfile | null> {
@@ -873,6 +876,19 @@ export class HttpStorageBackend implements StorageBackend {
 
   deleteDailyStepLog(id: string): Promise<DailyStepLog> {
     return firstValueFrom(this.dailyStepLogsApi.deleteDailyStepLog(id));
+  }
+
+  listHikeRoutes(): Promise<HikeRoute[]> {
+    return firstValueFrom(this.hikeRoutesApi.listHikeRoutes());
+  }
+
+  /** POST with an existing id is an idempotent upsert server-side, so this covers both create and update. */
+  upsertHikeRoute(route: HikeRoute): Promise<HikeRoute> {
+    return firstValueFrom(this.hikeRoutesApi.createHikeRoute(route));
+  }
+
+  deleteHikeRoute(id: string): Promise<HikeRoute> {
+    return firstValueFrom(this.hikeRoutesApi.deleteHikeRoute(id));
   }
 }
 

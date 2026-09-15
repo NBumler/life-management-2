@@ -46,6 +46,7 @@ export type OutboxEntityType =
   | 'Recipe'
   | 'Meal'
   | 'DailyStepLog'
+  | 'HikeRoute'
   | 'ShoppingList'
   // documentation/Subfeatures/Bevásárlás teljesítve.md: the `.../complete` action endpoint. Its own
   // outbox entity type (not 'ShoppingList') so it never coalesces with — or is recovered like — the

@@ -55,6 +55,7 @@ const ALL_ENTITY_TYPES = [
   'Recipe',
   'Meal',
   'DailyStepLog',
+  'HikeRoute',
   'ShoppingList',
   'ShoppingListComplete',
 ] as const satisfies readonly OutboxEntityType[];
@@ -206,6 +207,9 @@ const STEPS_BY_VERSION: Readonly<Record<number, VersionSteps>> = {
   // backlog/088: `Sector.defaultLengthInMeters` added as a new optional/nullable field — a missing key
   // already means "no default" server-side, so no payload transform is needed for any entity.
   5: { default: identityStep },
+  // backlog/tura-utvonaltervezo/103-...: `HikeRoute` added as a brand-new entity type — no existing
+  // entity's payload shape changed, so a plain identity step for everyone.
+  6: { default: identityStep },
 };
 
 function buildMigrations(): ReadonlyMap<string, MigrationStep> {

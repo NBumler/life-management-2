@@ -45,6 +45,8 @@ api/gearItems.service.ts
 api/gearItems.serviceInterface.ts
 api/health.service.ts
 api/health.serviceInterface.ts
+api/hikeRoutes.service.ts
+api/hikeRoutes.serviceInterface.ts
 api/householdRooms.service.ts
 api/householdRooms.serviceInterface.ts
 api/householdTasks.service.ts
@@ -107,6 +109,7 @@ model/gearItem.ts
 model/gym.ts
 model/gymColorBand.ts
 model/healthResponse.ts
+model/hikeRoute.ts
 model/householdRoom.ts
 model/householdTask.ts
 model/indoorRoute.ts

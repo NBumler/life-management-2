@@ -24,6 +24,7 @@ import { Sector } from '../../api/model/sector';
 import { Route } from '../../api/model/route';
 import { BoulderProblem } from '../../api/model/boulderProblem';
 import { DailyStepLog } from '../../api/model/dailyStepLog';
+import { HikeRoute } from '../../api/model/hikeRoute';
 import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 import { normalizeName } from '../../shared/name-normalization';
@@ -114,6 +115,9 @@ import {
   DailyStepLogRow,
   dailyStepLogLocalWriteTask,
   dailyStepLogRowToDto,
+  HikeRouteRow,
+  hikeRouteLocalWriteTask,
+  hikeRouteRowToDto,
 } from '../data/local-rows';
 // ClimbingSession is a nested aggregate (session + attempts + pitches, one body) — like Recipe /
 // WorkoutSession it is excluded from Fix and its current payload is read through the storage backend.
@@ -543,6 +547,13 @@ export class OutboxEntityRegistryService {
       currentPayload: rowLookup<DailyStepLogRow, unknown>('daily_step_log', dailyStepLogRowToDto),
       buildFixWriteTask: (payload) => dailyStepLogLocalWriteTask(payload as unknown as DailyStepLog),
       // documentation/Features/Lépésszám követés.md: a daily step log has no name — nothing to uniqueness-check.
+      nameUniqueness: null,
+    },
+    HikeRoute: {
+      table: 'hike_route',
+      currentPayload: rowLookup<HikeRouteRow, unknown>('hike_route', hikeRouteRowToDto),
+      buildFixWriteTask: (payload) => hikeRouteLocalWriteTask(payload as unknown as HikeRoute),
+      // backlog/tura-utvonaltervezo/103-...: route names are free-text, not unique per user.
       nameUniqueness: null,
     },
   };

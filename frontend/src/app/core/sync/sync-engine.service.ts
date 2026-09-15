@@ -24,6 +24,7 @@ import { StoredFoodsService } from '../../api/api/storedFoods.service';
 import { SwimLogsService } from '../../api/api/swimLogs.service';
 import { BikeRideLogsService } from '../../api/api/bikeRideLogs.service';
 import { DailyStepLogsService } from '../../api/api/dailyStepLogs.service';
+import { HikeRoutesService } from '../../api/api/hikeRoutes.service';
 import { RecurringExpensesService } from '../../api/api/recurringExpenses.service';
 import { AycmPartnersService } from '../../api/api/aycmPartners.service';
 import { AycmPriceRulesService } from '../../api/api/aycmPriceRules.service';
@@ -66,6 +67,7 @@ import { StoredFood } from '../../api/model/storedFood';
 import { SwimLog } from '../../api/model/swimLog';
 import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { DailyStepLog } from '../../api/model/dailyStepLog';
+import { HikeRoute } from '../../api/model/hikeRoute';
 import { RecurringExpense } from '../../api/model/recurringExpense';
 import { AycmPartner } from '../../api/model/aycmPartner';
 import { AycmPriceRule } from '../../api/model/aycmPriceRule';
@@ -137,6 +139,8 @@ import {
   bikeRideLogTombstoneTask,
   dailyStepLogServerApplyTask,
   dailyStepLogTombstoneTask,
+  hikeRouteServerApplyTask,
+  hikeRouteTombstoneTask,
   recurringExpenseServerApplyTask,
   recurringExpenseTombstoneTask,
   aycmPartnerServerApplyTask,
@@ -230,6 +234,7 @@ export class SyncEngineService {
   private readonly swimLogsApi = inject(SwimLogsService);
   private readonly bikeRideLogsApi = inject(BikeRideLogsService);
   private readonly dailyStepLogsApi = inject(DailyStepLogsService);
+  private readonly hikeRoutesApi = inject(HikeRoutesService);
   private readonly recurringExpensesApi = inject(RecurringExpensesService);
   private readonly aycmPartnersApi = inject(AycmPartnersService);
   private readonly aycmPriceRulesApi = inject(AycmPriceRulesService);
@@ -699,6 +704,16 @@ export class SyncEngineService {
         // same as above
       }
     }
+
+    const staleHikeRoutes = await this.db.query<{ id: string }>('SELECT id FROM hike_route WHERE _needs_refetch = 1');
+    for (const row of staleHikeRoutes) {
+      try {
+        const dto = await firstValueFrom(this.hikeRoutesApi.getHikeRoute(row.id));
+        await this.db.executeTransaction([hikeRouteServerApplyTask(dto)]);
+      } catch {
+        // same as above
+      }
+    }
   }
 
   private async probeBackend(): Promise<boolean> {
@@ -854,6 +869,9 @@ export class SyncEngineService {
     }
     if (item.entityType === 'DailyStepLog') {
       return [dailyStepLogServerApplyTask(body as DailyStepLog)];
+    }
+    if (item.entityType === 'HikeRoute') {
+      return [hikeRouteServerApplyTask(body as HikeRoute)];
     }
     if (item.entityType === 'RecurringExpense') {
       return [recurringExpenseServerApplyTask(body as RecurringExpense)];
@@ -1122,6 +1140,8 @@ export class SyncEngineService {
       await this.db.executeTransaction([bikeRideLogTombstoneTask(item.targetEntityId, null, now)]);
     } else if (item.entityType === 'DailyStepLog') {
       await this.db.executeTransaction([dailyStepLogTombstoneTask(item.targetEntityId, null, now)]);
+    } else if (item.entityType === 'HikeRoute') {
+      await this.db.executeTransaction([hikeRouteTombstoneTask(item.targetEntityId, null, now)]);
     } else if (item.entityType === 'RecurringExpense') {
       await this.db.executeTransaction([recurringExpenseTombstoneTask(item.targetEntityId, null, now)]);
     } else if (item.entityType === 'AycmPartner') {
@@ -1431,6 +1451,12 @@ export class SyncEngineService {
         return [dailyStepLogServerApplyTask(change.data as DailyStepLog)];
       }
       return [dailyStepLogTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
+    }
+    if (change.entityType === 'HikeRoute') {
+      if (!change.deleted) {
+        return [hikeRouteServerApplyTask(change.data as HikeRoute)];
+      }
+      return [hikeRouteTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
     }
     if (change.entityType === 'RecurringExpense') {
       if (!change.deleted) {

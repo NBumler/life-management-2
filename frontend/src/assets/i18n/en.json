@@ -414,7 +414,15 @@
     "FIX_NAME_CONFLICT": "This name is already taken."
   },
   "TURA": {
-    "TITLE": "Hiking"
+    "TITLE": "Hiking",
+    "DRAW": "Draw",
+    "UNDO": "Undo",
+    "CLEAR": "Clear",
+    "MY_ROUTES": "My routes",
+    "ROUTE_NAME_PLACEHOLDER": "Route name",
+    "NO_ROUTES": "No saved routes yet.",
+    "DELETE_ROUTE_CONFIRM_TITLE": "Delete route",
+    "DELETE_ROUTE_CONFIRM_MESSAGE": "Delete the route \"{{name}}\"?"
   },
   "GEAR": {
     "TITLE": "GearCheck",

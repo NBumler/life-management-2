@@ -1220,7 +1220,28 @@ const SCHEMA_V37_STATEMENTS: string[] = [
   `ALTER TABLE sector ADD COLUMN default_length_in_meters REAL`,
 ];
 
-const SCHEMA_VERSION = 37;
+/**
+ * backlog/tura-utvonaltervezo/103-... 2.1 fázis — kézzel rajzolt túraútvonalak. Flat, mirrors
+ * recurring_expense. `coordinates` is a JSON-encoded array of [lon, lat] pairs in a TEXT column
+ * (same convention as packing_session.source_template_ids).
+ */
+const SCHEMA_V38_STATEMENTS: string[] = [
+  `CREATE TABLE IF NOT EXISTS hike_route (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    coordinates TEXT NOT NULL,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+];
+
+const SCHEMA_VERSION = 38;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -1260,7 +1281,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 34, statements: SCHEMA_V34_STATEMENTS },
   { toVersion: 35, statements: SCHEMA_V35_STATEMENTS },
   { toVersion: 36, statements: SCHEMA_V36_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V37_STATEMENTS },
+  { toVersion: 37, statements: SCHEMA_V37_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V38_STATEMENTS },
 ];
 
 export interface SqlTask {

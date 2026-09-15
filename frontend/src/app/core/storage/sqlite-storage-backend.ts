@@ -37,6 +37,7 @@ import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 import { WorkoutPlan } from '../../api/model/workoutPlan';
 import { WorkoutSession } from '../../api/model/workoutSession';
 import { DailyStepLog } from '../../api/model/dailyStepLog';
+import { HikeRoute } from '../../api/model/hikeRoute';
 import { buildSeedExercises, EXERCISE_SEED_KEY, EXERCISE_SEED_VERSION, seedRowsToInsert } from '../data/exercise-seed';
 import { emptiedMeals } from './food-delete-cascade';
 import {
@@ -193,6 +194,9 @@ import {
   DailyStepLogRow,
   dailyStepLogLocalWriteTask,
   dailyStepLogRowToDto,
+  HikeRouteRow,
+  hikeRouteLocalWriteTask,
+  hikeRouteRowToDto,
 } from '../data/local-rows';
 import { AuthSessionService } from '../session/auth-session.service';
 import { EnqueueResult, OfflineQueueService } from '../sync/offline-queue.service';
@@ -2982,6 +2986,57 @@ export class SqliteStorageBackend implements StorageBackend {
   private async readDailyStepLog(id: string): Promise<DailyStepLog> {
     const rows = await this.db.query<DailyStepLogRow>('SELECT * FROM daily_step_log WHERE id = ?', [id]);
     return dailyStepLogRowToDto(rows[0]);
+  }
+
+  async listHikeRoutes(): Promise<HikeRoute[]> {
+    const rows = await this.db.query<HikeRouteRow>('SELECT * FROM hike_route WHERE deleted = 0 ORDER BY updated_at DESC');
+    return rows.map(hikeRouteRowToDto);
+  }
+
+  async upsertHikeRoute(route: HikeRoute): Promise<HikeRoute> {
+    const userId = this.requireUserId();
+    const existing = await this.db.query('SELECT 1 FROM hike_route WHERE id = ?', [route.id]);
+    const isNew = existing.length === 0;
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: isNew ? 'POST' : 'PUT',
+      url: isNew ? '/api/hike-routes' : `/api/hike-routes/${route.id}`,
+      payload: route,
+      entityType: 'HikeRoute',
+      targetEntityId: route.id,
+    });
+    await this.db.executeTransaction([hikeRouteLocalWriteTask(route), ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    return this.readHikeRoute(route.id);
+  }
+
+  async deleteHikeRoute(id: string): Promise<HikeRoute> {
+    const userId = this.requireUserId();
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: 'DELETE',
+      url: `/api/hike-routes/${id}`,
+      payload: null,
+      entityType: 'HikeRoute',
+      targetEntityId: id,
+    });
+    const entityTask: SqlTask = enqueue.hardRemoveLocalEntity
+      ? { statement: 'DELETE FROM hike_route WHERE id = ?', values: [id] }
+      : {
+          statement: 'UPDATE hike_route SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?',
+          values: [new Date().toISOString(), id],
+        };
+    await this.db.executeTransaction([entityTask, ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    if (enqueue.hardRemoveLocalEntity) {
+      return { id, name: '', coordinates: [], deleted: true };
+    }
+    return this.readHikeRoute(id);
+  }
+
+  private async readHikeRoute(id: string): Promise<HikeRoute> {
+    const rows = await this.db.query<HikeRouteRow>('SELECT * FROM hike_route WHERE id = ?', [id]);
+    return hikeRouteRowToDto(rows[0]);
   }
 
   private requireUserId(): string {

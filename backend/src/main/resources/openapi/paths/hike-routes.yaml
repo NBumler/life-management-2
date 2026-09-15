@@ -1,0 +1,36 @@
+get:
+  operationId: listHikeRoutes
+  tags:
+    - hike-routes
+  summary: The caller's hike routes, live rows only (deleted = false).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/HikeRouteList.yaml'
+post:
+  operationId: createHikeRoute
+  tags:
+    - hike-routes
+  summary: Create a hike route — idempotent upsert on the client-supplied id.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/HikeRoute.yaml'
+  responses:
+    '200':
+      description: Created or, on retry with the same id, the existing row.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/HikeRoute.yaml'
+    '400':
+      description: Blank name, or fewer than 2 waypoints.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
