@@ -1,12 +1,12 @@
 ---
 id: 103
 type: feature
-status: ready
+status: done
 title: Túra — alapvető útvonaltervezés és turistajelzés-térkép
 specs: []
-flag:
+flag: menu.tura
 created: 2026-09-13
-closed:
+closed: 2026-09-16
 ---
 
 # 103 — Túra — alapvető útvonaltervezés és turistajelzés-térkép
@@ -26,6 +26,8 @@ az appban.
 ## Elfogadási kritériumok
 
 - [x] Az alábbi döntési checklista véglegesítve, a ticket scope-ja körvonalazva és `ready`-re állítva.
+- [x] Minden "kell" jelölt tétel implementálva és `master`-en, zöld backend/frontend build+teszt+lint
+      mellett (fázisbontás és commitok a "Terv / döntési napló" alján).
 
 ## Terv / döntési napló
 
@@ -46,14 +48,38 @@ az appban.
 
 ### Nyitott kérdés
 
-- Térkép-alap technológia választás (pl. Leaflet/MapLibre + OSM csempék vs. natív Capacitor
-  térkép-plugin) — ez erősen összefügg a `105-tura-offline-terkep-es-utvonalszamitas.md` offline-
-  letöltési megoldásával, azzal együtt döntendő.
+- ~~Térkép-alap technológia választás~~ — eldőlt: **MapLibre GL JS** (raster OSM csempével), lásd a
+  fázisbontási terv "Kulcs technikai döntések" szakaszát. Nem natív Capacitor térkép-plugin.
 - Ez a ticket csak a **megjelenítést és tervezést** fedi; az élő GPS-navigáció a
   `106-tura-gps-navigacio-elo-helymegosztas.md` alá tartozik.
 
+### Megvalósítás — fázisbontás és commitok
+
+A ticket a jóváhagyott implementációs terv szerint fázisokra bontva készült el, minden fázis után
+felhasználói jóváhagyással:
+
+| Fázis | Tartalom | Commit |
+|---|---|---|
+| 0. | Menü → Túra tab-váz, `menu.tura` flag | `61d1d11` |
+| 1. | Alaptérkép (MapLibre GL JS) + magyar turistajelzés-réteg (`TrailSegment`, admin import) | `ec1cb2d` |
+| 2.1 | Kézi útvonal-rajzolás, `HikeRoute` user-owned entitás | `0854c54` |
+| 2.2 | Automatikus útvonal-generálás jelzett ösvényeken (saját Dijkstra/A*) | `f1c92f2` |
+| 2.3 | Táv/idő/szintkülönbség-becslés + magassági profil (Open-Meteo elevation API) | `05d8a5d` |
+| 2.4 | Többnapos túra tervezés (szakaszokra bontás, éjszakázó pontok) | `a26cae4` |
+| 2.5 | Kész/ajánlott túrák katalógusa + szűrés (nehézség/aktivitás-típus/táv) | `894d7c2` |
+
+Via ferrata / speciális nehézségi profilok szándékosan nem készültek el (ld. a döntési checklista
+"nem kell" pontja).
+
 ## Lezáráskor (on-done)
 
-- Frissített specek: _(új spec-fájl, ha ekkor még nincs — lásd 102-es ticket)_
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — <mit>
-- Kód: `frontend` új `pages/` alá térkép-komponens, `core/data/` új repository
+- Frissített specek: **nincs** — a `102-tura-utvonaltervezo-attekintes` esernyő-ticket explicit
+  rögzíti, hogy a `documentation/` spec csak a teljes feature-család (103–111) leszállítása után
+  készül el, nem az egyes ticketek lezárásakor. A jelenlegi állapot eddig a `backlog/
+  tura-utvonaltervezo/` jegyekben és a fenti fázisbontásban dokumentált.
+- `IMPLEMENTATION_STATUS.md` sor: `2026-09-16 — #103` (a `## Lezárt jegyek` tetején).
+- Kód: `backend/src/main/java/hu/bumler/lm2/tura/` (teljes új package: `HikeRoute*`,
+  `TrailSegment*`, `CuratedRoute*`, `RouteMetricsService`, `RouteSuggestionService`,
+  `ElevationClient` + `OpenMeteoElevationClient`, `GeoUtils`, `HikeRouteDayJson`,
+  `HikeRouteDayValidation`), migrációk `V39`–`V43`; `frontend/src/app/pages/menu/tura/` (új oldal),
+  `core/data/{hike-route,trail-segment,route-metrics,route-suggestion,curated-route}.repository.ts`.
