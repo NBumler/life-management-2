@@ -41,7 +41,7 @@ túrázási funkció).
 
 | Ticket | Terület | Státusz |
 |---|---|---|
-| [[backlog/tura-utvonaltervezo/103-tura-alapveto-utvonaltervezes-es-terkep]] | Alaptérkép, turistajelzés-réteg, manuális/automatikus útvonaltervezés, katalógus, szűrés | `ready` |
+| `backlog/archive/103-tura-alapveto-utvonaltervezes-es-terkep.md` | Alaptérkép, turistajelzés-réteg, manuális/automatikus útvonaltervezés, katalógus, szűrés | `done` |
 | [[backlog/tura-utvonaltervezo/104-tura-adatforras-integracio]] | Magyar (majd több országos) turistaút-adatforrás (OSM), ország-kód particionálás | `ready` |
 | [[backlog/tura-utvonaltervezo/105-tura-offline-terkep-es-utvonalszamitas]] | Offline térkép-letöltés régiónként, **valódi offline útvonalszámítás** | `ready` |
 | [[backlog/tura-utvonaltervezo/106-tura-gps-navigacio-elo-helymegosztas]] | Élő GPS-navigáció, track-felvétel, turn-by-turn, letérés-figyelmeztetés, SOS | `ready` |

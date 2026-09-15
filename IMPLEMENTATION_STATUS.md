@@ -14,6 +14,22 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-16 — #103** Túra — alapvető útvonaltervezés és turistajelzés-térkép. Menü → Túra új
+  tab (`menu.tura` flag): MapLibre GL JS alaptérkép magyar turistajelzés-réteggel (megosztott,
+  admin-importált `TrailSegment`, bbox-lekérdezés); kézi útvonal-rajzolás és automatikus
+  útvonal-generálás jelzett ösvényeken (saját Dijkstra/A* a `TrailSegment` gráfon); táv/idő/
+  szintkülönbség-becslés + magassági profil (Open-Meteo elevation API, Naismith-szabály); többnapos
+  túra tervezés szakaszokra bontással és éjszakázó pontokkal (`HikeRoute.days`, denormalizált JSON,
+  nem önálló sync-entitás); admin-kurált/OSM-eredetű ajánlott túrák katalógusa, szűrhető nehézség/
+  aktivitás-típus/táv szerint (`CuratedRoute`, megosztott referenciaadat, mint a `TrailSegment`).
+  Via ferrata tudatosan kimaradt. `documentation/` spec **nem** készült — a [[backlog/
+  tura-utvonaltervezo/102-tura-utvonaltervezo-attekintes]] esernyő-ticket explicit a teljes
+  feature-család (103–111) leszállítására halasztja. Új backend package:
+  `hu.bumler.lm2.tura` (`HikeRoute*`, `TrailSegment*`, `CuratedRoute*`, `RouteMetricsService`,
+  `RouteSuggestionService`, `ElevationClient`), migrációk `V39`–`V43`. Új frontend:
+  `pages/menu/tura/`, `core/data/{hike-route,trail-segment,route-metrics,route-suggestion,
+  curated-route}.repository.ts`. Fázisbontás és commitok: `backlog/archive/
+  103-tura-alapveto-utvonaltervezes-es-terkep.md`.
 - **2026-09-09 — #101** Android kezdőképernyő-widget (launcher `AppWidgetProvider`). Négy natív
   widget: **Mai étkezés állása** (kcal + makrók a mai célhoz, a [[Kezdőlap]] / [[Étkezés]]
   `TodayNutritionService`-éből), **Lépésszám** (mai lépés + `stepsLowThreshold` mint cél),
