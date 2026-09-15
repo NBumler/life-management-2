@@ -1,0 +1,19 @@
+parameters:
+  - name: id
+    in: path
+    required: true
+    schema:
+      type: string
+      format: uuid
+delete:
+  operationId: deleteCuratedRoute
+  tags:
+    - curated-routes
+  summary: >-
+    Admin hard delete, idempotens (backlog/tura-utvonaltervezo/103-... 2.5 fázis). Admin API —
+    X-Admin-Api-Key.
+  security:
+    - adminApiKey: []
+  responses:
+    '204':
+      description: OK (törölve, vagy már nem is létezett).

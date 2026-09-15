@@ -169,6 +169,12 @@ paths:
     $ref: 'openapi/paths/hike-routes.yaml'
   /api/hike-routes/{id}:
     $ref: 'openapi/paths/hike-routes-item.yaml'
+  /api/tura/curated-routes:
+    $ref: 'openapi/paths/tura-curated-routes.yaml'
+  /api/admin/tura/curated-routes:
+    $ref: 'openapi/paths/admin-tura-curated-routes.yaml'
+  /api/admin/tura/curated-routes/{id}:
+    $ref: 'openapi/paths/admin-tura-curated-routes-item.yaml'
 components:
   securitySchemes:
     bearerAuth:
@@ -392,3 +398,13 @@ components:
       $ref: 'openapi/components/schemas/HikeRouteDay.yaml'
     HikeRouteList:
       $ref: 'openapi/components/schemas/HikeRouteList.yaml'
+    CuratedRouteDifficulty:
+      $ref: 'openapi/components/schemas/CuratedRouteDifficulty.yaml'
+    CuratedRouteActivityType:
+      $ref: 'openapi/components/schemas/CuratedRouteActivityType.yaml'
+    CuratedRoute:
+      $ref: 'openapi/components/schemas/CuratedRoute.yaml'
+    CuratedRouteList:
+      $ref: 'openapi/components/schemas/CuratedRouteList.yaml'
+    CuratedRouteUpsertRequest:
+      $ref: 'openapi/components/schemas/CuratedRouteUpsertRequest.yaml'

@@ -1,0 +1,36 @@
+get:
+  operationId: listCuratedRoutes
+  tags:
+    - curated-routes
+  summary: >-
+    backlog/tura-utvonaltervezo/103-... 2.5 fázis — admin-szerkesztett/OSM-eredetű ajánlott
+    túrakatalógus, szűrhető nehézség/aktivitás-típus/táv szerint. Minden szűrő opcionális; szűrő
+    nélkül a teljes katalógust adja vissza.
+  parameters:
+    - name: difficulty
+      in: query
+      required: false
+      schema:
+        $ref: '../components/schemas/CuratedRouteDifficulty.yaml'
+    - name: activityType
+      in: query
+      required: false
+      schema:
+        $ref: '../components/schemas/CuratedRouteActivityType.yaml'
+    - name: minDistanceMeters
+      in: query
+      required: false
+      schema:
+        type: number
+    - name: maxDistanceMeters
+      in: query
+      required: false
+      schema:
+        type: number
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/CuratedRouteList.yaml'

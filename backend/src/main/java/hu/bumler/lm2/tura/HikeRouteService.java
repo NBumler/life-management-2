@@ -93,30 +93,8 @@ class HikeRouteService {
 		entity.setElevationProfile(HikeRouteMapper.flattenProfile(dto.getElevationProfile().orElse(null)));
 
 		List<HikeRouteDay> days = dto.getDays().orElse(List.of());
-		validateDays(days, entity.getCoordinates().size() / 2);
+		HikeRouteDayValidation.validate(days, entity.getCoordinates().size() / 2);
 		entity.setDaysJson(mapper.flattenDays(days));
-	}
-
-	/**
-	 * backlog/tura-utvonaltervezo/103-... 2.4 fázis — üres lista (egynapos túra) mindig érvényes.
-	 * Egyébként: a napok endWaypointIndex-ei szigorúan növekvők és a route-on belül vannak, az
-	 * utolsó nap pedig mindig a route utolsó pontjáig tart (nincs "lefedetlen" farok a végén).
-	 */
-	private static void validateDays(List<HikeRouteDay> days, int waypointCount) {
-		if (days.isEmpty()) {
-			return;
-		}
-		int previous = -1;
-		for (HikeRouteDay day : days) {
-			int index = day.getEndWaypointIndex();
-			if (index <= previous || index >= waypointCount) {
-				throw new ValidationException("Hike route days must have strictly increasing, in-range endWaypointIndex values", "days");
-			}
-			previous = index;
-		}
-		if (previous != waypointCount - 1) {
-			throw new ValidationException("The last hike route day must end at the route's last waypoint", "days");
-		}
 	}
 
 	private static Double toDouble(BigDecimal value) {

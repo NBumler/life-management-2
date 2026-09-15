@@ -33,6 +33,8 @@ api/climbingSectors.service.ts
 api/climbingSectors.serviceInterface.ts
 api/climbingSessions.service.ts
 api/climbingSessions.serviceInterface.ts
+api/curatedRoutes.service.ts
+api/curatedRoutes.serviceInterface.ts
 api/dailyStepLogs.service.ts
 api/dailyStepLogs.serviceInterface.ts
 api/events.service.ts
@@ -102,6 +104,10 @@ model/boulderProblem.ts
 model/calendarEvent.ts
 model/climbingSession.ts
 model/crag.ts
+model/curatedRoute.ts
+model/curatedRouteActivityType.ts
+model/curatedRouteDifficulty.ts
+model/curatedRouteUpsertRequest.ts
 model/dailyStepLog.ts
 model/elevationProfilePoint.ts
 model/exercise.ts

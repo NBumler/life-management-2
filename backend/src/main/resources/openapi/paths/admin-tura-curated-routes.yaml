@@ -1,0 +1,28 @@
+post:
+  operationId: upsertCuratedRoute
+  tags:
+    - curated-routes
+  summary: >-
+    Admin upsert (backlog/tura-utvonaltervezo/103-... 2.5 fázis): a megadott id-re a teljes rekordot
+    létrehozza vagy lecseréli. Admin API — X-Admin-Api-Key.
+  security:
+    - adminApiKey: []
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/CuratedRouteUpsertRequest.yaml'
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/CuratedRoute.yaml'
+    '400':
+      description: Blank name, fewer than 2 waypoints, or invalid day split.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'

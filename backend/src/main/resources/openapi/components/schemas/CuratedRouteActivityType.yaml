@@ -1,0 +1,9 @@
+type: string
+description: >-
+  Aktivitás-típus (backlog/tura-utvonaltervezo/103-... 2.5 fázis) — a turistautak.hu kategorizálását
+  követi (gyalogos/kerékpáros/vízi/lovas).
+enum:
+  - HIKING
+  - CYCLING
+  - WATER
+  - HORSEBACK

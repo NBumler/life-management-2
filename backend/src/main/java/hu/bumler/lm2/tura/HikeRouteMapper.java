@@ -6,8 +6,6 @@ import java.util.List;
 
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import hu.bumler.lm2.api.model.ElevationProfilePoint;
@@ -34,39 +32,12 @@ class HikeRouteMapper {
 		dto.elevationLossMeters(toBigDecimal(entity.getElevationLossMeters()));
 		dto.estimatedDurationMinutes(toBigDecimal(entity.getEstimatedDurationMinutes()));
 		dto.elevationProfile(toProfile(entity.getElevationProfile()));
-		dto.days(toDays(entity.getDaysJson()));
+		dto.days(HikeRouteDayJson.toDays(objectMapper, entity.getDaysJson()));
 		return dto;
 	}
 
-	/**
-	 * backlog/tura-utvonaltervezo/103-... 2.4 fázis — a napi bontás nem önálló entitás, hanem a
-	 * generált {@link HikeRouteDay} DTO-t magát tároljuk pre-szerializált JSON-ként (ld.
-	 * HikeRouteEntity.daysJson), ugyanazzal az ObjectMapper-rel, ami a HTTP kérés/válasz testet is
-	 * (de)szerializálja — a JsonNullable mezők (overnightName, a napi metrikák) így ugyanúgy
-	 * viselkednek oda-vissza.
-	 */
-	private List<HikeRouteDay> toDays(String json) {
-		if (json == null) {
-			return null;
-		}
-		try {
-			return objectMapper.readValue(json, new TypeReference<List<HikeRouteDay>>() {
-			});
-		} catch (JsonProcessingException e) {
-			throw new IllegalStateException("Corrupt hike route days JSON", e);
-		}
-	}
-
-	/** Fordítottja a {@link #toDays}-nak — null bemenetre (egynapos túra) null-t ad vissza, nem üres tömböt. */
 	String flattenDays(List<HikeRouteDay> days) {
-		if (days == null || days.isEmpty()) {
-			return null;
-		}
-		try {
-			return objectMapper.writeValueAsString(days);
-		} catch (JsonProcessingException e) {
-			throw new IllegalStateException("Could not serialize hike route days", e);
-		}
+		return HikeRouteDayJson.flatten(objectMapper, days);
 	}
 
 	private static BigDecimal toBigDecimal(Double value) {

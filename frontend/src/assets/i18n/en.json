@@ -438,6 +438,25 @@
       "REMOVE_BREAK": "Remove day break",
       "ADD_BREAK": "Add day break",
       "SUMMARY": "{{count}} days"
+    },
+    "CATALOG": {
+      "BUTTON": "Catalog",
+      "MODAL_TITLE": "Recommended routes",
+      "FILTER_DIFFICULTY": "Difficulty",
+      "FILTER_ACTIVITY": "Activity",
+      "FILTER_DISTANCE": "Distance",
+      "ANY": "Any",
+      "DIFFICULTY_EASY": "Easy",
+      "DIFFICULTY_MODERATE": "Moderate",
+      "DIFFICULTY_HARD": "Hard",
+      "ACTIVITY_HIKING": "Hiking",
+      "ACTIVITY_CYCLING": "Cycling",
+      "ACTIVITY_WATER": "Water",
+      "ACTIVITY_HORSEBACK": "Horseback",
+      "DISTANCE_SHORT": "Short (under 10 km)",
+      "DISTANCE_MEDIUM": "Medium (10-20 km)",
+      "DISTANCE_LONG": "Long (over 20 km)",
+      "NO_RESULTS": "No route matches the current filter."
     }
   },
   "GEAR": {

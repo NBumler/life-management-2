@@ -34,10 +34,14 @@ import {
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import maplibregl from 'maplibre-gl';
 
+import { CuratedRoute } from '../../../api/model/curatedRoute';
+import { CuratedRouteActivityType } from '../../../api/model/curatedRouteActivityType';
+import { CuratedRouteDifficulty } from '../../../api/model/curatedRouteDifficulty';
 import { HikeRoute } from '../../../api/model/hikeRoute';
 import { HikeRouteDay } from '../../../api/model/hikeRouteDay';
 import { RouteMetrics } from '../../../api/model/routeMetrics';
 import { Bbox, TrailSegmentRepository } from '../../../core/data/trail-segment.repository';
+import { CuratedRouteFilter, CuratedRouteRepository } from '../../../core/data/curated-route.repository';
 import { HikeRouteRepository } from '../../../core/data/hike-route.repository';
 import { RouteMetricsRepository } from '../../../core/data/route-metrics.repository';
 import { RouteSuggestionRepository } from '../../../core/data/route-suggestion.repository';
@@ -45,6 +49,11 @@ import { elevationProfilePolylinePoints } from './elevation-profile-svg';
 import { draftRouteToFeatureCollection, draftWaypointsToFeatureCollection, hikeRoutesToFeatureCollection } from './hike-routes-geojson';
 import { trailSegmentSymbolColor } from './trail-segment-symbol-color';
 import { trailSegmentsToFeatureCollection } from './trail-segments-geojson';
+
+/** backlog/tura-utvonaltervezo/103-... 2.5 fázis — a katalógus-szűrő táv-tengelye előre definiált sávokként (nem szabad numerikus range-inputként). */
+export type DistanceBucket = 'any' | 'short' | 'medium' | 'long';
+const DISTANCE_BUCKET_MEDIUM_MIN = 10000;
+const DISTANCE_BUCKET_LONG_MIN = 20000;
 
 /** backlog/tura-utvonaltervezo/103-... 2.3 fázis — mennyit várunk az utolsó waypoint-változás után, mielőtt a metrikát újraszámoltatjuk. */
 const METRICS_DEBOUNCE_MS = 500;
@@ -61,6 +70,8 @@ const HIKE_ROUTE_DRAFT_POINTS_SOURCE_ID = 'hike-route-draft-points';
 const HIKE_ROUTE_DRAFT_POINTS_LAYER_ID = 'hike-route-draft-points-layer';
 const AUTO_ROUTE_START_SOURCE_ID = 'hike-route-auto-start';
 const AUTO_ROUTE_START_LAYER_ID = 'hike-route-auto-start-layer';
+const CURATED_ROUTE_PREVIEW_SOURCE_ID = 'curated-route-preview';
+const CURATED_ROUTE_PREVIEW_LAYER_ID = 'curated-route-preview-layer';
 
 /** backlog/tura-utvonaltervezo/103-... 2.2 fázis — a rajzolás-térkép aktuális interakciós módja. */
 type Mode = 'none' | 'manual' | 'auto';
@@ -123,6 +134,7 @@ const COUNTRY_CODE = 'HU';
 export class TuraPage implements AfterViewInit, OnDestroy {
 	private readonly trailSegments = inject(TrailSegmentRepository);
 	protected readonly hikeRoutes = inject(HikeRouteRepository);
+	protected readonly curatedRoutes = inject(CuratedRouteRepository);
 	protected readonly routeSuggestion = inject(RouteSuggestionRepository);
 	protected readonly routeMetrics = inject(RouteMetricsRepository);
 	private readonly alertController = inject(AlertController);
@@ -148,6 +160,13 @@ export class TuraPage implements AfterViewInit, OnDestroy {
 	protected readonly showDaysPanel = signal(false);
 	protected readonly dayCount = computed(() => this.dayBreaks().length + 1);
 	protected readonly canAddDayBreak = computed(() => this.dayBreaks().length < Math.max(0, this.draft().length - 2));
+	/** backlog/tura-utvonaltervezo/103-... 2.5 fázis — ajánlott/kész túrák katalógusa, szűréssel. */
+	protected readonly showCatalogPanel = signal(false);
+	protected readonly catalogDifficulty = signal<CuratedRouteDifficulty | ''>('');
+	protected readonly catalogActivityType = signal<CuratedRouteActivityType | ''>('');
+	protected readonly catalogDistanceBucket = signal<DistanceBucket>('any');
+	/** A térképen kiemelt katalógus-túra (ha a felhasználó rákattintott egy listaelemre) — null = nincs kiemelés. */
+	protected readonly previewedCuratedRoute = signal<number[][] | null>(null);
 	/** backlog/tura-utvonaltervezo/103-... 2.3 fázis — a draft() útvonalhoz tartozó, utoljára sikeresen kiszámolt metrika. */
 	protected readonly metrics = signal<RouteMetrics | null>(null);
 	protected readonly profilePoints = computed(() => {
@@ -180,6 +199,11 @@ export class TuraPage implements AfterViewInit, OnDestroy {
 			const start = this.autoStart();
 			const source = this.map?.getSource(AUTO_ROUTE_START_SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
 			source?.setData(draftWaypointsToFeatureCollection(start ? [start] : []));
+		});
+		effect(() => {
+			const preview = this.previewedCuratedRoute();
+			const source = this.map?.getSource(CURATED_ROUTE_PREVIEW_SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
+			source?.setData(draftRouteToFeatureCollection(preview ?? []));
 		});
 		effect(() => {
 			// backlog/tura-utvonaltervezo/103-... 2.4 fázis — ha a draft zsugorodik (undo/clear), a most
@@ -248,6 +272,16 @@ export class TuraPage implements AfterViewInit, OnDestroy {
 				type: 'circle',
 				source: AUTO_ROUTE_START_SOURCE_ID,
 				paint: { 'circle-color': '#8e24aa', 'circle-radius': 6, 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 1.5 },
+			});
+
+			map.addSource(CURATED_ROUTE_PREVIEW_SOURCE_ID, { type: 'geojson', data: draftRouteToFeatureCollection([]) });
+			map.addLayer({
+				id: CURATED_ROUTE_PREVIEW_LAYER_ID,
+				type: 'line',
+				source: CURATED_ROUTE_PREVIEW_SOURCE_ID,
+				// Ciánkék — a terepszínű (zöld) OSM alaptérképen jól elkülönül a többi réteg
+				// (útvonalaim: kék, rajz-piszkozat: narancs, auto-mód kezdőpont: lila) színétől is.
+				paint: { 'line-color': '#00bcd4', 'line-width': 5 },
 			});
 
 			void this.loadCurrentViewport(map);
@@ -348,6 +382,68 @@ export class TuraPage implements AfterViewInit, OnDestroy {
 
 	protected removeDayBreak(position: number): void {
 		this.dayBreaks.update((breaks) => breaks.filter((_, index) => index !== position));
+	}
+
+	protected toggleCatalogPanel(): void {
+		const opening = !this.showCatalogPanel();
+		this.showCatalogPanel.set(opening);
+		if (opening) {
+			void this.reloadCatalog();
+		}
+	}
+
+	protected setCatalogDifficulty(value: CuratedRouteDifficulty | ''): void {
+		this.catalogDifficulty.set(value);
+		void this.reloadCatalog();
+	}
+
+	protected setCatalogActivityType(value: CuratedRouteActivityType | ''): void {
+		this.catalogActivityType.set(value);
+		void this.reloadCatalog();
+	}
+
+	protected setCatalogDistanceBucket(value: DistanceBucket): void {
+		this.catalogDistanceBucket.set(value);
+		void this.reloadCatalog();
+	}
+
+	private async reloadCatalog(): Promise<void> {
+		const filter: CuratedRouteFilter = {
+			difficulty: this.catalogDifficulty() || undefined,
+			activityType: this.catalogActivityType() || undefined,
+			...this.distanceBucketToRange(this.catalogDistanceBucket()),
+		};
+		await this.curatedRoutes.load(filter);
+	}
+
+	private distanceBucketToRange(bucket: DistanceBucket): Pick<CuratedRouteFilter, 'minDistanceMeters' | 'maxDistanceMeters'> {
+		switch (bucket) {
+			case 'short':
+				return { maxDistanceMeters: DISTANCE_BUCKET_MEDIUM_MIN };
+			case 'medium':
+				return { minDistanceMeters: DISTANCE_BUCKET_MEDIUM_MIN, maxDistanceMeters: DISTANCE_BUCKET_LONG_MIN };
+			case 'long':
+				return { minDistanceMeters: DISTANCE_BUCKET_LONG_MIN };
+			default:
+				return {};
+		}
+	}
+
+	protected previewCuratedRoute(route: CuratedRoute): void {
+		this.previewedCuratedRoute.set(route.coordinates);
+		if (!this.map || route.coordinates.length === 0) {
+			return;
+		}
+		const lons = route.coordinates.map((coordinate) => coordinate[0]);
+		const lats = route.coordinates.map((coordinate) => coordinate[1]);
+		this.map.fitBounds(
+			[
+				[Math.min(...lons), Math.min(...lats)],
+				[Math.max(...lons), Math.max(...lats)],
+			],
+			{ padding: 40 },
+		);
+		this.showCatalogPanel.set(false);
 	}
 
 	private handleAutoModeClick(point: number[]): void {

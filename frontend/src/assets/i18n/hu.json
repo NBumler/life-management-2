@@ -438,6 +438,25 @@
       "REMOVE_BREAK": "Töréspont törlése",
       "ADD_BREAK": "Töréspont hozzáadása",
       "SUMMARY": "{{count}} nap"
+    },
+    "CATALOG": {
+      "BUTTON": "Katalógus",
+      "MODAL_TITLE": "Ajánlott túrák",
+      "FILTER_DIFFICULTY": "Nehézség",
+      "FILTER_ACTIVITY": "Aktivitás",
+      "FILTER_DISTANCE": "Táv",
+      "ANY": "Bármely",
+      "DIFFICULTY_EASY": "Könnyű",
+      "DIFFICULTY_MODERATE": "Közepes",
+      "DIFFICULTY_HARD": "Nehéz",
+      "ACTIVITY_HIKING": "Gyalogos",
+      "ACTIVITY_CYCLING": "Kerékpáros",
+      "ACTIVITY_WATER": "Vízi",
+      "ACTIVITY_HORSEBACK": "Lovas",
+      "DISTANCE_SHORT": "Rövid (10 km alatt)",
+      "DISTANCE_MEDIUM": "Közepes (10–20 km)",
+      "DISTANCE_LONG": "Hosszú (20 km felett)",
+      "NO_RESULTS": "Nincs a szűrésnek megfelelő túra."
     }
   },
   "GEAR": {

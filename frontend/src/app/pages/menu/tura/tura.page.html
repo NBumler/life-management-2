@@ -27,6 +27,10 @@
       </ion-button>
     </ion-buttons>
     <ion-buttons slot="end">
+      <ion-button (click)="toggleCatalogPanel()">
+        <ion-icon slot="start" name="star-outline" aria-hidden="true"></ion-icon>
+        {{ 'TURA.CATALOG.BUTTON' | translate }}
+      </ion-button>
       <ion-button (click)="toggleRoutesPanel()">
         <ion-icon slot="start" name="list-outline" aria-hidden="true"></ion-icon>
         {{ 'TURA.MY_ROUTES' | translate }}
@@ -172,6 +176,86 @@
         {{ 'TURA.DAYS.ADD_BREAK' | translate }}
       </ion-button>
       <p class="days-summary">{{ 'TURA.DAYS.SUMMARY' | translate: { count: dayCount() } }}</p>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<ion-modal [isOpen]="showCatalogPanel()" (didDismiss)="showCatalogPanel.set(false)">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>{{ 'TURA.CATALOG.MODAL_TITLE' | translate }}</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="showCatalogPanel.set(false)">{{ 'COMMON.CLOSE' | translate }}</ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+      <ion-toolbar>
+        <ion-item lines="none">
+          <ion-select
+            [label]="'TURA.CATALOG.FILTER_DIFFICULTY' | translate"
+            [value]="catalogDifficulty()"
+            (ionChange)="setCatalogDifficulty($any($event.target).value)"
+          >
+            <ion-select-option value="">{{ 'TURA.CATALOG.ANY' | translate }}</ion-select-option>
+            <ion-select-option value="EASY">{{ 'TURA.CATALOG.DIFFICULTY_EASY' | translate }}</ion-select-option>
+            <ion-select-option value="MODERATE">{{ 'TURA.CATALOG.DIFFICULTY_MODERATE' | translate }}</ion-select-option>
+            <ion-select-option value="HARD">{{ 'TURA.CATALOG.DIFFICULTY_HARD' | translate }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item lines="none">
+          <ion-select
+            [label]="'TURA.CATALOG.FILTER_ACTIVITY' | translate"
+            [value]="catalogActivityType()"
+            (ionChange)="setCatalogActivityType($any($event.target).value)"
+          >
+            <ion-select-option value="">{{ 'TURA.CATALOG.ANY' | translate }}</ion-select-option>
+            <ion-select-option value="HIKING">{{ 'TURA.CATALOG.ACTIVITY_HIKING' | translate }}</ion-select-option>
+            <ion-select-option value="CYCLING">{{ 'TURA.CATALOG.ACTIVITY_CYCLING' | translate }}</ion-select-option>
+            <ion-select-option value="WATER">{{ 'TURA.CATALOG.ACTIVITY_WATER' | translate }}</ion-select-option>
+            <ion-select-option value="HORSEBACK">{{ 'TURA.CATALOG.ACTIVITY_HORSEBACK' | translate }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item lines="none">
+          <ion-select
+            [label]="'TURA.CATALOG.FILTER_DISTANCE' | translate"
+            [value]="catalogDistanceBucket()"
+            (ionChange)="setCatalogDistanceBucket($any($event.target).value)"
+          >
+            <ion-select-option value="any">{{ 'TURA.CATALOG.ANY' | translate }}</ion-select-option>
+            <ion-select-option value="short">{{ 'TURA.CATALOG.DISTANCE_SHORT' | translate }}</ion-select-option>
+            <ion-select-option value="medium">{{ 'TURA.CATALOG.DISTANCE_MEDIUM' | translate }}</ion-select-option>
+            <ion-select-option value="long">{{ 'TURA.CATALOG.DISTANCE_LONG' | translate }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content>
+      <ion-list>
+        @if (curatedRoutes.routes().length === 0) {
+          <ion-item lines="none">
+            <ion-label>{{ 'TURA.CATALOG.NO_RESULTS' | translate }}</ion-label>
+          </ion-item>
+        }
+        @for (route of curatedRoutes.routes(); track route.id) {
+          <ion-item button (click)="previewCuratedRoute(route)">
+            <ion-label>
+              {{ route.name }}
+              <p>
+                {{ ('TURA.CATALOG.DIFFICULTY_' + route.difficulty) | translate }} ·
+                {{ ('TURA.CATALOG.ACTIVITY_' + route.activityType) | translate }}
+              </p>
+              <p>
+                {{ formatDistance(route.distanceMeters) }} · {{ formatDuration(route.estimatedDurationMinutes) }} · ↑{{
+                  formatElevation(route.elevationGainMeters)
+                }}
+              </p>
+              @if (route.days && route.days.length > 1) {
+                <p>{{ 'TURA.DAYS.SUMMARY' | translate: { count: route.days.length } }}</p>
+              }
+            </ion-label>
+          </ion-item>
+        }
+      </ion-list>
     </ion-content>
   </ng-template>
 </ion-modal>
