@@ -33,8 +33,6 @@ class RouteSuggestionService {
 	 */
 	private static final double MAX_SNAP_DISTANCE_METERS = 2_000;
 
-	private static final double EARTH_RADIUS_METERS = 6_371_000;
-
 	/** Két pontot ugyanannak a csomópontnak tekintünk, ha ~11 cm-nél közelebb esnek egymáshoz. */
 	private static final double NODE_KEY_PRECISION = 1_000_000;
 
@@ -64,12 +62,12 @@ class RouteSuggestionService {
 		for (String node : pathNodes) {
 			double[] point = graph.coordinateOf(node);
 			double[] last = coordinates.get(coordinates.size() - 1);
-			if (haversineMeters(last[0], last[1], point[0], point[1]) > 0.1) {
+			if (GeoUtils.haversineMeters(last[0], last[1], point[0], point[1]) > 0.1) {
 				coordinates.add(point);
 			}
 		}
 		double[] last = coordinates.get(coordinates.size() - 1);
-		if (haversineMeters(last[0], last[1], endLon, endLat) > 0.1) {
+		if (GeoUtils.haversineMeters(last[0], last[1], endLon, endLat) > 0.1) {
 			coordinates.add(new double[] { endLon, endLat });
 		}
 
@@ -77,7 +75,7 @@ class RouteSuggestionService {
 		for (int i = 1; i < coordinates.size(); i++) {
 			double[] a = coordinates.get(i - 1);
 			double[] b = coordinates.get(i);
-			distanceMeters += haversineMeters(a[0], a[1], b[0], b[1]);
+			distanceMeters += GeoUtils.haversineMeters(a[0], a[1], b[0], b[1]);
 		}
 
 		List<List<BigDecimal>> pairs = new ArrayList<>(coordinates.size());
@@ -106,17 +104,6 @@ class RouteSuggestionService {
 		return graph;
 	}
 
-	private static double haversineMeters(double lon1, double lat1, double lon2, double lat2) {
-		double lat1Rad = Math.toRadians(lat1);
-		double lat2Rad = Math.toRadians(lat2);
-		double deltaLat = Math.toRadians(lat2 - lat1);
-		double deltaLon = Math.toRadians(lon2 - lon1);
-		double a = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2)
-				+ Math.cos(lat1Rad) * Math.cos(lat2Rad) * Math.sin(deltaLon / 2) * Math.sin(deltaLon / 2);
-		double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-		return EARTH_RADIUS_METERS * c;
-	}
-
 	/** In-memory undirected graph over trail-segment vertices, snapped to a shared-endpoint key. */
 	private static final class Graph {
 
@@ -131,7 +118,7 @@ class RouteSuggestionService {
 			}
 			coordinateByNode.putIfAbsent(from, new double[] { lon1, lat1 });
 			coordinateByNode.putIfAbsent(to, new double[] { lon2, lat2 });
-			double weight = haversineMeters(lon1, lat1, lon2, lat2);
+			double weight = GeoUtils.haversineMeters(lon1, lat1, lon2, lat2);
 			adjacency.computeIfAbsent(from, ignored -> new ArrayList<>()).add(new Edge(to, weight));
 			adjacency.computeIfAbsent(to, ignored -> new ArrayList<>()).add(new Edge(from, weight));
 		}
@@ -145,7 +132,7 @@ class RouteSuggestionService {
 			double nearestDistance = Double.MAX_VALUE;
 			for (Map.Entry<String, double[]> entry : coordinateByNode.entrySet()) {
 				double[] point = entry.getValue();
-				double distance = haversineMeters(lon, lat, point[0], point[1]);
+				double distance = GeoUtils.haversineMeters(lon, lat, point[0], point[1]);
 				if (distance < nearestDistance) {
 					nearestDistance = distance;
 					nearest = entry.getKey();
@@ -198,7 +185,7 @@ class RouteSuggestionService {
 
 		private double heuristic(String node, double[] goalPoint) {
 			double[] point = coordinateByNode.get(node);
-			return haversineMeters(point[0], point[1], goalPoint[0], goalPoint[1]);
+			return GeoUtils.haversineMeters(point[0], point[1], goalPoint[0], goalPoint[1]);
 		}
 
 		private static List<String> reconstructPath(Map<String, String> cameFrom, String goal) {

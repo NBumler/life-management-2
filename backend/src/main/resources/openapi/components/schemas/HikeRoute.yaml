@@ -39,3 +39,24 @@ properties:
     type: string
     format: date-time
     readOnly: true
+  distanceMeters:
+    type: number
+    nullable: true
+    description: >-
+      backlog/tura-utvonaltervezo/103-... 2.3 fázis. A kliens tölti ki a /api/tura/route-metrics
+      hívás eredményéből mentéskor; null, ha a metrika-számítás még nem történt meg (pl. az
+      elevation API akkor nem volt elérhető) — a HikeRoute enélkül is menthető/szinkronizálható.
+  elevationGainMeters:
+    type: number
+    nullable: true
+  elevationLossMeters:
+    type: number
+    nullable: true
+  estimatedDurationMinutes:
+    type: number
+    nullable: true
+  elevationProfile:
+    type: array
+    nullable: true
+    items:
+      $ref: 'ElevationProfilePoint.yaml'

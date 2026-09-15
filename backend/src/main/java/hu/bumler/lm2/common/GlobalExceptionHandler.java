@@ -4,6 +4,7 @@ import java.util.Map;
 
 import hu.bumler.lm2.api.model.ApiError;
 import hu.bumler.lm2.common.exception.CursorTooOldException;
+import hu.bumler.lm2.common.exception.ElevationUnavailableException;
 import hu.bumler.lm2.common.exception.EntityDeletedException;
 import hu.bumler.lm2.common.exception.EntityNotFoundException;
 import hu.bumler.lm2.common.exception.UnauthorizedException;
@@ -128,6 +129,16 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(CursorTooOldException.class)
 	ResponseEntity<ApiError> handleCursorTooOld(CursorTooOldException ex) {
 		return ResponseEntity.status(HttpStatus.GONE).body(new ApiError("CURSOR_TOO_OLD", ex.getMessage()));
+	}
+
+	// backlog/tura-utvonaltervezo/103-... 2.3 fázis: a magassági profil egy külső, publikus API-tól
+	// függ (Open-Meteo). Ez sosem a kliens hibája, ezért 502 — a route-metrics hívás elbukik, de a
+	// kliens ettől függetlenül tud nevet adni és menteni az útvonalat metrika nélkül (ld. HikeRoute
+	// nullable mezői).
+	@ExceptionHandler(ElevationUnavailableException.class)
+	ResponseEntity<ApiError> handleElevationUnavailable(ElevationUnavailableException ex) {
+		log.warn("Elevation lookup failed: {}", ex.getMessage());
+		return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(new ApiError("ELEVATION_UNAVAILABLE", ex.getMessage()));
 	}
 
 	@ExceptionHandler(UnauthorizedException.class)

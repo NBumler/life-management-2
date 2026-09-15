@@ -1,0 +1,23 @@
+type: object
+description: >-
+  backlog/tura-utvonaltervezo/103-... 2.3 fázis — kiszámított táv/idő/szintkülönbség + magassági
+  profil egy útvonalhoz.
+required:
+  - distanceMeters
+  - elevationGainMeters
+  - elevationLossMeters
+  - estimatedDurationMinutes
+  - profile
+properties:
+  distanceMeters:
+    type: number
+  elevationGainMeters:
+    type: number
+  elevationLossMeters:
+    type: number
+  estimatedDurationMinutes:
+    type: number
+  profile:
+    type: array
+    items:
+      $ref: 'ElevationProfilePoint.yaml'

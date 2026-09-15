@@ -103,6 +103,7 @@ model/calendarEvent.ts
 model/climbingSession.ts
 model/crag.ts
 model/dailyStepLog.ts
+model/elevationProfilePoint.ts
 model/exercise.ts
 model/food.ts
 model/gearItem.ts
@@ -130,6 +131,8 @@ model/recipeIngredient.ts
 model/recurringExpense.ts
 model/refreshRequest.ts
 model/route.ts
+model/routeMetrics.ts
+model/routeMetricsRequest.ts
 model/routeSuggestion.ts
 model/sector.ts
 model/shoppingList.ts

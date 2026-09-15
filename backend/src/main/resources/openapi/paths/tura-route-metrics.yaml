@@ -1,0 +1,20 @@
+post:
+  operationId: computeRouteMetrics
+  tags:
+    - tura
+  summary: >-
+    Táv/idő/szintkülönbség-becslés + magassági profil egy (kézzel rajzolt vagy automatikusan
+    generált) útvonalhoz (backlog/tura-utvonaltervezo/103-... 2.3 fázis).
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/RouteMetricsRequest.yaml'
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/RouteMetrics.yaml'

@@ -210,6 +210,12 @@ const STEPS_BY_VERSION: Readonly<Record<number, VersionSteps>> = {
   // backlog/tura-utvonaltervezo/103-...: `HikeRoute` added as a brand-new entity type — no existing
   // entity's payload shape changed, so a plain identity step for everyone.
   6: { default: identityStep },
+  // backlog/tura-utvonaltervezo/103-... 2.3 fázis: `HikeRoute` gained 5 new nullable/optional
+  // metrics fields (distanceMeters, elevationGainMeters, elevationLossMeters,
+  // estimatedDurationMinutes, elevationProfile). A missing key already means "no metrics computed"
+  // server-side (same reasoning as the Sector.defaultLengthInMeters precedent at step 5), so no
+  // payload transform is needed for any entity.
+  7: { default: identityStep },
 };
 
 function buildMigrations(): ReadonlyMap<string, MigrationStep> {

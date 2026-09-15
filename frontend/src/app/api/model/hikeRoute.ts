@@ -7,6 +7,7 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import { ElevationProfilePoint } from './elevationProfilePoint';
 
 
 /**
@@ -23,5 +24,13 @@ export interface HikeRoute {
     readonly deletedAt?: string | null;
     readonly createdAt?: string;
     readonly updatedAt?: string;
+    /**
+     * backlog/tura-utvonaltervezo/103-... 2.3 fázis. A kliens tölti ki a /api/tura/route-metrics hívás eredményéből mentéskor; null, ha a metrika-számítás még nem történt meg (pl. az elevation API akkor nem volt elérhető) — a HikeRoute enélkül is menthető/szinkronizálható.
+     */
+    distanceMeters?: number | null;
+    elevationGainMeters?: number | null;
+    elevationLossMeters?: number | null;
+    estimatedDurationMinutes?: number | null;
+    elevationProfile?: Array<ElevationProfilePoint> | null;
 }
 

@@ -4581,6 +4581,11 @@ export interface HikeRouteRow {
   _local_only: number;
   _sync_error: number;
   _needs_refetch: number;
+  distance_meters: number | null;
+  elevation_gain_meters: number | null;
+  elevation_loss_meters: number | null;
+  estimated_duration_minutes: number | null;
+  elevation_profile: string | null;
 }
 
 export function hikeRouteRowToDto(row: HikeRouteRow): HikeRoute {
@@ -4592,27 +4597,51 @@ export function hikeRouteRowToDto(row: HikeRouteRow): HikeRoute {
     deletedAt: row.deleted_at,
     createdAt: row.created_at ?? undefined,
     updatedAt: row.updated_at ?? undefined,
+    distanceMeters: row.distance_meters,
+    elevationGainMeters: row.elevation_gain_meters,
+    elevationLossMeters: row.elevation_loss_meters,
+    estimatedDurationMinutes: row.estimated_duration_minutes,
+    elevationProfile: row.elevation_profile ? (JSON.parse(row.elevation_profile) as HikeRoute['elevationProfile']) : null,
   };
 }
 
 export function hikeRouteLocalWriteTask(dto: HikeRoute): SqlTask {
   return {
     statement: `
-      INSERT INTO hike_route (id, name, coordinates, _dirty, _local_only)
-      VALUES (?, ?, ?, 1, 1)
+      INSERT INTO hike_route (
+        id, name, coordinates, distance_meters, elevation_gain_meters, elevation_loss_meters,
+        estimated_duration_minutes, elevation_profile, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
       ON CONFLICT(id) DO UPDATE SET
-        name = excluded.name, coordinates = excluded.coordinates, _dirty = 1`,
-    values: [dto.id, dto.name, JSON.stringify(dto.coordinates)],
+        name = excluded.name, coordinates = excluded.coordinates,
+        distance_meters = excluded.distance_meters, elevation_gain_meters = excluded.elevation_gain_meters,
+        elevation_loss_meters = excluded.elevation_loss_meters, estimated_duration_minutes = excluded.estimated_duration_minutes,
+        elevation_profile = excluded.elevation_profile, _dirty = 1`,
+    values: [
+      dto.id,
+      dto.name,
+      JSON.stringify(dto.coordinates),
+      dto.distanceMeters ?? null,
+      dto.elevationGainMeters ?? null,
+      dto.elevationLossMeters ?? null,
+      dto.estimatedDurationMinutes ?? null,
+      dto.elevationProfile ? JSON.stringify(dto.elevationProfile) : null,
+    ],
   };
 }
 
 export function hikeRouteServerApplyTask(dto: HikeRoute): SqlTask {
   return {
     statement: `
-      INSERT INTO hike_route (id, name, coordinates, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
-      VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0)
+      INSERT INTO hike_route (
+        id, name, coordinates, distance_meters, elevation_gain_meters, elevation_loss_meters,
+        estimated_duration_minutes, elevation_profile, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET
         name = excluded.name, coordinates = excluded.coordinates,
+        distance_meters = excluded.distance_meters, elevation_gain_meters = excluded.elevation_gain_meters,
+        elevation_loss_meters = excluded.elevation_loss_meters, estimated_duration_minutes = excluded.estimated_duration_minutes,
+        elevation_profile = excluded.elevation_profile,
         created_at = excluded.created_at, updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at,
         _dirty = 0, _local_only = 0, _needs_refetch = 0
       WHERE hike_route._dirty = 0`,
@@ -4620,6 +4649,11 @@ export function hikeRouteServerApplyTask(dto: HikeRoute): SqlTask {
       dto.id,
       dto.name,
       JSON.stringify(dto.coordinates),
+      dto.distanceMeters ?? null,
+      dto.elevationGainMeters ?? null,
+      dto.elevationLossMeters ?? null,
+      dto.estimatedDurationMinutes ?? null,
+      dto.elevationProfile ? JSON.stringify(dto.elevationProfile) : null,
       dto.createdAt ?? null,
       dto.updatedAt ?? null,
       dto.deleted ? 1 : 0,

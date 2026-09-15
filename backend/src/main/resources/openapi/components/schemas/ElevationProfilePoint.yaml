@@ -1,0 +1,12 @@
+type: object
+description: Egy mintapont a magassági profilban (backlog/tura-utvonaltervezo/103-... 2.3 fázis).
+required:
+  - distanceMeters
+  - elevationMeters
+properties:
+  distanceMeters:
+    type: number
+    description: Táv az útvonal kezdőpontjától méterben.
+  elevationMeters:
+    type: number
+    description: Tengerszint feletti magasság méterben.

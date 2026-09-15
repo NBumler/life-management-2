@@ -1,10 +1,22 @@
-import { AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, OnDestroy, effect, inject, signal, viewChild } from '@angular/core';
+import {
+	AfterViewInit,
+	ChangeDetectionStrategy,
+	Component,
+	ElementRef,
+	OnDestroy,
+	computed,
+	effect,
+	inject,
+	signal,
+	viewChild,
+} from '@angular/core';
 import {
 	AlertController,
 	IonBackButton,
 	IonButton,
 	IonButtons,
 	IonContent,
+	IonFooter,
 	IonHeader,
 	IonIcon,
 	IonInput,
@@ -20,12 +32,20 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import maplibregl from 'maplibre-gl';
 
 import { HikeRoute } from '../../../api/model/hikeRoute';
+import { RouteMetrics } from '../../../api/model/routeMetrics';
 import { Bbox, TrailSegmentRepository } from '../../../core/data/trail-segment.repository';
 import { HikeRouteRepository } from '../../../core/data/hike-route.repository';
+import { RouteMetricsRepository } from '../../../core/data/route-metrics.repository';
 import { RouteSuggestionRepository } from '../../../core/data/route-suggestion.repository';
+import { elevationProfilePolylinePoints } from './elevation-profile-svg';
 import { draftRouteToFeatureCollection, draftWaypointsToFeatureCollection, hikeRoutesToFeatureCollection } from './hike-routes-geojson';
 import { trailSegmentSymbolColor } from './trail-segment-symbol-color';
 import { trailSegmentsToFeatureCollection } from './trail-segments-geojson';
+
+/** backlog/tura-utvonaltervezo/103-... 2.3 fázis — mennyit várunk az utolsó waypoint-változás után, mielőtt a metrikát újraszámoltatjuk. */
+const METRICS_DEBOUNCE_MS = 500;
+const PROFILE_CHART_WIDTH = 300;
+const PROFILE_CHART_HEIGHT = 60;
 
 const TRAIL_SEGMENTS_SOURCE_ID = 'trail-segments';
 const TRAIL_SEGMENTS_LAYER_ID = 'trail-segments-layer';
@@ -87,6 +107,7 @@ const COUNTRY_CODE = 'HU';
 		IonLabel,
 		IonModal,
 		IonContent,
+		IonFooter,
 		IonSpinner,
 		TranslatePipe,
 	],
@@ -96,6 +117,7 @@ export class TuraPage implements AfterViewInit, OnDestroy {
 	private readonly trailSegments = inject(TrailSegmentRepository);
 	protected readonly hikeRoutes = inject(HikeRouteRepository);
 	protected readonly routeSuggestion = inject(RouteSuggestionRepository);
+	protected readonly routeMetrics = inject(RouteMetricsRepository);
 	private readonly alertController = inject(AlertController);
 	private readonly translate = inject(TranslateService);
 	private readonly mapContainer = viewChild.required<ElementRef<HTMLDivElement>>('mapContainer');
@@ -110,6 +132,15 @@ export class TuraPage implements AfterViewInit, OnDestroy {
 	protected readonly autoStart = signal<number[] | null>(null);
 	protected readonly routeName = signal('');
 	protected readonly showRoutesPanel = signal(false);
+	/** backlog/tura-utvonaltervezo/103-... 2.3 fázis — a draft() útvonalhoz tartozó, utoljára sikeresen kiszámolt metrika. */
+	protected readonly metrics = signal<RouteMetrics | null>(null);
+	protected readonly profilePoints = computed(() => {
+		const metrics = this.metrics();
+		return metrics ? elevationProfilePolylinePoints(metrics.profile, PROFILE_CHART_WIDTH, PROFILE_CHART_HEIGHT) : '';
+	});
+
+	private metricsRequestId = 0;
+	private metricsDebounceHandle?: ReturnType<typeof setTimeout>;
 
 	constructor() {
 		effect(() => {
@@ -133,6 +164,16 @@ export class TuraPage implements AfterViewInit, OnDestroy {
 			const start = this.autoStart();
 			const source = this.map?.getSource(AUTO_ROUTE_START_SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
 			source?.setData(draftWaypointsToFeatureCollection(start ? [start] : []));
+		});
+		effect(() => {
+			const coordinates = this.draft();
+			clearTimeout(this.metricsDebounceHandle);
+			if (coordinates.length < 2) {
+				this.metrics.set(null);
+				return;
+			}
+			const requestId = ++this.metricsRequestId;
+			this.metricsDebounceHandle = setTimeout(() => void this.refreshMetrics(coordinates, requestId), METRICS_DEBOUNCE_MS);
 		});
 	}
 
@@ -210,6 +251,7 @@ export class TuraPage implements AfterViewInit, OnDestroy {
 	}
 
 	ngOnDestroy(): void {
+		clearTimeout(this.metricsDebounceHandle);
 		this.resizeObserver?.disconnect();
 		this.map?.remove();
 	}
@@ -272,10 +314,48 @@ export class TuraPage implements AfterViewInit, OnDestroy {
 		if (name === '' || this.draft().length < 2) {
 			return;
 		}
-		await this.hikeRoutes.save({ name, coordinates: this.draft() });
+		const metrics = this.metrics();
+		await this.hikeRoutes.save({
+			name,
+			coordinates: this.draft(),
+			distanceMeters: metrics?.distanceMeters,
+			elevationGainMeters: metrics?.elevationGainMeters,
+			elevationLossMeters: metrics?.elevationLossMeters,
+			estimatedDurationMinutes: metrics?.estimatedDurationMinutes,
+			elevationProfile: metrics?.profile,
+		});
 		this.draft.set([]);
 		this.routeName.set('');
 		this.mode.set('none');
+	}
+
+	/** backlog/tura-utvonaltervezo/103-... 2.3 fázis — online, best-effort: hiba esetén a felhasználó metrika nélkül is menthet. */
+	private async refreshMetrics(coordinates: number[][], requestId: number): Promise<void> {
+		try {
+			const result = await this.routeMetrics.compute(coordinates);
+			if (requestId === this.metricsRequestId) {
+				this.metrics.set(result);
+			}
+		} catch {
+			if (requestId === this.metricsRequestId) {
+				this.metrics.set(null);
+			}
+		}
+	}
+
+	protected formatDistance(meters: number): string {
+		return `${(meters / 1000).toFixed(1)} km`;
+	}
+
+	protected formatDuration(minutes: number): string {
+		const totalMinutes = Math.round(minutes);
+		const hours = Math.floor(totalMinutes / 60);
+		const mins = totalMinutes % 60;
+		return hours > 0 ? `${hours} ó ${mins} p` : `${mins} p`;
+	}
+
+	protected formatElevation(meters: number): string {
+		return `${Math.round(meters)} m`;
 	}
 
 	protected toggleRoutesPanel(): void {

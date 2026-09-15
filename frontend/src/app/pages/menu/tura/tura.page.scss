@@ -2,3 +2,36 @@
   position: absolute;
   inset: 0;
 }
+
+// backlog/tura-utvonaltervezo/103-... 2.3 fázis — táv/idő/szintkülönbség + magassági profil, egy
+// ion-footer sávban (nem absolute overlay ion-content fölött — [fullscreen]="true" mellett az
+// ion-content dobozának alja a tab-bar mögé nyúlik, ott egy absolute-pozicionált panel a tab-bar
+// alá kerülne és láthatatlan maradna).
+// ion-toolbar lays its slotted content out as a flex ROW by default — a wrapper is needed so the
+// stats line and the chart stack vertically as one flex item instead of sitting side by side.
+.route-metrics-content {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 4px 0;
+}
+
+.route-metrics-stats {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.route-metrics-chart {
+  width: 100%;
+  height: 40px;
+  display: block;
+}
+
+.route-metrics-loading {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}

@@ -1,6 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 
+import { ElevationProfilePoint } from '../../api/model/elevationProfilePoint';
 import { HikeRoute } from '../../api/model/hikeRoute';
 import { STORAGE_BACKEND } from '../storage/storage-backend';
 import { SyncEngineService } from '../sync/sync-engine.service';
@@ -11,6 +12,16 @@ export interface HikeRouteSaveInput {
   name: string;
   /** [lon, lat] pairs in drawing order — at least 2 required. */
   coordinates: number[][];
+  /**
+   * backlog/tura-utvonaltervezo/103-... 2.3 fázis — a /api/tura/route-metrics hívás eredménye,
+   * ha a felhasználó mentés előtt online kiszámoltatta; hiányában a mezők null-ként mentődnek
+   * (a route enélkül is menthető/szinkronizálható, ld. HikeRoute.yaml).
+   */
+  distanceMeters?: number;
+  elevationGainMeters?: number;
+  elevationLossMeters?: number;
+  estimatedDurationMinutes?: number;
+  elevationProfile?: ElevationProfilePoint[];
 }
 
 /**
@@ -36,6 +47,11 @@ export class HikeRouteRepository {
       name: input.name,
       coordinates: input.coordinates,
       deleted: false,
+      distanceMeters: input.distanceMeters ?? null,
+      elevationGainMeters: input.elevationGainMeters ?? null,
+      elevationLossMeters: input.elevationLossMeters ?? null,
+      estimatedDurationMinutes: input.estimatedDurationMinutes ?? null,
+      elevationProfile: input.elevationProfile ?? null,
     };
     const saved = await this.storage.upsertHikeRoute(draft);
     this.items.update((list) => {

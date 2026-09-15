@@ -1241,7 +1241,20 @@ const SCHEMA_V38_STATEMENTS: string[] = [
   )`,
 ];
 
-const SCHEMA_VERSION = 38;
+/**
+ * backlog/tura-utvonaltervezo/103-... 2.3 fázis — táv/idő/szintkülönbség + magassági profil a
+ * kliens által kiszámolt (route-metrics hívás) és mentéskor denormalizáltan tárolt értékei.
+ * `elevation_profile` ugyanazt a JSON-encoded TEXT konvenciót követi, mint `coordinates`.
+ */
+const SCHEMA_V39_STATEMENTS: string[] = [
+  `ALTER TABLE hike_route ADD COLUMN distance_meters REAL`,
+  `ALTER TABLE hike_route ADD COLUMN elevation_gain_meters REAL`,
+  `ALTER TABLE hike_route ADD COLUMN elevation_loss_meters REAL`,
+  `ALTER TABLE hike_route ADD COLUMN estimated_duration_minutes REAL`,
+  `ALTER TABLE hike_route ADD COLUMN elevation_profile TEXT`,
+];
+
+const SCHEMA_VERSION = 39;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -1282,7 +1295,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 35, statements: SCHEMA_V35_STATEMENTS },
   { toVersion: 36, statements: SCHEMA_V36_STATEMENTS },
   { toVersion: 37, statements: SCHEMA_V37_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V38_STATEMENTS },
+  { toVersion: 38, statements: SCHEMA_V38_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V39_STATEMENTS },
 ];
 
 export interface SqlTask {

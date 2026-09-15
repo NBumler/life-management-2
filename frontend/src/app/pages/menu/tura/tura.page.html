@@ -59,6 +59,30 @@
   <div #mapContainer class="map-container"></div>
 </ion-content>
 
+@if (metrics(); as m) {
+  <ion-footer>
+    <ion-toolbar>
+      <div class="route-metrics-content">
+        <div class="route-metrics-stats">
+          <span>{{ formatDistance(m.distanceMeters) }}</span>
+          <span>{{ formatDuration(m.estimatedDurationMinutes) }}</span>
+          <span>↑{{ formatElevation(m.elevationGainMeters) }}</span>
+          <span>↓{{ formatElevation(m.elevationLossMeters) }}</span>
+        </div>
+        <svg class="route-metrics-chart" viewBox="0 0 300 60" preserveAspectRatio="none">
+          <polyline [attr.points]="profilePoints()" fill="none" stroke="#1a73e8" stroke-width="2"></polyline>
+        </svg>
+      </div>
+    </ion-toolbar>
+  </ion-footer>
+} @else if (routeMetrics.loading()) {
+  <ion-footer>
+    <ion-toolbar class="route-metrics-loading">
+      <ion-spinner name="dots"></ion-spinner>
+    </ion-toolbar>
+  </ion-footer>
+}
+
 <ion-modal [isOpen]="showRoutesPanel()" (didDismiss)="showRoutesPanel.set(false)">
   <ng-template>
     <ion-header>

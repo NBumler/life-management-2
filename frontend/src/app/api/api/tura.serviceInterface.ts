@@ -11,6 +11,8 @@ import { HttpHeaders }                                       from '@angular/comm
 
 import { Observable }                                        from 'rxjs';
 
+import { RouteMetrics } from '../model/models';
+import { RouteMetricsRequest } from '../model/models';
 import { RouteSuggestion } from '../model/models';
 import { TrailSegment } from '../model/models';
 import { TrailSegmentImportRequest } from '../model/models';
@@ -24,6 +26,14 @@ import { Configuration }                                     from '../configurat
 export interface TuraServiceInterface {
     defaultHeaders: HttpHeaders;
     configuration: Configuration;
+
+    /**
+     * Táv/idő/szintkülönbség-becslés + magassági profil egy (kézzel rajzolt vagy automatikusan generált) útvonalhoz (backlog/tura-utvonaltervezo/103-... 2.3 fázis).
+     * 
+     * @endpoint post /api/tura/route-metrics
+     * @param routeMetricsRequest 
+     */
+    computeRouteMetrics(routeMetricsRequest: RouteMetricsRequest, extraHttpRequestParams?: any): Observable<RouteMetrics>;
 
     /**
      * Kézi/admin-triggerelt import (backlog/tura-utvonaltervezo/104-...): a megadott országkódra vonatkozó teljes szakaszkészletet lecseréli a kérésben küldött listára. Admin API — X-Admin-Api-Key.

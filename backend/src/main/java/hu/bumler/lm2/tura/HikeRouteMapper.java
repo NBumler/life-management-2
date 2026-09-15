@@ -1,7 +1,12 @@
 package hu.bumler.lm2.tura;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.stereotype.Component;
 
+import hu.bumler.lm2.api.model.ElevationProfilePoint;
 import hu.bumler.lm2.api.model.HikeRoute;
 
 @Component
@@ -13,6 +18,38 @@ class HikeRouteMapper {
 		dto.deletedAt(entity.getDeletedAt());
 		dto.createdAt(entity.getCreatedAt());
 		dto.updatedAt(entity.getUpdatedAt());
+		dto.distanceMeters(toBigDecimal(entity.getDistanceMeters()));
+		dto.elevationGainMeters(toBigDecimal(entity.getElevationGainMeters()));
+		dto.elevationLossMeters(toBigDecimal(entity.getElevationLossMeters()));
+		dto.estimatedDurationMinutes(toBigDecimal(entity.getEstimatedDurationMinutes()));
+		dto.elevationProfile(toProfile(entity.getElevationProfile()));
 		return dto;
+	}
+
+	private static BigDecimal toBigDecimal(Double value) {
+		return value == null ? null : BigDecimal.valueOf(value);
+	}
+
+	private static List<ElevationProfilePoint> toProfile(List<Double> flattened) {
+		if (flattened == null || flattened.isEmpty()) {
+			return null;
+		}
+		List<ElevationProfilePoint> profile = new ArrayList<>(flattened.size() / 2);
+		for (int i = 0; i < flattened.size(); i += 2) {
+			profile.add(new ElevationProfilePoint(BigDecimal.valueOf(flattened.get(i)), BigDecimal.valueOf(flattened.get(i + 1))));
+		}
+		return profile;
+	}
+
+	static List<Double> flattenProfile(List<ElevationProfilePoint> profile) {
+		if (profile == null) {
+			return null;
+		}
+		List<Double> flattened = new ArrayList<>(profile.size() * 2);
+		for (ElevationProfilePoint point : profile) {
+			flattened.add(point.getDistanceMeters().doubleValue());
+			flattened.add(point.getElevationMeters().doubleValue());
+		}
+		return flattened;
 	}
 }

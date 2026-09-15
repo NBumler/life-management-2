@@ -39,6 +39,23 @@ public class HikeRouteEntity {
 	@Column(nullable = false)
 	private List<Double> coordinates = new ArrayList<>();
 
+	@Column(name = "distance_meters")
+	private Double distanceMeters;
+
+	@Column(name = "elevation_gain_meters")
+	private Double elevationGainMeters;
+
+	@Column(name = "elevation_loss_meters")
+	private Double elevationLossMeters;
+
+	@Column(name = "estimated_duration_minutes")
+	private Double estimatedDurationMinutes;
+
+	/** [distanceMeters1, elevationMeters1, distanceMeters2, elevationMeters2, ...], a coordinates mintáját követve. */
+	@JdbcTypeCode(SqlTypes.ARRAY)
+	@Column(name = "elevation_profile")
+	private List<Double> elevationProfile;
+
 	@Generated(event = EventType.INSERT)
 	@Column(name = "created_at", insertable = false, updatable = false)
 	private OffsetDateTime createdAt;
@@ -83,6 +100,46 @@ public class HikeRouteEntity {
 
 	public void setCoordinates(List<Double> coordinates) {
 		this.coordinates = coordinates;
+	}
+
+	public Double getDistanceMeters() {
+		return distanceMeters;
+	}
+
+	public void setDistanceMeters(Double distanceMeters) {
+		this.distanceMeters = distanceMeters;
+	}
+
+	public Double getElevationGainMeters() {
+		return elevationGainMeters;
+	}
+
+	public void setElevationGainMeters(Double elevationGainMeters) {
+		this.elevationGainMeters = elevationGainMeters;
+	}
+
+	public Double getElevationLossMeters() {
+		return elevationLossMeters;
+	}
+
+	public void setElevationLossMeters(Double elevationLossMeters) {
+		this.elevationLossMeters = elevationLossMeters;
+	}
+
+	public Double getEstimatedDurationMinutes() {
+		return estimatedDurationMinutes;
+	}
+
+	public void setEstimatedDurationMinutes(Double estimatedDurationMinutes) {
+		this.estimatedDurationMinutes = estimatedDurationMinutes;
+	}
+
+	public List<Double> getElevationProfile() {
+		return elevationProfile;
+	}
+
+	public void setElevationProfile(List<Double> elevationProfile) {
+		this.elevationProfile = elevationProfile;
 	}
 
 	public OffsetDateTime getCreatedAt() {

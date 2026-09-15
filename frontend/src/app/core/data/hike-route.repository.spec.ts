@@ -78,6 +78,36 @@ describe('HikeRouteRepository', () => {
     expect(storage.upsertHikeRoute).toHaveBeenCalledWith(jasmine.objectContaining({ id: 'existing-1' }));
   });
 
+  it('save(): passes through the computed metrics fields when given, else null', async () => {
+    storage.upsertHikeRoute.and.callFake(async (draft) => draft);
+
+    await repository.save({
+      name: 'Kilátó túra',
+      coordinates: [
+        [19.0, 47.0],
+        [19.1, 47.1],
+      ],
+      distanceMeters: 1000,
+      elevationGainMeters: 50,
+      elevationLossMeters: 10,
+      estimatedDurationMinutes: 20,
+      elevationProfile: [{ distanceMeters: 0, elevationMeters: 300 }],
+    });
+    await repository.save({
+      name: 'Kilátó túra 2',
+      coordinates: [
+        [19.0, 47.0],
+        [19.1, 47.1],
+      ],
+    });
+
+    const [withMetrics, withoutMetrics] = storage.upsertHikeRoute.calls.allArgs().map((args) => args[0] as HikeRoute);
+    expect(withMetrics.distanceMeters).toBe(1000);
+    expect(withMetrics.elevationProfile).toEqual([{ distanceMeters: 0, elevationMeters: 300 }]);
+    expect(withoutMetrics.distanceMeters).toBeNull();
+    expect(withoutMetrics.elevationProfile).toBeNull();
+  });
+
   it('remove(): deletes via the storage backend and drops it from the signal', async () => {
     storage.listHikeRoutes.and.resolveTo([route({ id: 'a' })]);
     await repository.load();

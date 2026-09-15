@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import hu.bumler.lm2.TestcontainersConfiguration;
 import hu.bumler.lm2.api.model.AdminCreateUserRequest;
 import hu.bumler.lm2.api.model.AuthTokens;
+import hu.bumler.lm2.api.model.ElevationProfilePoint;
 import hu.bumler.lm2.api.model.HikeRoute;
 import hu.bumler.lm2.api.model.LoginRequest;
 
@@ -128,6 +129,41 @@ class HikeRouteIntegrationTest {
 
 		mockMvc.perform(get("/api/hike-routes/" + id).header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenB))
 				.andExpect(status().isNotFound());
+	}
+
+	@Test
+	void create_persistsAndReturnsTheClientComputedMetrics() throws Exception {
+		String token = registerAndLogin("hr-metrics");
+		UUID id = UUID.randomUUID();
+		HikeRoute body = route(id);
+		body.distanceMeters(BigDecimal.valueOf(1234.5));
+		body.elevationGainMeters(BigDecimal.valueOf(120.0));
+		body.elevationLossMeters(BigDecimal.valueOf(45.0));
+		body.estimatedDurationMinutes(BigDecimal.valueOf(90));
+		body.elevationProfile(List.of(new ElevationProfilePoint(BigDecimal.ZERO, BigDecimal.valueOf(300.0)),
+				new ElevationProfilePoint(BigDecimal.valueOf(1234.5), BigDecimal.valueOf(375.0))));
+
+		createRoute(token, body).andExpect(status().isOk())
+				.andExpect(jsonPath("$.distanceMeters").value(1234.5))
+				.andExpect(jsonPath("$.elevationGainMeters").value(120.0))
+				.andExpect(jsonPath("$.elevationLossMeters").value(45.0))
+				.andExpect(jsonPath("$.estimatedDurationMinutes").value(90))
+				.andExpect(jsonPath("$.elevationProfile.length()").value(2))
+				.andExpect(jsonPath("$.elevationProfile[1].elevationMeters").value(375.0));
+
+		mockMvc.perform(get("/api/hike-routes/" + id).header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.distanceMeters").value(1234.5));
+	}
+
+	@Test
+	void create_leavesMetricsNull_whenTheClientDidNotComputeThem() throws Exception {
+		String token = registerAndLogin("hr-no-metrics");
+		HikeRoute body = route(UUID.randomUUID());
+
+		createRoute(token, body).andExpect(status().isOk())
+				.andExpect(jsonPath("$.distanceMeters").value(org.hamcrest.Matchers.nullValue()))
+				.andExpect(jsonPath("$.elevationProfile").value(org.hamcrest.Matchers.nullValue()));
 	}
 
 	@Test
