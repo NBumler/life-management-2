@@ -14,6 +14,19 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-16 — #104** Túra — turistaút-adatforrás integráció. Valós, teljes országos magyar
+  turistaút-hálózat (230 611 szakasz, 6375 OSM `route=hiking` reláció) betöltve a `trail_segment`
+  táblába — kézzel indítható `scripts/import-hiking-trails.mjs` script tölti le Overpass API-ból
+  (nem a turistautak.hu saját, session közben megbízhatatlannak bizonyult API-ja) és POST-olja a
+  meglévő admin import endpointra. Ezzel egy időben két, csak valódi (nagy méretű) adaton
+  jelentkező hibát is javítottunk: (1) a tömeges import percekig tartott/időtúllépett egy
+  soronkénti `save()`-merge miatt — `EntityManager.persist()` + batch flush/clear + JDBC
+  batch-elés old meg; (2) az automatikus útvonal-javaslat 20-25 másodpercig tartott, mert minden
+  kéréskor a teljes ország-hálózatból épült fel a routing-gráf — mostantól a kezdő-/végpont köré
+  fűzött, arányosan táguló bbox-ra szűkül (~1 mp). Emellett a 103-as fázisból megörökölt snap-hiba
+  is javítva: a kattintott pont eddig csak a legközelebbi ismert turistaút-*vertexre* illeszkedett,
+  nem a vonalra — hosszú, egyenes szakasz közepére kattintva ez tévesen "nincs útvonal"-t adott.
+  Részletek: `backlog/archive/104-tura-adatforras-integracio.md`.
 - **2026-09-16 — #107** Túra — domborzat-árnyékolás + alternatív alaptérkép-rétegek. A [[backlog/
   tura-utvonaltervezo/103-tura-alapveto-utvonaltervezes-es-terkep]] MapLibre GL JS alaptérképéhez
   két új, kulcs nélküli raster-forrás (OpenTopoMap topográfiai, Esri World Imagery szatellit) +

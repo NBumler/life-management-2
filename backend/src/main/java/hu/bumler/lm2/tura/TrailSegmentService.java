@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import hu.bumler.lm2.api.model.TrailSegment;
 import hu.bumler.lm2.api.model.TrailSegmentImportItem;
 import hu.bumler.lm2.common.exception.ValidationException;
+import jakarta.persistence.EntityManager;
 
 /**
  * backlog/tura-utvonaltervezo/103-... / 104-... — bbox-alapú lekérdezés a térkép trail-rétegéhez,
@@ -18,12 +19,22 @@ import hu.bumler.lm2.common.exception.ValidationException;
 @Service
 class TrailSegmentService {
 
+	/**
+	 * Egy teljes országos OSM-import könnyen 100 000+ szakaszt jelent — ennyi elem után
+	 * flush+clear nélkül a Hibernate persistence context (és a JVM heap) korlátlanul nőne, plusz
+	 * {@link #importSegments} soronkénti {@code entityManager.persist()} hívása JDBC batch-elve
+	 * fut (ld. application.yaml {@code hibernate.jdbc.batch_size}), nem soronkénti round-trippel.
+	 */
+	private static final int IMPORT_FLUSH_BATCH_SIZE = 500;
+
 	private final TrailSegmentRepository repository;
 	private final TrailSegmentMapper mapper;
+	private final EntityManager entityManager;
 
-	TrailSegmentService(TrailSegmentRepository repository, TrailSegmentMapper mapper) {
+	TrailSegmentService(TrailSegmentRepository repository, TrailSegmentMapper mapper, EntityManager entityManager) {
 		this.repository = repository;
 		this.mapper = mapper;
+		this.entityManager = entityManager;
 	}
 
 	@Transactional(readOnly = true)
@@ -35,6 +46,7 @@ class TrailSegmentService {
 	@Transactional
 	int importSegments(String countryCode, List<TrailSegmentImportItem> items) {
 		repository.deleteByCountryCode(countryCode);
+		int sinceLastFlush = 0;
 		for (TrailSegmentImportItem item : items) {
 			List<List<BigDecimal>> coordinates = item.getCoordinates();
 			if (coordinates.size() < 2) {
@@ -59,7 +71,16 @@ class TrailSegmentService {
 			entity.setOsmWayId(item.getOsmWayId().orElse(null));
 			entity.setSymbol(item.getSymbol());
 			entity.setGeometry(flattened, minLon, minLat, maxLon, maxLat);
-			repository.save(entity);
+			// entityManager.persist() (nem repository.save()) — a save() a nem-null, kézzel
+			// generált UUID id miatt merge()-nek (tehát egy felesleges exists-SELECT-nek) nézné
+			// minden egyes új sort is, ami tömeges importnál (100 000+ szakasz) tarthatatlanul
+			// lelassítja a műveletet.
+			entityManager.persist(entity);
+			if (++sinceLastFlush >= IMPORT_FLUSH_BATCH_SIZE) {
+				entityManager.flush();
+				entityManager.clear();
+				sinceLastFlush = 0;
+			}
 		}
 		return items.size();
 	}

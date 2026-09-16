@@ -21,8 +21,9 @@ import hu.bumler.lm2.api.model.RouteSuggestion;
  * backlog/tura-utvonaltervezo/103-... 2.2 fázis — automatikus útvonal-generálás két pont közt a
  * jelzett turistaút-hálózaton. Saját A* a {@link TrailSegmentEntity} adatból felépített gráfon
  * (nem külső routing motor — ld. a terv indoklását: a magyar turistaút-gráf jóval kisebb, mint egy
- * teljes úthálózat). A gráf minden kéréskor újraépül a teljes ország-hálózatból; ez a fázis a
- * helyességet célozza, nem a gráf-építés cache-elését.
+ * teljes úthálózat). A 104-es ticket valódi, országos OSM-import mellett a gráf minden kéréskor
+ * újraépül, de csak a kezdő-/végpont köré fűzött bbox-on belüli szakaszokból (ld. {@link
+ * #trySuggest}) — nem cache-elt, de nem is a teljes ország-hálózatból.
  */
 @Service
 class RouteSuggestionService {
@@ -36,6 +37,19 @@ class RouteSuggestionService {
 	/** Két pontot ugyanannak a csomópontnak tekintünk, ha ~11 cm-nél közelebb esnek egymáshoz. */
 	private static final double NODE_KEY_PRECISION = 1_000_000;
 
+	private static final double METERS_PER_LAT_DEGREE = 111_320;
+
+	/** A kezdő-/végpont köré fűzött keresési bbox minimális ráhagyása — rövid (helyi) utaknál is
+	 *  legyen elég hely egy kis kerülőnek. */
+	private static final double MIN_SEARCH_PADDING_METERS = 10_000;
+
+	/** A ráhagyás a két pont egyenes távolságának ekkora hányada — hosszabb túráknál arányosan nő. */
+	private static final double SEARCH_PADDING_FACTOR = 0.5;
+
+	/** Ennél nagyobb ráhagyást nem engedünk — ez a felső korlát tartja a gráfot ország-alatti
+	 *  méretben még a leghosszabb reális túrákra is. */
+	private static final double MAX_SEARCH_PADDING_METERS = 150_000;
+
 	private final TrailSegmentRepository repository;
 
 	RouteSuggestionService(TrailSegmentRepository repository) {
@@ -44,7 +58,35 @@ class RouteSuggestionService {
 
 	@Transactional(readOnly = true)
 	RouteSuggestion suggest(String countryCode, double startLon, double startLat, double endLon, double endLat) {
-		Graph graph = buildGraph(repository.findByCountryCode(countryCode));
+		double directDistance = GeoUtils.haversineMeters(startLon, startLat, endLon, endLat);
+		double padding = Math.min(MAX_SEARCH_PADDING_METERS, Math.max(MIN_SEARCH_PADDING_METERS, directDistance * SEARCH_PADDING_FACTOR));
+
+		RouteSuggestion result = trySuggest(countryCode, startLon, startLat, endLon, endLat, padding);
+		if (result.getFound() || padding >= MAX_SEARCH_PADDING_METERS) {
+			return result;
+		}
+		// Ha a kezdeti keresési sugáron belül nem volt összeköttetés, a jelzett út nagy kerülővel
+		// mehet (pl. hegyi terepen) — mielőtt "nincs útvonal"-t jelentenénk, egyszer még
+		// megpróbáljuk a maximális sugárral (ami még mindig jóval kisebb, mint a teljes ország).
+		return trySuggest(countryCode, startLon, startLat, endLon, endLat, MAX_SEARCH_PADDING_METERS);
+	}
+
+	private RouteSuggestion trySuggest(String countryCode, double startLon, double startLat, double endLon, double endLat,
+			double paddingMeters) {
+		// Egy teljes országos import 100 000+ szakaszt jelent — ha minden kérésnél a teljes
+		// ország-hálózatból építenénk fel a gráfot (mint a 2.2 fázisban, amikor még csak egy
+		// tesztrégiónyi adat volt), egyetlen útvonal-javaslat is percekig tartana. Ehelyett a
+		// kezdő-/végpont köré fűzött, a két pont távolságával arányosan táguló bbox-on belüli
+		// szakaszokból építjük fel a gráfot — a legtöbb túraútvonal helyi léptékű, nem országos.
+		double midLat = (startLat + endLat) / 2;
+		double latPadding = paddingMeters / METERS_PER_LAT_DEGREE;
+		double lonPadding = paddingMeters / (METERS_PER_LAT_DEGREE * Math.cos(Math.toRadians(midLat)));
+		double minLon = Math.min(startLon, endLon) - lonPadding;
+		double maxLon = Math.max(startLon, endLon) + lonPadding;
+		double minLat = Math.min(startLat, endLat) - latPadding;
+		double maxLat = Math.max(startLat, endLat) + latPadding;
+
+		Graph graph = buildGraph(repository.findInBbox(countryCode, minLon, minLat, maxLon, maxLat));
 
 		String startNode = graph.snapToNearestEdge(startLon, startLat, MAX_SNAP_DISTANCE_METERS);
 		String endNode = graph.snapToNearestEdge(endLon, endLat, MAX_SNAP_DISTANCE_METERS);
