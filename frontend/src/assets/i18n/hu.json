@@ -466,6 +466,21 @@
       "BASEMAP_TOPO": "Topográfiai",
       "BASEMAP_SATELLITE": "Szatellit",
       "HILLSHADE": "Domborzat-árnyékolás"
+    },
+    "OFFLINE": {
+      "BUTTON": "Offline területek",
+      "MODAL_TITLE": "Offline területek",
+      "DOWNLOAD_CURRENT": "Jelenlegi terület letöltése",
+      "DOWNLOADING": "Letöltés… ({{done}}/{{total}} csempe)",
+      "EMPTY": "Még nincs letöltött terület.",
+      "REGION_SUMMARY": "{{size}}",
+      "DEFAULT_NAME": "Terület — {{date}}",
+      "NAME_PROMPT_TITLE": "Terület neve",
+      "DOWNLOAD": "Letöltés",
+      "TOO_LARGE_TITLE": "Túl nagy terület",
+      "TOO_LARGE_MESSAGE": "Ez a terület túl nagy az offline letöltéshez — közelíts rá egy kisebb részre a térképen, és próbáld újra.",
+      "DELETE_CONFIRM_TITLE": "Offline terület törlése",
+      "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd a(z) „{{name}}” offline területet? A letöltött csempék felszabadulnak."
     }
   },
   "GEAR": {

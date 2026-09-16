@@ -33,6 +33,7 @@ import {
 	IonToolbar,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { Capacitor } from '@capacitor/core';
 import maplibregl from 'maplibre-gl';
 
 import { CuratedRoute } from '../../../api/model/curatedRoute';
@@ -48,6 +49,9 @@ import { RouteMetricsRepository } from '../../../core/data/route-metrics.reposit
 import { RouteSuggestionRepository } from '../../../core/data/route-suggestion.repository';
 import { elevationProfilePolylinePoints } from './elevation-profile-svg';
 import { draftRouteToFeatureCollection, draftWaypointsToFeatureCollection, hikeRoutesToFeatureCollection } from './hike-routes-geojson';
+import { OFFLINE_TILE_PROTOCOL, registerOfflineTileProtocol } from './offline-map-protocol';
+import { OFFLINE_TILE_MAX_COUNT, OfflineRegion } from './offline-region.model';
+import { OfflineRegionRepository } from './offline-region.repository';
 import { trailSegmentSymbolColor } from './trail-segment-symbol-color';
 import { trailSegmentsToFeatureCollection } from './trail-segments-geojson';
 
@@ -98,12 +102,19 @@ const HILLSHADE_LAYER_ID = 'hillshade';
 // Mindhárom alaptérkép-réteg és a hillshade is a kezdeti style részeként létezik (nem
 // map.setStyle()-lal cserélve), a láthatóság `visibility` layout-tulajdonsággal váltva — így a
 // többi (turistajelzés, útvonalak stb.) forrás/réteg érintetlen marad váltáskor.
+// backlog/tura-utvonaltervezo/105-... 4. fázis: az `osm` réteg csempe-URL-je a saját
+// `tura-offline-tile://` MapLibre protokollra mutat (ld. offline-map-protocol.ts) — ez natív
+// platformon a letöltött offline régiók Filesystem-cache-ét fűzi a hálózati kérés elé, hogy
+// BACKEND_OFFLINE/FULL_OFFLINE alatt is renderelhető legyen a korábban letöltött terület. A
+// topo/szatellit réteg (és a hillshade DEM) szándékosan online-only marad — a régiónkénti offline
+// letöltés csak az alapértelmezett OSM-rétegre terjed ki, hogy a letöltés/tárhely-kezelés ne
+// hármas komplexitású legyen (ld. `OfflineRegionRepository` dokumentációja).
 const BASE_STYLE: maplibregl.StyleSpecification = {
 	version: 8,
 	sources: {
 		osm: {
 			type: 'raster',
-			tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+			tiles: [`${OFFLINE_TILE_PROTOCOL}://osm/{z}/{x}/{y}`],
 			tileSize: 256,
 			attribution: '© OpenStreetMap contributors',
 		},
@@ -180,6 +191,7 @@ export class TuraPage implements AfterViewInit, OnDestroy {
 	protected readonly curatedRoutes = inject(CuratedRouteRepository);
 	protected readonly routeSuggestion = inject(RouteSuggestionRepository);
 	protected readonly routeMetrics = inject(RouteMetricsRepository);
+	protected readonly offlineRegions = inject(OfflineRegionRepository);
 	private readonly alertController = inject(AlertController);
 	private readonly translate = inject(TranslateService);
 	private readonly mapContainer = viewChild.required<ElementRef<HTMLDivElement>>('mapContainer');
@@ -214,6 +226,9 @@ export class TuraPage implements AfterViewInit, OnDestroy {
 	protected readonly showLayersPanel = signal(false);
 	protected readonly activeBasemap = signal<Basemap>('osm');
 	protected readonly showHillshade = signal(false);
+	/** backlog/tura-utvonaltervezo/105-... 4. fázis — offline terület-letöltés panel; web buildben (nincs Filesystem-hozzáférés) a gomb el sem érhető. */
+	protected readonly offlineCapable = Capacitor.isNativePlatform();
+	protected readonly showOfflinePanel = signal(false);
 	/** backlog/tura-utvonaltervezo/103-... 2.3 fázis — a draft() útvonalhoz tartozó, utoljára sikeresen kiszámolt metrika. */
 	protected readonly metrics = signal<RouteMetrics | null>(null);
 	protected readonly profilePoints = computed(() => {
@@ -272,6 +287,7 @@ export class TuraPage implements AfterViewInit, OnDestroy {
 
 	ngAfterViewInit(): void {
 		void this.hikeRoutes.load();
+		registerOfflineTileProtocol();
 
 		const map = new maplibregl.Map({
 			container: this.mapContainer().nativeElement,
@@ -510,6 +526,64 @@ export class TuraPage implements AfterViewInit, OnDestroy {
 	protected toggleHillshade(visible: boolean): void {
 		this.showHillshade.set(visible);
 		this.map?.setLayoutProperty(HILLSHADE_LAYER_ID, 'visibility', visible ? 'visible' : 'none');
+	}
+
+	protected toggleOfflinePanel(): void {
+		this.showOfflinePanel.update((open) => !open);
+	}
+
+	protected formatOfflineSize(bytes: number): string {
+		return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+	}
+
+	/**
+	 * backlog/tura-utvonaltervezo/105-... 4. fázis — az aktuális térkép-viewport bbox-át tölti le
+	 * offline használatra (ld. `OfflineRegionRepository` a "mekkora egy régió" döntésért). Előbb egy
+	 * méret-becsléssel elutasítja a túl nagy (pl. ország-léptékű) területet, majd egy `AlertController`
+	 * prompttal kér nevet a régiónak — ugyanaz a minta, mint a meglévő törlés-megerősítéseknél.
+	 */
+	protected async downloadCurrentRegion(): Promise<void> {
+		if (!this.map) {
+			return;
+		}
+		const bounds = this.map.getBounds();
+		const bbox: Bbox = [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()];
+		const tileCount = this.offlineRegions.estimateTileCount(bbox);
+		if (tileCount === 0 || tileCount > OFFLINE_TILE_MAX_COUNT) {
+			const alert = await this.alertController.create({
+				header: this.translate.instant('TURA.OFFLINE.TOO_LARGE_TITLE'),
+				message: this.translate.instant('TURA.OFFLINE.TOO_LARGE_MESSAGE'),
+				buttons: [this.translate.instant('COMMON.OK')],
+			});
+			await alert.present();
+			return;
+		}
+
+		const defaultName = this.translate.instant('TURA.OFFLINE.DEFAULT_NAME', { date: new Date().toLocaleDateString() });
+		const alert = await this.alertController.create({
+			header: this.translate.instant('TURA.OFFLINE.NAME_PROMPT_TITLE'),
+			inputs: [{ name: 'name', type: 'text', value: defaultName, placeholder: defaultName }],
+			buttons: [
+				{ text: this.translate.instant('COMMON.CANCEL'), role: 'cancel' },
+				{
+					text: this.translate.instant('TURA.OFFLINE.DOWNLOAD'),
+					handler: (data: { name?: string }) => void this.offlineRegions.download(COUNTRY_CODE, bbox, data.name?.trim() || defaultName),
+				},
+			],
+		});
+		await alert.present();
+	}
+
+	protected async confirmDeleteOfflineRegion(region: OfflineRegion): Promise<void> {
+		const alert = await this.alertController.create({
+			header: this.translate.instant('TURA.OFFLINE.DELETE_CONFIRM_TITLE'),
+			message: this.translate.instant('TURA.OFFLINE.DELETE_CONFIRM_MESSAGE', { name: region.name }),
+			buttons: [
+				{ text: this.translate.instant('COMMON.CANCEL'), role: 'cancel' },
+				{ text: this.translate.instant('COMMON.DELETE'), role: 'destructive', handler: () => void this.offlineRegions.remove(region.id) },
+			],
+		});
+		await alert.present();
 	}
 
 	private handleAutoModeClick(point: number[]): void {

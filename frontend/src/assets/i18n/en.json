@@ -466,6 +466,21 @@
       "BASEMAP_TOPO": "Topographic",
       "BASEMAP_SATELLITE": "Satellite",
       "HILLSHADE": "Terrain shading"
+    },
+    "OFFLINE": {
+      "BUTTON": "Offline areas",
+      "MODAL_TITLE": "Offline areas",
+      "DOWNLOAD_CURRENT": "Download current area",
+      "DOWNLOADING": "Downloading… ({{done}}/{{total}} tiles)",
+      "EMPTY": "No downloaded areas yet.",
+      "REGION_SUMMARY": "{{size}}",
+      "DEFAULT_NAME": "Area — {{date}}",
+      "NAME_PROMPT_TITLE": "Area name",
+      "DOWNLOAD": "Download",
+      "TOO_LARGE_TITLE": "Area too large",
+      "TOO_LARGE_MESSAGE": "This area is too large to download for offline use — zoom in to a smaller area on the map and try again.",
+      "DELETE_CONFIRM_TITLE": "Delete offline area",
+      "DELETE_CONFIRM_MESSAGE": "Delete the offline area \"{{name}}\"? The downloaded tiles will be freed."
     }
   },
   "GEAR": {

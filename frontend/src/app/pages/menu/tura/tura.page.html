@@ -32,6 +32,11 @@
       <ion-button (click)="toggleLayersPanel()">
         <ion-icon slot="icon-only" name="layers-outline" [attr.aria-label]="'TURA.LAYERS.BUTTON' | translate"></ion-icon>
       </ion-button>
+      @if (offlineCapable) {
+        <ion-button (click)="toggleOfflinePanel()">
+          <ion-icon slot="icon-only" name="cloud-download-outline" [attr.aria-label]="'TURA.OFFLINE.BUTTON' | translate"></ion-icon>
+        </ion-button>
+      }
       <ion-button (click)="toggleCatalogPanel()">
         <ion-icon slot="start" name="star-outline" aria-hidden="true"></ion-icon>
         {{ 'TURA.CATALOG.BUTTON' | translate }}
@@ -139,6 +144,58 @@
             <ion-label>{{ 'TURA.LAYERS.HILLSHADE' | translate }}</ion-label>
           </ion-toggle>
         </ion-item>
+      </ion-list>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<ion-modal [isOpen]="showOfflinePanel()" (didDismiss)="showOfflinePanel.set(false)">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>{{ 'TURA.OFFLINE.MODAL_TITLE' | translate }}</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="showOfflinePanel.set(false)">{{ 'COMMON.CLOSE' | translate }}</ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content>
+      <ion-list>
+        <ion-item lines="none">
+          <ion-button
+            expand="block"
+            fill="outline"
+            [disabled]="offlineRegions.downloadProgress() !== null"
+            (click)="downloadCurrentRegion()"
+          >
+            <ion-icon slot="start" name="cloud-download-outline" aria-hidden="true"></ion-icon>
+            {{ 'TURA.OFFLINE.DOWNLOAD_CURRENT' | translate }}
+          </ion-button>
+        </ion-item>
+        @if (offlineRegions.downloadProgress(); as progress) {
+          <ion-item lines="none">
+            <ion-spinner slot="start" name="dots"></ion-spinner>
+            <ion-label>{{ 'TURA.OFFLINE.DOWNLOADING' | translate: { done: progress.done, total: progress.total } }}</ion-label>
+          </ion-item>
+        }
+        @if (offlineRegions.regions().length === 0) {
+          <ion-item lines="none">
+            <ion-label>{{ 'TURA.OFFLINE.EMPTY' | translate }}</ion-label>
+          </ion-item>
+        }
+        @for (region of offlineRegions.regions(); track region.id) {
+          <ion-item>
+            <ion-label>
+              {{ region.name }}
+              <p>{{ 'TURA.OFFLINE.REGION_SUMMARY' | translate: { size: formatOfflineSize(region.approxSizeBytes) } }}</p>
+            </ion-label>
+            <ion-buttons slot="end">
+              <ion-button (click)="confirmDeleteOfflineRegion(region); $event.stopPropagation()">
+                <ion-icon slot="icon-only" name="trash-outline" [attr.aria-label]="'COMMON.DELETE' | translate"></ion-icon>
+              </ion-button>
+            </ion-buttons>
+          </ion-item>
+        }
       </ion-list>
     </ion-content>
   </ng-template>

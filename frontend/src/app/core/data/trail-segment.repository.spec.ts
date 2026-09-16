@@ -1,8 +1,9 @@
 import { TestBed } from '@angular/core/testing';
-import { Observable, of } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 
 import { TuraService } from '../../api/api/tura.service';
 import { TrailSegment } from '../../api/model/trailSegment';
+import { OfflineRegionRepository } from '../../pages/menu/tura/offline-region.repository';
 import { TrailSegmentRepository } from './trail-segment.repository';
 
 /**
@@ -31,12 +32,18 @@ function segment(overrides: Partial<TrailSegment> = {}): TrailSegment {
 describe('TrailSegmentRepository', () => {
 	let repository: TrailSegmentRepository;
 	let turaService: jasmine.SpyObj<TrailSegmentsQuery>;
+	let offlineRegions: jasmine.SpyObj<Pick<OfflineRegionRepository, 'getCachedSegmentsInBbox'>>;
 
 	beforeEach(() => {
 		turaService = jasmine.createSpyObj('TuraService', ['listTrailSegmentsInBbox']);
+		offlineRegions = jasmine.createSpyObj('OfflineRegionRepository', ['getCachedSegmentsInBbox']);
+		offlineRegions.getCachedSegmentsInBbox.and.returnValue(Promise.resolve([]));
 
 		TestBed.configureTestingModule({
-			providers: [{ provide: TuraService, useValue: turaService }],
+			providers: [
+				{ provide: TuraService, useValue: turaService },
+				{ provide: OfflineRegionRepository, useValue: offlineRegions },
+			],
 		});
 		repository = TestBed.inject(TrailSegmentRepository);
 	});
@@ -62,5 +69,15 @@ describe('TrailSegmentRepository', () => {
 		await repository.loadBbox('HU', [1, 1, 2, 2]);
 
 		expect(repository.segments().map((s) => s.id).sort()).toEqual(['a', 'b']);
+	});
+
+	it('loadBbox(): falls back to the offline region cache when the network call fails', async () => {
+		turaService.listTrailSegmentsInBbox.and.returnValue(throwError(() => new Error('network down')));
+		offlineRegions.getCachedSegmentsInBbox.and.returnValue(Promise.resolve([segment({ id: 'cached' })]));
+
+		await repository.loadBbox('HU', [19.0, 47.0, 19.2, 47.2]);
+
+		expect(offlineRegions.getCachedSegmentsInBbox).toHaveBeenCalledWith([19.0, 47.0, 19.2, 47.2]);
+		expect(repository.segments().map((s) => s.id)).toEqual(['cached']);
 	});
 });
