@@ -3,6 +3,17 @@
   inset: 0;
 }
 
+// Kis (telefon-szélességű) képernyőn a fejléc gomb-sorai nem férnek el egy sorban, és az
+// ion-toolbar alapból se nem tördel, se nem scroll-ozható — az "end" slotba eső gombok
+// (Rétegek/Katalógus/Útvonalaim) korábban láthatatlanul kilógtak a képernyőről, minden
+// elérési mód nélkül. A `container` egy Ionic által direkt erre a célra exponált CSS shadow
+// part (az a belső flex-doboz, ami a slot="start"/"end" tartalmat összefogja) — erre rakva az
+// overflow-t mindkét gomb-sor vízszintesen görgethetővé válik, ha nem fér ki.
+.tura-scrollable-toolbar::part(container) {
+  overflow-x: auto;
+  flex-wrap: nowrap;
+}
+
 // backlog/tura-utvonaltervezo/103-... 2.3 fázis — táv/idő/szintkülönbség + magassági profil, egy
 // ion-footer sávban (nem absolute overlay ion-content fölött — [fullscreen]="true" mellett az
 // ion-content dobozának alja a tab-bar mögé nyúlik, ott egy absolute-pozicionált panel a tab-bar

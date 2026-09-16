@@ -5,7 +5,7 @@
     </ion-buttons>
     <ion-title>{{ 'TURA.TITLE' | translate }}</ion-title>
   </ion-toolbar>
-  <ion-toolbar>
+  <ion-toolbar class="tura-scrollable-toolbar">
     <ion-buttons slot="start">
       <ion-button [fill]="mode() === 'manual' ? 'solid' : 'clear'" (click)="toggleDrawMode()">
         <ion-icon slot="start" name="create-outline" aria-hidden="true"></ion-icon>
@@ -26,7 +26,9 @@
         <ion-icon slot="icon-only" name="trash-outline" [attr.aria-label]="'TURA.CLEAR' | translate"></ion-icon>
       </ion-button>
     </ion-buttons>
-    <ion-buttons slot="end">
+  </ion-toolbar>
+  <ion-toolbar class="tura-scrollable-toolbar">
+    <ion-buttons slot="start">
       <ion-button (click)="toggleLayersPanel()">
         <ion-icon slot="icon-only" name="layers-outline" [attr.aria-label]="'TURA.LAYERS.BUTTON' | translate"></ion-icon>
       </ion-button>
