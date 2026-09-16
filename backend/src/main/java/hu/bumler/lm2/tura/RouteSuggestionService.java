@@ -46,8 +46,8 @@ class RouteSuggestionService {
 	RouteSuggestion suggest(String countryCode, double startLon, double startLat, double endLon, double endLat) {
 		Graph graph = buildGraph(repository.findByCountryCode(countryCode));
 
-		String startNode = graph.nearestNode(startLon, startLat, MAX_SNAP_DISTANCE_METERS);
-		String endNode = graph.nearestNode(endLon, endLat, MAX_SNAP_DISTANCE_METERS);
+		String startNode = graph.snapToNearestEdge(startLon, startLat, MAX_SNAP_DISTANCE_METERS);
+		String endNode = graph.snapToNearestEdge(endLon, endLat, MAX_SNAP_DISTANCE_METERS);
 		if (startNode == null || endNode == null) {
 			return notFound();
 		}
@@ -109,6 +109,8 @@ class RouteSuggestionService {
 
 		private final Map<String, double[]> coordinateByNode = new HashMap<>();
 		private final Map<String, List<Edge>> adjacency = new HashMap<>();
+		private final List<RawEdge> rawEdges = new ArrayList<>();
+		private int virtualNodeCounter = 0;
 
 		void addEdge(double lon1, double lat1, double lon2, double lat2) {
 			String from = key(lon1, lat1);
@@ -121,24 +123,73 @@ class RouteSuggestionService {
 			double weight = GeoUtils.haversineMeters(lon1, lat1, lon2, lat2);
 			adjacency.computeIfAbsent(from, ignored -> new ArrayList<>()).add(new Edge(to, weight));
 			adjacency.computeIfAbsent(to, ignored -> new ArrayList<>()).add(new Edge(from, weight));
+			rawEdges.add(new RawEdge(from, to));
 		}
 
 		double[] coordinateOf(String node) {
 			return coordinateByNode.get(node);
 		}
 
-		String nearestNode(double lon, double lat, double maxDistanceMeters) {
-			String nearest = null;
-			double nearestDistance = Double.MAX_VALUE;
-			for (Map.Entry<String, double[]> entry : coordinateByNode.entrySet()) {
-				double[] point = entry.getValue();
-				double distance = GeoUtils.haversineMeters(lon, lat, point[0], point[1]);
-				if (distance < nearestDistance) {
-					nearestDistance = distance;
-					nearest = entry.getKey();
+		/**
+		 * Egy klikkelt pontot a hozzá legközelebb eső turistaút-ÉLRE (nem csak egy már ismert
+		 * csomópontra/vertex-re) illeszt — a felhasználó a vonal bármely pontjára kattinthat, nem
+		 * csak a ritkán elhelyezkedő OSM-vertex-ekre (ahogy pl. a Google Maps is a legközelebbi
+		 * útpontra fog vinni, nem várja el a pixel-pontos találatot egy útkereszteződésen). A
+		 * legközelebbi él vetített pontján egy virtuális csomópontot szúr be, ami a két végponthoz
+		 * a megfelelő rész-távolsággal kapcsolódik, hogy az A* onnan/oda is tudjon útvonalat adni.
+		 */
+		String snapToNearestEdge(double lon, double lat, double maxDistanceMeters) {
+			RawEdge bestEdge = null;
+			double[] bestPoint = null;
+			double bestDistance = Double.MAX_VALUE;
+			for (RawEdge edge : rawEdges) {
+				double[] a = coordinateByNode.get(edge.from());
+				double[] b = coordinateByNode.get(edge.to());
+				double[] projected = projectOntoSegment(lon, lat, a, b);
+				double distance = GeoUtils.haversineMeters(lon, lat, projected[0], projected[1]);
+				if (distance < bestDistance) {
+					bestDistance = distance;
+					bestEdge = edge;
+					bestPoint = projected;
 				}
 			}
-			return nearestDistance <= maxDistanceMeters ? nearest : null;
+			if (bestEdge == null || bestDistance > maxDistanceMeters) {
+				return null;
+			}
+			String virtualNode = "virtual:" + virtualNodeCounter++;
+			coordinateByNode.put(virtualNode, bestPoint);
+			double[] a = coordinateByNode.get(bestEdge.from());
+			double[] b = coordinateByNode.get(bestEdge.to());
+			connect(virtualNode, bestEdge.from(), GeoUtils.haversineMeters(bestPoint[0], bestPoint[1], a[0], a[1]));
+			connect(virtualNode, bestEdge.to(), GeoUtils.haversineMeters(bestPoint[0], bestPoint[1], b[0], b[1]));
+			return virtualNode;
+		}
+
+		private void connect(String from, String to, double weight) {
+			adjacency.computeIfAbsent(from, ignored -> new ArrayList<>()).add(new Edge(to, weight));
+			adjacency.computeIfAbsent(to, ignored -> new ArrayList<>()).add(new Edge(from, weight));
+		}
+
+		/**
+		 * Merőleges vetítés az a→b szakaszra, egy lokális, egyenközű (equirectangular) síkbeli
+		 * közelítésben — turistaút-szakasz léptékben (méterektől néhány km-ig) elég pontos. A `t`
+		 * paramétert [0,1]-re szorítjuk, hogy a szakasz "meghosszabbításába" eső pont a legközelebbi
+		 * végpontra illeszkedjen, ne egy a vonalon kívüli, extrapolált pontra.
+		 */
+		private static double[] projectOntoSegment(double lon, double lat, double[] a, double[] b) {
+			double lonScale = Math.cos(Math.toRadians(a[1]));
+			double ax = a[0] * lonScale;
+			double ay = a[1];
+			double bx = b[0] * lonScale;
+			double by = b[1];
+			double px = lon * lonScale;
+			double py = lat;
+			double dx = bx - ax;
+			double dy = by - ay;
+			double lengthSquared = dx * dx + dy * dy;
+			double t = lengthSquared == 0 ? 0 : ((px - ax) * dx + (py - ay) * dy) / lengthSquared;
+			t = Math.max(0, Math.min(1, t));
+			return new double[] { (ax + t * dx) / lonScale, ay + t * dy };
 		}
 
 		/**
@@ -206,6 +257,9 @@ class RouteSuggestionService {
 		}
 
 		private record Edge(String to, double weight) {
+		}
+
+		private record RawEdge(String from, String to) {
 		}
 
 		private record NodeEntry(String node, double fScore) {
