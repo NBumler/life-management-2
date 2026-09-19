@@ -5,7 +5,9 @@ import { AlertController } from '@ionic/angular/standalone';
 import { provideTranslateService } from '@ngx-translate/core';
 
 import { Route } from '../../../../api/model/route';
+import { Sector } from '../../../../api/model/sector';
 import { RouteRepository, RouteSaveInput } from '../../../../core/data/route.repository';
+import { SectorRepository } from '../../../../core/data/sector.repository';
 import { RouteEditPage } from './route-edit.page';
 
 describe('RouteEditPage', () => {
@@ -13,7 +15,12 @@ describe('RouteEditPage', () => {
   let component: RouteEditPage;
   let saveSpy: jasmine.Spy<(input: RouteSaveInput) => Promise<Route>>;
 
-  async function setup(routeIdParam = 'new', cragId = 'c1', sectorId = 's1'): Promise<void> {
+  async function setup(
+    routeIdParam = 'new',
+    cragId = 'c1',
+    sectorId = 's1',
+    sectors: Sector[] = [],
+  ): Promise<void> {
     saveSpy = jasmine.createSpy('save').and.resolveTo({
       id: 'r1',
       sectorId,
@@ -36,6 +43,10 @@ describe('RouteEditPage', () => {
           useValue: { load: () => Promise.resolve(), items: signal<Route[]>([]), save: saveSpy, remove: () => Promise.resolve() },
         },
         {
+          provide: SectorRepository,
+          useValue: { load: () => Promise.resolve(), items: signal<Sector[]>(sectors) },
+        },
+        {
           provide: ActivatedRoute,
           useValue: { snapshot: { paramMap: convertToParamMap({ cragId, sectorId, routeId: routeIdParam }) } },
         },
@@ -53,6 +64,68 @@ describe('RouteEditPage', () => {
   it('reads the sector id from the route param', async () => {
     await setup('new', 'crag-1', 'sector-5');
     expect(component.sectorId()).toBe('sector-5');
+  });
+
+  it('backlog/113 — prefills the length from the sector default for a new route', async () => {
+    const sector: Sector = { id: 's1', cragId: 'c1', name: 'Napos fal', defaultLengthInMeters: 25, deleted: false };
+    await setup('new', 'c1', 's1', [sector]);
+    expect(component.form.controls.lengthInMeters.value).toBe(25);
+  });
+
+  it('backlog/113 — leaves the length blank when the sector has no default', async () => {
+    const sector: Sector = { id: 's1', cragId: 'c1', name: 'Napos fal', defaultLengthInMeters: null, deleted: false };
+    await setup('new', 'c1', 's1', [sector]);
+    expect(component.form.controls.lengthInMeters.value).toBeNull();
+  });
+
+  it('backlog/113 — does not touch the length prefill when editing an existing route', async () => {
+    saveSpy = jasmine.createSpy('save');
+    await TestBed.configureTestingModule({
+      imports: [RouteEditPage],
+      providers: [
+        provideRouter([]),
+        provideTranslateService(),
+        {
+          provide: RouteRepository,
+          useValue: {
+            load: () => Promise.resolve(),
+            items: signal<Route[]>([
+              {
+                id: 'r1',
+                sectorId: 's1',
+                name: 'Sárkányfészek',
+                guidebookGrade: '7b+',
+                lengthInMeters: null,
+                totalPitches: null,
+                rockType: null,
+                aspect: null,
+                deleted: false,
+              },
+            ]),
+            save: saveSpy,
+            remove: () => Promise.resolve(),
+          },
+        },
+        {
+          provide: SectorRepository,
+          useValue: {
+            load: () => Promise.resolve(),
+            items: signal<Sector[]>([{ id: 's1', cragId: 'c1', name: 'Napos fal', defaultLengthInMeters: 25, deleted: false }]),
+          },
+        },
+        {
+          provide: ActivatedRoute,
+          useValue: { snapshot: { paramMap: convertToParamMap({ cragId: 'c1', sectorId: 's1', routeId: 'r1' }) } },
+        },
+        { provide: AlertController, useValue: { create: () => Promise.resolve({ present: () => Promise.resolve() }) } },
+      ],
+    }).compileComponents();
+    spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
+    fixture = TestBed.createComponent(RouteEditPage);
+    component = fixture.componentInstance;
+    await component.ngOnInit();
+
+    expect(component.form.controls.lengthInMeters.value).toBeNull();
   });
 
   it('save() forwards the guidebook grade verbatim, pinned to the sector', async () => {

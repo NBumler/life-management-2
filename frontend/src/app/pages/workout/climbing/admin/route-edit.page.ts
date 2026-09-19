@@ -17,6 +17,7 @@ import {
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 import { RouteRepository, RouteSaveInput } from '../../../../core/data/route.repository';
+import { SectorRepository } from '../../../../core/data/sector.repository';
 import { Aspect } from '../../../../shared/aspect';
 import { AspectPickerComponent } from '../../../../shared/aspect-picker/aspect-picker.component';
 
@@ -50,6 +51,7 @@ export class RouteEditPage implements OnInit {
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
   private readonly repository = inject(RouteRepository);
+  private readonly sectorRepository = inject(SectorRepository);
   private readonly alertController = inject(AlertController);
   private readonly translate = inject(TranslateService);
 
@@ -89,6 +91,15 @@ export class RouteEditPage implements OnInit {
         aspect: existing.aspect ?? null,
         topoNumber: existing.topoNumber ?? null,
       });
+      return;
+    }
+
+    // backlog/113 — new route under a sector: prefill the length from the sector's default so it
+    // doesn't start blank when the sector already has one; the user can still overwrite it.
+    await this.sectorRepository.load();
+    const sector = this.sectorRepository.items().find((s) => s.id === this.sectorId() && !s.deleted);
+    if (sector?.defaultLengthInMeters != null) {
+      this.form.patchValue({ lengthInMeters: sector.defaultLengthInMeters });
     }
   }
 

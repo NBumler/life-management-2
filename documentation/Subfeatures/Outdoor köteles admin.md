@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-09
-verifikalt_commit: b5d1556
+verifikalva: 2026-09-19
+verifikalt_commit: f1d6d59
 ---
 
 # Outdoor köteles admin
@@ -24,7 +24,7 @@ Kültéri köteles törzsadat: **Crag → Sector → Route**.
 | Entitás | Fő mezők |
 |---|---|
 | `Crag` / `Sector` | Mint [[Outdoor boulder admin]] (közös helyszín fa). A `Sector` **`defaultLengthInMeters`** mezője (`backlog/088`) itt van hossz-fogyasztója: a köteles napló ide esik vissza, ha az útnak nincs saját hossza. |
-| `Route` | `name`, `guidebookGrade`, `lengthInMeters`, `totalPitches` (kötélhossz; új Route űrlapon **alapból `1`** — az egyhosszos út a gyakori eset, tárolt `null` is `1`-ként jelenik meg), `rockType`, `aspect`, `topoNumber`, soft delete |
+| `Route` | `name`, `guidebookGrade`, `lengthInMeters` (új Route űrlapon a szektor `defaultLengthInMeters`-ével **előtöltött**, ha van — `backlog/113`; kézzel felülírható, csak a Route létrehozásakor, mentés után a Route saját mezője), `totalPitches` (kötélhossz; új Route űrlapon **alapból `1`** — az egyhosszos út a gyakori eset, tárolt `null` is `1`-ként jelenik meg), `rockType`, `aspect`, `topoNumber`, soft delete |
 
 `aspect` (fekvés) — **8 irányú égtáj-enum**: `N`, `NE`, `E`, `SE`, `S`, `SW`, `W`, `NW` (üres/`null` = ismeretlen; nincs `UNKNOWN` tag). Bevitel a `Route` és a `Sector` szerkesztőn a **vizuális választóval** (`app-aspect-picker`): négyzet kerületén a 8 irány, É felül, egy tap; a kijelöltre újra tap → törlés. Iránytű-fokból a `degreesToAspect` binnel (45°-os cikkek, az alsó határ felfelé kerekít — 22,5° = `NE`); paritás-fixture: `shared/fixtures/aspect-degrees.json` (kliens: `shared/aspect.ts`, backend: `hu.bumler.lm2.common.AspectDirection`). A `Route` saját `aspect`-je a `Sector` defaultja fölött nyer — de ez **törzsadat**: a napló nem tárolja és nem szerkeszti (`backlog/084` — nincs session-szintű felülírás), legfeljebb megjeleníti a feloldott értéket.
 

@@ -14,6 +14,10 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-20 — #113** Új út hossz-mező előtöltése a szektor alapértelmezett hosszával. Amikor a
+  user egy szektoron belül új Route-ot hoz létre, a `lengthInMeters` mező alapértéke a szektor
+  `defaultLengthInMeters`-e lesz (ha van), szabadon felülírható mentés előtt — korábban a mező
+  üresen indult, pedig a fekvés/kőzet mezőknél már volt hasonló, dokumentált öröklés.
 - **2026-09-20 — #114** Mászó-admin névmezők ne kapitalizáljanak automatikusan mobilon. A
   `Route`/`Crag`/`Sector`/`Gym`/`IndoorRoute` szerkesztő `name` mezője mind `autocapitalize="off"`-ot
   kapott — korábban a natív billentyűzet mondat-eleji nagybetűsítést alkalmazott, ami zavaró volt
