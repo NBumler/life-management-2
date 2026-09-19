@@ -692,7 +692,9 @@
       "HELP_BOULDER": "Font: szám + betű (A–C), opcionális +. Példa: 6A, 6B+, 7C — a 3, 4, 5 betű nélkül is érvényes, 6-tól kötelező a betű. V-skála: V + szám. Példa: V0–V17.",
       "HELP_ROPE": "Francia: szám + betű (a–c), opcionális +. Példa: 6a, 6a+, 7b — a 3, 4, 5 betű nélkül is érvényes, 6-tól kötelező a betű. YDS: 5. + fok, 5.10 felett a–d. Példa: 5.9, 5.10a. UIAA: római szám, opcionális +/−. Példa: VI-, VII+.",
       "ERROR_UNKNOWN": "A fokozat nem ismerhető fel. Nézd meg a súgót a példákért.",
-      "ERROR_AMBIGUOUS": "Egészítsd ki a fokozatot (pl. 6 → 6a), vagy válassz a javaslatokból."
+      "ERROR_AMBIGUOUS": "Egészítsd ki a fokozatot (pl. 6 → 6a), vagy válassz a javaslatokból.",
+      "ERROR_MISSING_LETTER_BOULDER": "Font skálán betű is kell a szám mellé, pl. 4A+ (nem elég a puszta +/−).",
+      "ERROR_MISSING_LETTER_ROPE": "Francia skálán betű kell a szám mellé (pl. 4a+), UIAA-ban pedig római szám (pl. IV+) — a puszta +/− önmagában nem elég."
     },
     "ASPECT_PICKER": {
       "GROUP_LABEL": "Fekvés (égtáj)",

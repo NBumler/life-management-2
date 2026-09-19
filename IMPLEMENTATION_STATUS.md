@@ -14,6 +14,10 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-20 — #116** Dedikált hibaüzenet a "szám+/-" grade-mintára (pl. `4+`, `6-`). Korábban ez
+  csak az általános "ismeretlen fokozat" üzenetet kapta; most a `GradeInputComponent` felismeri ezt
+  a gyakori félregépelést (arab szám + bare `+`/`-`, betű/római szám nélkül) és diszciplína-függő
+  javítást ajánl (Boulder: Font betű, pl. `4A+`; Rope: Francia betű vagy UIAA római szám).
 - **2026-09-20 — #115** Színsáv hex mező mellé natív színválasztó gomb. A `GymColorBand` szerkesztő
   `hexColor` mezője mellett egy `slot="end"` gomb natív `input[type=color]` palettát nyit (a súgó-gomb
   mintájára); a kiválasztott szín visszaírja a szöveges mezőt a kanonikus `#rrggbb` alakra. A kézi

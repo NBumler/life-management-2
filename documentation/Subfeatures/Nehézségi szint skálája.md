@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-09
-verifikalt_commit: b03e284
+verifikalva: 2026-09-19
+verifikalt_commit: f1d6d59
 ---
 
 # Nehézségi szint skálája
@@ -70,7 +70,7 @@ vonatkozik, hogy az út-pickerből előtöltött `userRawInput` ne ragadjon `UNK
    - **Üres:** nincs postfix; INVALID
    - **Egyértelmű** (pontosan egy regex): záró badge = FRA / YDS / UIAA / V / FONT; VALID
    - **Kétértelmű** (tiszta szám, pl. `4`/`6`): suggestion `ion-chip`-sor + inline hiba-note (`ERROR_AMBIGUOUS`); köteles `6` → VI és 6a; `4` → IV és 4. Fallback: `3`/`4`/`5` VALID Francia default (ezeken a fokokon francia/Font betű nélkül is érvényes grade — a `3` a mátrix `FRENCH '3'` / `FONT '3'` sora; `1`/`2` mátrixsor nélkül marad kétértelmű); **`6`-tól felfelé minden csupasz szám** (`6`, `7`, `8`, `9`, …) INVALID amíg nincs chip-választás — francia/Font jelölésben 6-tól kötelező a betű (`6a`/`6A` stb.)
-   - **Ismeretlen:** `?` záró badge + `HelpInputComponent` súgó-ikon → `AlertController` modal példákkal + inline hiba-note (`ERROR_UNKNOWN`); INVALID
+   - **Ismeretlen:** `?` záró badge + `HelpInputComponent` súgó-ikon → `AlertController` modal példákkal + inline hiba-note (`ERROR_UNKNOWN`); INVALID. **Egy alesetnek** — puszta arab szám + betű/római szám nélküli `+`/`-` (pl. `4+`, `6-`, `backlog/116`) — dedikált, diszciplína-függő hiba-note jár a generikus `ERROR_UNKNOWN` helyett: `ERROR_MISSING_LETTER_BOULDER` (Font-nál betű kell, pl. `4A+`) / `ERROR_MISSING_LETTER_ROPE` (Francia betű, pl. `4a+`, vagy UIAA római szám, pl. `IV+`) — felismerés: `isBareNumberWithModifier` (`shared/climbing/grade-scale.ts`).
 3. **Mobil pre-parsing:** Boulder → NAGYBETŰ; Köteles → kisbetű (kivéve I,V,X UIAA karakterek); `trim()`
 
 ### Megjegyzések

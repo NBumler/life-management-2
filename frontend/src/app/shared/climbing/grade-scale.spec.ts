@@ -1,4 +1,4 @@
-import { normalizeGradeInput, parseGrade, scalePostfix } from './grade-scale';
+import { isBareNumberWithModifier, normalizeGradeInput, parseGrade, scalePostfix } from './grade-scale';
 
 describe('grade-scale', () => {
   describe('normalizeGradeInput', () => {
@@ -26,6 +26,26 @@ describe('grade-scale', () => {
       expect(parseGrade('abc', 'ROPE').status).toBe('UNKNOWN');
       expect(parseGrade('7z', 'ROPE').status).toBe('UNKNOWN');
       expect(parseGrade('nope', 'BOULDER').status).toBe('UNKNOWN');
+    });
+
+    it('is UNKNOWN for a bare number + modifier missing its letter/roman numeral (backlog/116)', () => {
+      expect(parseGrade('4+', 'BOULDER').status).toBe('UNKNOWN');
+      expect(parseGrade('4-', 'ROPE').status).toBe('UNKNOWN');
+      expect(parseGrade('6+', 'BOULDER').status).toBe('UNKNOWN');
+    });
+  });
+
+  describe('isBareNumberWithModifier', () => {
+    it('flags an arabic digit with a bare +/- and no letter/roman numeral', () => {
+      expect(isBareNumberWithModifier('4+')).toBe(true);
+      expect(isBareNumberWithModifier('12-')).toBe(true);
+    });
+
+    it('does not flag a fully-formed grade or a plain number', () => {
+      expect(isBareNumberWithModifier('4A+')).toBe(false);
+      expect(isBareNumberWithModifier('IV+')).toBe(false);
+      expect(isBareNumberWithModifier('4')).toBe(false);
+      expect(isBareNumberWithModifier('abc')).toBe(false);
     });
   });
 

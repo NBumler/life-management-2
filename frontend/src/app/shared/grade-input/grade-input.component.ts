@@ -3,7 +3,14 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { IonChip } from '@ionic/angular/standalone';
 
 import { ClimbingScale } from '../climbing/climbing-grade-matrix';
-import { ClimbingDiscipline, GradeCandidate, GradeParseResult, parseGrade, scalePostfix } from '../climbing/grade-scale';
+import {
+  ClimbingDiscipline,
+  GradeCandidate,
+  GradeParseResult,
+  isBareNumberWithModifier,
+  parseGrade,
+  scalePostfix,
+} from '../climbing/grade-scale';
 import { HelpInputComponent } from '../help-input/help-input.component';
 
 const EMPTY_PARSE: GradeParseResult = { status: 'EMPTY', normalized: '', scale: null, absoluteDifficultyIndex: null, candidates: [] };
@@ -107,8 +114,14 @@ export class GradeInputComponent implements ControlValueAccessor, OnDestroy {
   }
 
   get errorKey(): string | null {
-    switch (this.parsed().status) {
+    const result = this.parsed();
+    switch (result.status) {
       case 'UNKNOWN':
+        if (isBareNumberWithModifier(result.normalized)) {
+          return this.discipline === 'BOULDER'
+            ? 'SHARED.GRADE_INPUT.ERROR_MISSING_LETTER_BOULDER'
+            : 'SHARED.GRADE_INPUT.ERROR_MISSING_LETTER_ROPE';
+        }
         return 'SHARED.GRADE_INPUT.ERROR_UNKNOWN';
       case 'AMBIGUOUS':
         return 'SHARED.GRADE_INPUT.ERROR_AMBIGUOUS';

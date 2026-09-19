@@ -69,7 +69,18 @@ const SCALE_PATTERNS: Record<ClimbingScale, RegExp> = {
 };
 
 const BARE_NUMBER = /^\d+$/;
+const NUMBER_WITH_BARE_MODIFIER = /^\d+[+-]$/;
 const ROMAN_1_TO_12 = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+
+/**
+ * A common mistyping: an arabic digit with a bare `+`/`-` and no scale letter (`4+`, `6-`) or roman
+ * numeral. It matches no `SCALE_PATTERNS` (Font/French need a letter, UIAA needs roman numerals), so
+ * `parseGrade` reports `UNKNOWN` — this flags that specific sub-case so the UI can suggest the fix
+ * instead of showing the generic "not recognised" message.
+ */
+export function isBareNumberWithModifier(normalized: string): boolean {
+  return NUMBER_WITH_BARE_MODIFIER.test(normalized);
+}
 
 /**
  * Nehézségi szint skálája.md "Mobil pre-parsing": trim; Boulder → UPPER; Köteles → lower, but the

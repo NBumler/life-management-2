@@ -692,7 +692,9 @@
       "HELP_BOULDER": "Font: number + letter (A–C), optional +. Example: 6A, 6B+, 7C — bare 3, 4, 5 are also valid, from 6 the letter is required. V-scale: V + number. Example: V0–V17.",
       "HELP_ROPE": "French: number + letter (a–c), optional +. Example: 6a, 6a+, 7b — bare 3, 4, 5 are also valid, from 6 the letter is required. YDS: 5. + grade, a–d above 5.10. Example: 5.9, 5.10a. UIAA: roman numeral, optional +/−. Example: VI-, VII+.",
       "ERROR_UNKNOWN": "Grade not recognised. Check the help for examples.",
-      "ERROR_AMBIGUOUS": "Complete the grade (e.g. 6 → 6a), or pick one of the suggestions."
+      "ERROR_AMBIGUOUS": "Complete the grade (e.g. 6 → 6a), or pick one of the suggestions.",
+      "ERROR_MISSING_LETTER_BOULDER": "Font grades need a letter next to the number, e.g. 4A+ (a bare +/− is not enough).",
+      "ERROR_MISSING_LETTER_ROPE": "French grades need a letter next to the number (e.g. 4a+), UIAA needs a roman numeral (e.g. IV+) — a bare +/− alone is not enough."
     },
     "ASPECT_PICKER": {
       "GROUP_LABEL": "Aspect (compass direction)",

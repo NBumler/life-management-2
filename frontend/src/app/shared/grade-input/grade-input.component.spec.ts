@@ -52,6 +52,18 @@ describe('GradeInputComponent', () => {
     expect(component.chips.length).toBe(0);
   }));
 
+  it('shows a discipline-specific hint for a bare number + modifier (backlog/116)', fakeAsync(() => {
+    component.onInput('4+');
+    tick(250);
+    expect(component.badge).toBe('?');
+    expect(component.errorKey).toBe('SHARED.GRADE_INPUT.ERROR_MISSING_LETTER_BOULDER');
+
+    component.discipline = 'ROPE';
+    component.onInput('4-');
+    tick(250);
+    expect(component.errorKey).toBe('SHARED.GRADE_INPUT.ERROR_MISSING_LETTER_ROPE');
+  }));
+
   it('offers ambiguity chips for a bare rope number and resolves on pick', fakeAsync(() => {
     component.discipline = 'ROPE';
     component.onInput('6');
