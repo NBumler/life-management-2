@@ -50,6 +50,18 @@
       "INCOMPLETE": "A recipe/food referenced by one of today's items is missing — the daily total is incomplete.",
       "NOT_COMPUTABLE": "Fill in your profile (weight, height, goal) to see today's target.",
       "SET_UP_PROFILE": "Open profile"
+    },
+    "WORKOUTS": {
+      "TITLE": "Today's workouts",
+      "STEPS": "Steps",
+      "WORKOUT": "Workout log",
+      "CLIMBING": "Climbing",
+      "SWIM": "Swimming",
+      "BIKE": "Cycling",
+      "STEP_COUNT": "{{count}} steps",
+      "SESSION_COUNT": "{{count}} session(s)",
+      "TOTAL": "Total",
+      "EMPTY": "No workouts logged yet today."
     }
   },
   "MENU": {

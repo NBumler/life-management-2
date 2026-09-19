@@ -1,0 +1,25 @@
+@if (rowDefs.length > 0) {
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>{{ 'HOME.WORKOUTS.TITLE' | translate }}</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      @if (rows().length > 0) {
+        @for (row of rows(); track row.key) {
+          <div class="workout-row">
+            <ion-icon [name]="row.icon" class="workout-icon"></ion-icon>
+            <span class="workout-label">{{ row.labelKey | translate }}</span>
+            <span class="workout-count">{{ row.countLabelKey | translate: { count: row.count } }}</span>
+            <span class="workout-kcal">{{ row.kcal | number: '1.0-0' }} kcal</span>
+          </div>
+        }
+        <div class="workout-row workout-total">
+          <span class="workout-label">{{ 'HOME.WORKOUTS.TOTAL' | translate }}</span>
+          <span class="workout-kcal">{{ totalKcal() | number: '1.0-0' }} kcal</span>
+        </div>
+      } @else {
+        <ion-note>{{ 'HOME.WORKOUTS.EMPTY' | translate }}</ion-note>
+      }
+    </ion-card-content>
+  </ion-card>
+}

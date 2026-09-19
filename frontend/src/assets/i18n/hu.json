@@ -50,6 +50,18 @@
       "INCOMPLETE": "Egy mai tétel hivatkozott receptje/élelmiszere hiányzik — a napi összesítés hiányos.",
       "NOT_COMPUTABLE": "Add meg a profil adataidat (súly, magasság, cél), hogy lásd a mai célt.",
       "SET_UP_PROFILE": "Profil megnyitása"
+    },
+    "WORKOUTS": {
+      "TITLE": "Mai edzések",
+      "STEPS": "Lépés",
+      "WORKOUT": "Edzésnapló",
+      "CLIMBING": "Mászás",
+      "SWIM": "Úszás",
+      "BIKE": "Bicikli",
+      "STEP_COUNT": "{{count}} lépés",
+      "SESSION_COUNT": "{{count}} alkalom",
+      "TOTAL": "Összesen",
+      "EMPTY": "Ma még nem volt edzés."
     }
   },
   "MENU": {

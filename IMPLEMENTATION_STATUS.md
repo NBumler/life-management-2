@@ -14,6 +14,12 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-20 — #112** Dashboard "Mai edzések" widget (lépés/edzésnapló/mászás/úszás/bicikli +
+  extra kalória). Új `today-workouts` Kezdőlap-widget: soronként a mai (helyi naptári nap) élő
+  aktivitások + saját extra-kalóriájuk, plusz egy összesített kcal sor — ugyanabból az
+  `activity-kcal.ts`-ből, mint a "Mai étkezés állása" widget mögötti TDEE-számítás. Soronkénti
+  flag-elés (`HOME_TODAY_WORKOUT_ROWS`), a widget csak akkor tűnik el teljesen, ha egyik sor
+  flagje sincs bekapcsolva; ha van engedélyezett sor de nincs mai adat, üres állapot üzenet.
 - **2026-09-20 — #117** Ion-modal + slotolt komponens magasság-fix — audit + megosztott mixin.
   `backlog/098` (gyakorlat-picker) mintáját megismételte az Étkezés tétel-szerkesztője
   (`meal-item-editor`) — javítva, és a `:host` szabály `shared/styles/_ion-modal-host.scss`

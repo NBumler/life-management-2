@@ -6,6 +6,7 @@ import {
   arrowUndoOutline,
   bagHandleOutline,
   barbellOutline,
+  bicycleOutline,
   businessOutline,
   calendarOutline,
   cartOutline,
@@ -56,6 +57,7 @@ import {
   trailSignOutline,
   trashOutline,
   walletOutline,
+  waterOutline,
 } from 'ionicons/icons';
 
 /**
@@ -73,6 +75,7 @@ export function registerIcons(): void {
     'arrow-undo-outline': arrowUndoOutline,
     'bag-handle-outline': bagHandleOutline,
     'barbell-outline': barbellOutline,
+    'bicycle-outline': bicycleOutline,
     'business-outline': businessOutline,
     'calendar-outline': calendarOutline,
     'cart-outline': cartOutline,
@@ -123,5 +126,6 @@ export function registerIcons(): void {
     'trail-sign-outline': trailSignOutline,
     'trash-outline': trashOutline,
     'wallet-outline': walletOutline,
+    'water-outline': waterOutline,
   });
 }
