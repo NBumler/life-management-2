@@ -1236,6 +1236,7 @@
         "FIELD_HEX": "Hex szín",
         "HEX_INVALID": "3 vagy 6 jegyű hex szín kell (pl. #f0a vagy #ff00aa).",
         "HEX_CONFLICT": "Ebben a teremben már van sáv ezzel a színnel.",
+        "HEX_PICKER_LABEL": "Szín kiválasztása palettáról",
         "FIELD_VARIANT": "Változat",
         "FIELD_GRADE_LOWER": "Alsó fokozat",
         "FIELD_GRADE_UPPER": "Felső fokozat",

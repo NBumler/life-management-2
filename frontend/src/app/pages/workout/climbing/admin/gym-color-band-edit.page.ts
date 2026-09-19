@@ -9,6 +9,7 @@ import {
   IonButtons,
   IonContent,
   IonHeader,
+  IonIcon,
   IonInput,
   IonItem,
   IonList,
@@ -24,8 +25,12 @@ import { GymColorBand } from '../../../../api/model/gymColorBand';
 import { GymColorBandHexConflictError, GymColorBandRepository, GymColorBandSaveInput } from '../../../../core/data/gym-color-band.repository';
 import { parseGrade } from '../../../../shared/climbing/grade-scale';
 import { GradeInputComponent } from '../../../../shared/grade-input/grade-input.component';
+import { normalizeHexColor } from '../../../../shared/hex-color-normalization';
 
 const HEX_PATTERN = /^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
+const HEX_6_DIGIT = /^#[0-9a-f]{6}$/;
+/** Neutral fallback so the native `input[type=color]` always has a valid 6-digit value to open with. */
+const HEX_PICKER_FALLBACK = '#888888';
 
 /**
  * documentation/Subfeatures/Indoor boulder admin.md — the colour-band editor. `hexColor` must be a
@@ -46,6 +51,7 @@ const HEX_PATTERN = /^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
     IonBackButton,
     IonButton,
     IonContent,
+    IonIcon,
     IonList,
     IonItem,
     IonInput,
@@ -90,6 +96,11 @@ export class GymColorBandEditPage implements OnInit {
     this.upperParse().status === 'VALID' ? this.upperParse().absoluteDifficultyIndex : null,
   );
   readonly gradesValid = computed(() => this.lowerIndex() !== null && this.upperIndex() !== null);
+  /** backlog/115 — the native colour-picker button's current swatch; falls back to a neutral grey while the text field isn't a valid 6-digit hex yet. */
+  readonly hexColorPreview = computed(() => {
+    const normalized = normalizeHexColor(this.value().hexColor ?? '');
+    return HEX_6_DIGIT.test(normalized) ? normalized : HEX_PICKER_FALLBACK;
+  });
 
   async ngOnInit(): Promise<void> {
     await this.repository.load();
@@ -111,6 +122,13 @@ export class GymColorBandEditPage implements OnInit {
         gradeUpper: existing.gradeUpper,
       });
     }
+  }
+
+  /** backlog/115 — the hidden native `input[type=color]` picked a swatch; write it back as the canonical hex. */
+  onColorPicked(event: Event): void {
+    const picked = (event.target as HTMLInputElement).value;
+    this.form.patchValue({ hexColor: normalizeHexColor(picked) });
+    this.form.controls.hexColor.markAsTouched();
   }
 
   async save(): Promise<void> {

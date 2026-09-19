@@ -97,4 +97,26 @@ describe('GymColorBandEditPage', () => {
     await component.save();
     expect(component.hexConflict()).toBe(true);
   });
+
+  it('backlog/115 — hexColorPreview mirrors a valid 6-digit hex, canonicalised', async () => {
+    await setup();
+    component.form.patchValue({ hexColor: '#FF00AA' });
+    expect(component.hexColorPreview()).toBe('#ff00aa');
+  });
+
+  it('backlog/115 — hexColorPreview falls back to neutral grey for an invalid/short/empty hex', async () => {
+    await setup();
+    expect(component.hexColorPreview()).toBe('#888888');
+    component.form.patchValue({ hexColor: '#f0a' });
+    expect(component.hexColorPreview()).toBe('#ff00aa'); // 3-digit still expands to a valid preview
+    component.form.patchValue({ hexColor: 'nope' });
+    expect(component.hexColorPreview()).toBe('#888888');
+  });
+
+  it('backlog/115 — onColorPicked writes back the canonical hex and marks the field touched', async () => {
+    await setup();
+    component.onColorPicked({ target: { value: '#FF00AA' } } as unknown as Event);
+    expect(component.form.controls.hexColor.value).toBe('#ff00aa');
+    expect(component.form.controls.hexColor.touched).toBe(true);
+  });
 });

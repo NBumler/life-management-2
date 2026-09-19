@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: dac7f81
+verifikalva: 2026-09-19
+verifikalt_commit: f1d6d59
 ---
 
 # Indoor boulder admin
@@ -49,7 +49,12 @@ CRUD: terem lista, szín-sávok nested vagy külön; soft delete; megerősítés
 ### UI/UX elvárások
 
 - Belépés: [[Mászónapló]] hub Admin, vagy Indoor Boulder napló jobb felső admin.
-- Terem szerkesztő + színlista; színválasztó + grade alsó/felső a shared nehézség komponenssel.
+- Terem szerkesztő + színlista; grade alsó/felső a shared nehézség komponenssel.
+- `hexColor` bevitel kétféleképp: szabad szöveges `ion-input` (`#rrggbb`/rövid forma) **és** a mező
+  végén (`slot="end"`) egy gomb, ami egy natív `input[type=color]` színpalettát nyit (`backlog/115`,
+  minta: a súgó-gomb `shared/help-input/`). A paletta választása visszaírja a szöveges mezőt a
+  kanonikus (`#rrggbb`, kisbetűs) alakra; amíg a szöveges mező nem érvényes 6-jegyű hex, a paletta
+  gomb egy semleges szürke (`#888888`) mintaszínnel nyílik.
 - Egyedi hex validáció mentéskor (a kanonikus alakon — [[Névegyediség]]).
 
 ### Megjegyzések

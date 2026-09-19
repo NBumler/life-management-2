@@ -14,6 +14,10 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-20 — #115** Színsáv hex mező mellé natív színválasztó gomb. A `GymColorBand` szerkesztő
+  `hexColor` mezője mellett egy `slot="end"` gomb natív `input[type=color]` palettát nyit (a súgó-gomb
+  mintájára); a kiválasztott szín visszaírja a szöveges mezőt a kanonikus `#rrggbb` alakra. A kézi
+  szöveges beírás változatlanul működik.
 - **2026-09-20 — #113** Új út hossz-mező előtöltése a szektor alapértelmezett hosszával. Amikor a
   user egy szektoron belül új Route-ot hoz létre, a `lengthInMeters` mező alapértéke a szektor
   `defaultLengthInMeters`-e lesz (ha van), szabadon felülírható mentés előtt — korábban a mező

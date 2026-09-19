@@ -29,7 +29,24 @@
           placeholder="#rrggbb"
           [label]="'WORKOUT.CLIMBING.BAND.FIELD_HEX' | translate"
           label-placement="stacked"
-        ></ion-input>
+        >
+          <ion-button
+            slot="end"
+            fill="clear"
+            type="button"
+            (click)="colorPicker.click()"
+            [attr.aria-label]="'WORKOUT.CLIMBING.BAND.HEX_PICKER_LABEL' | translate"
+          >
+            <ion-icon slot="icon-only" name="color-palette-outline"></ion-icon>
+          </ion-button>
+        </ion-input>
+        <input
+          #colorPicker
+          type="color"
+          style="position: absolute; width: 0; height: 0; opacity: 0; pointer-events: none"
+          [value]="hexColorPreview()"
+          (input)="onColorPicked($event)"
+        />
       </ion-item>
       @if (form.controls.hexColor.touched && form.controls.hexColor.invalid) {
         <ion-item lines="none">
