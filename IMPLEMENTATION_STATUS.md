@@ -37,10 +37,11 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
   user egy szektoron belül új Route-ot hoz létre, a `lengthInMeters` mező alapértéke a szektor
   `defaultLengthInMeters`-e lesz (ha van), szabadon felülírható mentés előtt — korábban a mező
   üresen indult, pedig a fekvés/kőzet mezőknél már volt hasonló, dokumentált öröklés.
-- **2026-09-20 — #114** Mászó-admin névmezők ne kapitalizáljanak automatikusan mobilon. A
-  `Route`/`Crag`/`Sector`/`Gym`/`IndoorRoute` szerkesztő `name` mezője mind `autocapitalize="off"`-ot
-  kapott — korábban a natív billentyűzet mondat-eleji nagybetűsítést alkalmazott, ami zavaró volt
-  kisbetűs/vegyes írásmódú topó-neveknél.
+- **2026-09-20 — #114** Mászó-admin névmezők kapitalizáljanak automatikusan mobilon. A
+  `Route`/`Crag`/`Sector`/`Gym`/`IndoorRoute` szerkesztő `name` mezője mind explicit
+  `autocapitalize="sentences"`-t kapott — korábban egyáltalán nem kapitalizált a natív billentyűzet,
+  pedig a legtöbb route/crag/sector név tulajdonnévként nagybetűvel kezdődik. (Javítva ugyanaznap:
+  az eredeti implementáció tévesen `autocapitalize="off"`-ot állított be egy félreértés miatt.)
 - **2026-09-16 — #105** Túra — offline térkép-letöltés és offline útvonalszámítás. Új "Offline
   területek" panel (csak natív platformon): a felhasználó letöltheti az aktuális térkép-viewportot
   (z12–z15, max. 2500 csempe/régió) az alapértelmezett OSM alaptérkép-rétegből, Capacitor
