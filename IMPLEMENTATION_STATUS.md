@@ -14,6 +14,10 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-20 — #114** Mászó-admin névmezők ne kapitalizáljanak automatikusan mobilon. A
+  `Route`/`Crag`/`Sector`/`Gym`/`IndoorRoute` szerkesztő `name` mezője mind `autocapitalize="off"`-ot
+  kapott — korábban a natív billentyűzet mondat-eleji nagybetűsítést alkalmazott, ami zavaró volt
+  kisbetűs/vegyes írásmódú topó-neveknél.
 - **2026-09-16 — #105** Túra — offline térkép-letöltés és offline útvonalszámítás. Új "Offline
   területek" panel (csak natív platformon): a felhasználó letöltheti az aktuális térkép-viewportot
   (z12–z15, max. 2500 csempe/régió) az alapértelmezett OSM alaptérkép-rétegből, Capacitor
