@@ -1,13 +1,8 @@
-// Rendered as the sole child of an `<ion-modal>`'s `<ng-template>`. Ionic 8 does not add the
-// `.ion-page` wrapper for an inline modal whose slotted child is a component, so without this the
-// host collapses to its intrinsic height and `<ion-content>` gets almost no room — on Android the
-// list showed nothing, on web a single row. Mirror `.ion-page` so the content fills the modal and
-// the exercise list uses the whole height.
+@use '../styles/ion-modal-host' as modal-host;
+
+// Rendered as the sole child of an `<ion-modal>`'s `<ng-template>` — see shared/styles/_ion-modal-host.scss.
 :host {
-  display: flex;
-  flex-direction: column;
-  position: absolute;
-  inset: 0;
+  @include modal-host.ion-modal-host-fill;
 }
 
 .chip-row {

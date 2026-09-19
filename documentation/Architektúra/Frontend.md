@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-09
-verifikalt_commit: 914302f
+verifikalva: 2026-09-20
+verifikalt_commit: 1047919
 ---
 
 # Frontend
@@ -264,6 +264,14 @@ Platform-kényelmi pluginok (splash screen, status bar, keyboard) szükség szer
 - A feature kód a **repositoryból** olvas és ír; a generált klienst közvetlenül nem hívja.
 - Nincs hardcode felhasználói szöveg: minden i18n kulcson megy át.
 - Dátum / időzóna logika a közös, tesztelt DateTime modulon keresztül ([[Étkezés]] időzóna-szabályai).
+- **`<ion-modal>`-ba slotolt önálló komponens mindig `@include`-olja a `shared/styles/_ion-modal-host.scss`
+  `ion-modal-host-fill` mixint a saját `:host`-jában** (`backlog/117`). Ionic 8 nem ad `.ion-page`
+  wrappert egy inline modal (`<ion-modal><ng-template>`) slotolt Angular-komponense köré, így enélkül
+  a hoszt az intrinsic magasságára esik össze és a benne lévő `<ion-content>` majdnem 0 magasságot kap
+  (Androidon üresnek tűnő, weben egy-két soros lista — `backlog/098`, megismételve `backlog/117`-nél az
+  Étkezés tétel-szerkesztőjénél). Ha a modal `ng-template`-je közvetlenül `<ion-header>`/`<ion-content>`-et
+  ír (nem egy külön komponensre mutat, pl. `sync.page.html`, `tura.page.html`), ez a szabály nem
+  vonatkozik rá.
 
 #### Platform-képességmátrix
 

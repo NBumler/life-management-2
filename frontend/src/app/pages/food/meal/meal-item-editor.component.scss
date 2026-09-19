@@ -1,4 +1,13 @@
-// One meal item, edited full-width in a modal — the layout the cramped inline list row could never give.
+@use '../../../shared/styles/ion-modal-host' as modal-host;
+
+// One meal item, edited full-width in a modal — the layout the cramped inline list row could never
+// give. Rendered as the sole child of an `<ion-modal>`'s `<ng-template>` (meal-edit.page.html), so it
+// needs the same host-fill fix as shared/exercise-picker (backlog/098) — see
+// shared/styles/_ion-modal-host.scss (backlog/117).
+:host {
+  @include modal-host.ion-modal-host-fill;
+}
+
 .field-error {
   display: block;
   padding-inline: 16px;

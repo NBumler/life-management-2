@@ -14,6 +14,11 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-20 — #117** Ion-modal + slotolt komponens magasság-fix — audit + megosztott mixin.
+  `backlog/098` (gyakorlat-picker) mintáját megismételte az Étkezés tétel-szerkesztője
+  (`meal-item-editor`) — javítva, és a `:host` szabály `shared/styles/_ion-modal-host.scss`
+  `ion-modal-host-fill` mixinbe emelve (mindkét hívó erre állt át), a mintát a [[Frontend]]
+  "Kötelező elvek" is rögzíti a jövőbeli modal-slotolt komponensek számára.
 - **2026-09-20 — #116** Dedikált hibaüzenet a "szám+/-" grade-mintára (pl. `4+`, `6-`). Korábban ez
   csak az általános "ismeretlen fokozat" üzenetet kapta; most a `GradeInputComponent` felismeri ezt
   a gyakori félregépelést (arab szám + bare `+`/`-`, betű/római szám nélkül) és diszciplína-függő

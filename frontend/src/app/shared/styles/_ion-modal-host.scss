@@ -1,0 +1,13 @@
+// backlog/117 — Ionic 8's inline `<ion-modal><ng-template>` does not wrap a slotted Angular
+// component in a `.ion-page`. Without an explicit size, the host collapses to its intrinsic
+// `display: block` / `height: auto`, and any `<ion-content>` inside it gets almost no room —
+// on Android the content looked empty, on web it showed one or two rows (backlog/098, reproduced
+// again for backlog/117's meal-item-editor). Any component meant to be the sole child of such a
+// modal should `@include ion-modal-host-fill;` in its own `:host` rule instead of re-deriving
+// this from scratch.
+@mixin ion-modal-host-fill {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  inset: 0;
+}
