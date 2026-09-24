@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-24
-verifikalt_commit: 3aee8a9
+verifikalt_commit: edde907
 ---
 
 # Outdoor köteles napló
@@ -25,7 +25,7 @@ Kültéri köteles session + kísérletek / multi-pitch. Dashboard: **Outdoor K�
 |---|---|
 | Helyszín | `Crag` **session szinten** (egy alkalom = egy szikla); a **szektor kísérletenként** (`backlog/084`) — egy alkalom több szektort is érinthet. Új kísérlet-sor a szektort az **előző kísérletéből** tölti elő (első sornál az utolsó outdoor-kötél session utolsó kísérletének szektorából); a `Crag` váltása minden sor szektorát törli. |
 | Út | `Route` master **vagy** ad-hoc (+ `saveToCatalog`) — a `Route` opciók a kísérlet szektorából jönnek, a `saveToCatalog` a kísérlet szektorába ír. Út kiválasztásakor a fokozat és a hossz a Route-ból töltődik; **másik Route-ra váltáskor újratöltődik** az újból (és vele a levezetett nehézségi index) — kivéve ha a user közben kézzel átírta, akkor a kézi érték marad ([[Mászónapló]] `AscentAttempt`). |
-| `safetyStyle` | `TOPROPE` \| `LEAD` \| `TRAD` (TRAD: +6 kg aktív kalóriánál) |
+| `safetyStyle` | `TOPROPE` \| `LEAD` \| `TRAD` (TRAD: +6 kg aktív kalóriánál). Új kísérletnél `LEAD`; út választásakor a `Route.protectionType`-ból **előtöltődik** (`BOLTED → LEAD`, `TRAD`/`CLEAN → TRAD`, `TOPROPE → TOPROPE`, `shared/climbing/protection-type.ts`), de csak amíg a user kézzel nem állította (`safetyStyleAutoFilled` provenance) — utána szabadon módosítható (pl. a partner tradként vezeti, a user toprope-ként mássza). |
 | `lengthInMeters` | Öröklési sorrend (`backlog/088`): **1.** `Route.lengthInMeters` → **2.** a kísérlet szektorának `defaultLengthInMeters`-e → **3.** kézi felülírás. A `lengthAutoFilled` provenance-flag a szektor-defaultra is kiterjed: út- vagy szektorváltáskor az örökölt hossz újratöltődik, kézi átírásig. A kötél-kalória (`lengthInMeters × {25\|45\|60}`) a feloldott hosszt használja. |
 | `PitchLog` | **Opcionális** lista: `pitchNumber`, `isLead`, `rawGrade`, index, `lengthInMeters` — ha nincs kitöltve, elég session + teljes úthossz |
 | Másodmászó | `isLead=false` → aktív MET ×0.8 |

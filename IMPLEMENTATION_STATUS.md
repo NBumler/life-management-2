@@ -14,6 +14,11 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-24 — #118** Kültéri kötélút biztosítási típusa (`Route.protectionType`: Nittelt / Trad /
+  Clean / Toprope, opcionális), az út-admin rádiógombokkal; a kültéri köteles napló út-választáskor
+  ebből tölti elő a kísérlet `safetyStyle`-ját (kézi értéket nem ír felül). V44 + `SCHEMA_V41`, outbox
+  v10. — érintett: [[Outdoor köteles admin]], [[Outdoor köteles napló]]; kód: `climbing` (backend),
+  `pages/workout/climbing`, `shared/climbing`.
 - **2026-09-24 — #120** „Új kísérlet" gomb a kísérletlista alján is (≥1 kísérletnél), hozzáadás
   után görgetés az új kártyához — mind a 4 mászó kontextus-naplóban. — érintett: [[Mászónapló]] + a 4
   napló-spec; kód: `pages/workout/climbing/naplo`.

@@ -1,14 +1,14 @@
 ---
 id: 118
 type: feature
-status: ready
+status: done
 title: Mászó admin — kültéri kötélút biztosítási típusa (nittelt / trad / clean / toprope), rádiógombokkal
 specs:
   - "[[Outdoor köteles admin]]"
   - "[[Outdoor köteles napló]]"
 flag:
 created: 2026-09-24
-closed:
+closed: 2026-09-24
 ---
 
 # 118 — Mászó admin — kültéri kötélút biztosítási típusa (nittelt / trad / clean / toprope), rádiógombokkal
@@ -29,19 +29,19 @@ adott kísérletet, nem azt, milyen az út.
 
 ## Elfogadási kritériumok
 
-- [ ] Új opcionális mező a `Route`-on: `protectionType` enum `BOLTED | TRAD | CLEAN | TOPROPE`
+- [x] Új opcionális mező a `Route`-on: `protectionType` enum `BOLTED | TRAD | CLEAN | TOPROPE`
       (nullable; meglévő utak `null`-lal maradnak).
-- [ ] Flyway migráció (új oszlop + `CHECK` constraint az enumra), `ddl-auto=validate` zöld;
+- [x] Flyway migráció (új oszlop + `CHECK` constraint az enumra), `ddl-auto=validate` zöld;
       OpenAPI spec + `gen:api`; natív `SCHEMA_Vn` új oszlop; mindkét storage backend írja/olvassa.
-- [ ] Az út admin formon **rádiógomb-csoport** (`ion-radio-group`) a 4 opcióval + „nincs megadva"
+- [x] Az út admin formon **rádiógomb-csoport** (`ion-radio-group`) a 4 opcióval + „nincs megadva"
       (vagy visszakattintással törölhető) — nem legördülő.
-- [ ] i18n (hu/en) címkék: Nittelt / Trad / Clean / Toprope.
-- [ ] Az út részletek / választó listában a típus megjelenik (pl. rövid címke az út neve mellett).
-- [ ] Kültéri köteles naplóban út kiválasztásakor a kísérlet `safetyStyle`-ja a `protectionType`
+- [x] i18n (hu/en) címkék: Nittelt / Trad / Clean / Toprope.
+- [x] Az út részletek / választó listában a típus megjelenik (pl. rövid címke az út neve mellett).
+- [x] Kültéri köteles naplóban út kiválasztásakor a kísérlet `safetyStyle`-ja a `protectionType`
       alapján előtöltődik (leképezés: döntési napló), és utána szabadon módosítható.
-- [ ] `verify:outbox` snapshot frissítve (`OUTBOX_PAYLOAD_SCHEMA_VERSION` bump + migrációs lépés,
+- [x] `verify:outbox` snapshot frissítve (`OUTBOX_PAYLOAD_SCHEMA_VERSION` bump + migrációs lépés,
       ha kell — új nullable mező, a régi payload `null`-lal kiegészíthető).
-- [ ] Zöld lint + test:ci + build + backend test.
+- [x] Zöld lint + test:ci + build + backend test.
 
 ## Terv / döntési napló
 
@@ -56,5 +56,5 @@ adott kísérletet, nem azt, milyen az út.
 ## Lezáráskor (on-done)
 
 - Frissített specek: [[Outdoor köteles admin]], [[Outdoor köteles napló]]
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — <mit>
-- Kód: <fő package-ek / fájlok>
+- `IMPLEMENTATION_STATUS.md` sor: 2026-09-24 — #118
+- Kód: `climbing/Route*` (backend), `V44__climbing_route_protection_type.sql`, `SCHEMA_V41`, `shared/climbing/protection-type.ts`, `admin/route-edit.page.*`, `naplo/outdoor-rope-session-edit.page.*`
