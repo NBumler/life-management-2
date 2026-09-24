@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-09
-verifikalt_commit: 1d1b15c
+verifikalva: 2026-09-24
+verifikalt_commit: f866e86
 ---
 
 # Élelmiszer tárolás
@@ -69,7 +69,7 @@ Bevásárlás nélkül is felvehető:
 
 #### Készletcsökkenés étkezéskor
 
-Forrás: [[Élelmiszer forrású étkezés]], [[Recept forrású étkezés]] (nem: [[Egyéni forrású étkezés]]).
+Forrás: [[Élelmiszer forrású étkezés]], [[Recept forrású étkezés]] (nem: [[Egyéni forrású étkezés]]). Recept-tételnél a levont mennyiség a tétel hozzávaló-felülírásait követi: `(felülírt ?? recept szerinti) × servings` (`backlog/121`).
 
 Étkezés **létrehozásakor** levonás; szerkesztés / törlés esetén **nincs** visszapótlás ([[Étkezés]]).
 

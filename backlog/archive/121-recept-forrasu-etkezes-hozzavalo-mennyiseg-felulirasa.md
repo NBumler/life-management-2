@@ -1,7 +1,7 @@
 ---
 id: 121
 type: feature
-status: ready
+status: done
 title: Recept forrású étkezés — hozzávalók mennyiségének étkezés-szintű felülírása (a recept változatlan)
 specs:
   - "[[Recept forrású étkezés]]"
@@ -9,7 +9,7 @@ specs:
   - "[[Élelmiszer tárolás]]"
 flag:
 created: 2026-09-24
-closed:
+closed: 2026-09-24
 ---
 
 # 121 — Recept forrású étkezés — hozzávalók mennyiségének étkezés-szintű felülírása (a recept változatlan)
@@ -30,24 +30,24 @@ lehet arányosan skálázni.
 
 ## Elfogadási kritériumok
 
-- [ ] A recept-tételsoron kinyitható „Hozzávalók" rész, amely listázza a recept élő hozzávalóit a
+- [x] A recept-tételsoron kinyitható „Hozzávalók" rész, amely listázza a recept élő hozzávalóit a
       recept szerinti (1 adagszorzóra vett) alapértelmezett mennyiséggel; minden sor mennyisége
       szerkeszthető ([[Mennyiség mező]] komponens, mértékegységgel). A beírt érték a recept
       hozzávaló-mennyiségét **helyettesíti** erre az étkezésre, és a `servings` ezt is szorozza
       (effektív = felülírt mennyiség × `servings`); a UI mutatja az effektív mennyiséget is.
-- [ ] Egy hozzávaló 0-ra állítható (kimaradt), és a felülírás visszaállítható az alapértékre.
-- [ ] A felülírás **nem** módosítja a `Recipe` / `RecipeIngredient` sorokat.
-- [ ] A tétel makrói / ára hozzávalónként `(felülírt ?? recept szerinti mennyiség) × servings`
+- [x] Egy hozzávaló 0-ra állítható (kimaradt), és a felülírás visszaállítható az alapértékre.
+- [x] A felülírás **nem** módosítja a `Recipe` / `RecipeIngredient` sorokat.
+- [x] A tétel makrói / ára hozzávalónként `(felülírt ?? recept szerinti mennyiség) × servings`
       alapján számolódnak; a UI jelzi, hogy a tétel el van térítve a recepttől.
-- [ ] Készletlevonás létrehozáskor ugyanezzel az effektív mennyiséggel történik
+- [x] Készletlevonás létrehozáskor ugyanezzel az effektív mennyiséggel történik
       (`(felülírt ?? recept szerinti) × servings`), nem a recept szerintivel.
-- [ ] Új, szinkronizált gyerek-entitás (javaslat: `MealItemIngredientOverride`: `mealItemId`,
+- [x] Új, szinkronizált gyerek-entitás (javaslat: `MealItemIngredientOverride`: `mealItemId`,
       `recipeIngredientId`, `foodId` snapshot, `quantityAmount`, `quantityUnit`), a `Meal` nested
       aggregate PUT-jában mentve (`NestedChildResolver` minta), soft delete-tel.
-- [ ] Flyway + natív `SCHEMA_Vn` + OpenAPI + `gen:api`; `verify:outbox` snapshot frissítés
+- [x] Flyway + natív `SCHEMA_Vn` + OpenAPI + `gen:api`; `verify:outbox` snapshot frissítés
       (+ `OUTBOX_PAYLOAD_SCHEMA_VERSION` bump, migrációs lépés: régi payload → üres override-lista).
-- [ ] Offline: a felülírás és a levonás is a helyi tranzakcióban történik ([[Backend-offline first]]).
-- [ ] Zöld lint + test:ci + build + backend test + verify:outbox.
+- [x] Offline: a felülírás és a levonás is a helyi tranzakcióban történik ([[Backend-offline first]]).
+- [x] Zöld lint + test:ci + build + backend test + verify:outbox.
 
 ## Terv / döntési napló
 
@@ -56,6 +56,12 @@ lehet arányosan skálázni.
   mennyiségét cseréli, a `servings` utána ugyanúgy skáláz, mint a nem felülírt soroknál.
 - Nyitott: mi történik, ha a receptből utólag törlődik egy hozzávaló, amire override van
   (javaslat: az override a `foodId` snapshot alapján tovább számol, „recepten kívüli" jelöléssel).
+- **Döntés (implementáció, 2026-09-24):** a gyerek-entitás javaslat helyett a felülírások a `MealItem`
+  `ingredientOverrides` JSON-tömbjében élnek (jsonb / natívan TEXT): nincs saját id-juk, semmi nem
+  hivatkozik rájuk és csak a tétellel együtt változnak — a `HikeRoute.days` mintája. Így nincs új
+  szinkronizált tábla, `sync_changes` view-bővítés és tombstone-kezelés; a nested aggregate PUT
+  változatlanul egyben írja. A nyitott kérdés a javaslat szerint: recepten kívüli felülírás a `foodId`
+  snapshottal tovább számol, „recepten kívüli" jelöléssel.
 - Nem scope: recepten kívüli új hozzávaló felvétele a tételbe — erre ott a külön élelmiszer-tétel
   ([[Élelmiszer forrású étkezés]]).
 - Szerkesztésnél továbbra sincs készlet-visszapótlás / újralevonás ([[Étkezés]] meglévő szabálya).
@@ -63,5 +69,5 @@ lehet arányosan skálázni.
 ## Lezáráskor (on-done)
 
 - Frissített specek: [[Recept forrású étkezés]], [[Étkezés]], [[Élelmiszer tárolás]]
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — <mit>
-- Kód: <fő package-ek / fájlok>
+- `IMPLEMENTATION_STATUS.md` sor: 2026-09-24 — #121
+- Kód: `V47__meal_item_ingredient_overrides.sql`, `food/MealItem*` + `MealService` (backend), `SCHEMA_V44`, `pages/food/meal/recipe-overrides.ts`, `meal-item-editor.component.*`, `meal-item-row.ts`, `meal-item-summary.ts`, `core/data/meal.repository.ts`

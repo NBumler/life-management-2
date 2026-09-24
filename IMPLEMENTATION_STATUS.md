@@ -14,6 +14,11 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-24 — #121** Recept forrású étkezés hozzávalónkénti mennyiség-felülírása: a recept
+  változatlan, a beírt (ténylegesen felhasznált) mennyiséget a `servings` is szorozza; makrók, ár és
+  készletlevonás ugyanabból a `effectiveRecipeIngredients`-ből. `MealItem.ingredientOverrides`
+  JSON-tömb (V47 + `SCHEMA_V44`, outbox v13). — érintett: [[Recept forrású étkezés]], [[Étkezés]],
+  [[Élelmiszer tárolás]]; kód: `food` (backend), `pages/food/meal`, `core/data/meal.repository.ts`.
 - **2026-09-24 — #127** Állandó heti beosztás: saját sor nélküli hét a legutóbbi korábbi beosztást
   örökli; módosításkor „Mostantól” / „Csak erre a hétre” (utóbbi a következő hetet visszaállítja).
   Tisztán kliensoldali (`resolveEffectiveWeek`), adatmodell-változás nélkül; a „Másolás következő
