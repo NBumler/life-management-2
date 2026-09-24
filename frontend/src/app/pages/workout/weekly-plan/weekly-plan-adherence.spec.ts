@@ -1,6 +1,6 @@
 import { WeeklyPlanSlot } from '../../../api/model/weeklyPlanSlot';
 import { WorkoutSession } from '../../../api/model/workoutSession';
-import { WEEK_DAYS, addLocalDays, isSlotCompleted, mondayOf, weekDates } from './weekly-plan-adherence';
+import { WEEK_DAYS, addLocalDays, isSlotCompleted, mondayOf, resolveEffectiveWeek, weekDates } from './weekly-plan-adherence';
 
 function session(partial: Partial<WorkoutSession>): WorkoutSession {
   return {
@@ -53,5 +53,41 @@ describe('weekly-plan-adherence', () => {
     expect(isSlotCompleted(sessions, '2026-08-24', 'plan-1')).toBe(true);
     expect(isSlotCompleted(sessions, '2026-08-24', 'plan-3')).toBe(false);
     expect(isSlotCompleted([sessions[2], sessions[3]], '2026-08-24', 'plan-1')).toBe(false);
+  });
+});
+
+describe('resolveEffectiveWeek (backlog/127)', () => {
+  function slot(id: string, dayOfWeek: WeeklyPlanSlot.DayOfWeekEnum, planId: string, deleted = false): WeeklyPlanSlot {
+    return { id, weeklyPlanId: 'w', dayOfWeek, planId, deleted } as WeeklyPlanSlot;
+  }
+  const mon = WeeklyPlanSlot.DayOfWeekEnum.Monday;
+  const weeks = [
+    { weekStartDate: '2026-09-07', deleted: false, slots: [slot('a', mon, 'pA')] },
+    { weekStartDate: '2026-09-21', deleted: false, slots: [slot('b', mon, 'pB'), slot('x', mon, 'gone', true)] },
+    { weekStartDate: '2026-10-05', deleted: true, slots: [slot('c', mon, 'pC')] },
+  ];
+
+  it("uses the week's own row", () => {
+    const week = resolveEffectiveWeek(weeks, '2026-09-21');
+    expect(week.inherited).toBeFalse();
+    expect(week.slots.map((s) => s.planId)).toEqual(['pB']);
+  });
+
+  it('inherits the most recent earlier schedule, forwards only', () => {
+    const inherited = resolveEffectiveWeek(weeks, '2026-09-14');
+    expect(inherited).toEqual(jasmine.objectContaining({ inherited: true, sourceWeekStart: '2026-09-07' }));
+    expect(inherited.slots.map((s) => s.planId)).toEqual(['pA']);
+    // a deleted row is ignored → still inherits 09-21
+    expect(resolveEffectiveWeek(weeks, '2026-10-12').sourceWeekStart).toBe('2026-09-21');
+  });
+
+  it('is empty before the first schedule ever set', () => {
+    expect(resolveEffectiveWeek(weeks, '2026-08-31')).toEqual({ slots: [], sourceWeekStart: null, inherited: false });
+  });
+
+  it('an own row with no slots is an explicit empty week (not inherited)', () => {
+    const withEmpty = [...weeks, { weekStartDate: '2026-09-28', deleted: false, slots: [] }];
+    expect(resolveEffectiveWeek(withEmpty, '2026-09-28')).toEqual({ slots: [], sourceWeekStart: '2026-09-28', inherited: false });
+    expect(resolveEffectiveWeek(withEmpty, '2026-10-05').slots).toEqual([]);
   });
 });

@@ -52,3 +52,42 @@ export function isSlotCompleted(sessions: readonly WorkoutSession[], weekStart: 
       !session.deleted && session.planId === slotPlanId && session.date >= weekStart && session.date <= weekEnd,
   );
 }
+
+/**
+ * backlog/127 — the schedule that applies to one calendar week. A week with its own live `WeeklyPlan`
+ * row uses it (even an empty one — an explicit "no training" week); a week without one **inherits**
+ * the most recent earlier week that has a row ("öröklés előre"), so a schedule set once keeps applying
+ * until the user changes it. Inheritance only ever looks backwards, so editing a week never changes
+ * any earlier week (or its adherence).
+ */
+export interface EffectiveWeek {
+  /** Live slots of the source week (empty when nothing applies). */
+  slots: WeeklyPlanSlot[];
+  /** `weekStartDate` of the row the slots come from; null when no earlier week has a schedule. */
+  sourceWeekStart: string | null;
+  /** True when the slots come from an earlier week, not the week's own row. */
+  inherited: boolean;
+}
+
+export function resolveEffectiveWeek(
+  weeks: readonly { weekStartDate: string; deleted: boolean; slots: WeeklyPlanSlot[] }[],
+  weekStart: string,
+): EffectiveWeek {
+  let source: (typeof weeks)[number] | undefined;
+  for (const week of weeks) {
+    if (week.deleted || week.weekStartDate > weekStart) {
+      continue;
+    }
+    if (source === undefined || week.weekStartDate > source.weekStartDate) {
+      source = week;
+    }
+  }
+  if (source === undefined) {
+    return { slots: [], sourceWeekStart: null, inherited: false };
+  }
+  return {
+    slots: source.slots.filter((slot) => !slot.deleted),
+    sourceWeekStart: source.weekStartDate,
+    inherited: source.weekStartDate !== weekStart,
+  };
+}

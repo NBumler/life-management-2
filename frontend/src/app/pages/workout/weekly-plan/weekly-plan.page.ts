@@ -10,6 +10,9 @@ import {
   IonItem,
   IonLabel,
   IonList,
+  IonNote,
+  IonSegment,
+  IonSegmentButton,
   IonSelect,
   IonSelectOption,
   ViewWillEnter,
@@ -22,12 +25,19 @@ import { WorkoutSessionRepository } from '../../../core/data/workout-session.rep
 import { WeeklyPlanRepository } from '../../../core/data/weekly-plan.repository';
 import { today } from '../../../shared/local-date';
 import { WorkoutSegmentHeaderComponent } from '../workout-segment-header.component';
-import { WEEK_DAYS, addLocalDays, isSlotCompleted, mondayOf } from './weekly-plan-adherence';
+import { WEEK_DAYS, addLocalDays, isSlotCompleted, mondayOf, resolveEffectiveWeek } from './weekly-plan-adherence';
+
+/**
+ * backlog/127 — how an edit applies: `FROM_NOW` saves this week's schedule, which every later week
+ * without its own row then inherits; `THIS_WEEK_ONLY` is a one-off exception — the following week is
+ * pinned to the schedule that applied before the edit, so it resumes there.
+ */
+export type WeeklyEditMode = 'FROM_NOW' | 'THIS_WEEK_ONLY';
 
 interface DayCell {
   dayOfWeek: WeeklyPlanSlot.DayOfWeekEnum;
   date: string;
-  /** The existing slot's id for this day, or null when the day has no live slot yet. */
+  /** This week's own slot id for the day; null when the day has no own live slot (none, or inherited). */
   slotId: string | null;
   planId: string | null;
   planName: string | null;
@@ -38,7 +48,8 @@ interface DayCell {
  * documentation/Subfeatures/Heti terv.md "Heti dashboard" — a 7-day view of the current calendar
  * week: assign an active template to each day, a "Teljesítve" badge per adherence
  * (`weekly-plan-adherence.ts`), a thumb-zone "Edzés indítása" CTA that opens the live view preloaded
- * from the plan, plus prev/next week nav and "Másolás következő hétre".
+ * from the plan, plus prev/next week nav. backlog/127: a week without its own schedule inherits the
+ * last earlier one (`resolveEffectiveWeek`); an edit applies "from now" or "only this week".
  */
 @Component({
   selector: 'app-weekly-plan',
@@ -60,6 +71,13 @@ interface DayCell {
       .week-nav ion-buttons {
         flex: none;
       }
+      .schedule-meta {
+        padding: 0 16px 8px;
+      }
+      .inherited-note {
+        display: block;
+        margin-bottom: 8px;
+      }
     `,
   ],
   imports: [
@@ -67,6 +85,9 @@ interface DayCell {
     IonHeader,
     IonContent,
     IonList,
+    IonNote,
+    IonSegment,
+    IonSegmentButton,
     IonItem,
     IonLabel,
     IonBadge,
@@ -89,11 +110,14 @@ export class WeeklyPlanPage implements OnInit, ViewWillEnter {
 
   readonly activePlans = computed(() => this.planRepository.activePlans());
 
-  readonly week = computed(() => this.weeklyRepository.byWeekStart(this.weekStart()));
+  readonly effective = computed(() => resolveEffectiveWeek(this.weeklyRepository.items(), this.weekStart()));
+
+  readonly editMode = signal<WeeklyEditMode>('FROM_NOW');
 
   readonly days = computed<DayCell[]>(() => {
     const start = this.weekStart();
-    const slots = (this.week()?.slots ?? []).filter((slot) => !slot.deleted);
+    const effective = this.effective();
+    const slots = effective.slots;
     const sessions = this.sessionRepository.items();
     const plans = this.planRepository.items();
     return WEEK_DAYS.map((dayOfWeek, index) => {
@@ -103,7 +127,8 @@ export class WeeklyPlanPage implements OnInit, ViewWillEnter {
       return {
         dayOfWeek,
         date: addLocalDays(start, index),
-        slotId: slot?.id ?? null,
+        // an inherited slot row belongs to another week — never carry its id into this week's save
+        slotId: effective.inherited ? null : (slot?.id ?? null),
         planId,
         planName: plan?.name ?? (planId !== null ? '—' : null),
         completed: planId !== null && isSlotCompleted(sessions, start, planId),
@@ -111,7 +136,6 @@ export class WeeklyPlanPage implements OnInit, ViewWillEnter {
     });
   });
 
-  readonly hasAnySlot = computed(() => this.days().some((day) => day.planId !== null));
 
   async ngOnInit(): Promise<void> {
     await Promise.all([this.planRepository.load(), this.weeklyRepository.load(), this.sessionRepository.load()]);
@@ -129,34 +153,46 @@ export class WeeklyPlanPage implements OnInit, ViewWillEnter {
     this.weekStart.set(mondayOf(today()));
   }
 
-  /** Assign / change / clear a day. `planId === ''` (the "none" option) clears the slot. */
+  /**
+   * Assign / change / clear a day. `planId === ''` (the "none" option) clears the slot. The whole
+   * week's effective schedule (own or inherited) is saved as this week's own row.
+   */
   async assignDay(day: DayCell, planId: string): Promise<void> {
     const next = planId === '' ? null : planId;
     if (next === day.planId) {
       return;
     }
-    // Carry each day's existing slot id through so re-assigning a day updates the same row (and
-    // undeletes it if it was cleared before) instead of relying on the deterministic-id fallback.
-    const slots = this.days()
+    const weekStart = this.weekStart();
+    const before = this.days();
+    if (this.editMode() === 'THIS_WEEK_ONLY') {
+      await this.pinFollowingWeek(weekStart, before);
+    }
+    // Carry each day's own slot id through so re-assigning a day updates the same row (and undeletes
+    // it if it was cleared before) instead of relying on the deterministic-id fallback.
+    const slots = before
       .map((cell) => ({
         dayOfWeek: cell.dayOfWeek,
         planId: cell.dayOfWeek === day.dayOfWeek ? next : cell.planId,
         id: cell.slotId ?? undefined,
       }))
       .filter((cell): cell is { dayOfWeek: WeeklyPlanSlot.DayOfWeekEnum; planId: string; id: string | undefined } => cell.planId !== null);
-    await this.weeklyRepository.saveWeek(this.weekStart(), slots);
+    await this.weeklyRepository.saveWeek(weekStart, slots);
   }
 
-  async copyToNextWeek(): Promise<void> {
-    const current = this.days().filter((day) => day.planId !== null);
-    if (current.length === 0) {
+  /**
+   * "Csak erre a hétre": unless the following week already has its own schedule, give it one equal to
+   * what applied before this edit — otherwise it would inherit the exception.
+   */
+  private async pinFollowingWeek(weekStart: string, before: DayCell[]): Promise<void> {
+    const nextWeekStart = addLocalDays(weekStart, 7);
+    if (this.weeklyRepository.byWeekStart(nextWeekStart) !== undefined) {
       return;
     }
-    const nextWeekStart = addLocalDays(this.weekStart(), 7);
     await this.weeklyRepository.saveWeek(
       nextWeekStart,
-      current.map((day) => ({ dayOfWeek: day.dayOfWeek, planId: day.planId as string })),
+      before
+        .filter((cell) => cell.planId !== null)
+        .map((cell) => ({ dayOfWeek: cell.dayOfWeek, planId: cell.planId as string })),
     );
-    this.weekStart.set(nextWeekStart);
   }
 }

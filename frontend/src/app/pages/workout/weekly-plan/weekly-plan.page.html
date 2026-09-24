@@ -33,6 +33,22 @@
       </ion-item>
     </ion-list>
   } @else {
+    <div class="schedule-meta">
+      @if (effective().inherited) {
+        <ion-note class="inherited-note">
+          {{ 'WORKOUT.WEEKLY.INHERITED_FROM' | translate: { date: effective().sourceWeekStart } }}
+        </ion-note>
+      }
+      <ion-segment
+        class="edit-mode"
+        [value]="editMode()"
+        (ionChange)="editMode.set($any($event.detail.value))"
+        [attr.aria-label]="'WORKOUT.WEEKLY.EDIT_MODE' | translate"
+      >
+        <ion-segment-button value="FROM_NOW">{{ 'WORKOUT.WEEKLY.EDIT_FROM_NOW' | translate }}</ion-segment-button>
+        <ion-segment-button value="THIS_WEEK_ONLY">{{ 'WORKOUT.WEEKLY.EDIT_THIS_WEEK_ONLY' | translate }}</ion-segment-button>
+      </ion-segment>
+    </div>
     <ion-list>
       @for (day of days(); track day.dayOfWeek) {
         <ion-item lines="full">
@@ -70,10 +86,5 @@
       }
     </ion-list>
 
-    @if (hasAnySlot()) {
-      <div class="cta-row">
-        <ion-button expand="block" fill="clear" (click)="copyToNextWeek()">{{ 'WORKOUT.WEEKLY.COPY_NEXT_WEEK' | translate }}</ion-button>
-      </div>
-    }
   }
 </ion-content>

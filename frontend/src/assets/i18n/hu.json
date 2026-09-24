@@ -1138,7 +1138,6 @@
       "REST_DAY": "Pihenőnap",
       "DONE": "Teljesítve",
       "START": "Edzés indítása",
-      "COPY_NEXT_WEEK": "Másolás következő hétre",
       "DAY": {
         "MONDAY": "Hétfő",
         "TUESDAY": "Kedd",
@@ -1147,7 +1146,11 @@
         "FRIDAY": "Péntek",
         "SATURDAY": "Szombat",
         "SUNDAY": "Vasárnap"
-      }
+      },
+      "INHERITED_FROM": "A {{date}} héten beállított beosztás érvényes (öröklött).",
+      "EDIT_MODE": "Módosítás érvényessége",
+      "EDIT_FROM_NOW": "Mostantól",
+      "EDIT_THIS_WEEK_ONLY": "Csak erre a hétre"
     },
     "SWIM": {
       "NEW": "Új úszás",

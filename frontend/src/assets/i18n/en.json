@@ -1138,7 +1138,6 @@
       "REST_DAY": "Rest day",
       "DONE": "Done",
       "START": "Start workout",
-      "COPY_NEXT_WEEK": "Copy to next week",
       "DAY": {
         "MONDAY": "Monday",
         "TUESDAY": "Tuesday",
@@ -1147,7 +1146,11 @@
         "FRIDAY": "Friday",
         "SATURDAY": "Saturday",
         "SUNDAY": "Sunday"
-      }
+      },
+      "INHERITED_FROM": "The schedule set in the week of {{date}} applies (inherited).",
+      "EDIT_MODE": "Apply changes",
+      "EDIT_FROM_NOW": "From now on",
+      "EDIT_THIS_WEEK_ONLY": "This week only"
     },
     "SWIM": {
       "NEW": "New swim",
