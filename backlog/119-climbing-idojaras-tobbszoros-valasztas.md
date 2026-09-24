@@ -1,7 +1,7 @@
 ---
 id: 119
 type: change-request
-status: backlog
+status: ready
 title: Mászó session — időjárás többszörös választással, bővebb címkekészlettel
 specs:
   - "[[Mászónapló]]"
@@ -30,13 +30,13 @@ száraz" vagy „hideg + párás" nem fejezhető ki, és egyszerre csak egy ért
 ## Elfogadási kritériumok
 
 - [ ] A mező többértékű lesz: `weatherConditions: WeatherCondition[]` (üres lista = nincs megadva).
-- [ ] Atomi (nem összevont) címkék, javaslat: `HOT`, `MILD`, `COLD`, `DRY`, `HUMID`, `WINDY`,
-      `RAIN` (esett / eleredt), `WET_ROCK` (vizes szikla), `SUNNY`, `SHADE` — a végleges lista a
-      scopingkor rögzítendő.
+- [ ] Atomi (nem összevont) címkék: `HOT` (meleg), `MILD` (mérsékelt), `COLD` (hideg), `DRY`
+      (száraz), `HUMID` (párás), `WINDY` (szeles), `RAIN` (eső — esett / eleredt), `WET_ROCK`
+      (vizes szikla), `SUNNY` (napos), `SHADE` (árnyékos).
 - [ ] Nincs kölcsönös kizárás: bármely kombináció menthető (pl. `HOT` + `COLD`).
 - [ ] UI: toggle-chipek (több kiválasztható), nem egyválasztós select.
 - [ ] Adatmigráció a meglévő értékekre: `COLD_DRY → [COLD, DRY]`, `HOT_HUMID → [HOT, HUMID]`,
-      `WINDY → [WINDY]`, `WET → [WET_ROCK]` (vagy `RAIN` — döntendő) — Flyway + natív `SCHEMA_Vn`.
+      `WINDY → [WINDY]`, `WET → [RAIN]` — Flyway + natív `SCHEMA_Vn`.
 - [ ] Outbox: payload-alak változik → `OUTBOX_PAYLOAD_SCHEMA_VERSION` bump + `outbox-migrator.ts`
       lépés a `ClimbingSession`-re (régi skalár → lista, ugyanazzal a leképezéssel), `verify:outbox
       -- --write`.
@@ -48,9 +48,8 @@ száraz" vagy „hideg + párás" nem fejezhető ki, és egyszerre csak egy ért
 - Tárolás: Postgres `text[]` oszlop + `CHECK` az elemekre, vagy külön gyerektábla. Javaslat: `text[]`
   (a session nested PUT-ja amúgy is egyben írja; nincs szükség saját sync-sorra). Natív SQLite-ban
   JSON-szöveg oszlop.
-- Nyitott: a végleges címkekészlet (fent javaslat), és hogy a `WET` régi érték `RAIN`-re vagy
-  `WET_ROCK`-ra képeződjön.
-- Nyitott: beltéri sessionöknél továbbra sem jelenik meg (javaslat: igen, csak kültéri).
+- **Döntés (2026-09-24):** a címkekészlet a fenti 10 érték; a régi `WET` → `RAIN` (nem `WET_ROCK`).
+- Beltéri sessionöknél továbbra sem jelenik meg (csak kültéri).
 
 ## Lezáráskor (on-done)
 

@@ -1,7 +1,7 @@
 ---
 id: 127
 type: change-request
-status: backlog
+status: ready
 title: Heti terv — állandó (aktív) heti beosztás, ami a következő hetekre is érvényes, amíg a user nem módosítja
 specs:
   - "[[Heti terv]]"
@@ -53,7 +53,10 @@ Két megvalósítási irány (scopingkor döntendő):
    meglévő `WeeklyPlan` csak egy-heti felülírásként. Tisztább szemantika, de új szinkronizált tábla
    és migráció.
 
-Javaslat: 1. irány, mert illeszkedik a meglévő determinisztikus-UUID-s heti modellhez.
+**Döntés (2026-09-24):** az elfogadási kritériumokban leírt viselkedés jóváhagyva (öröklés előre +
+„Mostantól" / „Csak erre a hétre" választás). Megvalósítás: 1. irány, mert illeszkedik a meglévő
+determinisztikus-UUID-s heti modellhez. A „Másolás következő hétre" sorsa implementációkor
+dönthető (valószínűleg megszűnik).
 
 ## Lezáráskor (on-done)
 

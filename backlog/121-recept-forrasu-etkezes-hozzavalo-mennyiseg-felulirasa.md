@@ -1,7 +1,7 @@
 ---
 id: 121
 type: feature
-status: backlog
+status: ready
 title: Recept forrású étkezés — hozzávalók mennyiségének étkezés-szintű felülírása (a recept változatlan)
 specs:
   - "[[Recept forrású étkezés]]"
@@ -31,14 +31,16 @@ lehet arányosan skálázni.
 ## Elfogadási kritériumok
 
 - [ ] A recept-tételsoron kinyitható „Hozzávalók" rész, amely listázza a recept élő hozzávalóit a
-      `servings`-szel skálázott alapértelmezett mennyiséggel; minden sor mennyisége szerkeszthető
-      ([[Mennyiség mező]] komponens, mértékegységgel).
+      recept szerinti (1 adagszorzóra vett) alapértelmezett mennyiséggel; minden sor mennyisége
+      szerkeszthető ([[Mennyiség mező]] komponens, mértékegységgel). A beírt érték a recept
+      hozzávaló-mennyiségét **helyettesíti** erre az étkezésre, és a `servings` ezt is szorozza
+      (effektív = felülírt mennyiség × `servings`); a UI mutatja az effektív mennyiséget is.
 - [ ] Egy hozzávaló 0-ra állítható (kimaradt), és a felülírás visszaállítható az alapértékre.
 - [ ] A felülírás **nem** módosítja a `Recipe` / `RecipeIngredient` sorokat.
-- [ ] A tétel makrói / ára a felülírt mennyiségekkel számolódnak (nem felülírt hozzávaló: recept ×
-      `servings`); a UI jelzi, hogy a tétel el van térítve a recepttől.
-- [ ] Készletlevonás létrehozáskor a **felülírt** mennyiséggel történik (a nem felülírt
-      hozzávalóknál a mai `hozzávaló × servings` szabály marad).
+- [ ] A tétel makrói / ára hozzávalónként `(felülírt ?? recept szerinti mennyiség) × servings`
+      alapján számolódnak; a UI jelzi, hogy a tétel el van térítve a recepttől.
+- [ ] Készletlevonás létrehozáskor ugyanezzel az effektív mennyiséggel történik
+      (`(felülírt ?? recept szerinti) × servings`), nem a recept szerintivel.
 - [ ] Új, szinkronizált gyerek-entitás (javaslat: `MealItemIngredientOverride`: `mealItemId`,
       `recipeIngredientId`, `foodId` snapshot, `quantityAmount`, `quantityUnit`), a `Meal` nested
       aggregate PUT-jában mentve (`NestedChildResolver` minta), soft delete-tel.
@@ -49,9 +51,9 @@ lehet arányosan skálázni.
 
 ## Terv / döntési napló
 
-- Nyitott: a felülírt mennyiség **abszolút** érték-e az adott étkezésre (javaslat: igen — a user
-  a ténylegesen felhasznált mennyiséget írja be; a `servings` utólagos változtatása a felülírt
-  sorokat nem skálázza, csak a nem felülírtakat), vagy adagonkénti és `servings`-szel szorzódik.
+- **Döntés (2026-09-24):** a beírt mennyiség a ténylegesen felhasznált mennyiség a recept
+  hozzávalója helyett, és az adagszorzó ezt is szorozza — azaz a felülírás a recept-hozzávaló
+  mennyiségét cseréli, a `servings` utána ugyanúgy skáláz, mint a nem felülírt soroknál.
 - Nyitott: mi történik, ha a receptből utólag törlődik egy hozzávaló, amire override van
   (javaslat: az override a `foodId` snapshot alapján tovább számol, „recepten kívüli" jelöléssel).
 - Nem scope: recepten kívüli új hozzávaló felvétele a tételbe — erre ott a külön élelmiszer-tétel

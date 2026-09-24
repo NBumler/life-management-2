@@ -37,18 +37,21 @@ adott kísérletet, nem azt, milyen az út.
       (vagy visszakattintással törölhető) — nem legördülő.
 - [ ] i18n (hu/en) címkék: Nittelt / Trad / Clean / Toprope.
 - [ ] Az út részletek / választó listában a típus megjelenik (pl. rövid címke az út neve mellett).
+- [ ] Kültéri köteles naplóban út kiválasztásakor a kísérlet `safetyStyle`-ja a `protectionType`
+      alapján előtöltődik (leképezés: döntési napló), és utána szabadon módosítható.
 - [ ] `verify:outbox` snapshot frissítve (`OUTBOX_PAYLOAD_SCHEMA_VERSION` bump + migrációs lépés,
       ha kell — új nullable mező, a régi payload `null`-lal kiegészíthető).
 - [ ] Zöld lint + test:ci + build + backend test.
 
 ## Terv / döntési napló
 
-- Javaslat: kültéri köteles naplóban út választásakor a `protectionType` előtöltheti a kísérlet
-  `safetyStyle`-ját (`BOLTED → LEAD`, `TRAD`/`CLEAN → TRAD`, `TOPROPE → TOPROPE`), felülírhatóan.
-  Nyitott: kell-e ez, vagy maradjon tisztán informatív.
-- Nyitott: a beltéri kötélutakra (`IndoorRoute`) nem kerül (teremben gyakorlatilag mindig nittelt/
-  toprope) — ha mégis kell, külön jegy.
-- Nyitott: kell-e szektor-szintű alapértelmezés (mint a #88 úthossznál), vagy elég út-szinten.
+- **Döntés (2026-09-24):** kültéri köteles naplóban út választásakor a `protectionType` **előtölti**
+  a kísérlet `safetyStyle`-ját (`BOLTED → LEAD`, `TRAD`/`CLEAN → TRAD`, `TOPROPE → TOPROPE`), de az
+  **mindig módosítható** — pl. a partner tradként mássza, fent toprope-ot szerel, és a másik a trad
+  utat toprope-ként mássza. Az előtöltés csak út-választáskor fut, a már kézzel állított
+  `safetyStyle`-t nem írja felül.
+- A beltéri kötélutakra (`IndoorRoute`) nem kerül (teremben gyakorlatilag mindig nittelt/toprope) —
+  ha mégis kell, külön jegy. Szektor-szintű alapértelmezés sem kell, elég út-szinten.
 
 ## Lezáráskor (on-done)
 

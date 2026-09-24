@@ -1,7 +1,7 @@
 ---
 id: 125
 type: feature
-status: backlog
+status: ready
 title: Edzés sablon — szett cél-értéke tartományként ("8-12"), számként tárolt alsó/felső határral
 specs:
   - "[[Heti terv]]"
@@ -36,8 +36,8 @@ szettjeibe.
       nullable `repsMax` a felső határ (`null` = nem tartomány). Meglévő adatok migráció nélkül
       érvényesek.
 - [ ] Megjelenítés tartományként (`8–12`) a sablonban és a heti terv nézetben.
-- [ ] Edzés indításakor a session szett előtöltése: `reps` = alsó határ (vagy üres + `8–12` hint —
-      döntendő), a tartomány célként látszik az aktív edzés felületen.
+- [ ] Edzés indításakor a session szett előtöltése: `reps = ceil((alsó + felső) / 2)` (pl.
+      `8–12 → 10`, `8–11 → 10`); a tartomány célként látszik az aktív edzés felületen.
 - [ ] Parse-logika tiszta függvényben, unit tesztekkel (érvényes / érvénytelen / fordított / üres).
 - [ ] Flyway + natív `SCHEMA_Vn` + OpenAPI + `gen:api`; `verify:outbox` snapshot frissítés
       (+ `OUTBOX_PAYLOAD_SCHEMA_VERSION` bump; migráció: régi payload → `repsMax = null`).
@@ -45,10 +45,11 @@ szettjeibe.
 
 ## Terv / döntési napló
 
-- Nyitott: csak az ismétlésszámra kell a tartomány, vagy más cél-mezőkre is (súly, tartási idő,
-  táv, pihenő)? Javaslat: első körben `reps` (+ esetleg `holdTimeSeconds`), a minta
-  (`xMax` mező) később bővíthető.
-- Nyitott: előtöltés alsó határral vagy üresen hinttel.
+- **Döntés (2026-09-24):** első körben **csak az ismétlésszám** (`reps` + `repsMax`). Más
+  cél-mezőkre (súly, tartási idő, táv, pihenő) később várhatóan kelleni fog — ezért a parse- és
+  megjelenítő logika legyen mezőtől független, újrahasznosítható (`<mező>` + `<mező>Max` minta),
+  hogy a bővítés csak új oszlop + bekötés legyen.
+- **Döntés (2026-09-24):** előtöltés a két határ átlagával, felfelé kerekítve.
 
 ## Lezáráskor (on-done)
 

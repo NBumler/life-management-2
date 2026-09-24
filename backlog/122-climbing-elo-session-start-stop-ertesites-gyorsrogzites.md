@@ -1,7 +1,7 @@
 ---
 id: 122
 type: feature
-status: backlog
+status: ready
 title: Mászás — élő session (Start / Befejezés), tartós értesítés, gyors-rögzítő felület és összegző képernyő
 specs:
   - "[[Mászónapló]]"
@@ -73,8 +73,8 @@ teljes szerkesztő formon kísérleteket felvinni. Kell egy „Start session" �
       új sikeres kísérlet rögzítve az adott sávval és módosítóval; rövid visszajelzés (haptika +
       darabszám a soron).
 - [ ] Új kísérlet-mező: `bandModifier` (`MINUS | NEUTRAL | PLUS`, nullable); az
-      `absoluteDifficultyIndex` ebből számolódik (javaslat: `MINUS → Lower`, `NEUTRAL →` a mai
-      `colorBandMidIndex`, `PLUS → Upper` — lásd nyitott kérdés).
+      `absoluteDifficultyIndex` ebből számolódik: `MINUS →` a sáv `absoluteDifficultyIndexLower`-je,
+      `NEUTRAL →` a mai `colorBandMidIndex`, `PLUS →` a sáv `absoluteDifficultyIndexUpper`-je.
 - [ ] A többi kontextusban (indoor rope, outdoor boulder/rope) az élő felület a meglévő
       kísérlet-felvevő UI-t használja, gyorsan elérhető „Új kísérlet" gombbal.
 - [ ] A rögzített kísérletek listája az élő felületen látható; bármelyik szerkeszthető / törölhető.
@@ -99,11 +99,11 @@ teljes szerkesztő formon kísérleteket felvinni. Kell egy „Start session" �
 
 - Érdemes szeletekre bontani: (a) perzisztált draft + Start / Befejezés + összegző (kiváltja #21),
   (b) tartós értesítés + deep link, (c) beltéri boulder gyors-rögzítő rács + `bandModifier`.
-- Nyitott: a `±` módosító pontos jelentése az indexben — sáv alsó/felső határa, vagy közép ±
-  egy index-lépés; és hogyan viszonyul az admin oldali sáv-`variant`-hoz (pl. egy eleve `PLUS`
-  sávnál).
-- Nyitott: a gyors-rögzítés csak sikeres mászást rögzít-e (javaslat: igen; sikertelenre az élő
-  listán kézzel átbillenthető), a stílus (flash / redpoint) üresen marad.
+- **Döntés (2026-09-24):** a `−` / `+` a sáv alsó / felső index-határát rögzíti (semleges = a
+  mai közép). Az admin oldali sáv-`variant` ettől független, változatlan marad.
+- **Döntés (2026-09-24):** a gyors-rögzítő koppintás mindig **sikeres** mászást rögzít;
+  sikertelenre az élő listán / az összegzőn kézzel átbillenthető. A stílus (flash / redpoint)
+  üresen marad.
 - Nyitott: tartós értesítéshez elég-e a `@capacitor/local-notifications` `ongoing` opciója, vagy
   foreground service kell (Android 14+ korlátozások) — spike a (b) szelet elején.
 
