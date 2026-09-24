@@ -220,6 +220,9 @@ const STEPS_BY_VERSION: Readonly<Record<number, VersionSteps>> = {
   // `days` field (szakaszokra bontás/éjszakázó pontok). A missing key already means "egynapos túra"
   // server-side (same reasoning as step 5/7), so no payload transform is needed for any entity.
   8: { default: identityStep },
+  // backlog/118: `Route` gained a new nullable/optional `protectionType`. A missing key already means
+  // "not specified" server-side (same reasoning as step 5), so no payload transform is needed.
+  9: { default: identityStep },
 };
 
 function buildMigrations(): ReadonlyMap<string, MigrationStep> {

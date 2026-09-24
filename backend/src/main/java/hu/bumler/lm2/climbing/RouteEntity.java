@@ -53,6 +53,10 @@ public class RouteEntity {
 	@Column(name = "topo_number")
 	private String topoNumber;
 
+	/** backlog/118 — how the route is protected: BOLTED | TRAD | CLEAN | TOPROPE; null = unknown. */
+	@Column(name = "protection_type")
+	private String protectionType;
+
 	@Generated(event = EventType.INSERT)
 	@Column(name = "created_at", insertable = false, updatable = false)
 	private OffsetDateTime createdAt;
@@ -142,6 +146,14 @@ public class RouteEntity {
 
 	public void setTopoNumber(String topoNumber) {
 		this.topoNumber = topoNumber;
+	}
+
+	public String getProtectionType() {
+		return protectionType;
+	}
+
+	public void setProtectionType(String protectionType) {
+		this.protectionType = protectionType;
 	}
 
 	public OffsetDateTime getCreatedAt() {

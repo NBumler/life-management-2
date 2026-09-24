@@ -166,7 +166,7 @@
               <ion-select-option [value]="null">—</ion-select-option>
               @for (route of routesForRow(row); track route.id) {
                 <ion-select-option [value]="route.id"
-                  >@if (route.topoNumber) { {{ route.topoNumber }} · }{{ route.name }} ({{ route.guidebookGrade }})</ion-select-option
+                  >@if (route.topoNumber) { {{ route.topoNumber }} · }{{ route.name }} ({{ route.guidebookGrade }}@if (route.protectionType) { · {{ 'WORKOUT.CLIMBING.PROTECTION_TYPE.' + route.protectionType | translate }} })</ion-select-option
                 >
               }
             </ion-select>

@@ -38,6 +38,7 @@ import { SectorRepository } from '../../../../core/data/sector.repository';
 import { AscentAttemptSaveItem, ClimbingSessionDraft, PitchLogSaveItem } from '../../../../core/storage/storage-backend';
 import { uuidV4 } from '../../../../core/sync/uuid';
 import { parseGrade } from '../../../../shared/climbing/grade-scale';
+import { safetyStyleForProtection } from '../../../../shared/climbing/protection-type';
 import { GradeInputComponent } from '../../../../shared/grade-input/grade-input.component';
 import { HelpButtonComponent } from '../../../../shared/help-button/help-button.component';
 import { PartnerComboboxComponent } from '../../../../shared/partner-combobox/partner-combobox.component';
@@ -68,6 +69,8 @@ interface AttemptRow {
   /** `lengthInMeters` currently mirrors the picked route's length (not hand-typed) → a route switch refills it. */
   lengthAutoFilled: WritableSignal<boolean>;
   safetyStyle: WritableSignal<AscentAttempt.SafetyStyleEnum>;
+  /** backlog/118 — `safetyStyle` is still the default / the picked route's suggestion (not hand-set) → a route pick may refill it. */
+  safetyStyleAutoFilled: WritableSignal<boolean>;
   isSuccess: WritableSignal<boolean>;
   ascentStyle: WritableSignal<AscentAttempt.AscentStyleEnum | null>;
   attemptCount: WritableSignal<number | null>;
@@ -411,13 +414,17 @@ export class OutdoorRopeSessionEditPage implements OnInit {
   }
 
   setSafetyStyle(row: AttemptRow, style: AscentAttempt.SafetyStyleEnum): void {
+    if (style !== row.safetyStyle()) {
+      row.safetyStyleAutoFilled.set(false);
+    }
     row.safetyStyle.set(style);
     this.touchAttempts();
   }
 
   /**
    * documentation/Subfeatures/Outdoor köteles napló.md — a picked `Route` snapshots its name + grade
-   * and prefills the length. `rockType` / `aspect` are no longer session fields (backlog/084) — they
+   * and prefills the length and — from its `protectionType` (backlog/118) — the attempt's `safetyStyle`
+   * unless the user already set one by hand. `rockType` / `aspect` are no longer session fields (backlog/084) — they
    * stay on the route / sector / crag master data.
    */
   pickRoute(row: AttemptRow, routeId: string | null): void {
@@ -437,6 +444,10 @@ export class OutdoorRopeSessionEditPage implements OnInit {
       if (inherited != null && (row.lengthInMeters() == null || row.lengthAutoFilled())) {
         row.lengthInMeters.set(inherited);
         row.lengthAutoFilled.set(true);
+      }
+      const suggested = safetyStyleForProtection(route.protectionType);
+      if (suggested !== null && row.safetyStyleAutoFilled()) {
+        row.safetyStyle.set(suggested);
       }
       row.saveToCatalog.set(false);
     }
@@ -537,6 +548,7 @@ export class OutdoorRopeSessionEditPage implements OnInit {
         rockType: null,
         aspect: null,
         topoNumber: null,
+        protectionType: null,
       });
       row.routeId.set(created.id);
       row.saveToCatalog.set(false);
@@ -695,6 +707,9 @@ export class OutdoorRopeSessionEditPage implements OnInit {
         storedLength != null && (storedLength === route?.lengthInMeters || storedLength === sectorDefaultLength),
       ),
       safetyStyle: signal(attempt.safetyStyle ?? DEFAULT_SAFETY_STYLE),
+      safetyStyleAutoFilled: signal(
+        attempt.safetyStyle == null || attempt.safetyStyle === safetyStyleForProtection(route?.protectionType),
+      ),
       isSuccess: signal(attempt.isSuccess),
       ascentStyle: signal(attempt.ascentStyle ?? null),
       attemptCount: signal(attempt.attemptCount ?? null),
@@ -730,6 +745,7 @@ export class OutdoorRopeSessionEditPage implements OnInit {
       lengthInMeters: signal<number | null>(null),
       lengthAutoFilled: signal(false),
       safetyStyle: signal<AscentAttempt.SafetyStyleEnum>(DEFAULT_SAFETY_STYLE),
+      safetyStyleAutoFilled: signal(true),
       isSuccess: signal(false),
       ascentStyle: signal<AscentAttempt.AscentStyleEnum | null>(null),
       attemptCount: signal<number | null>(1),

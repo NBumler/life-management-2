@@ -17,6 +17,9 @@ class RouteMapper {
 			dto.aspect(Route.AspectEnum.fromValue(entity.getAspect()));
 		}
 		dto.topoNumber(entity.getTopoNumber());
+		if (entity.getProtectionType() != null) {
+			dto.protectionType(Route.ProtectionTypeEnum.fromValue(entity.getProtectionType()));
+		}
 		dto.deletedAt(entity.getDeletedAt());
 		dto.createdAt(entity.getCreatedAt());
 		dto.updatedAt(entity.getUpdatedAt());

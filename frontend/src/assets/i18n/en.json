@@ -1312,7 +1312,9 @@
         "FIELD_TOPO_NUMBER": "Topo number (optional)",
         "FIELD_TOPO_NUMBER_PLACEHOLDER": "e.g. 12, 5/a, 5b",
         "DELETE_CONFIRM_TITLE": "Delete route",
-        "DELETE_CONFIRM_MESSAGE": "Delete this route?"
+        "DELETE_CONFIRM_MESSAGE": "Delete this route?",
+        "FIELD_PROTECTION": "Protection",
+        "FIELD_PROTECTION_HINT": "Tap the selected option again to clear it (not specified)."
       },
       "PROBLEM": {
         "LIST_TITLE": "Boulder problems (optional)",
@@ -1424,6 +1426,12 @@
         "OUTCOME_FAILED": "Failed",
         "PYRAMID": "Grade pyramid",
         "PYRAMID_EMPTY": "No sends in this period."
+      },
+      "PROTECTION_TYPE": {
+        "BOLTED": "Bolted",
+        "TRAD": "Trad",
+        "CLEAN": "Clean",
+        "TOPROPE": "Top-rope"
       }
     }
   },

@@ -379,4 +379,29 @@ describe('OutdoorRopeSessionEditPage', () => {
     expect(component.attempts().length).toBe(2);
     expect(host.querySelectorAll('.attempt-card').length).toBe(2);
   });
+
+  it('picking a route prefills the safety style from its protection type, but never over a hand-set one (backlog/118)', async () => {
+    await setup('new', [crag()], [
+      route({ protectionType: Route.ProtectionTypeEnum.Trad }),
+      route({ id: 'rt2', name: 'Felső kötél', protectionType: Route.ProtectionTypeEnum.Toprope }),
+      route({ id: 'rt3', name: 'Ismeretlen', protectionType: null }),
+    ]);
+    component.form.patchValue({ cragId: 'c1' });
+    component.addAttempt();
+    const row = component.attempts()[0];
+    component.pickSector(row, 's1');
+
+    component.pickRoute(row, 'rt1');
+    expect(row.safetyStyle()).toBe(AscentAttempt.SafetyStyleEnum.Trad);
+    component.pickRoute(row, 'rt2');
+    expect(row.safetyStyle()).toBe(AscentAttempt.SafetyStyleEnum.Toprope);
+    // no protection type → the current value stays
+    component.pickRoute(row, 'rt3');
+    expect(row.safetyStyle()).toBe(AscentAttempt.SafetyStyleEnum.Toprope);
+
+    // the partner leads the trad line, this climber toproped it: a hand-set value survives re-picks
+    component.setSafetyStyle(row, AscentAttempt.SafetyStyleEnum.Lead);
+    component.pickRoute(row, 'rt1');
+    expect(row.safetyStyle()).toBe(AscentAttempt.SafetyStyleEnum.Lead);
+  });
 });

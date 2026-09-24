@@ -43,6 +43,7 @@ class RouteServiceTest {
 		e.setTotalPitches(1);
 		e.setRockType("gránit");
 		e.setAspect("W");
+		e.setProtectionType("BOLTED");
 		return e;
 	}
 
@@ -60,6 +61,7 @@ class RouteServiceTest {
 		input.rockType("mészkő");
 		input.aspect(Route.AspectEnum.E);
 		input.topoNumber("12/a");
+		input.protectionType(Route.ProtectionTypeEnum.TRAD);
 
 		Route saved = service.create(userId, input);
 
@@ -71,6 +73,7 @@ class RouteServiceTest {
 		assertThat(saved.getRockType().orElse(null)).isEqualTo("mészkő");
 		assertThat(saved.getAspect().orElse(null)).isEqualTo(Route.AspectEnum.E);
 		assertThat(saved.getTopoNumber().orElse(null)).isEqualTo("12/a");
+		assertThat(saved.getProtectionType().orElse(null)).isEqualTo(Route.ProtectionTypeEnum.TRAD);
 	}
 
 	@Test
@@ -99,6 +102,7 @@ class RouteServiceTest {
 		assertThat(updated.getTotalPitches().orElse(null)).isNull();
 		assertThat(updated.getRockType().orElse(null)).isNull();
 		assertThat(updated.getAspect().orElse(null)).isNull();
+		assertThat(updated.getProtectionType().orElse(null)).isNull();
 	}
 
 	@Test

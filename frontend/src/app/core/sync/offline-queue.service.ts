@@ -33,8 +33,11 @@ import { uuidV4 } from './uuid';
  * - v6 → v7 (backlog/tura-utvonaltervezo/103-...): `HikeRoute` added as a brand-new entity type. No
  *   existing entity's payload shape changed (there can be no pending pre-existing `HikeRoute` write),
  *   so every type is identity here too; the bump exists only to satisfy the schema-drift guard.
+ * - v9 → v10 (backlog/118): `Route` gained an optional/nullable `protectionType`. A pending `Route`
+ *   write from before that app update simply has no such key — the server reads a missing value as
+ *   "not specified", identical to the old behaviour — so every type is identity.
  */
-export const OUTBOX_PAYLOAD_SCHEMA_VERSION = 9;
+export const OUTBOX_PAYLOAD_SCHEMA_VERSION = 10;
 
 /** documentation/Architektúra/Backend-offline first.md §6 "Tétel-újrapróbálkozási backoff" (jitter omitted — not load-bearing for correctness). */
 const RETRY_BACKOFF_MS = [2000, 8000, 30000, 120000, 600000];

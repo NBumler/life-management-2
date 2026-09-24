@@ -1312,7 +1312,9 @@
         "FIELD_TOPO_NUMBER": "Topó-sorszám (opcionális)",
         "FIELD_TOPO_NUMBER_PLACEHOLDER": "pl. 12, 5/a, 5b",
         "DELETE_CONFIRM_TITLE": "Út törlése",
-        "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd ezt az utat?"
+        "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd ezt az utat?",
+        "FIELD_PROTECTION": "Biztosítás típusa",
+        "FIELD_PROTECTION_HINT": "A kijelölt opcióra újra koppintva törölhető (nincs megadva)."
       },
       "PROBLEM": {
         "LIST_TITLE": "Boulderek (opcionális)",
@@ -1424,6 +1426,12 @@
         "OUTCOME_FAILED": "Sikertelen",
         "PYRAMID": "Grade-piramis",
         "PYRAMID_EMPTY": "Nincs sikeres mászás az időszakban."
+      },
+      "PROTECTION_TYPE": {
+        "BOLTED": "Nittelt",
+        "TRAD": "Trad",
+        "CLEAN": "Clean",
+        "TOPROPE": "Toprope"
       }
     }
   },

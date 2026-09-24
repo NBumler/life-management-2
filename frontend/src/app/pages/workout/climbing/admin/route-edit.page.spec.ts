@@ -155,4 +155,16 @@ describe('RouteEditPage', () => {
     await component.save();
     expect(saveSpy).toHaveBeenCalledWith(jasmine.objectContaining({ topoNumber: null }));
   });
+
+  it('save() forwards the picked protection type, or null when none is picked (backlog/118)', async () => {
+    await setup();
+    component.form.patchValue({ name: 'Sárkányfészek', guidebookGrade: '7a' });
+    await component.save();
+    expect(saveSpy).toHaveBeenCalledWith(jasmine.objectContaining({ protectionType: null }));
+
+    saveSpy.calls.reset();
+    component.form.patchValue({ protectionType: Route.ProtectionTypeEnum.Clean });
+    await component.save();
+    expect(saveSpy).toHaveBeenCalledWith(jasmine.objectContaining({ protectionType: Route.ProtectionTypeEnum.Clean }));
+  });
 });

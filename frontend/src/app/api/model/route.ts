@@ -37,6 +37,10 @@ export interface Route {
      * backlog/079 — optional guidebook / topo ordinal (\"12\", \"5/a\", \"5b\"). Sector-scoped, not unique. Clients order route pickers by a natural (numeric-prefix + letter) sort on this, falling back to name; the server never orders by it.
      */
     topoNumber?: string | null;
+    /**
+     * backlog/118 — how the route is protected (a permanent property of the route, not of an attempt): BOLTED (sport), TRAD, CLEAN, TOPROPE (top-rope only). `null` = not specified. The rope napló prefills an attempt\'s `safetyStyle` from it (BOLTED → LEAD, TRAD/CLEAN → TRAD, TOPROPE → TOPROPE); the attempt value stays freely editable.
+     */
+    protectionType?: Route.ProtectionTypeEnum | null;
     deleted: boolean;
     readonly deletedAt?: string | null;
     readonly createdAt?: string;
@@ -54,6 +58,13 @@ export namespace Route {
         Nw: 'NW'
     } as const;
     export type AspectEnum = typeof AspectEnum[keyof typeof AspectEnum];
+    export const ProtectionTypeEnum = {
+        Bolted: 'BOLTED',
+        Trad: 'TRAD',
+        Clean: 'CLEAN',
+        Toprope: 'TOPROPE'
+    } as const;
+    export type ProtectionTypeEnum = typeof ProtectionTypeEnum[keyof typeof ProtectionTypeEnum];
 }
 
 

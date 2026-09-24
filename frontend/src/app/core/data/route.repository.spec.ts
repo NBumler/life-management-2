@@ -32,6 +32,7 @@ function saveInput(overrides: Partial<RouteSaveInput> = {}): RouteSaveInput {
     rockType: null,
     aspect: null,
     topoNumber: null,
+    protectionType: null,
     ...overrides,
   };
 }

@@ -11,6 +11,9 @@ import {
   IonInput,
   IonItem,
   IonList,
+  IonNote,
+  IonRadio,
+  IonRadioGroup,
   IonTitle,
   IonToolbar,
 } from '@ionic/angular/standalone';
@@ -18,13 +21,15 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 import { RouteRepository, RouteSaveInput } from '../../../../core/data/route.repository';
 import { SectorRepository } from '../../../../core/data/sector.repository';
+import { Route } from '../../../../api/model/route';
 import { Aspect } from '../../../../shared/aspect';
 import { AspectPickerComponent } from '../../../../shared/aspect-picker/aspect-picker.component';
 
 /**
  * documentation/Subfeatures/Outdoor köteles admin.md — the rope-route editor. `guidebookGrade` is a
  * raw guidebook string stored verbatim (the napló parses it, the server keeps no matrix index).
- * `lengthInMeters` / `totalPitches` / `rockType` / `aspect` are optional napló-prefill values.
+ * `lengthInMeters` / `totalPitches` / `rockType` / `aspect` are optional napló-prefill values;
+ * `protectionType` (backlog/118) is a radio group — tapping the checked option again clears it.
  */
 @Component({
   selector: 'app-route-edit',
@@ -41,6 +46,9 @@ import { AspectPickerComponent } from '../../../../shared/aspect-picker/aspect-p
     IonList,
     IonItem,
     IonInput,
+    IonNote,
+    IonRadio,
+    IonRadioGroup,
     TranslatePipe,
     AspectPickerComponent,
   ],
@@ -55,6 +63,13 @@ export class RouteEditPage implements OnInit {
   private readonly alertController = inject(AlertController);
   private readonly translate = inject(TranslateService);
 
+  readonly protectionTypes: readonly Route.ProtectionTypeEnum[] = [
+    Route.ProtectionTypeEnum.Bolted,
+    Route.ProtectionTypeEnum.Trad,
+    Route.ProtectionTypeEnum.Clean,
+    Route.ProtectionTypeEnum.Toprope,
+  ];
+
   readonly routeId = signal<string | null>(null);
   readonly cragId = signal<string>('');
   readonly sectorId = signal<string>('');
@@ -67,6 +82,7 @@ export class RouteEditPage implements OnInit {
     rockType: this.fb.control<string | null>(null),
     aspect: this.fb.control<Aspect | null>(null),
     topoNumber: this.fb.control<string | null>(null, [Validators.maxLength(32)]),
+    protectionType: this.fb.control<Route.ProtectionTypeEnum | null>(null),
   });
 
   async ngOnInit(): Promise<void> {
@@ -90,6 +106,7 @@ export class RouteEditPage implements OnInit {
         rockType: existing.rockType ?? null,
         aspect: existing.aspect ?? null,
         topoNumber: existing.topoNumber ?? null,
+        protectionType: existing.protectionType ?? null,
       });
       return;
     }
@@ -119,6 +136,7 @@ export class RouteEditPage implements OnInit {
       rockType: v.rockType?.trim() ? v.rockType.trim() : null,
       aspect: v.aspect ?? null,
       topoNumber: v.topoNumber?.trim() ? v.topoNumber.trim() : null,
+      protectionType: v.protectionType ?? null,
     };
     await this.repository.save(input);
     await this.navigateBack();

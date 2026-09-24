@@ -81,6 +81,8 @@ class RouteService {
 		Route.AspectEnum aspect = dto.getAspect().orElse(null);
 		entity.setAspect(aspect == null ? null : aspect.getValue());
 		entity.setTopoNumber(dto.getTopoNumber().orElse(null));
+		Route.ProtectionTypeEnum protectionType = dto.getProtectionType().orElse(null);
+		entity.setProtectionType(protectionType == null ? null : protectionType.getValue());
 	}
 
 	private static RouteEntity requireOwner(RouteEntity entity, UUID userId) {

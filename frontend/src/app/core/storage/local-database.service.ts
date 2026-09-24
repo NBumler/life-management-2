@@ -1261,7 +1261,13 @@ const SCHEMA_V39_STATEMENTS: string[] = [
  */
 const SCHEMA_V40_STATEMENTS: string[] = [`ALTER TABLE hike_route ADD COLUMN days TEXT`];
 
-const SCHEMA_VERSION = 40;
+/**
+ * backlog/118 — a kültéri kötélút biztosítási típusa (`BOLTED | TRAD | CLEAN | TOPROPE`, NULL = nincs
+ * megadva); on-device tükre a backend `V44__climbing_route_protection_type.sql`-nek.
+ */
+const SCHEMA_V41_STATEMENTS: string[] = [`ALTER TABLE route ADD COLUMN protection_type TEXT`];
+
+const SCHEMA_VERSION = 41;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -1304,7 +1310,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 37, statements: SCHEMA_V37_STATEMENTS },
   { toVersion: 38, statements: SCHEMA_V38_STATEMENTS },
   { toVersion: 39, statements: SCHEMA_V39_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V40_STATEMENTS },
+  { toVersion: 40, statements: SCHEMA_V40_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V41_STATEMENTS },
 ];
 
 export interface SqlTask {

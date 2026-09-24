@@ -39,6 +39,19 @@
           label-placement="stacked"
         ></ion-input>
       </ion-item>
+      <ion-radio-group formControlName="protectionType" [allowEmptySelection]="true" class="protection-type">
+        <ion-item lines="none">
+          <ion-note>{{ 'WORKOUT.CLIMBING.ROUTE.FIELD_PROTECTION' | translate }}</ion-note>
+        </ion-item>
+        @for (type of protectionTypes; track type) {
+          <ion-item>
+            <ion-radio [value]="type" justify="start" labelPlacement="end">{{ 'WORKOUT.CLIMBING.PROTECTION_TYPE.' + type | translate }}</ion-radio>
+          </ion-item>
+        }
+        <ion-item lines="none">
+          <ion-note class="protection-type__hint">{{ 'WORKOUT.CLIMBING.ROUTE.FIELD_PROTECTION_HINT' | translate }}</ion-note>
+        </ion-item>
+      </ion-radio-group>
       <ion-item>
         <ion-input
           type="number"

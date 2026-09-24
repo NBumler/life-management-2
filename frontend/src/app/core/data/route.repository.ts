@@ -21,6 +21,8 @@ export interface RouteSaveInput {
   rockType: string | null;
   aspect: Aspect | null;
   topoNumber: string | null;
+  /** backlog/118 — BOLTED | TRAD | CLEAN | TOPROPE; null = nincs megadva. */
+  protectionType: Route.ProtectionTypeEnum | null;
 }
 
 /**
@@ -83,6 +85,7 @@ export class RouteRepository {
       rockType: input.rockType,
       aspect: input.aspect,
       topoNumber: input.topoNumber,
+      protectionType: input.protectionType,
       deleted: false,
     };
     const saved = await this.storage.upsertRoute(draft);
