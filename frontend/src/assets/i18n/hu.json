@@ -1352,6 +1352,7 @@
         "ATTEMPT_N": "{{n}}. kísérlet",
         "SUCCESS": "Sikeres",
         "FIELD_BAND": "Szín-sáv",
+        "OR_GRADE": "vagy fokozat megadása",
         "FIELD_GRADE": "Fokozat (Font / V)",
         "GRADE_PLACEHOLDER": "pl. 6B vagy V4",
         "FIELD_ATTEMPT_COUNT": "Próbák (ebben a sessionben)",

@@ -127,30 +127,44 @@
         </ion-item>
 
         @if (bands().length > 0) {
-          <ion-item>
-            <ion-select
-              [label]="'WORKOUT.CLIMBING.SESSION.FIELD_BAND' | translate"
-              labelPlacement="stacked"
-              [value]="row.colorBandId()"
-              (ionChange)="pickBand(row, $any($event.target).value)"
-            >
-              <ion-select-option [value]="null">—</ion-select-option>
+          <div class="band-picker">
+            <ion-note class="band-picker__label">{{ 'WORKOUT.CLIMBING.SESSION.FIELD_BAND' | translate }}</ion-note>
+            <div class="band-chips" role="radiogroup" [attr.aria-label]="'WORKOUT.CLIMBING.SESSION.FIELD_BAND' | translate">
               @for (band of bands(); track band.id) {
-                <ion-select-option [value]="band.id">{{ band.name }} ({{ band.gradeLower }}–{{ band.gradeUpper }})</ion-select-option>
+                <ion-chip
+                  class="band-chip"
+                  role="radio"
+                  [attr.aria-checked]="row.colorBandId() === band.id"
+                  [attr.data-band-id]="band.id"
+                  [outline]="row.colorBandId() !== band.id"
+                  [color]="row.colorBandId() === band.id ? 'primary' : undefined"
+                  (click)="pickBand(row, row.colorBandId() === band.id ? null : band.id)"
+                >
+                  <span class="band-swatch" [style.background]="band.hexColor" aria-hidden="true"></span>
+                  <ion-label>{{ band.name }} <small>{{ band.gradeLower }}–{{ band.gradeUpper }}</small></ion-label>
+                </ion-chip>
               }
-            </ion-select>
-          </ion-item>
+            </div>
+          </div>
         }
 
-        <ion-item>
-          <app-grade-input
-            discipline="BOULDER"
-            [label]="'WORKOUT.CLIMBING.SESSION.FIELD_GRADE' | translate"
-            [placeholder]="'WORKOUT.CLIMBING.SESSION.GRADE_PLACEHOLDER' | translate"
-            [value]="row.userRawInput() ?? ''"
-            (valueChange)="row.userRawInput.set($event); touchAttempts()"
-          />
-        </ion-item>
+        @if (bands().length === 0 || row.gradeOpen()) {
+          <ion-item>
+            <app-grade-input
+              discipline="BOULDER"
+              [label]="'WORKOUT.CLIMBING.SESSION.FIELD_GRADE' | translate"
+              [placeholder]="'WORKOUT.CLIMBING.SESSION.GRADE_PLACEHOLDER' | translate"
+              [value]="row.userRawInput() ?? ''"
+              (valueChange)="row.userRawInput.set($event); touchAttempts()"
+            />
+          </ion-item>
+        } @else {
+          <ion-item lines="none">
+            <ion-button class="grade-toggle" fill="clear" size="small" (click)="row.gradeOpen.set(true)">
+              {{ 'WORKOUT.CLIMBING.SESSION.OR_GRADE' | translate }}
+            </ion-button>
+          </ion-item>
+        }
 
         <ion-item>
           <ion-input

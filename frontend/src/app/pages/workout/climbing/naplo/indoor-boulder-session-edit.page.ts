@@ -8,6 +8,7 @@ import {
   IonBackButton,
   IonButton,
   IonButtons,
+  IonChip,
   IonContent,
   IonFooter,
   IonHeader,
@@ -51,6 +52,8 @@ interface AttemptRow {
   ascentStyle: WritableSignal<AscentAttempt.AscentStyleEnum | null>;
   attemptCount: WritableSignal<number | null>;
   notes: WritableSignal<string | null>;
+  /** backlog/123 — with colour bands the free-text grade is secondary, folded behind "or grade". */
+  gradeOpen: WritableSignal<boolean>;
 }
 
 const ASCENT_STYLES: readonly AscentAttempt.AscentStyleEnum[] = [
@@ -64,7 +67,8 @@ const ASCENT_STYLES: readonly AscentAttempt.AscentStyleEnum[] = [
  * (`id` route param is an existing session's uuid or `new`). Context is fixed (INDOOR + BOULDER);
  * minimal required fields: date + gym + at least a duration or one attempt (the client kcal falls
  * back to logged-attempt-rows × 5 min). Colour-band chips from the selected gym are the primary grade
- * quick-select; a free-text Font/V grade is the alternative (parsed client-side for the matrix index).
+ * quick-select (backlog/123 — chips, not a dropdown); a free-text Font/V grade is the alternative,
+ * folded behind an "or grade" button whenever the gym has bands (parsed client-side for the matrix index).
  */
 @Component({
   selector: 'app-indoor-boulder-session-edit',
@@ -78,6 +82,7 @@ const ASCENT_STYLES: readonly AscentAttempt.AscentStyleEnum[] = [
     IonButtons,
     IonBackButton,
     IonButton,
+    IonChip,
     IonContent,
     IonFooter,
     IonList,
@@ -108,6 +113,31 @@ const ASCENT_STYLES: readonly AscentAttempt.AscentStyleEnum[] = [
       }
       .attempt-card--fail {
         border-inline-start-color: var(--ion-color-danger);
+      }
+      .band-picker {
+        padding: 8px 16px 0;
+      }
+      .band-picker__label {
+        display: block;
+        font-size: 0.8rem;
+        margin-bottom: 4px;
+      }
+      .band-chips {
+        display: flex;
+        flex-wrap: wrap;
+      }
+      .band-swatch {
+        display: inline-block;
+        width: 1rem;
+        height: 1rem;
+        border-radius: 50%;
+        margin-inline-end: 6px;
+        border: 1px solid var(--ion-background-color-step-300, #ccc);
+        flex: none;
+      }
+      .band-chip small {
+        opacity: 0.7;
+        margin-inline-start: 2px;
       }
       .attempt-card > ion-item:first-child {
         --background: var(--ion-background-color-step-50, #f7f7f7);
@@ -396,6 +426,7 @@ export class IndoorBoulderSessionEditPage implements OnInit {
       ascentStyle: signal(attempt.ascentStyle ?? null),
       attemptCount: signal(attempt.attemptCount ?? null),
       notes: signal(attempt.notes ?? null),
+      gradeOpen: signal(!!attempt.userRawInput?.trim()),
     };
   }
 
@@ -408,6 +439,7 @@ export class IndoorBoulderSessionEditPage implements OnInit {
       ascentStyle: signal<AscentAttempt.AscentStyleEnum | null>(null),
       attemptCount: signal<number | null>(1),
       notes: signal<string | null>(null),
+      gradeOpen: signal(false),
     };
   }
 }

@@ -1352,6 +1352,7 @@
         "ATTEMPT_N": "Attempt {{n}}",
         "SUCCESS": "Sent",
         "FIELD_BAND": "Colour band",
+        "OR_GRADE": "or enter a grade",
         "FIELD_GRADE": "Grade (Font / V)",
         "GRADE_PLACEHOLDER": "e.g. 6B or V4",
         "FIELD_ATTEMPT_COUNT": "Tries (this session)",

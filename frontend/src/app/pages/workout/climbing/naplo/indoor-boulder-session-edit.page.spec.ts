@@ -44,7 +44,7 @@ describe('IndoorBoulderSessionEditPage', () => {
   let component: IndoorBoulderSessionEditPage;
   let saveSpy: jasmine.Spy<(draft: ClimbingSessionDraft) => Promise<ClimbingSession>>;
 
-  async function setup(idParam = 'new'): Promise<void> {
+  async function setup(idParam = 'new', previous: ClimbingSession[] = []): Promise<void> {
     saveSpy = jasmine.createSpy('save').and.callFake(async (d: ClimbingSessionDraft) => ({
       ...d,
       id: d.id || 's1',
@@ -64,7 +64,7 @@ describe('IndoorBoulderSessionEditPage', () => {
             items: signal<ClimbingSession[]>([]),
             partnerSuggestions: signal<string[]>(['Anna', 'Béla']),
             byId: () => undefined,
-            forContext: () => [],
+            forContext: () => previous,
             save: saveSpy,
             remove: () => Promise.resolve(),
           },
@@ -172,5 +172,51 @@ describe('IndoorBoulderSessionEditPage', () => {
     const draft = saveSpy.calls.mostRecent().args[0];
     // floor((15 + 18) / 2) = 16 — not Math.round's 17.
     expect(draft.attempts[0].absoluteDifficultyIndex).toBe(16);
+  });
+
+  describe('colour-band chips (backlog/123)', () => {
+    function previousSession(): ClimbingSession {
+      return { id: 'old', date: '2026-09-01', gymId: 'g1', attempts: [], deleted: false } as unknown as ClimbingSession;
+    }
+
+    function chips(): HTMLElement[] {
+      return Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('.band-chip'));
+    }
+
+    it('a new session with the prefilled last gym shows the gym bands as chips on a fresh attempt', async () => {
+      await setup('new', [previousSession()]);
+      component.addAttempt();
+      fixture.detectChanges();
+
+      expect(component.form.controls.gymId.value).toBe('g1');
+      expect(chips().map((chip) => chip.getAttribute('data-band-id'))).toEqual(['b1', 'b2']);
+    });
+
+    it('tapping a chip picks the band, tapping it again clears it', async () => {
+      await setup('new', [previousSession()]);
+      component.addAttempt();
+      fixture.detectChanges();
+
+      chips()[1].click();
+      fixture.detectChanges();
+      expect(component.attempts()[0].colorBandId()).toBe('b2');
+      expect(chips()[1].getAttribute('aria-checked')).toBe('true');
+
+      chips()[1].click();
+      fixture.detectChanges();
+      expect(component.attempts()[0].colorBandId()).toBeNull();
+    });
+
+    it('folds the free-text grade behind "or grade" while the gym has bands', async () => {
+      await setup('new', [previousSession()]);
+      component.addAttempt();
+      fixture.detectChanges();
+      const host = fixture.nativeElement as HTMLElement;
+
+      expect(host.querySelector('app-grade-input')).toBeNull();
+      (host.querySelector('.grade-toggle') as HTMLElement).click();
+      fixture.detectChanges();
+      expect(host.querySelector('app-grade-input')).not.toBeNull();
+    });
   });
 });
