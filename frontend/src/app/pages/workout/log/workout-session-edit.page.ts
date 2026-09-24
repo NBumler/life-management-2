@@ -68,6 +68,7 @@ interface ExerciseRow {
 @Component({
   selector: 'app-workout-session-edit',
   templateUrl: 'workout-session-edit.page.html',
+  styleUrls: ['workout-session-edit.page.scss'],
   imports: [
     ReactiveFormsModule,
     DecimalPipe,

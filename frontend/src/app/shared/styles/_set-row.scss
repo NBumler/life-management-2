@@ -1,0 +1,45 @@
+// backlog/124 + backlog/126 — the numbered set row shared by the workout template editor
+// (plan-edit), the post-hoc session editor (workout-session-edit) and the live active-workout
+// screen. An unstyled `<ion-label slot="start">` defaults to `flex: 1`, so the one-digit set number
+// claimed as much width as all the inputs together (the same bug kaja-stats' `.rank` hit earlier);
+// on a ~360 px phone the squeezed inputs no longer showed their values. The number is a narrow
+// gutter, the fields wrap onto a second line instead of shrinking to nothing, and the active
+// workout's quick-bump buttons get their own full-width line under the fields.
+@mixin set-row {
+  .set-number {
+    flex: 0 0 auto;
+    min-width: 1.5rem;
+    margin-inline-end: 0.5rem;
+    text-align: end;
+    color: var(--ion-color-medium);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .set-fields {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0 8px;
+    flex: 1 1 auto;
+    min-width: 0;
+    padding-block: 4px;
+
+    > ion-select {
+      flex: 0 1 auto;
+      max-width: 9rem;
+    }
+
+    > ion-input {
+      flex: 1 1 4.5rem;
+      min-width: 4.5rem;
+    }
+  }
+
+  .set-bumps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    flex-basis: 100%;
+    padding-top: 4px;
+  }
+}

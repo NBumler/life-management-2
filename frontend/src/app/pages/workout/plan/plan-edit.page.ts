@@ -63,6 +63,7 @@ const WORKOUT_TYPE_VALUES = Object.values(WorkoutPlan.DefaultWorkoutTypeEnum);
 @Component({
   selector: 'app-plan-edit',
   templateUrl: 'plan-edit.page.html',
+  styleUrls: ['plan-edit.page.scss'],
   imports: [
     ReactiveFormsModule,
     ExercisePickerComponent,

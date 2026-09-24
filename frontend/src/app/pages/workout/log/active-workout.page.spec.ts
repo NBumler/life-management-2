@@ -193,6 +193,25 @@ describe('ActiveWorkoutPage', () => {
     expect(draftService.draft()?.exercises[0].sets[0].weightKg).toBe(5);
   });
 
+  it('the +2.5 kg / +1 buttons update the rendered inputs of the set row (backlog/126)', async () => {
+    await setup();
+    await component.ngOnInit();
+    component.onPicked([pick()]);
+    fixture.detectChanges();
+    const host: HTMLElement = fixture.nativeElement;
+
+    (host.querySelector('.set-bumps .bump-weight-small') as HTMLElement).click();
+    (host.querySelector('.set-bumps .bump-reps') as HTMLElement).click();
+    fixture.detectChanges();
+
+    const inputs = Array.from(host.querySelectorAll('.set-fields ion-input')) as unknown as { value: unknown }[];
+    const values = inputs.map((input) => Number(input.value));
+    const set = component.exercises()[0].sets()[0];
+    expect(values).toContain(set.weightKg() as number);
+    expect(values).toContain(set.reps() as number);
+    expect(set.weightKg()).toBe(2.5);
+  });
+
   it('finish() enqueues a session under the draft id, clears the draft and navigates back', async () => {
     await setup();
     await component.ngOnInit();

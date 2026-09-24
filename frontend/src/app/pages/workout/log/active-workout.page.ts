@@ -94,6 +94,7 @@ const TICK_MS = 1000;
 @Component({
   selector: 'app-active-workout',
   templateUrl: 'active-workout.page.html',
+  styleUrls: ['active-workout.page.scss'],
   imports: [
     DecimalPipe,
     ExercisePickerComponent,
