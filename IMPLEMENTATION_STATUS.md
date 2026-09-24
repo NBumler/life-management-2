@@ -14,6 +14,16 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-24 — #123** Indoor boulder színsáv chip-sor. A jelentett „nem választható szín” weben nem
+  reprodukálódott (a legördülő megjelent, csak könnyen átnézhető volt); a spec szerinti chip-sor
+  váltotta (sáv-színű pötty + tartomány, újrakoppintással törölhető), színsávos teremben a szöveges
+  grade egy „vagy fokozat megadása” gomb mögé került. — érintett: [[Indoor boulder napló]]; kód:
+  `pages/workout/climbing/naplo`.
+- **2026-09-24 — #124 + #126** Szettsor layout: keskeny sorszám-gutter, tördelő mezők, az Active
+  Workout `+2.5 kg` / `+5 kg` / `+1 ism.` gombjai a mezők alatt (a bump hatása eddig azért nem
+  látszott Androidon, mert az input összenyomódott). Közös `shared/styles/_set-row.scss` mixin a
+  sablon-szerkesztőre, az utólagos formra és az Active Workoutra. — érintett: [[Edzésnapló]],
+  [[Heti terv]]; kód: `pages/workout/{plan,log}`, `shared/styles`.
 - **2026-09-20 — #112** Dashboard "Mai edzések" widget (lépés/edzésnapló/mászás/úszás/bicikli +
   extra kalória). Új `today-workouts` Kezdőlap-widget: soronként a mai (helyi naptári nap) élő
   aktivitások + saját extra-kalóriájuk, plusz egy összesített kcal sor — ugyanabból az

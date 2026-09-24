@@ -1,13 +1,13 @@
 ---
 id: 123
 type: bug
-status: ready
+status: done
 title: Indoor boulder — új sessionnél a terem színsávjai nem választhatók, csak grade adható meg
 specs:
   - "[[Indoor boulder napló]]"
 flag:
 created: 2026-09-24
-closed:
+closed: 2026-09-24
 ---
 
 # 123 — Indoor boulder — új sessionnél a terem színsávjai nem választhatók, csak grade adható meg
@@ -36,16 +36,16 @@ Két eltérés a spectől:
 
 ## Elfogadási kritériumok
 
-- [ ] Reprodukálva és gyökérok azonosítva (emulátoron / telefonon és weben): új session, előtöltött
+- [x] Reprodukálva és gyökérok azonosítva (emulátoron / telefonon és weben): új session, előtöltött
       terem, illetve kézzel választott terem esetén is. Gyanúk: (a) a `gymIdValue` signal nem kap
       értéket az előtöltésnél / a `bands` computed nem frissül; (b) a sávok egy másik (pl. törölt
       vagy nem-`BOULDER`) teremhez tartoznak; (c) a sávok még nincsenek a helyi tárban új sessionnél.
-- [ ] Ha a kiválasztott teremnek van élő színsávja, új és meglévő sessionnél is azonnal
+- [x] Ha a kiválasztott teremnek van élő színsávja, új és meglévő sessionnél is azonnal
       megjelenik a színválasztó minden kísérlet-kártyán.
-- [ ] A színválasztó a spec szerint **chip-sor** (a sáv színével), ez az elsődleges bevitel; a
+- [x] A színválasztó a spec szerint **chip-sor** (a sáv színével), ez az elsődleges bevitel; a
       grade-mező színsávos teremben másodlagos (pl. „vagy grade" összecsukott mező).
-- [ ] Regressziós spec-teszt: új session + előtöltött terem → sávok láthatók.
-- [ ] Zöld lint + test:ci + build.
+- [x] Regressziós spec-teszt: új session + előtöltött terem → sávok láthatók.
+- [x] Zöld lint + test:ci + build.
 
 ## Terv / döntési napló
 
@@ -55,5 +55,6 @@ hasznos._
 ## Lezáráskor (on-done)
 
 - Frissített specek: [[Indoor boulder napló]]
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — <mit>
-- Kód: <fő package-ek / fájlok>
+- `IMPLEMENTATION_STATUS.md` sor: 2026-09-24 — #123
+- Kód: `pages/workout/climbing/naplo/indoor-boulder-session-edit.page.*`
+- Megjegyzés: Reprodukció weben: a választó megjelent, funkcionális hiba nem volt (user megerősítette: „elnéztem valamit”); a spectől eltérő, könnyen átnézhető legördülő lecserélve chip-sorra, grade másodlagos.

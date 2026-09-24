@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-09
-verifikalt_commit: 27bf564
+verifikalva: 2026-09-24
+verifikalt_commit: 2141660
 ---
 
 # Heti terv
@@ -81,7 +81,7 @@ CRUD: sablon lista/szerkesztő; heti dashboard slot szerkesztés; soft delete sa
 
 ### UI/UX elvárások
 
-- Sablonok lista + nested gyakorlat/cél-szett szerkesztő ([[Gyakorlat]] picker).
+- Sablonok lista + nested gyakorlat/cél-szett szerkesztő ([[Gyakorlat]] picker). A cél-szett sorok elrendezése az [[Edzésnapló]]-val közös (keskeny sorszám-gutter, tördelő mezők — `backlog/124`).
 - Sablonok lista szűrő: **Aktív** (alapértelmezett) / Inaktív / Mind; soronkénti aktív/inaktív kapcsoló (nincs szükség edit módba lépésre); opcionális `goalLabel` szerinti csoport-fejléc a listában.
 - Heti dashboard slot kiosztás pickere és az [[Edzésnapló]] „Terv indítása” gyorsindítás listája csak aktív sablonokat kínál fel, `goalLabel` szerint csoportosítva, ha van címke.
 - Heti dashboard: 7 napos nézet; naphoz sablon rendelés; „Teljesítve” jelvény adherence szerint; CTA: Edzés indítása.

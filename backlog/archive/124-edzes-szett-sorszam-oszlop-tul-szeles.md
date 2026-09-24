@@ -1,14 +1,14 @@
 ---
 id: 124
 type: bug
-status: ready
+status: done
 title: Edzés — a szettsorok sorszám-oszlopa túl sok helyet foglal (sablon szerkesztő + napló)
 specs:
   - "[[Heti terv]]"
   - "[[Edzésnapló]]"
 flag:
 created: 2026-09-24
-closed:
+closed: 2026-09-24
 ---
 
 # 124 — Edzés — a szettsorok sorszám-oszlopa túl sok helyet foglal (sablon szerkesztő + napló)
@@ -34,14 +34,14 @@ flex-viselkedésével (`flex: 1`) a sor szélességének jelentős részét elfo
 
 ## Elfogadási kritériumok
 
-- [ ] A sorszám-oszlop tartalomhoz igazodó, keskeny (pl. `flex: 0 0 auto`, kis `min-width`,
+- [x] A sorszám-oszlop tartalomhoz igazodó, keskeny (pl. `flex: 0 0 auto`, kis `min-width`,
       jobb margó), a `.set-fields` kapja a maradék szélességet.
-- [ ] Mind a 3 oldalon egységesen javítva — lehetőleg közös stílusban (pl. megosztott SCSS mixin /
+- [x] Mind a 3 oldalon egységesen javítva — lehetőleg közös stílusban (pl. megosztott SCSS mixin /
       globális osztály, ahogy a #117 tette a modal-magassággal), nem háromszor másolva.
-- [ ] Átnézni a többi `ion-label slot="start"` sorszám-mintát (pl. mászó kísérlet-kártyák
+- [x] Átnézni a többi `ion-label slot="start"` sorszám-mintát (pl. mászó kísérlet-kártyák
       `ATTEMPT_N`, `kaja-stats`) — ha ott is jelentkezik, ugyanazzal javítva.
-- [ ] Ellenőrzés keskeny (≈360 px) kijelzőn.
-- [ ] Zöld lint + test:ci + build.
+- [x] Ellenőrzés keskeny (≈360 px) kijelzőn.
+- [x] Zöld lint + test:ci + build.
 
 ## Terv / döntési napló
 
@@ -49,6 +49,7 @@ _Nincs._
 
 ## Lezáráskor (on-done)
 
-- Frissített specek: [[Heti terv]], [[Edzésnapló]] (`### UI/UX elvárások`, ha rögzítjük)
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — <mit>
-- Kód: <fő package-ek / fájlok>
+- Frissített specek: [[Heti terv]], [[Edzésnapló]]
+- `IMPLEMENTATION_STATUS.md` sor: 2026-09-24 — #124
+- Kód: `shared/styles/_set-row.scss`, `pages/workout/{plan,log}/*.page.scss`
+- Megjegyzés: Közös `_set-row.scss` mixin a 3 szettsoros oldalra; audit: `kaja-stats` `.rank` már javítva volt, a mászó `ATTEMPT_N` nem `slot="start"`, nem érintett.

@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-19
-verifikalt_commit: f1d6d59
+verifikalva: 2026-09-24
+verifikalt_commit: 2141660
 ---
 
 # Edzésnapló
@@ -162,7 +162,8 @@ Tervezett (`backlog/055-edzesnaplo-statisztika-felulet-1rm-max-suly-gorbe-heti-v
 - Flow: Dashboard → Új edzés / Terv indítása / Ugyanaz mint legutóbb → Active Workout (vagy utólagos form) → gyakorlat modal → szettek → Befejezés → summary / dashboard frissülés.
 - **Lista:** időrend (újabb elöl); soron: dátum, cím vagy típus, időtartam, megjelenített kcal (utility).
 - **Gyakorlat picker:** `ion-searchbar` + `ExerciseCategory` chipek + Kedvencek; ad-hoc létrehozás. A `<ion-modal>`-ben megjelenő `app-exercise-picker` a modal **teljes magasságát** kitölti (`:host` a megosztott `ion-modal-host-fill` mixin — `shared/styles/_ion-modal-host.scss`, `backlog/117` — flex-oszlop, `position: absolute; inset: 0`), így a találati lista a teljes rendelkezésre álló teret használja, nem egy-két sorra zsugorodik. Ugyanezt a mintát használja az [[Étkezés]] tétel-szerkesztő modalja is.
-- **Szettek:** gyakorlatonként egy átlátható lista/táblázat; `+ Új szett`; előző szett másolása; `+2.5 kg` / `+5 kg` / `+1 rep`; numerikus billentyűzet autofókusz.
+- **Szettek:** gyakorlatonként egy átlátható lista/táblázat; `+ Új szett`; előző szett másolása; numerikus billentyűzet autofókusz. Az Active Workout gyors-növelő gombjai (`+2.5 kg` / `+5 kg` súlyos, `+1 ism.` repses gyakorlatnál) **saját sorban, a mezők alatt** vannak, így a megnövelt érték mindig látszik; a szett törlés (✕) jobbra marad.
+- **Szettsor elrendezése** (sablon-szerkesztő, utólagos form és Active Workout egyaránt, közös `shared/styles/_set-row.scss` mixin — `backlog/124`/`126`): a sorszám keskeny, tartalomhoz igazodó gutter; a mezők (szett-típus + a `kind` szerinti inputok) tördelnek, nem zsugorodnak olvashatatlanra ~360 px-en sem.
 - **Thumb-zone:** szett-pipa és „Edzés befejezése” a képernyő alsó harmadában.
 - **HIIT:** körök (`roundsCount`); kör másolás gombokkal.
 - **Törlés:** megerősítő dialógus.
