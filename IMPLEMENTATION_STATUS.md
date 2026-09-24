@@ -14,6 +14,10 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-24 — #127** Állandó heti beosztás: saját sor nélküli hét a legutóbbi korábbi beosztást
+  örökli; módosításkor „Mostantól” / „Csak erre a hétre” (utóbbi a következő hetet visszaállítja).
+  Tisztán kliensoldali (`resolveEffectiveWeek`), adatmodell-változás nélkül; a „Másolás következő
+  hétre” megszűnt. — érintett: [[Heti terv]]; kód: `pages/workout/weekly-plan`.
 - **2026-09-24 — #125** Edzés-sablon ismétlésszám tartományként ("8-12"): szöveges bevitel parse-olva,
   számként tárolt alsó (`reps`) / felső (`repsMax`) határ; edzés indításakor a felfelé kerekített
   átlag töltődik, a tartomány célként látszik. Mezőtől független `shared/target-range.ts`. V46 +

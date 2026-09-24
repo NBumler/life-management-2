@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-24
-verifikalt_commit: 8079588
+verifikalt_commit: 0985aa9
 ---
 
 # Heti terv
@@ -69,7 +69,15 @@ Indításkor az [[Edzésnapló]] átmásolja ezeket session entry / set előtöl
 | `deleted` | Soft delete |
 | `createdAt` / `updatedAt` | Audit |
 
-**Másolás következő hétre:** a aktuális `WeeklyPlan` slotjai új `weekStartDate`-tel másolhatók (új UUID-k).
+**Állandó beosztás — öröklés előre (`backlog/127`):** a heti beosztást nem kell hetente újra megadni. Egy hét, amelynek **nincs saját** élő `WeeklyPlan` sora, a legutóbbi **korábbi**, saját sorral rendelkező hét slotjait örökli (`resolveEffectiveWeek`, `weekly-plan-adherence.ts`); saját sor — akár üres, azaz tudatosan edzésmentes hét — mindig az öröklött fölött nyer. Az első valaha beállított hét előtt minden hét üres. Az öröklés csak visszafelé néz, ezért egy hét módosítása soha nem változtat korábbi hetet (és annak adherence-ét). Tisztán kliensoldali feloldás: az adatmodell, a determinisztikus UUID v5 `(userId, weekStartDate)` azonosító és a szinkron változatlan.
+
+**Módosítás érvényessége** (szegmens a heti nézet tetején, alapértelmezés „Mostantól”): egy nap kiosztásakor / törlésekor a hét teljes érvényes (saját vagy örökölt) beosztása a hét **saját sorává** mentődik — az örökölt slot-id soha nem kerül át másik hét mentésébe.
+- **„Mostantól”** — csak az adott hét mentődik; minden későbbi, saját sor nélküli hét ezt örökli.
+- **„Csak erre a hétre”** — egyszeri kivétel: ha a következő hétnek még nincs saját sora, előbb az kapja meg a módosítás *előtti* beosztást, így a kivétel utáni héten az korábbi rend folytatódik.
+
+#### Tudatos korlát
+
+Egy későbbi hét, amelynek már saját sora van (pl. egy korábbi „Csak erre a hétre” visszaállító sora), egy „Mostantól” módosításkor megtartja a saját beosztását — a heti nézetben ez nem „örökölt”-ként jelenik meg, így látható.
 
 #### Indítás és adherence
 
@@ -86,7 +94,7 @@ CRUD: sablon lista/szerkesztő; heti dashboard slot szerkesztés; soft delete sa
 - Heti dashboard slot kiosztás pickere és az [[Edzésnapló]] „Terv indítása” gyorsindítás listája csak aktív sablonokat kínál fel, `goalLabel` szerint csoportosítva, ha van címke.
 - Heti dashboard: 7 napos nézet; naphoz sablon rendelés; „Teljesítve” jelvény adherence szerint; CTA: Edzés indítása.
 - A hét-navigátor (előző hét ◂ / hét kezdete / következő hét ▸) **egy sorban** jelenik meg, a nyilak a hét-felirat két szélén (`.week-nav` flex-sor); a felirat tapja a mai hétre ugrik.
-- „Másolás következő hétre” akció.
+- Örökölt hétnél jelzés: „A <dátum> héten beállított beosztás érvényes (öröklött)”; „Mostantól” / „Csak erre a hétre” szegmens a módosítás érvényességéhez. (A korábbi „Másolás következő hétre” akció megszűnt — az öröklés feleslegessé tette.)
 - Thumb-zone barát CTA az indításhoz (mobil).
 
 ### Megjegyzések
