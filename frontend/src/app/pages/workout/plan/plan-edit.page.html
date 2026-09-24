@@ -78,12 +78,18 @@
               }
             </ion-select>
             @if (fieldsFor(row).reps) {
+              <!-- backlog/125: "8-12" range — text input; inputmode="tel" gives a digit pad that also has "-" -->
               <ion-input
-                type="number"
-                inputmode="numeric"
-                [value]="set.reps()"
-                (ionInput)="set.reps.set($any($event.target).value === '' ? null : +$any($event.target).value)"
+                class="reps-range"
+                type="text"
+                inputmode="tel"
+                [value]="set.repsText()"
+                (ionInput)="onRepsInput(set, $any($event.target).value ?? '')"
                 [label]="'WORKOUT.SESSION.FIELD_REPS' | translate"
+                [placeholder]="'WORKOUT.PLAN.REPS_RANGE_PLACEHOLDER' | translate"
+                [class.ion-invalid]="set.repsError() !== null"
+                [class.ion-touched]="set.repsError() !== null"
+                [errorText]="set.repsError() ? ('WORKOUT.PLAN.REPS_RANGE_' + set.repsError() | translate) : ''"
                 label-placement="stacked"
               ></ion-input>
             }

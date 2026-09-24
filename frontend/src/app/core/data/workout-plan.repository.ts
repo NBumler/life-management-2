@@ -164,6 +164,7 @@ export class WorkoutPlanRepository {
               id: set.id,
               setType: set.setType,
               reps: set.reps ?? null,
+              repsMax: set.repsMax ?? null,
               weightKg: set.weightKg ?? null,
               holdTimeSeconds: set.holdTimeSeconds ?? null,
               edgeSizeMm: set.edgeSizeMm ?? null,

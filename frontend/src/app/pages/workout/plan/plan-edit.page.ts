@@ -29,12 +29,18 @@ import { WorkoutPlanRepository } from '../../../core/data/workout-plan.repositor
 import { WorkoutPlanDraft, WorkoutPlanExerciseSaveItem } from '../../../core/storage/storage-backend';
 import { uuidV4 } from '../../../core/sync/uuid';
 import { ExercisePickResult, ExercisePickerComponent } from '../../../shared/exercise-picker/exercise-picker.component';
+import { formatTargetRange, parseTargetRange } from '../../../shared/target-range';
 import { PLAN_TO_ENTRY_KIND, SET_TYPES, VisibleSetFields, moveById, visibleFields } from '../log/workout-fields';
 
 interface TargetSetRow {
   id: string;
   setType: WritableSignal<WorkoutPlanSet.SetTypeEnum>;
   reps: WritableSignal<number | null>;
+  /** backlog/125 — upper bound of a "8-12" rep range; null = single target. */
+  repsMax: WritableSignal<number | null>;
+  /** What the user typed in the reps field ("8-12"); parsed into `reps` / `repsMax` on every keystroke. */
+  repsText: WritableSignal<string>;
+  repsError: WritableSignal<'INVALID' | 'INVERTED' | null>;
   weightKg: WritableSignal<number | null>;
   holdTimeSeconds: WritableSignal<number | null>;
   edgeSizeMm: WritableSignal<number | null>;
@@ -177,7 +183,25 @@ export class PlanEditPage implements OnInit {
     field.update((value) => Math.round(((value ?? 0) + delta) * 100) / 100);
   }
 
+  /** backlog/125 — "N" or "N-M"; an unparseable / inverted input keeps the last valid numbers and blocks save. */
+  onRepsInput(set: TargetSetRow, text: string): void {
+    set.repsText.set(text);
+    const parsed = parseTargetRange(text);
+    if (!parsed.ok) {
+      set.repsError.set(parsed.error);
+      return;
+    }
+    set.repsError.set(null);
+    set.reps.set(parsed.value.lower);
+    set.repsMax.set(parsed.value.upper);
+  }
+
+  readonly hasSetErrors = () => this.exercises().some((row) => row.sets().some((set) => set.repsError() !== null));
+
   async save(): Promise<void> {
+    if (this.hasSetErrors()) {
+      return;
+    }
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -238,6 +262,7 @@ export class PlanEditPage implements OnInit {
         id: set.id,
         setType: set.setType(),
         reps: set.reps(),
+        repsMax: set.repsMax(),
         weightKg: set.weightKg(),
         holdTimeSeconds: set.holdTimeSeconds(),
         edgeSizeMm: set.edgeSizeMm(),
@@ -267,6 +292,9 @@ export class PlanEditPage implements OnInit {
               id: set.id,
               setType: signal(set.setType),
               reps: signal(set.reps ?? null),
+              repsMax: signal(set.repsMax ?? null),
+              repsText: signal(formatTargetRange(set.reps, set.repsMax).replace('–', '-')),
+              repsError: signal<'INVALID' | 'INVERTED' | null>(null),
               weightKg: signal(set.weightKg ?? null),
               holdTimeSeconds: signal(set.holdTimeSeconds ?? null),
               edgeSizeMm: signal(set.edgeSizeMm ?? null),
@@ -294,6 +322,9 @@ export class PlanEditPage implements OnInit {
       id: uuidV4(),
       setType: signal(previous?.setType() ?? WorkoutPlanSet.SetTypeEnum.Working),
       reps: signal(previous?.reps() ?? null),
+      repsMax: signal(previous?.repsMax() ?? null),
+      repsText: signal(previous?.repsError() ? '' : (previous?.repsText() ?? '')),
+      repsError: signal<'INVALID' | 'INVERTED' | null>(null),
       weightKg: signal(previous?.weightKg() ?? null),
       holdTimeSeconds: signal(previous?.holdTimeSeconds() ?? null),
       edgeSizeMm: signal(previous?.edgeSizeMm() ?? null),

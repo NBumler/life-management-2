@@ -34,6 +34,10 @@ public class WorkoutPlanSetEntity {
 	@Column
 	private Integer reps;
 
+	/** backlog/125 — upper bound of a target rep range ("8-12"); null = a single target (`reps`). */
+	@Column(name = "reps_max")
+	private Integer repsMax;
+
 	@Column(name = "weight_kg")
 	private BigDecimal weightKg;
 
@@ -96,6 +100,14 @@ public class WorkoutPlanSetEntity {
 
 	public void setReps(Integer reps) {
 		this.reps = reps;
+	}
+
+	public Integer getRepsMax() {
+		return repsMax;
+	}
+
+	public void setRepsMax(Integer repsMax) {
+		this.repsMax = repsMax;
 	}
 
 	public BigDecimal getWeightKg() {

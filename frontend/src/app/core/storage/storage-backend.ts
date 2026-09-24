@@ -231,6 +231,8 @@ export interface WorkoutPlanSetSaveItem {
   id: string;
   setType: WorkoutPlanSet.SetTypeEnum;
   reps: number | null;
+  /** backlog/125 — upper bound of a target rep range; null = single target. */
+  repsMax: number | null;
   weightKg: number | null;
   holdTimeSeconds: number | null;
   edgeSizeMm: number | null;

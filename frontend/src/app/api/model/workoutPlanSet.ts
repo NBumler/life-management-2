@@ -17,9 +17,13 @@ export interface WorkoutPlanSet {
     planExerciseId: string;
     setType: WorkoutPlanSet.SetTypeEnum;
     /**
-     * Target reps.
+     * Target reps — the single target, or the lower bound of a range when `repsMax` is set.
      */
     reps?: number | null;
+    /**
+     * backlog/125 — upper bound of a target rep range (\"8-12\" → reps 8, repsMax 12). `null` = not a range. Requires `reps` and must be ≥ it (400 VALIDATION otherwise). Starting a workout from the plan prefills the session set with ceil((reps + repsMax) / 2).
+     */
+    repsMax?: number | null;
     /**
      * Target load, kg only. Bodyweight = 0; weighted = +kg; assist (band/pulley) = negative kg.
      */

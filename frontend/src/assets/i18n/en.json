@@ -994,7 +994,8 @@
       "SET_DONE": "Set done",
       "PR_1RM": "1RM PR",
       "PR_WEIGHT": "Weight PR",
-      "PR_VOLUME": "Volume PR"
+      "PR_VOLUME": "Volume PR",
+      "REPS_TARGET": "target: {{range}}"
     },
     "EXERCISES": {
       "TITLE": "Exercises",
@@ -1124,7 +1125,10 @@
       "ADHOC_NOT_ALLOWED": "A template only takes catalog exercises; ad-hoc picks were skipped.",
       "DELETE": "Delete template",
       "DELETE_CONFIRM_TITLE": "Delete template",
-      "DELETE_CONFIRM_MESSAGE": "Delete this template? Past workout logs and weekly assignments pointing at it are left untouched."
+      "DELETE_CONFIRM_MESSAGE": "Delete this template? Past workout logs and weekly assignments pointing at it are left untouched.",
+      "REPS_RANGE_PLACEHOLDER": "e.g. 10 or 8-12",
+      "REPS_RANGE_INVALID": "Enter a number or a range (e.g. 8-12).",
+      "REPS_RANGE_INVERTED": "The lower bound cannot exceed the upper one."
     },
     "WEEKLY": {
       "WEEK_OF": "Week of:",

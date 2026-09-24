@@ -1283,7 +1283,13 @@ const SCHEMA_V42_STATEMENTS: string[] = [
    WHERE weather_conditions IS NULL OR weather_conditions NOT LIKE '[%'`,
 ];
 
-const SCHEMA_VERSION = 42;
+/**
+ * backlog/125 — edzés-sablon szett cél-ismétlésszám tartomány felső határa (`reps_max`, NULL = nem
+ * tartomány); on-device tükre a backend `V46__workout_plan_set_reps_max.sql`-nek.
+ */
+const SCHEMA_V43_STATEMENTS: string[] = [`ALTER TABLE workout_plan_set ADD COLUMN reps_max INTEGER`];
+
+const SCHEMA_VERSION = 43;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -1328,7 +1334,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 39, statements: SCHEMA_V39_STATEMENTS },
   { toVersion: 40, statements: SCHEMA_V40_STATEMENTS },
   { toVersion: 41, statements: SCHEMA_V41_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V42_STATEMENTS },
+  { toVersion: 42, statements: SCHEMA_V42_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V43_STATEMENTS },
 ];
 
 export interface SqlTask {

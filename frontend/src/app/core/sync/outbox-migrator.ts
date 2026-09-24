@@ -245,6 +245,9 @@ const STEPS_BY_VERSION: Readonly<Record<number, VersionSteps>> = {
   9: { default: identityStep },
   // backlog/119: `ClimbingSession.weatherConditions` scalar → list of atomic tags.
   10: { default: identityStep, overrides: { ClimbingSession: climbingSessionWeatherToList } },
+  // backlog/125: `WorkoutPlanSet.repsMax` added as a new nullable field — a missing key already means
+  // "not a range" server-side (same reasoning as step 5), so no payload transform is needed.
+  11: { default: identityStep },
 };
 
 function buildMigrations(): ReadonlyMap<string, MigrationStep> {

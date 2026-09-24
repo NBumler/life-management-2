@@ -6,6 +6,7 @@ import { provideTranslateService } from '@ngx-translate/core';
 
 import { Exercise } from '../../../api/model/exercise';
 import { WorkoutExerciseEntry } from '../../../api/model/workoutExerciseEntry';
+import { WorkoutPlan } from '../../../api/model/workoutPlan';
 import { WorkoutSession } from '../../../api/model/workoutSession';
 import { WorkoutSetEntry } from '../../../api/model/workoutSetEntry';
 import { ExerciseRepository } from '../../../core/data/exercise.repository';
@@ -83,7 +84,7 @@ describe('ActiveWorkoutPage', () => {
   let router: jasmine.SpyObj<Pick<Router, 'navigateByUrl'>>;
   let draftService: WorkoutDraftService;
 
-  async function setup(queryParams: Record<string, string> = {}): Promise<void> {
+  async function setup(queryParams: Record<string, string> = {}, plan?: WorkoutPlan): Promise<void> {
     repository = jasmine.createSpyObj('WorkoutSessionRepository', ['load', 'byId', 'save']) as never;
     repository.load.and.resolveTo();
     repository.items = signal<WorkoutSession[]>([]);
@@ -100,7 +101,7 @@ describe('ActiveWorkoutPage', () => {
         provideTranslateService(),
         { provide: WorkoutSessionRepository, useValue: repository },
         { provide: ExerciseRepository, useValue: exerciseRepository },
-        { provide: WorkoutPlanRepository, useValue: { load: () => Promise.resolve(), byId: () => undefined, items: signal([]) } },
+        { provide: WorkoutPlanRepository, useValue: { load: () => Promise.resolve(), byId: () => plan, items: signal([]) } },
         { provide: ProfileRepository, useValue: { load: () => Promise.resolve(), profile: signal(null) } },
         { provide: Router, useValue: router },
         { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(queryParams) } } },
@@ -275,5 +276,39 @@ describe('ActiveWorkoutPage', () => {
 
     expect(component.title()).toBe('Parked');
     expect(draftService.draft()?.sessionId).toBe('parked');
+  });
+
+  it('starting from a plan prefills a "8–12" target at its rounded-up midpoint and keeps the range as a hint (backlog/125)', async () => {
+    const plan = {
+      id: 'plan1',
+      name: 'Felsőtest',
+      active: true,
+      deleted: false,
+      exercises: [
+        {
+          id: 'pe1',
+          planId: 'plan1',
+          exerciseId: 'cat-bench',
+          exerciseName: 'Fekvenyomás',
+          exerciseCategory: 'CHEST',
+          exerciseKind: 'WEIGHTED_REPS',
+          orderIndex: 0,
+          deleted: false,
+          targetSets: [
+            { id: 't1', planExerciseId: 'pe1', setType: 'WORKING', reps: 8, repsMax: 11, orderIndex: 0, deleted: false },
+            { id: 't2', planExerciseId: 'pe1', setType: 'WORKING', reps: 6, repsMax: null, orderIndex: 1, deleted: false },
+          ],
+        },
+      ],
+    } as unknown as WorkoutPlan;
+    await setup({ planId: 'plan1' }, plan);
+    await component.ngOnInit();
+
+    const sets = component.exercises()[0].sets();
+    expect(sets[0].reps()).toBe(10);
+    expect(sets[0].repsTarget).toBe('8–11');
+    expect(sets[1].reps()).toBe(6);
+    expect(sets[1].repsTarget).toBeNull();
+    expect(draftService.draft()?.exercises[0].sets[0].repsTarget).toBe('8–11');
   });
 });

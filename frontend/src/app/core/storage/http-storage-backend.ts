@@ -580,6 +580,7 @@ export class HttpStorageBackend implements StorageBackend {
           planExerciseId: exercise.id,
           setType: set.setType,
           reps: set.reps,
+          repsMax: set.repsMax,
           weightKg: set.weightKg,
           holdTimeSeconds: set.holdTimeSeconds,
           edgeSizeMm: set.edgeSizeMm,

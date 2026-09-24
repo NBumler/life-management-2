@@ -1,5 +1,5 @@
 {
-  "payloadSchemaVersion": 11,
+  "payloadSchemaVersion": 12,
   "entities": {
     "AycmCheckIn": "5050bb69ed3adf81c152c637b748050512395f739cc029e99bdc578cb539ed28",
     "AycmPartner": "c0471c6686aa5775df5f2bd120cad172e84ff8c9e1cbf40ba3400b6434188cbb",
@@ -36,7 +36,7 @@
     "UserProfile": "86071c199268eb962efd1b9d1e9f8fac50e3adc99aa577fdcea57c95b88efa38",
     "WeeklyPlan": "bba6809fcff04c04ca9b75f432741a91a565a54fe5066471eb9dbda52d66c8d0",
     "WeightHistoryEntry": "d8341801379aad465211c1b29295606d772bb042ecf6c7caa60b7521013a3e53",
-    "WorkoutPlan": "a86f733d76ebdf1b8e4eee72c08e655158b518710fedba1063436192944ea24a",
+    "WorkoutPlan": "6f021e821af6347b81356eb8ceb1150ec07c936b06e3a6b7deb1346d8f5f8b5a",
     "WorkoutSession": "c1537bcd3252243f7c6583442ca50cf5bc504d41517be4272145614dffffd815"
   }
 }

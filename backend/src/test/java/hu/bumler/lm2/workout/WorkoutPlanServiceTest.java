@@ -13,6 +13,7 @@ import hu.bumler.lm2.api.model.WorkoutPlanExercise;
 import hu.bumler.lm2.api.model.WorkoutPlanSet;
 import hu.bumler.lm2.common.exception.EntityDeletedException;
 import hu.bumler.lm2.common.exception.EntityNotFoundException;
+import hu.bumler.lm2.common.exception.ValidationException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -108,6 +109,42 @@ class WorkoutPlanServiceTest {
 		verify(setRepository).save(setCaptor.capture());
 		assertThat(setCaptor.getValue().getId()).isEqualTo(setId);
 		assertThat(setCaptor.getValue().getPlanExerciseId()).isEqualTo(exerciseId);
+	}
+
+	@Test
+	void create_storesATargetRepRange_asNumericLowerAndUpperBounds() {
+		UUID planId = UUID.randomUUID();
+		UUID exerciseId = UUID.randomUUID();
+		when(repository.findById(planId)).thenReturn(Optional.empty());
+		when(exerciseRepository.findByPlanId(planId)).thenReturn(List.of());
+		WorkoutPlanSet range = set(UUID.randomUUID(), exerciseId, 0);
+		range.reps(8);
+		range.repsMax(12);
+
+		service.create(UUID.randomUUID(), plan(planId, List.of(exercise(exerciseId, planId, 0, List.of(range)))));
+
+		ArgumentCaptor<WorkoutPlanSetEntity> setCaptor = ArgumentCaptor.forClass(WorkoutPlanSetEntity.class);
+		verify(setRepository).save(setCaptor.capture());
+		assertThat(setCaptor.getValue().getReps()).isEqualTo(8);
+		assertThat(setCaptor.getValue().getRepsMax()).isEqualTo(12);
+	}
+
+	@Test
+	void create_rejectsAnInvertedOrOpenRepRange() {
+		UUID planId = UUID.randomUUID();
+		UUID exerciseId = UUID.randomUUID();
+		when(repository.findById(planId)).thenReturn(Optional.empty());
+		when(exerciseRepository.findByPlanId(planId)).thenReturn(List.of());
+		WorkoutPlanSet inverted = set(UUID.randomUUID(), exerciseId, 0);
+		inverted.reps(12);
+		inverted.repsMax(8);
+		WorkoutPlanSet open = set(UUID.randomUUID(), exerciseId, 0);
+		open.repsMax(8);
+
+		assertThatThrownBy(() -> service.create(UUID.randomUUID(),
+				plan(planId, List.of(exercise(exerciseId, planId, 0, List.of(inverted)))))).isInstanceOf(ValidationException.class);
+		assertThatThrownBy(() -> service.create(UUID.randomUUID(),
+				plan(planId, List.of(exercise(exerciseId, planId, 0, List.of(open)))))).isInstanceOf(ValidationException.class);
 	}
 
 	@Test

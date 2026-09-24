@@ -32,7 +32,15 @@ properties:
     type: integer
     minimum: 0
     nullable: true
-    description: Target reps.
+    description: Target reps — the single target, or the lower bound of a range when `repsMax` is set.
+  repsMax:
+    type: integer
+    minimum: 0
+    nullable: true
+    description: >-
+      backlog/125 — upper bound of a target rep range ("8-12" → reps 8, repsMax 12). `null` = not a
+      range. Requires `reps` and must be ≥ it (400 VALIDATION otherwise). Starting a workout from the
+      plan prefills the session set with ceil((reps + repsMax) / 2).
   weightKg:
     type: number
     nullable: true

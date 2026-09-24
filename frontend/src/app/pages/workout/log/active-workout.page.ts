@@ -39,6 +39,7 @@ import {
 } from '../../../core/data/workout-draft.service';
 import { WorkoutSessionRepository } from '../../../core/data/workout-session.repository';
 import { uuidV4 } from '../../../core/sync/uuid';
+import { formatTargetRange, targetRangePrefill } from '../../../shared/target-range';
 import { WorkoutExerciseSaveItem, WorkoutSessionDraft } from '../../../core/storage/storage-backend';
 import { today } from '../../../shared/local-date';
 import { ExercisePickResult, ExercisePickerComponent } from '../../../shared/exercise-picker/exercise-picker.component';
@@ -67,6 +68,8 @@ interface SetRow {
   distanceMeters: WritableSignal<number | null>;
   restTimeSeconds: WritableSignal<number | null>;
   isCompleted: WritableSignal<boolean>;
+  /** backlog/125 — the plan's target rep range ("8–12"), shown as a hint; the `reps` value starts at its rounded-up midpoint. */
+  repsTarget?: string | null;
 }
 
 interface ExerciseRow {
@@ -466,6 +469,7 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
           distanceMeters: set.distanceMeters(),
           restTimeSeconds: set.restTimeSeconds(),
           isCompleted: set.isCompleted(),
+          repsTarget: set.repsTarget ?? null,
         })),
       })),
     };
@@ -577,6 +581,7 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
           distanceMeters: signal(set.distanceMeters),
           restTimeSeconds: signal(set.restTimeSeconds),
           isCompleted: signal(set.isCompleted),
+          repsTarget: set.repsTarget ?? null,
         })),
       ),
     };
@@ -634,7 +639,9 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
             .map((set) => ({
               id: uuidV4(),
               setType: signal(PLAN_TO_ENTRY_SET_TYPE[set.setType]),
-              reps: signal(set.reps ?? null),
+              // backlog/125 — a "8–12" target starts the set at ceil((8 + 12) / 2) = 10
+              reps: signal(targetRangePrefill(set.reps, set.repsMax)),
+              repsTarget: set.repsMax != null ? formatTargetRange(set.reps, set.repsMax) : null,
               weightKg: signal(set.weightKg ?? null),
               holdTimeSeconds: signal(set.holdTimeSeconds ?? null),
               edgeSizeMm: signal(set.edgeSizeMm ?? null),
@@ -670,6 +677,7 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
       distanceMeters: signal(null),
       restTimeSeconds: signal(previous?.restTimeSeconds() ?? null),
       isCompleted: signal(false),
+      repsTarget: previous?.repsTarget ?? null,
     };
   }
 
@@ -684,6 +692,7 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
       distanceMeters: signal(source.distanceMeters()),
       restTimeSeconds: signal(source.restTimeSeconds()),
       isCompleted: signal(false),
+      repsTarget: source.repsTarget ?? null,
     };
   }
 

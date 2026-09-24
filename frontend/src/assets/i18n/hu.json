@@ -994,7 +994,8 @@
       "SET_DONE": "Szett kész",
       "PR_1RM": "1RM PR",
       "PR_WEIGHT": "Súly PR",
-      "PR_VOLUME": "Volumen PR"
+      "PR_VOLUME": "Volumen PR",
+      "REPS_TARGET": "cél: {{range}}"
     },
     "SESSION": {
       "NEW_TITLE": "Új edzés",
@@ -1124,7 +1125,10 @@
       "ADHOC_NOT_ALLOWED": "Sablonhoz csak katalógusban lévő gyakorlat adható hozzá; az ad-hoc gyakorlatok kimaradtak.",
       "DELETE": "Sablon törlése",
       "DELETE_CONFIRM_TITLE": "Sablon törlése",
-      "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd ezt a sablont? A korábbi edzésnaplók és a rá mutató heti kiosztások érintetlenek maradnak."
+      "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd ezt a sablont? A korábbi edzésnaplók és a rá mutató heti kiosztások érintetlenek maradnak.",
+      "REPS_RANGE_PLACEHOLDER": "pl. 10 vagy 8-12",
+      "REPS_RANGE_INVALID": "Számot vagy tartományt adj meg (pl. 8-12).",
+      "REPS_RANGE_INVERTED": "A tartomány alsó határa nem lehet nagyobb a felsőnél."
     },
     "WEEKLY": {
       "WEEK_OF": "Hét kezdete:",

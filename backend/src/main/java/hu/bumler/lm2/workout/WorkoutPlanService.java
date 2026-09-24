@@ -16,6 +16,7 @@ import hu.bumler.lm2.api.model.WorkoutPlanSet;
 import hu.bumler.lm2.common.NestedChildResolver;
 import hu.bumler.lm2.common.exception.EntityDeletedException;
 import hu.bumler.lm2.common.exception.EntityNotFoundException;
+import hu.bumler.lm2.common.exception.ValidationException;
 
 /**
  * documentation/Subfeatures/Heti terv.md — per-user training templates. Nested aggregate PUT like
@@ -207,7 +208,14 @@ class WorkoutPlanService {
 
 	private void applySetFields(WorkoutPlanSetEntity entity, WorkoutPlanSet dto) {
 		entity.setSetType(dto.getSetType().getValue());
-		entity.setReps(dto.getReps().orElse(null));
+		Integer reps = dto.getReps().orElse(null);
+		Integer repsMax = dto.getRepsMax().orElse(null);
+		// backlog/125 — a range needs both bounds, lower ≤ upper (the client parses "8-12" the same way).
+		if (repsMax != null && (reps == null || repsMax < reps)) {
+			throw new ValidationException("repsMax must be >= reps and requires reps", "repsMax");
+		}
+		entity.setReps(reps);
+		entity.setRepsMax(repsMax);
 		entity.setWeightKg(dto.getWeightKg().orElse(null));
 		entity.setHoldTimeSeconds(dto.getHoldTimeSeconds().orElse(null));
 		entity.setEdgeSizeMm(dto.getEdgeSizeMm().orElse(null));

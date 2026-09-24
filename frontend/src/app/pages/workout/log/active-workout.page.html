@@ -111,6 +111,7 @@
                 [value]="set.reps()"
                 (ionInput)="setField(set.reps, $any($event.target).value === '' ? null : +$any($event.target).value)"
                 [label]="'WORKOUT.SESSION.FIELD_REPS' | translate"
+                [helperText]="set.repsTarget ? ('WORKOUT.ACTIVE.REPS_TARGET' | translate: { range: set.repsTarget }) : ''"
                 label-placement="stacked"
               ></ion-input>
             }

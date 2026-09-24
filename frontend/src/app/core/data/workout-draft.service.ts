@@ -26,6 +26,8 @@ export interface ActiveSetDraft {
   distanceMeters: number | null;
   restTimeSeconds: number | null;
   isCompleted: boolean;
+  /** backlog/125 — the plan's target rep range ("8–12") shown next to the reps field; display-only, never saved. */
+  repsTarget?: string | null;
 }
 
 export interface ActiveExerciseDraft {

@@ -11,6 +11,7 @@ class WorkoutPlanSetMapper {
 		WorkoutPlanSet dto = new WorkoutPlanSet(entity.getId(), entity.getPlanExerciseId(),
 				WorkoutPlanSet.SetTypeEnum.fromValue(entity.getSetType()), entity.getOrderIndex(), entity.isDeleted());
 		dto.reps(entity.getReps());
+		dto.repsMax(entity.getRepsMax());
 		dto.weightKg(entity.getWeightKg());
 		dto.holdTimeSeconds(entity.getHoldTimeSeconds());
 		dto.edgeSizeMm(entity.getEdgeSizeMm());

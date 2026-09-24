@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { AlertController, ToastController } from '@ionic/angular/standalone';
 import { provideTranslateService } from '@ngx-translate/core';
 
@@ -72,5 +72,46 @@ describe('PlanEditPage', () => {
 
     component.moveExercise(c, 1); // 'c' is last — no-op
     expect(component.exercises().map((row) => row.exerciseId)).toEqual(['b', 'a', 'c']);
+  });
+
+  describe('reps range (backlog/125)', () => {
+    let saveSpy: jasmine.Spy;
+
+    beforeEach(() => {
+      saveSpy = spyOn(TestBed.inject(WorkoutPlanRepository), 'save').and.resolveTo({ id: 'p1' } as WorkoutPlan);
+      spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
+      component.form.patchValue({ name: 'Felsőtest' });
+      component.onPicked([pick()]);
+    });
+
+    it('parses "8-12" into numeric lower / upper bounds and saves them', async () => {
+      const set = component.exercises()[0].sets()[0];
+      component.onRepsInput(set, '8 – 12');
+      await component.save();
+
+      const draft = saveSpy.calls.mostRecent().args[0];
+      expect(draft.exercises[0].targetSets[0].reps).toBe(8);
+      expect(draft.exercises[0].targetSets[0].repsMax).toBe(12);
+    });
+
+    it('a single value clears the upper bound', async () => {
+      const set = component.exercises()[0].sets()[0];
+      component.onRepsInput(set, '8-12');
+      component.onRepsInput(set, '10');
+      await component.save();
+
+      const draft = saveSpy.calls.mostRecent().args[0];
+      expect(draft.exercises[0].targetSets[0].reps).toBe(10);
+      expect(draft.exercises[0].targetSets[0].repsMax).toBeNull();
+    });
+
+    it('an inverted range shows an inline error and blocks the save', async () => {
+      const set = component.exercises()[0].sets()[0];
+      component.onRepsInput(set, '12-8');
+      expect(set.repsError()).toBe('INVERTED');
+
+      await component.save();
+      expect(saveSpy).not.toHaveBeenCalled();
+    });
   });
 });
