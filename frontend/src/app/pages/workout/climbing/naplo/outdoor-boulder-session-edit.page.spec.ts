@@ -241,4 +241,21 @@ describe('OutdoorBoulderSessionEditPage', () => {
     const draft = saveSpy.calls.mostRecent().args[0];
     expect(draft.attempts[0].boulderProblemId).toBeNull();
   });
+
+  it('shows a bottom "Új kísérlet" button only once there is an attempt, and it appends another (backlog/120)', async () => {
+    await setup();
+    fixture.detectChanges();
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.querySelector('.add-attempt-bottom')).toBeNull();
+
+    component.addAttempt();
+    fixture.detectChanges();
+    const bottom = host.querySelector('.add-attempt-bottom') as HTMLElement | null;
+    expect(bottom).not.toBeNull();
+
+    bottom!.click();
+    fixture.detectChanges();
+    expect(component.attempts().length).toBe(2);
+    expect(host.querySelectorAll('.attempt-card').length).toBe(2);
+  });
 });

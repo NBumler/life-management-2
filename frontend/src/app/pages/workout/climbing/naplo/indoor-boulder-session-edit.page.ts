@@ -1,5 +1,5 @@
 import { DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, OnInit, WritableSignal, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, Injector, OnInit, WritableSignal, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -42,6 +42,7 @@ import { GradeInputComponent } from '../../../../shared/grade-input/grade-input.
 import { HelpButtonComponent } from '../../../../shared/help-button/help-button.component';
 import { PartnerComboboxComponent } from '../../../../shared/partner-combobox/partner-combobox.component';
 import { climbingKcal, climbingVolume } from '../climbing-metrics';
+import { scrollToLastAttempt } from './scroll-to-last-attempt';
 
 /** One editable ascent-attempt row (mutable signals, mirrors the workout edit page's SetRow). */
 interface AttemptRow {
@@ -101,6 +102,9 @@ const ASCENT_STYLES: readonly AscentAttempt.AscentStyleEnum[] = [
   ],
   styles: [
     `
+      .attempts-footer {
+        padding: 4px 8px 16px;
+      }
       .attempt-card {
         margin: 12px 8px;
         border: 1px solid var(--ion-background-color-step-150, #d7d8da);
@@ -149,6 +153,8 @@ const ASCENT_STYLES: readonly AscentAttempt.AscentStyleEnum[] = [
 })
 export class IndoorBoulderSessionEditPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
+  private readonly host = inject(ElementRef<HTMLElement>);
+  private readonly injector = inject(Injector);
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
   private readonly repository = inject(ClimbingSessionRepository);
@@ -281,6 +287,7 @@ export class IndoorBoulderSessionEditPage implements OnInit {
   addAttempt(): void {
     this.attempts.update((rows) => [...rows, this.emptyRow()]);
     this.touchAttempts();
+    scrollToLastAttempt(this.host, this.injector);
   }
 
   removeAttempt(row: AttemptRow): void {

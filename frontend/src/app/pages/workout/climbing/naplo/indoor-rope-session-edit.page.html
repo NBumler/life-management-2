@@ -247,6 +247,14 @@
         </ion-item>
       </ion-list>
     }
+
+    @if (attempts().length > 0) {
+      <div class="attempts-footer">
+        <ion-button class="add-attempt-bottom" expand="block" fill="outline" (click)="addAttempt()">
+          {{ 'WORKOUT.CLIMBING.SESSION.ADD_ATTEMPT' | translate }}
+        </ion-button>
+      </div>
+    }
   </form>
 </ion-content>
 

@@ -1,5 +1,5 @@
 import { DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, OnInit, WritableSignal, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, Injector, OnInit, WritableSignal, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -43,6 +43,7 @@ import { HelpButtonComponent } from '../../../../shared/help-button/help-button.
 import { PartnerComboboxComponent } from '../../../../shared/partner-combobox/partner-combobox.component';
 import { today } from '../../../../shared/local-date';
 import { climbingKcal, climbingVolume } from '../climbing-metrics';
+import { scrollToLastAttempt } from './scroll-to-last-attempt';
 
 /** One editable pitch row inside a multi-pitch attempt (mutable signals). */
 interface PitchRow {
@@ -153,6 +154,9 @@ const WEATHER_CONDITIONS: readonly ClimbingSession.WeatherConditionsEnum[] = [
   ],
   styles: [
     `
+      .attempts-footer {
+        padding: 4px 8px 16px;
+      }
       .attempt-card {
         margin: 12px 8px;
         border: 1px solid var(--ion-background-color-step-150, #d7d8da);
@@ -182,6 +186,8 @@ const WEATHER_CONDITIONS: readonly ClimbingSession.WeatherConditionsEnum[] = [
 })
 export class OutdoorRopeSessionEditPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
+  private readonly host = inject(ElementRef<HTMLElement>);
+  private readonly injector = inject(Injector);
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
   private readonly repository = inject(ClimbingSessionRepository);
@@ -384,6 +390,7 @@ export class OutdoorRopeSessionEditPage implements OnInit {
       return [...rows, this.emptyRow(prev?.sectorId() ?? this.lastUsedSectorId, prev?.sectorName() ?? this.lastUsedSectorName)];
     });
     this.touchAttempts();
+    scrollToLastAttempt(this.host, this.injector);
   }
 
   removeAttempt(row: AttemptRow): void {
