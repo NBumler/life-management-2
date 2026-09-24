@@ -46,6 +46,7 @@ import { WorkoutSession } from '../../api/model/workoutSession';
 import { WorkoutSetEntry } from '../../api/model/workoutSetEntry';
 import { DailyStepLog } from '../../api/model/dailyStepLog';
 import { HikeRoute } from '../../api/model/hikeRoute';
+import { canonicalWeather, legacyWeatherToTags } from '../../shared/climbing/weather';
 
 /**
  * Row <-> DTO mapping and SQL task builders for the two local tables this phase covers.
@@ -2449,7 +2450,7 @@ export function climbingSessionRowToDto(row: ClimbingSessionRow): Omit<ClimbingS
     headspaceRating: row.headspace_rating,
     notes: row.notes,
     climbingPartners: row.climbing_partners === null ? null : (JSON.parse(row.climbing_partners) as string[]),
-    weatherConditions: (row.weather_conditions as ClimbingSession.WeatherConditionsEnum | null) ?? null,
+    weatherConditions: weatherFromColumn(row.weather_conditions),
     gymId: row.gym_id,
     gymName: row.gym_name,
     cragId: row.crag_id,
@@ -2462,6 +2463,25 @@ export function climbingSessionRowToDto(row: ClimbingSessionRow): Omit<ClimbingS
 }
 
 export type ClimbingSessionWriteInput = Omit<ClimbingSession, 'attempts' | 'deleted' | 'deletedAt' | 'createdAt' | 'updatedAt'>;
+
+/**
+ * backlog/119 — `weather_conditions` holds a JSON array of atomic tags (SCHEMA_V42 rewrote the old
+ * scalar values in place). A bare legacy scalar is still mapped defensively, so a row written by an
+ * older build in between never reads back as garbage.
+ */
+function weatherFromColumn(value: string | null): ClimbingSession.WeatherConditionsEnum[] {
+  if (value === null || value === '') {
+    return [];
+  }
+  if (!value.startsWith('[')) {
+    return legacyWeatherToTags(value);
+  }
+  return canonicalWeather(JSON.parse(value) as string[]);
+}
+
+function weatherJson(tags: Array<string> | null | undefined): string {
+  return JSON.stringify(canonicalWeather(tags));
+}
 
 function climbingPartnersJson(partners: Array<string> | null | undefined): string | null {
   return partners && partners.length > 0 ? JSON.stringify(partners) : null;
@@ -2488,7 +2508,7 @@ export function climbingSessionLocalWriteTask(dto: ClimbingSessionWriteInput): S
       dto.headspaceRating ?? null,
       dto.notes ?? null,
       climbingPartnersJson(dto.climbingPartners),
-      dto.weatherConditions ?? null,
+      weatherJson(dto.weatherConditions),
       dto.gymId ?? null,
       dto.gymName ?? null,
       dto.cragId ?? null,
@@ -2520,7 +2540,7 @@ export function climbingSessionServerApplyTask(dto: Omit<ClimbingSession, 'attem
       dto.headspaceRating ?? null,
       dto.notes ?? null,
       climbingPartnersJson(dto.climbingPartners),
-      dto.weatherConditions ?? null,
+      weatherJson(dto.weatherConditions),
       dto.gymId ?? null,
       dto.gymName ?? null,
       dto.cragId ?? null,

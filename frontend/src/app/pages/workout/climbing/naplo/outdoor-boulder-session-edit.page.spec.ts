@@ -142,9 +142,10 @@ describe('OutdoorBoulderSessionEditPage', () => {
     await setup();
     component.form.patchValue({
       cragId: 'c1',
-      weatherConditions: ClimbingSession.WeatherConditionsEnum.ColdDry,
       totalSessionDurationMinutes: 90,
     });
+    // backlog/119 — any combination (contradicting tags too) is saved as a list
+    component.weather.set([ClimbingSession.WeatherConditionsEnum.Hot, ClimbingSession.WeatherConditionsEnum.Cold]);
     component.addAttempt();
     const row = component.attempts()[0];
     component.pickSector(row, 's1');
@@ -160,7 +161,7 @@ describe('OutdoorBoulderSessionEditPage', () => {
         discipline: ClimbingSession.DisciplineEnum.Boulder,
         cragId: 'c1',
         cragName: 'Sikló-sziklák',
-        weatherConditions: ClimbingSession.WeatherConditionsEnum.ColdDry,
+        weatherConditions: [ClimbingSession.WeatherConditionsEnum.Hot, ClimbingSession.WeatherConditionsEnum.Cold],
         gymId: null,
       }),
     );

@@ -177,9 +177,10 @@ describe('OutdoorRopeSessionEditPage', () => {
     await setup();
     component.form.patchValue({
       cragId: 'c1',
-      weatherConditions: ClimbingSession.WeatherConditionsEnum.Windy,
       totalSessionDurationMinutes: 120,
     });
+    // backlog/119 — any combination (contradicting tags too) is saved as a list
+    component.weather.set([ClimbingSession.WeatherConditionsEnum.Windy, ClimbingSession.WeatherConditionsEnum.Rain]);
     component.addAttempt();
     const row = component.attempts()[0];
     component.pickSector(row, 's1');
@@ -196,7 +197,7 @@ describe('OutdoorRopeSessionEditPage', () => {
         discipline: ClimbingSession.DisciplineEnum.Rope,
         cragId: 'c1',
         cragName: 'Sikló-sziklák',
-        weatherConditions: ClimbingSession.WeatherConditionsEnum.Windy,
+        weatherConditions: [ClimbingSession.WeatherConditionsEnum.Windy, ClimbingSession.WeatherConditionsEnum.Rain],
         gymId: null,
       }),
     );

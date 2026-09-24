@@ -448,7 +448,7 @@ export class IndoorRopeSessionEditPage implements OnInit {
       headspaceRating: value.headspaceRating,
       notes: value.notes?.trim() ? value.notes.trim() : null,
       climbingPartners: partners.length > 0 ? partners : null,
-      weatherConditions: null,
+      weatherConditions: [],
       gymId: value.gymId,
       gymName: gym?.name ?? null,
       cragId: null,

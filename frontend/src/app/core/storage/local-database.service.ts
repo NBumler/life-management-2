@@ -1267,7 +1267,23 @@ const SCHEMA_V40_STATEMENTS: string[] = [`ALTER TABLE hike_route ADD COLUMN days
  */
 const SCHEMA_V41_STATEMENTS: string[] = [`ALTER TABLE route ADD COLUMN protection_type TEXT`];
 
-const SCHEMA_VERSION = 41;
+/**
+ * backlog/119 — `climbing_session.weather_conditions` becomes a JSON array of atomic tags (on-device
+ * mirror of the backend `V45__climbing_session_weather_multi.sql`, same mapping: COLD_DRY → COLD+DRY,
+ * HOT_HUMID → HOT+HUMID, WINDY → WINDY, WET → RAIN, NULL → []). The column stays TEXT.
+ */
+const SCHEMA_V42_STATEMENTS: string[] = [
+  `UPDATE climbing_session SET weather_conditions = CASE weather_conditions
+     WHEN 'COLD_DRY' THEN '["COLD","DRY"]'
+     WHEN 'HOT_HUMID' THEN '["HOT","HUMID"]'
+     WHEN 'WINDY' THEN '["WINDY"]'
+     WHEN 'WET' THEN '["RAIN"]'
+     ELSE '[]'
+   END
+   WHERE weather_conditions IS NULL OR weather_conditions NOT LIKE '[%'`,
+];
+
+const SCHEMA_VERSION = 42;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -1311,7 +1327,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 38, statements: SCHEMA_V38_STATEMENTS },
   { toVersion: 39, statements: SCHEMA_V39_STATEMENTS },
   { toVersion: 40, statements: SCHEMA_V40_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V41_STATEMENTS },
+  { toVersion: 41, statements: SCHEMA_V41_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V42_STATEMENTS },
 ];
 
 export interface SqlTask {

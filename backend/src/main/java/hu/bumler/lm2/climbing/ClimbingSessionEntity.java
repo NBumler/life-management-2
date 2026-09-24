@@ -65,8 +65,10 @@ public class ClimbingSessionEntity {
 	@Column(name = "climbing_partners")
 	private List<String> climbingPartners;
 
-	@Column(name = "weather_conditions")
-	private String weatherConditions;
+	/** backlog/119 — atomic weather tags (HOT, COLD, RAIN, …); empty = not specified. */
+	@JdbcTypeCode(SqlTypes.ARRAY)
+	@Column(name = "weather_conditions", nullable = false)
+	private List<String> weatherConditions = new ArrayList<>();
 
 	@Column(name = "gym_id")
 	private UUID gymId;
@@ -174,11 +176,11 @@ public class ClimbingSessionEntity {
 		this.climbingPartners = climbingPartners == null ? null : new ArrayList<>(climbingPartners);
 	}
 
-	public String getWeatherConditions() {
+	public List<String> getWeatherConditions() {
 		return weatherConditions;
 	}
 
-	public void setWeatherConditions(String weatherConditions) {
+	public void setWeatherConditions(List<String> weatherConditions) {
 		this.weatherConditions = weatherConditions;
 	}
 

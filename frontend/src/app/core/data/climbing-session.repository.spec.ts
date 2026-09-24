@@ -30,7 +30,7 @@ function draft(overrides: Partial<ClimbingSessionDraft> = {}): ClimbingSessionDr
     headspaceRating: null,
     notes: null,
     climbingPartners: null,
-    weatherConditions: null,
+    weatherConditions: [],
     gymId: 'g1',
     gymName: 'Blokk',
     cragId: null,

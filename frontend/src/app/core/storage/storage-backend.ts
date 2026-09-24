@@ -212,7 +212,8 @@ export interface ClimbingSessionDraft {
   headspaceRating: number | null;
   notes: string | null;
   climbingPartners: string[] | null;
-  weatherConditions: ClimbingSession.WeatherConditionsEnum | null;
+  /** backlog/119 — atomic weather tags; `[]` = not specified (outdoor only). */
+  weatherConditions: ClimbingSession.WeatherConditionsEnum[];
   gymId: string | null;
   gymName: string | null;
   cragId: string | null;

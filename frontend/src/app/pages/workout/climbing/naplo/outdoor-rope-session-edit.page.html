@@ -48,18 +48,11 @@
         </ion-note>
       }
 
-      <ion-item>
-        <ion-select
-          formControlName="weatherConditions"
-          [label]="'WORKOUT.CLIMBING.SESSION.FIELD_WEATHER' | translate"
-          labelPlacement="stacked"
-        >
-          <ion-select-option [value]="null">—</ion-select-option>
-          @for (w of weatherConditions; track w) {
-            <ion-select-option [value]="w">{{ 'WORKOUT.CLIMBING.WEATHER.' + w | translate }}</ion-select-option>
-          }
-        </ion-select>
-      </ion-item>
+      <app-weather-chips
+        [label]="'WORKOUT.CLIMBING.SESSION.FIELD_WEATHER' | translate"
+        [value]="weather()"
+        (valueChange)="weather.set($event)"
+      />
 
       <ion-item>
         <ion-input

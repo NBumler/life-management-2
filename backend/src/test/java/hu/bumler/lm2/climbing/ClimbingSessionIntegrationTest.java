@@ -97,16 +97,32 @@ class ClimbingSessionIntegrationTest {
 		// backlog/084: the sector is now a per-attempt soft link (round-tripped in
 		// create_storesTheAttemptLevelSector_verbatim, which sets up a real Sector for the FK).
 		ClimbingSession dto = outdoorRopeSession(id, List.of());
-		dto.weatherConditions(ClimbingSession.WeatherConditionsEnum.COLD_DRY);
+		// backlog/119: any combination (contradicting tags too), de-duplicated into canonical enum order.
+		dto.weatherConditions(List.of(ClimbingSession.WeatherConditionsEnum.RAIN, ClimbingSession.WeatherConditionsEnum.HOT,
+				ClimbingSession.WeatherConditionsEnum.COLD, ClimbingSession.WeatherConditionsEnum.HOT));
 		dto.climbingPartners(List.of("Anna", "Béla"));
 		dto.totalSessionDurationMinutes(120);
 
 		createSession(token, dto).andExpect(status().isOk())
 				.andExpect(jsonPath("$.locationType").value("OUTDOOR"))
 				.andExpect(jsonPath("$.discipline").value("ROPE"))
-				.andExpect(jsonPath("$.weatherConditions").value("COLD_DRY"))
+				.andExpect(jsonPath("$.weatherConditions.length()").value(3))
+				.andExpect(jsonPath("$.weatherConditions[0]").value("HOT"))
+				.andExpect(jsonPath("$.weatherConditions[1]").value("COLD"))
+				.andExpect(jsonPath("$.weatherConditions[2]").value("RAIN"))
 				.andExpect(jsonPath("$.climbingPartners[1]").value("Béla"))
 				.andExpect(jsonPath("$.totalSessionDurationMinutes").value(120));
+	}
+
+	@Test
+	void create_echoesAnEmptyWeatherList_whenNoneIsGiven() throws Exception {
+		String token = registerAndLogin("cs-no-weather");
+		ClimbingSession dto = outdoorRopeSession(UUID.randomUUID(), List.of());
+		dto.weatherConditions(null);
+
+		createSession(token, dto).andExpect(status().isOk())
+				.andExpect(jsonPath("$.weatherConditions").isArray())
+				.andExpect(jsonPath("$.weatherConditions.length()").value(0));
 	}
 
 	@Test

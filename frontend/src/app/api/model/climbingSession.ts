@@ -42,9 +42,9 @@ export interface ClimbingSession {
     notes?: string | null;
     climbingPartners?: Array<string> | null;
     /**
-     * Outdoor sessions only.
+     * backlog/119 — outdoor sessions only. Any combination of atomic weather tags (contradicting ones too — conditions change during a long session); an empty / missing list means \"not specified\". The server always echoes a list (never null), de-duplicated in a canonical order.
      */
-    weatherConditions?: ClimbingSession.WeatherConditionsEnum | null;
+    weatherConditions?: Array<ClimbingSession.WeatherConditionsEnum>;
     /**
      * Indoor context: → Gym (climbing/gyms). A soft link only; `gymName` is the snapshot.
      */
@@ -73,10 +73,16 @@ export namespace ClimbingSession {
     } as const;
     export type DisciplineEnum = typeof DisciplineEnum[keyof typeof DisciplineEnum];
     export const WeatherConditionsEnum = {
-        ColdDry: 'COLD_DRY',
-        HotHumid: 'HOT_HUMID',
+        Hot: 'HOT',
+        Mild: 'MILD',
+        Cold: 'COLD',
+        Dry: 'DRY',
+        Humid: 'HUMID',
         Windy: 'WINDY',
-        Wet: 'WET'
+        Rain: 'RAIN',
+        WetRock: 'WET_ROCK',
+        Sunny: 'SUNNY',
+        Shade: 'SHADE'
     } as const;
     export type WeatherConditionsEnum = typeof WeatherConditionsEnum[keyof typeof WeatherConditionsEnum];
 }

@@ -1,5 +1,5 @@
 {
-  "payloadSchemaVersion": 10,
+  "payloadSchemaVersion": 11,
   "entities": {
     "AycmCheckIn": "5050bb69ed3adf81c152c637b748050512395f739cc029e99bdc578cb539ed28",
     "AycmPartner": "c0471c6686aa5775df5f2bd120cad172e84ff8c9e1cbf40ba3400b6434188cbb",
@@ -8,7 +8,7 @@
     "BikeRideLog": "e0c1a9fd38790d287d43d34eb1379e0a4d2a472f7ce78d6afe7ca36e09fd5e3d",
     "BoulderProblem": "91330929a5d15e41ae21ae94f6581f29551849638b31f35dc213c9aaf5607e5d",
     "CalendarEvent": "b21c16badccd9b28c0f47bcf6f16c4271cd1495fd5d3138508685209ad209267",
-    "ClimbingSession": "fa392834e89e774d673f73fed0ff5cb4a50f81348f2af090eabe552021fa4770",
+    "ClimbingSession": "f540cfa4d37cfab567609054f806c177b12a50c3bba6cd4bacd113fb38f5366a",
     "Crag": "3704fbc438ea0e36c5d8685e41d76267dc857f88e7f2dd76b89c72f5b0832d6f",
     "DailyStepLog": "5363a564d4bfe46b5d5e52040017eeae795cea9cddc423aaccfdd2045c714672",
     "Exercise": "8faec9ff38bc269cbb3b35a6333b9a0b262295bd1ae2e994e9f3525b5d11b608",

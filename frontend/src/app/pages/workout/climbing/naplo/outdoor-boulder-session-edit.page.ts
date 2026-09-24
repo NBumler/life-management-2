@@ -39,6 +39,8 @@ import { parseGrade } from '../../../../shared/climbing/grade-scale';
 import { GradeInputComponent } from '../../../../shared/grade-input/grade-input.component';
 import { HelpButtonComponent } from '../../../../shared/help-button/help-button.component';
 import { PartnerComboboxComponent } from '../../../../shared/partner-combobox/partner-combobox.component';
+import { WeatherChipsComponent } from '../../../../shared/weather-chips/weather-chips.component';
+import { WeatherTag, canonicalWeather } from '../../../../shared/climbing/weather';
 import { today } from '../../../../shared/local-date';
 import { climbingKcal, climbingVolume } from '../climbing-metrics';
 import { scrollToLastAttempt } from './scroll-to-last-attempt';
@@ -77,14 +79,6 @@ const PRIOR_ASCENT_WARN_STYLES: ReadonlySet<AscentAttempt.AscentStyleEnum> = new
   AscentAttempt.AscentStyleEnum.Flash,
 ]);
 
-/** documentation/Features/Mászónapló.md — outdoor `weatherConditions` enum, session-level, that day's. */
-const WEATHER_CONDITIONS: readonly ClimbingSession.WeatherConditionsEnum[] = [
-  ClimbingSession.WeatherConditionsEnum.ColdDry,
-  ClimbingSession.WeatherConditionsEnum.HotHumid,
-  ClimbingSession.WeatherConditionsEnum.Windy,
-  ClimbingSession.WeatherConditionsEnum.Wet,
-];
-
 /**
  * documentation/Subfeatures/Outdoor boulder napló.md — the OUTDOOR + BOULDER kontextus-napló
  * create/edit form (`id` route param is an existing session's uuid or `new`). Differs from the
@@ -92,7 +86,7 @@ const WEATHER_CONDITIONS: readonly ClimbingSession.WeatherConditionsEnum[] = [
  * crag picker (snapshot name) instead of a gym, with the **sector chosen per attempt** (backlog/084 —
  * one session can touch several sectors, prefilled from the previous attempt); an optional master
  * `BoulderProblem` pick OR an ad-hoc name with an optional "save to catalog"; and a
- * `weatherConditions` chip. `rockType` / `aspect` are master-data properties (problem / sector / crag)
+ * `weatherConditions` multi-select chips (backlog/119). `rockType` / `aspect` are master-data properties (problem / sector / crag)
  * — not stored on the log. No colour bands, no PitchLog. Duration fallback is attempts × 5 min
  * (handled by `climbing-metrics`).
  */
@@ -123,6 +117,7 @@ const WEATHER_CONDITIONS: readonly ClimbingSession.WeatherConditionsEnum[] = [
     GradeInputComponent,
     HelpButtonComponent,
     PartnerComboboxComponent,
+    WeatherChipsComponent,
   ],
   styles: [
     `
@@ -165,7 +160,6 @@ export class OutdoorBoulderSessionEditPage implements OnInit {
   private readonly translate = inject(TranslateService);
 
   readonly ascentStyles = ASCENT_STYLES;
-  readonly weatherConditions = WEATHER_CONDITIONS;
   readonly ratings = [1, 2, 3, 4, 5];
 
   readonly sessionId = signal<string | null>(null);
@@ -173,6 +167,8 @@ export class OutdoorBoulderSessionEditPage implements OnInit {
 
   /** backlog/069 — picked partner names (own signal, not a form control); suggestions from the log. */
   readonly partners = signal<string[]>([]);
+  /** backlog/119 — multi-select weather tags (own signal, like `partners`); `[]` = not specified. */
+  readonly weather = signal<WeatherTag[]>([]);
   readonly partnerSuggestions = this.repository.partnerSuggestions;
 
   /** backlog/084 — sector of the most recent prior session's last attempt; seeds the first new attempt row. */
@@ -182,7 +178,6 @@ export class OutdoorBoulderSessionEditPage implements OnInit {
   readonly form = this.fb.nonNullable.group({
     date: this.fb.nonNullable.control(today(), [Validators.required]),
     cragId: this.fb.nonNullable.control('', [Validators.required]),
-    weatherConditions: this.fb.control<ClimbingSession.WeatherConditionsEnum | null>(null),
     totalSessionDurationMinutes: this.fb.control<number | null>(null, [Validators.min(1)]),
     pumpRating: this.fb.control<number | null>(null),
     headspaceRating: this.fb.control<number | null>(null),
@@ -267,13 +262,13 @@ export class OutdoorBoulderSessionEditPage implements OnInit {
       this.form.reset({
         date: existing.date,
         cragId: existing.cragId ?? '',
-        weatherConditions: existing.weatherConditions ?? null,
         totalSessionDurationMinutes: existing.totalSessionDurationMinutes ?? null,
         pumpRating: existing.pumpRating ?? null,
         headspaceRating: existing.headspaceRating ?? null,
         notes: existing.notes ?? null,
       });
       this.partners.set([...(existing.climbingPartners ?? [])]);
+      this.weather.set(canonicalWeather(existing.weatherConditions));
       this.attempts.set(
         existing.attempts
           .filter((attempt) => !attempt.deleted)
@@ -492,7 +487,7 @@ export class OutdoorBoulderSessionEditPage implements OnInit {
       headspaceRating: value.headspaceRating,
       notes: value.notes?.trim() ? value.notes.trim() : null,
       climbingPartners: partners.length > 0 ? partners : null,
-      weatherConditions: value.weatherConditions,
+      weatherConditions: this.weather(),
       gymId: null,
       gymName: null,
       cragId: value.cragId,

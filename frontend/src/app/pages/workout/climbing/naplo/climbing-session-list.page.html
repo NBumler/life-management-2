@@ -34,6 +34,13 @@
               · {{ card.successCount }}/{{ card.attemptCount }}
               {{ 'WORKOUT.CLIMBING.SESSION.SENDS_SHORT' | translate }}
             </p>
+            @if (card.session.weatherConditions?.length) {
+              <p class="weather-tags">
+                @for (tag of card.session.weatherConditions; track tag; let last = $last) {
+                  {{ 'WORKOUT.CLIMBING.WEATHER.' + tag | translate }}@if (!last) { · }
+                }
+              </p>
+            }
           </ion-label>
           <ion-note slot="end">
             @if (card.kcal > 0) {

@@ -1,6 +1,8 @@
 package hu.bumler.lm2.climbing;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 
@@ -23,9 +25,9 @@ class ClimbingSessionMapper {
 		dto.headspaceRating(entity.getHeadspaceRating());
 		dto.notes(entity.getNotes());
 		dto.climbingPartners(entity.getClimbingPartners());
-		if (entity.getWeatherConditions() != null) {
-			dto.weatherConditions(ClimbingSession.WeatherConditionsEnum.fromValue(entity.getWeatherConditions()));
-		}
+		dto.weatherConditions(entity.getWeatherConditions() == null ? new ArrayList<>()
+				: entity.getWeatherConditions().stream().map(ClimbingSession.WeatherConditionsEnum::fromValue)
+						.collect(Collectors.toCollection(ArrayList::new)));
 		dto.gymId(entity.getGymId());
 		dto.gymName(entity.getGymName());
 		dto.cragId(entity.getCragId());

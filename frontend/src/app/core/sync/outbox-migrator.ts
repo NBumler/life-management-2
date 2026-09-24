@@ -1,5 +1,6 @@
 import { OutboxItem, OutboxEntityType } from './outbox-item';
 import { OUTBOX_PAYLOAD_SCHEMA_VERSION } from './offline-queue.service';
+import { legacyWeatherToTags } from '../../shared/climbing/weather';
 
 /**
  * documentation/Architektúra/Backend-offline first.md §7 "Payload-verziózás (app frissítés)".
@@ -134,6 +135,25 @@ export function stripClimbingSessionFailurePoint(payload: unknown, url: string):
 }
 
 /**
+ * v10 → v11 (backlog/119): `ClimbingSession.weatherConditions` went from one combined nullable value
+ * (`COLD_DRY | HOT_HUMID | WINDY | WET`) to a list of atomic tags. A session write still pending from
+ * before that app update carries the old scalar (or null) — rewrite it with the same mapping as the
+ * server / on-device migrations (COLD_DRY → [COLD, DRY], HOT_HUMID → [HOT, HUMID], WINDY → [WINDY],
+ * WET → [RAIN], null → []). A payload already holding a list, a DELETE (null payload) or a
+ * non-session-shaped payload passes through untouched.
+ */
+export function climbingSessionWeatherToList(payload: unknown, url: string): { payload: unknown; url: string } {
+  if (payload === null || typeof payload !== 'object' || !('weatherConditions' in payload)) {
+    return { payload, url };
+  }
+  const session = payload as Record<string, unknown>;
+  if (Array.isArray(session['weatherConditions'])) {
+    return { payload, url };
+  }
+  return { payload: { ...session, weatherConditions: legacyWeatherToTags(session['weatherConditions']) }, url };
+}
+
+/**
  * v3 → v4 (backlog/099): `ShoppingList` gained `saveToStorage` (per-list "save purchases to
  * storage" toggle). A `ShoppingList` create/update still pending from before that app update has no
  * `saveToStorage` key; the post-#99 server treats a missing/null value as `true`, but make it
@@ -223,6 +243,8 @@ const STEPS_BY_VERSION: Readonly<Record<number, VersionSteps>> = {
   // backlog/118: `Route` gained a new nullable/optional `protectionType`. A missing key already means
   // "not specified" server-side (same reasoning as step 5), so no payload transform is needed.
   9: { default: identityStep },
+  // backlog/119: `ClimbingSession.weatherConditions` scalar → list of atomic tags.
+  10: { default: identityStep, overrides: { ClimbingSession: climbingSessionWeatherToList } },
 };
 
 function buildMigrations(): ReadonlyMap<string, MigrationStep> {

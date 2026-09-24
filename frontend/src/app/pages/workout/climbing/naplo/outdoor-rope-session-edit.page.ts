@@ -42,6 +42,8 @@ import { safetyStyleForProtection } from '../../../../shared/climbing/protection
 import { GradeInputComponent } from '../../../../shared/grade-input/grade-input.component';
 import { HelpButtonComponent } from '../../../../shared/help-button/help-button.component';
 import { PartnerComboboxComponent } from '../../../../shared/partner-combobox/partner-combobox.component';
+import { WeatherChipsComponent } from '../../../../shared/weather-chips/weather-chips.component';
+import { WeatherTag, canonicalWeather } from '../../../../shared/climbing/weather';
 import { today } from '../../../../shared/local-date';
 import { climbingKcal, climbingVolume } from '../climbing-metrics';
 import { scrollToLastAttempt } from './scroll-to-last-attempt';
@@ -107,18 +109,10 @@ const OUTDOOR_SAFETY_STYLES: readonly AscentAttempt.SafetyStyleEnum[] = [
 
 const DEFAULT_SAFETY_STYLE = AscentAttempt.SafetyStyleEnum.Lead;
 
-/** documentation/Features/Mászónapló.md — outdoor `weatherConditions` enum, session-level, that day's. */
-const WEATHER_CONDITIONS: readonly ClimbingSession.WeatherConditionsEnum[] = [
-  ClimbingSession.WeatherConditionsEnum.ColdDry,
-  ClimbingSession.WeatherConditionsEnum.HotHumid,
-  ClimbingSession.WeatherConditionsEnum.Windy,
-  ClimbingSession.WeatherConditionsEnum.Wet,
-];
-
 /**
  * documentation/Subfeatures/Outdoor köteles napló.md — the OUTDOOR + ROPE kontextus-napló create/edit
  * form (`id` route param is an existing session's uuid or `new`). A session-level crag picker
- * (snapshot name) + `weatherConditions` chip; the **sector is chosen per attempt** (backlog/084 — one
+ * (snapshot name) + `weatherConditions` multi-select chips (backlog/119); the **sector is chosen per attempt** (backlog/084 — one
  * session can touch several sectors), prefilled from the previous attempt. Each attempt takes an
  * optional master `Route` OR an ad-hoc name with "save to catalog", the indoor rope napló's grade
  * parser, a `TOPROPE | LEAD | TRAD` safety chip, `lengthInMeters`, a single free-text `notes` field
@@ -154,6 +148,7 @@ const WEATHER_CONDITIONS: readonly ClimbingSession.WeatherConditionsEnum[] = [
     GradeInputComponent,
     HelpButtonComponent,
     PartnerComboboxComponent,
+    WeatherChipsComponent,
   ],
   styles: [
     `
@@ -203,7 +198,6 @@ export class OutdoorRopeSessionEditPage implements OnInit {
 
   readonly ascentStyles = ASCENT_STYLES;
   readonly safetyStyles = OUTDOOR_SAFETY_STYLES;
-  readonly weatherConditions = WEATHER_CONDITIONS;
   readonly ratings = [1, 2, 3, 4, 5];
 
   readonly sessionId = signal<string | null>(null);
@@ -215,12 +209,13 @@ export class OutdoorRopeSessionEditPage implements OnInit {
 
   /** backlog/069 — picked partner names (own signal, not a form control); suggestions from the log. */
   readonly partners = signal<string[]>([]);
+  /** backlog/119 — multi-select weather tags (own signal, like `partners`); `[]` = not specified. */
+  readonly weather = signal<WeatherTag[]>([]);
   readonly partnerSuggestions = this.repository.partnerSuggestions;
 
   readonly form = this.fb.nonNullable.group({
     date: this.fb.nonNullable.control(today(), [Validators.required]),
     cragId: this.fb.nonNullable.control('', [Validators.required]),
-    weatherConditions: this.fb.control<ClimbingSession.WeatherConditionsEnum | null>(null),
     totalSessionDurationMinutes: this.fb.control<number | null>(null, [Validators.min(1)]),
     pumpRating: this.fb.control<number | null>(null),
     headspaceRating: this.fb.control<number | null>(null),
@@ -305,13 +300,13 @@ export class OutdoorRopeSessionEditPage implements OnInit {
       this.form.reset({
         date: existing.date,
         cragId: existing.cragId ?? '',
-        weatherConditions: existing.weatherConditions ?? null,
         totalSessionDurationMinutes: existing.totalSessionDurationMinutes ?? null,
         pumpRating: existing.pumpRating ?? null,
         headspaceRating: existing.headspaceRating ?? null,
         notes: existing.notes ?? null,
       });
       this.partners.set([...(existing.climbingPartners ?? [])]);
+      this.weather.set(canonicalWeather(existing.weatherConditions));
       this.attempts.set(
         existing.attempts
           .filter((attempt) => !attempt.deleted)
@@ -634,7 +629,7 @@ export class OutdoorRopeSessionEditPage implements OnInit {
       headspaceRating: value.headspaceRating,
       notes: value.notes?.trim() ? value.notes.trim() : null,
       climbingPartners: partners.length > 0 ? partners : null,
-      weatherConditions: value.weatherConditions,
+      weatherConditions: this.weather(),
       gymId: null,
       gymName: null,
       cragId: value.cragId,

@@ -1,5 +1,7 @@
 package hu.bumler.lm2.climbing;
 
+import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -193,6 +195,23 @@ class ClimbingSessionService {
 				() -> new PitchLogEntity(id, attemptId), "No such pitch log");
 	}
 
+	/**
+	 * backlog/119 — the weather tags as stored: de-duplicated, in the enum's canonical order, never null
+	 * (an absent / null list means "not specified" = empty).
+	 */
+	static List<String> canonicalWeather(List<ClimbingSession.WeatherConditionsEnum> tags) {
+		if (tags == null || tags.isEmpty()) {
+			return new ArrayList<>();
+		}
+		EnumSet<ClimbingSession.WeatherConditionsEnum> set = EnumSet.noneOf(ClimbingSession.WeatherConditionsEnum.class);
+		for (ClimbingSession.WeatherConditionsEnum tag : tags) {
+			if (tag != null) {
+				set.add(tag);
+			}
+		}
+		return set.stream().map(ClimbingSession.WeatherConditionsEnum::getValue).collect(Collectors.toCollection(ArrayList::new));
+	}
+
 	private void applySessionFields(ClimbingSessionEntity entity, ClimbingSession dto) {
 		entity.setDate(dto.getDate());
 		entity.setLocationType(dto.getLocationType().getValue());
@@ -202,8 +221,7 @@ class ClimbingSessionService {
 		entity.setHeadspaceRating(dto.getHeadspaceRating().orElse(null));
 		entity.setNotes(dto.getNotes().orElse(null));
 		entity.setClimbingPartners(dto.getClimbingPartners().orElse(null));
-		ClimbingSession.WeatherConditionsEnum weather = dto.getWeatherConditions().orElse(null);
-		entity.setWeatherConditions(weather == null ? null : weather.getValue());
+		entity.setWeatherConditions(canonicalWeather(dto.getWeatherConditions()));
 		entity.setGymId(dto.getGymId().orElse(null));
 		entity.setGymName(dto.getGymName().orElse(null));
 		entity.setCragId(dto.getCragId().orElse(null));

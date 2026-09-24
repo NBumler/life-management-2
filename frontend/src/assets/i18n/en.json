@@ -1407,10 +1407,16 @@
         "HELP_TEXT": "Onsight: first try, with no prior information (you had not seen it climbed and got no beta).\nFlash: first try, but with prior information (you saw someone climb it or were given beta).\nRedpoint: a clean, continuous ascent after earlier attempts.\n\nOnsight and flash only apply to the very first attempt on a route; after that it is a redpoint. That is why only one can be chosen at a time."
       },
       "WEATHER": {
-        "COLD_DRY": "Cold, dry",
-        "HOT_HUMID": "Hot, humid",
+        "HOT": "Hot",
+        "MILD": "Mild",
+        "COLD": "Cold",
+        "DRY": "Dry",
+        "HUMID": "Humid",
         "WINDY": "Windy",
-        "WET": "Wet"
+        "RAIN": "Rain",
+        "WET_ROCK": "Wet rock",
+        "SUNNY": "Sunny",
+        "SHADE": "Shade"
       },
       "STATS_PAGE": {
         "PERIOD_DAYS": "{{days}} days",

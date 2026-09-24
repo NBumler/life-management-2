@@ -9,6 +9,7 @@ import {
   registeredMigrationKeys,
   rewriteDbUnitToCs,
   stripClimbingSessionFailurePoint,
+  climbingSessionWeatherToList,
 } from './outbox-migrator';
 
 // documentation/Architektúra/Backend-offline first.md §7 "Payload-verziózás (app frissítés)".
@@ -377,6 +378,30 @@ describe('migrateOutboxItem', () => {
 
       expect(result.payload).toEqual({ id: 'l1', saveToStorage: true, items: [], deleted: false });
       expect(result.payloadVersion).toBe(OUTBOX_PAYLOAD_SCHEMA_VERSION);
+    });
+  });
+
+  describe('climbingSessionWeatherToList (v10 → v11, backlog/119)', () => {
+    it('rewrites the legacy combined scalar into atomic tags (WET → RAIN)', () => {
+      expect(climbingSessionWeatherToList({ id: 's1', weatherConditions: 'COLD_DRY' }, '/u').payload).toEqual({
+        id: 's1',
+        weatherConditions: ['COLD', 'DRY'],
+      });
+      expect(climbingSessionWeatherToList({ id: 's1', weatherConditions: 'WET' }, '/u').payload).toEqual({
+        id: 's1',
+        weatherConditions: ['RAIN'],
+      });
+      expect(climbingSessionWeatherToList({ id: 's1', weatherConditions: null }, '/u').payload).toEqual({
+        id: 's1',
+        weatherConditions: [],
+      });
+    });
+
+    it('leaves an already-migrated list, a DELETE and a non-session payload untouched', () => {
+      const listPayload = { id: 's1', weatherConditions: ['HOT'] };
+      expect(climbingSessionWeatherToList(listPayload, '/u').payload).toBe(listPayload);
+      expect(climbingSessionWeatherToList(null, '/u')).toEqual({ payload: null, url: '/u' });
+      expect(climbingSessionWeatherToList({ id: 'x' }, '/u')).toEqual({ payload: { id: 'x' }, url: '/u' });
     });
   });
 });

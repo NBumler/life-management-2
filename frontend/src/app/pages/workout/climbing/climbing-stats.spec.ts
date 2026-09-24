@@ -59,7 +59,7 @@ function session(overrides: Partial<ClimbingSession> = {}): ClimbingSession {
     headspaceRating: null,
     notes: null,
     climbingPartners: null,
-    weatherConditions: null,
+    weatherConditions: [],
     gymId: null,
     gymName: null,
     cragId: null,
