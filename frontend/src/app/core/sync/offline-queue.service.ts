@@ -41,8 +41,11 @@ import { uuidV4 } from './uuid';
  * - v11 → v12 (backlog/125): `WorkoutPlanSet` (nested in `WorkoutPlan`) gained a nullable `repsMax`.
  *   A pending plan write from before that app update has no such key — the server reads it as "not a
  *   range" (null), identical to the old behaviour — so every type is identity.
+ * - v12 → v13 (backlog/121): `MealItem` (nested in `Meal`) gained an optional `ingredientOverrides`
+ *   list. A pending meal write from before that app update has no such key — the server reads it as
+ *   "no overrides" (the recipe as written), identical to the old behaviour — so every type is identity.
  */
-export const OUTBOX_PAYLOAD_SCHEMA_VERSION = 12;
+export const OUTBOX_PAYLOAD_SCHEMA_VERSION = 13;
 
 /** documentation/Architektúra/Backend-offline first.md §6 "Tétel-újrapróbálkozási backoff" (jitter omitted — not load-bearing for correctness). */
 const RETRY_BACKOFF_MS = [2000, 8000, 30000, 120000, 600000];

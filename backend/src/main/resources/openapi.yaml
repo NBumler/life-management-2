@@ -268,6 +268,8 @@ components:
       $ref: 'openapi/components/schemas/MealList.yaml'
     MealItem:
       $ref: 'openapi/components/schemas/MealItem.yaml'
+    MealItemIngredientOverride:
+      $ref: 'openapi/components/schemas/MealItemIngredientOverride.yaml'
     ShoppingList:
       $ref: 'openapi/components/schemas/ShoppingList.yaml'
     ShoppingListList:

@@ -46,7 +46,14 @@ export function computeDailyNutrition(meals: readonly Meal[], recipes: readonly 
 
 function toSaveItem(item: MealItem): MealItemSaveItem {
   if (item.type === 'RECIPE') {
-    return { id: item.id, type: 'RECIPE', recipeId: item.recipeId ?? '', servings: item.servings, sortOrder: item.sortOrder };
+    return {
+      id: item.id,
+      type: 'RECIPE',
+      recipeId: item.recipeId ?? '',
+      servings: item.servings,
+      sortOrder: item.sortOrder,
+      ingredientOverrides: item.ingredientOverrides ?? [],
+    };
   }
   if (item.type === 'FOOD') {
     return {

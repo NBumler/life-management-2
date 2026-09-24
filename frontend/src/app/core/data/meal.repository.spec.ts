@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 
 import { Food } from '../../api/model/food';
 import { Meal } from '../../api/model/meal';
+import { Recipe } from '../../api/model/recipe';
 import { StoredFood } from '../../api/model/storedFood';
 import { MealDraft, StorageBackend, STORAGE_BACKEND } from '../storage/storage-backend';
 import { SyncEngineService } from '../sync/sync-engine.service';
@@ -90,5 +91,34 @@ describe('MealRepository', () => {
 
     expect(storage.upsertStoredFood).not.toHaveBeenCalled();
     expect(storage.deleteStoredFood).not.toHaveBeenCalled();
+  });
+
+  it('save(): a recipe item deducts the overridden quantity × servings, not the recipe one (backlog/121)', async () => {
+    storage.listRecipes.and.resolveTo([
+      {
+        id: 'r1',
+        name: 'Palacsinta',
+        deleted: false,
+        ingredients: [{ id: 'ing-1', recipeId: 'r1', foodId: 'food-1', quantityAmount: 200, quantityUnit: 'g', sortOrder: 0, deleted: false }],
+      } as unknown as Recipe,
+    ]);
+    await repository.load();
+
+    await repository.save({
+      ...foodItemDraft(),
+      items: [
+        {
+          id: 'item-1',
+          type: 'RECIPE',
+          recipeId: 'r1',
+          servings: 2,
+          sortOrder: 0,
+          ingredientOverrides: [{ recipeIngredientId: 'ing-1', foodId: 'food-1', quantityAmount: 150, quantityUnit: 'g' }],
+        },
+      ],
+    });
+
+    // 500g on hand − 150g × 2 servings = 200g (the recipe's 200g × 2 would have left 100g)
+    expect(storage.upsertStoredFood).toHaveBeenCalledWith(jasmine.objectContaining({ id: 'sf-1', quantityAmount: 200 }));
   });
 });

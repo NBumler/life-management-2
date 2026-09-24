@@ -57,6 +57,14 @@ properties:
   priceHuf:
     type: integer
     nullable: true
+  ingredientOverrides:
+    type: array
+    items:
+      $ref: './MealItemIngredientOverride.yaml'
+    description: >-
+      backlog/121 — RECIPE items only: per-ingredient quantity overrides for this meal (see
+      MealItemIngredientOverride). Missing / empty = the recipe as written. Ignored (stored empty)
+      for FOOD / CUSTOM items; at most one override per recipeIngredientId.
   servings:
     type: number
     minimum: 0

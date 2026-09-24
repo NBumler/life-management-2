@@ -51,6 +51,7 @@ import {
   toSaveItem,
 } from './meal-item-row';
 import { computeMealItemEffective } from './meal-item-summary';
+import { effectiveRecipeIngredients, isDivertedFromRecipe } from './recipe-overrides';
 
 /**
  * documentation/Subfeatures/Étkezés.md "Étkezés entitás" / "Tétel — közös" — create + edit in one
@@ -170,6 +171,15 @@ export class MealEditPage implements OnInit, OnDestroy {
 
   effectiveOf(row: ItemRow, index: number) {
     return computeMealItemEffective(toSaveItem(row, index), this.recipeRepository.items(), this.foodRepository.items());
+  }
+
+  /** backlog/121 — a RECIPE row whose per-meal ingredient overrides make it differ from the recipe. */
+  isDiverted(row: ItemRow): boolean {
+    if (row.type !== 'RECIPE' || row.overrides().length === 0) {
+      return false;
+    }
+    const recipe = this.recipeRepository.items().find((candidate) => candidate.id === row.recipeId);
+    return isDivertedFromRecipe(effectiveRecipeIngredients(recipe, row.overrides()));
   }
 
   isRowComplete(row: ItemRow): boolean {

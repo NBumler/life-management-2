@@ -3,6 +3,7 @@ import { Recipe } from '../../../api/model/recipe';
 import { QuantityUnit } from '../../../shared/quantity';
 import { computeRecipeSummary } from '../recipe/recipe-summary';
 import { MealItemSaveItem } from '../../../core/storage/storage-backend';
+import { effectiveRecipeIngredients } from './recipe-overrides';
 
 /**
  * documentation/Subfeatures/Étkezés.md "Tétel — közös" / [[Recept forrású étkezés]] / [[Élelmiszer
@@ -39,9 +40,12 @@ export function computeMealItemEffective(item: MealItemSaveItem, recipes: readon
     if (recipe === undefined) {
       return { ...ZERO, incomplete: true };
     }
-    const ingredients = recipe.ingredients
-      .filter((ingredient) => !ingredient.deleted)
-      .map((ingredient) => ({ foodId: ingredient.foodId, quantityAmount: ingredient.quantityAmount, quantityUnit: ingredient.quantityUnit as QuantityUnit }));
+    // backlog/121 — per-meal ingredient overrides replace the recipe quantity before `servings` scales it
+    const ingredients = effectiveRecipeIngredients(recipe, item.ingredientOverrides).map((ingredient) => ({
+      foodId: ingredient.foodId,
+      quantityAmount: ingredient.quantityAmount,
+      quantityUnit: ingredient.quantityUnit as QuantityUnit,
+    }));
     const summary = computeRecipeSummary(ingredients, foods);
     return { ...scale(summary, item.servings), incomplete: summary.incomplete };
   }

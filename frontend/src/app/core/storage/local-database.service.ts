@@ -1289,7 +1289,14 @@ const SCHEMA_V42_STATEMENTS: string[] = [
  */
 const SCHEMA_V43_STATEMENTS: string[] = [`ALTER TABLE workout_plan_set ADD COLUMN reps_max INTEGER`];
 
-const SCHEMA_VERSION = 43;
+/**
+ * backlog/121 — recept forrású étkezési tétel hozzávaló-mennyiség felülírásai JSON-tömbként
+ * (`meal_item.ingredient_overrides`, NULL = nincs); on-device tükre a backend
+ * `V47__meal_item_ingredient_overrides.sql`-nek.
+ */
+const SCHEMA_V44_STATEMENTS: string[] = [`ALTER TABLE meal_item ADD COLUMN ingredient_overrides TEXT`];
+
+const SCHEMA_VERSION = 44;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -1335,7 +1342,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 40, statements: SCHEMA_V40_STATEMENTS },
   { toVersion: 41, statements: SCHEMA_V41_STATEMENTS },
   { toVersion: 42, statements: SCHEMA_V42_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V43_STATEMENTS },
+  { toVersion: 43, statements: SCHEMA_V43_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V44_STATEMENTS },
 ];
 
 export interface SqlTask {

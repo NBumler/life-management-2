@@ -100,6 +100,9 @@
           <ion-label class="meal-item-summary" (click)="openEditor(row)">
             <h3>{{ rowTitle(row) }}</h3>
             <p>{{ rowSummaryLine(row, i) }}</p>
+            @if (isDiverted(row)) {
+              <p class="meal-item-summary__diverted">{{ 'FOOD.MEAL.DIVERTED_FROM_RECIPE' | translate }}</p>
+            }
             @if (showItemErrors() && !isRowComplete(row)) {
               <p class="meal-item-summary__error">{{ 'FOOD.MEAL.ITEM_INCOMPLETE' | translate }}</p>
             }

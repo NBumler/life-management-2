@@ -10,8 +10,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import hu.bumler.lm2.api.model.Meal;
 import hu.bumler.lm2.api.model.MealItem;
+import hu.bumler.lm2.api.model.MealItemIngredientOverride;
 import hu.bumler.lm2.common.exception.EntityDeletedException;
 import hu.bumler.lm2.common.exception.EntityNotFoundException;
 import hu.bumler.lm2.common.exception.ValidationException;
@@ -42,7 +45,7 @@ class MealServiceTest {
 		itemRepository = mock(MealItemRepository.class);
 		recipeRepository = mock(RecipeRepository.class);
 		foodRepository = mock(FoodRepository.class);
-		service = new MealService(repository, itemRepository, recipeRepository, foodRepository, new MealMapper(), new MealItemMapper());
+		service = new MealService(repository, itemRepository, recipeRepository, foodRepository, new MealMapper(), new MealItemMapper(new ObjectMapper()));
 		when(repository.saveAndFlush(any())).thenAnswer(inv -> inv.getArgument(0));
 	}
 
@@ -102,6 +105,52 @@ class MealServiceTest {
 		verify(itemRepository).save(itemCaptor.capture());
 		assertThat(itemCaptor.getValue().getId()).isEqualTo(itemId);
 		assertThat(itemCaptor.getValue().getRecipeId()).isEqualTo(recipeId);
+	}
+
+	@Test
+	void create_storesRecipeIngredientOverrides_andEchoesThemBack() {
+		UUID id = UUID.randomUUID();
+		UUID itemId = UUID.randomUUID();
+		UUID recipeId = UUID.randomUUID();
+		UUID ingredientId = UUID.randomUUID();
+		UUID foodId = UUID.randomUUID();
+		when(repository.findById(id)).thenReturn(Optional.empty());
+		when(itemRepository.findByMealId(id)).thenReturn(List.of());
+		liveRecipe(recipeId);
+		MealItem item = recipeItem(itemId, id, recipeId, 2.0, 0);
+		item.ingredientOverrides(List.of(new MealItemIngredientOverride(ingredientId, foodId, BigDecimal.valueOf(400), "g")));
+
+		service.create(UUID.randomUUID(), new Meal(id, EATEN_AT, "Europe/Budapest", List.of(item), false));
+
+		ArgumentCaptor<MealItemEntity> itemCaptor = ArgumentCaptor.forClass(MealItemEntity.class);
+		verify(itemRepository).save(itemCaptor.capture());
+		MealItem echoed = new MealItemMapper(new ObjectMapper()).toDto(itemCaptor.getValue());
+		assertThat(echoed.getIngredientOverrides()).hasSize(1);
+		assertThat(echoed.getIngredientOverrides().get(0).getRecipeIngredientId()).isEqualTo(ingredientId);
+		assertThat(echoed.getIngredientOverrides().get(0).getQuantityAmount()).isEqualByComparingTo("400");
+	}
+
+	@Test
+	void create_rejectsTwoOverridesForTheSameRecipeIngredient() {
+		UUID id = UUID.randomUUID();
+		UUID recipeId = UUID.randomUUID();
+		UUID ingredientId = UUID.randomUUID();
+		when(repository.findById(id)).thenReturn(Optional.empty());
+		when(itemRepository.findByMealId(id)).thenReturn(List.of());
+		liveRecipe(recipeId);
+		MealItem item = recipeItem(UUID.randomUUID(), id, recipeId, 1.0, 0);
+		item.ingredientOverrides(List.of(new MealItemIngredientOverride(ingredientId, UUID.randomUUID(), BigDecimal.ONE, "g"),
+				new MealItemIngredientOverride(ingredientId, UUID.randomUUID(), BigDecimal.TEN, "g")));
+
+		assertThatThrownBy(() -> service.create(UUID.randomUUID(), new Meal(id, EATEN_AT, "Europe/Budapest", List.of(item), false)))
+				.isInstanceOf(ValidationException.class);
+	}
+
+	@Test
+	void mapper_echoesAnEmptyOverrideList_forAPlainItem() {
+		MealItemEntity entity = new MealItemEntity(UUID.randomUUID(), UUID.randomUUID(), "RECIPE", 0);
+		entity.setServings(BigDecimal.ONE);
+		assertThat(new MealItemMapper(new ObjectMapper()).toDto(entity).getIngredientOverrides()).isEmpty();
 	}
 
 	@Test

@@ -6,3 +6,8 @@
 .meal-item-summary__error {
   color: var(--ion-color-danger);
 }
+
+// backlog/121 — the item's ingredient quantities were overridden for this meal
+.meal-item-summary__diverted {
+  color: var(--ion-color-warning-shade);
+}

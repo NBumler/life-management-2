@@ -913,7 +913,15 @@
         "DAILY_PRICE": "Daily price: {{amount}} Ft",
         "PROFILE_INCOMPLETE_NOTICE": "Fill in your profile to see today's goals.",
         "SUMMARY_INCOMPLETE": "~ Some values are estimated — catalog data is missing for an item."
-      }
+      },
+      "INGREDIENTS_SHOW": "Ingredients ({{n}}) ▾",
+      "INGREDIENTS_HIDE": "Ingredients ({{n}}) ▴",
+      "INGREDIENTS_HINT": "Quantity actually used per serving — the recipe stays unchanged and the servings multiplier applies to it too.",
+      "DIVERTED_FROM_RECIPE": "Differs from the recipe",
+      "OFF_RECIPE": "no longer in the recipe",
+      "INGREDIENT_RECIPE": "recipe: {{amount}} {{unit}}",
+      "INGREDIENT_EFFECTIVE": "total: {{amount}} {{unit}}",
+      "INGREDIENT_RESET": "As in recipe"
     }
   },
   "SHOPPING": {

@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import hu.bumler.lm2.api.model.Meal;
 import hu.bumler.lm2.api.model.MealItem;
+import hu.bumler.lm2.api.model.MealItemIngredientOverride;
 import hu.bumler.lm2.common.NestedChildResolver;
 import hu.bumler.lm2.common.exception.EntityDeletedException;
 import hu.bumler.lm2.common.exception.EntityNotFoundException;
@@ -152,12 +153,14 @@ class MealService {
 		entity.setCarbsG(null);
 		entity.setFatG(null);
 		entity.setPriceHuf(null);
+		entity.setIngredientOverridesJson(null);
 
 		switch (type) {
 			case RECIPE -> {
 				UUID recipeId = dto.getRecipeId().orElseThrow(() -> new ValidationException("recipeId is required for RECIPE items", "recipeId"));
 				requireLiveRecipe(recipeId);
 				entity.setRecipeId(recipeId);
+				entity.setIngredientOverridesJson(itemMapper.writeOverrides(validOverrides(dto.getIngredientOverrides())));
 			}
 			case FOOD -> {
 				UUID foodId = dto.getFoodId().orElseThrow(() -> new ValidationException("foodId is required for FOOD items", "foodId"));
@@ -184,6 +187,24 @@ class MealService {
 
 		entity.setServings(dto.getServings());
 		entity.setSortOrder(dto.getSortOrder());
+	}
+
+	/**
+	 * backlog/121 — overrides are keyed by recipe ingredient: at most one per recipeIngredientId, and a
+	 * quantity may be 0 (left out) but never negative (the schema's `minimum: 0` already rejects that).
+	 */
+	private static List<MealItemIngredientOverride> validOverrides(List<MealItemIngredientOverride> overrides) {
+		if (overrides == null) {
+			return List.of();
+		}
+		Set<UUID> seen = new HashSet<>();
+		for (MealItemIngredientOverride override : overrides) {
+			if (!seen.add(override.getRecipeIngredientId())) {
+				throw new ValidationException("Duplicate override for recipe ingredient " + override.getRecipeIngredientId(),
+						"ingredientOverrides");
+			}
+		}
+		return overrides;
 	}
 
 	/** documentation/Subfeatures/Recept forrású étkezés.md: a meal item may only reference a live Recipe. */

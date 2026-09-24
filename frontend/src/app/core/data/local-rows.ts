@@ -47,6 +47,7 @@ import { WorkoutSetEntry } from '../../api/model/workoutSetEntry';
 import { DailyStepLog } from '../../api/model/dailyStepLog';
 import { HikeRoute } from '../../api/model/hikeRoute';
 import { canonicalWeather, legacyWeatherToTags } from '../../shared/climbing/weather';
+import { MealItemIngredientOverride } from '../../api/model/mealItemIngredientOverride';
 
 /**
  * Row <-> DTO mapping and SQL task builders for the two local tables this phase covers.
@@ -3683,6 +3684,8 @@ export interface MealItemRow {
   carbs_g: number | null;
   fat_g: number | null;
   price_huf: number | null;
+  /** backlog/121 — JSON array of MealItemIngredientOverride (RECIPE items only); NULL = none. */
+  ingredient_overrides: string | null;
   servings: number;
   sort_order: number;
   created_at: string | null;
@@ -3710,6 +3713,7 @@ export function mealItemRowToDto(row: MealItemRow): MealItem {
     carbsG: row.carbs_g,
     fatG: row.fat_g,
     priceHuf: row.price_huf,
+    ingredientOverrides: row.ingredient_overrides ? (JSON.parse(row.ingredient_overrides) as MealItemIngredientOverride[]) : [],
     servings: row.servings,
     sortOrder: row.sort_order,
     deleted: row.deleted === 1,
@@ -3717,6 +3721,11 @@ export function mealItemRowToDto(row: MealItemRow): MealItem {
     createdAt: row.created_at ?? undefined,
     updatedAt: row.updated_at ?? undefined,
   };
+}
+
+/** backlog/121 — NULL for no overrides (a plain recipe item / FOOD / CUSTOM), JSON array otherwise. */
+function overridesJson(overrides: MealItemIngredientOverride[] | null | undefined): string | null {
+  return overrides && overrides.length > 0 ? JSON.stringify(overrides) : null;
 }
 
 export function mealItemLocalWriteTask(dto: {
@@ -3735,20 +3744,21 @@ export function mealItemLocalWriteTask(dto: {
   priceHuf: number | null;
   servings: number;
   sortOrder: number;
+  ingredientOverrides: MealItemIngredientOverride[];
 }): SqlTask {
   return {
     statement: `
       INSERT INTO meal_item (
         id, meal_id, type, recipe_id, food_id, quantity_amount, quantity_unit, display_name,
-        calories_kcal, protein_g, carbs_g, fat_g, price_huf, servings, sort_order, _dirty, _local_only
+        calories_kcal, protein_g, carbs_g, fat_g, price_huf, servings, sort_order, ingredient_overrides, _dirty, _local_only
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
       ON CONFLICT(id) DO UPDATE SET
         type = excluded.type, recipe_id = excluded.recipe_id, food_id = excluded.food_id,
         quantity_amount = excluded.quantity_amount, quantity_unit = excluded.quantity_unit, display_name = excluded.display_name,
         calories_kcal = excluded.calories_kcal, protein_g = excluded.protein_g, carbs_g = excluded.carbs_g, fat_g = excluded.fat_g,
         price_huf = excluded.price_huf, servings = excluded.servings, sort_order = excluded.sort_order,
-        deleted = 0, deleted_at = NULL, _dirty = 1`,
+        ingredient_overrides = excluded.ingredient_overrides, deleted = 0, deleted_at = NULL, _dirty = 1`,
     values: [
       dto.id,
       dto.mealId,
@@ -3765,6 +3775,7 @@ export function mealItemLocalWriteTask(dto: {
       dto.priceHuf,
       dto.servings,
       dto.sortOrder,
+      overridesJson(dto.ingredientOverrides),
     ],
   };
 }
@@ -3782,16 +3793,16 @@ export function mealItemServerApplyTask(dto: MealItem): SqlTask {
     statement: `
       INSERT INTO meal_item (
         id, meal_id, type, recipe_id, food_id, quantity_amount, quantity_unit, display_name,
-        calories_kcal, protein_g, carbs_g, fat_g, price_huf, servings, sort_order,
+        calories_kcal, protein_g, carbs_g, fat_g, price_huf, servings, sort_order, ingredient_overrides,
         created_at, updated_at, deleted, deleted_at, _dirty, _local_only
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET
         meal_id = excluded.meal_id, type = excluded.type, recipe_id = excluded.recipe_id, food_id = excluded.food_id,
         quantity_amount = excluded.quantity_amount, quantity_unit = excluded.quantity_unit, display_name = excluded.display_name,
         calories_kcal = excluded.calories_kcal, protein_g = excluded.protein_g, carbs_g = excluded.carbs_g, fat_g = excluded.fat_g,
         price_huf = excluded.price_huf, servings = excluded.servings, sort_order = excluded.sort_order,
-        created_at = excluded.created_at, updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at,
+        ingredient_overrides = excluded.ingredient_overrides, created_at = excluded.created_at, updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at,
         _dirty = 0, _local_only = 0, _needs_refetch = 0
       WHERE meal_item._dirty = 0`,
     values: [
@@ -3810,6 +3821,7 @@ export function mealItemServerApplyTask(dto: MealItem): SqlTask {
       dto.priceHuf ?? null,
       dto.servings,
       dto.sortOrder,
+      overridesJson(dto.ingredientOverrides),
       dto.createdAt ?? null,
       dto.updatedAt ?? null,
       dto.deleted ? 1 : 0,

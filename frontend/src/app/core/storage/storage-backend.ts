@@ -9,6 +9,7 @@ import { HouseholdRoom } from '../../api/model/householdRoom';
 import { HouseholdTask } from '../../api/model/householdTask';
 import { LifePlan } from '../../api/model/lifePlan';
 import { Meal } from '../../api/model/meal';
+import { MealItemIngredientOverride } from '../../api/model/mealItemIngredientOverride';
 import { PackingSession } from '../../api/model/packingSession';
 import { PackingSessionDetail } from '../../api/model/packingSessionDetail';
 import { PackingSessionItem } from '../../api/model/packingSessionItem';
@@ -286,7 +287,15 @@ export interface WeeklyPlanDraft {
  * screen constructing a RECIPE/FOOD/CUSTOM row can't accidentally set another type's fields.
  */
 export type MealItemSaveItem =
-  | { id: string; type: 'RECIPE'; recipeId: string; servings: number; sortOrder: number }
+  | {
+      id: string;
+      type: 'RECIPE';
+      recipeId: string;
+      servings: number;
+      sortOrder: number;
+      /** backlog/121 — per-ingredient quantity overrides for this meal; missing / empty = the recipe as written. */
+      ingredientOverrides?: MealItemIngredientOverride[];
+    }
   | { id: string; type: 'FOOD'; foodId: string; quantityAmount: number; quantityUnit: string; servings: number; sortOrder: number }
   | {
       id: string;
@@ -329,14 +338,16 @@ export function expandMealItemSaveItem(
   priceHuf: number | null;
   servings: number;
   sortOrder: number;
+  ingredientOverrides: MealItemIngredientOverride[];
 } {
-  const base = { id: item.id, mealId, servings: item.servings, sortOrder: item.sortOrder };
+  const base = { id: item.id, mealId, servings: item.servings, sortOrder: item.sortOrder, ingredientOverrides: [] as MealItemIngredientOverride[] };
   switch (item.type) {
     case 'RECIPE':
       return {
         ...base,
         type: 'RECIPE',
         recipeId: item.recipeId,
+        ingredientOverrides: item.ingredientOverrides ?? [],
         foodId: null,
         quantityAmount: null,
         quantityUnit: null,

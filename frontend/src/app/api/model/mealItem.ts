@@ -7,6 +7,7 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import { MealItemIngredientOverride } from './mealItemIngredientOverride';
 
 
 /**
@@ -29,6 +30,10 @@ export interface MealItem {
     carbsG?: number | null;
     fatG?: number | null;
     priceHuf?: number | null;
+    /**
+     * backlog/121 — RECIPE items only: per-ingredient quantity overrides for this meal (see MealItemIngredientOverride). Missing / empty = the recipe as written. Ignored (stored empty) for FOOD / CUSTOM items; at most one override per recipeIngredientId.
+     */
+    ingredientOverrides?: Array<MealItemIngredientOverride>;
     servings: number;
     sortOrder: number;
     deleted: boolean;

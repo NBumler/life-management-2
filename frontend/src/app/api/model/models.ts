@@ -34,6 +34,7 @@ export * from './lifePlan';
 export * from './loginRequest';
 export * from './meal';
 export * from './mealItem';
+export * from './mealItemIngredientOverride';
 export * from './packingSession';
 export * from './packingSessionDetail';
 export * from './packingSessionItem';

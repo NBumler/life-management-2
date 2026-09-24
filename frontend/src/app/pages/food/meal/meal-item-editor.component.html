@@ -116,6 +116,50 @@
     </ion-item>
   </ion-list>
 
+  @if (row.type === 'RECIPE' && ingredients().length > 0) {
+    <!-- backlog/121: per-meal ingredient quantity overrides; the recipe itself never changes -->
+    <div class="ingredients">
+      <ion-button class="ingredients__toggle" fill="clear" size="small" (click)="ingredientsOpen.set(!ingredientsOpen())">
+        {{ (ingredientsOpen() ? 'FOOD.MEAL.INGREDIENTS_HIDE' : 'FOOD.MEAL.INGREDIENTS_SHOW') | translate: { n: ingredients().length } }}
+      </ion-button>
+      @if (diverted()) {
+        <ion-note color="warning" class="ingredients__diverted">{{ 'FOOD.MEAL.DIVERTED_FROM_RECIPE' | translate }}</ion-note>
+      }
+      @if (ingredientsOpen()) {
+        <ion-note class="ingredients__hint">{{ 'FOOD.MEAL.INGREDIENTS_HINT' | translate }}</ion-note>
+        <ion-list>
+          @for (ingredient of ingredients(); track ingredient.recipeIngredientId) {
+            <ion-item class="ingredient" lines="full">
+              <div class="ingredient__body">
+                <div class="ingredient__name">
+                  {{ foodName(ingredient.foodId) }}
+                  @if (ingredient.offRecipe) {
+                    <ion-note color="medium"> · {{ 'FOOD.MEAL.OFF_RECIPE' | translate }}</ion-note>
+                  }
+                </div>
+                <app-quantity-input [formControl]="ingredientControl(ingredient)" mode="quantity"></app-quantity-input>
+                <ion-note class="ingredient__meta">
+                  @if (ingredient.recipeAmount !== null) {
+                    {{ 'FOOD.MEAL.INGREDIENT_RECIPE' | translate: { amount: ingredient.recipeAmount, unit: ingredient.recipeUnit } }} ·
+                  }
+                  {{
+                    'FOOD.MEAL.INGREDIENT_EFFECTIVE'
+                      | translate: { amount: (ingredient.quantityAmount * row.servings() | number: '1.0-2'), unit: ingredient.quantityUnit }
+                  }}
+                </ion-note>
+              </div>
+              @if (ingredient.overridden) {
+                <ion-button slot="end" fill="clear" size="small" class="ingredient__reset" (click)="resetIngredient(ingredient)">
+                  {{ 'FOOD.MEAL.INGREDIENT_RESET' | translate }}
+                </ion-button>
+              }
+            </ion-item>
+          }
+        </ion-list>
+      }
+    </div>
+  }
+
   <div class="effective-preview">
     <span>{{
       'FOOD.MEAL.EFFECTIVE_SUMMARY' | translate: { kcal: effective().energyKcal | number: '1.0-0', price: effective().priceHuf | number: '1.0-0' }

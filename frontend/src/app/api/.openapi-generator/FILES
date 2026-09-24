@@ -125,6 +125,7 @@ model/lifePlan.ts
 model/loginRequest.ts
 model/meal.ts
 model/mealItem.ts
+model/mealItemIngredientOverride.ts
 model/models.ts
 model/packingSession.ts
 model/packingSessionDetail.ts

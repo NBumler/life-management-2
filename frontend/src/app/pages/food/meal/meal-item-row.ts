@@ -1,6 +1,7 @@
 import { Signal, WritableSignal, signal } from '@angular/core';
 import { FormControl } from '@angular/forms';
 
+import { MealItemIngredientOverride } from '../../../api/model/mealItemIngredientOverride';
 import { MealItemSaveItem } from '../../../core/storage/storage-backend';
 import { uuidV4 } from '../../../core/sync/uuid';
 import { ParsedQuantity, QuantityUnit } from '../../../shared/quantity';
@@ -26,6 +27,8 @@ export interface RecipeItemRow {
   type: 'RECIPE';
   recipeId: string;
   servings: WritableSignal<number>;
+  /** backlog/121 — per-ingredient quantity overrides for this meal (the recipe itself never changes). */
+  overrides: WritableSignal<MealItemIngredientOverride[]>;
 }
 
 export interface FoodItemRow {
@@ -54,7 +57,7 @@ export interface CustomItemRow {
 export type ItemRow = RecipeItemRow | FoodItemRow | CustomItemRow;
 
 export function createRecipeRow(recipeId: string): RecipeItemRow {
-  return { id: uuidV4(), type: 'RECIPE', recipeId, servings: signal(1) };
+  return { id: uuidV4(), type: 'RECIPE', recipeId, servings: signal(1), overrides: signal([]) };
 }
 
 function buildFoodRow(id: string, foodId: string, quantity: ParsedQuantity<QuantityUnit>, servings: number): FoodItemRow {
@@ -104,12 +107,19 @@ export interface MealItemDto {
   carbsG?: number | null;
   fatG?: number | null;
   priceHuf?: number | null;
+  ingredientOverrides?: MealItemIngredientOverride[] | null;
   servings: number;
 }
 
 export function buildRowFromDto(item: MealItemDto): ItemRow {
   if (item.type === 'RECIPE') {
-    return { id: item.id, type: 'RECIPE', recipeId: item.recipeId ?? '', servings: signal(item.servings) };
+    return {
+      id: item.id,
+      type: 'RECIPE',
+      recipeId: item.recipeId ?? '',
+      servings: signal(item.servings),
+      overrides: signal([...(item.ingredientOverrides ?? [])]),
+    };
   }
   if (item.type === 'FOOD') {
     return buildFoodRow(
@@ -134,7 +144,14 @@ export function buildRowFromDto(item: MealItemDto): ItemRow {
 
 export function toSaveItem(row: ItemRow, sortOrder: number): MealItemSaveItem {
   if (row.type === 'RECIPE') {
-    return { id: row.id, type: 'RECIPE', recipeId: row.recipeId, servings: row.servings(), sortOrder };
+    return {
+      id: row.id,
+      type: 'RECIPE',
+      recipeId: row.recipeId,
+      servings: row.servings(),
+      sortOrder,
+      ingredientOverrides: row.overrides(),
+    };
   }
   if (row.type === 'FOOD') {
     const quantity = row.quantity();
@@ -186,7 +203,7 @@ export function isRowComplete(row: ItemRow): boolean {
  * `FormControl`, so without this a cancel would keep every keystroke). `restoreRow` is the inverse.
  */
 export type RowSnapshot =
-  | { type: 'RECIPE'; servings: number }
+  | { type: 'RECIPE'; servings: number; overrides: MealItemIngredientOverride[] }
   | { type: 'FOOD'; servings: number; quantity: ParsedQuantity<QuantityUnit> }
   | {
       type: 'CUSTOM';
@@ -201,7 +218,7 @@ export type RowSnapshot =
 
 export function snapshotRow(row: ItemRow): RowSnapshot {
   if (row.type === 'RECIPE') {
-    return { type: 'RECIPE', servings: row.servings() };
+    return { type: 'RECIPE', servings: row.servings(), overrides: [...row.overrides()] };
   }
   if (row.type === 'FOOD') {
     return { type: 'FOOD', servings: row.servings(), quantity: row.quantityControl.getRawValue() };
@@ -221,6 +238,7 @@ export function snapshotRow(row: ItemRow): RowSnapshot {
 export function restoreRow(row: ItemRow, snapshot: RowSnapshot): void {
   if (row.type === 'RECIPE' && snapshot.type === 'RECIPE') {
     row.servings.set(snapshot.servings);
+    row.overrides.set(snapshot.overrides);
     return;
   }
   if (row.type === 'FOOD' && snapshot.type === 'FOOD') {

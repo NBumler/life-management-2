@@ -913,7 +913,15 @@
         "DAILY_PRICE": "Napi ár: {{amount}} Ft",
         "PROFILE_INCOMPLETE_NOTICE": "A napi célok megjelenítéséhez töltsd ki a profilodat.",
         "SUMMARY_INCOMPLETE": "~ Néhány érték becsült – egy tételhez hiányzik a katalógusadat."
-      }
+      },
+      "INGREDIENTS_SHOW": "Hozzávalók ({{n}}) ▾",
+      "INGREDIENTS_HIDE": "Hozzávalók ({{n}}) ▴",
+      "INGREDIENTS_HINT": "Egy adagra vett, ténylegesen felhasznált mennyiség — a recept nem változik, az adagszorzó ezt is szorozza.",
+      "DIVERTED_FROM_RECIPE": "Eltér a recepttől",
+      "OFF_RECIPE": "recepten kívüli",
+      "INGREDIENT_RECIPE": "recept: {{amount}} {{unit}}",
+      "INGREDIENT_EFFECTIVE": "összesen: {{amount}} {{unit}}",
+      "INGREDIENT_RESET": "Recept szerint"
     }
   },
   "SHOPPING": {

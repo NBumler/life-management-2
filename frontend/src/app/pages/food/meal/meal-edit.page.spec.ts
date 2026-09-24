@@ -316,7 +316,7 @@ describe('MealEditPage', () => {
 
     expect(repository.save).toHaveBeenCalledWith(
       jasmine.objectContaining({
-        items: [{ id: jasmine.any(String), type: 'RECIPE', recipeId: 'r1', servings: 1, sortOrder: 0 }],
+        items: [{ id: jasmine.any(String), type: 'RECIPE', recipeId: 'r1', servings: 1, sortOrder: 0, ingredientOverrides: [] }],
       }),
     );
     expect(navigateSpy).toHaveBeenCalledWith('/tabs/food/meal');

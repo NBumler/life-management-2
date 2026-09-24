@@ -3,6 +3,7 @@ import { Capacitor } from '@capacitor/core';
 
 import { Meal } from '../../api/model/meal';
 import { resolveFoodQuantity } from '../../pages/food/food-quantity';
+import { effectiveRecipeIngredients } from '../../pages/food/meal/recipe-overrides';
 import { planStockConsumption } from '../../pages/food/storage/stock-consumption';
 import { today } from '../../shared/local-date';
 import { QuantityUnit, canonicalQuantityAmount } from '../../shared/quantity';
@@ -63,7 +64,7 @@ export class MealRepository {
 
   /**
    * documentation/Subfeatures/Recept forrású étkezés.md / Élelmiszer forrású étkezés.md: aggregates
-   * every RECIPE item's live ingredients and every FOOD item's own quantity into one canonical
+   * every RECIPE item's live ingredients (with its per-meal overrides applied — backlog/121) and every FOOD item's own quantity into one canonical
    * per-`foodId` demand map (CUSTOM items never touch storage), then hands it to the pure
    * `planStockConsumption` FIFO/opened-first planner and applies the result through the existing
    * `StoredFoodRepository` — each affected row is its own independent local write + outbox entry.
@@ -78,7 +79,7 @@ export class MealRepository {
         if (recipe === undefined) {
           continue;
         }
-        for (const ingredient of recipe.ingredients.filter((candidate) => !candidate.deleted)) {
+        for (const ingredient of effectiveRecipeIngredients(recipe, item.ingredientOverrides)) {
           const canonical = this.canonicalDemand(ingredient.quantityAmount, ingredient.quantityUnit, ingredient.foodId, foods) * item.servings;
           demand.set(ingredient.foodId, (demand.get(ingredient.foodId) ?? 0) + canonical);
         }

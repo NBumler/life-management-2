@@ -5,7 +5,9 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import org.hibernate.annotations.Generated;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.generator.EventType;
+import org.hibernate.type.SqlTypes;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -45,6 +47,14 @@ public class MealItemEntity {
 
 	@Column(name = "display_name")
 	private String displayName;
+
+	/**
+	 * backlog/121 — RECIPE items only: per-ingredient quantity overrides, pre-serialized JSON of the
+	 * generated MealItemIngredientOverride list (same pattern as HikeRouteEntity.daysJson); null = none.
+	 */
+	@JdbcTypeCode(SqlTypes.JSON)
+	@Column(name = "ingredient_overrides")
+	private String ingredientOverridesJson;
 
 	@Column(name = "calories_kcal")
 	private BigDecimal caloriesKcal;
@@ -134,6 +144,14 @@ public class MealItemEntity {
 	public void setQuantity(BigDecimal amount, String unit) {
 		this.quantityAmount = amount;
 		this.quantityUnit = unit;
+	}
+
+	public String getIngredientOverridesJson() {
+		return ingredientOverridesJson;
+	}
+
+	public void setIngredientOverridesJson(String ingredientOverridesJson) {
+		this.ingredientOverridesJson = ingredientOverridesJson;
 	}
 
 	public String getDisplayName() {

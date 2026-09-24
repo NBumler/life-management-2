@@ -42,3 +42,30 @@
 .effective-preview__warn {
   color: var(--ion-color-warning);
 }
+
+// backlog/121 — per-meal recipe ingredient overrides
+.ingredients {
+  margin-top: 12px;
+}
+
+.ingredients__diverted,
+.ingredients__hint {
+  display: block;
+  padding-inline: 12px;
+  font-size: 0.85rem;
+}
+
+.ingredient__body {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding-block: 6px;
+}
+
+.ingredient__name {
+  font-weight: 600;
+}
+
+.ingredient__meta {
+  display: block;
+  font-size: 0.8rem;
+}
