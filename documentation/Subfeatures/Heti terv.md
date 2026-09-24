@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-24
-verifikalt_commit: 2141660
+verifikalt_commit: 8079588
 ---
 
 # Heti terv
@@ -53,7 +53,7 @@ Fejlesztési sorrend: [[Gyakorlat]] → [[Edzésnapló]] → **Heti terv**.
 | `exerciseName` / `exerciseCategory` / `exerciseKind` | Snapshot a szerkesztéskor (pickerből) |
 | `orderIndex` | Egész |
 | `supersetGroup` | Opcionális; ugyanaz a szabály mint az [[Edzésnapló]]ban |
-| `targetSets` | Cél szettek listája: `setType`, cél `reps` / `weightKg` / `holdTimeSeconds` / `edgeSizeMm` / `distanceMeters` / `restTimeSeconds` — a `exerciseKind` szerint releváns mezők |
+| `targetSets` | Cél szettek listája: `setType`, cél `reps` / `weightKg` / `holdTimeSeconds` / `edgeSizeMm` / `distanceMeters` / `restTimeSeconds` — a `exerciseKind` szerint releváns mezők. Az ismétlésszám **tartomány** is lehet (`backlog/125`): `reps` = alsó határ / egyetlen cél, nullable `repsMax` = felső határ (`null` = nem tartomány; a szerver `repsMax < reps` vagy `reps` nélküli `repsMax` esetén 400 `VALIDATION`). |
 
 Indításkor az [[Edzésnapló]] átmásolja ezeket session entry / set előtöltésnek; a session `planId = WorkoutPlan.id`.
 
@@ -73,7 +73,7 @@ Indításkor az [[Edzésnapló]] átmásolja ezeket session entry / set előtöl
 
 #### Indítás és adherence
 
-- **„Edzés indítása a tervből”:** a slot / sablon `WorkoutPlan`-jából új `WorkoutSession`; gyakorlatok + cél szettek előtöltve; `planId` = sablon ID. Eltérés szabad.
+- **„Edzés indítása a tervből”:** a slot / sablon `WorkoutPlan`-jából új `WorkoutSession`; gyakorlatok + cél szettek előtöltve; `planId` = sablon ID. Eltérés szabad. Tartományos cél-ismétlésnél a session szett `reps`-e a határok átlaga **felfelé kerekítve** (`8–12 → 10`, `8–11 → 10`), a tartomány pedig „cél: 8–11” segédszövegként látszik az ismétlés-mező alatt.
 - **Teljesítve (adherence):** az adott héten létezik nem törölt `WorkoutSession`, ahol `planId` = a slot sablon ID-ja **és** `date` az adott `weekStartDate` hetébe esik. Nincs tartalmi egyezés-vizsgálat.
 - Egy sablon **többször** is teljesíthető egy héten (több session ugyanazzal a `planId`-del); a jelvényhez elég ≥1.
 
@@ -81,7 +81,7 @@ CRUD: sablon lista/szerkesztő; heti dashboard slot szerkesztés; soft delete sa
 
 ### UI/UX elvárások
 
-- Sablonok lista + nested gyakorlat/cél-szett szerkesztő ([[Gyakorlat]] picker). A cél-szett sorok elrendezése az [[Edzésnapló]]-val közös (keskeny sorszám-gutter, tördelő mezők — `backlog/124`).
+- Sablonok lista + nested gyakorlat/cél-szett szerkesztő ([[Gyakorlat]] picker). Az ismétlésszám mező szöveges (`inputmode="tel"` — számbillentyűzet kötőjellel): `N` vagy `N-M` (szóköz, en-dash tűrve; `N-N` egyetlen értékké egyszerűsödik); értelmezhetetlen vagy fordított tartománynál inline hiba és a mentés blokkolva. A parse / megjelenítés mezőtől független (`shared/target-range.ts`), hogy később más cél-mezők is kaphassanak tartományt. A cél-szett sorok elrendezése az [[Edzésnapló]]-val közös (keskeny sorszám-gutter, tördelő mezők — `backlog/124`).
 - Sablonok lista szűrő: **Aktív** (alapértelmezett) / Inaktív / Mind; soronkénti aktív/inaktív kapcsoló (nincs szükség edit módba lépésre); opcionális `goalLabel` szerinti csoport-fejléc a listában.
 - Heti dashboard slot kiosztás pickere és az [[Edzésnapló]] „Terv indítása” gyorsindítás listája csak aktív sablonokat kínál fel, `goalLabel` szerint csoportosítva, ha van címke.
 - Heti dashboard: 7 napos nézet; naphoz sablon rendelés; „Teljesítve” jelvény adherence szerint; CTA: Edzés indítása.

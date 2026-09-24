@@ -14,6 +14,11 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-24 — #125** Edzés-sablon ismétlésszám tartományként ("8-12"): szöveges bevitel parse-olva,
+  számként tárolt alsó (`reps`) / felső (`repsMax`) határ; edzés indításakor a felfelé kerekített
+  átlag töltődik, a tartomány célként látszik. Mezőtől független `shared/target-range.ts`. V46 +
+  `SCHEMA_V43`, outbox v12. — érintett: [[Heti terv]], [[Edzésnapló]]; kód: `workout` (backend),
+  `pages/workout/{plan,log}`, `shared`.
 - **2026-09-24 — #119** Mászó session időjárás többszörös választással: 10 atomi címke
   (meleg/mérsékelt/hideg/száraz/párás/szeles/eső/vizes szikla/napos/árnyékos), bármely kombináció,
   toggle-chipekkel; régi értékek migrálva (WET → RAIN). V45 + `SCHEMA_V42`, outbox v11 migrációs

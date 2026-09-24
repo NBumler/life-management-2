@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-24
-verifikalt_commit: 2141660
+verifikalt_commit: 8079588
 ---
 
 # Edzésnapló
@@ -141,7 +141,7 @@ PR típusok (badge a szett mellett): számított **1RM** megdöntés; **max súl
 
 #### Kapcsolat [[Heti terv]]
 
-- „Edzés indítása a tervből”: új session a `WorkoutPlan` sablonból; előtöltés (`rowsFromPlan`); `planId = WorkoutPlan.id`. Az előtöltő logika kész; belépője jelenleg a [[Heti terv]] heti dashboard nap-`START` gombja (`?planId=`). Az Edzésnapló dashboardon nincs önálló „Terv indítása" gyorsindító (aktív sablonok listája) — tervezett: `backlog/054-edzesnaplo-dashboard-terv-inditasa-gyorsindito-aktiv-sablonok-li.md`.
+- „Edzés indítása a tervből”: új session a `WorkoutPlan` sablonból; előtöltés (`rowsFromPlan`); `planId = WorkoutPlan.id`. Tartományos cél-ismétlés (`8–12`, [[Heti terv]]) a határok átlagával, felfelé kerekítve töltődik; a tartomány display-only `repsTarget`-ként a helyi draftban is megmarad és „cél: …” segédszövegként látszik (a session szettjén nincs tartomány-mező). Az előtöltő logika kész; belépője jelenleg a [[Heti terv]] heti dashboard nap-`START` gombja (`?planId=`). Az Edzésnapló dashboardon nincs önálló „Terv indítása" gyorsindító (aktív sablonok listája) — tervezett: `backlog/054-edzesnaplo-dashboard-terv-inditasa-gyorsindito-aktiv-sablonok-li.md`.
 - Eltérés szabad (nincs hiba); a napló a valóságot rögzíti.
 - **Adherence:** adott héten van-e session ugyanezzel a `planId`-del (részletek: [[Heti terv]]).
 - **Ad-hoc** terv nélkül: támogatott.
