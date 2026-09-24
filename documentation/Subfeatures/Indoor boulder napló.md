@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-24
-verifikalt_commit: 2141660
+verifikalt_commit: 3aee8a9
 ---
 
 # Indoor boulder napló
@@ -55,6 +55,7 @@ CRUD: nested session mentés; soft delete; draft élő sessionhez.
 
 ### UI/UX elvárások
 
+- „Új kísérlet" gomb a lista tetején és (≥1 kísérletnél) alján is, görgetés az új kártyához — [[Mászónapló]] `### UI/UX elvárások`.
 - Flow: Hub → Indoor Boulder csempe → Active session (vagy utólagos) → kísérlet hozzáadás (szín chip / parser) → pipa → Befejezés.
 - Szín-sáv **chip-sor** a kiválasztott terem élő sávjaiból (nehézség szerint; chipenként sáv-színű pötty + név + fokozat-tartomány); koppintás választ, a kiválasztott chip újrakoppintása törli. Színsávos teremben a szöveges grade másodlagos: „vagy fokozat megadása” gomb mögött van (meglévő, grade-es kísérletnél nyitva); sáv nélküli teremben a grade-mező közvetlenül látszik.
 - Sikeres kísérletnél a **Stílus** választó mellett súgó (ⓘ) gomb (`app-help-button`) — onsight / flash / redpoint magyarázat; részletek: [[Mászónapló]] „Kísérlet stílus súgó”. A [[Mászónapló]] `ascentStyle` korábbi-megmászás figyelmeztetése **indoor bouldernél nincs**: a kísérlet csak `colorBandId` szín-sávra linkel, ami nem azonosít konkrét problémát, így nincs mihez hasonlítani.

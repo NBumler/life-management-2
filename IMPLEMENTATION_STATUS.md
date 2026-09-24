@@ -14,6 +14,9 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-24 — #120** „Új kísérlet" gomb a kísérletlista alján is (≥1 kísérletnél), hozzáadás
+  után görgetés az új kártyához — mind a 4 mászó kontextus-naplóban. — érintett: [[Mászónapló]] + a 4
+  napló-spec; kód: `pages/workout/climbing/naplo`.
 - **2026-09-24 — #123** Indoor boulder színsáv chip-sor. A jelentett „nem választható szín” weben nem
   reprodukálódott (a legördülő megjelent, csak könnyen átnézhető volt); a spec szerinti chip-sor
   váltotta (sáv-színű pötty + tartomány, újrakoppintással törölhető), színsávos teremben a szöveges

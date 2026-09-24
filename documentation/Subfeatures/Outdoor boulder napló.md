@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-09
-verifikalt_commit: 05094a4
+verifikalva: 2026-09-24
+verifikalt_commit: 3aee8a9
 ---
 
 # Outdoor boulder napló
@@ -34,6 +34,7 @@ Kültéri boulder session + kísérletek. Dashboard: **Outdoor Boulder**.
 
 ### UI/UX elvárások
 
+- „Új kísérlet" gomb a lista tetején és (≥1 kísérletnél) alján is, görgetés az új kártyához — [[Mászónapló]] `### UI/UX elvárások`.
 Hub → Outdoor Boulder; session szintű `Crag` picker; minden kísérlet-kártyán **szektor select** (a `Crag` szektorai közül, az előző kísérletéből előtöltve), majd — ha a szektorban van `BoulderProblem` — probléma select; grade parser; időjárás chip. Sikeres kísérletnél a Stílus választó mellett súgó (ⓘ) gomb (`app-help-button` — [[Mászónapló]]). Ha sikeres `ONSIGHT` / `FLASH` egy olyan `BoulderProblem`-re, amit a user korábbi dátumú sessionben már megmászott, a stílus alatt nem blokkoló figyelmeztetés jelenik meg a legutóbbi megmászás dátumával (a mentés engedélyezett) — részletek: [[Mászónapló]] `ascentStyle`. Admin → [[Outdoor boulder admin]].
 
 ### Megjegyzések

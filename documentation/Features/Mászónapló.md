@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-09
-verifikalt_commit: b5d1556
+verifikalva: 2026-09-24
+verifikalt_commit: 3aee8a9
 ---
 
 # Mászónapló
@@ -171,6 +171,7 @@ Minden mászó entitás: soft delete ([[Backend-offline first]]). Nested session
 - Kísérlet-jegyzet: egyetlen **többsoros, auto-grow** mező. Sikernél „Jegyzet"; sikertelennél „Jegyzet / hol akadt el?" címkével + promttal (nincs külön „Hol akadt el" input).
 - „Kísérlet hozzáadása" út / probléma **select**: a `Route` / `BoulderProblem` / `IndoorRoute` opciók a `topoNumber` (topó-sorszám) szerint, **természetes alfanumerikus** rendezésben (`2` < `5/a` < `5/b` < `10`); sorszám nélküli utak a lista végén, név szerint. A meglévő sorszám az opció-címke elé kerül (`12 · Sárga áthajlás (6b)`). Kliensoldali rendezés (`shared/natural-sort.ts`); részletek: [[Outdoor köteles admin]] / [[Outdoor boulder admin]] / [[Indoor köteles admin]].
 - Minden kísérlet **önálló kártya** (`.attempt-card`, mind a 4 kontextus napló-formban): térköz + keret + lekerekítés, a bal élen **színsáv** a sikerállapothoz (zöld = sikeres, piros = sikertelen), kiemelt kártyafejléc („N. kísérlet" + siker-toggle).
+- **„Új kísérlet" gomb** a kísérlet-szakasz fejlécében és — ha már van legalább 1 kísérlet — **a lista alján is** (mind a 4 kontextus); hozzáadás után a nézet az új kártyához görget (`naplo/scroll-to-last-attempt.ts`).
 - **Fekvés (`aspect`)** — a szektor / út égtáj-orientációja **8 irányú égtáj-enum** (`N`/`NE`/`E`/`SE`/`S`/`SW`/`W`/`NW`; üres = ismeretlen), **vizuális választóval** (`app-aspect-picker`): négyzet kerületén a 8 irány, É felül, egy tap; a kijelölt irányra újra tap → törlés. Felmászókönyv-fokból (iránytű) a `degreesToAspect` binnel (`shared/aspect.ts`, fixture: `shared/fixtures/aspect-degrees.json`, backend-paritás: `hu.bumler.lm2.common.AspectDirection`). Használat: **kizárólag a törzsadaton** — [[Outdoor boulder admin]] `Sector`, [[Outdoor köteles admin]] `Route`. A napló-form nem szerkeszti (a session-szintű `aspect` / `rockType` felülírás megszűnt — `backlog/084`); ha megjeleníti, a kísérlet szektorából / útjából / sziklájából származtatja.
 - Per-kontextus session lista (a közös, szűrő-tabos listát a `backlog/022-...` jegy fedi).
 

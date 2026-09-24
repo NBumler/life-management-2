@@ -1,7 +1,7 @@
 ---
 id: 120
 type: change-request
-status: ready
+status: done
 title: Mászó session — „Új kísérlet" gomb a kísérletlista alján is
 specs:
   - "[[Mászónapló]]"
@@ -11,7 +11,7 @@ specs:
   - "[[Outdoor köteles napló]]"
 flag:
 created: 2026-09-24
-closed:
+closed: 2026-09-24
 ---
 
 # 120 — Mászó session — „Új kísérlet" gomb a kísérletlista alján is
@@ -29,13 +29,13 @@ fejlécében van, a lista felett.
 
 ## Elfogadási kritériumok
 
-- [ ] Mind a 4 kontextusban a kísérletlista **utolsó kártyája után** is megjelenik egy „Új kísérlet"
+- [x] Mind a 4 kontextusban a kísérletlista **utolsó kártyája után** is megjelenik egy „Új kísérlet"
       gomb (ugyanaz az `addAttempt()` akció); a felső gomb megmarad.
-- [ ] Az alsó gomb csak akkor jelenik meg, ha már van legalább 1 kísérlet (üres listánál a felső
+- [x] Az alsó gomb csak akkor jelenik meg, ha már van legalább 1 kísérlet (üres listánál a felső
       elég — duplikált gomb ne legyen egymás alatt).
-- [ ] Új kísérlet hozzáadása után a nézet az új kártyához görget (alsó gombnál ez természetes,
+- [x] Új kísérlet hozzáadása után a nézet az új kártyához görget (alsó gombnál ez természetes,
       felsőnél javasolt).
-- [ ] Spec-tesztek mind a 4 oldalra; zöld lint + test:ci + build.
+- [x] Spec-tesztek mind a 4 oldalra; zöld lint + test:ci + build.
 
 ## Terv / döntési napló
 
@@ -43,6 +43,6 @@ _Nincs. Kapcsolódik: #122-ben tervezett élő session felület, amely saját gy
 
 ## Lezáráskor (on-done)
 
-- Frissített specek: [[Mászónapló]] (`### UI/UX elvárások`), a 4 napló-spec
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — <mit>
-- Kód: <fő package-ek / fájlok>
+- Frissített specek: [[Mászónapló]], a 4 napló-spec
+- `IMPLEMENTATION_STATUS.md` sor: 2026-09-24 — #120
+- Kód: `pages/workout/climbing/naplo/*-session-edit.page.*`, `naplo/scroll-to-last-attempt.ts`
