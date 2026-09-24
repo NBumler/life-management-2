@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-24
-verifikalt_commit: d6e22b2
+verifikalt_commit: c3d8708
 ---
 
 # Mászónapló
@@ -30,7 +30,15 @@ Egy naplóegység = egy `ClimbingSession` + alatta `AscentAttempt` lista. A kal�
 
 Kontextus váltás **aktív session közben tilos** — lezárás / mentés, majd új session másik belépőből.
 
-„Aktív session" = **kliens-lokális draft állapot**, **nem** perzisztált `ClimbingSession` mező; a `ClimbingSession` entitásnak nincs saját `isActive` / státusz mezője. A draft jelenleg csak memóriában él — folyamatban lévő session app-kill után elveszik; a draft-perzisztálás / helyreállítás tervezett: `backlog/021-climbing-folyamatban-levo-session-draft-perzisztalasa-app-kill-t.md`.
+„Aktív session" = **kliens-lokális draft állapot**, **nem** perzisztált `ClimbingSession` mező; a `ClimbingSession` entitásnak nincs saját `isActive` / státusz mezője.
+
+#### Élő session (`backlog/122`)
+
+- **Indítás:** mind a 4 kontextus-lista tetején „Session indítása" gomb (az utólagos „Új session" megmarad). Egyszerre **legfeljebb 1** élő session: ha egy másik kontextusban fut, a gomb tiltott és jelzi, melyikben. A hub és a kontextus-listák feltűnő **„Folyamatban: <kontextus> <eltelt idő>"** sávot mutatnak (`app-climbing-live-banner`), ami az élő felületre visz.
+- **Élő felület** = ugyanaz a kontextus-napló szerkesztő a `<kontextus>/live` útvonalon: fent stopper + „Session vége" / „Elvetés" sáv (`app-climbing-live-bar`), alatta a teljes form és a kísérletkártyák (mind szerkeszthető / törölhető — félrenyomás javítása). Beltéri bouldernél gyors-rögzítő rács ([[Indoor boulder napló]]).
+- **Perzisztálás:** a draft (`ClimbingLiveDraft`: kontextus, kezdés, esetleges befejezés, a form teljes pillanatképe) `@capacitor/preferences`-ben él (weben localStorage) — másodpercenként, az oldal elrejtésekor és minden gyors-koppintás után mentve (`ClimbingLiveController` + `ClimbingLiveSessionService`), így app-kill / újraindítás után a hub-sávról vagy az értesítésről visszanavigálva helyreáll. A draft **soha nem kerül outboxba**.
+- **Session vége → összegző:** ugyanazon az oldalon összegző mód: szerkeszthető **kezdés** és **befejezés** (alapértéke a gomb megnyomásának ideje; a befejezés nem lehet a kezdés előtt), az időtartam ebből számolódik, a session minden mezője és minden kísérlete szerkeszthető; „Vissza az élő sessionhöz" visszavált. **„Jóváhagyás és mentés"** → a meglévő nested mentés (helyi tár + outbox) `startedAt` / `endedAt`-tal és `totalSessionDurationMinutes = kerekített (vége − kezdés)` perccel, majd a draft és az értesítés törlődik. **„Elvetés"** megerősítéssel: a draft törlődik, semmi nem mentődik.
+- **Tartós értesítés** (natív): indításkor el nem húzható (Android `ongoing`) értesítés a kontextussal és a kezdés idejével; koppintásra az élő felület nyílik ([[Értesítések]]). Web buildben nincs értesítés, de az élő session ugyanúgy működik; engedély hiányában is.
 
 #### Subfeature fa
 
@@ -46,7 +54,8 @@ Kontextus váltás **aktív session közben tilos** — lezárás / mentés, maj
 | `date` | Naptári dátum (kliens TZ) |
 | `locationType` | `INDOOR` \| `OUTDOOR` — **dashboard discriminator**, nem form-választó |
 | `discipline` | `BOULDER` \| `ROPE` — **dashboard discriminator** |
-| `totalSessionDurationMinutes` | Egész `> 0` ha van; hiányzik → fallback (lásd Kalória) |
+| `totalSessionDurationMinutes` | Egész `> 0` ha van; hiányzik → fallback (lásd Kalória). Élő sessionnél a (befejezés − kezdés) kerekített perce |
+| `startedAt` / `endedAt` | Opcionális `timestamptz` (`backlog/122`): élő session kezdése / befejezése (az összegzőn szerkeszthető); utólagos rögzítésnél `null`. `endedAt < startedAt` → 400 `VALIDATION` (DB CHECK is) |
 | `pumpRating` | Opcionális 1–5; kalória módosító |
 | `headspaceRating` | Opcionális 1–5; rögzítve, de jelenleg egyetlen statisztikai nézet sem olvassa — megjelenítés tervezett: `backlog/025-climbing-headspacerating-megjelenitese-valamelyik-statisztikaban.md` |
 | `notes` | Opcionális |
@@ -71,6 +80,7 @@ Egy napon **több** session megengedett (akár ugyanarra a kontextusra is). Egy 
 | `safetyStyle` | Csak kötél: `TOPROPE` \| `LEAD` \| `TRAD` (indoor: TRAD rejtve) |
 | `attemptCount` | Opcionális egész `≥ 1` — **próbák (gólok) száma ebben a sessionben ezen az úton**, kontextustól függetlenül (pl. redpoint-próbák egy köteles úton). A napló-form címkéje: „Próbák (ebben a sessionben)"; új kísérlet-sor felvételekor a mező **alapból `1`** (a leggyakoribb eset egy próba), így ha a user nem módosítja, `1` mentődik. Tájékoztató mező: a Volumen-, a sikerarány- és a duration-fallback képlet is **kísérlet-soronként** (nem `Σ attemptCount`) számol, egyikük sem szoroz vele; a statisztikai nézetek megjeleníthetik. |
 | `colorBandId` / `routeId` / `boulderProblemId` | Opcionális FK + **snapshot** mezők (gyerek specek) |
+| `bandModifier` | Beltéri boulder, opcionális (`backlog/122`): `MINUS` \| `NEUTRAL` \| `PLUS` — a színsáv melyik részén volt a probléma; az `absoluteDifficultyIndex` ebből: `MINUS →` a sáv alsó, `NEUTRAL` / `null →` floorolt közép, `PLUS →` felső indexe (`bandModifierIndex`). Független a sáv admin-oldali `variant`-jától |
 | `sectorId` / `sectorName` | **Kültéri**, opcionális FK + snapshot: a **kísérlet szektora** (`backlog/084`). Egy alkalom (session) több szektort is érinthet, ezért a szektor kísérletenként választható — a `Crag` marad session-szintű. Új kísérlet-sor felvételekor a szektor **előtöltődik az előző kísérletéből** (első sornál az utolsó ilyen kontextusú session utolsó kísérletének szektorából); a `Crag` váltása minden sor szektorát törli. Indoor kontextusban `null`. |
 | `lengthInMeters` | Kötél; opcionális. Öröklés: indoor a terem falmagasságából; outdoor `Route.lengthInMeters` → a kísérlet szektorának `Sector.defaultLengthInMeters`-e (`backlog/088`) → kézi. Provenance-jelölt (`lengthAutoFilled`): út- vagy szektorváltáskor az örökölt érték újratöltődik, kézi felülírásig. |
 | `notes` | Opcionális szabad szöveg, többsoros (auto-grow). **Nincs külön `failurePoint` mező** — sikertelen kísérletnél ugyanez a `notes` mező kapja a „Jegyzet / hol akadt el?" címkét és a „Hol akadt el? Mi ment / nem ment?" promptot. A régi `failurePoint` szöveg a `V31` migrációval (backend) + a helyi `SCHEMA_V30` upgrade-del (natív) a `notes`-ba olvadt. |
@@ -157,7 +167,7 @@ Max grade kontextusonként (a legnehezebb **sikeres** kísérlet); összes Volum
 
 #### Soft delete / offline
 
-Minden mászó entitás: soft delete ([[Backend-offline first]]). Nested session + attempts **egy** POST/PUT. Élő pipálás + utólagos mentés; a draft-perzisztálás (app-kill utáni helyreállítás) tervezett — `backlog/021-climbing-folyamatban-levo-session-draft-perzisztalasa-app-kill-t.md`.
+Minden mászó entitás: soft delete ([[Backend-offline first]]). Nested session + attempts **egy** POST/PUT. Élő session (perzisztált draft, app-kill után helyreáll — `backlog/122`, lásd fent) + utólagos mentés.
 
 **Nincs:** gear wear / kötél-leltár; mikro pihenő-stopper; térképnézet / fotó (a `crag.latitude` / `longitude` oszlop létezik, a térkép-UI nincs).
 
@@ -196,11 +206,11 @@ Nincs nyitott kérdés.
 - Hub dashboard; per-kontextus session listák; 4 kontextus route → gyerek napló screenek.
 - Shared grade parser komponens (`shared/grade-input/`); climbing calorie + volume pure TS (`shared/climbing/` + `pages/workout/climbing/climbing-metrics.ts` / `climbing-stats.ts`).
 - Mászótárs combobox: `shared/partner-combobox/` (presentational, nincs injektált repo); a javaslatlista a `ClimbingSessionRepository.partnerSuggestions` derived signal (élő sessionök `climbingPartners` értékei, gyakoriság + recency szerint).
-- Draft: jelenleg csak in-memory form-state; perzisztálás tervezett (`backlog/021-...`).
+- Élő session: `core/data/climbing-live-session.service.ts` (draft + tartós értesítés), `naplo/climbing-live-controller.ts` (stopper, autosave, összegző), `naplo/climbing-live-bar.component.ts`, `climbing-live-banner.component.ts`; a 4 szerkesztő a `<ctx>/live` útvonalon (route data `live: true`).
 
 #### Backend-offline
 
-Olvasás/írás helyi store; mutációk outbox + kliens UUID; soft delete synchelhető; draft helyi. A mászótárs-javaslatok forrása a helyi `climbing_session` tábla, így a combobox Full-offline is teljes értékű. Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
+Olvasás/írás helyi store; mutációk outbox + kliens UUID; soft delete synchelhető; az élő session draftja helyi `@capacitor/preferences` blob (sosem outbox), csak a jóváhagyott session íródik a helyi tárba + outboxba — Full-offline is végigvihető. `backlog/122`: `startedAt` / `endedAt` / `bandModifier` új nullable mezők → outbox payload-séma v13 → v14 (identity), natív `SCHEMA_V45`. A mászótárs-javaslatok forrása a helyi `climbing_session` tábla, így a combobox Full-offline is teljes értékű. Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
 
 A `#77` (`AscentAttempt.failurePoint` → `notes` beolvasztás) egy még nem frissített telefonon beragaszthatott egy `ClimbingSession` POST-ot (a payload a törölt mezőt hordozta). `backlog/080`: `OUTBOX_PAYLOAD_SCHEMA_VERSION` v2 → v3 `ClimbingSession:2` migrátor-lépéssel kiszedi a `failurePoint`-ot minden `attempt`-ből (nem üres szöveget a `#77` szabálya szerint a `notes`-ba forgatva), a backend pedig az ismeretlen mezőt már úgyis eldobná (`FAIL_ON_UNKNOWN_PROPERTIES` off) — lásd [[Backend-offline first]] §7.
 

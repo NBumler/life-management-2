@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-07
-verifikalt_commit: 2de9087
+verifikalva: 2026-09-24
+verifikalt_commit: c3d8708
 ---
 
 # Értesítések
@@ -23,6 +23,7 @@ Lokális (készüléken ütemezett) értesítések a fontos küszöbökről. Jel
 
 - **Lokális értesítés** (Capacitor Local Notifications / platform ekvivalens): az app / OS ütemező a készüléken tüzel, saját backend nélkül.
 - Az OS értesítési engedélyt egy típus **bekapcsolásakor**, illetve a Beállítások lapon lévő „Engedélyezés" sávból kéri az app — nincs proaktív prompt az első app-indításkor (minden típus alapból be van kapcsolva). Proaktív első-indításkori kérés: `backlog/029-ertesitesek-proaktiv-os-engedelykeres-elso-inditaskor.md`.
+- **Tartós (ongoing) értesítés — élő mászó session** (`backlog/122`): a [[Mászónapló]] „Session indítása" egy el nem húzható Android értesítést tesz ki (kontextus + kezdés ideje, fix id `424242`, a `lm2-default` csatornán), ami a session jóváhagyásáig / elvetéséig marad; koppintásra a meglévő `extra.route` tap-kezelő az élő felületre navigál. Nem része az ütemező registry-jének (a reconcile nem nyúl hozzá), típus-kapcsoló nincs rá; engedélyt csak akkor kér, ha még nem döntött róla a user, és engedély nélkül is fut az élő session.
 - **Remote push** (FCM/APNs, szerver küldi, ha az app zárva van napok óta is): nincs implementálva — tervezett: `backlog/005-remote-push-fcm-apns.md` (lásd Megjegyzések).
 
 #### Beállítások UI

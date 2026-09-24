@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-24
-verifikalt_commit: 3aee8a9
+verifikalt_commit: c3d8708
 ---
 
 # Indoor köteles napló
@@ -37,6 +37,7 @@ Beltéri köteles session + kísérletek. Dashboard: **Indoor Kötél**. Közös
 
 ### UI/UX elvárások
 
+- **Élő session** (`backlog/122`): „Session indítása" a listán → ugyanez a form élő módban (stopper, autosave, a meglévő „Új kísérlet" felvevővel), „Session vége" → szerkeszthető összegző → jóváhagyás — [[Mászónapló]].
 - „Új kísérlet" gomb a lista tetején és (≥1 kísérletnél) alján is, görgetés az új kártyához — [[Mászónapló]] `### UI/UX elvárások`.
 Hub → Indoor Kötél csempe → session form (safety chip-ek, grade parser, magasság). Sikeres kísérletnél a Stílus választó mellett súgó (ⓘ) gomb (`app-help-button` — [[Mászónapló]]). Ha sikeres `ONSIGHT` / `FLASH` egy olyan `IndoorRoute`-ra, amit a user korábbi dátumú sessionben már megmászott, a stílus alatt nem blokkoló figyelmeztetés jelenik meg a legutóbbi megmászás dátumával (a mentés engedélyezett) — részletek: [[Mászónapló]] `ascentStyle`. Admin link → [[Indoor köteles admin]].
 

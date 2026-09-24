@@ -14,6 +14,13 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-24 — #122 (+ #21)** Élő mászó session: „Session indítása" a kontextus-listákon (egyszerre egy),
+  hub-/lista-sáv „Folyamatban: …", élő felület = a meglévő 4 napló-szerkesztő `<ctx>/live` útvonalon
+  (stopper, perzisztált draft — app-kill után helyreáll, így a #21 is lezárva), „Session vége" →
+  szerkeszthető összegző (kezdés / befejezés) → jóváhagyás; natív tartós értesítés deep linkkel; beltéri
+  boulder `− / sáv / +` gyors-rögzítő rács, új `AscentAttempt.bandModifier`. V48 + `SCHEMA_V45`, outbox
+  v14. — érintett: [[Mászónapló]], a 4 napló-spec, [[Értesítések]]; kód: `climbing` (backend),
+  `core/data/climbing-live-session.service.ts`, `pages/workout/climbing`.
 - **2026-09-24 — #121** Recept forrású étkezés hozzávalónkénti mennyiség-felülírása: a recept
   változatlan, a beírt (ténylegesen felhasznált) mennyiséget a `servings` is szorozza; makrók, ár és
   készletlevonás ugyanabból a `effectiveRecipeIngredients`-ből. `MealItem.ingredientOverrides`

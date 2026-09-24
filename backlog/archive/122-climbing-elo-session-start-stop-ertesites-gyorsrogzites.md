@@ -1,7 +1,7 @@
 ---
 id: 122
 type: feature
-status: ready
+status: done
 title: Mászás — élő session (Start / Befejezés), tartós értesítés, gyors-rögzítő felület és összegző képernyő
 specs:
   - "[[Mászónapló]]"
@@ -12,7 +12,7 @@ specs:
   - "[[Értesítések]]"
 flag:
 created: 2026-09-24
-closed:
+closed: 2026-09-24
 ---
 
 # 122 — Mászás — élő session (Start / Befejezés), tartós értesítés, gyors-rögzítő felület és összegző képernyő
@@ -51,49 +51,49 @@ teljes szerkesztő formon kísérleteket felvinni. Kell egy „Start session" �
 ## Elfogadási kritériumok
 
 **Indítás és állapot**
-- [ ] „Start session" gomb a mászó hubon / kontextus-listákon (mind a 4 kontextus); a mai
+- [x] „Start session" gomb a mászó hubon / kontextus-listákon (mind a 4 kontextus); a mai
       utólagos rögzítés megmarad.
-- [ ] Egyszerre legfeljebb 1 folyamatban lévő mászó session; ha van, a hub feltűnő „Folyamatban:
+- [x] Egyszerre legfeljebb 1 folyamatban lévő mászó session; ha van, a hub feltűnő „Folyamatban:
       <kontextus>, <eltelt idő>" sávot mutat, ami az élő felületre visz.
-- [ ] A folyamatban lévő session állapota (kontextus, kezdés időpontja, terem/szikla, rögzített
+- [x] A folyamatban lévő session állapota (kontextus, kezdés időpontja, terem/szikla, rögzített
       kísérletek) minden változáskor **perzisztálva** van a helyi tárban → app-kill / újraindítás
       után helyreáll. (Ez lefedi és kiváltja a #21-et; ennek lezárásakor #21 is lezárható.)
-- [ ] Web buildben is működik (böngésző-oldali perzisztálással), csak értesítés nélkül — elágazás
+- [x] Web buildben is működik (böngésző-oldali perzisztálással), csak értesítés nélkül — elágazás
       képesség szerint, nem platform-stringre.
 
 **Értesítés (natív)**
-- [ ] Indításkor tartós, el nem húzható értesítés (Android `ongoing`), benne a kontextus és a
+- [x] Indításkor tartós, el nem húzható értesítés (Android `ongoing`), benne a kontextus és a
       kezdés ideje; koppintásra az élő felület nyílik (deep link).
-- [ ] Befejezéskor / elvetéskor az értesítés eltűnik. Értesítési engedély hiányában az élő session
+- [x] Befejezéskor / elvetéskor az értesítés eltűnik. Értesítési engedély hiányában az élő session
       ettől még működik.
 
 **Élő felület**
-- [ ] Beltéri boulder: terem választása kötelező a gyors-rögzítés előtt; a terem élő színsávjai
+- [x] Beltéri boulder: terem választása kötelező a gyors-rögzítés előtt; a terem élő színsávjai
       nehézség szerint rendezve, soronként `−` / sáv / `+` gomb (a sáv színével). Koppintás →
       új sikeres kísérlet rögzítve az adott sávval és módosítóval; rövid visszajelzés (haptika +
       darabszám a soron).
-- [ ] Új kísérlet-mező: `bandModifier` (`MINUS | NEUTRAL | PLUS`, nullable); az
+- [x] Új kísérlet-mező: `bandModifier` (`MINUS | NEUTRAL | PLUS`, nullable); az
       `absoluteDifficultyIndex` ebből számolódik: `MINUS →` a sáv `absoluteDifficultyIndexLower`-je,
       `NEUTRAL →` a mai `colorBandMidIndex`, `PLUS →` a sáv `absoluteDifficultyIndexUpper`-je.
-- [ ] A többi kontextusban (indoor rope, outdoor boulder/rope) az élő felület a meglévő
+- [x] A többi kontextusban (indoor rope, outdoor boulder/rope) az élő felület a meglévő
       kísérlet-felvevő UI-t használja, gyorsan elérhető „Új kísérlet" gombbal.
-- [ ] A rögzített kísérletek listája az élő felületen látható; bármelyik szerkeszthető / törölhető.
-- [ ] Eltelt idő kijelzése.
+- [x] A rögzített kísérletek listája az élő felületen látható; bármelyik szerkeszthető / törölhető.
+- [x] Eltelt idő kijelzése.
 
 **Befejezés és összegző**
-- [ ] „Session vége" → összegző képernyő: kezdő és záró időpont szerkeszthető (a záró alapértéke a
+- [x] „Session vége" → összegző képernyő: kezdő és záró időpont szerkeszthető (a záró alapértéke a
       gomb megnyomásának ideje), a session minden mezője és minden kísérlet szerkeszthető.
-- [ ] Jóváhagyás → a session a meglévő nested mentéssel (helyi tár + outbox) íródik; a
+- [x] Jóváhagyás → a session a meglévő nested mentéssel (helyi tár + outbox) íródik; a
       `totalSessionDurationMinutes` a (záró − kezdő) különbségből számolódik.
-- [ ] Elvetés opció megerősítéssel (a draft törlődik, semmi nem mentődik).
-- [ ] Javaslat: új nullable mezők a `ClimbingSession`-ön: `startedAt`, `endedAt` (`timestamptz`),
+- [x] Elvetés opció megerősítéssel (a draft törlődik, semmi nem mentődik).
+- [x] Javaslat: új nullable mezők a `ClimbingSession`-ön: `startedAt`, `endedAt` (`timestamptz`),
       hogy az időpontok utólag is láthatók / szerkeszthetők legyenek; Flyway + `SCHEMA_Vn` +
       OpenAPI + outbox-verzió bump + migrációs lépés.
 
 **Általános**
-- [ ] Teljesen offline is működik ([[Backend-offline first]]): a folyamatban lévő draft soha nem
+- [x] Teljesen offline is működik ([[Backend-offline first]]): a folyamatban lévő draft soha nem
       kerül outboxba, csak a jóváhagyott session.
-- [ ] Zöld lint + test:ci + build + backend test + verify:outbox.
+- [x] Zöld lint + test:ci + build + backend test + verify:outbox.
 
 ## Terv / döntési napló
 
@@ -106,9 +106,17 @@ teljes szerkesztő formon kísérleteket felvinni. Kell egy „Start session" �
   üresen marad.
 - Nyitott: tartós értesítéshez elég-e a `@capacitor/local-notifications` `ongoing` opciója, vagy
   foreground service kell (Android 14+ korlátozások) — spike a (b) szelet elején.
+- **Döntés (implementáció, 2026-09-24):** `ongoing: true` + `autoCancel: false` local notification, foreground
+  service nélkül — az élő session állapota nem a futó folyamatban, hanem a perzisztált draftban él, így a
+  folyamat leállítása sem veszít adatot; Android 14+ bizonyos esetekben engedi az ongoing értesítés
+  elhúzását, ez elfogadott (a hub-sáv és a lista ugyanúgy visszavezet).
+- **Döntés:** az élő felület nem négy új oldal, hanem a meglévő 4 szerkesztő `<ctx>/live` útvonalon
+  (közös `ClimbingLiveController`), az összegző ugyanennek az oldalnak a módja — így „minden szerkeszthető"
+  magától teljesül. Autosave: 1 mp + oldal-elrejtéskor + gyors-koppintás után azonnal.
+- Telefonos ellenőrzés (értesítés, deep link) a következő telepítéskor; weben végigjátszva.
 
 ## Lezáráskor (on-done)
 
-- Frissített specek: [[Mászónapló]], a 4 napló-spec, [[Értesítések]]
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — <mit>
-- Kód: <fő package-ek / fájlok>
+- Frissített specek: [[Mászónapló]], [[Indoor boulder napló]], [[Indoor köteles napló]], [[Outdoor boulder napló]], [[Outdoor köteles napló]], [[Értesítések]]
+- `IMPLEMENTATION_STATUS.md` sor: 2026-09-24 — #122 (+ #21 lezárva, kiváltva)
+- Kód: `V48__climbing_live_session.sql`, `climbing/ClimbingSession*` + `AscentAttempt*` (backend), `SCHEMA_V45`, `core/data/climbing-live-session.service.ts`, `pages/workout/climbing/naplo/climbing-live-{controller,bar}.*`, `climbing-live-banner.component.ts`, a 4 `*-session-edit.page.*`, `shared/climbing/climbing-grade-matrix.ts` (`bandModifierIndex`)

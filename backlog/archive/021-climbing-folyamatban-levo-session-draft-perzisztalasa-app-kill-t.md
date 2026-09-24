@@ -1,14 +1,14 @@
 ---
 id: 21
 type: feature
-status: backlog
+status: done
 title: Climbing: folyamatban levo session draft perzisztalasa (app-kill tuleles)
 specs:
   - "[[Mászónapló]]"
   - "[[Indoor boulder napló]]"
 flag:
 created: 2026-09-02
-closed:
+closed: 2026-09-24
 ---
 
 # 21 — Climbing: folyamatban levo session draft perzisztalasa (app-kill tuleles)
@@ -25,15 +25,17 @@ Lásd a motivációt + a hivatkozott spec(ek) `### Jelenlegi működés` szakasz
 
 ## Elfogadási kritériumok
 
-- [ ] Az érintett spec(ek) `### Jelenlegi működés` szakasza a leszállított viselkedést írja le.
-- [ ] Ha „Nem scope” blokkból jött: a blokk törölve, helyette a megvalósult működés prózája.
+- [x] Az érintett spec(ek) `### Jelenlegi működés` szakasza a leszállított viselkedést írja le.
+- [x] Ha „Nem scope” blokkból jött: a blokk törölve, helyette a megvalósult működés prózája.
 
 ## Terv / döntési napló
 
-_Nincs._
+**Kiváltva (2026-09-24):** a `backlog/122` élő mászó session a folyamatban lévő session draftját
+`@capacitor/preferences`-ben perzisztálja (1 mp-es + elrejtéskori autosave), app-kill / újraindítás után
+a hub-sávról, a listáról vagy az értesítésről visszanavigálva helyreáll.
 
 ## Lezáráskor (on-done)
 
-- Frissített specek: [[Mászónapló]], [[Indoor boulder napló]]
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — <mit>
-- Kód: <fő package-ek / fájlok>
+- Frissített specek: [[Mászónapló]], [[Indoor boulder napló]] (a #122-vel együtt)
+- `IMPLEMENTATION_STATUS.md` sor: 2026-09-24 — #122 soron belül
+- Kód: lásd `backlog/archive/122-...`

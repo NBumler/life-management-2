@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-24
-verifikalt_commit: d6e22b2
+verifikalt_commit: c3d8708
 ---
 
 # Outdoor köteles napló
@@ -35,6 +35,7 @@ Kültéri köteles session + kísérletek / multi-pitch. Dashboard: **Outdoor K�
 
 ### UI/UX elvárások
 
+- **Élő session** (`backlog/122`): „Session indítása" a listán → ugyanez a form élő módban (stopper, autosave, a meglévő „Új kísérlet" felvevővel), „Session vége" → szerkeszthető összegző → jóváhagyás — [[Mászónapló]].
 - „Új kísérlet" gomb a lista tetején és (≥1 kísérletnél) alján is, görgetés az új kártyához — [[Mászónapló]] `### UI/UX elvárások`.
 Hub → Outdoor Kötél; session szintű `Crag` picker; minden kísérlet-kártyán **szektor select** (a `Crag` szektorai közül, az előző kísérletéből előtöltve), majd — ha a szektorban van `Route` — út select; safety; opcionális pitch szerkesztő (összecsukható). Sikeres kísérletnél a Stílus választó mellett súgó (ⓘ) gomb (`app-help-button` — [[Mászónapló]]). Ha sikeres `ONSIGHT` / `FLASH` egy olyan `Route`-ra, amit a user korábbi dátumú sessionben már megmászott, a stílus alatt nem blokkoló figyelmeztetés jelenik meg a legutóbbi megmászás dátumával (a mentés engedélyezett) — részletek: [[Mászónapló]] `ascentStyle`. Admin → [[Outdoor köteles admin]].
 

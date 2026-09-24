@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-24
-verifikalt_commit: 3aee8a9
+verifikalt_commit: c3d8708
 ---
 
 # Indoor boulder napló
@@ -39,6 +39,7 @@ Közös session modell: [[Mászónapló]] (`locationType=INDOOR`, `discipline=BO
 | Mező | Szabály |
 |---|---|
 | `colorBandId` | Opcionális; ha van → elsődleges gyorsválasztás |
+| `bandModifier` | Opcionális `MINUS` \| `NEUTRAL` \| `PLUS` (`backlog/122`) — a sávon belüli rész; a kártyán `− / = / +` gombokkal állítható, az index `MINUS →` alsó, `PLUS →` felső, egyébként közép ([[Mászónapló]]) |
 | Snapshot | `colorName`, `hexColor`, `gradeRange` szöveg (pl. `6A–6B`). A numerikus index-tartomány (`Lower`/`Upper`) snapshotolása tervezett — `backlog/023-climbing-a-kiserlet-snapshot-tarolja-a-szin-sav-numerikus-index-.md` |
 | `userRawInput` | Opcionális / alternatív: [[Nehézségi szint skálája]] Font/V parser |
 | `absoluteDifficultyIndex` | Szín-sávból: a `[Lower, Upper]` index **lefelé kerekített** közepe (`resolveIndex()` → `colorBandMidIndex`, `floor` — determinisztikus, klienst és szervert egyaránt köti); parser esetén a parsed grade indexe. |
@@ -55,6 +56,7 @@ CRUD: nested session mentés; soft delete; draft élő sessionhez.
 
 ### UI/UX elvárások
 
+- **Élő session gyors-rögzítő rács** (`backlog/122`, csak élő módban): a kiválasztott terem élő színsávjai nehézség szerint, soronként `−` / sáv (színnel + a sessionbeli darabszámmal) / `+` gomb. Egy koppintás = egy **sikeres** kísérlet az adott sávval és módosítóval (stílus üres), rövid haptika. Terem nélkül / sáv nélküli teremnél figyelmeztetés. A rögzített kísérletek alatta kártyaként szerkeszthetők (pl. sikertelenre állítás). Élő / összegző folyamat: [[Mászónapló]].
 - „Új kísérlet" gomb a lista tetején és (≥1 kísérletnél) alján is, görgetés az új kártyához — [[Mászónapló]] `### UI/UX elvárások`.
 - Flow: Hub → Indoor Boulder csempe → Active session (vagy utólagos) → kísérlet hozzáadás (szín chip / parser) → pipa → Befejezés.
 - Szín-sáv **chip-sor** a kiválasztott terem élő sávjaiból (nehézség szerint; chipenként sáv-színű pötty + név + fokozat-tartomány); koppintás választ, a kiválasztott chip újrakoppintása törli. Színsávos teremben a szöveges grade másodlagos: „vagy fokozat megadása” gomb mögött van (meglévő, grade-es kísérletnél nyitva); sáv nélküli teremben a grade-mező közvetlenül látszik.
