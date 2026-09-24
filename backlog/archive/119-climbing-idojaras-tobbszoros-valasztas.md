@@ -1,7 +1,7 @@
 ---
 id: 119
 type: change-request
-status: ready
+status: done
 title: Mászó session — időjárás többszörös választással, bővebb címkekészlettel
 specs:
   - "[[Mászónapló]]"
@@ -9,7 +9,7 @@ specs:
   - "[[Outdoor boulder napló]]"
 flag:
 created: 2026-09-24
-closed:
+closed: 2026-09-24
 ---
 
 # 119 — Mászó session — időjárás többszörös választással, bővebb címkekészlettel
@@ -29,19 +29,19 @@ száraz" vagy „hideg + párás" nem fejezhető ki, és egyszerre csak egy ért
 
 ## Elfogadási kritériumok
 
-- [ ] A mező többértékű lesz: `weatherConditions: WeatherCondition[]` (üres lista = nincs megadva).
-- [ ] Atomi (nem összevont) címkék: `HOT` (meleg), `MILD` (mérsékelt), `COLD` (hideg), `DRY`
+- [x] A mező többértékű lesz: `weatherConditions: WeatherCondition[]` (üres lista = nincs megadva).
+- [x] Atomi (nem összevont) címkék: `HOT` (meleg), `MILD` (mérsékelt), `COLD` (hideg), `DRY`
       (száraz), `HUMID` (párás), `WINDY` (szeles), `RAIN` (eső — esett / eleredt), `WET_ROCK`
       (vizes szikla), `SUNNY` (napos), `SHADE` (árnyékos).
-- [ ] Nincs kölcsönös kizárás: bármely kombináció menthető (pl. `HOT` + `COLD`).
-- [ ] UI: toggle-chipek (több kiválasztható), nem egyválasztós select.
-- [ ] Adatmigráció a meglévő értékekre: `COLD_DRY → [COLD, DRY]`, `HOT_HUMID → [HOT, HUMID]`,
+- [x] Nincs kölcsönös kizárás: bármely kombináció menthető (pl. `HOT` + `COLD`).
+- [x] UI: toggle-chipek (több kiválasztható), nem egyválasztós select.
+- [x] Adatmigráció a meglévő értékekre: `COLD_DRY → [COLD, DRY]`, `HOT_HUMID → [HOT, HUMID]`,
       `WINDY → [WINDY]`, `WET → [RAIN]` — Flyway + natív `SCHEMA_Vn`.
-- [ ] Outbox: payload-alak változik → `OUTBOX_PAYLOAD_SCHEMA_VERSION` bump + `outbox-migrator.ts`
+- [x] Outbox: payload-alak változik → `OUTBOX_PAYLOAD_SCHEMA_VERSION` bump + `outbox-migrator.ts`
       lépés a `ClimbingSession`-re (régi skalár → lista, ugyanazzal a leképezéssel), `verify:outbox
       -- --write`.
-- [ ] Megjelenítés a session listában / részleteknél több címkével; i18n hu/en.
-- [ ] Zöld lint + test:ci + build + backend test.
+- [x] Megjelenítés a session listában / részleteknél több címkével; i18n hu/en.
+- [x] Zöld lint + test:ci + build + backend test.
 
 ## Terv / döntési napló
 
@@ -54,5 +54,6 @@ száraz" vagy „hideg + párás" nem fejezhető ki, és egyszerre csak egy ért
 ## Lezáráskor (on-done)
 
 - Frissített specek: [[Mászónapló]], [[Outdoor köteles napló]], [[Outdoor boulder napló]]
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — <mit>
-- Kód: <fő package-ek / fájlok>
+- `IMPLEMENTATION_STATUS.md` sor: 2026-09-24 — #119
+- Kód: `V45__climbing_session_weather_multi.sql`, `climbing/ClimbingSession*` (backend), `SCHEMA_V42`, `shared/climbing/weather.ts`, `shared/weather-chips/`, `core/sync/outbox-migrator.ts` (v10→v11)
+- Tárolás: Postgres `text[]` (a javaslat szerint), natívan JSON-szöveg.

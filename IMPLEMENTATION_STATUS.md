@@ -14,6 +14,11 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-24 — #119** Mászó session időjárás többszörös választással: 10 atomi címke
+  (meleg/mérsékelt/hideg/száraz/párás/szeles/eső/vizes szikla/napos/árnyékos), bármely kombináció,
+  toggle-chipekkel; régi értékek migrálva (WET → RAIN). V45 + `SCHEMA_V42`, outbox v11 migrációs
+  lépéssel. — érintett: [[Mászónapló]], [[Outdoor köteles napló]], [[Outdoor boulder napló]]; kód:
+  `climbing` (backend), `shared/climbing/weather.ts`, `shared/weather-chips`.
 - **2026-09-24 — #118** Kültéri kötélút biztosítási típusa (`Route.protectionType`: Nittelt / Trad /
   Clean / Toprope, opcionális), az út-admin rádiógombokkal; a kültéri köteles napló út-választáskor
   ebből tölti elő a kísérlet `safetyStyle`-ját (kézi értéket nem ír felül). V44 + `SCHEMA_V41`, outbox

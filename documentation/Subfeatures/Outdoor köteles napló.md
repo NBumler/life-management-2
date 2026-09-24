@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-24
-verifikalt_commit: edde907
+verifikalt_commit: d6e22b2
 ---
 
 # Outdoor köteles napló
@@ -29,7 +29,7 @@ Kültéri köteles session + kísérletek / multi-pitch. Dashboard: **Outdoor K�
 | `lengthInMeters` | Öröklési sorrend (`backlog/088`): **1.** `Route.lengthInMeters` → **2.** a kísérlet szektorának `defaultLengthInMeters`-e → **3.** kézi felülírás. A `lengthAutoFilled` provenance-flag a szektor-defaultra is kiterjed: út- vagy szektorváltáskor az örökölt hossz újratöltődik, kézi átírásig. A kötél-kalória (`lengthInMeters × {25\|45\|60}`) a feloldott hosszt használja. |
 | `PitchLog` | **Opcionális** lista: `pitchNumber`, `isLead`, `rawGrade`, index, `lengthInMeters` — ha nincs kitöltve, elég session + teljes úthossz |
 | Másodmászó | `isLead=false` → aktív MET ×0.8 |
-| `weatherConditions` | Session |
+| `weatherConditions` | Session szint; több címke egyszerre (toggle-chipek) — [[Mászónapló]] |
 | `rockType` / `aspect` | **Nem napló-mező** (`backlog/084` — a session-szintű felülírás megszűnt). A szikla helyben marad; a kőzettípus és a fekvés a törzsadat tulajdonsága: `rockType` a `Crag.defaultRockType` (opcionálisan a `Route.rockType`), `aspect` a `Sector.defaultAspect` (opcionálisan a `Route.aspect`) — szerkesztésük [[Outdoor köteles admin]]. A napló legfeljebb megjeleníti, a `Route` → `Sector` / `Crag` láncból származtatva. |
 | Multi-pitch indoor | N/A (csak itt) |
 

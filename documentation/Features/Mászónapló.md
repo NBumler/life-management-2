@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-09-24
-verifikalt_commit: 3aee8a9
+verifikalt_commit: d6e22b2
 ---
 
 # Mászónapló
@@ -51,7 +51,7 @@ Kontextus váltás **aktív session közben tilos** — lezárás / mentés, maj
 | `headspaceRating` | Opcionális 1–5; rögzítve, de jelenleg egyetlen statisztikai nézet sem olvassa — megjelenítés tervezett: `backlog/025-climbing-headspacerating-megjelenitese-valamelyik-statisztikaban.md` |
 | `notes` | Opcionális |
 | `climbingPartners` | Opcionális string lista. A napló-formon **combobox** (`app-partner-combobox`): a felvett nevek chip-ként; a beviteli mező a user korábbi társait (az összes élő `ClimbingSession.climbingPartners` értékéből, gyakoriság szerint, [[Szöveges keresés]] normalizálással) szűri **és** enged új nevet felvenni („+ Hozzáadás: …"). Nincs külön `Partner` entitás — tisztán kliens-oldali aggregáció a helyi `climbing_session` táblából (`ClimbingSessionRepository.partnerSuggestions`), így Full-offline is működik. |
-| `weatherConditions` | Opcionális enum (`COLD_DRY`, `HOT_HUMID`, `WINDY`, `WET`); a „csak outdoor" korlát **kliens-oldalon** kényszerített (az indoor form fixen `null`-t küld), a szerver laza (mint `workout_session`) |
+| `weatherConditions` | **Többértékű** (`backlog/119`): atomi címkék listája — `HOT` (meleg), `MILD` (mérsékelt), `COLD` (hideg), `DRY` (száraz), `HUMID` (párás), `WINDY` (szeles), `RAIN` (eső), `WET_ROCK` (vizes szikla), `SUNNY` (napos), `SHADE` (árnyékos). **Bármely kombináció** menthető, egymásnak ellentmondó címkék is (egy hosszú nap alatt változnak a körülmények); üres lista = nincs megadva. UI: toggle-chipek (`app-weather-chips`). A szerver duplikátum-mentesen, kanonikus sorrendben tárolja és mindig listát ad vissza (`[]`, sosem `null`). A „csak outdoor" korlát **kliens-oldalon** kényszerített (az indoor form fixen `[]`-t küld), a szerver laza (mint `workout_session`). A korábbi összevont értékek migrációja: `COLD_DRY → [COLD, DRY]`, `HOT_HUMID → [HOT, HUMID]`, `WINDY → [WINDY]`, `WET → [RAIN]`. A session-listán a címkék a kártya harmadik sorában látszanak. |
 | `gymId` / `cragId` hivatkozás | Kontextus szerint — gyerek specek. Kültéri: **egy session = egy `Crag`**; a szektor a kísérlet (`AscentAttempt`) szintjén (`backlog/084`). Nincs session-szintű `rockType` / `aspect` — ezek a törzsadat (út / szektor / szikla) tulajdonságai, a napló megjelenítésre a `Route` → `Sector` → `Crag` láncból származtatja őket, nem tárol saját másolatot. |
 | `attempts` | `AscentAttempt[]` |
 | `deleted` | Soft delete |
@@ -203,6 +203,8 @@ Nincs nyitott kérdés.
 Olvasás/írás helyi store; mutációk outbox + kliens UUID; soft delete synchelhető; draft helyi. A mászótárs-javaslatok forrása a helyi `climbing_session` tábla, így a combobox Full-offline is teljes értékű. Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
 
 A `#77` (`AscentAttempt.failurePoint` → `notes` beolvasztás) egy még nem frissített telefonon beragaszthatott egy `ClimbingSession` POST-ot (a payload a törölt mezőt hordozta). `backlog/080`: `OUTBOX_PAYLOAD_SCHEMA_VERSION` v2 → v3 `ClimbingSession:2` migrátor-lépéssel kiszedi a `failurePoint`-ot minden `attempt`-ből (nem üres szöveget a `#77` szabálya szerint a `notes`-ba forgatva), a backend pedig az ismeretlen mezőt már úgyis eldobná (`FAIL_ON_UNKNOWN_PROPERTIES` off) — lásd [[Backend-offline first]] §7.
+
+`backlog/119`: az időjárás skalárból lista lett → `OUTBOX_PAYLOAD_SCHEMA_VERSION` v10 → v11 `ClimbingSession:10` lépéssel (`climbingSessionWeatherToList`: a régi skalár a fenti leképezéssel listává alakul, `null` → `[]`); a helyi `climbing_session.weather_conditions` TEXT oszlop JSON-tömböt tárol (`SCHEMA_V42` ugyanezzel a leképezéssel írta át a meglévő sorokat).
 
 ### Backend
 
