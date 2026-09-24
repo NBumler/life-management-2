@@ -251,6 +251,9 @@ const STEPS_BY_VERSION: Readonly<Record<number, VersionSteps>> = {
   // backlog/121: `MealItem.ingredientOverrides` added as a new optional list — a missing key already
   // means "no overrides" server-side (same reasoning as step 5), so no payload transform is needed.
   12: { default: identityStep },
+  // backlog/122: `ClimbingSession.startedAt` / `endedAt` + `AscentAttempt.bandModifier` added as new
+  // nullable fields — a missing key already means "not recorded" server-side, so no transform is needed.
+  13: { default: identityStep },
 };
 
 function buildMigrations(): ReadonlyMap<string, MigrationStep> {

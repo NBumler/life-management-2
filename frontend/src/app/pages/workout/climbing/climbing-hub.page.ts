@@ -5,6 +5,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 
 import { WorkoutSegmentHeaderComponent } from '../workout-segment-header.component';
 import { CLIMBING_CONTEXTS } from './climbing-contexts';
+import { ClimbingLiveBannerComponent } from './climbing-live-banner.component';
 
 /**
  * documentation/Features/Mászónapló.md "Dashboard (Hub)" — the Mászás segment's landing screen: 4
@@ -28,6 +29,7 @@ import { CLIMBING_CONTEXTS } from './climbing-contexts';
     IonItem,
     IonLabel,
     WorkoutSegmentHeaderComponent,
+    ClimbingLiveBannerComponent,
     TranslatePipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -1453,6 +1453,35 @@
         "TRAD": "Trad",
         "CLEAN": "Clean",
         "TOPROPE": "Top-rope"
+      },
+      "LIVE": {
+        "START": "Start session",
+        "TITLE": "Live session",
+        "IN_PROGRESS": "In progress",
+        "HUB_BANNER": "In progress: {{context}}",
+        "OTHER_IN_PROGRESS": "A live session ({{context}}) is already running — finish it first.",
+        "END": "End session",
+        "RESUME": "Back to the live session",
+        "DISCARD": "Discard",
+        "DISCARD_CONFIRM_TITLE": "Discard the session?",
+        "DISCARD_CONFIRM_MESSAGE": "The session in progress and all its recorded attempts are deleted; nothing is saved.",
+        "SUMMARY_TITLE": "Session summary",
+        "SUMMARY_HINT": "Everything is editable — approving saves the session.",
+        "STARTED_AT": "Started",
+        "ENDED_AT": "Ended",
+        "DURATION": "Duration: {{minutes}} min",
+        "END_BEFORE_START": "The end cannot be before the start.",
+        "APPROVE": "Approve and save",
+        "QUICK_TITLE": "Quick record",
+        "QUICK_NEEDS_GYM": "Pick a gym (with colour bands) to quick-record.",
+        "BAND_MODIFIER": "Within the band",
+        "MODIFIER": {
+          "MINUS": "−",
+          "NEUTRAL": "=",
+          "PLUS": "+"
+        },
+        "NOTIFICATION_TITLE": "Climbing session in progress",
+        "NOTIFICATION_BODY": "{{context}} · started {{time}}"
       }
     }
   },

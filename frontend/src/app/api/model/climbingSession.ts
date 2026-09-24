@@ -28,6 +28,14 @@ export interface ClimbingSession {
      */
     discipline: ClimbingSession.DisciplineEnum;
     /**
+     * backlog/122 — wall-clock start of a live-recorded session (\"Start session\"); null for a post-hoc log. Editable on the end-of-session summary.
+     */
+    startedAt?: string | null;
+    /**
+     * backlog/122 — wall-clock end of a live-recorded session (defaults to when \"Session vége\" was tapped, editable on the summary); must not precede `startedAt` (400 VALIDATION). The client then stores `totalSessionDurationMinutes` = the rounded difference.
+     */
+    endedAt?: string | null;
+    /**
      * Missing / invalid → the client\'s kcal preview falls back to logged-attempt-rows × 5 min (boulder) or × 15 min (rope); the server just stores what is sent.
      */
     totalSessionDurationMinutes?: number | null;

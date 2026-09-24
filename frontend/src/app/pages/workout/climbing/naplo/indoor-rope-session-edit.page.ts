@@ -1,5 +1,5 @@
 import { DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, ElementRef, Injector, OnInit, WritableSignal, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, Injector, OnDestroy, OnInit, WritableSignal, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -40,6 +40,8 @@ import { GradeInputComponent } from '../../../../shared/grade-input/grade-input.
 import { HelpButtonComponent } from '../../../../shared/help-button/help-button.component';
 import { PartnerComboboxComponent } from '../../../../shared/partner-combobox/partner-combobox.component';
 import { climbingKcal, climbingVolume } from '../climbing-metrics';
+import { ClimbingLiveBarComponent } from './climbing-live-bar.component';
+import { ClimbingLiveController } from './climbing-live-controller';
 import { scrollToLastAttempt } from './scroll-to-last-attempt';
 
 /** One editable ascent-attempt row (mutable signals, mirrors the indoor-boulder edit page's AttemptRow). */
@@ -122,6 +124,7 @@ const DEFAULT_SAFETY_STYLE = AscentAttempt.SafetyStyleEnum.Lead;
     GradeInputComponent,
     HelpButtonComponent,
     PartnerComboboxComponent,
+    ClimbingLiveBarComponent,
   ],
   styles: [
     `
@@ -149,10 +152,13 @@ const DEFAULT_SAFETY_STYLE = AscentAttempt.SafetyStyleEnum.Lead;
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class IndoorRopeSessionEditPage implements OnInit {
+export class IndoorRopeSessionEditPage implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly injector = inject(Injector);
+
+  /** backlog/122 — the `indoor-rope/live` route: live session + summary on this same form. */
+  readonly live = new ClimbingLiveController('indoor-rope');
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
   private readonly repository = inject(ClimbingSessionRepository);
@@ -266,24 +272,62 @@ export class IndoorRopeSessionEditPage implements OnInit {
         return;
       }
       this.sessionId.set(idParam);
-      this.form.reset({
-        date: existing.date,
-        gymId: existing.gymId ?? '',
-        totalSessionDurationMinutes: existing.totalSessionDurationMinutes ?? null,
-        pumpRating: existing.pumpRating ?? null,
-        headspaceRating: existing.headspaceRating ?? null,
-        notes: existing.notes ?? null,
-      });
-      this.partners.set([...(existing.climbingPartners ?? [])]);
-      this.attempts.set(
-        existing.attempts
-          .filter((attempt) => !attempt.deleted)
-          .sort((a, b) => a.orderIndex - b.orderIndex)
-          .map((attempt) => this.rowFrom(attempt)),
-      );
+      this.applySession(existing);
       return;
     }
 
+    if (this.live.isLive) {
+      const session = await this.live.resume();
+      if (session === null) {
+        return;
+      }
+      this.sessionId.set(session.id);
+      this.applySession(session);
+      if (!session.gymId) {
+        this.prefillLast();
+      }
+      this.live.startAutosave(
+        () => this.buildDraft(),
+        () => this.syncLiveDuration(),
+      );
+      this.syncLiveDuration();
+      return;
+    }
+
+    this.prefillLast();
+  }
+
+  ngOnDestroy(): void {
+    this.live.destroy();
+  }
+
+  private applySession(existing: ClimbingSession): void {
+    this.form.reset({
+      date: existing.date,
+      gymId: existing.gymId ?? '',
+      totalSessionDurationMinutes: existing.totalSessionDurationMinutes ?? null,
+      pumpRating: existing.pumpRating ?? null,
+      headspaceRating: existing.headspaceRating ?? null,
+      notes: existing.notes ?? null,
+    });
+    this.partners.set([...(existing.climbingPartners ?? [])]);
+    this.attempts.set(
+      existing.attempts
+        .filter((attempt) => !attempt.deleted)
+        .sort((a, b) => a.orderIndex - b.orderIndex)
+        .map((attempt) => this.rowFrom(attempt)),
+    );
+  }
+
+  /** Live mode: the duration follows the stopwatch / the summary's start–end, so the kcal preview is right. */
+  private syncLiveDuration(): void {
+    const minutes = this.live.durationMinutes();
+    if (this.form.controls.totalSessionDurationMinutes.value !== minutes) {
+      this.form.controls.totalSessionDurationMinutes.setValue(minutes);
+    }
+  }
+
+  private prefillLast(): void {
     // A fresh session prefills the most recently used gym (documentation/Subfeatures/Indoor köteles napló.md).
     const lastGymId = this.repository
       .forContext(ClimbingSession.LocationTypeEnum.Indoor, ClimbingSession.DisciplineEnum.Rope)
@@ -361,12 +405,15 @@ export class IndoorRopeSessionEditPage implements OnInit {
   }
 
   async save(): Promise<void> {
-    if (this.form.invalid || !this.minFieldsMet()) {
+    if (this.form.invalid || !this.minFieldsMet() || (this.live.isLive && (!this.live.summary() || this.live.timesInvalid()))) {
       this.form.markAllAsTouched();
       return;
     }
     const saved = await this.repository.save(this.buildDraft());
     this.sessionId.set(saved.id);
+    if (this.live.isLive) {
+      await this.live.finish();
+    }
     await this.router.navigateByUrl('/tabs/workout/climbing/indoor-rope');
   }
 
@@ -433,6 +480,10 @@ export class IndoorRopeSessionEditPage implements OnInit {
   }
 
   private buildDraft(): ClimbingSessionDraft {
+    return this.live.decorate(this.formDraft());
+  }
+
+  private formDraft(): ClimbingSessionDraft {
     const value = this.form.getRawValue();
     const gym = this.ropeGyms().find((g) => g.id === value.gymId);
     const partners = this.partners()

@@ -36,6 +36,21 @@ properties:
       - BOULDER
       - ROPE
     description: Dashboard discriminator. A session never mixes BOULDER + ROPE.
+  startedAt:
+    type: string
+    format: date-time
+    nullable: true
+    description: >-
+      backlog/122 — wall-clock start of a live-recorded session ("Start session"); null for a post-hoc
+      log. Editable on the end-of-session summary.
+  endedAt:
+    type: string
+    format: date-time
+    nullable: true
+    description: >-
+      backlog/122 — wall-clock end of a live-recorded session (defaults to when "Session vége" was
+      tapped, editable on the summary); must not precede `startedAt` (400 VALIDATION). The client then
+      stores `totalSessionDurationMinutes` = the rounded difference.
   totalSessionDurationMinutes:
     type: integer
     minimum: 1

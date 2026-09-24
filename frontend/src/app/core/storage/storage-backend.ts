@@ -185,6 +185,8 @@ export interface AscentAttemptSaveItem {
   absoluteDifficultyIndex: number | null;
   ascentStyle: AscentAttempt.AscentStyleEnum | null;
   safetyStyle: AscentAttempt.SafetyStyleEnum | null;
+  /** backlog/122 — indoor boulder: − / band / + part of the colour band; null = not recorded. */
+  bandModifier?: AscentAttempt.BandModifierEnum | null;
   attemptCount: number | null;
   colorBandId: string | null;
   colorName: string | null;
@@ -209,6 +211,9 @@ export interface ClimbingSessionDraft {
   locationType: ClimbingSession.LocationTypeEnum;
   discipline: ClimbingSession.DisciplineEnum;
   totalSessionDurationMinutes: number | null;
+  /** backlog/122 — wall-clock start / end of a live-recorded session; null for a post-hoc log. */
+  startedAt?: string | null;
+  endedAt?: string | null;
   pumpRating: number | null;
   headspaceRating: number | null;
   notes: string | null;

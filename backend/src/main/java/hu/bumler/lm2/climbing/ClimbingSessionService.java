@@ -1,5 +1,6 @@
 package hu.bumler.lm2.climbing;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -18,6 +19,7 @@ import hu.bumler.lm2.api.model.PitchLog;
 import hu.bumler.lm2.common.NestedChildResolver;
 import hu.bumler.lm2.common.exception.EntityDeletedException;
 import hu.bumler.lm2.common.exception.EntityNotFoundException;
+import hu.bumler.lm2.common.exception.ValidationException;
 
 /**
  * documentation/Features/Mászónapló.md — per-user climbing log. Nested aggregate PUT exactly like
@@ -217,6 +219,14 @@ class ClimbingSessionService {
 		entity.setLocationType(dto.getLocationType().getValue());
 		entity.setDiscipline(dto.getDiscipline().getValue());
 		entity.setTotalSessionDurationMinutes(dto.getTotalSessionDurationMinutes().orElse(null));
+		OffsetDateTime startedAt = dto.getStartedAt().orElse(null);
+		OffsetDateTime endedAt = dto.getEndedAt().orElse(null);
+		// backlog/122 — the live-session summary lets the user fix the end time; it may not precede the start.
+		if (startedAt != null && endedAt != null && endedAt.isBefore(startedAt)) {
+			throw new ValidationException("endedAt must not be before startedAt", "endedAt");
+		}
+		entity.setStartedAt(startedAt);
+		entity.setEndedAt(endedAt);
 		entity.setPumpRating(dto.getPumpRating().orElse(null));
 		entity.setHeadspaceRating(dto.getHeadspaceRating().orElse(null));
 		entity.setNotes(dto.getNotes().orElse(null));
@@ -234,6 +244,8 @@ class ClimbingSessionService {
 		entity.setAbsoluteDifficultyIndex(dto.getAbsoluteDifficultyIndex().orElse(null));
 		AscentAttempt.AscentStyleEnum ascentStyle = dto.getAscentStyle().orElse(null);
 		entity.setAscentStyle(ascentStyle == null ? null : ascentStyle.getValue());
+		AscentAttempt.BandModifierEnum bandModifier = dto.getBandModifier().orElse(null);
+		entity.setBandModifier(bandModifier == null ? null : bandModifier.getValue());
 		AscentAttempt.SafetyStyleEnum safetyStyle = dto.getSafetyStyle().orElse(null);
 		entity.setSafetyStyle(safetyStyle == null ? null : safetyStyle.getValue());
 		entity.setAttemptCount(dto.getAttemptCount().orElse(null));

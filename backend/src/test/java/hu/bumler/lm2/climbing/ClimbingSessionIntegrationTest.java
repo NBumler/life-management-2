@@ -1,6 +1,7 @@
 package hu.bumler.lm2.climbing;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -112,6 +113,34 @@ class ClimbingSessionIntegrationTest {
 				.andExpect(jsonPath("$.weatherConditions[2]").value("RAIN"))
 				.andExpect(jsonPath("$.climbingPartners[1]").value("Béla"))
 				.andExpect(jsonPath("$.totalSessionDurationMinutes").value(120));
+	}
+
+	@Test
+	void create_storesLiveSessionTimes_andTheAttemptBandModifier() throws Exception {
+		String token = registerAndLogin("cs-live");
+		UUID id = UUID.randomUUID();
+		AscentAttempt quickTap = attempt(UUID.randomUUID(), id, 0, true, List.of());
+		quickTap.bandModifier(AscentAttempt.BandModifierEnum.PLUS);
+		ClimbingSession dto = indoorBoulderSession(id, List.of(quickTap));
+		dto.startedAt(OffsetDateTime.parse("2026-09-24T17:00:00Z"));
+		dto.endedAt(OffsetDateTime.parse("2026-09-24T18:30:00Z"));
+		dto.totalSessionDurationMinutes(90);
+
+		createSession(token, dto).andExpect(status().isOk())
+				.andExpect(jsonPath("$.startedAt").value(org.hamcrest.Matchers.startsWith("2026-09-24T17:00")))
+				.andExpect(jsonPath("$.endedAt").value(org.hamcrest.Matchers.startsWith("2026-09-24T18:30")))
+				.andExpect(jsonPath("$.attempts[0].bandModifier").value("PLUS"));
+	}
+
+	@Test
+	void create_rejectsAnEndBeforeTheStart() throws Exception {
+		String token = registerAndLogin("cs-live-bad");
+		ClimbingSession dto = indoorBoulderSession(UUID.randomUUID(), List.of());
+		dto.startedAt(OffsetDateTime.parse("2026-09-24T18:00:00Z"));
+		dto.endedAt(OffsetDateTime.parse("2026-09-24T17:00:00Z"));
+		dto.totalSessionDurationMinutes(30);
+
+		createSession(token, dto).andExpect(status().isBadRequest());
 	}
 
 	@Test

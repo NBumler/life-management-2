@@ -1453,6 +1453,35 @@
         "TRAD": "Trad",
         "CLEAN": "Clean",
         "TOPROPE": "Toprope"
+      },
+      "LIVE": {
+        "START": "Session indítása",
+        "TITLE": "Élő session",
+        "IN_PROGRESS": "Folyamatban",
+        "HUB_BANNER": "Folyamatban: {{context}}",
+        "OTHER_IN_PROGRESS": "Már fut egy élő session ({{context}}) — előbb azt zárd le.",
+        "END": "Session vége",
+        "RESUME": "Vissza az élő sessionhöz",
+        "DISCARD": "Elvetés",
+        "DISCARD_CONFIRM_TITLE": "Elveted a sessiont?",
+        "DISCARD_CONFIRM_MESSAGE": "A folyamatban lévő session és minden rögzített kísérlete törlődik, semmi nem mentődik.",
+        "SUMMARY_TITLE": "Session összegzés",
+        "SUMMARY_HINT": "Minden adat szerkeszthető — a jóváhagyással mentődik a session.",
+        "STARTED_AT": "Kezdés",
+        "ENDED_AT": "Befejezés",
+        "DURATION": "Időtartam: {{minutes}} perc",
+        "END_BEFORE_START": "A befejezés nem lehet a kezdés előtt.",
+        "APPROVE": "Jóváhagyás és mentés",
+        "QUICK_TITLE": "Gyors rögzítés",
+        "QUICK_NEEDS_GYM": "Válassz termet (színsávokkal) a gyors rögzítéshez.",
+        "BAND_MODIFIER": "Sávon belül",
+        "MODIFIER": {
+          "MINUS": "−",
+          "NEUTRAL": "=",
+          "PLUS": "+"
+        },
+        "NOTIFICATION_TITLE": "Mászó session folyamatban",
+        "NOTIFICATION_BODY": "{{context}} · kezdés {{time}}"
       }
     }
   },

@@ -13,8 +13,19 @@
 </ion-header>
 
 <ion-content>
+  <app-climbing-live-banner />
   <div class="cta-row">
-    <ion-button expand="block" routerLink="new">{{ 'WORKOUT.CLIMBING.SESSION.NEW' | translate }}</ion-button>
+    @if (!liveHere()) {
+      <ion-button class="start-live" expand="block" [disabled]="otherLiveContextLabel() !== null" (click)="startLive()">
+        {{ 'WORKOUT.CLIMBING.LIVE.START' | translate }}
+      </ion-button>
+      @if (otherLiveContextLabel(); as other) {
+        <ion-note color="medium" class="field-error">
+          {{ 'WORKOUT.CLIMBING.LIVE.OTHER_IN_PROGRESS' | translate: { context: (other | translate) } }}
+        </ion-note>
+      }
+    }
+    <ion-button expand="block" fill="outline" routerLink="new">{{ 'WORKOUT.CLIMBING.SESSION.NEW' | translate }}</ion-button>
   </div>
 
   @if (isEmpty()) {

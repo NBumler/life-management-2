@@ -1,5 +1,5 @@
 import { DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, ElementRef, Injector, OnInit, WritableSignal, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, Injector, OnDestroy, OnInit, WritableSignal, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -43,6 +43,8 @@ import { WeatherChipsComponent } from '../../../../shared/weather-chips/weather-
 import { WeatherTag, canonicalWeather } from '../../../../shared/climbing/weather';
 import { today } from '../../../../shared/local-date';
 import { climbingKcal, climbingVolume } from '../climbing-metrics';
+import { ClimbingLiveBarComponent } from './climbing-live-bar.component';
+import { ClimbingLiveController } from './climbing-live-controller';
 import { scrollToLastAttempt } from './scroll-to-last-attempt';
 
 /** One editable ascent-attempt row (mutable signals, mirrors the indoor-boulder edit page's AttemptRow). */
@@ -117,6 +119,7 @@ const PRIOR_ASCENT_WARN_STYLES: ReadonlySet<AscentAttempt.AscentStyleEnum> = new
     GradeInputComponent,
     HelpButtonComponent,
     PartnerComboboxComponent,
+    ClimbingLiveBarComponent,
     WeatherChipsComponent,
   ],
   styles: [
@@ -145,10 +148,13 @@ const PRIOR_ASCENT_WARN_STYLES: ReadonlySet<AscentAttempt.AscentStyleEnum> = new
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class OutdoorBoulderSessionEditPage implements OnInit {
+export class OutdoorBoulderSessionEditPage implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly injector = inject(Injector);
+
+  /** backlog/122 — the `outdoor-boulder/live` route: live session + summary on this same form. */
+  readonly live = new ClimbingLiveController('outdoor-boulder');
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
   private readonly repository = inject(ClimbingSessionRepository);
@@ -259,25 +265,63 @@ export class OutdoorBoulderSessionEditPage implements OnInit {
         return;
       }
       this.sessionId.set(idParam);
-      this.form.reset({
-        date: existing.date,
-        cragId: existing.cragId ?? '',
-        totalSessionDurationMinutes: existing.totalSessionDurationMinutes ?? null,
-        pumpRating: existing.pumpRating ?? null,
-        headspaceRating: existing.headspaceRating ?? null,
-        notes: existing.notes ?? null,
-      });
-      this.partners.set([...(existing.climbingPartners ?? [])]);
-      this.weather.set(canonicalWeather(existing.weatherConditions));
-      this.attempts.set(
-        existing.attempts
-          .filter((attempt) => !attempt.deleted)
-          .sort((a, b) => a.orderIndex - b.orderIndex)
-          .map((attempt) => this.rowFrom(attempt)),
-      );
+      this.applySession(existing);
       return;
     }
 
+    if (this.live.isLive) {
+      const session = await this.live.resume();
+      if (session === null) {
+        return;
+      }
+      this.sessionId.set(session.id);
+      this.applySession(session);
+      if (!session.cragId) {
+        this.prefillLast();
+      }
+      this.live.startAutosave(
+        () => this.buildDraft(),
+        () => this.syncLiveDuration(),
+      );
+      this.syncLiveDuration();
+      return;
+    }
+
+    this.prefillLast();
+  }
+
+  ngOnDestroy(): void {
+    this.live.destroy();
+  }
+
+  private applySession(existing: ClimbingSession): void {
+    this.form.reset({
+      date: existing.date,
+      cragId: existing.cragId ?? '',
+      totalSessionDurationMinutes: existing.totalSessionDurationMinutes ?? null,
+      pumpRating: existing.pumpRating ?? null,
+      headspaceRating: existing.headspaceRating ?? null,
+      notes: existing.notes ?? null,
+    });
+    this.partners.set([...(existing.climbingPartners ?? [])]);
+    this.weather.set(canonicalWeather(existing.weatherConditions));
+    this.attempts.set(
+      existing.attempts
+        .filter((attempt) => !attempt.deleted)
+        .sort((a, b) => a.orderIndex - b.orderIndex)
+        .map((attempt) => this.rowFrom(attempt)),
+    );
+  }
+
+  /** Live mode: the duration follows the stopwatch / the summary's start–end, so the kcal preview is right. */
+  private syncLiveDuration(): void {
+    const minutes = this.live.durationMinutes();
+    if (this.form.controls.totalSessionDurationMinutes.value !== minutes) {
+      this.form.controls.totalSessionDurationMinutes.setValue(minutes);
+    }
+  }
+
+  private prefillLast(): void {
     // A fresh session prefills the most recently used crag (documentation/Subfeatures/Outdoor boulder
     // napló.md); the sector is per attempt (backlog/084) and seeds from that session's last attempt.
     const last = this.repository
@@ -387,13 +431,16 @@ export class OutdoorBoulderSessionEditPage implements OnInit {
   }
 
   async save(): Promise<void> {
-    if (this.form.invalid || !this.minFieldsMet()) {
+    if (this.form.invalid || !this.minFieldsMet() || (this.live.isLive && (!this.live.summary() || this.live.timesInvalid()))) {
       this.form.markAllAsTouched();
       return;
     }
     await this.persistNewCatalogProblems();
     const saved = await this.repository.save(this.buildDraft());
     this.sessionId.set(saved.id);
+    if (this.live.isLive) {
+      await this.live.finish();
+    }
     await this.router.navigateByUrl('/tabs/workout/climbing/outdoor-boulder');
   }
 
@@ -472,6 +519,10 @@ export class OutdoorBoulderSessionEditPage implements OnInit {
   }
 
   private buildDraft(): ClimbingSessionDraft {
+    return this.live.decorate(this.formDraft());
+  }
+
+  private formDraft(): ClimbingSessionDraft {
     const value = this.form.getRawValue();
     const crag = this.crags().find((entry) => entry.id === value.cragId);
     const partners = this.partners()

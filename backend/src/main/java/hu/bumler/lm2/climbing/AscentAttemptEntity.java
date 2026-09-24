@@ -45,6 +45,10 @@ public class AscentAttemptEntity {
 	@Column(name = "safety_style")
 	private String safetyStyle;
 
+	/** backlog/122 — indoor boulder: which part of the colour band (MINUS / NEUTRAL / PLUS); null = not recorded. */
+	@Column(name = "band_modifier")
+	private String bandModifier;
+
 	@Column(name = "attempt_count")
 	private Integer attemptCount;
 
@@ -147,6 +151,14 @@ public class AscentAttemptEntity {
 
 	public void setAscentStyle(String ascentStyle) {
 		this.ascentStyle = ascentStyle;
+	}
+
+	public String getBandModifier() {
+		return bandModifier;
+	}
+
+	public void setBandModifier(String bandModifier) {
+		this.bandModifier = bandModifier;
 	}
 
 	public String getSafetyStyle() {

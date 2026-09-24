@@ -52,6 +52,13 @@ public class ClimbingSessionEntity {
 	@Column(name = "total_session_duration_minutes")
 	private Integer totalSessionDurationMinutes;
 
+	/** backlog/122 — wall-clock start / end of a live-recorded session (null for a post-hoc log). */
+	@Column(name = "started_at")
+	private OffsetDateTime startedAt;
+
+	@Column(name = "ended_at")
+	private OffsetDateTime endedAt;
+
 	@Column(name = "pump_rating")
 	private Integer pumpRating;
 
@@ -134,6 +141,22 @@ public class ClimbingSessionEntity {
 
 	public void setDiscipline(String discipline) {
 		this.discipline = discipline;
+	}
+
+	public OffsetDateTime getStartedAt() {
+		return startedAt;
+	}
+
+	public void setStartedAt(OffsetDateTime startedAt) {
+		this.startedAt = startedAt;
+	}
+
+	public OffsetDateTime getEndedAt() {
+		return endedAt;
+	}
+
+	public void setEndedAt(OffsetDateTime endedAt) {
+		this.endedAt = endedAt;
 	}
 
 	public Integer getTotalSessionDurationMinutes() {

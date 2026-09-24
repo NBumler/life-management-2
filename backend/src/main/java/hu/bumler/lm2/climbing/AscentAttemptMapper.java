@@ -22,6 +22,9 @@ class AscentAttemptMapper {
 		if (entity.getAscentStyle() != null) {
 			dto.ascentStyle(AscentAttempt.AscentStyleEnum.fromValue(entity.getAscentStyle()));
 		}
+		if (entity.getBandModifier() != null) {
+			dto.bandModifier(AscentAttempt.BandModifierEnum.fromValue(entity.getBandModifier()));
+		}
 		if (entity.getSafetyStyle() != null) {
 			dto.safetyStyle(AscentAttempt.SafetyStyleEnum.fromValue(entity.getSafetyStyle()));
 		}

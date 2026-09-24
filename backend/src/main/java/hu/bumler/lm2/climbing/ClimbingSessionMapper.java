@@ -21,6 +21,8 @@ class ClimbingSessionMapper {
 				ClimbingSession.LocationTypeEnum.fromValue(entity.getLocationType()),
 				ClimbingSession.DisciplineEnum.fromValue(entity.getDiscipline()), attempts, entity.isDeleted());
 		dto.totalSessionDurationMinutes(entity.getTotalSessionDurationMinutes());
+		dto.startedAt(entity.getStartedAt());
+		dto.endedAt(entity.getEndedAt());
 		dto.pumpRating(entity.getPumpRating());
 		dto.headspaceRating(entity.getHeadspaceRating());
 		dto.notes(entity.getNotes());

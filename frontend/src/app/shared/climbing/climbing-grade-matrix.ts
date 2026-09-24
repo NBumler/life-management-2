@@ -195,3 +195,21 @@ export function gradeToIndex(scale: ClimbingScale, normalizedLabel: string): num
 export function colorBandMidIndex(lowIndex: number, highIndex: number): number {
   return Math.floor((lowIndex + highIndex) / 2);
 }
+
+/**
+ * backlog/122 — the index an indoor-boulder attempt resolves to from its colour band and the tapped
+ * part of it: MINUS → the band's lower bound, PLUS → its upper bound, NEUTRAL / not recorded → the
+ * {@link colorBandMidIndex} (so an attempt logged without a modifier keeps its historical value).
+ */
+export function bandModifierIndex(
+  band: { absoluteDifficultyIndexLower: number; absoluteDifficultyIndexUpper: number },
+  modifier: 'MINUS' | 'NEUTRAL' | 'PLUS' | null | undefined,
+): number {
+  if (modifier === 'MINUS') {
+    return band.absoluteDifficultyIndexLower;
+  }
+  if (modifier === 'PLUS') {
+    return band.absoluteDifficultyIndexUpper;
+  }
+  return colorBandMidIndex(band.absoluteDifficultyIndexLower, band.absoluteDifficultyIndexUpper);
+}

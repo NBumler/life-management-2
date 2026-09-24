@@ -42,6 +42,18 @@ properties:
       - REDPOINT
     nullable: true
     description: Only meaningful when `isSuccess`; the context whitelist is enforced client-side.
+  bandModifier:
+    type: string
+    enum:
+      - MINUS
+      - NEUTRAL
+      - PLUS
+    nullable: true
+    description: >-
+      backlog/122 — indoor boulder: the part of the colour band the problem sat in, tapped on the
+      live quick-record grid (− / band / +). The client resolves `absoluteDifficultyIndex` from it:
+      MINUS → the band's lower index, NEUTRAL → its mid index, PLUS → its upper index. null = not
+      recorded (the band's mid index applies). Independent of the band's own admin-side `variant`.
   safetyStyle:
     type: string
     enum:

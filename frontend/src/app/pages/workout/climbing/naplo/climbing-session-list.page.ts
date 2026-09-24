@@ -1,6 +1,6 @@
 import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   IonBackButton,
   IonButton,
@@ -18,11 +18,13 @@ import {
 import { TranslatePipe } from '@ngx-translate/core';
 
 import { ClimbingSession } from '../../../../api/model/climbingSession';
+import { ClimbingLiveSessionService, liveRoute } from '../../../../core/data/climbing-live-session.service';
 import { ClimbingSessionRepository } from '../../../../core/data/climbing-session.repository';
 import { ProfileRepository } from '../../../../core/data/profile.repository';
 import { climbingAttemptInput } from '../climbing-attempt-input';
 import { climbingKcal, climbingVolume } from '../climbing-metrics';
 import { CLIMBING_CONTEXTS, ClimbingContextKey } from '../climbing-contexts';
+import { ClimbingLiveBannerComponent } from '../climbing-live-banner.component';
 
 interface SessionCard {
   session: ClimbingSession;
@@ -58,6 +60,7 @@ interface SessionCard {
     IonLabel,
     IonNote,
     TranslatePipe,
+    ClimbingLiveBannerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -65,6 +68,8 @@ export class ClimbingSessionListPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly repository = inject(ClimbingSessionRepository);
   private readonly profileRepository = inject(ProfileRepository);
+  private readonly liveService = inject(ClimbingLiveSessionService);
+  private readonly router = inject(Router);
 
   readonly context =
     CLIMBING_CONTEXTS.find((c) => c.key === (this.route.snapshot.data['contextKey'] as ClimbingContextKey)) ??
@@ -98,6 +103,23 @@ export class ClimbingSessionListPage implements OnInit {
   });
 
   readonly isEmpty = computed(() => this.repository.loaded() && this.cards().length === 0);
+
+  /** backlog/122 — at most one live session: another context's running one blocks "Start session". */
+  readonly otherLiveContextLabel = computed(() => {
+    const draft = this.liveService.draft();
+    if (draft === null || draft.contextKey === this.context.key) {
+      return null;
+    }
+    return CLIMBING_CONTEXTS.find((ctx) => ctx.key === draft.contextKey)?.labelKey ?? null;
+  });
+
+  readonly liveHere = computed(() => this.liveService.draft()?.contextKey === this.context.key);
+
+  /** "Session indítása": a fresh live draft (+ ongoing notification) and straight to the live screen. */
+  async startLive(): Promise<void> {
+    const draft = await this.liveService.start(this.context.key);
+    await this.router.navigateByUrl(liveRoute(draft.contextKey));
+  }
 
   async ngOnInit(): Promise<void> {
     await Promise.all([this.repository.load(), this.profileRepository.load()]);

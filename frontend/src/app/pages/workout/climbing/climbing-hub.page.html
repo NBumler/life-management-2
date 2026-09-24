@@ -13,6 +13,7 @@
 </ion-header>
 
 <ion-content>
+  <app-climbing-live-banner />
   <ion-list>
     @for (ctx of contexts; track ctx.key) {
       <ion-item button [routerLink]="ctx.route" detail="true">

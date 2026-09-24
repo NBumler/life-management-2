@@ -1,5 +1,6 @@
 import { DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, ElementRef, Injector, OnInit, WritableSignal, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, Injector, OnDestroy, OnInit, WritableSignal, computed, inject, signal } from '@angular/core';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -36,18 +37,22 @@ import { ProfileRepository } from '../../../../core/data/profile.repository';
 import { AscentAttemptSaveItem, ClimbingSessionDraft } from '../../../../core/storage/storage-backend';
 import { uuidV4 } from '../../../../core/sync/uuid';
 import { today } from '../../../../shared/local-date';
-import { colorBandMidIndex } from '../../../../shared/climbing/climbing-grade-matrix';
+import { bandModifierIndex } from '../../../../shared/climbing/climbing-grade-matrix';
 import { parseGrade } from '../../../../shared/climbing/grade-scale';
 import { GradeInputComponent } from '../../../../shared/grade-input/grade-input.component';
 import { HelpButtonComponent } from '../../../../shared/help-button/help-button.component';
 import { PartnerComboboxComponent } from '../../../../shared/partner-combobox/partner-combobox.component';
 import { climbingKcal, climbingVolume } from '../climbing-metrics';
+import { ClimbingLiveBarComponent } from './climbing-live-bar.component';
+import { ClimbingLiveController } from './climbing-live-controller';
 import { scrollToLastAttempt } from './scroll-to-last-attempt';
 
 /** One editable ascent-attempt row (mutable signals, mirrors the workout edit page's SetRow). */
 interface AttemptRow {
   id: string;
   colorBandId: WritableSignal<string | null>;
+  /** backlog/122 — which part of the band (− / band / +); null = not recorded (the band's mid index). */
+  bandModifier: WritableSignal<AscentAttempt.BandModifierEnum | null>;
   userRawInput: WritableSignal<string | null>;
   isSuccess: WritableSignal<boolean>;
   ascentStyle: WritableSignal<AscentAttempt.AscentStyleEnum | null>;
@@ -56,6 +61,12 @@ interface AttemptRow {
   /** backlog/123 — with colour bands the free-text grade is secondary, folded behind "or grade". */
   gradeOpen: WritableSignal<boolean>;
 }
+
+const BAND_MODIFIERS: readonly AscentAttempt.BandModifierEnum[] = [
+  AscentAttempt.BandModifierEnum.Minus,
+  AscentAttempt.BandModifierEnum.Neutral,
+  AscentAttempt.BandModifierEnum.Plus,
+];
 
 const ASCENT_STYLES: readonly AscentAttempt.AscentStyleEnum[] = [
   AscentAttempt.AscentStyleEnum.Flash,
@@ -99,6 +110,7 @@ const ASCENT_STYLES: readonly AscentAttempt.AscentStyleEnum[] = [
     GradeInputComponent,
     HelpButtonComponent,
     PartnerComboboxComponent,
+    ClimbingLiveBarComponent,
   ],
   styles: [
     `
@@ -139,6 +151,33 @@ const ASCENT_STYLES: readonly AscentAttempt.AscentStyleEnum[] = [
         border: 1px solid var(--ion-background-color-step-300, #ccc);
         flex: none;
       }
+      .band-modifiers {
+        display: flex;
+        gap: 4px;
+        padding-top: 4px;
+      }
+      .quick-grid {
+        padding: 0 8px 8px;
+      }
+      .quick-row {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .quick-row .quick-band {
+        flex: 1 1 auto;
+      }
+      .quick-row .quick-minus,
+      .quick-row .quick-plus {
+        flex: 0 0 3rem;
+        font-size: 1.3rem;
+      }
+      .quick-count {
+        margin-inline-start: auto;
+        padding-inline-start: 8px;
+        font-variant-numeric: tabular-nums;
+        font-weight: 600;
+      }
       .band-chip small {
         opacity: 0.7;
         margin-inline-start: 2px;
@@ -151,7 +190,7 @@ const ASCENT_STYLES: readonly AscentAttempt.AscentStyleEnum[] = [
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class IndoorBoulderSessionEditPage implements OnInit {
+export class IndoorBoulderSessionEditPage implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly injector = inject(Injector);
@@ -165,6 +204,10 @@ export class IndoorBoulderSessionEditPage implements OnInit {
   private readonly translate = inject(TranslateService);
 
   readonly ascentStyles = ASCENT_STYLES;
+  readonly bandModifiers = BAND_MODIFIERS;
+
+  /** backlog/122 — the `indoor-boulder/live` route: live session + summary on this same form. */
+  readonly live = new ClimbingLiveController('indoor-boulder');
   readonly ratings = [1, 2, 3, 4, 5];
 
   readonly sessionId = signal<string | null>(null);
@@ -205,6 +248,19 @@ export class IndoorBoulderSessionEditPage implements OnInit {
   readonly bands = computed<GymColorBand[]>(() => {
     const gymId = this.gymIdValue();
     return gymId ? this.bandRepository.forGym(gymId) : [];
+  });
+
+  /** backlog/122 — how many attempts each band got this session (the quick-record grid's counters). */
+  readonly bandCounts = computed(() => {
+    this.attemptsRevision();
+    const counts = new Map<string, number>();
+    for (const row of this.attempts()) {
+      const bandId = row.colorBandId();
+      if (bandId !== null) {
+        counts.set(bandId, (counts.get(bandId) ?? 0) + 1);
+      }
+    }
+    return counts;
   });
 
   readonly previewKcal = computed(() => {
@@ -253,24 +309,62 @@ export class IndoorBoulderSessionEditPage implements OnInit {
         return;
       }
       this.sessionId.set(idParam);
-      this.form.reset({
-        date: existing.date,
-        gymId: existing.gymId ?? '',
-        totalSessionDurationMinutes: existing.totalSessionDurationMinutes ?? null,
-        pumpRating: existing.pumpRating ?? null,
-        headspaceRating: existing.headspaceRating ?? null,
-        notes: existing.notes ?? null,
-      });
-      this.partners.set([...(existing.climbingPartners ?? [])]);
-      this.attempts.set(
-        existing.attempts
-          .filter((attempt) => !attempt.deleted)
-          .sort((a, b) => a.orderIndex - b.orderIndex)
-          .map((attempt) => this.rowFrom(attempt)),
-      );
+      this.applySession(existing);
       return;
     }
 
+    if (this.live.isLive) {
+      const session = await this.live.resume();
+      if (session === null) {
+        return;
+      }
+      this.sessionId.set(session.id);
+      this.applySession(session);
+      if (!session.gymId) {
+        this.prefillLastGym();
+      }
+      this.live.startAutosave(
+        () => this.buildDraft(),
+        () => this.syncLiveDuration(),
+      );
+      this.syncLiveDuration();
+      return;
+    }
+
+    this.prefillLastGym();
+  }
+
+  ngOnDestroy(): void {
+    this.live.destroy();
+  }
+
+  private applySession(existing: ClimbingSession): void {
+    this.form.reset({
+      date: existing.date,
+      gymId: existing.gymId ?? '',
+      totalSessionDurationMinutes: existing.totalSessionDurationMinutes ?? null,
+      pumpRating: existing.pumpRating ?? null,
+      headspaceRating: existing.headspaceRating ?? null,
+      notes: existing.notes ?? null,
+    });
+    this.partners.set([...(existing.climbingPartners ?? [])]);
+    this.attempts.set(
+      existing.attempts
+        .filter((attempt) => !attempt.deleted)
+        .sort((a, b) => a.orderIndex - b.orderIndex)
+        .map((attempt) => this.rowFrom(attempt)),
+    );
+  }
+
+  /** Live mode: the duration follows the stopwatch / the summary's start–end, so the kcal preview is right. */
+  private syncLiveDuration(): void {
+    const minutes = this.live.durationMinutes();
+    if (this.form.controls.totalSessionDurationMinutes.value !== minutes) {
+      this.form.controls.totalSessionDurationMinutes.setValue(minutes);
+    }
+  }
+
+  private prefillLastGym(): void {
     // A fresh session prefills the most recently used gym (documentation/Subfeatures/Indoor boulder napló.md).
     const lastGymId = this.repository
       .forContext(ClimbingSession.LocationTypeEnum.Indoor, ClimbingSession.DisciplineEnum.Boulder)
@@ -303,7 +397,30 @@ export class IndoorBoulderSessionEditPage implements OnInit {
     this.touchAttempts();
   }
 
+  /**
+   * backlog/122 — one tap on the live grid = one successful ascent with that band and part of it
+   * (− lower / band mid / + upper index). A short haptic tick confirms it; the row's counter goes up.
+   */
+  quickRecord(band: GymColorBand, modifier: AscentAttempt.BandModifierEnum): void {
+    const row = this.emptyRow();
+    row.colorBandId.set(band.id);
+    row.bandModifier.set(modifier);
+    row.isSuccess.set(true);
+    this.attempts.update((rows) => [...rows, row]);
+    this.touchAttempts();
+    void Haptics.impact({ style: ImpactStyle.Light }).catch(() => undefined);
+    void this.live.autosave();
+  }
+
+  setBandModifier(row: AttemptRow, modifier: AscentAttempt.BandModifierEnum | null): void {
+    row.bandModifier.set(row.bandModifier() === modifier ? null : modifier);
+    this.touchAttempts();
+  }
+
   pickBand(row: AttemptRow, bandId: string | null): void {
+    if (bandId !== row.colorBandId()) {
+      row.bandModifier.set(null);
+    }
     row.colorBandId.set(bandId);
     this.touchAttempts();
   }
@@ -313,12 +430,15 @@ export class IndoorBoulderSessionEditPage implements OnInit {
   }
 
   async save(): Promise<void> {
-    if (this.form.invalid || !this.minFieldsMet()) {
+    if (this.form.invalid || !this.minFieldsMet() || (this.live.isLive && (!this.live.summary() || this.live.timesInvalid()))) {
       this.form.markAllAsTouched();
       return;
     }
     const saved = await this.repository.save(this.buildDraft());
     this.sessionId.set(saved.id);
+    if (this.live.isLive) {
+      await this.live.finish();
+    }
     await this.router.navigateByUrl('/tabs/workout/climbing/indoor-boulder');
   }
 
@@ -355,7 +475,7 @@ export class IndoorBoulderSessionEditPage implements OnInit {
     }));
   }
 
-  /** A typed free-text grade wins; otherwise the picked colour band's mid index; otherwise unresolved. */
+  /** A typed free-text grade wins; otherwise the picked colour band's index for its − / band / + part (backlog/122); otherwise unresolved. */
   private resolveIndex(row: AttemptRow): number | null {
     const raw = row.userRawInput()?.trim();
     if (raw) {
@@ -366,12 +486,16 @@ export class IndoorBoulderSessionEditPage implements OnInit {
     }
     const band = this.bandById(row.colorBandId());
     if (band) {
-      return colorBandMidIndex(band.absoluteDifficultyIndexLower, band.absoluteDifficultyIndexUpper);
+      return bandModifierIndex(band, row.bandModifier());
     }
     return null;
   }
 
   private buildDraft(): ClimbingSessionDraft {
+    return this.live.decorate(this.formDraft());
+  }
+
+  private formDraft(): ClimbingSessionDraft {
     const value = this.form.getRawValue();
     const gym = this.boulderGyms().find((g) => g.id === value.gymId);
     const partners = this.partners()
@@ -408,6 +532,7 @@ export class IndoorBoulderSessionEditPage implements OnInit {
       safetyStyle: null,
       attemptCount: row.attemptCount(),
       colorBandId: row.colorBandId(),
+      bandModifier: row.colorBandId() ? row.bandModifier() : null,
       colorName: band?.name ?? null,
       hexColor: band?.hexColor ?? null,
       gradeRange: band ? `${band.gradeLower}–${band.gradeUpper}` : null,
@@ -428,6 +553,7 @@ export class IndoorBoulderSessionEditPage implements OnInit {
     return {
       id: attempt.id,
       colorBandId: signal(attempt.colorBandId ?? null),
+      bandModifier: signal(attempt.bandModifier ?? null),
       userRawInput: signal(attempt.userRawInput ?? null),
       isSuccess: signal(attempt.isSuccess),
       ascentStyle: signal(attempt.ascentStyle ?? null),
@@ -441,6 +567,7 @@ export class IndoorBoulderSessionEditPage implements OnInit {
     return {
       id: uuidV4(),
       colorBandId: signal<string | null>(null),
+      bandModifier: signal<AscentAttempt.BandModifierEnum | null>(null),
       userRawInput: signal<string | null>(null),
       isSuccess: signal(false),
       ascentStyle: signal<AscentAttempt.AscentStyleEnum | null>(null),

@@ -459,6 +459,13 @@ export const routes: Routes = [
                       import('./pages/workout/climbing/naplo/indoor-boulder-session-edit.page').then((m) => m.IndoorBoulderSessionEditPage),
                   },
                   {
+                    // backlog/122 — the live session (and its end-of-session summary) on the same form
+                    path: 'live',
+                    data: { live: true },
+                    loadComponent: () =>
+                      import('./pages/workout/climbing/naplo/indoor-boulder-session-edit.page').then((m) => m.IndoorBoulderSessionEditPage),
+                  },
+                  {
                     path: ':id',
                     loadComponent: () =>
                       import('./pages/workout/climbing/naplo/indoor-boulder-session-edit.page').then((m) => m.IndoorBoulderSessionEditPage),
@@ -479,6 +486,13 @@ export const routes: Routes = [
                   },
                   {
                     path: 'new',
+                    loadComponent: () =>
+                      import('./pages/workout/climbing/naplo/indoor-rope-session-edit.page').then((m) => m.IndoorRopeSessionEditPage),
+                  },
+                  {
+                    // backlog/122 — the live session (and its end-of-session summary) on the same form
+                    path: 'live',
+                    data: { live: true },
                     loadComponent: () =>
                       import('./pages/workout/climbing/naplo/indoor-rope-session-edit.page').then((m) => m.IndoorRopeSessionEditPage),
                   },
@@ -509,6 +523,13 @@ export const routes: Routes = [
                       import('./pages/workout/climbing/naplo/outdoor-boulder-session-edit.page').then((m) => m.OutdoorBoulderSessionEditPage),
                   },
                   {
+                    // backlog/122 — the live session (and its end-of-session summary) on the same form
+                    path: 'live',
+                    data: { live: true },
+                    loadComponent: () =>
+                      import('./pages/workout/climbing/naplo/outdoor-boulder-session-edit.page').then((m) => m.OutdoorBoulderSessionEditPage),
+                  },
+                  {
                     path: ':id',
                     loadComponent: () =>
                       import('./pages/workout/climbing/naplo/outdoor-boulder-session-edit.page').then((m) => m.OutdoorBoulderSessionEditPage),
@@ -532,6 +553,13 @@ export const routes: Routes = [
                   },
                   {
                     path: 'new',
+                    loadComponent: () =>
+                      import('./pages/workout/climbing/naplo/outdoor-rope-session-edit.page').then((m) => m.OutdoorRopeSessionEditPage),
+                  },
+                  {
+                    // backlog/122 — the live session (and its end-of-session summary) on the same form
+                    path: 'live',
+                    data: { live: true },
                     loadComponent: () =>
                       import('./pages/workout/climbing/naplo/outdoor-rope-session-edit.page').then((m) => m.OutdoorRopeSessionEditPage),
                   },

@@ -1296,7 +1296,17 @@ const SCHEMA_V43_STATEMENTS: string[] = [`ALTER TABLE workout_plan_set ADD COLUM
  */
 const SCHEMA_V44_STATEMENTS: string[] = [`ALTER TABLE meal_item ADD COLUMN ingredient_overrides TEXT`];
 
-const SCHEMA_VERSION = 44;
+/**
+ * backlog/122 — élő mászó session: kezdő / záró időpont a sessionön, színsávon belüli módosító (− / semleges /
+ * +) a beltéri boulder kísérleten; on-device tükre a backend `V48__climbing_live_session.sql`-nek.
+ */
+const SCHEMA_V45_STATEMENTS: string[] = [
+  `ALTER TABLE climbing_session ADD COLUMN started_at TEXT`,
+  `ALTER TABLE climbing_session ADD COLUMN ended_at TEXT`,
+  `ALTER TABLE ascent_attempt ADD COLUMN band_modifier TEXT`,
+];
+
+const SCHEMA_VERSION = 45;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -1343,7 +1353,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 41, statements: SCHEMA_V41_STATEMENTS },
   { toVersion: 42, statements: SCHEMA_V42_STATEMENTS },
   { toVersion: 43, statements: SCHEMA_V43_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V44_STATEMENTS },
+  { toVersion: 44, statements: SCHEMA_V44_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V45_STATEMENTS },
 ];
 
 export interface SqlTask {

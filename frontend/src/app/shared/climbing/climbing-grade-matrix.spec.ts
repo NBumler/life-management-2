@@ -3,6 +3,7 @@ import {
   CLIMBING_GRADE_MATRIX,
   ClimbingScale,
   ROPE_SCALES,
+  bandModifierIndex,
   colorBandMidIndex,
   gradeToIndex,
 } from './climbing-grade-matrix';
@@ -104,6 +105,16 @@ describe('climbing-grade-matrix', () => {
       expect(colorBandMidIndex(15, 18)).toBe(16); // 33 / 2 = 16.5 -> 16
       expect(colorBandMidIndex(10, 11)).toBe(10);
       expect(colorBandMidIndex(20, 20)).toBe(20);
+    });
+  });
+
+  describe('bandModifierIndex (backlog/122)', () => {
+    const band = { absoluteDifficultyIndexLower: 15, absoluteDifficultyIndexUpper: 18 };
+    it('maps − / band / + to the lower / floored mid / upper index; no modifier = mid', () => {
+      expect(bandModifierIndex(band, 'MINUS')).toBe(15);
+      expect(bandModifierIndex(band, 'NEUTRAL')).toBe(16);
+      expect(bandModifierIndex(band, 'PLUS')).toBe(18);
+      expect(bandModifierIndex(band, null)).toBe(16);
     });
   });
 });

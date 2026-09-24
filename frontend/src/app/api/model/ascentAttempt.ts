@@ -30,6 +30,10 @@ export interface AscentAttempt {
      */
     ascentStyle?: AscentAttempt.AscentStyleEnum | null;
     /**
+     * backlog/122 — indoor boulder: the part of the colour band the problem sat in, tapped on the live quick-record grid (− / band / +). The client resolves `absoluteDifficultyIndex` from it: MINUS → the band\'s lower index, NEUTRAL → its mid index, PLUS → its upper index. null = not recorded (the band\'s mid index applies). Independent of the band\'s own admin-side `variant`.
+     */
+    bandModifier?: AscentAttempt.BandModifierEnum | null;
+    /**
      * Rope only (indoor hides TRAD client-side); null for boulder.
      */
     safetyStyle?: AscentAttempt.SafetyStyleEnum | null;
@@ -96,6 +100,12 @@ export namespace AscentAttempt {
         Redpoint: 'REDPOINT'
     } as const;
     export type AscentStyleEnum = typeof AscentStyleEnum[keyof typeof AscentStyleEnum];
+    export const BandModifierEnum = {
+        Minus: 'MINUS',
+        Neutral: 'NEUTRAL',
+        Plus: 'PLUS'
+    } as const;
+    export type BandModifierEnum = typeof BandModifierEnum[keyof typeof BandModifierEnum];
     export const SafetyStyleEnum = {
         Toprope: 'TOPROPE',
         Lead: 'LEAD',

@@ -4,10 +4,14 @@
       <ion-back-button defaultHref="/tabs/workout/climbing/outdoor-boulder" />
     </ion-buttons>
     <ion-title>
-      {{ (sessionId() ? 'WORKOUT.CLIMBING.SESSION.EDIT_TITLE' : 'WORKOUT.CLIMBING.SESSION.NEW_TITLE') | translate }}
+      @if (live.isLive) {
+        {{ (live.summary() ? 'WORKOUT.CLIMBING.LIVE.SUMMARY_TITLE' : 'WORKOUT.CLIMBING.LIVE.TITLE') | translate }}
+      } @else {
+        {{ (sessionId() ? 'WORKOUT.CLIMBING.SESSION.EDIT_TITLE' : 'WORKOUT.CLIMBING.SESSION.NEW_TITLE') | translate }}
+      }
     </ion-title>
     <ion-buttons slot="end">
-      @if (sessionId()) {
+      @if (sessionId() && !live.isLive) {
         <ion-button color="danger" (click)="delete()">{{ 'COMMON.DELETE' | translate }}</ion-button>
       }
     </ion-buttons>
@@ -15,6 +19,9 @@
 </ion-header>
 
 <ion-content>
+  @if (live.isLive) {
+    <app-climbing-live-bar [live]="live" />
+  }
   <form [formGroup]="form">
     <ion-list>
       <ion-item>
@@ -270,6 +277,12 @@
       }
       <span>· {{ 'WORKOUT.CLIMBING.SESSION.VOLUME_SHORT' | translate }} {{ previewVolume() | number: '1.0-0' }}</span>
     </div>
-    <ion-button slot="end" (click)="save()" [disabled]="form.invalid || !minFieldsMet()">{{ 'COMMON.SAVE' | translate }}</ion-button>
+    @if (!live.isLive) {
+      <ion-button slot="end" (click)="save()" [disabled]="form.invalid || !minFieldsMet()">{{ 'COMMON.SAVE' | translate }}</ion-button>
+    } @else if (live.summary()) {
+      <ion-button slot="end" class="live-approve" (click)="save()" [disabled]="form.invalid || !minFieldsMet() || live.timesInvalid()">
+        {{ 'WORKOUT.CLIMBING.LIVE.APPROVE' | translate }}
+      </ion-button>
+    }
   </ion-toolbar>
 </ion-footer>

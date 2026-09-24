@@ -7,6 +7,7 @@ import { provideTranslateService } from '@ngx-translate/core';
 import { ClimbingSession } from '../../../../api/model/climbingSession';
 import { Gym } from '../../../../api/model/gym';
 import { GymColorBand } from '../../../../api/model/gymColorBand';
+import { ClimbingLiveSessionService } from '../../../../core/data/climbing-live-session.service';
 import { ClimbingSessionRepository } from '../../../../core/data/climbing-session.repository';
 import { GymColorBandRepository } from '../../../../core/data/gym-color-band.repository';
 import { GymRepository } from '../../../../core/data/gym.repository';
@@ -44,7 +45,7 @@ describe('IndoorBoulderSessionEditPage', () => {
   let component: IndoorBoulderSessionEditPage;
   let saveSpy: jasmine.Spy<(draft: ClimbingSessionDraft) => Promise<ClimbingSession>>;
 
-  async function setup(idParam = 'new', previous: ClimbingSession[] = []): Promise<void> {
+  async function setup(idParam = 'new', previous: ClimbingSession[] = [], data: Record<string, unknown> = {}): Promise<void> {
     saveSpy = jasmine.createSpy('save').and.callFake(async (d: ClimbingSessionDraft) => ({
       ...d,
       id: d.id || 's1',
@@ -72,7 +73,7 @@ describe('IndoorBoulderSessionEditPage', () => {
         { provide: GymRepository, useValue: { load: () => Promise.resolve(), items: signal<Gym[]>([boulderGym()]) } },
         { provide: GymColorBandRepository, useValue: { load: () => Promise.resolve(), forGym: () => [band(), oddBand()] } },
         { provide: ProfileRepository, useValue: { load: () => Promise.resolve(), profile: signal({ currentWeightKg: 70 }) } },
-        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: idParam }) } } },
+        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: idParam }), data } } },
         { provide: AlertController, useValue: { create: () => Promise.resolve({ present: () => Promise.resolve() }) } },
       ],
     }).compileComponents();
@@ -81,8 +82,13 @@ describe('IndoorBoulderSessionEditPage', () => {
 
     fixture = TestBed.createComponent(IndoorBoulderSessionEditPage);
     component = fixture.componentInstance;
+    if (beforeInit) {
+      await beforeInit();
+    }
     await component.ngOnInit();
   }
+
+  let beforeInit: (() => Promise<unknown>) | null = null;
 
   it('starts as a fresh session for the "new" route param', async () => {
     await setup();
@@ -235,5 +241,96 @@ describe('IndoorBoulderSessionEditPage', () => {
     fixture.detectChanges();
     expect(component.attempts().length).toBe(2);
     expect(host.querySelectorAll('.attempt-card').length).toBe(2);
+  });
+
+  describe('live session (backlog/122)', () => {
+    let liveService: ClimbingLiveSessionService;
+
+    beforeEach(() => {
+      beforeInit = async () => {
+        liveService = TestBed.inject(ClimbingLiveSessionService);
+        await liveService.clear();
+        await liveService.start('indoor-boulder', Date.now() - 45 * 60_000);
+      };
+    });
+
+    afterEach(async () => {
+      component?.ngOnDestroy();
+      beforeInit = null;
+      await liveService?.clear();
+    });
+
+    it('resumes the persisted live draft on the live route and hides the post-hoc save', async () => {
+      await setup('new', [], { live: true });
+      expect(component.live.isLive).toBeTrue();
+      expect(component.live.summary()).toBeFalse();
+      expect(component.sessionId()).toBe(liveService.draft()!.session.id);
+      fixture.detectChanges();
+      expect((fixture.nativeElement as HTMLElement).querySelector('app-climbing-live-bar')).not.toBeNull();
+      expect((fixture.nativeElement as HTMLElement).querySelector('.live-approve')).toBeNull();
+    });
+
+    it('a quick-record tap logs a successful attempt with the band part: − lower, band mid, + upper index', async () => {
+      await setup('new', [], { live: true });
+      component.form.patchValue({ gymId: 'g1' });
+      component.quickRecord(band(), 'MINUS');
+      component.quickRecord(band(), 'NEUTRAL');
+      component.quickRecord(band(), 'PLUS');
+
+      expect(component.attempts().map((row) => [row.isSuccess(), row.colorBandId(), row.bandModifier()])).toEqual([
+        [true, 'b1', 'MINUS'],
+        [true, 'b1', 'NEUTRAL'],
+        [true, 'b1', 'PLUS'],
+      ]);
+      expect(component.bandCounts().get('b1')).toBe(3);
+    });
+
+    it('"Session vége" → summary → approve saves once with start / end / duration, then drops the draft', async () => {
+      await setup('new', [], { live: true });
+      component.form.patchValue({ gymId: 'g1' });
+      component.quickRecord(band(), 'MINUS');
+      component.quickRecord(band(), 'PLUS');
+
+      await component.save(); // still live → blocked
+      expect(saveSpy).not.toHaveBeenCalled();
+
+      await component.live.endSession();
+      expect(component.live.summary()).toBeTrue();
+      await component.save();
+
+      const draft = saveSpy.calls.mostRecent().args[0];
+      expect(draft.id).toBe(component.sessionId()!);
+      expect(draft.startedAt).toBeTruthy();
+      expect(draft.endedAt).toBeTruthy();
+      expect(draft.totalSessionDurationMinutes).toBe(45);
+      expect(draft.attempts.map((a) => [a.bandModifier, a.absoluteDifficultyIndex])).toEqual([
+        ['MINUS', 10],
+        ['PLUS', 12],
+      ]);
+      expect(await liveService.refresh()).toBeNull();
+    });
+
+    it('an end before the start blocks the approve', async () => {
+      await setup('new', [], { live: true });
+      component.form.patchValue({ gymId: 'g1' });
+      component.quickRecord(band(), 'NEUTRAL');
+      await component.live.endSession();
+      await component.live.setEnd('2000-01-01T10:00');
+
+      expect(component.live.timesInvalid()).toBeTrue();
+      await component.save();
+      expect(saveSpy).not.toHaveBeenCalled();
+    });
+
+    it('the autosave writes the form into the persisted draft (survives an app kill)', async () => {
+      await setup('new', [], { live: true });
+      component.form.patchValue({ gymId: 'g1', notes: 'erős nap' });
+      component.quickRecord(band(), 'PLUS');
+      await component.live.autosave();
+
+      const stored = await liveService.refresh();
+      expect(stored?.session.notes).toBe('erős nap');
+      expect(stored?.session.attempts[0].bandModifier).toBe('PLUS');
+    });
   });
 });
