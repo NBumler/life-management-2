@@ -1,7 +1,7 @@
 ---
 id: 128
 type: bug
-status: backlog
+status: deferred
 title: "[PRIO] Meglévő rekord szerkesztése nem marad meg (étkezés tétel mennyisége, színsáv nehézsége) — Androidon"
 specs:
   - "[[Étkezés]]"
@@ -99,7 +99,15 @@ A javítás előtt **reprodukálni és lokalizálni kell**, melyik réteg veszti
 
 ## Terv / döntési napló
 
-_Első lépés: debug build Androidon, `chrome://inspect` + az érintett SQLite sorok és
+- **2026-09-25 — `deferred`:** a user nem tudta reprodukálni. Addig parkolva, amíg újra elő
+  nem jön. Ha előjön: jegyezd fel a pontos lépéseket (melyik gomb / back / lehúzás zárta a
+  tételszerkesztőt, online vagy offline volt-e), és ne mentsd újra a rekordot, amíg adb-vel
+  ki nem olvastuk az SQLite + `outbox_item` állapotot → vissza `ready`-be.
+- A színsáv-oldali tünet valószínűleg a #129 volt (érvénytelen `3A`/`4A` Font-fokozat miatti
+  néma mentés), nem egy elveszett szerkesztés. A szerkesztés-oldali gyanú így főleg az étkezés
+  tételére marad.
+
+_Első lépés (ha újra előjön): debug build Androidon, `chrome://inspect` + az érintett SQLite sorok és
 `outbox_item` tartalmának kiolvasása a szerkesztés előtt és után._
 
 ## Lezáráskor (on-done)

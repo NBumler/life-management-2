@@ -1,85 +1,87 @@
 ---
 id: 129
 type: bug
-status: backlog
-title: "[PRIO] Új színsáv (GymColorBand) létrehozása nem működik Androidon"
+status: ready
+title: "[PRIO] Font/francia fokozat: a súgó és a hibaüzenet félrevezet (3A/4A érvénytelen), a színsáv mentése pedig csendben elnyeli a hibát"
 specs:
+  - "[[Nehézségi szint skálája]]"
   - "[[Indoor boulder admin]]"
-  - "[[Indoor boulder napló]]"
-  - "[[Backend-offline first]]"
 flag:
 created: 2026-09-25
 closed:
 ---
 
-# 129 — [PRIO] Új színsáv (GymColorBand) létrehozása nem működik Androidon
+# 129 — [PRIO] Font/francia fokozat: félrevezető súgó és hibaüzenet + csendes mentés a színsáv-szerkesztőn
 
 ## Motiváció / probléma
 
-**Prioritásos.** Felhasználói bejelentés (Android natív build, 2026-09-25): egy teremhez nem
-lehet új színsáv elemet felvenni. Színsáv nélkül az indoor boulder napló gyors-rögzítője
-([[Indoor boulder napló]]) nem használható, ami **offline sem működik**, pedig a
-[[Backend-offline first]] szerint a teljes admin + napló folyamatnak hálózat nélkül is mennie
-kell.
+Felhasználói bejelentés (Android, 2026-09-25): a Monkey Boulder teremhez nem lehetett új
+színsávot felvenni (Név: Fehér, Hex: `#ffffff`, Változat: Semleges, **Alsó: `3A`, Felső: `4A`**).
+**A Mentés gombra nyomva semmi sem történt.**
 
-**Tünet (a user emlékezete szerint): a Mentés gombra nyomva semmi sem történik** — nincs
-navigáció, nincs hibaüzenet, a form nyitva marad. Ez a lenti 1. (csendes validációs no-op) és 4.
-(nem kezelt kivétel) hipotézissel egyezik.
+**Gyökérok (a user eszközön igazolta):** a `3A` és a `4A` **nem érvényes Font-fokozat**. A
+Fontainebleau skálán a betű (A–C) csak **6-tól** létezik: az alsó fokozatok `3`, `4`, `5`
+(a hagyományos skálán `4+`, `5+` is), utána `6A`, `6A+`, `6B`, … Ez a konverziós mátrixban is
+így van (`FONT: '3', '4', '5', '6A', …`), a parser tehát helyesen utasítja el a `3A`-t. A hibát
+a félrevezető UI okozta:
 
-Nem ismert, hogy konzisztensen vagy csak néha jön elő, és az sem, hogy csak UI-hiba-e (pl.
-a mentés létrejön, csak a lista nem frissül), vagy a lokális írás sem történik meg. Lehet
-köze a #128-hoz (szerkesztés nem marad meg, köztük a színsáv nehézsége), de lehet független is.
+1. **A súgó félrevezet.** `SHARED.GRADE_INPUT.HELP_BOULDER`: „a 3, 4, 5 betű nélkül **is**
+   érvényes” → azt sugallja, hogy a `3A` / `4A` is jó. Valójában 3–5-nél **csak** betű nélkül
+   érvényes.
+2. **A „hiányzó betű” hibaüzenet kifejezetten rossz utat mutat.**
+   `SHARED.GRADE_INPUT.ERROR_MISSING_LETTER_BOULDER`: „Font skálán betű is kell a szám mellé,
+   pl. **4A+**” — a `4A+` maga is érvénytelen. Ugyanez a köteles párjánál
+   (`ERROR_MISSING_LETTER_ROPE`: „pl. **4a+**”; a francia mátrixban `3`, `4`, `5`, `5a`–`5c`,
+   `6a`… van, `4a+` nincs).
+3. **A színsáv-szerkesztő mentése csendes.** `gym-color-band-edit.page.ts` `save()` érvénytelen
+   formnál vagy nem `VALID` grade-nél szó nélkül kilép. Látható hiba csak a hex mezőnél van,
+   így a user nem tudja, mi a baj.
+
+Szakmai forrás (a Font skála 3–5 betű nélkül, a betű 6-tól):
+[99Boulders — Bouldering Grades](https://www.99boulders.com/bouldering-grades),
+[Lacrux — Climbing scales explained](https://www.lacrux.com/en/klettern/climbing-scales-explained-uiaa-fontainebleau-v-grade-co/).
 
 ## Jelenlegi működés
 
-- Útvonal: `/tabs/workout/climbing/admin/gyms/:gymId/bands/new` →
-  `pages/workout/climbing/admin/gym-color-band-edit.page.ts`. A `gymId`-t a
-  `route.snapshot.parent` paramMap-jéből veszi. A lista a `gym-edit.page.html`-ben csak akkor
-  látszik, ha a teremnek már van `gymId`-je (mentett terem).
-- `save()` **csendben visszatér**, ha a form invalid vagy bármelyik grade határ nem `VALID`
-  (`form.markAllAsTouched()` után). Hibaüzenet **csak a hex mezőre** van (formátum /
-  ütközés). Név- és grade-hibára nincs látható visszajelzés, a gomb „nem csinál semmit”.
-- `GymColorBandRepository.save` → egyedi hex ellenőrzés (kanonikus alakon, a terem élő sávjai
-  között) → `storage.upsertGymColorBand` (SQLite + outbox) → a `items` signal frissül → vissza
-  a terem oldalra, ahol a `bands` computed a `forGym(gymId)`-ből számol.
-- Nem várt kivétel (pl. SQLite / outbox hiba) esetén a `save()` továbbdobja, és nincs
-  felhasználói visszajelzés.
-
-## Hipotézisek (kivizsgálandó, nem igazolt)
-
-1. **Csendes validációs no-op.** A grade parser `BOULDER` skálán nem ismeri fel a beírt
-   értéket (pl. formátum, „/"-tartomány, szóköz, V vs Font), vagy a név üres. A `save()` ilyenkor
-   szó nélkül kilép, ami a user szemszögéből pont „nem tudok létrehozni”.
-2. **`gymId` üres vagy rossz.** Ionic navigációnál a `route.snapshot.parent` nem a `:gymId`
-   szintre mutat, a sáv `gymId: ''`-vel mentődik, és a terem listájában soha nem jelenik meg
-   (a hex-ütközés ellenőrzés is rossz halmazon fut).
-3. **A lista nem frissül.** A terem oldal Ionic stack-ben újrahasznosított példány, a sáv
-   létrejön, de a `bands` nem látszik (vö. #128 cache-hipotézis).
-4. **Lokális írás / outbox hiba** (pl. hiányzó oszlop a `SCHEMA_Vn`-ben, FK a még nem szinkronizált
-   `gym`-re, `dependsOn` hiánya egy offline létrehozott teremnél) → nem kezelt kivétel.
-5. **A natív színválasztó** (`input[type=color]`, `backlog/115`) Android WebView-ben nem
-   frissíti a hex mezőt, így a hex üres/invalid marad (de ekkor látszania kellene a hex
-   hibaüzenetnek, ha a mező touched).
+- [[Nehézségi szint skálája]] / `shared/grade-input/grade-input.component.ts`: a súgó (ⓘ)
+  szövege `HELP_BOULDER` / `HELP_ROPE` (`assets/i18n/{hu,en}.json`), a mező alatti hiba
+  `ERROR_UNKNOWN` / `ERROR_AMBIGUOUS` / `ERROR_MISSING_LETTER_*` (`isBareNumberWithModifier`
+  esetén). A hiba a 250 ms-os debounce vagy a blur után jelenik meg.
+- [[Indoor boulder admin]] színsáv-szerkesztő: a `save()` érvénytelen név vagy grade esetén
+  `markAllAsTouched()` után visszatér. Hibaüzenet nincs, navigáció nincs.
 
 ## Elfogadási kritériumok
 
-- [ ] Reprodukció és gyökérok dokumentálva a `## Terv / döntési napló`-ban (Android, ONLINE és
-      FULL_OFFLINE állapot, meglévő szinkronizált terem és offline most létrehozott terem is).
-- [ ] Új színsáv létrehozható Androidon ONLINE, BACKEND_OFFLINE és FULL_OFFLINE állapotban.
-      Mentés után azonnal megjelenik a terem sávlistájában, app újraindítás után is ott van,
-      és a következő drain után a szerveren is létrejön.
-- [ ] Offline most létrehozott teremhez is lehet sávot felvenni: az outbox `dependsOn`
-      láncolja a terem POST-jára.
-- [ ] A `save()` **soha nem csendes**: minden invalid mezőnél (név, alsó/felső grade, hex,
-      fordított tartomány ha releváns) látható, lefordított hibaüzenet jelenik meg; nem várt
-      hibánál is van visszajelzés (toast), nem csak konzol.
-- [ ] A létrehozott sáv azonnal kiválasztható az [[Indoor boulder napló]] gyors-rögzítő rácsán.
-- [ ] Regressziós spec a talált gyökérokra + a csendes-validáció visszajelzésre.
+- [ ] `HELP_BOULDER` (hu + en) egyértelmű: **3, 4, 5 csak betű nélkül érvényes** (nem „is”),
+      6-tól kötelező a betű. Példa a súgóban: `3`, `5`, `6A`, `6B+`, `7C`.
+- [ ] `HELP_ROPE` (hu + en) a francia mátrixhoz igazítva: `3`, `4` csak betű nélkül, `5`
+      betű nélkül vagy `5a`–`5c`, 6-tól kötelező a betű.
+- [ ] `ERROR_MISSING_LETTER_BOULDER` / `_ROPE` nem javasol érvénytelen fokozatot (a `4A+` /
+      `4a+` példa kikerül). Olyan példát ad, ami ténylegesen elfogadott (pl. `6A+` / `6a+`).
+- [ ] Ha 3–5 közötti számhoz betű kerül (Font: `3A`, `4A`, `5C`, …; francia: `3a`, `4b`, …),
+      a mező **célzott** hibaüzenetet ad (pl. „3–5 között betű nélkül: `4`”), nem csak az
+      általános „nem ismerhető fel” szöveget.
+- [ ] A színsáv-szerkesztő `save()` soha nem csendes: érvénytelen névnél és alsó/felső
+      fokozatnál azonnal (debounce nélkül) látható, lefordított hiba jelenik meg a mező
+      alatt. Nem várt hibánál is van visszajelzés (toast), nem csak konzol.
+- [ ] Ugyanez a csendes-mentés minta átnézve a többi grade-mezős admin szerkesztőn
+      (indoor route, outdoor route, boulder problem). Ahol ugyanígy csendes, ott is javítva.
+- [ ] Spec: [[Nehézségi szint skálája]] súgó- és hibaszöveg-leírása frissítve, [[Indoor boulder
+      admin]] mentés-validáció leírva.
+- [ ] Regressziós tesztek: a grade-input `3A` / `4a` célzott hibaüzenete, és a színsáv-szerkesztő
+      érvénytelen grade melletti mentésénél megjelenő hiba.
+
+## Nyitott kérdések / döntendő
+
+- A hagyományos Font skálán a `4+` és az `5+` is létező fokozat, a mátrixban viszont nincs
+  (`'3', '4', '5', '6A'`). Legyen-e felvéve? Ez mátrixváltozás és index-átsorolás, a meglévő
+  adatokat is érintheti → javasolt külön jegyben, ha kell.
 
 ## Terv / döntési napló
 
-_Első lépés: debug build, `chrome://inspect` konzol + `gym_color_band` / `outbox_item` tábla
-tartalma a mentés előtt és után; ellenőrizni, milyen `gymId`-vel jön létre a sor (ha létrejön)._
+- 2026-09-25: a user eszközön igazolta, hogy a `3A` / `4A` alsó/felső fokozat okozza a néma
+  mentést. A kezdeti hipotézisek (rossz `gymId`, lista-cache, SQLite/outbox hiba, natív
+  színválasztó) elvetve.
 
 ## Lezáráskor (on-done)
 
