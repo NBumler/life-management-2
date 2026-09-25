@@ -21,7 +21,7 @@ import { ClimbingSession } from '../../../../api/model/climbingSession';
 import { ClimbingLiveSessionService, liveRoute } from '../../../../core/data/climbing-live-session.service';
 import { ClimbingSessionRepository } from '../../../../core/data/climbing-session.repository';
 import { ProfileRepository } from '../../../../core/data/profile.repository';
-import { climbingAttemptInput } from '../climbing-attempt-input';
+import { climbingAttemptInput, climbingSessionKcalInput } from '../climbing-attempt-input';
 import { climbingKcal, climbingVolume } from '../climbing-metrics';
 import { CLIMBING_CONTEXTS, ClimbingContextKey } from '../climbing-contexts';
 import { ClimbingLiveBannerComponent } from '../climbing-live-banner.component';
@@ -88,15 +88,7 @@ export class ClimbingSessionListPage implements OnInit {
           session,
           attemptCount: attempts.length,
           successCount: attempts.filter((a) => a.isSuccess).length,
-          kcal: climbingKcal(
-            {
-              discipline: this.context.discipline,
-              totalSessionDurationMinutes: session.totalSessionDurationMinutes ?? null,
-              pumpRating: session.pumpRating ?? null,
-              attempts: metricAttempts,
-            },
-            bodyWeight,
-          ),
+          kcal: climbingKcal(climbingSessionKcalInput(session, this.repository.items()), bodyWeight),
           volume: climbingVolume({ discipline: this.context.discipline, attempts: metricAttempts }),
         };
       });

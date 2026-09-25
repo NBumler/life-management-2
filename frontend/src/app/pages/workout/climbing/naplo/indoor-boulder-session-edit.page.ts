@@ -42,7 +42,8 @@ import { parseGrade } from '../../../../shared/climbing/grade-scale';
 import { GradeInputComponent } from '../../../../shared/grade-input/grade-input.component';
 import { HelpButtonComponent } from '../../../../shared/help-button/help-button.component';
 import { PartnerComboboxComponent } from '../../../../shared/partner-combobox/partner-combobox.component';
-import { climbingKcal, climbingVolume } from '../climbing-metrics';
+import { boulderReferenceIndex } from '../climbing-attempt-input';
+import { ClimbingAttemptInput, climbingKcal, climbingVolume } from '../climbing-metrics';
 import { ClimbingLiveBarComponent } from './climbing-live-bar.component';
 import { ClimbingLiveController } from './climbing-live-controller';
 import { scrollToLastAttempt } from './scroll-to-last-attempt';
@@ -235,6 +236,9 @@ export class IndoorBoulderSessionEditPage implements OnInit, OnDestroy {
   private readonly pumpValue = toSignal(this.form.controls.pumpRating.valueChanges, {
     initialValue: this.form.controls.pumpRating.value,
   });
+  private readonly dateValue = toSignal(this.form.controls.date.valueChanges, {
+    initialValue: this.form.controls.date.value,
+  });
   /** Bumped on every attempt-row field change so the kcal / volume preview recomputes. */
   private readonly attemptsRevision = signal(0);
 
@@ -271,6 +275,7 @@ export class IndoorBoulderSessionEditPage implements OnInit, OnDestroy {
         totalSessionDurationMinutes: this.durationValue(),
         pumpRating: this.pumpValue(),
         attempts: this.metricAttempts(),
+        referenceDifficultyIndex: boulderReferenceIndex(this.repository.items(), this.dateValue(), this.sessionId()),
       },
       this.profileRepository.profile()?.currentWeightKg ?? null,
     );
@@ -467,11 +472,12 @@ export class IndoorBoulderSessionEditPage implements OnInit, OnDestroy {
     await this.router.navigateByUrl('/tabs/workout/climbing/indoor-boulder');
   }
 
-  /** The kcal / volume model only needs success + resolved grade index per attempt (boulder: no length / safety). */
-  private metricAttempts(): { isSuccess: boolean; absoluteDifficultyIndex: number | null }[] {
+  /** The kcal / volume model only needs success + resolved grade index + go count per attempt (boulder: no length / safety). */
+  private metricAttempts(): ClimbingAttemptInput[] {
     return this.attempts().map((row) => ({
       isSuccess: row.isSuccess(),
       absoluteDifficultyIndex: this.resolveIndex(row),
+      attemptCount: row.attemptCount(),
     }));
   }
 

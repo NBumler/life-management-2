@@ -15,7 +15,7 @@ import { DailyStepLog } from '../../api/model/dailyStepLog';
 import { SwimLog } from '../../api/model/swimLog';
 import { WorkoutSession } from '../../api/model/workoutSession';
 import { bikeKcal } from '../../pages/workout/cycling/bike-metrics';
-import { climbingAttemptInput } from '../../pages/workout/climbing/climbing-attempt-input';
+import { climbingSessionKcalInput } from '../../pages/workout/climbing/climbing-attempt-input';
 import { climbingKcal } from '../../pages/workout/climbing/climbing-metrics';
 import { sessionKcal } from '../../pages/workout/log/workout-metrics';
 import { swimKcal } from '../../pages/workout/swimming/swim-metrics';
@@ -106,15 +106,7 @@ export function climbingKcalForDay(
     .reduce(
       (sum, session) =>
         sum +
-        climbingKcal(
-          {
-            discipline: session.discipline,
-            totalSessionDurationMinutes: session.totalSessionDurationMinutes ?? null,
-            pumpRating: session.pumpRating ?? null,
-            attempts: session.attempts.filter((attempt) => !attempt.deleted).map(climbingAttemptInput),
-          },
-          bodyWeightKg,
-        ),
+        climbingKcal(climbingSessionKcalInput(session, sessions), bodyWeightKg),
       0,
     );
 }

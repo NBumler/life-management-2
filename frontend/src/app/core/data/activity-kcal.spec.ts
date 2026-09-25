@@ -132,8 +132,8 @@ describe('climbingKcalForDay', () => {
   it('sums climbingKcal over live sessions whose date matches the day', () => {
     const sessions = [climb({ id: 'a' }), climb({ id: 'b', totalSessionDurationMinutes: 30 })];
     const expected =
-      climbingKcal({ discipline: 'BOULDER', totalSessionDurationMinutes: 60, pumpRating: null, attempts: [{ isSuccess: true, absoluteDifficultyIndex: 16 }] }, 80) +
-      climbingKcal({ discipline: 'BOULDER', totalSessionDurationMinutes: 30, pumpRating: null, attempts: [{ isSuccess: true, absoluteDifficultyIndex: 16 }] }, 80);
+      climbingKcal({ discipline: 'BOULDER', totalSessionDurationMinutes: 60, pumpRating: null, attempts: [{ isSuccess: true, absoluteDifficultyIndex: 16 }], referenceDifficultyIndex: 16 }, 80) +
+      climbingKcal({ discipline: 'BOULDER', totalSessionDurationMinutes: 30, pumpRating: null, attempts: [{ isSuccess: true, absoluteDifficultyIndex: 16 }], referenceDifficultyIndex: 16 }, 80);
     expect(climbingKcalForDay(sessions, '2026-08-28', 80)).toBeCloseTo(expected, 6);
     expect(climbingKcalForDay(sessions, '2026-08-28', 80)).toBeGreaterThan(0);
   });

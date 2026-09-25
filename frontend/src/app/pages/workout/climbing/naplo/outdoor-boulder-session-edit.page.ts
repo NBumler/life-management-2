@@ -42,7 +42,8 @@ import { PartnerComboboxComponent } from '../../../../shared/partner-combobox/pa
 import { WeatherChipsComponent } from '../../../../shared/weather-chips/weather-chips.component';
 import { WeatherTag, canonicalWeather } from '../../../../shared/climbing/weather';
 import { today } from '../../../../shared/local-date';
-import { climbingKcal, climbingVolume } from '../climbing-metrics';
+import { boulderReferenceIndex } from '../climbing-attempt-input';
+import { ClimbingAttemptInput, climbingKcal, climbingVolume } from '../climbing-metrics';
 import { ClimbingLiveBarComponent } from './climbing-live-bar.component';
 import { ClimbingLiveController } from './climbing-live-controller';
 import { scrollToLastAttempt } from './scroll-to-last-attempt';
@@ -199,6 +200,9 @@ export class OutdoorBoulderSessionEditPage implements OnInit, OnDestroy {
   private readonly pumpValue = toSignal(this.form.controls.pumpRating.valueChanges, {
     initialValue: this.form.controls.pumpRating.value,
   });
+  private readonly dateValue = toSignal(this.form.controls.date.valueChanges, {
+    initialValue: this.form.controls.date.value,
+  });
   /** Bumped on every attempt-row field change so the kcal / volume preview recomputes. */
   private readonly attemptsRevision = signal(0);
 
@@ -226,6 +230,7 @@ export class OutdoorBoulderSessionEditPage implements OnInit, OnDestroy {
         totalSessionDurationMinutes: this.durationValue(),
         pumpRating: this.pumpValue(),
         attempts: this.metricAttempts(),
+        referenceDifficultyIndex: boulderReferenceIndex(this.repository.items(), this.dateValue(), this.sessionId()),
       },
       this.profileRepository.profile()?.currentWeightKg ?? null,
     );
@@ -491,11 +496,12 @@ export class OutdoorBoulderSessionEditPage implements OnInit, OnDestroy {
     }
   }
 
-  /** The kcal / volume model only needs success + resolved grade index per attempt (boulder: no length / safety). */
-  private metricAttempts(): { isSuccess: boolean; absoluteDifficultyIndex: number | null }[] {
+  /** The kcal / volume model only needs success + resolved grade index + go count per attempt (boulder: no length / safety). */
+  private metricAttempts(): ClimbingAttemptInput[] {
     return this.attempts().map((row) => ({
       isSuccess: row.isSuccess(),
       absoluteDifficultyIndex: this.resolveIndex(row),
+      attemptCount: row.attemptCount(),
     }));
   }
 

@@ -22,6 +22,10 @@ lehet új színsáv elemet felvenni. Színsáv nélkül az indoor boulder napló
 [[Backend-offline first]] szerint a teljes admin + napló folyamatnak hálózat nélkül is mennie
 kell.
 
+**Tünet (a user emlékezete szerint): a Mentés gombra nyomva semmi sem történik** — nincs
+navigáció, nincs hibaüzenet, a form nyitva marad. Ez a lenti 1. (csendes validációs no-op) és 4.
+(nem kezelt kivétel) hipotézissel egyezik.
+
 Nem ismert, hogy konzisztensen vagy csak néha jön elő, és az sem, hogy csak UI-hiba-e (pl.
 a mentés létrejön, csak a lista nem frissül), vagy a lokális írás sem történik meg. Lehet
 köze a #128-hoz (szerkesztés nem marad meg, köztük a színsáv nehézsége), de lehet független is.
