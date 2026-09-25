@@ -14,6 +14,10 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-09-25 — #130** Boulder kalória-modell: aktív idő 45 s × `attemptCount`, aktív MET 5.8 → 9.5 a
+  mászó 90 napos referenciaszintjéhez mért nehézség szerint (2024 Compendium), boulder pihenő bruttó 3.0
+  MET — érintett: [[Mászónapló]], [[Tápérték kalkulátor]], [[Indoor boulder napló]]; kód:
+  `pages/workout/climbing/climbing-metrics.ts`, `climbing-attempt-input.ts`, `core/data/activity-kcal.ts`
 - **2026-09-24 — #122 (+ #21)** Élő mászó session: „Session indítása" a kontextus-listákon (egyszerre egy),
   hub-/lista-sáv „Folyamatban: …", élő felület = a meglévő 4 napló-szerkesztő `<ctx>/live` útvonalon
   (stopper, perzisztált draft — app-kill után helyreáll, így a #21 is lezárva), „Session vége" →

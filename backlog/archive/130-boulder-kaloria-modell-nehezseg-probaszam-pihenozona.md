@@ -1,7 +1,7 @@
 ---
 id: 130
 type: change-request
-status: backlog
+status: done
 title: Boulder kalória-modell — nehézség, próbaszám és a pihenőzóna valósághű figyelembevétele
 specs:
   - "[[Mászónapló]]"
@@ -10,7 +10,7 @@ specs:
   - "[[Outdoor boulder napló]]"
 flag:
 created: 2026-09-25
-closed:
+closed: 2026-09-25
 ---
 
 # 130 — Boulder kalória-modell: nehézség, próbaszám és pihenőzóna
@@ -174,10 +174,14 @@ visszamenőleg hat.
 
 ## Terv / döntési napló
 
-_—_
+A nyitott kérdésekre hozott döntések (2026-09-25):
+- `BOULDER_SECONDS_PER_GO` = fix 45 s (nincs siker/bukás szerinti bontás, mert a modell így egyszerűbb, és a különbség a pihenőzónában amúgy is kiegyenlítődik).
+- `I_ref` = 90 napos **maximum** (sikeres, boulder, indoor + outdoor, a sessiont kihagyva); nincs előzmény → V5 (index 20). A session saját legjobb sikeres kísérlete megemeli. `Δ` = 8 index (4 V-fokozat).
+- Nincs külön bemelegítés-mező: a boulder pihenő 3.0 bruttó MET fedi.
+- A kötél ág változatlan; ha kell nehézségfüggés, az külön jegy lesz.
 
 ## Lezáráskor (on-done)
 
-- Frissített specek: [[…]] — melyik szakasz, egy sor mit változott
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — <mit>
-- Kód: <fő package-ek / fájlok>
+- Frissített specek: [[Mászónapló]] — „Kalória (kanonikus)”: 45 s × próbaszám, 2024 Compendium MET-tábla, „Relatív nehézség” blokk, boulder pihenő 3.0, példa, `attemptCount` mező-leírás, új `#### Tudatos korlát` (a kcal az előzményektől függ); [[Tápérték kalkulátor]] — mászás MET-összefoglaló; [[Indoor boulder napló]] — `attemptCount` + kalória-hivatkozás
+- `IMPLEMENTATION_STATUS.md` sor: 2026-09-25 — #130 boulder kalória-modell
+- Kód: `frontend/src/app/pages/workout/climbing/climbing-metrics.ts`, `climbing-attempt-input.ts`, `core/data/activity-kcal.ts`, `naplo/climbing-session-list.page.ts`, `naplo/{indoor,outdoor}-boulder-session-edit.page.ts`

@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-24
-verifikalt_commit: c3d8708
+verifikalva: 2026-09-25
+verifikalt_commit: aa61aee
 ---
 
 # Indoor boulder napló
@@ -44,13 +44,13 @@ Közös session modell: [[Mászónapló]] (`locationType=INDOOR`, `discipline=BO
 | `userRawInput` | Opcionális / alternatív: [[Nehézségi szint skálája]] Font/V parser |
 | `absoluteDifficultyIndex` | Szín-sávból: a `[Lower, Upper]` index **lefelé kerekített** közepe (`resolveIndex()` → `colorBandMidIndex`, `floor` — determinisztikus, klienst és szervert egyaránt köti); parser esetén a parsed grade indexe. |
 | `isSuccess` | Boolean |
-| `attemptCount` | Opcionális `≥ 1` — próbák (gólok) száma **ebben a sessionben** ezen a problémán (napló-form címke: „Próbák (ebben a sessionben)"). Tájékoztató; a képletek nem szoroznak vele. Lásd [[Mászónapló]]. |
+| `attemptCount` | Opcionális `≥ 1` — próbák (gólok) száma **ebben a sessionben** ezen a problémán (napló-form címke: „Próbák (ebben a sessionben)"). A boulder kalória aktív idejébe bemegy (45 s / próba); a Volumen és a sikerarány nem szoroz vele. Lásd [[Mászónapló]]. |
 | `ascentStyle` | Ha siker: `FLASH` \| `REDPOINT` \| `ONSIGHT` (ONSIGHT megengedett fallback) |
 | `notes` | Opcionális, többsoros szabad szöveg (pl. top fogás). Sikertelennél ugyanez a mező a „hol akadt el" jegyzet — **nincs külön `failurePoint`** ([[Mászónapló]], `backlog/archive/077`). |
 
 Nincs `safetyStyle`, `lengthInMeters`, `PitchLog`.
 
-Kalória / volumen: [[Mászónapló]] (boulder 60 s/kísérlet; volume = sikeres × 4 m × \(I\)).
+Kalória / volumen: [[Mászónapló]] (boulder 45 s × próbaszám, a saját szinthez mért nehézség szerinti MET; volume = sikeres × 4 m × \(I\)).
 
 CRUD: nested session mentés; soft delete; draft élő sessionhez.
 

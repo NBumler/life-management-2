@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: 65c3b52
+verifikalva: 2026-09-25
+verifikalt_commit: aa61aee
 ---
 
 # Tápérték kalkulátor
@@ -72,7 +72,7 @@ MET táblák (részletek a napló specekben is):
 
 **Bicikli** ([[Biciklizés napló]]): `CITY` 4.0; `STATIONARY` 6.0; `ROAD_LEISURE` 6.8; `MOUNTAIN_TRAIL` 8.5; `ROAD_VIGOROUS` 10.0.
 
-**Mászás** ([[Mászónapló]]): **aktív/passzív MET modell** (nem teljes session-idő × egy MET). Aktív bázis: boulder **8.0**, kötél **7.0** (másodmászó: ×0.8); rest **2.0**; `pumpRating` az aktív MET-et módosítja; TRAD: testsúly +6 kg az aktív ágon. Aktív idő: boulder 60 s/kísérlet; kötél m × (25/45/60 s) safety szerint. Részletek és fallback: [[Mászónapló]].
+**Mászás** ([[Mászónapló]]): **aktív/passzív MET modell** (nem teljes session-idő × egy MET). Aktív bázis: boulder **5.8 → 9.5** a mászó 90 napos referenciaszintjéhez mért nehézség szerint (ismeretlen grade: 8.8), kötél **7.0** (másodmászó: ×0.8); rest: kötél **2.0**, boulder **3.0**; `pumpRating` az aktív MET-et módosítja; TRAD: testsúly +6 kg az aktív ágon. Aktív idő: boulder 45 s × `attemptCount`; kötél m × (25/45/60 s) safety szerint. Részletek és fallback: [[Mászónapló]].
 
 **Erőedzés** ([[Edzésnapló]]): `GENERAL_WEIGHTS` 5.0; `HIIT_CIRCUIT` 8.0.
 

@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-24
-verifikalt_commit: c3d8708
+verifikalva: 2026-09-25
+verifikalt_commit: aa61aee
 ---
 
 # Mászónapló
@@ -78,7 +78,7 @@ Egy napon **több** session megengedett (akár ugyanarra a kontextusra is). Egy 
 | `absoluteDifficultyIndex` | Integer; mátrixból ([[Nehézségi szint skálája (konverziós mátrix)]]). Kliens-oldalon mindig a `userRawInput` (ha van) vagy a kiválasztott út fokozatából számítva — lásd fent az útváltás-szabályt. |
 | `ascentStyle` | Opcionális, ha `isSuccess`: `ONSIGHT` \| `FLASH` \| `REDPOINT` (kontextus szerinti whitelist). A választó mellett súgó (ⓘ) gomb: a három stílus definíciója + miért zárják ki egymást (`WORKOUT.CLIMBING.ASCENT_STYLE.HELP_*`). **Korábbi-megmászás figyelmeztetés:** ha a sor sikeres `ONSIGHT` / `FLASH`, **és** ugyanarra a linkelt útra (`indoorRouteId` / `routeId` / `boulderProblemId`) van korábbi, nem törölt, **sikeres** kísérlet egy korábbi dátumú sessionben, a stílus-választó alatt **nem blokkoló** figyelmeztető `ion-note` jelenik meg a legutóbbi megmászás dátumával (`WORKOUT.CLIMBING.SESSION.PRIOR_ASCENT_WARNING`) — a mentés engedélyezett marad (a user tudhatja jobban: elírt linkelés, más út). Tisztán kliensoldali, származtatott (`ClimbingSessionRepository.priorSuccessfulAscentDate`), Full-offline is fut. Ad-hoc (link nélküli) kísérletnél nincs mihez hasonlítani → nincs figyelmeztetés. Indoor bouldernél nincs (a `colorBandId` szín-sáv nem azonosít konkrét problémát). |
 | `safetyStyle` | Csak kötél: `TOPROPE` \| `LEAD` \| `TRAD` (indoor: TRAD rejtve) |
-| `attemptCount` | Opcionális egész `≥ 1` — **próbák (gólok) száma ebben a sessionben ezen az úton**, kontextustól függetlenül (pl. redpoint-próbák egy köteles úton). A napló-form címkéje: „Próbák (ebben a sessionben)"; új kísérlet-sor felvételekor a mező **alapból `1`** (a leggyakoribb eset egy próba), így ha a user nem módosítja, `1` mentődik. Tájékoztató mező: a Volumen-, a sikerarány- és a duration-fallback képlet is **kísérlet-soronként** (nem `Σ attemptCount`) számol, egyikük sem szoroz vele; a statisztikai nézetek megjeleníthetik. |
+| `attemptCount` | Opcionális egész `≥ 1` — **próbák (gólok) száma ebben a sessionben ezen az úton**, kontextustól függetlenül (pl. redpoint-próbák egy köteles úton). A napló-form címkéje: „Próbák (ebben a sessionben)"; új kísérlet-sor felvételekor a mező **alapból `1`** (a leggyakoribb eset egy próba), így ha a user nem módosítja, `1` mentődik. **Bouldernél a kalóriába bemegy** (aktív idő = `attemptCount × 45 s`, `backlog/130`); a Volumen-, a sikerarány- és a duration-fallback képlet viszont **kísérlet-soronként** (nem `Σ attemptCount`) számol, nem szoroz vele. Kötélnél a kalóriát sem érinti (ott a mászott méter számít). |
 | `colorBandId` / `routeId` / `boulderProblemId` | Opcionális FK + **snapshot** mezők (gyerek specek) |
 | `bandModifier` | Beltéri boulder, opcionális (`backlog/122`): `MINUS` \| `NEUTRAL` \| `PLUS` — a színsáv melyik részén volt a probléma; az `absoluteDifficultyIndex` ebből: `MINUS →` a sáv alsó, `NEUTRAL` / `null →` floorolt közép, `PLUS →` felső indexe (`bandModifierIndex`). Független a sáv admin-oldali `variant`-jától |
 | `sectorId` / `sectorName` | **Kültéri**, opcionális FK + snapshot: a **kísérlet szektora** (`backlog/084`). Egy alkalom (session) több szektort is érinthet, ezért a szektor kísérletenként választható — a `Crag` marad session-szintű. Új kísérlet-sor felvételekor a szektor **előtöltődik az előző kísérletéből** (első sornál az utolsó ilyen kontextusú session utolsó kísérletének szektorából); a `Crag` váltása minden sor szektorát törli. Indoor kontextusban `null`. |
@@ -103,7 +103,7 @@ elvetve: telefonon, a szikla alatt egy projektútra 6 sort felvenni kezelhetetle
 
 | Szabály | Aktív idő |
 |---|---|
-| Boulder (minden naplózott kísérlet) | fix **60 s** |
+| Boulder | **45 s × `attemptCount`** (hiányzó / `< 1` → 1 próba) — egy boulder-próba jellemzően 4–10 mozdulat, 20–60 s; a nehéz, bukós próbák a rövidebbek |
 | Kötél TOPROPE | `lengthInMeters × 25` s |
 | Kötél LEAD | `lengthInMeters × 45` s |
 | Kötél TRAD | `lengthInMeters × 60` s |
@@ -112,14 +112,24 @@ elvetve: telefonon, a szikla alatt egy projektútra 6 sort felvenni kezelhetetle
 \(t_{\text{activeMin}} = \sum \text{aktív s} / 60\);  
 \(t_{\text{restMin}} = \max(0,\; \text{totalSessionDurationMinutes} - t_{\text{activeMin}})\).
 
-**MET (bruttó, a [Compendium of Physical Activities](https://pacompendium.com) — Ainsworth et al. 2011 — sziklamászás-kódjaihoz igazítva: „ascending, high difficulty" ≈ 7.5; „low-to-moderate" ≈ 5.8; „rappelling" 5.0; állás / biztosítás ≈ 2.0):**
+**MET (bruttó, a [2024 Adult Compendium of Physical Activities](https://pacompendium.com/sports/) — Herrmann et al. 2024 — sziklamászás-kódjaihoz igazítva: 15537 „ascending or traversing rock, low-to-moderate difficulty" 5.8; 15535 „ascending rock, high difficulty" 7.3; 15534 „free boulder" 8.8; 15540 „rappelling" 5.0; állás / biztosítás ≈ 2.0):**
 
 | | Bruttó MET |
 |---|---|
-| Aktív boulder | 8.0 |
+| Aktív boulder | **5.8 → 9.5**, a mászó saját szintjéhez viszonyított nehézség szerint (lásd „Relatív nehézség") |
+| Aktív boulder, ismeretlen grade (`absoluteDifficultyIndex` hiányzik) | 8.8 (15534) |
 | Aktív kötél (elöl) | 7.0 |
 | Aktív kötél másod | \(7.0 \times 0.8\) |
-| Rest / üresjárat / biztosítás a földön | **2.0** |
+| Rest — kötél (biztosítás / üresjárat a földön) | **2.0** |
+| Rest — boulder (járkálás a problémák közt, spottolás, kefélés, nem naplózott bemelegítő mászások, a próbák utáni 2–4 perces emelkedett regeneráció) | **3.0** |
+
+**Relatív nehézség (boulder, `backlog/130`).** A mászás energiaköltsége a nehézséggel nő (Mermier et al. 1997: egyre nehezebb falon szignifikánsan nő a VO₂ és az energialeadás; a Compendium is 5.8 → 7.3-ra lép a nehézséggel), de a meghatározó a **mászó saját szintjéhez mért** nehézség: egy V7 a saját határon közel maximális terhelés (versenyboulderben ~10 MET-es csúcs, a VO₂max ~75%-a), egy V12-es mászónak bemelegítés. Ezért:
+
+- **Referenciaszint** \(I_{\text{ref}}\) = a legmagasabb **sikeres** boulder `absoluteDifficultyIndex` bármely élő (indoor vagy outdoor) BOULDER sessionben a session dátuma előtti **90 napban** (a dátumot is beleértve, az adott sessiont kihagyva). Ha nincs ilyen, **V5 (index 20)** az alapérték. A session saját legjobb **sikeres** kísérlete mindig megemeli (egy megmászott új max. nem lehet „a határ fölött").
+- \(r = \text{clamp}\big((I - (I_{\text{ref}} - 8)) / 8,\ 0,\ 1\big)\) — a 8 index-lépés 4 V-fokozat (a V-skála lépése 2 index a [[Nehézségi szint skálája (konverziós mátrix)]]-ban).
+- \(\text{MET}_{\text{active}} = 5.8 + r \times (9.5 - 5.8)\): a határ alatt 4 fokozattal vagy lejjebb 5.8, a határon (vagy felette) 9.5.
+
+A referenciaszint a mászás-előzményből minden megjelenítéskor újraszámolódik; egy session kcal-ja így az előzmények változásával (pl. egy korábbi session törlése) kis mértékben elmozdulhat — lásd `#### Tudatos korlát` lent.
 
 **Nettó MET-számítás:** minden zóna `(bruttó MET − 1)` értéken számol (`RESTING_MET = 1.0`, az ACSM
 nettó-energia konvenció). Ez azért kell, mert a mászás-kcal a [[Tápérték kalkulátor]]
@@ -142,12 +152,16 @@ Hiányzó `pumpRating` → szorzó **1.0**.
 
 Testsúly \(m\): [[Profile]] aktuális kg — **nem** fagyasztódik. TRAD: \(m_{\text{eff}} = m + 6\) (hardver) az **aktív** kötél ágon; rest ágon marad \(m\).
 
-\[\text{kcal} = \max(0,\; \text{MET}_{\text{active}} \times \text{pump} - 1) \times m_{\text{eff}} \times \frac{t_{\text{activeMin}}}{60} + (2.0 - 1) \times m \times \frac{t_{\text{restMin}}}{60}\]
+\[\text{kcal} = \max(0,\; \text{MET}_{\text{active}} \times \text{pump} - 1) \times m_{\text{eff}} \times \frac{t_{\text{activeMin}}}{60} + (\text{MET}_{\text{rest}} - 1) \times m \times \frac{t_{\text{restMin}}}{60}\]
+
+(\(\text{MET}_{\text{active}}\) bouldernél kísérletenként más — az aktív tag kísérletenkénti összeg; \(\text{MET}_{\text{rest}}\) kötélnél 2.0, bouldernél 3.0.)
+
+**Példa (boulder, 76 kg, pump 3, 81 perc, \(I_{\text{ref}}\) = V7):** 4 V7-sor × 4 próba + 5 V5-sor × 1 próba → aktív 12 perc nettó 8.5 MET-en (~129 kcal) + 3.75 perc nettó ~6.65 MET-en (~32 kcal) + 65.25 perc pihenő nettó 2.0 MET-en (~165 kcal) ≈ **325 kcal** (~4 kcal/perc). A `backlog/130` előtti modell (fix 60 s / sor, 8.0 MET minden kísérletre, bruttó 2.0 pihenő) ugyanerre 171 kcal-t adott.
 
 - A session **nem tárol** SSOT `calculatedCalories` mezőt (mint [[Úszás napló]] / [[Edzésnapló]]); a [[Tápérték kalkulátor]] utility számol.
 - UI élő előnézet ugyanazzal a pure TS képlettel; szerver opcionális paritás.
 
-**Duration fallback** (ha hiányzik / érvénytelen `totalSessionDurationMinutes`). A „kísérletek száma" itt a **naplózott `AscentAttempt` sorok darabszáma** a sessionben (**nem** a `Σ attemptCount`, ami az egyes problémákon/utakon belüli próbákat számolja). Az `attemptCount` önálló, tájékoztató mező az attempt-soron: a Volumen- és a sikerarány-statisztika is **attempt-soronként** számol és **nem szoroz** vele, és a duration fallbackba sem megy — de a statisztikai nézetek megjeleníthetik (pl. „N redpoint-próba"):
+**Duration fallback** (ha hiányzik / érvénytelen `totalSessionDurationMinutes`). A „kísérletek száma" itt a **naplózott `AscentAttempt` sorok darabszáma** a sessionben (**nem** a `Σ attemptCount`, ami az egyes problémákon/utakon belüli próbákat számolja). Az `attemptCount` a duration fallbackba nem megy, és a Volumen- és a sikerarány-statisztika is **attempt-soronként** számol, **nem szoroz** vele (a boulder aktív idejébe viszont bemegy — lásd fent); a statisztikai nézetek megjeleníthetik (pl. „N redpoint-próba"):
 
 - Boulder: \(\text{naplózott attempt sorok száma} \times 5\) perc  
 - Kötél: \(\text{naplózott attempt sorok száma} \times 15\) perc  
@@ -186,6 +200,14 @@ Minden mászó entitás: soft delete ([[Backend-offline first]]). Nested session
 - Per-kontextus session lista (a közös, szűrő-tabos listát a `backlog/022-...` jegy fedi).
 
 ### Megjegyzések
+
+#### Tudatos korlát — a boulder kcal az előzményektől függ
+
+A boulder aktív MET-je a mászó 90 napos referenciaszintjéhez mér (`backlog/130`), és a session nem
+tárol kcal-t. Ezért egy régi session kcal-ja utólag elmozdulhat, ha a 90 napos ablakában lévő
+sessionök változnak (törlés, grade-javítás, egy másik eszközről később beszinkronizált session). A
+napi `activityExtraKcal` visszamenőleg is így számol. Ez vállalt: a modell egyszerű és
+determinisztikus marad, és a mozgás a session saját adatainak változásához képest kicsi.
 
 #### Tudatos korlát — egy ascent-style / sikeres kísérlet
 
