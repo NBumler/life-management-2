@@ -24,6 +24,7 @@ import {
   IonTextarea,
   IonTitle,
   IonToolbar,
+  PopoverController,
   ToastController,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
@@ -39,7 +40,19 @@ import { today } from '../../../shared/local-date';
 import { ExercisePickResult, ExercisePickerComponent } from '../../../shared/exercise-picker/exercise-picker.component';
 import { presentExerciseActions, supportsWarmupRamp } from './exercise-actions';
 import { rampWarmupSets } from './warmup-ramp';
-import { LOCATIONS, SET_TYPES, WORKOUT_TYPES, moveById, sanitizeSessionTimes, setGridColumns, visibleFields } from './workout-fields';
+import {
+  LOCATIONS,
+  SET_TYPES,
+  SetSide,
+  WORKOUT_TYPES,
+  moveById,
+  nextSide,
+  sanitizeSessionTimes,
+  setGridColumns,
+  sideMark,
+  visibleFields,
+} from './workout-fields';
+import { SetOptions, presentSetOptions } from './set-options-popover.component';
 import { effectiveDurationMinutes, ghostForExercise, sessionKcal, sessionVolume } from './workout-metrics';
 
 interface SetRow {
@@ -51,6 +64,10 @@ interface SetRow {
   edgeSizeMm: WritableSignal<number | null>;
   distanceMeters: WritableSignal<number | null>;
   restTimeSeconds: WritableSignal<number | null>;
+  /** backlog/134 — one-sided set; null = both hands. */
+  side: WritableSignal<SetSide | null>;
+  /** backlog/135 — actual RPE. */
+  rpe: WritableSignal<number | null>;
   isCompleted: WritableSignal<boolean>;
 }
 
@@ -98,6 +115,8 @@ interface ExerciseRow {
     IonModal,
     TranslatePipe,
   ],
+  // Ionic standalone: PopoverController is not providedIn root — the set-options popover needs it here.
+  providers: [PopoverController],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WorkoutSessionEditPage implements OnInit {
@@ -109,12 +128,14 @@ export class WorkoutSessionEditPage implements OnInit {
   private readonly alertController = inject(AlertController);
   private readonly actionSheetController = inject(ActionSheetController);
   private readonly toastController = inject(ToastController);
+  private readonly popoverController = inject(PopoverController);
   private readonly translate = inject(TranslateService);
 
   readonly setTypes = SET_TYPES;
   readonly workoutTypes = WORKOUT_TYPES;
   readonly locations = LOCATIONS;
   readonly visibleFields = visibleFields;
+  readonly sideMark = sideMark;
 
   readonly sessionId = signal<string | null>(null);
   private readonly loadedSession = signal<WorkoutSession | null>(null);
@@ -240,6 +261,15 @@ export class WorkoutSessionEditPage implements OnInit {
     });
   }
 
+  /** backlog/134 + backlog/135 — the "1 M" badge opens type / side / RPE; every pick applies live. */
+  openSetOptions(event: Event, set: SetRow): Promise<void> {
+    return presentSetOptions(this.popoverController, event, { setType: set.setType(), side: set.side(), rpe: set.rpe() }, (options: SetOptions) => {
+      set.setType.set(options.setType as WorkoutSetEntry.SetTypeEnum);
+      set.side.set(options.side);
+      set.rpe.set(options.rpe);
+    });
+  }
+
   /** backlog/132 — replace the exercise's WARMUP sets with a 30 / 65 / 87 % ramp of the first WORKING set's weight. */
   async generateWarmup(row: ExerciseRow): Promise<void> {
     const working = row.sets().find((set) => set.setType() === WorkoutSetEntry.SetTypeEnum.Working);
@@ -262,6 +292,8 @@ export class WorkoutSessionEditPage implements OnInit {
       edgeSizeMm: signal<number | null>(null),
       distanceMeters: signal<number | null>(null),
       restTimeSeconds: signal<number | null>(spec.restTimeSeconds),
+      side: signal<SetSide | null>(null),
+      rpe: signal<number | null>(null),
       isCompleted: signal(false),
     }));
     row.sets.update((sets) => [...warmups, ...sets.filter((set) => set.setType() !== WorkoutSetEntry.SetTypeEnum.Warmup)]);
@@ -370,6 +402,8 @@ export class WorkoutSessionEditPage implements OnInit {
         edgeSizeMm: set.edgeSizeMm(),
         distanceMeters: set.distanceMeters(),
         restTimeSeconds: set.restTimeSeconds(),
+        side: set.side(),
+        rpe: set.rpe(),
         isCompleted: set.isCompleted(),
         orderIndex: setIndex,
       })),
@@ -428,6 +462,9 @@ export class WorkoutSessionEditPage implements OnInit {
               edgeSizeMm: signal(set.edgeSizeMm ?? null),
               distanceMeters: signal(set.distanceMeters ?? null),
               restTimeSeconds: signal(set.restTimeSeconds ?? null),
+              side: signal<SetSide | null>(set.side ?? null),
+              // "Ugyanaz mint legutóbb" copies the hand, not the effort
+              rpe: signal<number | null>(freshIds ? null : (set.rpe ?? null)),
               isCompleted: signal(freshIds ? false : set.isCompleted),
             })),
         ),
@@ -456,6 +493,8 @@ export class WorkoutSessionEditPage implements OnInit {
       edgeSizeMm: signal(previous?.edgeSizeMm() ?? null),
       distanceMeters: signal(null),
       restTimeSeconds: signal(previous?.restTimeSeconds() ?? null),
+      side: signal<SetSide | null>(nextSide(previous?.side())),
+      rpe: signal<number | null>(null),
       isCompleted: signal(false),
     };
   }
@@ -470,6 +509,8 @@ export class WorkoutSessionEditPage implements OnInit {
       edgeSizeMm: signal(source.edgeSizeMm()),
       distanceMeters: signal(source.distanceMeters()),
       restTimeSeconds: signal(source.restTimeSeconds()),
+      side: signal<SetSide | null>(nextSide(source.side())),
+      rpe: signal<number | null>(null),
       isCompleted: signal(false),
     };
   }

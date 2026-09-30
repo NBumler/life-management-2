@@ -20,6 +20,7 @@ import {
   IonTextarea,
   IonTitle,
   IonToolbar,
+  PopoverController,
   ToastController,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
@@ -35,7 +36,18 @@ import { ExercisePickResult, ExercisePickerComponent } from '../../../shared/exe
 import { formatTargetRange, parseTargetRange } from '../../../shared/target-range';
 import { presentExerciseActions, supportsWarmupRamp } from '../log/exercise-actions';
 import { rampWarmupSets } from '../log/warmup-ramp';
-import { PLAN_TO_ENTRY_KIND, SET_TYPES, VisibleSetFields, moveById, setGridColumns, visibleFields } from '../log/workout-fields';
+import {
+  PLAN_TO_ENTRY_KIND,
+  SET_TYPES,
+  SetSide,
+  VisibleSetFields,
+  moveById,
+  nextSide,
+  setGridColumns,
+  sideMark,
+  visibleFields,
+} from '../log/workout-fields';
+import { SetOptions, presentSetOptions } from '../log/set-options-popover.component';
 
 interface TargetSetRow {
   id: string;
@@ -51,6 +63,10 @@ interface TargetSetRow {
   edgeSizeMm: WritableSignal<number | null>;
   distanceMeters: WritableSignal<number | null>;
   restTimeSeconds: WritableSignal<number | null>;
+  /** backlog/134 — one-sided target set; null = both hands. */
+  side: WritableSignal<SetSide | null>;
+  /** backlog/135 — target RPE. */
+  rpe: WritableSignal<number | null>;
 }
 
 interface PlanExerciseRow {
@@ -60,8 +76,13 @@ interface PlanExerciseRow {
   exerciseCategory: WorkoutPlanExercise.ExerciseCategoryEnum;
   exerciseKind: WorkoutPlanExercise.ExerciseKindEnum;
   supersetGroup: WritableSignal<number | null>;
+  /** backlog/133 — per-template cue ("szék: 5", tempo). */
+  notes: WritableSignal<string>;
   sets: WritableSignal<TargetSetRow[]>;
 }
+
+/** backlog/133 — `WorkoutPlanExercise.notes` max length (the V49 CHECK). */
+export const PLAN_EXERCISE_NOTES_MAX = 200;
 
 const WORKOUT_TYPE_VALUES = Object.values(WorkoutPlan.DefaultWorkoutTypeEnum);
 
@@ -96,6 +117,8 @@ const WORKOUT_TYPE_VALUES = Object.values(WorkoutPlan.DefaultWorkoutTypeEnum);
     IonModal,
     TranslatePipe,
   ],
+  // Ionic standalone: PopoverController is not providedIn root — the set-options popover needs it here.
+  providers: [PopoverController],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PlanEditPage implements OnInit {
@@ -107,9 +130,12 @@ export class PlanEditPage implements OnInit {
   private readonly alertController = inject(AlertController);
   private readonly actionSheetController = inject(ActionSheetController);
   private readonly toastController = inject(ToastController);
+  private readonly popoverController = inject(PopoverController);
   private readonly translate = inject(TranslateService);
 
   readonly setTypes = SET_TYPES;
+  readonly sideMark = sideMark;
+  readonly notesMax = PLAN_EXERCISE_NOTES_MAX;
   readonly workoutTypes = WORKOUT_TYPE_VALUES;
 
   /** Same `exerciseKind` → visible-field table as the workout log, via the typed plan→entry enum map. */
@@ -131,6 +157,21 @@ export class PlanEditPage implements OnInit {
       remove: () => this.removeExercise(row),
       warmup: supportsWarmupRamp(row.exerciseKind) ? () => void this.generateWarmup(row) : undefined,
     });
+  }
+
+  /** backlog/134 + backlog/135 — the "1 M" badge opens type / side / target RPE; every pick applies live. */
+  openSetOptions(event: Event, set: TargetSetRow): Promise<void> {
+    return presentSetOptions(
+      this.popoverController,
+      event,
+      { setType: set.setType(), side: set.side(), rpe: set.rpe() },
+      (options: SetOptions) => {
+        set.setType.set(options.setType as WorkoutPlanSet.SetTypeEnum);
+        set.side.set(options.side);
+        set.rpe.set(options.rpe);
+      },
+      'WORKOUT.PLAN.FIELD_TARGET_RPE',
+    );
   }
 
   /** backlog/132 — replace the template exercise's WARMUP target sets with a 30 / 65 / 87 % ramp of the first WORKING target weight. */
@@ -158,6 +199,8 @@ export class PlanEditPage implements OnInit {
       edgeSizeMm: signal<number | null>(null),
       distanceMeters: signal<number | null>(null),
       restTimeSeconds: signal<number | null>(spec.restTimeSeconds),
+      side: signal<SetSide | null>(null),
+      rpe: signal<number | null>(null),
     }));
     row.sets.update((sets) => [...warmups, ...sets.filter((set) => set.setType() !== WorkoutPlanSet.SetTypeEnum.Warmup)]);
   }
@@ -311,6 +354,7 @@ export class PlanEditPage implements OnInit {
       exerciseKind: row.exerciseKind,
       orderIndex,
       supersetGroup: row.supersetGroup(),
+      notes: row.notes().trim() ? row.notes().trim().slice(0, PLAN_EXERCISE_NOTES_MAX) : null,
       targetSets: row.sets().map((set, setIndex) => ({
         id: set.id,
         setType: set.setType(),
@@ -321,6 +365,8 @@ export class PlanEditPage implements OnInit {
         edgeSizeMm: set.edgeSizeMm(),
         distanceMeters: set.distanceMeters(),
         restTimeSeconds: set.restTimeSeconds(),
+        side: set.side(),
+        rpe: set.rpe(),
         orderIndex: setIndex,
       })),
     };
@@ -337,6 +383,7 @@ export class PlanEditPage implements OnInit {
         exerciseCategory: exercise.exerciseCategory,
         exerciseKind: exercise.exerciseKind,
         supersetGroup: signal(exercise.supersetGroup ?? null),
+        notes: signal(exercise.notes ?? ''),
         sets: signal(
           exercise.targetSets
             .filter((set) => !set.deleted)
@@ -353,6 +400,8 @@ export class PlanEditPage implements OnInit {
               edgeSizeMm: signal(set.edgeSizeMm ?? null),
               distanceMeters: signal(set.distanceMeters ?? null),
               restTimeSeconds: signal(set.restTimeSeconds ?? null),
+              side: signal<SetSide | null>(set.side ?? null),
+              rpe: signal<number | null>(set.rpe ?? null),
             })),
         ),
       }));
@@ -366,6 +415,7 @@ export class PlanEditPage implements OnInit {
       exerciseCategory: result.exerciseCategory,
       exerciseKind: result.exerciseKind,
       supersetGroup: signal<number | null>(null),
+      notes: signal(''),
       sets: signal([this.emptySetRow(undefined)]),
     };
   }
@@ -383,6 +433,9 @@ export class PlanEditPage implements OnInit {
       edgeSizeMm: signal(previous?.edgeSizeMm() ?? null),
       distanceMeters: signal(null),
       restTimeSeconds: signal(previous?.restTimeSeconds() ?? null),
+      // backlog/134 — a one-sided target alternates the hand; the target RPE carries over
+      side: signal<SetSide | null>(nextSide(previous?.side())),
+      rpe: signal<number | null>(previous?.rpe() ?? null),
     };
   }
 }

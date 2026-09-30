@@ -263,6 +263,10 @@ export function ghostForExercise(
 
 export interface LastSet extends GhostSet {
   setType: WorkoutSetEntry.SetTypeEnum;
+  /** backlog/134 — the hand of a one-sided set; null = both. */
+  side?: WorkoutSetEntry.SideEnum | null;
+  /** backlog/135 — the logged RPE, when recorded. */
+  rpe?: number | null;
 }
 
 export interface LastPerformance {
@@ -298,6 +302,8 @@ export function lastPerformance(
       weightKg: set.weightKg ?? null,
       reps: set.reps ?? null,
       holdTimeSeconds: set.holdTimeSeconds ?? null,
+      side: set.side ?? null,
+      rpe: set.rpe ?? null,
     })),
   };
 }
@@ -306,8 +312,11 @@ function formatKg(value: number): string {
   return `${Math.round(value * 100) / 100}`;
 }
 
-function setToken(set: GhostSet): string {
+function setToken(set: GhostSet & { side?: string | null }): string {
   const parts: string[] = [];
+  if (set.side === 'LEFT' || set.side === 'RIGHT') {
+    parts.push(set.side === 'LEFT' ? '◀' : '▶');
+  }
   if (set.reps !== null) {
     parts.push(`${set.reps}`);
   }
@@ -324,7 +333,7 @@ function setToken(set: GhostSet): string {
  * backlog/131 — compact set summary: identical sets collapse to "3 × 5 @ 22.5 kg"; otherwise the sets
  * are listed "5 @ 22.5 kg · 4 @ 22.5 kg". Units are the model's fixed kg / s (no localisation needed).
  */
-export function formatSetSummary(sets: readonly GhostSet[]): string {
+export function formatSetSummary(sets: readonly (GhostSet & { side?: string | null })[]): string {
   const tokens = sets.map(setToken).filter((token) => token !== '');
   if (tokens.length === 0) {
     return '';
@@ -338,18 +347,33 @@ export function formatSetSummary(sets: readonly GhostSet[]): string {
 /** backlog/131 — the double-progression step (dumbbell / belt plate). */
 export const PROGRESSION_STEP_KG = 2.5;
 
+/** backlog/135 — an RPE at or above this means the set went to the limit: no weight increase next time. */
+export const PROGRESSION_MAX_RPE = 10;
+
 /**
  * backlog/131 "double progression": when every WORKING set last time reached the top of the target
  * rep range, suggest the last working weight + 2.5 kg (for an assisted, negative weight that means
- * 2.5 kg less assistance). Null without a range target, without WORKING sets, or when any of them fell
- * short or had no weight.
+ * 2.5 kg less assistance). Null without a range target, without WORKING sets, when any of them fell
+ * short or had no weight, or (backlog/135) when any was logged at RPE 10. `side` (backlog/134)
+ * narrows the judgement to that hand's WORKING sets (`null` = the both-hands sets).
  */
-export function progressionSuggestion(last: LastPerformance | null, repsMax: number | null): number | null {
+export function progressionSuggestion(
+  last: LastPerformance | null,
+  repsMax: number | null,
+  side: WorkoutSetEntry.SideEnum | null = null,
+): number | null {
   if (last === null || repsMax === null) {
     return null;
   }
-  const working = last.sets.filter((set) => set.setType === WorkoutSetEntry.SetTypeEnum.Working);
-  if (working.length === 0 || working.some((set) => set.reps === null || set.reps < repsMax || set.weightKg === null)) {
+  const working = last.sets.filter(
+    (set) => set.setType === WorkoutSetEntry.SetTypeEnum.Working && (set.side ?? null) === side,
+  );
+  if (
+    working.length === 0 ||
+    working.some(
+      (set) => set.reps === null || set.reps < repsMax || set.weightKg === null || (set.rpe ?? 0) >= PROGRESSION_MAX_RPE,
+    )
+  ) {
     return null;
   }
   const base = Math.max(...working.map((set) => set.weightKg as number));

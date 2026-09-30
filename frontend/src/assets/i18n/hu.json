@@ -1080,7 +1080,15 @@
       "EXERCISE_ACTIONS": "Gyakorlat műveletei",
       "GENERATE_WARMUP": "Bemelegítés generálása",
       "WARMUP_NO_WORKING_WEIGHT": "Előbb add meg a munkasúlyt az első munkaszetten.",
-      "WARMUP_NEEDS_BODY_WEIGHT": "Rásegítéses (negatív) munkasúlyhoz add meg a testsúlyod a Profilban."
+      "WARMUP_NEEDS_BODY_WEIGHT": "Rásegítéses (negatív) munkasúlyhoz add meg a testsúlyod a Profilban.",
+      "FIELD_SIDE": "Oldal",
+      "SIDE": {
+        "BOTH": "Mindkettő",
+        "LEFT": "Bal",
+        "RIGHT": "Jobb"
+      },
+      "FIELD_RPE": "RPE (megerőltetés)",
+      "SET_OPTIONS": "Szett beállításai"
     },
     "PICKER": {
       "TITLE": "Gyakorlat választása",
@@ -1166,7 +1174,10 @@
       "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd ezt a sablont? A korábbi edzésnaplók és a rá mutató heti kiosztások érintetlenek maradnak.",
       "REPS_RANGE_PLACEHOLDER": "8-12",
       "REPS_RANGE_INVALID": "Számot vagy tartományt adj meg (pl. 8-12).",
-      "REPS_RANGE_INVERTED": "A tartomány alsó határa nem lehet nagyobb a felsőnél."
+      "REPS_RANGE_INVERTED": "A tartomány alsó határa nem lehet nagyobb a felsőnél.",
+      "FIELD_TARGET_RPE": "Cél RPE",
+      "EXERCISE_NOTES": "Megjegyzés a gyakorlathoz",
+      "EXERCISE_NOTES_PLACEHOLDER": "Megjegyzés (pl. szék: 5, 3 mp negatív)"
     },
     "WEEKLY": {
       "WEEK_OF": "Hét kezdete:",

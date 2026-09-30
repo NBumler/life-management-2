@@ -67,6 +67,17 @@
         </ion-button>
       </ion-item>
 
+      <!-- backlog/133: per-template cue, shown when a workout starts from this plan -->
+      <ion-item lines="none" class="plan-exercise-notes">
+        <ion-input
+          [value]="row.notes()"
+          (ionInput)="row.notes.set($any($event.target).value ?? '')"
+          [maxlength]="notesMax"
+          [placeholder]="'WORKOUT.PLAN.EXERCISE_NOTES_PLACEHOLDER' | translate"
+          [aria-label]="'WORKOUT.PLAN.EXERCISE_NOTES' | translate"
+        ></ion-input>
+      </ion-item>
+
       @let fields = fieldsFor(row);
       <div class="set-table" [style.--set-grid]="gridFor(row)">
         @if (row.sets().length > 0) {
@@ -96,17 +107,12 @@
           <div class="set-row">
             <div class="set-index">
               <span>{{ i + 1 }}</span>
-              <ion-select
-                [value]="set.setType()"
-                [selectedText]="('WORKOUT.SESSION.SET_TYPE_SHORT.' + set.setType()) | translate"
-                (ionChange)="set.setType.set($event.detail.value)"
-                interface="popover"
-                [aria-label]="'WORKOUT.SESSION.FIELD_SET_TYPE' | translate"
-              >
-                @for (type of setTypes; track type) {
-                  <ion-select-option [value]="type">{{ ('WORKOUT.SESSION.SET_TYPE.' + type) | translate }}</ion-select-option>
+              <button type="button" class="set-badge" (click)="openSetOptions($event, set)" [attr.aria-label]="'WORKOUT.SESSION.SET_OPTIONS' | translate">
+                {{ ('WORKOUT.SESSION.SET_TYPE_SHORT.' + set.setType()) | translate }}{{ sideMark(set.side()) }}
+                @if (set.rpe() !== null) {
+                  <small>{{ set.rpe() }}</small>
                 }
-              </ion-select>
+              </button>
             </div>
             @if (fields.reps) {
               <!-- backlog/125: "8-12" range — text input; inputmode="tel" gives a digit pad that also has "-" -->

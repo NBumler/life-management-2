@@ -7,6 +7,14 @@
   color: var(--ion-color-medium);
 }
 
+// backlog/133 — the plan exercise's cue
+.plan-notes {
+  font-style: italic;
+}
+
 .progression-hint {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
   padding: 0 16px 4px;
 }

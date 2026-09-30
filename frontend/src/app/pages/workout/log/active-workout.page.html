@@ -68,6 +68,9 @@
         <ion-label>
           <h2>{{ row.exerciseName }}</h2>
           <p>{{ ('WORKOUT.EXERCISES.KIND.' + row.exerciseKind) | translate }}</p>
+          @if (row.planNotes) {
+            <p class="plan-notes">{{ row.planNotes }}</p>
+          }
           @if (lastTimeLabel(row); as last) {
             <p class="last-time">{{ 'WORKOUT.ACTIVE.LAST_TIME' | translate: last }}</p>
           }
@@ -93,11 +96,14 @@
         </ion-button>
       </ion-item>
 
-      @if (suggestionFor(row); as suggestion) {
+      @let suggestions = suggestionsFor(row);
+      @if (suggestions.length > 0) {
         <div class="progression-hint">
-          <ion-button size="small" fill="outline" color="success" (click)="applySuggestion(row, suggestion.weight)">
-            {{ 'WORKOUT.ACTIVE.SUGGESTION' | translate: suggestion }}
-          </ion-button>
+          @for (suggestion of suggestions; track suggestion.side) {
+            <ion-button size="small" fill="outline" color="success" (click)="applySuggestion(row, suggestion.side, suggestion.weight)">
+              {{ suggestion.mark }} {{ 'WORKOUT.ACTIVE.SUGGESTION' | translate: suggestion }}
+            </ion-button>
+          }
         </div>
       }
 
@@ -135,17 +141,12 @@
             ></ion-checkbox>
             <div class="set-index">
               <span>{{ i + 1 }}</span>
-              <ion-select
-                [value]="set.setType()"
-                [selectedText]="('WORKOUT.SESSION.SET_TYPE_SHORT.' + set.setType()) | translate"
-                (ionChange)="setSetType(set, $event.detail.value)"
-                interface="popover"
-                [aria-label]="'WORKOUT.SESSION.FIELD_SET_TYPE' | translate"
-              >
-                @for (type of setTypes; track type) {
-                  <ion-select-option [value]="type">{{ ('WORKOUT.SESSION.SET_TYPE.' + type) | translate }}</ion-select-option>
+              <button type="button" class="set-badge" (click)="openSetOptions($event, set)" [attr.aria-label]="'WORKOUT.SESSION.SET_OPTIONS' | translate">
+                {{ ('WORKOUT.SESSION.SET_TYPE_SHORT.' + set.setType()) | translate }}{{ sideMark(set.side()) }}
+                @if (set.rpe() !== null) {
+                  <small>{{ set.rpe() }}</small>
                 }
-              </ion-select>
+              </button>
             </div>
             @if (fields.reps) {
               <ion-input

@@ -132,6 +132,10 @@ export interface WorkoutSetSaveItem {
   edgeSizeMm: number | null;
   distanceMeters: number | null;
   restTimeSeconds: number | null;
+  /** backlog/134 — one-sided set; null = both hands / not relevant. */
+  side: WorkoutSetEntry.SideEnum | null;
+  /** backlog/135 — optional actual RPE (6–10, 0.5 steps). */
+  rpe: number | null;
   isCompleted: boolean;
   orderIndex: number;
 }
@@ -244,6 +248,10 @@ export interface WorkoutPlanSetSaveItem {
   edgeSizeMm: number | null;
   distanceMeters: number | null;
   restTimeSeconds: number | null;
+  /** backlog/134 — one-sided target set; null = both hands / not relevant. */
+  side: WorkoutPlanSet.SideEnum | null;
+  /** backlog/135 — optional target RPE (6–10, 0.5 steps). */
+  rpe: number | null;
   orderIndex: number;
 }
 
@@ -255,6 +263,8 @@ export interface WorkoutPlanExerciseSaveItem {
   exerciseKind: WorkoutPlanExercise.ExerciseKindEnum;
   orderIndex: number;
   supersetGroup: number | null;
+  /** backlog/133 — per-template cue (bench setting, tempo); max. 200 chars. */
+  notes: string | null;
   targetSets: WorkoutPlanSetSaveItem[];
 }
 

@@ -3,6 +3,8 @@ import { WorkoutPlanExercise } from '../../../api/model/workoutPlanExercise';
 import { WorkoutPlanSet } from '../../../api/model/workoutPlanSet';
 import { WorkoutSetEntry } from '../../../api/model/workoutSetEntry';
 import {
+  nextSide,
+  sideMark,
   PLAN_TO_ENTRY_CATEGORY,
   PLAN_TO_ENTRY_KIND,
   PLAN_TO_ENTRY_SET_TYPE,
@@ -114,6 +116,20 @@ describe('workout-fields', () => {
       for (const value of Object.values(WorkoutPlanSet.SetTypeEnum)) {
         expect(PLAN_TO_ENTRY_SET_TYPE[value]).toBe(value as unknown as WorkoutSetEntry.SetTypeEnum);
       }
+    });
+  });
+  describe('nextSide / sideMark (backlog/134)', () => {
+    it('alternates a one-sided set and leaves a both-hands set alone', () => {
+      expect(nextSide('LEFT')).toBe('RIGHT');
+      expect(nextSide('RIGHT')).toBe('LEFT');
+      expect(nextSide(null)).toBeNull();
+      expect(nextSide(undefined)).toBeNull();
+    });
+
+    it('marks left / right with an arrow, nothing for both hands', () => {
+      expect(sideMark('LEFT')).toBe('◀');
+      expect(sideMark('RIGHT')).toBe('▶');
+      expect(sideMark(null)).toBe('');
     });
   });
 });

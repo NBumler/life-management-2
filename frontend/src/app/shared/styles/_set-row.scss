@@ -57,7 +57,7 @@
     }
   }
 
-  // "1 M": the set number plus a compact set-type badge; tapping the badge opens the type popover.
+  // "1 M": the set number plus a compact set-type badge; tapping the badge opens the set-options popover.
   .set-index {
     display: flex;
     align-items: center;
@@ -71,27 +71,31 @@
       text-align: end;
     }
 
-    > ion-select {
-      flex: 0 0 1.75rem;
-      width: 1.75rem;
+    // backlog/134 + 135: "M" + side mark (◀ / ▶), the RPE small underneath; tap opens the set-options popover.
+    > .set-badge {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-width: 1.75rem;
+      max-width: 2.5rem;
       min-height: 28px;
-      padding: 0;
+      padding: 1px 4px;
       border: 1px solid var(--ion-color-step-300, var(--ion-color-medium));
       border-radius: 999px;
+      background: transparent;
+      font: inherit;
       font-size: 0.8125rem;
       font-weight: 600;
+      line-height: 1.1;
+      white-space: nowrap;
       color: var(--ion-text-color);
-      --padding-start: 0;
-      --padding-end: 0;
-      --padding-top: 0;
-      --padding-bottom: 0;
+      cursor: pointer;
 
-      &::part(icon) {
-        display: none;
-      }
-
-      &::part(text) {
-        text-align: center;
+      > small {
+        font-size: 0.625rem;
+        font-weight: 500;
+        color: var(--ion-color-medium);
       }
     }
   }

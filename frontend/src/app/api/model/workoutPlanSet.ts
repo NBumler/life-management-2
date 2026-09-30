@@ -10,7 +10,7 @@
 
 
 /**
- * documentation/Subfeatures/Heti terv.md \"targetSets\" — one target set on a WorkoutPlanExercise. Same field shape as WorkoutSetEntry minus `setNumber` / `isCompleted` (a template set has no completed state; ordering is `orderIndex` alone). The free `setType` list already expresses the warm-up ramping + few heavy WORKING sets pattern — no separate intensity field. Only ever saved nested inside a WorkoutPlan (documentation/Architektúra/Backend.md \"Nested aggregate PUT\"), but its own sync row. Which measurement fields apply follows the parent\'s `exerciseKind` snapshot; the server persists whatever is sent (deliberately loose type rule).
+ * documentation/Subfeatures/Heti terv.md \"targetSets\" — one target set on a WorkoutPlanExercise. Same field shape as WorkoutSetEntry minus `setNumber` / `isCompleted` (a template set has no completed state; ordering is `orderIndex` alone). The free `setType` list already expresses the warm-up ramping + few heavy WORKING sets pattern; the optional `rpe` (backlog/135) states a target effort. Only ever saved nested inside a WorkoutPlan (documentation/Architektúra/Backend.md \"Nested aggregate PUT\"), but its own sync row. Which measurement fields apply follows the parent\'s `exerciseKind` snapshot; the server persists whatever is sent (deliberately loose type rule).
  */
 export interface WorkoutPlanSet { 
     id: string;
@@ -44,6 +44,14 @@ export interface WorkoutPlanSet {
      * Target rest after this set — a long value on a WORKING set signals a heavy effort.
      */
     restTimeSeconds?: number | null;
+    /**
+     * backlog/134 — one-sided set (one-arm pull-up negative, lock-off, one-arm row). `null` = both hands / not relevant.
+     */
+    side?: WorkoutPlanSet.SideEnum | null;
+    /**
+     * backlog/135 — optional RPE, 6–10 in 0.5 steps (400 VALIDATION otherwise). The target effort; starting a workout from the plan prefills the session set with it.
+     */
+    rpe?: number | null;
     orderIndex: number;
     deleted: boolean;
     readonly deletedAt?: string | null;
@@ -59,6 +67,11 @@ export namespace WorkoutPlanSet {
         Failure: 'FAILURE'
     } as const;
     export type SetTypeEnum = typeof SetTypeEnum[keyof typeof SetTypeEnum];
+    export const SideEnum = {
+        Left: 'LEFT',
+        Right: 'RIGHT'
+    } as const;
+    export type SideEnum = typeof SideEnum[keyof typeof SideEnum];
 }
 
 

@@ -1,5 +1,6 @@
 package hu.bumler.lm2.workout;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -14,6 +15,7 @@ import hu.bumler.lm2.api.model.WorkoutSession;
 import hu.bumler.lm2.api.model.WorkoutSetEntry;
 import hu.bumler.lm2.common.exception.EntityDeletedException;
 import hu.bumler.lm2.common.exception.EntityNotFoundException;
+import hu.bumler.lm2.common.exception.ValidationException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -111,6 +113,39 @@ class WorkoutSessionServiceTest {
 		verify(setRepository).save(setCaptor.capture());
 		assertThat(setCaptor.getValue().getId()).isEqualTo(setId);
 		assertThat(setCaptor.getValue().getExerciseEntryId()).isEqualTo(exerciseId);
+	}
+
+	@Test
+	void create_storesTheSetSideAndRpe_andEchoesThem() {
+		UUID sessionId = UUID.randomUUID();
+		UUID exerciseId = UUID.randomUUID();
+		when(repository.findById(sessionId)).thenReturn(Optional.empty());
+		when(exerciseRepository.findBySessionId(sessionId)).thenReturn(List.of());
+		WorkoutSetEntry oneArm = set(UUID.randomUUID(), exerciseId, 1);
+		oneArm.side(WorkoutSetEntry.SideEnum.RIGHT);
+		oneArm.rpe(new BigDecimal("9"));
+
+		service.create(UUID.randomUUID(), session(sessionId, List.of(exercise(exerciseId, sessionId, 0, List.of(oneArm)))));
+
+		ArgumentCaptor<WorkoutSetEntryEntity> setCaptor = ArgumentCaptor.forClass(WorkoutSetEntryEntity.class);
+		verify(setRepository).save(setCaptor.capture());
+		assertThat(setCaptor.getValue().getSide()).isEqualTo("RIGHT");
+		assertThat(setCaptor.getValue().getRpe()).isEqualByComparingTo("9");
+		WorkoutSetEntry echoed = new WorkoutSetEntryMapper().toDto(setCaptor.getValue());
+		assertThat(echoed.getSide().orElse(null)).isEqualTo(WorkoutSetEntry.SideEnum.RIGHT);
+	}
+
+	@Test
+	void create_rejectsAnRpeOffTheHalfStepGrid() {
+		UUID sessionId = UUID.randomUUID();
+		UUID exerciseId = UUID.randomUUID();
+		when(repository.findById(sessionId)).thenReturn(Optional.empty());
+		when(exerciseRepository.findBySessionId(sessionId)).thenReturn(List.of());
+		WorkoutSetEntry odd = set(UUID.randomUUID(), exerciseId, 1);
+		odd.rpe(new BigDecimal("7.25"));
+
+		assertThatThrownBy(() -> service.create(UUID.randomUUID(),
+				session(sessionId, List.of(exercise(exerciseId, sessionId, 0, List.of(odd)))))).isInstanceOf(ValidationException.class);
 	}
 
 	@Test

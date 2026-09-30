@@ -271,4 +271,30 @@ describe('workout-metrics', () => {
       expect(progressionSuggestion(last, 5)).toBe(32.5);
     });
   });
+  describe('side / RPE awareness (backlog/134, backlog/135)', () => {
+    const working = (reps: number, weightKg: number, extra: { side?: 'LEFT' | 'RIGHT' | null; rpe?: number | null } = {}) => ({
+      setType: WorkoutSetEntry.SetTypeEnum.Working,
+      reps,
+      weightKg,
+      holdTimeSeconds: null,
+      side: extra.side ?? null,
+      rpe: extra.rpe ?? null,
+    });
+
+    it('judges each hand on its own sets', () => {
+      const last = { sessionDate: 'd', sets: [working(3, -20, { side: 'LEFT' }), working(2, -20, { side: 'RIGHT' })] };
+      expect(progressionSuggestion(last, 3, 'LEFT')).toBe(-17.5);
+      expect(progressionSuggestion(last, 3, 'RIGHT')).toBeNull();
+      expect(progressionSuggestion(last, 3)).toBeNull();
+    });
+
+    it('holds the weight after a working set logged at RPE 10', () => {
+      expect(progressionSuggestion({ sessionDate: 'd', sets: [working(5, 30, { rpe: 9 })] }, 5)).toBe(32.5);
+      expect(progressionSuggestion({ sessionDate: 'd', sets: [working(5, 30), working(5, 30, { rpe: 10 })] }, 5)).toBeNull();
+    });
+
+    it('marks the hand in the summary', () => {
+      expect(formatSetSummary([working(2, -15, { side: 'LEFT' }), working(2, -15, { side: 'RIGHT' })])).toBe('◀ 2 @ -15 kg · ▶ 2 @ -15 kg');
+    });
+  });
 });

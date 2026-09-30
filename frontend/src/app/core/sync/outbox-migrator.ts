@@ -254,6 +254,9 @@ const STEPS_BY_VERSION: Readonly<Record<number, VersionSteps>> = {
   // backlog/122: `ClimbingSession.startedAt` / `endedAt` + `AscentAttempt.bandModifier` added as new
   // nullable fields — a missing key already means "not recorded" server-side, so no transform is needed.
   13: { default: identityStep },
+  // backlog/133–135: `WorkoutPlanExercise.notes`, `WorkoutPlanSet` / `WorkoutSetEntry` `side` + `rpe` added
+  // as new nullable fields — a missing key already means "none" server-side, so no transform is needed.
+  14: { default: identityStep },
 };
 
 function buildMigrations(): ReadonlyMap<string, MigrationStep> {

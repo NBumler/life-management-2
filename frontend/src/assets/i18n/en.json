@@ -1132,7 +1132,15 @@
       "EXERCISE_ACTIONS": "Exercise actions",
       "GENERATE_WARMUP": "Generate warm-up",
       "WARMUP_NO_WORKING_WEIGHT": "Enter the working weight on the first working set first.",
-      "WARMUP_NEEDS_BODY_WEIGHT": "An assisted (negative) working weight needs your body weight in Profile."
+      "WARMUP_NEEDS_BODY_WEIGHT": "An assisted (negative) working weight needs your body weight in Profile.",
+      "FIELD_SIDE": "Side",
+      "SIDE": {
+        "BOTH": "Both",
+        "LEFT": "Left",
+        "RIGHT": "Right"
+      },
+      "FIELD_RPE": "RPE (effort)",
+      "SET_OPTIONS": "Set options"
     },
     "PICKER": {
       "TITLE": "Pick exercise",
@@ -1166,7 +1174,10 @@
       "DELETE_CONFIRM_MESSAGE": "Delete this template? Past workout logs and weekly assignments pointing at it are left untouched.",
       "REPS_RANGE_PLACEHOLDER": "8-12",
       "REPS_RANGE_INVALID": "Enter a number or a range (e.g. 8-12).",
-      "REPS_RANGE_INVERTED": "The lower bound cannot exceed the upper one."
+      "REPS_RANGE_INVERTED": "The lower bound cannot exceed the upper one.",
+      "FIELD_TARGET_RPE": "Target RPE",
+      "EXERCISE_NOTES": "Exercise note",
+      "EXERCISE_NOTES_PLACEHOLDER": "Note (e.g. bench 5, 3 s negative)"
     },
     "WEEKLY": {
       "WEEK_OF": "Week of:",

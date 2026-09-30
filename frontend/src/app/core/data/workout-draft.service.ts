@@ -25,6 +25,10 @@ export interface ActiveSetDraft {
   edgeSizeMm: number | null;
   distanceMeters: number | null;
   restTimeSeconds: number | null;
+  /** backlog/134 — one-sided set; null = both hands / not relevant. */
+  side?: WorkoutSetEntry.SideEnum | null;
+  /** backlog/135 — optional actual RPE; prefilled from the plan's target. */
+  rpe?: number | null;
   isCompleted: boolean;
   /** backlog/125 — the plan's target rep range ("8–12") shown next to the reps field; display-only, never saved. */
   repsTarget?: string | null;
@@ -39,6 +43,8 @@ export interface ActiveExerciseDraft {
   supersetGroup: number | null;
   /** Snapshot of the catalog row's `defaultRestTimeSeconds` at add time — the rest-timer fallback. */
   defaultRestTimeSeconds: number | null;
+  /** backlog/133 — the plan exercise's cue ("szék: 5"), shown under the name; display-only, never saved. */
+  planNotes?: string | null;
   sets: ActiveSetDraft[];
 }
 

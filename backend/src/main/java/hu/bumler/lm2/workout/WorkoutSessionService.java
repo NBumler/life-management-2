@@ -219,6 +219,9 @@ class WorkoutSessionService {
 		entity.setEdgeSizeMm(dto.getEdgeSizeMm().orElse(null));
 		entity.setDistanceMeters(dto.getDistanceMeters().orElse(null));
 		entity.setRestTimeSeconds(dto.getRestTimeSeconds().orElse(null));
+		WorkoutSetEntry.SideEnum side = dto.getSide().orElse(null);
+		entity.setSide(side == null ? null : side.getValue());
+		entity.setRpe(WorkoutSetRules.validRpe(dto.getRpe().orElse(null)));
 		entity.setCompleted(Boolean.TRUE.equals(dto.getIsCompleted()));
 		entity.setOrderIndex(dto.getOrderIndex());
 	}

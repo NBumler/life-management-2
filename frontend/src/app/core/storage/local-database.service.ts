@@ -1306,7 +1306,20 @@ const SCHEMA_V45_STATEMENTS: string[] = [
   `ALTER TABLE ascent_attempt ADD COLUMN band_modifier TEXT`,
 ];
 
-const SCHEMA_VERSION = 45;
+/**
+ * backlog/133–135 — sablon-gyakorlat megjegyzés (`workout_plan_exercise.notes`), egyoldali szett (`side`,
+ * LEFT / RIGHT) és opcionális RPE a sablon- és a napló-szetten; on-device tükre a backend
+ * `V49__workout_plan_notes_set_side_rpe.sql`-nek.
+ */
+const SCHEMA_V46_STATEMENTS: string[] = [
+  `ALTER TABLE workout_plan_exercise ADD COLUMN notes TEXT`,
+  `ALTER TABLE workout_plan_set ADD COLUMN side TEXT`,
+  `ALTER TABLE workout_plan_set ADD COLUMN rpe REAL`,
+  `ALTER TABLE workout_set_entry ADD COLUMN side TEXT`,
+  `ALTER TABLE workout_set_entry ADD COLUMN rpe REAL`,
+];
+
+const SCHEMA_VERSION = 46;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -1354,7 +1367,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 42, statements: SCHEMA_V42_STATEMENTS },
   { toVersion: 43, statements: SCHEMA_V43_STATEMENTS },
   { toVersion: 44, statements: SCHEMA_V44_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V45_STATEMENTS },
+  { toVersion: 45, statements: SCHEMA_V45_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V46_STATEMENTS },
 ];
 
 export interface SqlTask {

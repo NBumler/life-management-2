@@ -36,6 +36,14 @@ export interface WorkoutSetEntry {
     distanceMeters?: number | null;
     restTimeSeconds?: number | null;
     /**
+     * backlog/134 — one-sided set (one-arm pull-up negative, lock-off, one-arm row). `null` = both hands / not relevant.
+     */
+    side?: WorkoutSetEntry.SideEnum | null;
+    /**
+     * backlog/135 — optional actual RPE, 6–10 in 0.5 steps (400 VALIDATION otherwise).
+     */
+    rpe?: number | null;
+    /**
      * Live mode tick; a skipped set is false or deleted.
      */
     isCompleted: boolean;
@@ -54,6 +62,11 @@ export namespace WorkoutSetEntry {
         Failure: 'FAILURE'
     } as const;
     export type SetTypeEnum = typeof SetTypeEnum[keyof typeof SetTypeEnum];
+    export const SideEnum = {
+        Left: 'LEFT',
+        Right: 'RIGHT'
+    } as const;
+    export type SideEnum = typeof SideEnum[keyof typeof SideEnum];
 }
 
 

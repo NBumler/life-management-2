@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
-import { AlertController } from '@ionic/angular/standalone';
+import { AlertController, PopoverController } from '@ionic/angular/standalone';
 import { provideTranslateService } from '@ngx-translate/core';
 
 import { Exercise } from '../../../api/model/exercise';
@@ -83,6 +83,7 @@ describe('ActiveWorkoutPage', () => {
   let exerciseRepository: { load: jasmine.Spy; items: ReturnType<typeof signal<Exercise[]>> };
   let router: jasmine.SpyObj<Pick<Router, 'navigateByUrl'>>;
   let draftService: WorkoutDraftService;
+  let popoverCreate: jasmine.Spy;
 
   async function setup(queryParams: Record<string, string> = {}, plan?: WorkoutPlan): Promise<void> {
     repository = jasmine.createSpyObj('WorkoutSessionRepository', ['load', 'byId', 'save']) as never;
@@ -93,6 +94,7 @@ describe('ActiveWorkoutPage', () => {
     exerciseRepository = { load: jasmine.createSpy('load').and.resolveTo(), items: signal<Exercise[]>([]) };
     router = jasmine.createSpyObj('Router', ['navigateByUrl']);
     router.navigateByUrl.and.resolveTo(true);
+    popoverCreate = jasmine.createSpy('create').and.resolveTo({ present: () => Promise.resolve() });
 
     await TestBed.configureTestingModule({
       imports: [ActiveWorkoutPage],
@@ -110,7 +112,9 @@ describe('ActiveWorkoutPage', () => {
           useValue: { create: () => Promise.resolve({ present: () => Promise.resolve() }) },
         },
       ],
-    }).compileComponents();
+    })
+      .overrideComponent(ActiveWorkoutPage, { set: { providers: [{ provide: PopoverController, useValue: { create: popoverCreate } }] } })
+      .compileComponents();
 
     draftService = TestBed.inject(WorkoutDraftService);
     await draftService.clear();
@@ -340,12 +344,12 @@ describe('ActiveWorkoutPage', () => {
 
     const row = component.exercises()[0];
     expect(component.lastTimeLabel(row)).toEqual({ date: '2026-08-20', summary: '8 @ 100 kg' });
-    expect(component.suggestionFor(row)).toEqual({ weight: 102.5 });
+    expect(component.suggestionsFor(row)).toEqual([{ side: null, mark: '', weight: 102.5 }]);
 
-    component.applySuggestion(row, 102.5);
+    component.applySuggestion(row, null, 102.5);
 
     expect(row.sets()[0].weightKg()).toBe(102.5);
-    expect(component.suggestionFor(row)).toBeNull();
+    expect(component.suggestionsFor(row)).toEqual([]);
   });
 
   it('generateWarmup() prepends three WARMUP sets before the working set (backlog/132)', async () => {
@@ -359,5 +363,112 @@ describe('ActiveWorkoutPage', () => {
 
     expect(row.sets().map((set) => set.setType())).toEqual(['WARMUP', 'WARMUP', 'WARMUP', 'WORKING']);
     expect(row.sets().map((set) => set.weightKg())).toEqual([17.5, 40, 52.5, 60]);
+  });
+  it('starting from a plan carries the exercise cue, the set side and the target RPE (backlog/133–135)', async () => {
+    const plan = {
+      id: 'plan-2',
+      name: 'OAPU',
+      active: true,
+      deleted: false,
+      exercises: [
+        {
+          id: 'wpe2',
+          planId: 'plan-2',
+          exerciseId: 'cat-oapu',
+          exerciseName: 'Negatív egykezes',
+          exerciseCategory: 'BACK',
+          exerciseKind: 'BODYWEIGHT_REPS',
+          orderIndex: 0,
+          notes: '3–5 mp leengedés',
+          deleted: false,
+          targetSets: [
+            { id: 'ts1', planExerciseId: 'wpe2', setType: 'WORKING', reps: 2, side: 'LEFT', rpe: 8, orderIndex: 0, deleted: false },
+            { id: 'ts2', planExerciseId: 'wpe2', setType: 'WORKING', reps: 2, side: 'RIGHT', rpe: 8, orderIndex: 1, deleted: false },
+          ],
+        },
+      ],
+    } as unknown as WorkoutPlan;
+    await setup({ planId: 'plan-2' }, plan);
+    await component.ngOnInit();
+
+    const row = component.exercises()[0];
+    expect(row.planNotes).toBe('3–5 mp leengedés');
+    expect(row.sets().map((set) => [set.side(), set.rpe()])).toEqual([
+      ['LEFT', 8],
+      ['RIGHT', 8],
+    ]);
+    expect(draftService.draft()?.exercises[0].planNotes).toBe('3–5 mp leengedés');
+    expect(draftService.draft()?.exercises[0].sets[0].side).toBe('LEFT');
+  });
+
+  it('+ Új szett after a one-sided set alternates the hand and starts without RPE (backlog/134)', async () => {
+    await setup();
+    await component.ngOnInit();
+    component.onPicked([pick()]);
+    const row = component.exercises()[0];
+    row.sets()[0].side.set('LEFT');
+    row.sets()[0].rpe.set(9);
+
+    component.addSet(row);
+    component.copyLastSet(row);
+
+    expect(row.sets().map((set) => set.side())).toEqual(['LEFT', 'RIGHT', 'LEFT']);
+    expect(row.sets()[1].rpe()).toBeNull();
+  });
+
+  it('suggests per hand for a one-sided exercise and applies only to that hand (backlog/134)', async () => {
+    const plan = {
+      id: 'plan-3',
+      name: 'OAPU',
+      active: true,
+      deleted: false,
+      exercises: [
+        {
+          id: 'wpe3',
+          planId: 'plan-3',
+          exerciseId: 'cat-bench',
+          exerciseName: 'Fekvenyomás',
+          exerciseCategory: 'CHEST',
+          exerciseKind: 'WEIGHTED_REPS',
+          orderIndex: 0,
+          deleted: false,
+          targetSets: [
+            { id: 'ts1', planExerciseId: 'wpe3', setType: 'WORKING', reps: 2, repsMax: 3, weightKg: -20, side: 'LEFT', orderIndex: 0, deleted: false },
+            { id: 'ts2', planExerciseId: 'wpe3', setType: 'WORKING', reps: 2, repsMax: 3, weightKg: -20, side: 'RIGHT', orderIndex: 1, deleted: false },
+          ],
+        },
+      ],
+    } as unknown as WorkoutPlan;
+    const prior = priorSession();
+    prior.exercises[0].sets = [
+      { ...prior.exercises[0].sets[0], id: 'l', reps: 3, weightKg: -20, side: 'LEFT' },
+      { ...prior.exercises[0].sets[0], id: 'r', reps: 2, weightKg: -20, side: 'RIGHT', orderIndex: 1 },
+    ];
+    await setup({ planId: 'plan-3' }, plan);
+    repository.items.set([prior]);
+    await component.ngOnInit();
+
+    const row = component.exercises()[0];
+    expect(component.suggestionsFor(row)).toEqual([{ side: 'LEFT', mark: '◀', weight: -17.5 }]);
+
+    component.applySuggestion(row, 'LEFT', -17.5);
+
+    expect(row.sets().map((set) => set.weightKg())).toEqual([-17.5, -20]);
+  });
+  it('openSetOptions() opens the popover and applies type / side / RPE picks live (backlog/134–135)', async () => {
+    await setup();
+    await component.ngOnInit();
+    component.onPicked([pick()]);
+    const set = component.exercises()[0].sets()[0];
+
+    await component.openSetOptions(new Event('click'), set);
+
+    const props = popoverCreate.calls.mostRecent().args[0].componentProps;
+    expect(props.initial).toEqual({ setType: 'WORKING', side: null, rpe: null });
+    props.changed({ setType: 'FAILURE', side: 'RIGHT', rpe: 9.5 });
+    await Promise.resolve();
+
+    expect([set.setType(), set.side(), set.rpe()]).toEqual(['FAILURE', 'RIGHT', 9.5]);
+    expect(draftService.draft()?.exercises[0].sets[0].rpe).toBe(9.5);
   });
 });

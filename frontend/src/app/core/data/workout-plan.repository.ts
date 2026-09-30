@@ -157,6 +157,7 @@ export class WorkoutPlanRepository {
           exerciseKind: exercise.exerciseKind,
           orderIndex: exercise.orderIndex,
           supersetGroup: exercise.supersetGroup ?? null,
+          notes: exercise.notes ?? null,
           targetSets: exercise.targetSets
             .filter((set) => !set.deleted)
             .sort((a, b) => a.orderIndex - b.orderIndex)
@@ -170,6 +171,8 @@ export class WorkoutPlanRepository {
               edgeSizeMm: set.edgeSizeMm ?? null,
               distanceMeters: set.distanceMeters ?? null,
               restTimeSeconds: set.restTimeSeconds ?? null,
+              side: set.side ?? null,
+              rpe: set.rpe ?? null,
               orderIndex: set.orderIndex,
             })),
         })),

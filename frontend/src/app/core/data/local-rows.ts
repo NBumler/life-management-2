@@ -610,6 +610,8 @@ export interface WorkoutSetEntryRow {
   edge_size_mm: number | null;
   distance_meters: number | null;
   rest_time_seconds: number | null;
+  side: string | null;
+  rpe: number | null;
   is_completed: number;
   order_index: number;
   created_at: string | null;
@@ -634,6 +636,8 @@ export function workoutSetEntryRowToDto(row: WorkoutSetEntryRow): WorkoutSetEntr
     edgeSizeMm: row.edge_size_mm,
     distanceMeters: row.distance_meters,
     restTimeSeconds: row.rest_time_seconds,
+    side: row.side as WorkoutSetEntry.SideEnum | null,
+    rpe: row.rpe,
     isCompleted: row.is_completed === 1,
     orderIndex: row.order_index,
     deleted: row.deleted === 1,
@@ -655,6 +659,8 @@ type WorkoutSetEntryWriteInput = Pick<
   | 'edgeSizeMm'
   | 'distanceMeters'
   | 'restTimeSeconds'
+  | 'side'
+  | 'rpe'
   | 'isCompleted'
   | 'orderIndex'
 >;
@@ -662,12 +668,12 @@ type WorkoutSetEntryWriteInput = Pick<
 export function workoutSetEntryLocalWriteTask(dto: WorkoutSetEntryWriteInput): SqlTask {
   return {
     statement: `
-      INSERT INTO workout_set_entry (id, exercise_entry_id, set_number, set_type, reps, weight_kg, hold_time_seconds, edge_size_mm, distance_meters, rest_time_seconds, is_completed, order_index, _dirty, _local_only)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
+      INSERT INTO workout_set_entry (id, exercise_entry_id, set_number, set_type, reps, weight_kg, hold_time_seconds, edge_size_mm, distance_meters, rest_time_seconds, side, rpe, is_completed, order_index, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
       ON CONFLICT(id) DO UPDATE SET
         set_number = excluded.set_number, set_type = excluded.set_type, reps = excluded.reps, weight_kg = excluded.weight_kg,
         hold_time_seconds = excluded.hold_time_seconds, edge_size_mm = excluded.edge_size_mm, distance_meters = excluded.distance_meters,
-        rest_time_seconds = excluded.rest_time_seconds, is_completed = excluded.is_completed, order_index = excluded.order_index,
+        rest_time_seconds = excluded.rest_time_seconds, side = excluded.side, rpe = excluded.rpe, is_completed = excluded.is_completed, order_index = excluded.order_index,
         deleted = 0, deleted_at = NULL, _dirty = 1`,
     values: [
       dto.id,
@@ -680,6 +686,8 @@ export function workoutSetEntryLocalWriteTask(dto: WorkoutSetEntryWriteInput): S
       dto.edgeSizeMm ?? null,
       dto.distanceMeters ?? null,
       dto.restTimeSeconds ?? null,
+      dto.side ?? null,
+      dto.rpe ?? null,
       dto.isCompleted ? 1 : 0,
       dto.orderIndex,
     ],
@@ -697,12 +705,12 @@ export function workoutSetEntryLocalRemoveTask(id: string): SqlTask {
 export function workoutSetEntryServerApplyTask(dto: WorkoutSetEntry): SqlTask {
   return {
     statement: `
-      INSERT INTO workout_set_entry (id, exercise_entry_id, set_number, set_type, reps, weight_kg, hold_time_seconds, edge_size_mm, distance_meters, rest_time_seconds, is_completed, order_index, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      INSERT INTO workout_set_entry (id, exercise_entry_id, set_number, set_type, reps, weight_kg, hold_time_seconds, edge_size_mm, distance_meters, rest_time_seconds, side, rpe, is_completed, order_index, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET
         exercise_entry_id = excluded.exercise_entry_id, set_number = excluded.set_number, set_type = excluded.set_type,
         reps = excluded.reps, weight_kg = excluded.weight_kg, hold_time_seconds = excluded.hold_time_seconds,
-        edge_size_mm = excluded.edge_size_mm, distance_meters = excluded.distance_meters, rest_time_seconds = excluded.rest_time_seconds,
+        edge_size_mm = excluded.edge_size_mm, distance_meters = excluded.distance_meters, rest_time_seconds = excluded.rest_time_seconds, side = excluded.side, rpe = excluded.rpe,
         is_completed = excluded.is_completed, order_index = excluded.order_index, created_at = excluded.created_at,
         updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0, _needs_refetch = 0
       WHERE workout_set_entry._dirty = 0`,
@@ -717,6 +725,8 @@ export function workoutSetEntryServerApplyTask(dto: WorkoutSetEntry): SqlTask {
       dto.edgeSizeMm ?? null,
       dto.distanceMeters ?? null,
       dto.restTimeSeconds ?? null,
+      dto.side ?? null,
+      dto.rpe ?? null,
       dto.isCompleted ? 1 : 0,
       dto.orderIndex,
       dto.createdAt ?? null,
@@ -832,6 +842,7 @@ export interface WorkoutPlanExerciseRow {
   exercise_kind: string;
   order_index: number;
   superset_group: number | null;
+  notes: string | null;
   created_at: string | null;
   updated_at: string | null;
   deleted: number;
@@ -853,6 +864,7 @@ export function workoutPlanExerciseRowToDto(row: WorkoutPlanExerciseRow): Omit<W
     exerciseKind: row.exercise_kind as WorkoutPlanExercise.ExerciseKindEnum,
     orderIndex: row.order_index,
     supersetGroup: row.superset_group,
+    notes: row.notes,
     deleted: row.deleted === 1,
     deletedAt: row.deleted_at,
     createdAt: row.created_at ?? undefined,
@@ -862,17 +874,17 @@ export function workoutPlanExerciseRowToDto(row: WorkoutPlanExerciseRow): Omit<W
 
 type WorkoutPlanExerciseWriteInput = Pick<
   WorkoutPlanExercise,
-  'id' | 'planId' | 'exerciseId' | 'exerciseName' | 'exerciseCategory' | 'exerciseKind' | 'orderIndex' | 'supersetGroup'
+  'id' | 'planId' | 'exerciseId' | 'exerciseName' | 'exerciseCategory' | 'exerciseKind' | 'orderIndex' | 'supersetGroup' | 'notes'
 >;
 
 export function workoutPlanExerciseLocalWriteTask(dto: WorkoutPlanExerciseWriteInput): SqlTask {
   return {
     statement: `
-      INSERT INTO workout_plan_exercise (id, plan_id, exercise_id, exercise_name, exercise_category, exercise_kind, order_index, superset_group, _dirty, _local_only)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
+      INSERT INTO workout_plan_exercise (id, plan_id, exercise_id, exercise_name, exercise_category, exercise_kind, order_index, superset_group, notes, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
       ON CONFLICT(id) DO UPDATE SET
         exercise_id = excluded.exercise_id, exercise_name = excluded.exercise_name, exercise_category = excluded.exercise_category,
-        exercise_kind = excluded.exercise_kind, order_index = excluded.order_index, superset_group = excluded.superset_group,
+        exercise_kind = excluded.exercise_kind, order_index = excluded.order_index, superset_group = excluded.superset_group, notes = excluded.notes,
         deleted = 0, deleted_at = NULL, _dirty = 1`,
     values: [
       dto.id,
@@ -883,6 +895,7 @@ export function workoutPlanExerciseLocalWriteTask(dto: WorkoutPlanExerciseWriteI
       dto.exerciseKind,
       dto.orderIndex,
       dto.supersetGroup ?? null,
+      dto.notes ?? null,
     ],
   };
 }
@@ -898,12 +911,12 @@ export function workoutPlanExerciseLocalRemoveTask(id: string): SqlTask {
 export function workoutPlanExerciseServerApplyTask(dto: Omit<WorkoutPlanExercise, 'targetSets'>): SqlTask {
   return {
     statement: `
-      INSERT INTO workout_plan_exercise (id, plan_id, exercise_id, exercise_name, exercise_category, exercise_kind, order_index, superset_group, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      INSERT INTO workout_plan_exercise (id, plan_id, exercise_id, exercise_name, exercise_category, exercise_kind, order_index, superset_group, notes, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET
         plan_id = excluded.plan_id, exercise_id = excluded.exercise_id, exercise_name = excluded.exercise_name,
         exercise_category = excluded.exercise_category, exercise_kind = excluded.exercise_kind, order_index = excluded.order_index,
-        superset_group = excluded.superset_group, created_at = excluded.created_at, updated_at = excluded.updated_at,
+        superset_group = excluded.superset_group, notes = excluded.notes, created_at = excluded.created_at, updated_at = excluded.updated_at,
         deleted = excluded.deleted, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0, _needs_refetch = 0
       WHERE workout_plan_exercise._dirty = 0`,
     values: [
@@ -915,6 +928,7 @@ export function workoutPlanExerciseServerApplyTask(dto: Omit<WorkoutPlanExercise
       dto.exerciseKind,
       dto.orderIndex,
       dto.supersetGroup ?? null,
+      dto.notes ?? null,
       dto.createdAt ?? null,
       dto.updatedAt ?? null,
       dto.deleted ? 1 : 0,
@@ -945,6 +959,8 @@ export interface WorkoutPlanSetRow {
   edge_size_mm: number | null;
   distance_meters: number | null;
   rest_time_seconds: number | null;
+  side: string | null;
+  rpe: number | null;
   order_index: number;
   created_at: string | null;
   updated_at: string | null;
@@ -968,6 +984,8 @@ export function workoutPlanSetRowToDto(row: WorkoutPlanSetRow): WorkoutPlanSet {
     edgeSizeMm: row.edge_size_mm,
     distanceMeters: row.distance_meters,
     restTimeSeconds: row.rest_time_seconds,
+    side: row.side as WorkoutPlanSet.SideEnum | null,
+    rpe: row.rpe,
     orderIndex: row.order_index,
     deleted: row.deleted === 1,
     deletedAt: row.deleted_at,
@@ -978,17 +996,17 @@ export function workoutPlanSetRowToDto(row: WorkoutPlanSetRow): WorkoutPlanSet {
 
 type WorkoutPlanSetWriteInput = Pick<
   WorkoutPlanSet,
-  'id' | 'planExerciseId' | 'setType' | 'reps' | 'repsMax' | 'weightKg' | 'holdTimeSeconds' | 'edgeSizeMm' | 'distanceMeters' | 'restTimeSeconds' | 'orderIndex'
+  'id' | 'planExerciseId' | 'setType' | 'reps' | 'repsMax' | 'weightKg' | 'holdTimeSeconds' | 'edgeSizeMm' | 'distanceMeters' | 'restTimeSeconds' | 'side' | 'rpe' | 'orderIndex'
 >;
 
 export function workoutPlanSetLocalWriteTask(dto: WorkoutPlanSetWriteInput): SqlTask {
   return {
     statement: `
-      INSERT INTO workout_plan_set (id, plan_exercise_id, set_type, reps, reps_max, weight_kg, hold_time_seconds, edge_size_mm, distance_meters, rest_time_seconds, order_index, _dirty, _local_only)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
+      INSERT INTO workout_plan_set (id, plan_exercise_id, set_type, reps, reps_max, weight_kg, hold_time_seconds, edge_size_mm, distance_meters, rest_time_seconds, side, rpe, order_index, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
       ON CONFLICT(id) DO UPDATE SET
         set_type = excluded.set_type, reps = excluded.reps, reps_max = excluded.reps_max, weight_kg = excluded.weight_kg, hold_time_seconds = excluded.hold_time_seconds,
-        edge_size_mm = excluded.edge_size_mm, distance_meters = excluded.distance_meters, rest_time_seconds = excluded.rest_time_seconds,
+        edge_size_mm = excluded.edge_size_mm, distance_meters = excluded.distance_meters, rest_time_seconds = excluded.rest_time_seconds, side = excluded.side, rpe = excluded.rpe,
         order_index = excluded.order_index, deleted = 0, deleted_at = NULL, _dirty = 1`,
     values: [
       dto.id,
@@ -1001,6 +1019,8 @@ export function workoutPlanSetLocalWriteTask(dto: WorkoutPlanSetWriteInput): Sql
       dto.edgeSizeMm ?? null,
       dto.distanceMeters ?? null,
       dto.restTimeSeconds ?? null,
+      dto.side ?? null,
+      dto.rpe ?? null,
       dto.orderIndex,
     ],
   };
@@ -1017,12 +1037,12 @@ export function workoutPlanSetLocalRemoveTask(id: string): SqlTask {
 export function workoutPlanSetServerApplyTask(dto: WorkoutPlanSet): SqlTask {
   return {
     statement: `
-      INSERT INTO workout_plan_set (id, plan_exercise_id, set_type, reps, reps_max, weight_kg, hold_time_seconds, edge_size_mm, distance_meters, rest_time_seconds, order_index, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      INSERT INTO workout_plan_set (id, plan_exercise_id, set_type, reps, reps_max, weight_kg, hold_time_seconds, edge_size_mm, distance_meters, rest_time_seconds, side, rpe, order_index, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET
         plan_exercise_id = excluded.plan_exercise_id, set_type = excluded.set_type, reps = excluded.reps, reps_max = excluded.reps_max, weight_kg = excluded.weight_kg,
         hold_time_seconds = excluded.hold_time_seconds, edge_size_mm = excluded.edge_size_mm, distance_meters = excluded.distance_meters,
-        rest_time_seconds = excluded.rest_time_seconds, order_index = excluded.order_index, created_at = excluded.created_at,
+        rest_time_seconds = excluded.rest_time_seconds, side = excluded.side, rpe = excluded.rpe, order_index = excluded.order_index, created_at = excluded.created_at,
         updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0, _needs_refetch = 0
       WHERE workout_plan_set._dirty = 0`,
     values: [
@@ -1036,6 +1056,8 @@ export function workoutPlanSetServerApplyTask(dto: WorkoutPlanSet): SqlTask {
       dto.edgeSizeMm ?? null,
       dto.distanceMeters ?? null,
       dto.restTimeSeconds ?? null,
+      dto.side ?? null,
+      dto.rpe ?? null,
       dto.orderIndex,
       dto.createdAt ?? null,
       dto.updatedAt ?? null,

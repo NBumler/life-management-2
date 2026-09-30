@@ -204,6 +204,7 @@ class WorkoutPlanService {
 		entity.setExerciseKind(dto.getExerciseKind().getValue());
 		entity.setOrderIndex(dto.getOrderIndex());
 		entity.setSupersetGroup(dto.getSupersetGroup().orElse(null));
+		entity.setNotes(dto.getNotes().orElse(null));
 	}
 
 	private void applySetFields(WorkoutPlanSetEntity entity, WorkoutPlanSet dto) {
@@ -221,6 +222,9 @@ class WorkoutPlanService {
 		entity.setEdgeSizeMm(dto.getEdgeSizeMm().orElse(null));
 		entity.setDistanceMeters(dto.getDistanceMeters().orElse(null));
 		entity.setRestTimeSeconds(dto.getRestTimeSeconds().orElse(null));
+		WorkoutPlanSet.SideEnum side = dto.getSide().orElse(null);
+		entity.setSide(side == null ? null : side.getValue());
+		entity.setRpe(WorkoutSetRules.validRpe(dto.getRpe().orElse(null)));
 		entity.setOrderIndex(dto.getOrderIndex());
 	}
 

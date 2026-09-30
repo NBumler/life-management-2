@@ -24,6 +24,7 @@ import {
   IonSelectOption,
   IonTitle,
   IonToolbar,
+  PopoverController,
   ToastController,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
@@ -52,14 +53,18 @@ import {
   PLAN_TO_ENTRY_SET_TYPE,
   PLAN_TO_SESSION_TYPE,
   SET_TYPES,
+  SetSide,
   WORKOUT_TYPES,
   formatStopwatch,
   moveById,
   nextRestValue,
+  nextSide,
   sanitizeSessionTimes,
   setGridColumns,
+  sideMark,
   visibleFields,
 } from './workout-fields';
+import { SetOptions, presentSetOptions } from './set-options-popover.component';
 import { presentExerciseActions, supportsWarmupRamp } from './exercise-actions';
 import { rampWarmupSets } from './warmup-ramp';
 import {
@@ -81,6 +86,10 @@ interface SetRow {
   edgeSizeMm: WritableSignal<number | null>;
   distanceMeters: WritableSignal<number | null>;
   restTimeSeconds: WritableSignal<number | null>;
+  /** backlog/134 — one-sided set; null = both hands. */
+  side: WritableSignal<SetSide | null>;
+  /** backlog/135 — actual RPE; prefilled from the plan's target. */
+  rpe: WritableSignal<number | null>;
   isCompleted: WritableSignal<boolean>;
   /** backlog/125 — the plan's target rep range ("8–12"), shown as a hint; the `reps` value starts at its rounded-up midpoint. */
   repsTarget?: string | null;
@@ -93,6 +102,8 @@ interface ExerciseRow {
   exerciseCategory: WorkoutExerciseEntry.ExerciseCategoryEnum;
   exerciseKind: WorkoutExerciseEntry.ExerciseKindEnum;
   defaultRestTimeSeconds: number | null;
+  /** backlog/133 — the plan exercise's cue ("szék: 5"), display-only. */
+  planNotes: string | null;
   supersetGroup: WritableSignal<number | null>;
   sets: WritableSignal<SetRow[]>;
 }
@@ -135,6 +146,8 @@ const TICK_MS = 1000;
     IonModal,
     TranslatePipe,
   ],
+  // Ionic standalone: PopoverController is not providedIn root — the set-options popover needs it here.
+  providers: [PopoverController],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ActiveWorkoutPage implements OnInit, OnDestroy {
@@ -148,11 +161,13 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
   private readonly alertController = inject(AlertController);
   private readonly actionSheetController = inject(ActionSheetController);
   private readonly toastController = inject(ToastController);
+  private readonly popoverController = inject(PopoverController);
   private readonly translate = inject(TranslateService);
 
   readonly workoutTypes = WORKOUT_TYPES;
   readonly setTypes = SET_TYPES;
   readonly visibleFields = visibleFields;
+  readonly sideMark = sideMark;
 
   private sessionId = '';
   private startedAtMs = 0;
@@ -345,6 +360,8 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
       edgeSizeMm: signal<number | null>(null),
       distanceMeters: signal<number | null>(null),
       restTimeSeconds: signal<number | null>(spec.restTimeSeconds),
+      side: signal<SetSide | null>(null),
+      rpe: signal<number | null>(null),
       isCompleted: signal(false),
     }));
     row.sets.update((sets) => [
@@ -371,29 +388,35 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
   }
 
   /**
-   * The double-progression weight for this row's WORKING sets, when the plan gave a rep range and last
-   * time every working set hit its top. Hidden once every open WORKING set already carries it. Wrapped
-   * in an object so a 0 kg suggestion (assistance fully gone) still renders under `@if`.
+   * The double-progression weights for this row's WORKING sets, one per hand group (backlog/134: a
+   * one-sided exercise gets a left and a right suggestion), when the plan gave a rep range and last
+   * time every working set of that group hit its top. A group is hidden once every open WORKING set of
+   * it already carries the suggestion.
    */
-  suggestionFor(row: ExerciseRow): { weight: number } | null {
+  suggestionsFor(row: ExerciseRow): { side: SetSide | null; mark: string; weight: number }[] {
     if (!visibleFields(row.exerciseKind).weightKg) {
-      return null;
+      return [];
     }
     const working = row.sets().filter((set) => set.setType() === WorkoutSetEntry.SetTypeEnum.Working);
     const target = working.find((set) => set.repsTarget)?.repsTarget ?? null;
     const parsed = parseTargetRange(target);
     const repsMax = parsed.ok ? parsed.value.upper : null;
-    const suggestion = progressionSuggestion(this.lastFor(row), repsMax);
-    if (suggestion === null) {
-      return null;
+    const last = this.lastFor(row);
+    const sides = [...new Set(working.map((set) => set.side()))];
+    const result: { side: SetSide | null; mark: string; weight: number }[] = [];
+    for (const side of sides) {
+      const weight = progressionSuggestion(last, repsMax, side);
+      const open = working.filter((set) => set.side() === side && !set.isCompleted());
+      if (weight !== null && open.length > 0 && !open.every((set) => set.weightKg() === weight)) {
+        result.push({ side, mark: sideMark(side), weight });
+      }
     }
-    const open = working.filter((set) => !set.isCompleted());
-    return open.length === 0 || open.every((set) => set.weightKg() === suggestion) ? null : { weight: suggestion };
+    return result;
   }
 
-  applySuggestion(row: ExerciseRow, weightKg: number): void {
+  applySuggestion(row: ExerciseRow, side: SetSide | null, weightKg: number): void {
     row.sets()
-      .filter((set) => set.setType() === WorkoutSetEntry.SetTypeEnum.Working && !set.isCompleted())
+      .filter((set) => set.setType() === WorkoutSetEntry.SetTypeEnum.Working && set.side() === side && !set.isCompleted())
       .forEach((set) => set.weightKg.set(weightKg));
     // the set array itself is unchanged; re-emit so OnPush consumers of `row.sets()` recompute
     row.sets.update((sets) => [...sets]);
@@ -443,6 +466,21 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
   setSetType(set: SetRow, value: WorkoutSetEntry.SetTypeEnum): void {
     set.setType.set(value);
     void this.persist();
+  }
+
+  /** backlog/134 + backlog/135 — the "1 M" badge opens type / side / RPE; every pick applies live. */
+  openSetOptions(event: Event, set: SetRow): Promise<void> {
+    return presentSetOptions(
+      this.popoverController,
+      event,
+      { setType: set.setType(), side: set.side(), rpe: set.rpe() },
+      (options: SetOptions) => {
+        set.setType.set(options.setType as WorkoutSetEntry.SetTypeEnum);
+        set.side.set(options.side);
+        set.rpe.set(options.rpe);
+        void this.persist();
+      },
+    );
   }
 
   /**
@@ -572,6 +610,7 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
         exerciseKind: row.exerciseKind,
         supersetGroup: row.supersetGroup(),
         defaultRestTimeSeconds: row.defaultRestTimeSeconds,
+        planNotes: row.planNotes,
         sets: row.sets().map((set) => ({
           id: set.id,
           setType: set.setType(),
@@ -581,6 +620,8 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
           edgeSizeMm: set.edgeSizeMm(),
           distanceMeters: set.distanceMeters(),
           restTimeSeconds: set.restTimeSeconds(),
+          side: set.side(),
+          rpe: set.rpe(),
           isCompleted: set.isCompleted(),
           repsTarget: set.repsTarget ?? null,
         })),
@@ -626,6 +667,8 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
         edgeSizeMm: set.edgeSizeMm(),
         distanceMeters: set.distanceMeters(),
         restTimeSeconds: set.restTimeSeconds(),
+        side: set.side(),
+        rpe: set.rpe(),
         isCompleted: set.isCompleted(),
         orderIndex: setIndex,
       })),
@@ -682,6 +725,7 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
       exerciseCategory: exercise.exerciseCategory,
       exerciseKind: exercise.exerciseKind,
       defaultRestTimeSeconds: exercise.defaultRestTimeSeconds,
+      planNotes: exercise.planNotes ?? null,
       supersetGroup: signal(exercise.supersetGroup),
       sets: signal(
         exercise.sets.map((set) => ({
@@ -693,6 +737,8 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
           edgeSizeMm: signal(set.edgeSizeMm),
           distanceMeters: signal(set.distanceMeters),
           restTimeSeconds: signal(set.restTimeSeconds),
+          side: signal<SetSide | null>(set.side ?? null),
+          rpe: signal<number | null>(set.rpe ?? null),
           isCompleted: signal(set.isCompleted),
           repsTarget: set.repsTarget ?? null,
         })),
@@ -712,6 +758,7 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
         exerciseCategory: exercise.exerciseCategory,
         exerciseKind: exercise.exerciseKind,
         defaultRestTimeSeconds: this.catalogRestFor(exercise.exerciseId ?? null),
+        planNotes: null,
         supersetGroup: signal(exercise.supersetGroup ?? null),
         sets: signal(
           exercise.sets
@@ -726,6 +773,9 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
               edgeSizeMm: signal(set.edgeSizeMm ?? null),
               distanceMeters: signal(set.distanceMeters ?? null),
               restTimeSeconds: signal(set.restTimeSeconds ?? null),
+              // the hand carries over; the effort (RPE) is today's to log
+              side: signal<SetSide | null>(set.side ?? null),
+              rpe: signal<number | null>(null),
               isCompleted: signal(false),
             })),
         ),
@@ -744,6 +794,7 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
         exerciseCategory: PLAN_TO_ENTRY_CATEGORY[exercise.exerciseCategory],
         exerciseKind: PLAN_TO_ENTRY_KIND[exercise.exerciseKind],
         defaultRestTimeSeconds: this.catalogRestFor(exercise.exerciseId),
+        planNotes: exercise.notes ?? null,
         supersetGroup: signal(exercise.supersetGroup ?? null),
         sets: signal(
           exercise.targetSets
@@ -760,6 +811,9 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
               edgeSizeMm: signal(set.edgeSizeMm ?? null),
               distanceMeters: signal(set.distanceMeters ?? null),
               restTimeSeconds: signal(set.restTimeSeconds ?? null),
+              side: signal<SetSide | null>(set.side ?? null),
+              // backlog/135 — the target RPE seeds the actual one
+              rpe: signal<number | null>(set.rpe ?? null),
               isCompleted: signal(false),
             })),
         ),
@@ -774,6 +828,7 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
       exerciseCategory: result.exerciseCategory,
       exerciseKind: result.exerciseKind,
       defaultRestTimeSeconds: this.catalogRestFor(result.exerciseId),
+      planNotes: null,
       supersetGroup: signal<number | null>(null),
       sets: signal([this.emptySetRow(undefined)]),
     };
@@ -789,6 +844,8 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
       edgeSizeMm: signal(previous?.edgeSizeMm() ?? null),
       distanceMeters: signal(null),
       restTimeSeconds: signal(previous?.restTimeSeconds() ?? null),
+      side: signal<SetSide | null>(nextSide(previous?.side())),
+      rpe: signal<number | null>(null),
       isCompleted: signal(false),
       repsTarget: previous?.repsTarget ?? null,
     };
@@ -804,6 +861,8 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
       edgeSizeMm: signal(source.edgeSizeMm()),
       distanceMeters: signal(source.distanceMeters()),
       restTimeSeconds: signal(source.restTimeSeconds()),
+      side: signal<SetSide | null>(nextSide(source.side())),
+      rpe: signal<number | null>(null),
       isCompleted: signal(false),
       repsTarget: source.repsTarget ?? null,
     };

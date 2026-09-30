@@ -17,6 +17,8 @@ class WorkoutPlanSetMapper {
 		dto.edgeSizeMm(entity.getEdgeSizeMm());
 		dto.distanceMeters(entity.getDistanceMeters());
 		dto.restTimeSeconds(entity.getRestTimeSeconds());
+		dto.side(entity.getSide() == null ? null : WorkoutPlanSet.SideEnum.fromValue(entity.getSide()));
+		dto.rpe(entity.getRpe());
 		dto.deletedAt(entity.getDeletedAt());
 		dto.createdAt(entity.getCreatedAt());
 		dto.updatedAt(entity.getUpdatedAt());

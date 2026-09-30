@@ -53,6 +53,14 @@ public class WorkoutPlanSetEntity {
 	@Column(name = "rest_time_seconds")
 	private Integer restTimeSeconds;
 
+	/** backlog/134 — LEFT | RIGHT for a one-sided set; null = both hands / not relevant. */
+	@Column
+	private String side;
+
+	/** backlog/135 — optional RPE 6–10 in 0.5 steps (validated in {@link WorkoutSetRules}). */
+	@Column
+	private BigDecimal rpe;
+
 	@Column(name = "order_index", nullable = false)
 	private int orderIndex;
 
@@ -148,6 +156,22 @@ public class WorkoutPlanSetEntity {
 
 	public void setRestTimeSeconds(Integer restTimeSeconds) {
 		this.restTimeSeconds = restTimeSeconds;
+	}
+
+	public String getSide() {
+		return side;
+	}
+
+	public void setSide(String side) {
+		this.side = side;
+	}
+
+	public BigDecimal getRpe() {
+		return rpe;
+	}
+
+	public void setRpe(BigDecimal rpe) {
+		this.rpe = rpe;
 	}
 
 	public int getOrderIndex() {

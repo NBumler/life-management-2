@@ -45,6 +45,10 @@ public class WorkoutPlanExerciseEntity {
 	@Column(name = "superset_group")
 	private Integer supersetGroup;
 
+	/** backlog/133 — per-template cue for this exercise line (bench setting, tempo); max. 200 chars. */
+	@Column
+	private String notes;
+
 	@Generated(event = EventType.INSERT)
 	@Column(name = "created_at", insertable = false, updatable = false)
 	private OffsetDateTime createdAt;
@@ -121,6 +125,14 @@ public class WorkoutPlanExerciseEntity {
 
 	public void setSupersetGroup(Integer supersetGroup) {
 		this.supersetGroup = supersetGroup;
+	}
+
+	public String getNotes() {
+		return notes;
+	}
+
+	public void setNotes(String notes) {
+		this.notes = notes;
 	}
 
 	public OffsetDateTime getCreatedAt() {

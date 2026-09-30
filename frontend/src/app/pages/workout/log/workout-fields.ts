@@ -149,3 +149,19 @@ export function formatStopwatch(elapsedMs: number): string {
   const ss = String(seconds).padStart(2, '0');
   return hours > 0 ? `${hours}:${mm}:${ss}` : `${mm}:${ss}`;
 }
+
+/** backlog/134 — a one-sided set's hand; `null` everywhere means both hands / not relevant. */
+export type SetSide = 'LEFT' | 'RIGHT';
+
+/** backlog/135 — the selectable RPE values: 6–10 in 0.5 steps. */
+export const RPE_VALUES: readonly number[] = [6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10];
+
+/** backlog/134 — the compact mark next to the set-type badge ("B" is taken by Bemelegítő). */
+export function sideMark(side: SetSide | null | undefined): string {
+  return side === 'LEFT' ? '◀' : side === 'RIGHT' ? '▶' : '';
+}
+
+/** backlog/134 — "+ Új szett" / copy after a one-sided set alternates the hand (left → right → left …). */
+export function nextSide(previous: SetSide | null | undefined): SetSide | null {
+  return previous === 'LEFT' ? 'RIGHT' : previous === 'RIGHT' ? 'LEFT' : null;
+}

@@ -31,6 +31,10 @@ export interface WorkoutPlanExercise {
      * Same value = visual superset / round group (same rule as WorkoutExerciseEntry).
      */
     supersetGroup?: number | null;
+    /**
+     * backlog/133 — per-template cue for this exercise line (bench setting \"szék: 5\", tempo \"3–5 s negatív\"). Shown as a hint when a workout starts from the plan; the session entry does not store it.
+     */
+    notes?: string | null;
     targetSets: Array<WorkoutPlanSet>;
     deleted: boolean;
     readonly deletedAt?: string | null;

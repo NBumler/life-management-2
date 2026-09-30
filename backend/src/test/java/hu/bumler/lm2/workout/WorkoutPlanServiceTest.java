@@ -1,5 +1,6 @@
 package hu.bumler.lm2.workout;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -145,6 +146,44 @@ class WorkoutPlanServiceTest {
 				plan(planId, List.of(exercise(exerciseId, planId, 0, List.of(inverted)))))).isInstanceOf(ValidationException.class);
 		assertThatThrownBy(() -> service.create(UUID.randomUUID(),
 				plan(planId, List.of(exercise(exerciseId, planId, 0, List.of(open)))))).isInstanceOf(ValidationException.class);
+	}
+
+	@Test
+	void create_storesExerciseNotes_andTheSetSideAndTargetRpe() {
+		UUID planId = UUID.randomUUID();
+		UUID exerciseId = UUID.randomUUID();
+		when(repository.findById(planId)).thenReturn(Optional.empty());
+		when(exerciseRepository.findByPlanId(planId)).thenReturn(List.of());
+		WorkoutPlanSet oneArm = set(UUID.randomUUID(), exerciseId, 0);
+		oneArm.side(WorkoutPlanSet.SideEnum.LEFT);
+		oneArm.rpe(new BigDecimal("8.5"));
+		WorkoutPlanExercise line = exercise(exerciseId, planId, 0, List.of(oneArm));
+		line.notes("szék: 5, 3 mp negatív");
+
+		WorkoutPlan saved = service.create(UUID.randomUUID(), plan(planId, List.of(line)));
+
+		ArgumentCaptor<WorkoutPlanExerciseEntity> exerciseCaptor = ArgumentCaptor.forClass(WorkoutPlanExerciseEntity.class);
+		verify(exerciseRepository).save(exerciseCaptor.capture());
+		assertThat(exerciseCaptor.getValue().getNotes()).isEqualTo("szék: 5, 3 mp negatív");
+		ArgumentCaptor<WorkoutPlanSetEntity> setCaptor = ArgumentCaptor.forClass(WorkoutPlanSetEntity.class);
+		verify(setRepository).save(setCaptor.capture());
+		assertThat(setCaptor.getValue().getSide()).isEqualTo("LEFT");
+		assertThat(setCaptor.getValue().getRpe()).isEqualByComparingTo("8.5");
+		assertThat(saved.getId()).isEqualTo(planId);
+	}
+
+	@Test
+	void create_rejectsAnRpeOffTheHalfStepGridOrOutOfRange() {
+		UUID planId = UUID.randomUUID();
+		UUID exerciseId = UUID.randomUUID();
+		when(repository.findById(planId)).thenReturn(Optional.empty());
+		when(exerciseRepository.findByPlanId(planId)).thenReturn(List.of());
+		for (String bad : List.of("8.3", "5.5", "10.5")) {
+			WorkoutPlanSet target = set(UUID.randomUUID(), exerciseId, 0);
+			target.rpe(new BigDecimal(bad));
+			assertThatThrownBy(() -> service.create(UUID.randomUUID(),
+					plan(planId, List.of(exercise(exerciseId, planId, 0, List.of(target)))))).isInstanceOf(ValidationException.class);
+		}
 	}
 
 	@Test

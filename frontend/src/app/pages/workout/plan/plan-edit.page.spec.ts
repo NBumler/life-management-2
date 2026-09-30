@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
-import { AlertController, ToastController } from '@ionic/angular/standalone';
+import { AlertController, PopoverController, ToastController } from '@ionic/angular/standalone';
 import { provideTranslateService } from '@ngx-translate/core';
 
 import { WorkoutExerciseEntry } from '../../../api/model/workoutExerciseEntry';
@@ -40,7 +40,11 @@ describe('PlanEditPage', () => {
         { provide: AlertController, useValue: { create: () => Promise.resolve({ present: () => Promise.resolve() }) } },
         { provide: ToastController, useValue: { create: toastCreate } },
       ],
-    }).compileComponents();
+    })
+      .overrideComponent(PlanEditPage, {
+        set: { providers: [{ provide: PopoverController, useValue: { create: () => Promise.resolve({ present: () => Promise.resolve() }) } }] },
+      })
+      .compileComponents();
 
     fixture = TestBed.createComponent(PlanEditPage);
     component = fixture.componentInstance;
@@ -152,5 +156,36 @@ describe('PlanEditPage', () => {
 
     expect(row.sets().length).toBe(1);
     expect(toastCreate).toHaveBeenCalled();
+  });
+  it('saves the exercise cue (trimmed) and the side + RPE of every target set (backlog/133–135)', async () => {
+    const planSave = spyOn(TestBed.inject(WorkoutPlanRepository), 'save').and.resolveTo({ id: 'p1' } as WorkoutPlan);
+    spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
+    component.form.controls.name.setValue('OAPU');
+    component.onPicked([pick()]);
+    const row = component.exercises()[0];
+    row.notes.set('  szék: 5  ');
+    row.sets()[0].side.set('LEFT');
+    row.sets()[0].rpe.set(8.5);
+    component.addSet(row);
+
+    await component.save();
+
+    const draft = planSave.calls.mostRecent().args[0];
+    expect(draft.exercises[0].notes).toBe('szék: 5');
+    expect(draft.exercises[0].targetSets.map((set: { side: string | null; rpe: number | null }) => [set.side, set.rpe])).toEqual([
+      ['LEFT', 8.5],
+      ['RIGHT', 8.5],
+    ]);
+  });
+
+  it('saves an empty cue as null', async () => {
+    const planSave = spyOn(TestBed.inject(WorkoutPlanRepository), 'save').and.resolveTo({ id: 'p1' } as WorkoutPlan);
+    spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
+    component.form.controls.name.setValue('Alap');
+    component.onPicked([pick()]);
+
+    await component.save();
+
+    expect(planSave.calls.mostRecent().args[0].exercises[0].notes).toBeNull();
   });
 });

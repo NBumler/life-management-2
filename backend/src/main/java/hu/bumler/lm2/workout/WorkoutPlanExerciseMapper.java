@@ -20,6 +20,7 @@ class WorkoutPlanExerciseMapper {
 				WorkoutPlanExercise.ExerciseKindEnum.fromValue(entity.getExerciseKind()), entity.getOrderIndex(), targetSets,
 				entity.isDeleted());
 		dto.supersetGroup(entity.getSupersetGroup());
+		dto.notes(entity.getNotes());
 		dto.deletedAt(entity.getDeletedAt());
 		dto.createdAt(entity.getCreatedAt());
 		dto.updatedAt(entity.getUpdatedAt());

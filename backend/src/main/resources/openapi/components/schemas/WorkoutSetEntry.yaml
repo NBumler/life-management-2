@@ -59,6 +59,22 @@ properties:
     type: integer
     minimum: 0
     nullable: true
+  side:
+    type: string
+    enum:
+      - LEFT
+      - RIGHT
+    nullable: true
+    description: >-
+      backlog/134 — one-sided set (one-arm pull-up negative, lock-off, one-arm row). `null` = both
+      hands / not relevant.
+  rpe:
+    type: number
+    minimum: 6
+    maximum: 10
+    nullable: true
+    description: >-
+      backlog/135 — optional actual RPE, 6–10 in 0.5 steps (400 VALIDATION otherwise).
   isCompleted:
     type: boolean
     description: Live mode tick; a skipped set is false or deleted.

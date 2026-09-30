@@ -60,6 +60,13 @@ properties:
     type: integer
     nullable: true
     description: Same value = visual superset / round group (same rule as WorkoutExerciseEntry).
+  notes:
+    type: string
+    maxLength: 200
+    nullable: true
+    description: >-
+      backlog/133 — per-template cue for this exercise line (bench setting "szék: 5", tempo "3–5 s
+      negatív"). Shown as a hint when a workout starts from the plan; the session entry does not store it.
   targetSets:
     type: array
     items:
