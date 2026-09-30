@@ -1,14 +1,14 @@
 ---
 id: 133
 type: feature
-status: ready
+status: done
 title: "Sablon-gyakorlat megjegyzés (pl. padállás „szék: 5”, tempó) — látszik az élő edzésben"
 specs:
   - "[[Heti terv]]"
   - "[[Edzésnapló]]"
 flag:
 created: 2026-10-01
-closed:
+closed: 2026-10-01
 ---
 
 # 133 — Sablon-gyakorlat megjegyzés
@@ -27,13 +27,13 @@ megjegyzés. A session entry-n sincs megjegyzés (csak a session `notes`).
 
 ## Elfogadási kritériumok
 
-- [ ] `WorkoutPlanExercise.notes` (opcionális, max. 200 karakter): Flyway + OpenAPI + SQLite
+- [x] `WorkoutPlanExercise.notes` (opcionális, max. 200 karakter): Flyway + OpenAPI + SQLite
       `SCHEMA_Vn` + outbox payload-verzió emelés / migrátor lépés.
-- [ ] Sablon-szerkesztőben a gyakorlat-fejléc alatt egysoros mező.
-- [ ] Terv-indításkor a megjegyzés az Active Workout / utólagos form gyakorlat-fejléce alatt
+- [x] Sablon-szerkesztőben a gyakorlat-fejléc alatt egysoros mező.
+- [x] Terv-indításkor a megjegyzés az Active Workout / utólagos form gyakorlat-fejléce alatt
       segédszövegként látszik (display-only a draftban, mint a `repsTarget`). A session
       entry nem tárolja.
-- [ ] [[Heti terv]], [[Edzésnapló]] spec frissítve.
+- [x] [[Heti terv]], [[Edzésnapló]] spec frissítve.
 
 ## Terv / döntési napló
 
@@ -42,6 +42,6 @@ megjegyzés. A session entry-n sincs megjegyzés (csak a session `notes`).
 
 ## Lezáráskor (on-done)
 
-- Frissített specek: [[Heti terv]], [[Edzésnapló]]
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — <mit>
-- Kód: <fő package-ek / fájlok>
+- Frissített specek: [[Heti terv]] — `WorkoutPlanExercise.notes` + UI; [[Edzésnapló]] — „Sablonból indítva”
+- `IMPLEMENTATION_STATUS.md` sor: 2026-10-01 — #133–#135 közös sor
+- Kód: backend `V49`, `workout/*Entity|Mapper|Service`, `WorkoutSetRules`; frontend `SCHEMA_V46`, `core/data/local-rows.ts`, outbox v15, `pages/workout/log/set-options-popover.component.ts`

@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-10-01
-verifikalt_commit: c9676f5
+verifikalt_commit: 2b84319
 ---
 
 # Heti terv
@@ -53,13 +53,14 @@ Fejlesztési sorrend: [[Gyakorlat]] → [[Edzésnapló]] → **Heti terv**.
 | `exerciseName` / `exerciseCategory` / `exerciseKind` | Snapshot a szerkesztéskor (pickerből) |
 | `orderIndex` | Egész |
 | `supersetGroup` | Opcionális; ugyanaz a szabály mint az [[Edzésnapló]]ban |
-| `targetSets` | Cél szettek listája: `setType`, cél `reps` / `weightKg` / `holdTimeSeconds` / `edgeSizeMm` / `distanceMeters` / `restTimeSeconds` — a `exerciseKind` szerint releváns mezők. Az ismétlésszám **tartomány** is lehet (`backlog/125`): `reps` = alsó határ / egyetlen cél, nullable `repsMax` = felső határ (`null` = nem tartomány; a szerver `repsMax < reps` vagy `reps` nélküli `repsMax` esetén 400 `VALIDATION`). |
+| `notes` | Opcionális szöveg, max. **200** karakter (`backlog/133`, `V49` CHECK) — sablon-szintű utasítás ehhez a gyakorlat-sorhoz (padállás „szék: 5”, tempó „3–5 mp negatív”). Ugyanaz a gyakorlat sablononként más megjegyzést kaphat. Edzés indításakor a gyakorlat neve alatt segédszövegként látszik; a session entry nem tárolja. |
+| `targetSets` | Cél szettek listája: `setType`, cél `reps` / `weightKg` / `holdTimeSeconds` / `edgeSizeMm` / `distanceMeters` / `restTimeSeconds` — a `exerciseKind` szerint releváns mezők —, valamint opcionális `side` (`LEFT` \| `RIGHT`, `backlog/134`: egyoldali cél-szett) és cél-`rpe` (6–10, 0,5-ös lépés, `backlog/135`); mindkettő az [[Edzésnapló]] szett-mezőjével azonos szabályú, és indításkor a session szettjébe másolódik. Az ismétlésszám **tartomány** is lehet (`backlog/125`): `reps` = alsó határ / egyetlen cél, nullable `repsMax` = felső határ (`null` = nem tartomány; a szerver `repsMax < reps` vagy `reps` nélküli `repsMax` esetén 400 `VALIDATION`). |
 
 Indításkor az [[Edzésnapló]] átmásolja ezeket session entry / set előtöltésnek; a session `planId = WorkoutPlan.id`.
 
 A sablon-szerkesztő ⋮ menüjének „Bemelegítés generálása” pontja (`backlog/132`, részletek: [[Edzésnapló]] „Bemelegítés generálása”) az első WORKING cél-szett súlyából 3 WARMUP cél-szettet generál (30 / 65 / 87 %, 60 / 90 / 120 mp cél-pihenő).
 
-`targetSets` szabad `setType`-listája már önmagában kifejezi a bemelegítő ramping (több könnyű `WARMUP` szett) + kevés, nehéz `WORKING` szett (alacsony ismétlésszám, hosszú cél `restTimeSeconds`) mintát — nincs szükség külön mezőre a bemelegítés/munka szétválasztásához, sem külön „intenzitás” mezőre: az explicit `FAILURE` típus jelzi, ha egy szett tudatosan a bukásig megy, minden más `WORKING` szett hallgatólagosan tartalék ismétléssel (RIR) végzett.
+`targetSets` szabad `setType`-listája már önmagában kifejezi a bemelegítő ramping (több könnyű `WARMUP` szett) + kevés, nehéz `WORKING` szett (alacsony ismétlésszám, hosszú cél `restTimeSeconds`) mintát — nincs szükség külön mezőre a bemelegítés/munka szétválasztásához. Az explicit `FAILURE` típus jelzi, ha egy szett tudatosan a bukásig megy; a tervezett megerőltetés (pl. RPE 8–9 = 1–2 ismétlés tartalék) az opcionális cél-`rpe`-vel adható meg, ennek hiányában egy `WORKING` szett hallgatólagosan tartalék ismétléssel (RIR) végzett.
 
 #### Entitás — `WeeklyPlan` (adott naptári hét kiosztása)
 
@@ -91,7 +92,7 @@ CRUD: sablon lista/szerkesztő; heti dashboard slot szerkesztés; soft delete sa
 
 ### UI/UX elvárások
 
-- Sablonok lista + nested gyakorlat/cél-szett szerkesztő ([[Gyakorlat]] picker). Az ismétlésszám mező szöveges (`inputmode="tel"` — számbillentyűzet kötőjellel): `N` vagy `N-M` (szóköz, en-dash tűrve; `N-N` egyetlen értékké egyszerűsödik); értelmezhetetlen vagy fordított tartománynál a mező kerete piros, a szett sora alatt teljes szélességű hibaüzenet, és a mentés blokkolva. A parse / megjelenítés mezőtől független (`shared/target-range.ts`), hogy később más cél-mezők is kaphassanak tartományt. A cél-szett táblázat elrendezése az [[Edzésnapló]]-val közös (oszlopfejléc + szettenként egy sor, szett-típus jelvény, ⋮ gyakorlat-menü); a sablonban a `kind` mezői mellett egy „Pihenő / mp” (cél pihenő) oszlop is van.
+- Sablonok lista + nested gyakorlat/cél-szett szerkesztő ([[Gyakorlat]] picker). Az ismétlésszám mező szöveges (`inputmode="tel"` — számbillentyűzet kötőjellel): `N` vagy `N-M` (szóköz, en-dash tűrve; `N-N` egyetlen értékké egyszerűsödik); értelmezhetetlen vagy fordított tartománynál a mező kerete piros, a szett sora alatt teljes szélességű hibaüzenet, és a mentés blokkolva. A parse / megjelenítés mezőtől független (`shared/target-range.ts`), hogy később más cél-mezők is kaphassanak tartományt. A cél-szett táblázat elrendezése az [[Edzésnapló]]-val közös (oszlopfejléc + szettenként egy sor, szett-típus jelvény, ⋮ gyakorlat-menü); a sablonban a `kind` mezői mellett egy „Pihenő / mp” (cél pihenő) oszlop is van. A szett-jelvény popoverében (típus / Oldal / **Cél RPE**) állítható az egyoldali cél-szett és a cél-RPE; „+ Új szett” egyoldali szett után a kezet váltogatja, a cél-RPE-t átviszi. A gyakorlat-fejléc alatt egysoros **megjegyzés** mező (max. 200 karakter, „Megjegyzés (pl. szék: 5, 3 mp negatív)”); üresen `null`-ként mentődik.
 - Sablonok lista szűrő: **Aktív** (alapértelmezett) / Inaktív / Mind; soronkénti aktív/inaktív kapcsoló (nincs szükség edit módba lépésre); opcionális `goalLabel` szerinti csoport-fejléc a listában.
 - Heti dashboard slot kiosztás pickere és az [[Edzésnapló]] „Terv indítása” gyorsindítás listája csak aktív sablonokat kínál fel, `goalLabel` szerint csoportosítva, ha van címke.
 - Heti dashboard: 7 napos nézet; naphoz sablon rendelés; „Teljesítve” jelvény adherence szerint; CTA: Edzés indítása.

@@ -14,6 +14,11 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-01 — #133–#135** Sablon-gyakorlat megjegyzés (`notes`, max. 200, sablonból indítva a név alatt),
+  egyoldali szettek (`side` LEFT/RIGHT a sablon- és napló-szetten; új szett váltogatja a kezet, javaslat
+  oldalanként), opcionális RPE (6–10, 0,5 lépés; cél a sablonban, tényleges a naplóban; RPE 10 után nincs
+  emelés-javaslat). Közös szett-beállítás popover a jelvényen (típus / oldal / RPE). V49 + SCHEMA_V46 +
+  outbox v15 — érintett: [[Edzésnapló]], [[Heti terv]]; kód: `hu.bumler.lm2.workout`, `pages/workout`, `core/data/local-rows.ts`
 - **2026-10-01 — #131** Élő edzés „Legutóbb” sor (a legutóbbi alkalom összes munkaszettje) + double-progression
   javaslat (+2,5 kg, rásegítésnél kevesebb gumi), ha legutóbb minden WORKING szett elérte a tartomány tetejét;
   **#132** „Bemelegítés generálása” ⋮ menüpont (30/65/87 %, 60/90/120 s, negatív munkasúly testsúllyal) mind a
