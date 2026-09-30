@@ -1003,7 +1003,9 @@
       "PR_1RM": "1RM PR",
       "PR_WEIGHT": "Weight PR",
       "PR_VOLUME": "Volume PR",
-      "REPS_TARGET": "target: {{range}}"
+      "REPS_TARGET": "target: {{range}}",
+      "LAST_TIME": "Last time ({{date}}): {{summary}}",
+      "SUGGESTION": "Suggestion: {{weight}} kg"
     },
     "EXERCISES": {
       "TITLE": "Exercises",
@@ -1127,7 +1129,10 @@
         "DISTANCE": "m",
         "REST": "s"
       },
-      "EXERCISE_ACTIONS": "Exercise actions"
+      "EXERCISE_ACTIONS": "Exercise actions",
+      "GENERATE_WARMUP": "Generate warm-up",
+      "WARMUP_NO_WORKING_WEIGHT": "Enter the working weight on the first working set first.",
+      "WARMUP_NEEDS_BODY_WEIGHT": "An assisted (negative) working weight needs your body weight in Profile."
     },
     "PICKER": {
       "TITLE": "Pick exercise",

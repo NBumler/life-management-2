@@ -6,7 +6,10 @@ import {
   effectiveDurationMinutes,
   epley1Rm,
   exerciseVolume,
+  formatSetSummary,
   ghostForExercise,
+  lastPerformance,
+  progressionSuggestion,
   sessionKcal,
 } from './workout-metrics';
 
@@ -195,6 +198,77 @@ describe('workout-metrics', () => {
         exercises: [exercise({ exerciseId: null, exerciseName: 'fekvenyomás', sets: [set({ reps: 5, weightKg: 70 })] })],
       });
       expect(ghostForExercise([prior], null, 'Fekvenyomás', 's1')?.topSet?.weightKg).toBe(70);
+    });
+  });
+
+  describe('lastPerformance / formatSetSummary (backlog/131)', () => {
+    it('returns every counted set of the most recent entry, warm-ups excluded', () => {
+      const prior = session({
+        id: 'o1',
+        date: '2026-09-28',
+        exercises: [
+          exercise({
+            sets: [
+              set({ setType: WorkoutSetEntry.SetTypeEnum.Warmup, reps: 5, weightKg: 7.5, orderIndex: 0 }),
+              set({ reps: 5, weightKg: 22.5, orderIndex: 1 }),
+              set({ reps: 5, weightKg: 22.5, orderIndex: 2 }),
+              set({ reps: 4, weightKg: 22.5, orderIndex: 3 }),
+            ],
+          }),
+        ],
+      });
+
+      const last = lastPerformance([prior], 'cat-bench', 'Fekvenyomás', 's1');
+
+      expect(last?.sessionDate).toBe('2026-09-28');
+      expect(last?.sets.length).toBe(3);
+      expect(formatSetSummary(last!.sets)).toBe('5 @ 22.5 kg · 5 @ 22.5 kg · 4 @ 22.5 kg');
+    });
+
+    it('collapses identical sets and shows hold time / assistance', () => {
+      const same = { reps: 5, weightKg: 22.5, holdTimeSeconds: null };
+      expect(formatSetSummary([same, same, same])).toBe('3 × 5 @ 22.5 kg');
+      expect(formatSetSummary([{ reps: null, weightKg: 5, holdTimeSeconds: 10 }])).toBe('10 s @ 5 kg');
+      expect(formatSetSummary([{ reps: 2, weightKg: -15, holdTimeSeconds: null }])).toBe('2 @ -15 kg');
+      expect(formatSetSummary([{ reps: 8, weightKg: 0, holdTimeSeconds: null }])).toBe('8');
+    });
+
+    it('returns null with no history', () => {
+      expect(lastPerformance([], 'cat-bench', 'Fekvenyomás')).toBeNull();
+    });
+  });
+
+  describe('progressionSuggestion (backlog/131)', () => {
+    const working = (reps: number | null, weightKg: number | null) => ({
+      setType: WorkoutSetEntry.SetTypeEnum.Working,
+      reps,
+      weightKg,
+      holdTimeSeconds: null,
+    });
+
+    it('suggests +2.5 kg when every working set reached the top of the range', () => {
+      const last = { sessionDate: '2026-09-28', sets: [working(5, 22.5), working(5, 22.5), working(6, 22.5)] };
+      expect(progressionSuggestion(last, 5)).toBe(25);
+    });
+
+    it('means 2.5 kg less assistance for a negative (assisted) weight, down to 0', () => {
+      expect(progressionSuggestion({ sessionDate: 'd', sets: [working(3, -20)] }, 3)).toBe(-17.5);
+      expect(progressionSuggestion({ sessionDate: 'd', sets: [working(3, -2.5)] }, 3)).toBe(0);
+    });
+
+    it('gives nothing when a working set fell short, had no weight, or there is no range', () => {
+      expect(progressionSuggestion({ sessionDate: 'd', sets: [working(5, 22.5), working(4, 22.5)] }, 5)).toBeNull();
+      expect(progressionSuggestion({ sessionDate: 'd', sets: [working(5, null)] }, 5)).toBeNull();
+      expect(progressionSuggestion({ sessionDate: 'd', sets: [working(5, 22.5)] }, null)).toBeNull();
+      expect(progressionSuggestion(null, 5)).toBeNull();
+    });
+
+    it('ignores non-WORKING sets (a dropset below the top does not block)', () => {
+      const last = {
+        sessionDate: 'd',
+        sets: [working(5, 30), { setType: WorkoutSetEntry.SetTypeEnum.Dropset, reps: 3, weightKg: 20, holdTimeSeconds: null }],
+      };
+      expect(progressionSuggestion(last, 5)).toBe(32.5);
     });
   });
 });

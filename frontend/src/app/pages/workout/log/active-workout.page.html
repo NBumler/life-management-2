@@ -68,6 +68,9 @@
         <ion-label>
           <h2>{{ row.exerciseName }}</h2>
           <p>{{ ('WORKOUT.EXERCISES.KIND.' + row.exerciseKind) | translate }}</p>
+          @if (lastTimeLabel(row); as last) {
+            <p class="last-time">{{ 'WORKOUT.ACTIVE.LAST_TIME' | translate: last }}</p>
+          }
           @let pr = prFlags(row);
           @if (pr.new1Rm) {
             <ion-badge color="success">{{ 'WORKOUT.ACTIVE.PR_1RM' | translate }}</ion-badge>
@@ -89,6 +92,14 @@
           <ion-icon slot="icon-only" name="ellipsis-vertical"></ion-icon>
         </ion-button>
       </ion-item>
+
+      @if (suggestionFor(row); as suggestion) {
+        <div class="progression-hint">
+          <ion-button size="small" fill="outline" color="success" (click)="applySuggestion(row, suggestion.weight)">
+            {{ 'WORKOUT.ACTIVE.SUGGESTION' | translate: suggestion }}
+          </ion-button>
+        </div>
+      }
 
       @let fields = visibleFields(row.exerciseKind);
       <div class="set-table" [style.--set-grid]="gridFor(row)">

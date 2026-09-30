@@ -1003,7 +1003,9 @@
       "PR_1RM": "1RM PR",
       "PR_WEIGHT": "Súly PR",
       "PR_VOLUME": "Volumen PR",
-      "REPS_TARGET": "cél: {{range}}"
+      "REPS_TARGET": "cél: {{range}}",
+      "LAST_TIME": "Legutóbb ({{date}}): {{summary}}",
+      "SUGGESTION": "Javaslat: {{weight}} kg"
     },
     "SESSION": {
       "NEW_TITLE": "Új edzés",
@@ -1075,7 +1077,10 @@
         "DISTANCE": "m",
         "REST": "mp"
       },
-      "EXERCISE_ACTIONS": "Gyakorlat műveletei"
+      "EXERCISE_ACTIONS": "Gyakorlat műveletei",
+      "GENERATE_WARMUP": "Bemelegítés generálása",
+      "WARMUP_NO_WORKING_WEIGHT": "Előbb add meg a munkasúlyt az első munkaszetten.",
+      "WARMUP_NEEDS_BODY_WEIGHT": "Rásegítéses (negatív) munkasúlyhoz add meg a testsúlyod a Profilban."
     },
     "PICKER": {
       "TITLE": "Gyakorlat választása",

@@ -6,6 +6,7 @@ import { provideTranslateService } from '@ngx-translate/core';
 
 import { WorkoutExerciseEntry } from '../../../api/model/workoutExerciseEntry';
 import { WorkoutPlan } from '../../../api/model/workoutPlan';
+import { ProfileRepository } from '../../../core/data/profile.repository';
 import { WorkoutPlanRepository } from '../../../core/data/workout-plan.repository';
 import { ExercisePickResult } from '../../../shared/exercise-picker/exercise-picker.component';
 import { PlanEditPage } from './plan-edit.page';
@@ -34,6 +35,7 @@ describe('PlanEditPage', () => {
         provideRouter([]),
         provideTranslateService(),
         { provide: WorkoutPlanRepository, useValue: { load: () => Promise.resolve(), byId: () => undefined, items: signal<WorkoutPlan[]>([]), save: () => Promise.resolve({}), remove: () => Promise.resolve() } },
+        { provide: ProfileRepository, useValue: { load: () => Promise.resolve(), profile: signal({ currentWeightKg: 80 }) } },
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'new' }) } } },
         { provide: AlertController, useValue: { create: () => Promise.resolve({ present: () => Promise.resolve() }) } },
         { provide: ToastController, useValue: { create: toastCreate } },
@@ -113,5 +115,42 @@ describe('PlanEditPage', () => {
       await component.save();
       expect(saveSpy).not.toHaveBeenCalled();
     });
+  });
+  it('generateWarmup() prepends a 30 / 65 / 87 % ramp of the first WORKING target weight (backlog/132)', async () => {
+    component.onPicked([pick()]);
+    const row = component.exercises()[0];
+    row.sets()[0].weightKg.set(100);
+
+    await component.generateWarmup(row);
+
+    const sets = row.sets();
+    expect(sets.map((set) => set.setType())).toEqual(['WARMUP', 'WARMUP', 'WARMUP', 'WORKING']);
+    expect(sets.slice(0, 3).map((set) => [set.reps(), set.weightKg(), set.restTimeSeconds()])).toEqual([
+      [5, 30, 60],
+      [3, 65, 90],
+      [1, 87.5, 120],
+    ]);
+    expect(sets[0].repsText()).toBe('5');
+  });
+
+  it('generateWarmup() replaces earlier WARMUP sets instead of stacking them', async () => {
+    component.onPicked([pick()]);
+    const row = component.exercises()[0];
+    row.sets()[0].weightKg.set(40);
+
+    await component.generateWarmup(row);
+    await component.generateWarmup(row);
+
+    expect(row.sets().length).toBe(4);
+  });
+
+  it('generateWarmup() warns instead of generating without a working weight', async () => {
+    component.onPicked([pick()]);
+    const row = component.exercises()[0];
+
+    await component.generateWarmup(row);
+
+    expect(row.sets().length).toBe(1);
+    expect(toastCreate).toHaveBeenCalled();
   });
 });

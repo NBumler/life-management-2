@@ -260,3 +260,99 @@ export function ghostForExercise(
   }
   return { sessionDate: mostRecent.session.date, topSet: pickTopSet(mostRecent.entry) };
 }
+
+export interface LastSet extends GhostSet {
+  setType: WorkoutSetEntry.SetTypeEnum;
+}
+
+export interface LastPerformance {
+  sessionDate: string;
+  /** The counted (WORKING / DROPSET / FAILURE) sets of that entry in order; every live set if none is counted. */
+  sets: LastSet[];
+}
+
+/**
+ * backlog/131 — the Active Workout "Legutóbb" line: the most recent prior entry for the same exercise
+ * with all of its counted sets (not just the top one, so "3 × 5 @ 22.5 kg" is visible at a glance).
+ */
+export function lastPerformance(
+  priorSessions: readonly WorkoutSession[],
+  exerciseId: string | null,
+  exerciseName: string,
+  exceptSessionId?: string,
+): LastPerformance | null {
+  const [mostRecent] = priorEntriesFor(priorSessions, exerciseId, exerciseName, exceptSessionId);
+  if (!mostRecent) {
+    return null;
+  }
+  const sets = liveSets(mostRecent.entry);
+  const counted = sets.filter((set) => VOLUME_SET_TYPES.has(set.setType));
+  const pool = counted.length > 0 ? counted : sets;
+  if (pool.length === 0) {
+    return null;
+  }
+  return {
+    sessionDate: mostRecent.session.date,
+    sets: pool.map((set) => ({
+      setType: set.setType,
+      weightKg: set.weightKg ?? null,
+      reps: set.reps ?? null,
+      holdTimeSeconds: set.holdTimeSeconds ?? null,
+    })),
+  };
+}
+
+function formatKg(value: number): string {
+  return `${Math.round(value * 100) / 100}`;
+}
+
+function setToken(set: GhostSet): string {
+  const parts: string[] = [];
+  if (set.reps !== null) {
+    parts.push(`${set.reps}`);
+  }
+  if (set.holdTimeSeconds !== null) {
+    parts.push(`${set.holdTimeSeconds} s`);
+  }
+  if (set.weightKg !== null && set.weightKg !== 0) {
+    parts.push(`@ ${formatKg(set.weightKg)} kg`);
+  }
+  return parts.join(' ');
+}
+
+/**
+ * backlog/131 — compact set summary: identical sets collapse to "3 × 5 @ 22.5 kg"; otherwise the sets
+ * are listed "5 @ 22.5 kg · 4 @ 22.5 kg". Units are the model's fixed kg / s (no localisation needed).
+ */
+export function formatSetSummary(sets: readonly GhostSet[]): string {
+  const tokens = sets.map(setToken).filter((token) => token !== '');
+  if (tokens.length === 0) {
+    return '';
+  }
+  if (tokens.length > 1 && tokens.every((token) => token === tokens[0])) {
+    return `${tokens.length} × ${tokens[0]}`;
+  }
+  return tokens.join(' · ');
+}
+
+/** backlog/131 — the double-progression step (dumbbell / belt plate). */
+export const PROGRESSION_STEP_KG = 2.5;
+
+/**
+ * backlog/131 "double progression": when every WORKING set last time reached the top of the target
+ * rep range, suggest the last working weight + 2.5 kg (for an assisted, negative weight that means
+ * 2.5 kg less assistance). Null without a range target, without WORKING sets, or when any of them fell
+ * short or had no weight.
+ */
+export function progressionSuggestion(last: LastPerformance | null, repsMax: number | null): number | null {
+  if (last === null || repsMax === null) {
+    return null;
+  }
+  const working = last.sets.filter((set) => set.setType === WorkoutSetEntry.SetTypeEnum.Working);
+  if (working.length === 0 || working.some((set) => set.reps === null || set.reps < repsMax || set.weightKg === null)) {
+    return null;
+  }
+  const base = Math.max(...working.map((set) => set.weightKg as number));
+  const next = Math.round((base + PROGRESSION_STEP_KG) * 100) / 100;
+  return next === 0 ? 0 : next;
+}

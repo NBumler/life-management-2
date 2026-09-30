@@ -24,6 +24,7 @@ import {
   IonTextarea,
   IonTitle,
   IonToolbar,
+  ToastController,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
@@ -36,7 +37,8 @@ import { uuidV4 } from '../../../core/sync/uuid';
 import { WorkoutExerciseSaveItem, WorkoutSessionDraft } from '../../../core/storage/storage-backend';
 import { today } from '../../../shared/local-date';
 import { ExercisePickResult, ExercisePickerComponent } from '../../../shared/exercise-picker/exercise-picker.component';
-import { presentExerciseActions } from './exercise-actions';
+import { presentExerciseActions, supportsWarmupRamp } from './exercise-actions';
+import { rampWarmupSets } from './warmup-ramp';
 import { LOCATIONS, SET_TYPES, WORKOUT_TYPES, moveById, sanitizeSessionTimes, setGridColumns, visibleFields } from './workout-fields';
 import { effectiveDurationMinutes, ghostForExercise, sessionKcal, sessionVolume } from './workout-metrics';
 
@@ -106,6 +108,7 @@ export class WorkoutSessionEditPage implements OnInit {
   private readonly profileRepository = inject(ProfileRepository);
   private readonly alertController = inject(AlertController);
   private readonly actionSheetController = inject(ActionSheetController);
+  private readonly toastController = inject(ToastController);
   private readonly translate = inject(TranslateService);
 
   readonly setTypes = SET_TYPES;
@@ -233,7 +236,35 @@ export class WorkoutSessionEditPage implements OnInit {
       isLast,
       move: (delta) => this.moveExercise(row, delta),
       remove: () => this.removeExercise(row),
+      warmup: supportsWarmupRamp(row.exerciseKind) ? () => void this.generateWarmup(row) : undefined,
     });
+  }
+
+  /** backlog/132 — replace the exercise's WARMUP sets with a 30 / 65 / 87 % ramp of the first WORKING set's weight. */
+  async generateWarmup(row: ExerciseRow): Promise<void> {
+    const working = row.sets().find((set) => set.setType() === WorkoutSetEntry.SetTypeEnum.Working);
+    const result = rampWarmupSets(working?.weightKg() ?? null, this.profileRepository.profile()?.currentWeightKg ?? null);
+    if (!result.ok) {
+      const toast = await this.toastController.create({
+        message: this.translate.instant(`WORKOUT.SESSION.WARMUP_${result.reason}`),
+        duration: 3000,
+        color: 'warning',
+      });
+      await toast.present();
+      return;
+    }
+    const warmups: SetRow[] = result.sets.map((spec) => ({
+      id: uuidV4(),
+      setType: signal(WorkoutSetEntry.SetTypeEnum.Warmup),
+      reps: signal<number | null>(spec.reps),
+      weightKg: signal<number | null>(spec.weightKg),
+      holdTimeSeconds: signal<number | null>(null),
+      edgeSizeMm: signal<number | null>(null),
+      distanceMeters: signal<number | null>(null),
+      restTimeSeconds: signal<number | null>(spec.restTimeSeconds),
+      isCompleted: signal(false),
+    }));
+    row.sets.update((sets) => [...warmups, ...sets.filter((set) => set.setType() !== WorkoutSetEntry.SetTypeEnum.Warmup)]);
   }
 
   removeExercise(row: ExerciseRow): void {

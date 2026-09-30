@@ -1,3 +1,12 @@
 @use '../../../shared/styles/set-row';
 
 @include set-row.set-row;
+
+// backlog/131 — "Legutóbb" line under the exercise name + the progression-suggestion chip
+.last-time {
+  color: var(--ion-color-medium);
+}
+
+.progression-hint {
+  padding: 0 16px 4px;
+}

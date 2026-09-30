@@ -311,4 +311,53 @@ describe('ActiveWorkoutPage', () => {
     expect(sets[1].repsTarget).toBeNull();
     expect(draftService.draft()?.exercises[0].sets[0].repsTarget).toBe('8–11');
   });
+
+  it('shows last time and a +2.5 kg suggestion when the plan range top was reached (backlog/131)', async () => {
+    const plan = {
+      id: 'plan-1',
+      name: 'A nap',
+      active: true,
+      deleted: false,
+      exercises: [
+        {
+          id: 'wpe1',
+          planId: 'plan-1',
+          exerciseId: 'cat-bench',
+          exerciseName: 'Fekvenyomás',
+          exerciseCategory: 'CHEST',
+          exerciseKind: 'WEIGHTED_REPS',
+          orderIndex: 0,
+          deleted: false,
+          targetSets: [
+            { id: 'ts1', planExerciseId: 'wpe1', setType: 'WORKING', reps: 6, repsMax: 8, weightKg: 100, orderIndex: 0, deleted: false },
+          ],
+        },
+      ],
+    } as unknown as WorkoutPlan;
+    await setup({ planId: 'plan-1' }, plan);
+    repository.items.set([priorSession()]);
+    await component.ngOnInit();
+
+    const row = component.exercises()[0];
+    expect(component.lastTimeLabel(row)).toEqual({ date: '2026-08-20', summary: '8 @ 100 kg' });
+    expect(component.suggestionFor(row)).toEqual({ weight: 102.5 });
+
+    component.applySuggestion(row, 102.5);
+
+    expect(row.sets()[0].weightKg()).toBe(102.5);
+    expect(component.suggestionFor(row)).toBeNull();
+  });
+
+  it('generateWarmup() prepends three WARMUP sets before the working set (backlog/132)', async () => {
+    await setup();
+    await component.ngOnInit();
+    component.onPicked([pick()]);
+    const row = component.exercises()[0];
+    row.sets()[0].weightKg.set(60);
+
+    await component.generateWarmup(row);
+
+    expect(row.sets().map((set) => set.setType())).toEqual(['WARMUP', 'WARMUP', 'WARMUP', 'WORKING']);
+    expect(row.sets().map((set) => set.weightKg())).toEqual([17.5, 40, 52.5, 60]);
+  });
 });

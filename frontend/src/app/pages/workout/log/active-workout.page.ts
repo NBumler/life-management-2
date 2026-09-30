@@ -24,6 +24,7 @@ import {
   IonSelectOption,
   IonTitle,
   IonToolbar,
+  ToastController,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
@@ -41,7 +42,7 @@ import {
 } from '../../../core/data/workout-draft.service';
 import { WorkoutSessionRepository } from '../../../core/data/workout-session.repository';
 import { uuidV4 } from '../../../core/sync/uuid';
-import { formatTargetRange, targetRangePrefill } from '../../../shared/target-range';
+import { formatTargetRange, parseTargetRange, targetRangePrefill } from '../../../shared/target-range';
 import { WorkoutExerciseSaveItem, WorkoutSessionDraft } from '../../../core/storage/storage-backend';
 import { today } from '../../../shared/local-date';
 import { ExercisePickResult, ExercisePickerComponent } from '../../../shared/exercise-picker/exercise-picker.component';
@@ -59,8 +60,17 @@ import {
   setGridColumns,
   visibleFields,
 } from './workout-fields';
-import { presentExerciseActions } from './exercise-actions';
-import { detectPrs, effectiveDurationMinutes, sessionKcal } from './workout-metrics';
+import { presentExerciseActions, supportsWarmupRamp } from './exercise-actions';
+import { rampWarmupSets } from './warmup-ramp';
+import {
+  LastPerformance,
+  detectPrs,
+  effectiveDurationMinutes,
+  formatSetSummary,
+  lastPerformance,
+  progressionSuggestion,
+  sessionKcal,
+} from './workout-metrics';
 
 interface SetRow {
   id: string;
@@ -137,6 +147,7 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
   private readonly profileRepository = inject(ProfileRepository);
   private readonly alertController = inject(AlertController);
   private readonly actionSheetController = inject(ActionSheetController);
+  private readonly toastController = inject(ToastController);
   private readonly translate = inject(TranslateService);
 
   readonly workoutTypes = WORKOUT_TYPES;
@@ -305,7 +316,88 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
       isLast,
       move: (delta) => this.moveExercise(row, delta),
       remove: () => this.removeExercise(row),
+      warmup: supportsWarmupRamp(row.exerciseKind) ? () => void this.generateWarmup(row) : undefined,
     });
+  }
+
+  /**
+   * backlog/132 — replace the exercise's not-yet-ticked WARMUP sets with a 30 / 65 / 87 % ramp of the
+   * first WORKING set's weight (assisted = negative kg needs the profile body weight).
+   */
+  async generateWarmup(row: ExerciseRow): Promise<void> {
+    const working = row.sets().find((set) => set.setType() === WorkoutSetEntry.SetTypeEnum.Working);
+    const result = rampWarmupSets(working?.weightKg() ?? null, this.profileRepository.profile()?.currentWeightKg ?? null);
+    if (!result.ok) {
+      const toast = await this.toastController.create({
+        message: this.translate.instant(`WORKOUT.SESSION.WARMUP_${result.reason}`),
+        duration: 3000,
+        color: 'warning',
+      });
+      await toast.present();
+      return;
+    }
+    const warmups: SetRow[] = result.sets.map((spec) => ({
+      id: uuidV4(),
+      setType: signal(WorkoutSetEntry.SetTypeEnum.Warmup),
+      reps: signal<number | null>(spec.reps),
+      weightKg: signal<number | null>(spec.weightKg),
+      holdTimeSeconds: signal<number | null>(null),
+      edgeSizeMm: signal<number | null>(null),
+      distanceMeters: signal<number | null>(null),
+      restTimeSeconds: signal<number | null>(spec.restTimeSeconds),
+      isCompleted: signal(false),
+    }));
+    row.sets.update((sets) => [
+      ...warmups,
+      ...sets.filter((set) => set.setType() !== WorkoutSetEntry.SetTypeEnum.Warmup || set.isCompleted()),
+    ]);
+    void this.persist();
+  }
+
+  // ---- last time + progression (backlog/131) ------------------------------------------------
+
+  private lastFor(row: ExerciseRow): LastPerformance | null {
+    return lastPerformance(this.repository.items(), row.exerciseId, row.exerciseName, this.sessionId || undefined);
+  }
+
+  /** "Legutóbb (2026-09-28): 3 × 5 @ 22.5 kg", or null without history. */
+  lastTimeLabel(row: ExerciseRow): { date: string; summary: string } | null {
+    const last = this.lastFor(row);
+    if (last === null) {
+      return null;
+    }
+    const summary = formatSetSummary(last.sets);
+    return summary === '' ? null : { date: last.sessionDate, summary };
+  }
+
+  /**
+   * The double-progression weight for this row's WORKING sets, when the plan gave a rep range and last
+   * time every working set hit its top. Hidden once every open WORKING set already carries it. Wrapped
+   * in an object so a 0 kg suggestion (assistance fully gone) still renders under `@if`.
+   */
+  suggestionFor(row: ExerciseRow): { weight: number } | null {
+    if (!visibleFields(row.exerciseKind).weightKg) {
+      return null;
+    }
+    const working = row.sets().filter((set) => set.setType() === WorkoutSetEntry.SetTypeEnum.Working);
+    const target = working.find((set) => set.repsTarget)?.repsTarget ?? null;
+    const parsed = parseTargetRange(target);
+    const repsMax = parsed.ok ? parsed.value.upper : null;
+    const suggestion = progressionSuggestion(this.lastFor(row), repsMax);
+    if (suggestion === null) {
+      return null;
+    }
+    const open = working.filter((set) => !set.isCompleted());
+    return open.length === 0 || open.every((set) => set.weightKg() === suggestion) ? null : { weight: suggestion };
+  }
+
+  applySuggestion(row: ExerciseRow, weightKg: number): void {
+    row.sets()
+      .filter((set) => set.setType() === WorkoutSetEntry.SetTypeEnum.Working && !set.isCompleted())
+      .forEach((set) => set.weightKg.set(weightKg));
+    // the set array itself is unchanged; re-emit so OnPush consumers of `row.sets()` recompute
+    row.sets.update((sets) => [...sets]);
+    void this.persist();
   }
 
   removeExercise(row: ExerciseRow): void {

@@ -27,12 +27,14 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { WorkoutPlan } from '../../../api/model/workoutPlan';
 import { WorkoutPlanExercise } from '../../../api/model/workoutPlanExercise';
 import { WorkoutPlanSet } from '../../../api/model/workoutPlanSet';
+import { ProfileRepository } from '../../../core/data/profile.repository';
 import { WorkoutPlanRepository } from '../../../core/data/workout-plan.repository';
 import { WorkoutPlanDraft, WorkoutPlanExerciseSaveItem } from '../../../core/storage/storage-backend';
 import { uuidV4 } from '../../../core/sync/uuid';
 import { ExercisePickResult, ExercisePickerComponent } from '../../../shared/exercise-picker/exercise-picker.component';
 import { formatTargetRange, parseTargetRange } from '../../../shared/target-range';
-import { presentExerciseActions } from '../log/exercise-actions';
+import { presentExerciseActions, supportsWarmupRamp } from '../log/exercise-actions';
+import { rampWarmupSets } from '../log/warmup-ramp';
 import { PLAN_TO_ENTRY_KIND, SET_TYPES, VisibleSetFields, moveById, setGridColumns, visibleFields } from '../log/workout-fields';
 
 interface TargetSetRow {
@@ -101,6 +103,7 @@ export class PlanEditPage implements OnInit {
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
   private readonly repository = inject(WorkoutPlanRepository);
+  private readonly profileRepository = inject(ProfileRepository);
   private readonly alertController = inject(AlertController);
   private readonly actionSheetController = inject(ActionSheetController);
   private readonly toastController = inject(ToastController);
@@ -126,7 +129,37 @@ export class PlanEditPage implements OnInit {
       isLast,
       move: (delta) => this.moveExercise(row, delta),
       remove: () => this.removeExercise(row),
+      warmup: supportsWarmupRamp(row.exerciseKind) ? () => void this.generateWarmup(row) : undefined,
     });
+  }
+
+  /** backlog/132 — replace the template exercise's WARMUP target sets with a 30 / 65 / 87 % ramp of the first WORKING target weight. */
+  async generateWarmup(row: PlanExerciseRow): Promise<void> {
+    const working = row.sets().find((set) => set.setType() === WorkoutPlanSet.SetTypeEnum.Working);
+    const result = rampWarmupSets(working?.weightKg() ?? null, this.profileRepository.profile()?.currentWeightKg ?? null);
+    if (!result.ok) {
+      const toast = await this.toastController.create({
+        message: this.translate.instant(`WORKOUT.SESSION.WARMUP_${result.reason}`),
+        duration: 3000,
+        color: 'warning',
+      });
+      await toast.present();
+      return;
+    }
+    const warmups: TargetSetRow[] = result.sets.map((spec) => ({
+      id: uuidV4(),
+      setType: signal(WorkoutPlanSet.SetTypeEnum.Warmup),
+      reps: signal<number | null>(spec.reps),
+      repsMax: signal<number | null>(null),
+      repsText: signal(`${spec.reps}`),
+      repsError: signal<'INVALID' | 'INVERTED' | null>(null),
+      weightKg: signal<number | null>(spec.weightKg),
+      holdTimeSeconds: signal<number | null>(null),
+      edgeSizeMm: signal<number | null>(null),
+      distanceMeters: signal<number | null>(null),
+      restTimeSeconds: signal<number | null>(spec.restTimeSeconds),
+    }));
+    row.sets.update((sets) => [...warmups, ...sets.filter((set) => set.setType() !== WorkoutPlanSet.SetTypeEnum.Warmup)]);
   }
 
   readonly planId = signal<string | null>(null);
@@ -144,7 +177,7 @@ export class PlanEditPage implements OnInit {
   readonly isEditing = computed(() => this.planId() !== null);
 
   async ngOnInit(): Promise<void> {
-    await this.repository.load();
+    await Promise.all([this.repository.load(), this.profileRepository.load()]);
     const idParam = this.route.snapshot.paramMap.get('id');
     if (idParam !== null && idParam !== 'new') {
       const existing = this.repository.byId(idParam);
