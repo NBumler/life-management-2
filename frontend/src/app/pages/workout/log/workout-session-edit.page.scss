@@ -1,3 +1,12 @@
 @use '../../../shared/styles/set-row';
 
 @include set-row.set-row;
+
+// The footer's duration / volume / kcal preview spans ran together ("18 perc3,750 kg volumen").
+.preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  padding-inline: 16px;
+  font-size: 0.875rem;
+}

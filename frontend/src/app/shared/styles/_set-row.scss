@@ -1,45 +1,126 @@
-// backlog/124 + backlog/126 — the numbered set row shared by the workout template editor
-// (plan-edit), the post-hoc session editor (workout-session-edit) and the live active-workout
-// screen. An unstyled `<ion-label slot="start">` defaults to `flex: 1`, so the one-digit set number
-// claimed as much width as all the inputs together (the same bug kaja-stats' `.rank` hit earlier);
-// on a ~360 px phone the squeezed inputs no longer showed their values. The number is a narrow
-// gutter, the fields wrap onto a second line instead of shrinking to nothing, and the active
-// workout's quick-bump buttons get their own full-width line under the fields.
+// backlog/124 + backlog/126 + the phone-width set table — the numbered set rows shared by the
+// workout template editor (plan-edit), the post-hoc session editor (workout-session-edit) and the
+// live active-workout screen. Stacked per-input labels wrapped at a different field on every
+// exercise kind on a ~360 px phone, so a label ended up under the neighbouring field's value. Now
+// every exercise renders one column header (label + unit) and each set is one grid row of bordered,
+// label-less inputs aligned under it. The column template comes from `setGridColumns()`
+// (workout-fields.ts) through the `--set-grid` custom property on `.set-table`.
 @mixin set-row {
-  .set-number {
-    flex: 0 0 auto;
-    min-width: 1.5rem;
-    margin-inline-end: 0.5rem;
-    text-align: end;
-    color: var(--ion-color-medium);
-    font-variant-numeric: tabular-nums;
+  .set-table {
+    padding: 0 12px 4px 16px;
   }
 
-  .set-fields {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    gap: 0 8px;
-    flex: 1 1 auto;
-    min-width: 0;
-    padding-block: 4px;
-
-    > ion-select {
-      flex: 0 1 auto;
-      max-width: 9rem;
-    }
+  .set-row {
+    display: grid;
+    grid-template-columns: var(--set-grid);
+    align-items: center;
+    column-gap: 6px;
+    padding-block: 3px;
 
     > ion-input {
-      flex: 1 1 4.5rem;
-      min-width: 4.5rem;
+      min-height: 40px;
+      border: 1px solid var(--ion-color-step-300, var(--ion-color-medium));
+      border-radius: 6px;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+      --padding-start: 4px;
+      --padding-end: 4px;
+      --padding-top: 0;
+      --padding-bottom: 0;
+      --highlight-height: 0;
+
+      &.has-focus {
+        border-color: var(--ion-color-primary);
+      }
+
+      &.invalid {
+        border-color: var(--ion-color-danger);
+      }
+    }
+
+    > ion-checkbox {
+      justify-self: center;
     }
   }
 
+  .set-head {
+    padding-block: 4px 2px;
+    font-size: 0.75rem;
+    line-height: 1.15;
+    color: var(--ion-color-medium);
+    text-align: center;
+
+    small {
+      display: block;
+      font-size: 0.6875rem;
+      opacity: 0.8;
+    }
+  }
+
+  // "1 M": the set number plus a compact set-type badge; tapping the badge opens the type popover.
+  .set-index {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    font-variant-numeric: tabular-nums;
+    color: var(--ion-color-medium);
+
+    > span {
+      flex: 0 0 1rem;
+      text-align: end;
+    }
+
+    > ion-select {
+      flex: 0 0 1.75rem;
+      width: 1.75rem;
+      min-height: 28px;
+      padding: 0;
+      border: 1px solid var(--ion-color-step-300, var(--ion-color-medium));
+      border-radius: 999px;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--ion-text-color);
+      --padding-start: 0;
+      --padding-end: 0;
+      --padding-top: 0;
+      --padding-bottom: 0;
+
+      &::part(icon) {
+        display: none;
+      }
+
+      &::part(text) {
+        text-align: center;
+      }
+    }
+  }
+
+  .set-remove {
+    justify-self: center;
+    margin: 0;
+    --padding-start: 4px;
+    --padding-end: 4px;
+  }
+
+  // Full-width line under a set row (reps-range error in the template editor).
+  .set-error {
+    padding: 0 0 4px 3.75rem;
+    font-size: 0.75rem;
+    color: var(--ion-color-danger);
+  }
+
+  // Active workout only: the quick-bump buttons get a compact line under their own set row.
   .set-bumps {
     display: flex;
     flex-wrap: wrap;
     gap: 4px;
-    flex-basis: 100%;
-    padding-top: 4px;
+    padding: 0 0 6px calc(2rem + 3.75rem + 12px);
+
+    > ion-button {
+      margin: 0;
+      --padding-start: 8px;
+      --padding-end: 8px;
+    }
   }
 }

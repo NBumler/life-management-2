@@ -1050,7 +1050,32 @@
         "DROPSET": "Dropset",
         "REST_PAUSE": "Rest-pause",
         "FAILURE": "Kifáradásig"
-      }
+      },
+      "SET_TYPE_SHORT": {
+        "WARMUP": "B",
+        "WORKING": "M",
+        "DROPSET": "D",
+        "REST_PAUSE": "R",
+        "FAILURE": "K"
+      },
+      "COL": {
+        "SET": "#",
+        "REPS": "Ism.",
+        "WEIGHT": "Súly",
+        "HOLD": "Tartás",
+        "EDGE": "Léc",
+        "DISTANCE": "Táv",
+        "REST": "Pihenő"
+      },
+      "UNIT": {
+        "REPS": "db",
+        "WEIGHT": "kg",
+        "HOLD": "mp",
+        "EDGE": "mm",
+        "DISTANCE": "m",
+        "REST": "mp"
+      },
+      "EXERCISE_ACTIONS": "Gyakorlat műveletei"
     },
     "PICKER": {
       "TITLE": "Gyakorlat választása",
@@ -1134,7 +1159,7 @@
       "DELETE": "Sablon törlése",
       "DELETE_CONFIRM_TITLE": "Sablon törlése",
       "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd ezt a sablont? A korábbi edzésnaplók és a rá mutató heti kiosztások érintetlenek maradnak.",
-      "REPS_RANGE_PLACEHOLDER": "pl. 10 vagy 8-12",
+      "REPS_RANGE_PLACEHOLDER": "8-12",
       "REPS_RANGE_INVALID": "Számot vagy tartományt adj meg (pl. 8-12).",
       "REPS_RANGE_INVERTED": "A tartomány alsó határa nem lehet nagyobb a felsőnél."
     },

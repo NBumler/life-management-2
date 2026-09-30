@@ -2,12 +2,14 @@ import { ChangeDetectionStrategy, Component, OnInit, WritableSignal, computed, i
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
+  ActionSheetController,
   AlertController,
   IonBackButton,
   IonButton,
   IonButtons,
   IonContent,
   IonHeader,
+  IonIcon,
   IonInput,
   IonItem,
   IonLabel,
@@ -30,7 +32,8 @@ import { WorkoutPlanDraft, WorkoutPlanExerciseSaveItem } from '../../../core/sto
 import { uuidV4 } from '../../../core/sync/uuid';
 import { ExercisePickResult, ExercisePickerComponent } from '../../../shared/exercise-picker/exercise-picker.component';
 import { formatTargetRange, parseTargetRange } from '../../../shared/target-range';
-import { PLAN_TO_ENTRY_KIND, SET_TYPES, VisibleSetFields, moveById, visibleFields } from '../log/workout-fields';
+import { presentExerciseActions } from '../log/exercise-actions';
+import { PLAN_TO_ENTRY_KIND, SET_TYPES, VisibleSetFields, moveById, setGridColumns, visibleFields } from '../log/workout-fields';
 
 interface TargetSetRow {
   id: string;
@@ -79,6 +82,7 @@ const WORKOUT_TYPE_VALUES = Object.values(WorkoutPlan.DefaultWorkoutTypeEnum);
     IonButtons,
     IonBackButton,
     IonButton,
+    IonIcon,
     IonContent,
     IonList,
     IonItem,
@@ -98,6 +102,7 @@ export class PlanEditPage implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly repository = inject(WorkoutPlanRepository);
   private readonly alertController = inject(AlertController);
+  private readonly actionSheetController = inject(ActionSheetController);
   private readonly toastController = inject(ToastController);
   private readonly translate = inject(TranslateService);
 
@@ -107,6 +112,21 @@ export class PlanEditPage implements OnInit {
   /** Same `exerciseKind` → visible-field table as the workout log, via the typed plan→entry enum map. */
   fieldsFor(row: PlanExerciseRow): VisibleSetFields {
     return visibleFields(PLAN_TO_ENTRY_KIND[row.exerciseKind]);
+  }
+
+  /** Set-table columns: the kind's fields plus the template-only target rest. */
+  gridFor(row: PlanExerciseRow): string {
+    return setGridColumns(this.fieldsFor(row), { rest: true });
+  }
+
+  openExerciseActions(row: PlanExerciseRow, isFirst: boolean, isLast: boolean): Promise<void> {
+    return presentExerciseActions(this.actionSheetController, this.translate, {
+      header: row.exerciseName,
+      isFirst,
+      isLast,
+      move: (delta) => this.moveExercise(row, delta),
+      remove: () => this.removeExercise(row),
+    });
   }
 
   readonly planId = signal<string | null>(null);

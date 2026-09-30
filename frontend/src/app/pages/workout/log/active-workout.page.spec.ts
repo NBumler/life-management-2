@@ -205,7 +205,7 @@ describe('ActiveWorkoutPage', () => {
     (host.querySelector('.set-bumps .bump-reps') as HTMLElement).click();
     fixture.detectChanges();
 
-    const inputs = Array.from(host.querySelectorAll('.set-fields ion-input')) as unknown as { value: unknown }[];
+    const inputs = Array.from(host.querySelectorAll('.set-row ion-input')) as unknown as { value: unknown }[];
     const values = inputs.map((input) => Number(input.value));
     const set = component.exercises()[0].sets()[0];
     expect(values).toContain(set.weightKg() as number);

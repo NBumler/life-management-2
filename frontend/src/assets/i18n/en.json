@@ -1102,7 +1102,32 @@
         "DROPSET": "Drop set",
         "REST_PAUSE": "Rest-pause",
         "FAILURE": "To failure"
-      }
+      },
+      "SET_TYPE_SHORT": {
+        "WARMUP": "W",
+        "WORKING": "S",
+        "DROPSET": "D",
+        "REST_PAUSE": "R",
+        "FAILURE": "F"
+      },
+      "COL": {
+        "SET": "#",
+        "REPS": "Reps",
+        "WEIGHT": "Weight",
+        "HOLD": "Hold",
+        "EDGE": "Edge",
+        "DISTANCE": "Dist.",
+        "REST": "Rest"
+      },
+      "UNIT": {
+        "REPS": "reps",
+        "WEIGHT": "kg",
+        "HOLD": "s",
+        "EDGE": "mm",
+        "DISTANCE": "m",
+        "REST": "s"
+      },
+      "EXERCISE_ACTIONS": "Exercise actions"
     },
     "PICKER": {
       "TITLE": "Pick exercise",
@@ -1134,7 +1159,7 @@
       "DELETE": "Delete template",
       "DELETE_CONFIRM_TITLE": "Delete template",
       "DELETE_CONFIRM_MESSAGE": "Delete this template? Past workout logs and weekly assignments pointing at it are left untouched.",
-      "REPS_RANGE_PLACEHOLDER": "e.g. 10 or 8-12",
+      "REPS_RANGE_PLACEHOLDER": "8-12",
       "REPS_RANGE_INVALID": "Enter a number or a range (e.g. 8-12).",
       "REPS_RANGE_INVERTED": "The lower bound cannot exceed the upper one."
     },

@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
 import { Haptics, NotificationType } from '@capacitor/haptics';
 import {
+  ActionSheetController,
   AlertController,
   IonBadge,
   IonButton,
@@ -12,6 +13,7 @@ import {
   IonContent,
   IonFooter,
   IonHeader,
+  IonIcon,
   IonInput,
   IonItem,
   IonLabel,
@@ -54,8 +56,10 @@ import {
   moveById,
   nextRestValue,
   sanitizeSessionTimes,
+  setGridColumns,
   visibleFields,
 } from './workout-fields';
+import { presentExerciseActions } from './exercise-actions';
 import { detectPrs, effectiveDurationMinutes, sessionKcal } from './workout-metrics';
 
 interface SetRow {
@@ -106,6 +110,7 @@ const TICK_MS = 1000;
     IonTitle,
     IonButtons,
     IonButton,
+    IonIcon,
     IonContent,
     IonFooter,
     IonList,
@@ -131,6 +136,7 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
   private readonly planRepository = inject(WorkoutPlanRepository);
   private readonly profileRepository = inject(ProfileRepository);
   private readonly alertController = inject(AlertController);
+  private readonly actionSheetController = inject(ActionSheetController);
   private readonly translate = inject(TranslateService);
 
   readonly workoutTypes = WORKOUT_TYPES;
@@ -285,6 +291,21 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
     const rows = results.map((result) => this.emptyExerciseRow(result));
     this.exercises.update((current) => [...current, ...rows]);
     void this.persist();
+  }
+
+  /** Set-table columns (shared/styles/_set-row.scss): the kind's visible fields plus the done checkbox. */
+  gridFor(row: ExerciseRow): string {
+    return setGridColumns(visibleFields(row.exerciseKind), { check: true });
+  }
+
+  openExerciseActions(row: ExerciseRow, isFirst: boolean, isLast: boolean): Promise<void> {
+    return presentExerciseActions(this.actionSheetController, this.translate, {
+      header: row.exerciseName,
+      isFirst,
+      isLast,
+      move: (delta) => this.moveExercise(row, delta),
+      remove: () => this.removeExercise(row),
+    });
   }
 
   removeExercise(row: ExerciseRow): void {

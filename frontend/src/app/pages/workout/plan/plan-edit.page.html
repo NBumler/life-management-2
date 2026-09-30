@@ -56,28 +56,59 @@
           <h2>{{ row.exerciseName }}</h2>
           <p>{{ ('WORKOUT.EXERCISES.KIND.' + row.exerciseKind) | translate }}</p>
         </ion-label>
-        <ion-button slot="end" fill="clear" color="medium" size="small" [disabled]="$first" [attr.aria-label]="'COMMON.MOVE_UP' | translate" (click)="moveExercise(row, -1)">↑</ion-button>
-        <ion-button slot="end" fill="clear" color="medium" size="small" [disabled]="$last" [attr.aria-label]="'COMMON.MOVE_DOWN' | translate" (click)="moveExercise(row, 1)">↓</ion-button>
-        <ion-button slot="end" fill="clear" color="medium" (click)="removeExercise(row)">
-          {{ 'COMMON.REMOVE' | translate }}
+        <ion-button
+          slot="end"
+          fill="clear"
+          color="medium"
+          [attr.aria-label]="'WORKOUT.SESSION.EXERCISE_ACTIONS' | translate"
+          (click)="openExerciseActions(row, $first, $last)"
+        >
+          <ion-icon slot="icon-only" name="ellipsis-vertical"></ion-icon>
         </ion-button>
       </ion-item>
 
-      @for (set of row.sets(); track set.id; let i = $index) {
-        <ion-item>
-          <ion-label slot="start" class="set-number">{{ i + 1 }}</ion-label>
-          <div class="set-fields">
-            <ion-select
-              [value]="set.setType()"
-              (ionChange)="set.setType.set($event.detail.value)"
-              interface="popover"
-              [aria-label]="'WORKOUT.SESSION.FIELD_SET_TYPE' | translate"
-            >
-              @for (type of setTypes; track type) {
-                <ion-select-option [value]="type">{{ ('WORKOUT.SESSION.SET_TYPE.' + type) | translate }}</ion-select-option>
-              }
-            </ion-select>
-            @if (fieldsFor(row).reps) {
+      @let fields = fieldsFor(row);
+      <div class="set-table" [style.--set-grid]="gridFor(row)">
+        @if (row.sets().length > 0) {
+          <div class="set-row set-head" aria-hidden="true">
+            <span>{{ 'WORKOUT.SESSION.COL.SET' | translate }}</span>
+            @if (fields.reps) {
+              <span>{{ 'WORKOUT.SESSION.COL.REPS' | translate }}<small>{{ 'WORKOUT.SESSION.UNIT.REPS' | translate }}</small></span>
+            }
+            @if (fields.weightKg) {
+              <span>{{ 'WORKOUT.SESSION.COL.WEIGHT' | translate }}<small>{{ 'WORKOUT.SESSION.UNIT.WEIGHT' | translate }}</small></span>
+            }
+            @if (fields.holdTimeSeconds) {
+              <span>{{ 'WORKOUT.SESSION.COL.HOLD' | translate }}<small>{{ 'WORKOUT.SESSION.UNIT.HOLD' | translate }}</small></span>
+            }
+            @if (fields.edgeSizeMm) {
+              <span>{{ 'WORKOUT.SESSION.COL.EDGE' | translate }}<small>{{ 'WORKOUT.SESSION.UNIT.EDGE' | translate }}</small></span>
+            }
+            @if (fields.distanceMeters) {
+              <span>{{ 'WORKOUT.SESSION.COL.DISTANCE' | translate }}<small>{{ 'WORKOUT.SESSION.UNIT.DISTANCE' | translate }}</small></span>
+            }
+            <span>{{ 'WORKOUT.SESSION.COL.REST' | translate }}<small>{{ 'WORKOUT.SESSION.UNIT.REST' | translate }}</small></span>
+            <span></span>
+          </div>
+        }
+
+        @for (set of row.sets(); track set.id; let i = $index) {
+          <div class="set-row">
+            <div class="set-index">
+              <span>{{ i + 1 }}</span>
+              <ion-select
+                [value]="set.setType()"
+                [selectedText]="('WORKOUT.SESSION.SET_TYPE_SHORT.' + set.setType()) | translate"
+                (ionChange)="set.setType.set($event.detail.value)"
+                interface="popover"
+                [aria-label]="'WORKOUT.SESSION.FIELD_SET_TYPE' | translate"
+              >
+                @for (type of setTypes; track type) {
+                  <ion-select-option [value]="type">{{ ('WORKOUT.SESSION.SET_TYPE.' + type) | translate }}</ion-select-option>
+                }
+              </ion-select>
+            </div>
+            @if (fields.reps) {
               <!-- backlog/125: "8-12" range — text input; inputmode="tel" gives a digit pad that also has "-" -->
               <ion-input
                 class="reps-range"
@@ -85,52 +116,45 @@
                 inputmode="tel"
                 [value]="set.repsText()"
                 (ionInput)="onRepsInput(set, $any($event.target).value ?? '')"
-                [label]="'WORKOUT.SESSION.FIELD_REPS' | translate"
+                [aria-label]="'WORKOUT.SESSION.FIELD_REPS' | translate"
                 [placeholder]="'WORKOUT.PLAN.REPS_RANGE_PLACEHOLDER' | translate"
-                [class.ion-invalid]="set.repsError() !== null"
-                [class.ion-touched]="set.repsError() !== null"
-                [errorText]="set.repsError() ? ('WORKOUT.PLAN.REPS_RANGE_' + set.repsError() | translate) : ''"
-                label-placement="stacked"
+                [class.invalid]="set.repsError() !== null"
               ></ion-input>
             }
-            @if (fieldsFor(row).weightKg) {
+            @if (fields.weightKg) {
               <ion-input
                 type="number"
                 inputmode="decimal"
                 [value]="set.weightKg()"
                 (ionInput)="set.weightKg.set($any($event.target).value === '' ? null : +$any($event.target).value)"
-                [label]="'WORKOUT.SESSION.FIELD_WEIGHT' | translate"
-                label-placement="stacked"
+                [aria-label]="'WORKOUT.SESSION.FIELD_WEIGHT' | translate"
               ></ion-input>
             }
-            @if (fieldsFor(row).holdTimeSeconds) {
+            @if (fields.holdTimeSeconds) {
               <ion-input
                 type="number"
                 inputmode="numeric"
                 [value]="set.holdTimeSeconds()"
                 (ionInput)="set.holdTimeSeconds.set($any($event.target).value === '' ? null : +$any($event.target).value)"
-                [label]="'WORKOUT.SESSION.FIELD_HOLD' | translate"
-                label-placement="stacked"
+                [aria-label]="'WORKOUT.SESSION.FIELD_HOLD' | translate"
               ></ion-input>
             }
-            @if (fieldsFor(row).edgeSizeMm) {
+            @if (fields.edgeSizeMm) {
               <ion-input
                 type="number"
                 inputmode="numeric"
                 [value]="set.edgeSizeMm()"
                 (ionInput)="set.edgeSizeMm.set($any($event.target).value === '' ? null : +$any($event.target).value)"
-                [label]="'WORKOUT.SESSION.FIELD_EDGE' | translate"
-                label-placement="stacked"
+                [aria-label]="'WORKOUT.SESSION.FIELD_EDGE' | translate"
               ></ion-input>
             }
-            @if (fieldsFor(row).distanceMeters) {
+            @if (fields.distanceMeters) {
               <ion-input
                 type="number"
                 inputmode="numeric"
                 [value]="set.distanceMeters()"
                 (ionInput)="set.distanceMeters.set($any($event.target).value === '' ? null : +$any($event.target).value)"
-                [label]="'WORKOUT.SESSION.FIELD_DISTANCE' | translate"
-                label-placement="stacked"
+                [aria-label]="'WORKOUT.SESSION.FIELD_DISTANCE' | translate"
               ></ion-input>
             }
             <ion-input
@@ -138,13 +162,15 @@
               inputmode="numeric"
               [value]="set.restTimeSeconds()"
               (ionInput)="set.restTimeSeconds.set($any($event.target).value === '' ? null : +$any($event.target).value)"
-              [label]="'WORKOUT.PLAN.FIELD_REST' | translate"
-              label-placement="stacked"
+              [aria-label]="'WORKOUT.PLAN.FIELD_REST' | translate"
             ></ion-input>
+            <ion-button class="set-remove" size="small" fill="clear" color="medium" [attr.aria-label]="'COMMON.REMOVE' | translate" (click)="removeSet(row, set)">✕</ion-button>
           </div>
-          <ion-button slot="end" size="small" fill="clear" color="medium" (click)="removeSet(row, set)">✕</ion-button>
-        </ion-item>
-      }
+          @if (fields.reps && set.repsError(); as error) {
+            <div class="set-error">{{ ('WORKOUT.PLAN.REPS_RANGE_' + error) | translate }}</div>
+          }
+        }
+      </div>
 
       <ion-item lines="none">
         <ion-button fill="clear" (click)="addSet(row)">{{ 'WORKOUT.SESSION.ADD_SET' | translate }}</ion-button>

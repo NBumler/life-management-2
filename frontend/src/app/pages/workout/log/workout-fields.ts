@@ -98,6 +98,19 @@ export function visibleFields(kind: WorkoutExerciseEntry.ExerciseKindEnum): Visi
 }
 
 /**
+ * `grid-template-columns` of one exercise's set table (shared/styles/_set-row.scss): an optional
+ * done-checkbox column, the "1 M" set-number + set-type badge, one equal column per visible field
+ * (plus the template editor's target rest), and the ✕ remove button. The header row and every set
+ * row share it, so each input sits exactly under its label.
+ */
+export function setGridColumns(fields: VisibleSetFields, options: { rest?: boolean; check?: boolean } = {}): string {
+  const fieldCount = Object.values(fields).filter(Boolean).length + (options.rest ? 1 : 0);
+  return [options.check ? '2rem' : null, '3.75rem', `repeat(${fieldCount}, minmax(0, 1fr))`, '2rem']
+    .filter((column) => column !== null)
+    .join(' ');
+}
+
+/**
  * One rest-timer tick: decrement by a second, and report expiry when it hits zero so the caller can
  * fire the haptic/beep. `null` in → `null` out (no timer running). Pure so the countdown rule is
  * unit-testable without fake timers.

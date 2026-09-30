@@ -4,6 +4,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
+  ActionSheetController,
   AlertController,
   IonBackButton,
   IonButton,
@@ -11,6 +12,7 @@ import {
   IonContent,
   IonFooter,
   IonHeader,
+  IonIcon,
   IonInput,
   IonItem,
   IonLabel,
@@ -34,7 +36,8 @@ import { uuidV4 } from '../../../core/sync/uuid';
 import { WorkoutExerciseSaveItem, WorkoutSessionDraft } from '../../../core/storage/storage-backend';
 import { today } from '../../../shared/local-date';
 import { ExercisePickResult, ExercisePickerComponent } from '../../../shared/exercise-picker/exercise-picker.component';
-import { LOCATIONS, SET_TYPES, WORKOUT_TYPES, moveById, sanitizeSessionTimes, visibleFields } from './workout-fields';
+import { presentExerciseActions } from './exercise-actions';
+import { LOCATIONS, SET_TYPES, WORKOUT_TYPES, moveById, sanitizeSessionTimes, setGridColumns, visibleFields } from './workout-fields';
 import { effectiveDurationMinutes, ghostForExercise, sessionKcal, sessionVolume } from './workout-metrics';
 
 interface SetRow {
@@ -79,6 +82,7 @@ interface ExerciseRow {
     IonButtons,
     IonBackButton,
     IonButton,
+    IonIcon,
     IonContent,
     IonFooter,
     IonList,
@@ -101,6 +105,7 @@ export class WorkoutSessionEditPage implements OnInit {
   private readonly repository = inject(WorkoutSessionRepository);
   private readonly profileRepository = inject(ProfileRepository);
   private readonly alertController = inject(AlertController);
+  private readonly actionSheetController = inject(ActionSheetController);
   private readonly translate = inject(TranslateService);
 
   readonly setTypes = SET_TYPES;
@@ -214,6 +219,21 @@ export class WorkoutSessionEditPage implements OnInit {
     this.pickerOpen.set(false);
     const newRows = results.map((result) => this.emptyExerciseRow(result));
     this.exercises.update((rows) => [...rows, ...newRows]);
+  }
+
+  /** Set-table columns (shared/styles/_set-row.scss): the kind's visible fields. */
+  gridFor(row: ExerciseRow): string {
+    return setGridColumns(visibleFields(row.exerciseKind));
+  }
+
+  openExerciseActions(row: ExerciseRow, isFirst: boolean, isLast: boolean): Promise<void> {
+    return presentExerciseActions(this.actionSheetController, this.translate, {
+      header: row.exerciseName,
+      isFirst,
+      isLast,
+      move: (delta) => this.moveExercise(row, delta),
+      remove: () => this.removeExercise(row),
+    });
   }
 
   removeExercise(row: ExerciseRow): void {
