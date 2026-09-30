@@ -1,7 +1,7 @@
 ---
 id: 54
 type: feature
-status: backlog
+status: ready
 title: Edzesnaplo dashboard: Terv inditasa gyorsindito (aktiv sablonok listaja)
 specs:
   - "[[Edzésnapló]]"
@@ -30,7 +30,8 @@ Lásd a motivációt + a hivatkozott spec(ek) `### Jelenlegi működés` szakasz
 
 ## Terv / döntési napló
 
-_Nincs._
+- 2026-10-01: a backlog/139 („Következő javasolt” rotációs kártya) erre a gyorsindítóra épül —
+  együtt implementálva.
 
 ## Lezáráskor (on-done)
 

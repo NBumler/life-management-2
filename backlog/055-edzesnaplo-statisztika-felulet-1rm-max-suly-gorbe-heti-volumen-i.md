@@ -29,7 +29,10 @@ Lásd a motivációt + a hivatkozott spec(ek) `### Jelenlegi működés` szakasz
 
 ## Terv / döntési napló
 
-_Nincs._
+- 2026-10-01 (edzés-elemzés, backlog/131–142): egy OAPU-nézet is kell — a súlyozott húzódzkodás
+  hozzáadott súlya a [[Profile]] testsúlyának %-ában (a cél ~+40–50%), és a gumis / csigás
+  rásegítés (negatív kg) görbéje a 0 felé haladva; egyoldali szetteknél (backlog/134) bal / jobb
+  külön vonal.
 
 ## Lezáráskor (on-done)
 
