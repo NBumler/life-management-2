@@ -14,6 +14,10 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-01 — #131** Élő edzés „Legutóbb” sor (a legutóbbi alkalom összes munkaszettje) + double-progression
+  javaslat (+2,5 kg, rásegítésnél kevesebb gumi), ha legutóbb minden WORKING szett elérte a tartomány tetejét;
+  **#132** „Bemelegítés generálása” ⋮ menüpont (30/65/87 %, 60/90/120 s, negatív munkasúly testsúllyal) mind a
+  három edzés-szerkesztőben — érintett: [[Edzésnapló]], [[Heti terv]]; kód: `pages/workout/log`, `pages/workout/plan`
 - **2026-09-25 — #130** Boulder kalória-modell: aktív idő 45 s × `attemptCount`, aktív MET 5.8 → 9.5 a
   mászó 90 napos referenciaszintjéhez mért nehézség szerint (2024 Compendium), boulder pihenő bruttó 3.0
   MET — érintett: [[Mászónapló]], [[Tápérték kalkulátor]], [[Indoor boulder napló]]; kód:

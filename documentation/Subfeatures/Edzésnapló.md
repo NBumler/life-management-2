@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-24
-verifikalt_commit: 8079588
+verifikalva: 2026-10-01
+verifikalt_commit: c9676f5
 ---
 
 # Edzésnapló
@@ -151,7 +151,9 @@ PR típusok (badge a szett mellett): számított **1RM** megdöntés; **max súl
 
 Jelenleg él:
 
-- **Ghost values** az utólagos szerkesztőben (`workout-session-edit`) — legutóbbi alkalom ugyanarra a gyakorlatra (pl. „80 kg × 8”). Az élő `active-workout` nézetben nincs ghost, csak a **PR badge** (1RM / max súly / max volumen megdöntés).
+- **Ghost values** az utólagos szerkesztőben (`workout-session-edit`) — legutóbbi alkalom ugyanarra a gyakorlatra, a csúcs-szettel (pl. „80 kg × 8”).
+- **„Legutóbb” sor az élő `active-workout` nézetben** (`backlog/131`) — a gyakorlat neve alatt a legutóbbi alkalom dátuma és **összes** számolt (WORKING / DROPSET / FAILURE) szettje: azonos szettek összevonva („Legutóbb (2026-09-28): 3 × 5 @ 22.5 kg”), eltérőek ` · `-tal felsorolva („5 @ 22.5 kg · 4 @ 22.5 kg”); tartásidő „10 s”, 0 kg nem jelenik meg, rásegítés negatív kg-ként (`workout-metrics.ts`: `lastPerformance`, `formatSetSummary`). Mellette a **PR badge** (1RM / max súly / max volumen megdöntés).
+- **Progresszió-javaslat („double progression”, `backlog/131`)** az élő nézetben: ha a gyakorlat WORKING szettjeinek a sablonból tartomány-célja van (pl. „3–5”), és legutóbb **minden** WORKING szett elérte a tartomány felső határát, súllyal, akkor a gyakorlat alatt egy „Javaslat: <legutóbbi legnagyobb munkasúly + 2,5> kg” gomb jelenik meg (`progressionSuggestion`, lépés `PROGRESSION_STEP_KG = 2.5`). Rásegítésnél (negatív kg) ez 2,5 kg-mal kevesebb rásegítés, legfeljebb 0-ig. Tapra a még nem kipipált WORKING szettek súlyát erre állítja; ha már mind ezen áll, a gomb eltűnik. Tartomány-cél nélkül (ad-hoc / fix cél), WORKING szett nélkül, vagy ha egy szett alulmaradt, nincs javaslat. Csak súlyt mutató kindnál (`weightKg` mező).
 - Session-szintű **volumen-előnézet** (`Σ reps × weightKg` a WORKING/DROPSET/FAILURE szetteken).
 
 Tervezett (`backlog/055-edzesnaplo-statisztika-felulet-1rm-max-suly-gorbe-heti-volumen-i.md`): per-gyakorlat 1RM / max súly fejlődési görbe, heti volumen aggregát, izomcsoport-eloszlás.
@@ -164,7 +166,8 @@ Tervezett (`backlog/055-edzesnaplo-statisztika-felulet-1rm-max-suly-gorbe-heti-v
 - **Gyakorlat picker:** `ion-searchbar` + `ExerciseCategory` chipek + Kedvencek; ad-hoc létrehozás. A `<ion-modal>`-ben megjelenő `app-exercise-picker` a modal **teljes magasságát** kitölti (`:host` a megosztott `ion-modal-host-fill` mixin — `shared/styles/_ion-modal-host.scss`, `backlog/117` — flex-oszlop, `position: absolute; inset: 0`), így a találati lista a teljes rendelkezésre álló teret használja, nem egy-két sorra zsugorodik. Ugyanezt a mintát használja az [[Étkezés]] tétel-szerkesztő modalja is.
 - **Szettek:** gyakorlatonként egy szett-táblázat; `+ Új szett`; előző szett másolása; numerikus billentyűzet autofókusz. Az Active Workout gyors-növelő gombjai (`+2.5 kg` / `+5 kg` súlyos, `+1 ism.` repses gyakorlatnál) **szettenként egy kompakt sorban, a szett mezői alatt** vannak, így a megnövelt érték mindig látszik; a szett törlés (✕) a sor jobb szélén. Az utólagos formban nincsenek gyors-növelő gombok (az értéket úgyis begépeli a felhasználó).
 - **Szett-táblázat elrendezése** (sablon-szerkesztő, utólagos form és Active Workout egyaránt, közös `shared/styles/_set-row.scss` mixin + `setGridColumns()` a `workout-fields.ts`-ben): gyakorlatonként **egyszer** egy oszlopfejléc (rövid mezőnév + mértékegység, pl. „Súly / kg”), alatta szettenként **egy sor** keretes, label nélküli inputokkal pontosan a saját oszlopuk alatt — a `kind` szerint 1–4 számoszlop, így ~360 px-en sem tördel. Az első oszlop a sorszám + a szett-típus rövid jelvénye (M = Munka, B = Bemelegítő, D = Dropset, R = Rest-pause, K = Kifáradásig; tapra popoverben választható a teljes nevű típus). Active Workoutban a sor elején a „kész” pipa oszlop; ha a szett a sablonból tartomány-célt kapott, az ismétlés mező placeholdere a cél (pl. „8-12”).
-- **Gyakorlat műveletei:** a gyakorlat-fejléc jobb szélén egy ⋮ gomb action sheetet nyit (Mozgatás felfelé / lefelé — az első/utolsó gyakorlatnál a nem értelmezett irány hiányzik —, Eltávolítás), hogy a gyakorlatnév ne törjön két sorba.
+- **Gyakorlat műveletei:** a gyakorlat-fejléc jobb szélén egy ⋮ gomb action sheetet nyit (Mozgatás felfelé / lefelé — az első/utolsó gyakorlatnál a nem értelmezett irány hiányzik —, `WEIGHTED_REPS` / `BODYWEIGHT_REPS` kindnál „Bemelegítés generálása”, Eltávolítás), hogy a gyakorlatnév ne törjön két sorba.
+- **Bemelegítés generálása (`backlog/132`, ramping warm-up):** a gyakorlat **első WORKING szettjének** súlyából 3 `WARMUP` szettet szúr a szettlista elejére: 5 ism. × ~30%, 3 ism. × ~65%, 1 ism. × ~87%, 2,5 kg-ra kerekítve, 60 / 90 / 120 mp cél-pihenővel (`warmup-ramp.ts`: `rampWarmupSets`). A meglévő `WARMUP` szettek helyére kerülnek; az élő nézetben a már kipipált bemelegítők megmaradnak. **Rásegített (negatív kg) munkasúlynál** a mozgatott teher `testsúly + munkasúly` ([[Profile]] aktuális testsúly), a bemelegítők ennek hányadai, így nagyobb rásegítésként (negatívabb kg) mentődnek. Munkasúly nélkül (nincs / 0 kg) vagy rásegítésnél testsúly nélkül nem generál, hanem figyelmeztető toastot ad. Mindig abszolút kg mentődik — nincs %-mező. Mindhárom szerkesztőben (élő, utólagos, sablon) elérhető.
 - Az utólagos form láblécében az időtartam / volumen / kcal előnézet külön, térközzel elválasztott tételek.
 - **Thumb-zone:** szett-pipa és „Edzés befejezése” a képernyő alsó harmadában.
 - **HIIT:** körök (`roundsCount`); kör másolás gombokkal.

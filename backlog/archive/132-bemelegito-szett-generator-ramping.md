@@ -1,14 +1,14 @@
 ---
 id: 132
 type: feature
-status: ready
+status: done
 title: "Bemelegítő-szett generátor (ramping warm-up) a sablon- és az edzés-szerkesztőkben"
 specs:
   - "[[Edzésnapló]]"
   - "[[Heti terv]]"
 flag:
 created: 2026-10-01
-closed:
+closed: 2026-10-01
 ---
 
 # 132 — Bemelegítő-szett generátor (ramping)
@@ -26,16 +26,16 @@ kell felvenni. A spec szerint nincs %-os 1RM-mátrix, mindig abszolút kg mentő
 
 ## Elfogadási kritériumok
 
-- [ ] A gyakorlat ⋮ menüjében „Bemelegítés generálása” (csak `WEIGHTED_REPS` /
+- [x] A gyakorlat ⋮ menüjében „Bemelegítés generálása” (csak `WEIGHTED_REPS` /
       `BODYWEIGHT_REPS` kindnál), ha a gyakorlat első `WORKING` szettjén van súly (≠ 0). Ha nincs,
       a menüpont info-toastot ad („Előbb add meg a munkasúlyt”).
-- [ ] 3 `WARMUP` szettet szúr a munkaszettek elé: 5 × ~30%, 3 × ~65%, 1 × ~87% a munkasúlyból,
+- [x] 3 `WARMUP` szettet szúr a munkaszettek elé: 5 × ~30%, 3 × ~65%, 1 × ~87% a munkasúlyból,
       2,5 kg-ra kerekítve, pihenő 60 / 90 / 120 mp. Negatív (rásegített) munkasúlynál a
       rásegítés arányosan nagyobb (ugyanazzal a kisebb terhelés-hányaddal a testsúlyhoz képest).
-- [ ] Ha a gyakorlatnak már vannak `WARMUP` szettjei, a generálás ezeket lecseréli.
-- [ ] Mentve abszolút kg — nincs %-mező a modellben. Pure TS utility unit-teszttel.
-- [ ] Sablon-szerkesztőben, utólagos formban és Active Workoutban egyaránt elérhető.
-- [ ] [[Edzésnapló]], [[Heti terv]] spec frissítve.
+- [x] Ha a gyakorlatnak már vannak `WARMUP` szettjei, a generálás ezeket lecseréli.
+- [x] Mentve abszolút kg — nincs %-mező a modellben. Pure TS utility unit-teszttel.
+- [x] Sablon-szerkesztőben, utólagos formban és Active Workoutban egyaránt elérhető.
+- [x] [[Edzésnapló]], [[Heti terv]] spec frissítve.
 
 ## Terv / döntési napló
 
@@ -43,6 +43,6 @@ _Nincs._
 
 ## Lezáráskor (on-done)
 
-- Frissített specek: [[Edzésnapló]], [[Heti terv]]
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — <mit>
-- Kód: <fő package-ek / fájlok>
+- Frissített specek: [[Edzésnapló]] — UI/UX „Bemelegítés generálása”; [[Heti terv]] — cél-szettek bekezdés
+- `IMPLEMENTATION_STATUS.md` sor: 2026-10-01 — lásd lent
+- Kód: `pages/workout/log/warmup-ramp.ts`, `exercise-actions.ts`, `active-workout.page.ts`, `workout-session-edit.page.ts`, `plan/plan-edit.page.ts`

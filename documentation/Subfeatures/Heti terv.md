@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-24
-verifikalt_commit: 0985aa9
+verifikalva: 2026-10-01
+verifikalt_commit: c9676f5
 ---
 
 # Heti terv
@@ -56,6 +56,8 @@ Fejlesztési sorrend: [[Gyakorlat]] → [[Edzésnapló]] → **Heti terv**.
 | `targetSets` | Cél szettek listája: `setType`, cél `reps` / `weightKg` / `holdTimeSeconds` / `edgeSizeMm` / `distanceMeters` / `restTimeSeconds` — a `exerciseKind` szerint releváns mezők. Az ismétlésszám **tartomány** is lehet (`backlog/125`): `reps` = alsó határ / egyetlen cél, nullable `repsMax` = felső határ (`null` = nem tartomány; a szerver `repsMax < reps` vagy `reps` nélküli `repsMax` esetén 400 `VALIDATION`). |
 
 Indításkor az [[Edzésnapló]] átmásolja ezeket session entry / set előtöltésnek; a session `planId = WorkoutPlan.id`.
+
+A sablon-szerkesztő ⋮ menüjének „Bemelegítés generálása” pontja (`backlog/132`, részletek: [[Edzésnapló]] „Bemelegítés generálása”) az első WORKING cél-szett súlyából 3 WARMUP cél-szettet generál (30 / 65 / 87 %, 60 / 90 / 120 mp cél-pihenő).
 
 `targetSets` szabad `setType`-listája már önmagában kifejezi a bemelegítő ramping (több könnyű `WARMUP` szett) + kevés, nehéz `WORKING` szett (alacsony ismétlésszám, hosszú cél `restTimeSeconds`) mintát — nincs szükség külön mezőre a bemelegítés/munka szétválasztásához, sem külön „intenzitás” mezőre: az explicit `FAILURE` típus jelzi, ha egy szett tudatosan a bukásig megy, minden más `WORKING` szett hallgatólagosan tartalék ismétléssel (RIR) végzett.
 

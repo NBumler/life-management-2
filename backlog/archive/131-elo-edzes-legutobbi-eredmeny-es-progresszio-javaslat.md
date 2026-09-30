@@ -1,13 +1,13 @@
 ---
 id: 131
 type: feature
-status: ready
+status: done
 title: "Élő edzés: legutóbbi eredmény (ghost) + progresszió-javaslat a munkaszetteknél"
 specs:
   - "[[Edzésnapló]]"
 flag:
 created: 2026-10-01
-closed:
+closed: 2026-10-01
 ---
 
 # 131 — Élő edzés: legutóbbi eredmény (ghost) + progresszió-javaslat
@@ -27,16 +27,16 @@ tudni, mennyi volt legutóbb a súly × ismétlés, és kell egy egyszerű progr
 
 ## Elfogadási kritériumok
 
-- [ ] Az Active Workout gyakorlat-fejlécében a legutóbbi alkalom összefoglalója látszik
+- [x] Az Active Workout gyakorlat-fejlécében a legutóbbi alkalom összefoglalója látszik
       (pl. „Legutóbb: 3 × 5 @ 22,5 kg”), `ghostForExercise`-alapú logikával. Csak a
       WORKING / DROPSET / FAILURE szetteket veszi figyelembe.
-- [ ] Progresszió-javaslat (pure TS, unit-tesztelt): ha az előző sessionben az adott
+- [x] Progresszió-javaslat (pure TS, unit-tesztelt): ha az előző sessionben az adott
       gyakorlat **minden** munkaszettje elérte a cél-tartomány felső határát, a javaslat
       „+2,5 kg”; rásegítésnél (negatív kg) ez 2,5 kg-mal kevesebb rásegítést jelent. Egy tapra
       alkalmazható a még nem kész munkaszettekre.
-- [ ] Tartomány nélkül (nincs `repsTarget`) csak a „Legutóbb” sor jelenik meg, javaslat nincs.
-- [ ] Offline is működik (helyi session store).
-- [ ] [[Edzésnapló]] spec frissítve.
+- [x] Tartomány nélkül (nincs `repsTarget`) csak a „Legutóbb” sor jelenik meg, javaslat nincs.
+- [x] Offline is működik (helyi session store).
+- [x] [[Edzésnapló]] spec frissítve.
 
 ## Terv / döntési napló
 
@@ -45,6 +45,6 @@ tudni, mennyi volt legutóbb a súly × ismétlés, és kell egy egyszerű progr
 
 ## Lezáráskor (on-done)
 
-- Frissített specek: [[Edzésnapló]]
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — <mit>
-- Kód: <fő package-ek / fájlok>
+- Frissített specek: [[Edzésnapló]] — „Statisztika”: „Legutóbb” sor + progresszió-javaslat az élő nézetben
+- `IMPLEMENTATION_STATUS.md` sor: 2026-10-01 — lásd lent
+- Kód: `pages/workout/log/workout-metrics.ts` (`lastPerformance`, `formatSetSummary`, `progressionSuggestion`), `active-workout.page.{ts,html,scss}`
