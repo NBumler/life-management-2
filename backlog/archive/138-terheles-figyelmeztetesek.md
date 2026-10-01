@@ -1,14 +1,14 @@
 ---
 id: 138
 type: feature
-status: ready
+status: done
 title: "Terhelés-figyelmeztetések: pihenőnap hiány, edzés mászónapon, sok mászás, ujjterhelés"
 specs:
   - "[[Heti terv]]"
   - "[[Edzésnapló]]"
 flag:
 created: 2026-10-01
-closed:
+closed: 2026-10-01
 ---
 
 # 138 — Terhelés-figyelmeztetések
@@ -26,17 +26,17 @@ Nincs ilyen logika. Az edzés bármikor indítható, figyelmeztetés nélkül.
 
 ## Elfogadási kritériumok
 
-- [ ] Pure TS szabálymotor (unit-teszttel), inputja a backlog/137 napi terhelés-sora:
-  - [ ] **Nincs pihenőnap:** az utolsó 7 napban (ma nélkül) 0 pihenőnap → figyelmeztetés.
-  - [ ] **Mászónap:** ma van mászó-session → info: „Ma már másztál — csak rövid törzs /
+- [x] Pure TS szabálymotor (unit-teszttel), inputja a backlog/137 napi terhelés-sora:
+  - [x] **Nincs pihenőnap:** az utolsó 7 napban (ma nélkül) 0 pihenőnap → figyelmeztetés.
+  - [x] **Mászónap:** ma van mászó-session → info: „Ma már másztál — csak rövid törzs /
         prehab javasolt”.
-  - [ ] **Sok mászás:** a naptári héten ≥ 4 mászás → info: „Sok mászás a héten — az otthoni
+  - [x] **Sok mászás:** a naptári héten ≥ 4 mászás → info: „Sok mászás a héten — az otthoni
         húzó- és ujjedzés kihagyható”.
-  - [ ] **Ujjterhelés:** gördülő 7 napban ≥ 5 ujjterhelés-nap → figyelmeztetés.
-- [ ] Megjelenés: nem blokkoló banner a Heti terv dashboardon és az Edzésnapló listán.
+  - [x] **Ujjterhelés:** gördülő 7 napban ≥ 5 ujjterhelés-nap → figyelmeztetés.
+- [x] Megjelenés: nem blokkoló banner a Heti terv dashboardon és az Edzésnapló listán.
       Nincs push-értesítés.
-- [ ] A küszöbök konstansok (később hangolhatók).
-- [ ] Specek frissítve.
+- [x] A küszöbök konstansok (később hangolhatók).
+- [x] Specek frissítve.
 
 ## Terv / döntési napló
 
@@ -45,5 +45,5 @@ Nincs ilyen logika. Az edzés bármikor indítható, figyelmeztetés nélkül.
 ## Lezáráskor (on-done)
 
 - Frissített specek: [[Heti terv]], [[Edzésnapló]]
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — <mit>
-- Kód: <fő package-ek / fájlok>
+- `IMPLEMENTATION_STATUS.md` sor: 2026-10-01 — #138 terhelés-figyelmeztetések
+- Kód: `pages/workout/load-warnings.ts`, `load-warnings-banner.component.ts`, Heti terv + Edzésnapló lista (`c5bb2b8`)

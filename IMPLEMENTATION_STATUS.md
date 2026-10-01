@@ -14,6 +14,9 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-01 — #138** Terhelés-figyelmeztetések (nem blokkoló sáv a Heti terv dashboardon és az Edzésnapló listán):
+  nincs pihenőnap 7 napja, ≥ 5 ujjterhelő nap / 7, ma már másztál, ≥ 4 mászás a héten — tiszta `load-warnings.ts`,
+  konstans küszöbök. Érintett: [[Heti terv]], [[Edzésnapló]]
 - **2026-10-01 — #137** Heti terhelés-áttekintés a Heti terv dashboardon: naponként Mászás / Edzés / Ujjterhelés /
   Pihenő jelvény, felül „Mászás X nap · Edzés Y nap · Pihenőnap Z” — tiszta `training-load.ts` a helyi Mászónapló +
   Edzésnapló alapján (a #138 figyelmeztetések és a #139 rotáció erre épül). Érintett: [[Heti terv]], [[Mászónapló]]

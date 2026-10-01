@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-10-01
-verifikalt_commit: 9e3b005
+verifikalt_commit: c5bb2b8
 ---
 
 # Heti terv
@@ -96,6 +96,19 @@ A dashboard a beosztás mellett a hét **tényleges** terhelését is mutatja, a
 - Napsoronként jelvények a dátum alatt: **Mászás**, **Edzés** (csak ha a nap „Teljesítve” jelvényt nem kapott — a nem a slot-sablonból indított edzés), **Ujjterhelés** (ujj-gyakorlat mászás nélkül), **Pihenő** (csak mai / múltbeli napon; a jövőbeli nap még nem „pihent”).
 - Felül összesítő a naptári hétre: „Mászás X nap · Edzés Y nap · Pihenőnap Z” (a pihenőnap a mai napig számol). Hétváltáskor a megjelenített hétre számol.
 
+#### Terhelés-figyelmeztetések (`backlog/138`)
+
+Tiszta szabálymotor (`pages/workout/load-warnings.ts`) a fenti napi terhelés-soron, mindig a **mai** naphoz (a megjelenített héttől függetlenül). Csak tanács — a szövegezés „javasolt”, semmit nem tilt, push-értesítés nincs. A küszöbök konstansok (`REST_WINDOW_DAYS = 7`, `FINGER_LOAD_DAYS_LIMIT = 5`, `MANY_CLIMBS_PER_WEEK = 4`).
+
+| Kód | Súlyosság | Feltétel | Szöveg (hu) |
+|---|---|---|---|
+| `NO_REST_DAY` | figyelmeztetés | a ma előtti 7 nap egyike sem pihenőnap | „Az elmúlt 7 napban nem volt pihenőnap — heti 1–2 teljes pihenőnap javasolt.” |
+| `FINGER_LOAD` | figyelmeztetés | a gördülő 7 napban (ma is) ≥ 5 ujjterhelő nap | „…az ínak és a pulley-k lassan regenerálódnak, pihentetés javasolt.” |
+| `CLIMBED_TODAY` | info | ma van mászó-session | „Ma már másztál — ma legfeljebb rövid törzs / prehab edzés javasolt.” |
+| `MANY_CLIMBS` | info | a naptári héten (hétfőtől máig) ≥ 4 mászónap | „Sok mászás a héten — az otthoni húzó- és ujjedzés kihagyható.” |
+
+Megjelenés: nem blokkoló sáv(ok) (`app-load-warnings-banner`, figyelmeztetés: sárgás háttér + ⚠ ikon, info: szürke) a Heti terv dashboard tetején és az [[Edzésnapló]] lista tetején; figyelmeztetés nélkül nem renderel semmit. Sorrend: előbb a figyelmeztetések, aztán az infók.
+
 CRUD: sablon lista/szerkesztő; heti dashboard slot szerkesztés; soft delete sablonra / hétre (megerősítéssel). Sablon soft delete után a múltbeli sessionök `planId`-je megmarad; új slotba nem választható.
 
 ### UI/UX elvárások
@@ -129,7 +142,7 @@ Nincs nyitott kérdés.
 #### Backend-offline
 
 - Olvasás / írás helyi store-ból Backend-offline és Full-offline esetén is.
-- A heti terhelés kizárólag a helyi mászó- és edzésnapló-store-ból számol (nincs saját hívás), így Full-offline is teljes.
+- A heti terhelés és a terhelés-figyelmeztetések kizárólag a helyi mászó- és edzésnapló-store-ból számolnak (nincs saját hívás), így Full-offline is teljesek.
 - Create / update / soft-delete → outbox + kliens UUID; sync: [[Szinkronizációs központ]].
 - Szinkronizálatlan helyi draft elvetése: hard remove + outbox tisztítás.
 - Lásd [[Backend-offline first]].

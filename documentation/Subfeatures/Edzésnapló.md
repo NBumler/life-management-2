@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-10-01
-verifikalt_commit: 2b84319
+verifikalt_commit: c5bb2b8
 ---
 
 # Edzésnapló
@@ -164,7 +164,7 @@ Tervezett (`backlog/055-edzesnaplo-statisztika-felulet-1rm-max-suly-gorbe-heti-v
 
 - Belépés: [[Edzés]] tab → Edzésnapló (dashboard / lista).
 - Flow: Dashboard → Új edzés / Terv indítása / Ugyanaz mint legutóbb → Active Workout (vagy utólagos form) → gyakorlat modal → szettek → Befejezés → summary / dashboard frissülés.
-- **Lista:** időrend (újabb elöl); soron: dátum, cím vagy típus, időtartam, megjelenített kcal (utility).
+- **Lista:** időrend (újabb elöl); soron: dátum, cím vagy típus, időtartam, megjelenített kcal (utility). A lista tetején a [[Heti terv]] **terhelés-figyelmeztetései** (`backlog/138`: nincs pihenőnap / sok ujjterhelés / ma már másztál / sok mászás a héten) nem blokkoló sávként — az edzés indítása ettől függetlenül szabad.
 - **Gyakorlat picker:** `ion-searchbar` + `ExerciseCategory` chipek + Kedvencek; ad-hoc létrehozás. A `<ion-modal>`-ben megjelenő `app-exercise-picker` a modal **teljes magasságát** kitölti (`:host` a megosztott `ion-modal-host-fill` mixin — `shared/styles/_ion-modal-host.scss`, `backlog/117` — flex-oszlop, `position: absolute; inset: 0`), így a találati lista a teljes rendelkezésre álló teret használja, nem egy-két sorra zsugorodik. Ugyanezt a mintát használja az [[Étkezés]] tétel-szerkesztő modalja is.
 - **Szettek:** gyakorlatonként egy szett-táblázat; `+ Új szett`; előző szett másolása; numerikus billentyűzet autofókusz. Az Active Workout gyors-növelő gombjai (`+2.5 kg` / `+5 kg` súlyos, `+1 ism.` repses gyakorlatnál) **szettenként egy kompakt sorban, a szett mezői alatt** vannak, így a megnövelt érték mindig látszik; a szett törlés (✕) a sor jobb szélén. Az utólagos formban nincsenek gyors-növelő gombok (az értéket úgyis begépeli a felhasználó).
 - **Szett-táblázat elrendezése** (sablon-szerkesztő, utólagos form és Active Workout egyaránt, közös `shared/styles/_set-row.scss` mixin + `setGridColumns()` a `workout-fields.ts`-ben): gyakorlatonként **egyszer** egy oszlopfejléc (rövid mezőnév + mértékegység, pl. „Súly / kg”), alatta szettenként **egy sor** keretes, label nélküli inputokkal pontosan a saját oszlopuk alatt — a `kind` szerint 1–4 számoszlop, így ~360 px-en sem tördel. Az első oszlop a sorszám + a szett **jelvénye**: a szett-típus rövid betűje (M = Munka, B = Bemelegítő, D = Dropset, R = Rest-pause, K = Kifáradásig), egyoldali szettnél mellette ◀ (bal) / ▶ (jobb), és ha van RPE, alatta kicsiben a szám (pl. „M◀” / „8.5”). A jelvény tapja a **szett-beállítások popovert** nyitja (`set-options-popover.component.ts`, mindhárom szerkesztőben közös): teljes nevű típus (rádiógombok), Oldal (Mindkettő / Bal / Jobb szegmens), RPE (– / 6 … 10, 0,5-ös lépés; a sablon-szerkesztőben „Cél RPE”). Minden választás azonnal érvényesül; a popover érintésre a háttérben zárul. Szett-oszlop az oldalnak és az RPE-nek nincs (a ~360 px-es táblázat nem bírná).
@@ -204,6 +204,7 @@ Nincs nyitott kérdés.
 #### Backend-offline
 
 - Olvasás / írás helyi store-ból Backend-offline és Full-offline esetén is (élő edzés net nélkül is).
+- A lista terhelés-figyelmeztetései a helyi mászó- és edzésnapló-store-ból számolnak, Full-offline is.
 - Create / update / delete → outbox (`OfflineQueueService`) + kliens UUID v4; sync: [[Szinkronizációs központ]].
 - Kcal: mindig kliensoldali pure számítás; nincs kcal mező az entitáson; Étkezés / Tápérték store optimista frissítés.
 - Draft aktív session nem feltétlenül outbox — helyi draft; „Befejezés” / mentés után outbox.
