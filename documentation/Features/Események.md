@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: 8819b52
+verifikalva: 2026-10-01
+verifikalt_commit: e59bc75
 ---
 
 # Események
@@ -48,6 +48,7 @@ Nem pipálható: az előfordulás a napján marad (múltbeli is látszik a horiz
 | `startTime` / `endTime` | `HH:mm` (24h, perc). `allDay = true` → mindkettő `null`. `allDay = false` → mindkettő kötelező, **ugyanaz a naptári nap**, `endTime > startTime`. |
 | `frequency` | Opcionális enum: `DAILY` \| `WEEKLY` \| `YEARLY`. Üres / `null` = egyszeri. |
 | `interval` | Egész `≥ 1`. `frequency` nélkül figyelmen kívül (tárolt default `1`). |
+| `activityType` | Opcionális enum (`backlog/143`): `CLIMBING` \| `null`. `CLIMBING` = **tervezett mászás** — a [[Heti terv]] heti terhelése, terhelés-figyelmeztetései és rotációs javaslata előre számol vele (egyszeri és ismétlődő is). `null` = általános esemény. `V51` CHECK. |
 | `deleted` | Soft delete (`false` default); listák szűrik |
 | `createdAt` / `updatedAt` | Audit |
 
@@ -117,6 +118,7 @@ HTTP `DELETE` marad; a szerver tombstone-t ír. Már törölt ID-re `DELETE` →
 - Időzített default: `startTime` = most **felfelé** a következő 15 percre (pontos 15-perc-határ marad). **Ha maga ez a kerekítés lépné át éjfélt** (jelenlegi idő `23:46`–`23:59` között, a felfelé kerekítés `00:00`-t adna a következő napra): `startTime = 22:59`, `endTime = 23:59` (ugyanaz a fallback pár, mint lent), és a további lépések kimaradnak. **Egyébként:** `endTime` = `startTime + 1 óra`. Ha ez **átlépné** a naptári napot: `endTime = 23:59`; ha akkor `endTime ≤ startTime`: `startTime = 22:59`, `endTime = 23:59`.
 - Ritmus: nincs (egyszeri) / `DAILY` / `WEEKLY` / `YEARLY` + `interval` (default 1, `≥ 1`). WEEKLY/YEARLY magyarázat: a `date` napja / hó.napja.
 - Opcionális helyszín, megjegyzés.
+- **Típus** (`backlog/143`): az űrlap tetején „Esemény / Mászás” szegmens. Új eseménynél a „Mászás” választása az üres címet „Mászás”-ra tölti és egész napossá teszi (meglévő esemény mezői nem változnak). `?type=CLIMBING&date=YYYY-MM-DD` query paraméterrel előtöltve nyílik (a [[Heti terv]] innen nyitja az ismétlődő mászást). A mászás-esemény a listában és a [[Naptár]]ban ugyanúgy jelenik meg, mint bármely esemény (a címe jelzi), és egész naposként 09:00-kor értesítést kap, mint minden egész napos esemény.
 - Validáció: cím nem üres; időzítettnél mindkét idő, `endTime > startTime`; `interval ≥ 1` ha van `frequency`.
 
 ### Megjegyzések

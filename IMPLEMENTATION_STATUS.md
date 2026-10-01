@@ -14,6 +14,11 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-01 — #143** Tervezett mászás = `CLIMBING` típusú esemény (`CalendarEvent.activityType`, V51 + SCHEMA_V48 +
+  outbox v17): felvehető az Események űrlapján (Típus: Esemény / Mászás) és a Heti terv „+ Mászás” kapcsolójával. A heti
+  terhelés / figyelmeztetések / rotáció mára és előre a tervvel is számol (mai / holnapi mászás, sok mászás a héten,
+  előrejelzett pihenőhiány, ujjas sablon kihagyása mászás közelében); múltra a rögzített adat, elmaradt terv jelölve.
+  Érintett: [[Események]], [[Naptár]], [[Heti terv]], [[Edzésnapló]]
 - **2026-10-01 — #054 + #139** Edzésnapló terv-gyorsindító: mai heti slot (elsőbbség), rotációs „Következő javasolt”
   (legrégebben teljesített aktív sablon; slot esetén alternatíva), pihenő / prehab tipp a #138 szabályaira, „Terv
   indítása…” lista minden aktív sablonnal. Érintett: [[Edzésnapló]], [[Heti terv]]; kód: `rotation-suggestion.ts`,

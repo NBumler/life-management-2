@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-10-01
-verifikalt_commit: 2b8300e
+verifikalt_commit: e59bc75
 ---
 
 # Heti terv
@@ -94,22 +94,34 @@ A dashboard a beosztás mellett a hét **tényleges** terhelését is mutatja, a
 
 - Naponként: `climbing` = aznapi élő mászó-sessionök száma; `workouts` = aznapi élő edzésnapló-sessionök száma; `fingerLoad` = mászás **vagy** egy élő `FOREARM_FINGERS` kategóriájú / `HANGBOARD_PINCH` kindú gyakorlat aznapi edzésben; `rest` = se mászás, se edzésnapló (úszás, bicikli, lépés könnyű aktivitás — nem töri meg a pihenőnapot).
 - Napsoronként jelvények a dátum alatt: **Mászás**, **Edzés** (csak ha a nap „Teljesítve” jelvényt nem kapott — a nem a slot-sablonból indított edzés), **Ujjterhelés** (ujj-gyakorlat mászás nélkül), **Pihenő** (csak mai / múltbeli napon; a jövőbeli nap még nem „pihent”).
-- Felül összesítő a naptári hétre: „Mászás X nap · Edzés Y nap · Pihenőnap Z” (a pihenőnap a mai napig számol). Hétváltáskor a megjelenített hétre számol.
+- Felül összesítő a naptári hétre: „Mászás X nap · Edzés Y nap · Pihenőnap Z” (a pihenőnap a mai napig számol); ha van még előttünk álló tervezett mászás: „Mászás X nap (+Y tervezett) · …”. Hétváltáskor a megjelenített hétre számol.
+
+#### Tervezett mászás (`backlog/143`)
+
+A tervezett mászás egy `CLIMBING` típusú [[Események|esemény]] (egyszeri vagy ismétlődő; szinkronizál, a [[Naptár]]ban is látszik). A terhelés-sor (`plannedClimbDates` → `dailyTrainingLoad`) szabálya: **a múltra mindig a rögzített adat számít, mára és a jövőre a terv is**.
+
+- `plannedClimb` = ma / jövőbeli nap, tervezett mászással, rögzített mászó-session nélkül — nem pihenőnap, a szabályok mászónapként kezelik. Ha a mászást rögzíted, a nap sima „Mászás”.
+- `missedClimb` = múltbeli nap, terv volt, rögzítés nincs → szürke **„Elmaradt mászás”** jelvény; a számításban az a nap a tényleges adata szerint számít (pl. pihenőnap).
+- Napsoron (ma / jövő, rögzített mászás nélkül) kapcsoló-gomb: **„+ Mászás”** (körvonalas) → egyszeri, egész napos „Mászás” esemény létrehozása; **„Mászás (tervezett)”** (kitöltött) → az aznapi egyszeri mászás-esemény(ek) törlése. Ha a napot csak ismétlődő mászás-esemény fedi, a tap az esemény szerkesztőjét nyitja (egy előfordulás nem törölhető külön — [[Események]] „Tudatos korlát”).
+- **„Ütközés — edzés áthelyezése javasolt”** jelvény: a napon heti slot sablon van (még nem teljesítve) **és** tervezett mászás.
 
 #### Rotációs javaslat (`backlog/139`)
 
-A fix napkiosztás mellett (nem helyette) az [[Edzésnapló]] terv-gyorsindítója rotációt is javasol: a „Következő javasolt” az aktív, élő sablonok közül a legrégebben teljesített (`planId` szerinti utolsó élő session dátuma; sosem teljesített → elsőbbség; holtversenyben a sablon-sorrend). Így egy A/B pár a ténylegesen edzett napokon halad tovább, a mászásmentes napok rendszertelensége nem töri meg. Ha a mai napra van (öröklött) heti slot, az elsőbbséget élvez, a rotációs javaslat csak alternatíva. A fókuszváltás (pl. „OAPU mód”) a sablon-csoport kapcsolóval (`backlog/140`) történik: csak az aktív sablonok vesznek részt a rotációban. Tiszta TS: `pages/workout/rotation-suggestion.ts` (`rotationOrder`, `todaySlotPlan`, `doneToday`).
+A fix napkiosztás mellett (nem helyette) az [[Edzésnapló]] terv-gyorsindítója rotációt is javasol: a „Következő javasolt” az aktív, élő sablonok közül a legrégebben teljesített (`planId` szerinti utolsó élő session dátuma; sosem teljesített → elsőbbség; holtversenyben a sablon-sorrend). Így egy A/B pár a ténylegesen edzett napokon halad tovább, a mászásmentes napok rendszertelensége nem töri meg. Ha a mai napra van (öröklött) heti slot, az elsőbbséget élvez, a rotációs javaslat csak alternatíva. A fókuszváltás (pl. „OAPU mód”) a sablon-csoport kapcsolóval (`backlog/140`) történik: csak az aktív sablonok vesznek részt a rotációban. **Mászás közelében** (`backlog/143`: ma rögzített / tervezett, vagy holnap tervezett mászás) a javaslat kihagyja az ujjgyakorlatos sablonokat (élő `FOREARM_FINGERS` / `HANGBOARD_PINCH` gyakorlattal) és a következő ujjgyakorlat nélkülit ajánlja; ha minden maradék sablon ujjas, a soron következőt ajánlja, alatta „Minden aktív sablonban van ujjgyakorlat…” jelzéssel. Tiszta TS: `pages/workout/rotation-suggestion.ts` (`rotationOrder`, `suggestNextPlan`, `planHasFingerLoad`, `todaySlotPlan`, `doneToday`).
 
 #### Terhelés-figyelmeztetések (`backlog/138`)
 
-Tiszta szabálymotor (`pages/workout/load-warnings.ts`) a fenti napi terhelés-soron, mindig a **mai** naphoz (a megjelenített héttől függetlenül). Csak tanács — a szövegezés „javasolt”, semmit nem tilt, push-értesítés nincs. A küszöbök konstansok (`REST_WINDOW_DAYS = 7`, `FINGER_LOAD_DAYS_LIMIT = 5`, `MANY_CLIMBS_PER_WEEK = 4`).
+Tiszta szabálymotor (`pages/workout/load-warnings.ts`) a fenti napi terhelés-soron, mindig a **mai** naphoz (a megjelenített héttől függetlenül). Csak tanács — a szövegezés „javasolt”, semmit nem tilt, push-értesítés nincs. A küszöbök konstansok (`REST_WINDOW_DAYS = 7`, `FINGER_LOAD_DAYS_LIMIT = 5`, `MANY_CLIMBS_PER_WEEK = 4`, `REST_AHEAD_DAYS = 7`). Bemenet (`LoadWarningSources`): mászó- és edzésnapló, események (tervezett mászás, `backlog/143`), heti beosztás + sablonok.
 
 | Kód | Súlyosság | Feltétel | Szöveg (hu) |
 |---|---|---|---|
 | `NO_REST_DAY` | figyelmeztetés | a ma előtti 7 nap egyike sem pihenőnap | „Az elmúlt 7 napban nem volt pihenőnap — heti 1–2 teljes pihenőnap javasolt.” |
 | `FINGER_LOAD` | figyelmeztetés | a gördülő 7 napban (ma is) ≥ 5 ujjterhelő nap | „…az ínak és a pulley-k lassan regenerálódnak, pihentetés javasolt.” |
+| `NO_REST_AHEAD` | figyelmeztetés | a következő 7 napban (ma is) van tervezett mászás, és egyetlen nap sem szabad (szabad = se rögzített / tervezett mászás, se edzés, se heti slot sablon) — `backlog/143` | „A tervezett mászások és a heti beosztás mellett a következő 7 napban nem marad pihenőnap — érdemes egy napot szabadon hagyni.” |
 | `CLIMBED_TODAY` | info | ma van mászó-session | „Ma már másztál — ma legfeljebb rövid törzs / prehab edzés javasolt.” |
-| `MANY_CLIMBS` | info | a naptári héten (hétfőtől máig) ≥ 4 mászónap | „Sok mászás a héten — az otthoni húzó- és ujjedzés kihagyható.” |
+| `CLIMB_PLANNED_TODAY` | info | mára mászás van tervezve (még nincs rögzítve) — `backlog/143` | „Mára mászás van tervezve — ma legfeljebb rövid törzs / prehab edzés javasolt.” |
+| `CLIMB_TOMORROW` | info | holnapra mászás van tervezve — `backlog/143` | „Holnap mászás — ma ujj- és nehéz húzóedzés nem javasolt.” |
+| `MANY_CLIMBS` | info | a naptári héten (hétfő–vasárnap) ≥ 4 mászónap, a rögzítettek **és** a még előttünk álló tervezettek együtt | „Sok mászás a héten — az otthoni húzó- és ujjedzés kihagyható.” |
 
 Megjelenés: nem blokkoló sáv(ok) (`app-load-warnings-banner`, figyelmeztetés: sárgás háttér + ⚠ ikon, info: szürke) a Heti terv dashboard tetején és az [[Edzésnapló]] lista tetején; figyelmeztetés nélkül nem renderel semmit. Sorrend: előbb a figyelmeztetések, aztán az infók.
 
@@ -146,7 +158,7 @@ Nincs nyitott kérdés.
 #### Backend-offline
 
 - Olvasás / írás helyi store-ból Backend-offline és Full-offline esetén is.
-- A heti terhelés és a terhelés-figyelmeztetések kizárólag a helyi mászó- és edzésnapló-store-ból számolnak (nincs saját hívás), így Full-offline is teljesek.
+- A heti terhelés és a terhelés-figyelmeztetések kizárólag a helyi mászó- és edzésnapló-, esemény- (tervezett mászás) és heti terv store-ból számolnak (nincs saját hívás), így Full-offline is teljesek. A „+ Mászás” kapcsoló a szokásos esemény-írási úton (helyi store + outbox) ment.
 - Create / update / soft-delete → outbox + kliens UUID; sync: [[Szinkronizációs központ]].
 - Szinkronizálatlan helyi draft elvetése: hard remove + outbox tisztítás.
 - Lásd [[Backend-offline first]].

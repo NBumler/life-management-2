@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: 8819b52
+verifikalva: 2026-10-01
+verifikalt_commit: e59bc75
 ---
 
 # Naptár
@@ -28,6 +28,8 @@ Jelenleg két nézet van (hónap rács + napi lista); nincs nap / hét rács, é
 #### Szerep
 
 A naptár **fogyasztó**. Az előfordulásokat a producer specek számolják (háztartás: [[Háztartási feladatok]]; esemény: [[Események]]). Itt nincs occurrence-tábla, nincs saját OpenAPI.
+
+A **tervezett mászás** (`backlog/143`) egy `CLIMBING` típusú [[Események|esemény]], így külön producer nélkül, sima `EVENT` előfordulásként jelenik meg a naptárban (a címe — alapból „Mászás” — jelzi). Létrehozása az [[Események]] űrlapján vagy a [[Heti terv]] „+ Mászás” kapcsolójával; a naptárból továbbra sincs create.
 
 #### Producer registry
 
