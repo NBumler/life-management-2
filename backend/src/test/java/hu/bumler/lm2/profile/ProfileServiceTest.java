@@ -80,6 +80,22 @@ class ProfileServiceTest {
 	}
 
 	@Test
+	void upsert_roundTripsDailyStepGoal() {
+		UUID userId = UUID.randomUUID();
+		UUID profileId = UUID.randomUUID();
+		when(repository.findByUserId(userId)).thenReturn(Optional.empty());
+		when(repository.existsById(profileId)).thenReturn(false);
+		when(repository.saveAndFlush(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+		UserProfile saved = service.upsert(userId, new UserProfile(profileId).dailyStepGoal(13000));
+
+		assertThat(saved.getDailyStepGoal().orElse(null)).isEqualTo(13000);
+		ArgumentCaptor<ProfileEntity> captor = ArgumentCaptor.forClass(ProfileEntity.class);
+		verify(repository).saveAndFlush(captor.capture());
+		assertThat(captor.getValue().getDailyStepGoal()).isEqualTo(13000);
+	}
+
+	@Test
 	void upsert_updatesExistingProfile_whenOneAlreadyExistsForUser() {
 		UUID userId = UUID.randomUUID();
 		ProfileEntity existing = new ProfileEntity(UUID.randomUUID(), userId);

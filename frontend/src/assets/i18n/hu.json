@@ -188,7 +188,10 @@
     "HC_GRANT": "Health Connect engedélyezése",
     "HC_BG_GRANTED": "Háttér-hozzáférés engedélyezve — a „kevés lépés” értesítés akkor is szól este 8-kor, ha nem nyitod meg az appot.",
     "HC_BG_DENIED": "Háttér-hozzáférés nélkül a „kevés lépés” értesítés csak app-nyitáskor értékelődik.",
-    "HC_BG_GRANT": "Háttér-hozzáférés engedélyezése"
+    "HC_BG_GRANT": "Háttér-hozzáférés engedélyezése",
+    "GOAL_PROGRESS": "{{count}} / {{goal}} lépés ({{percent}}%)",
+    "GOAL_REACHED": "Cél teljesítve",
+    "GOAL_HINT": "Napi lépéscélt a Profilban állíthatsz be."
   },
   "FINANCE": {
     "DASHBOARD": {
@@ -397,7 +400,10 @@
     "WEIGHT_KG": "Testsúly (kg)",
     "WEIGHT_HISTORY_ITEM_VALUE": "{{weight}} kg",
     "DELETE_CONFIRM_TITLE": "Bejegyzés törlése",
-    "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd ezt a súlytörténet bejegyzést?"
+    "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd ezt a súlytörténet bejegyzést?",
+    "DAILY_STEP_GOAL": "Napi lépéscél",
+    "DAILY_STEP_GOAL_PLACEHOLDER": "pl. 13000",
+    "VALIDATION_DAILY_STEP_GOAL": "Egész szám 1000 és 100 000 között."
   },
   "SYNC": {
     "TITLE": "Szinkronizációs központ",

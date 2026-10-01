@@ -27,6 +27,24 @@
       ></ion-input>
     </ion-item>
 
+    @if (todayGoal(); as goal) {
+      <ion-item lines="none" class="step-goal">
+        <ion-label>
+          <p>
+            {{ 'STEPS.GOAL_PROGRESS' | translate: { count: goal.count, goal: goal.goal, percent: goal.percent } }}
+            @if (goal.reached) {
+              · <ion-text color="success">{{ 'STEPS.GOAL_REACHED' | translate }}</ion-text>
+            }
+          </p>
+          <ion-progress-bar [value]="goal.progress" [color]="goal.reached ? 'success' : 'primary'"></ion-progress-bar>
+        </ion-label>
+      </ion-item>
+    } @else {
+      <ion-item lines="none">
+        <ion-note>{{ 'STEPS.GOAL_HINT' | translate }}</ion-note>
+      </ion-item>
+    }
+
     @if (todayKcal() !== null) {
       <ion-item lines="none">
         <ion-note>{{ 'STEPS.TODAY_KCAL' | translate: { kcal: todayKcal() } }}</ion-note>
@@ -96,6 +114,14 @@
       <ion-item button (click)="editDay(log.date)">
         <ion-label>{{ log.date }}</ion-label>
         <ion-note slot="end">{{ 'STEPS.STEP_COUNT_VALUE' | translate: { count: log.stepCount } }}</ion-note>
+        @if (goalReached(log.stepCount)) {
+          <ion-icon
+            slot="end"
+            name="checkmark-circle-outline"
+            color="success"
+            [attr.aria-label]="'STEPS.GOAL_REACHED' | translate"
+          ></ion-icon>
+        }
       </ion-item>
     } @empty {
       <ion-item lines="none">

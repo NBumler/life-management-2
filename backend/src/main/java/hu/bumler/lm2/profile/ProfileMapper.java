@@ -31,6 +31,9 @@ class ProfileMapper {
 		if (entity.getGrossMonthlySalaryHuf() != null) {
 			dto.grossMonthlySalaryHuf(entity.getGrossMonthlySalaryHuf());
 		}
+		if (entity.getDailyStepGoal() != null) {
+			dto.dailyStepGoal(entity.getDailyStepGoal());
+		}
 		dto.createdAt(entity.getCreatedAt());
 		dto.updatedAt(entity.getUpdatedAt());
 		return dto;
@@ -47,5 +50,6 @@ class ProfileMapper {
 		entity.setGoal(goal == null ? null : goal.getValue());
 		entity.setKgPerWeek(dto.getKgPerWeek().orElse(null));
 		entity.setGrossMonthlySalaryHuf(dto.getGrossMonthlySalaryHuf().orElse(null));
+		entity.setDailyStepGoal(dto.getDailyStepGoal().orElse(null));
 	}
 }

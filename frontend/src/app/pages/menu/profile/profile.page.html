@@ -83,6 +83,23 @@
           labelPlacement="stacked"
         ></ion-input>
       </ion-item>
+
+      <ion-item>
+        <ion-input
+          formControlName="dailyStepGoal"
+          type="number"
+          inputmode="numeric"
+          step="500"
+          [label]="'PROFILE.DAILY_STEP_GOAL' | translate"
+          [placeholder]="'PROFILE.DAILY_STEP_GOAL_PLACEHOLDER' | translate"
+          labelPlacement="stacked"
+        ></ion-input>
+      </ion-item>
+      @if (form.controls.dailyStepGoal.touched && form.controls.dailyStepGoal.invalid) {
+        <ion-text color="danger">
+          <p class="ion-padding-start">{{ 'PROFILE.VALIDATION_DAILY_STEP_GOAL' | translate }}</p>
+        </ion-text>
+      }
     </ion-list>
 
     <ion-button expand="block" type="submit" class="ion-margin-top">

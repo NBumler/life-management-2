@@ -27,6 +27,7 @@ import { UserProfile } from '../../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../../api/model/weightHistoryEntry';
 import { ProfileRepository } from '../../../core/data/profile.repository';
 import { WeightHistoryRepository } from '../../../core/data/weight-history.repository';
+import { DAILY_STEP_GOAL_MAX, DAILY_STEP_GOAL_MIN } from '../../../shared/step-goal';
 
 function kgPerWeekRequiredValidator(control: AbstractControl): ValidationErrors | null {
   const goal = control.get('goal')?.value as UserProfile.GoalEnum | null;
@@ -101,6 +102,11 @@ export class ProfilePage implements OnInit {
       goal: this.fb.control<UserProfile.GoalEnum | null>(null),
       kgPerWeek: this.fb.control<number | null>(null, [Validators.min(0.1), Validators.max(1.5)]),
       grossMonthlySalaryHuf: this.fb.control<number | null>(null, [Validators.min(0)]),
+      dailyStepGoal: this.fb.control<number | null>(null, [
+        Validators.min(DAILY_STEP_GOAL_MIN),
+        Validators.max(DAILY_STEP_GOAL_MAX),
+        Validators.pattern(/^\d+$/),
+      ]),
     },
     { validators: [kgPerWeekRequiredValidator] },
   );

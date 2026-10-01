@@ -5,8 +5,10 @@ import { Preferences } from '@capacitor/preferences';
 import { TranslateService } from '@ngx-translate/core';
 
 import { today } from '../../shared/local-date';
+import { stepGoalOrNull } from '../../shared/step-goal';
 import { LanguageService } from '../config/language.service';
 import { DailyStepLogRepository } from '../data/daily-step-log.repository';
+import { ProfileRepository } from '../data/profile.repository';
 import { TodayNutritionService } from '../data/today-nutrition.service';
 import { NotificationTuningService } from '../notifications/notification-tuning.service';
 import { AuthSessionService } from '../session/auth-session.service';
@@ -36,6 +38,7 @@ export class WidgetSnapshotService {
   private readonly nutrition = inject(TodayNutritionService);
   private readonly stepLog = inject(DailyStepLogRepository);
   private readonly tuning = inject(NotificationTuningService);
+  private readonly profile = inject(ProfileRepository);
   private readonly dataChange = inject(DataChangeNotifier);
 
   private started = false;
@@ -69,6 +72,7 @@ export class WidgetSnapshotService {
         this.language.activeLanguage();
         this.authSession.isAuthenticated();
         this.tuning.tuning();
+        this.profile.profile();
         const pulled = tick !== this.lastTick;
         this.lastTick = tick;
         this.scheduleWrite(pulled);
@@ -76,6 +80,9 @@ export class WidgetSnapshotService {
       { injector: this.injector },
     );
 
+    if (!this.profile.loaded()) {
+      await this.profile.load();
+    }
     await this.writeAndRefresh(false);
     void Lm2Widget.ensureBackgroundRefresh().catch(() => undefined);
   }
@@ -109,7 +116,8 @@ export class WidgetSnapshotService {
       lang: this.language.activeLanguage(),
       nutrition: this.nutrition.summary(),
       stepCount: this.stepLog.stepsForDay(today()),
-      stepGoal: this.tuning.tuning().stepsLowThreshold,
+      // backlog/136: the Profile daily step goal; without one, the pre-goal fallback (STEPS_LOW threshold).
+      stepGoal: stepGoalOrNull(this.profile.profile()?.dailyStepGoal) ?? this.tuning.tuning().stepsLowThreshold,
       labels: this.resolveLabels(),
     });
     await Preferences.set({ key: WIDGET_SNAPSHOT_KEY, value: JSON.stringify(snapshot) });

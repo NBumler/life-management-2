@@ -50,8 +50,10 @@ import { uuidV4 } from './uuid';
  * - v14 → v15 (backlog/133–135): `WorkoutPlanExercise` gained a nullable `notes`, `WorkoutPlanSet` and
  *   `WorkoutSetEntry` nullable `side` / `rpe`. A pending plan / session write from before that app update
  *   has no such keys (= no cue, both hands, no RPE), so every type is identity.
+ * - v15 → v16 (backlog/136): `UserProfile` gained a nullable `dailyStepGoal`. A pending profile write from
+ *   before that app update has no such key (= no goal set), so every type is identity.
  */
-export const OUTBOX_PAYLOAD_SCHEMA_VERSION = 15;
+export const OUTBOX_PAYLOAD_SCHEMA_VERSION = 16;
 
 /** documentation/Architektúra/Backend-offline first.md §6 "Tétel-újrapróbálkozási backoff" (jitter omitted — not load-bearing for correctness). */
 const RETRY_BACKOFF_MS = [2000, 8000, 30000, 120000, 600000];

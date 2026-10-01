@@ -24,6 +24,10 @@ export interface UserProfile {
      */
     kgPerWeek?: number | null;
     grossMonthlySalaryHuf?: number | null;
+    /**
+     * Napi lépéscél (backlog/136) — the widget / step-tracker progress measures against it.
+     */
+    dailyStepGoal?: number | null;
     readonly createdAt?: string;
     readonly updatedAt?: string;
 }

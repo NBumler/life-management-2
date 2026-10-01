@@ -8,12 +8,14 @@ import {
   IonButtons,
   IonContent,
   IonHeader,
+  IonIcon,
   IonInput,
   IonItem,
   IonLabel,
   IonList,
   IonListHeader,
   IonNote,
+  IonProgressBar,
   IonText,
   IonTitle,
   IonToolbar,
@@ -26,6 +28,7 @@ import { DailyStepLogRepository } from '../../../core/data/daily-step-log.reposi
 import { ProfileRepository } from '../../../core/data/profile.repository';
 import { ActivityStepSyncService } from '../../../core/health/activity-step-sync.service';
 import { today } from '../../../shared/local-date';
+import { stepGoalOrNull, stepGoalProgress, stepGoalReached } from '../../../shared/step-goal';
 
 /**
  * documentation/Features/Lépésszám követés.md — the step-tracking shell screen (Menü tab). The
@@ -51,6 +54,8 @@ import { today } from '../../../shared/local-date';
     IonLabel,
     IonInput,
     IonNote,
+    IonProgressBar,
+    IonIcon,
     IonText,
     TranslatePipe,
   ],
@@ -77,6 +82,29 @@ export class StepTrackerPage implements OnInit, ViewWillEnter {
       .filter((log) => !log.deleted && log.date !== this.todayIso)
       .sort((a, b) => b.date.localeCompare(a.date)),
   );
+
+  /** backlog/136 — the Profile daily step goal, or null (no progress bar / no ✓ marks then). */
+  readonly stepGoal = computed(() => stepGoalOrNull(this.profileRepository.profile()?.dailyStepGoal));
+
+  /** Today's saved (or Health Connect-synced) count toward the goal — not the unsaved input. */
+  readonly todayGoal = computed(() => {
+    const goal = this.stepGoal();
+    if (goal === null) {
+      return null;
+    }
+    const count = this.repository.stepsForDay(this.todayIso);
+    return {
+      count,
+      goal,
+      progress: stepGoalProgress(count, goal),
+      percent: Math.round(stepGoalProgress(count, goal) * 100),
+      reached: stepGoalReached(count, goal),
+    };
+  });
+
+  goalReached(stepCount: number): boolean {
+    return stepGoalReached(stepCount, this.stepGoal());
+  }
 
   /** Today's step-calorie contribution to the Étkezés allowance, or null when profile weight is missing. */
   readonly todayKcal = computed(() => {

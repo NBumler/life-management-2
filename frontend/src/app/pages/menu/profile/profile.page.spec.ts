@@ -102,4 +102,18 @@ describe('ProfilePage — one-decimal weight validation (backlog/019)', () => {
     await page.saveEntry();
     expect(weightHistoryRepository.add).toHaveBeenCalled();
   });
+
+  it('validates the daily step goal range and saves it (backlog/136)', async () => {
+    const page = await createComponent();
+
+    page.form.controls.dailyStepGoal.setValue(500);
+    expect(page.form.controls.dailyStepGoal.errors?.['min']).toBeTruthy();
+    await page.save();
+    expect(profileRepository.save).not.toHaveBeenCalled();
+
+    page.form.controls.dailyStepGoal.setValue(13000);
+    expect(page.form.controls.dailyStepGoal.errors).toBeNull();
+    await page.save();
+    expect(profileRepository.save.calls.mostRecent().args[0].dailyStepGoal).toBe(13000);
+  });
 });

@@ -65,6 +65,7 @@ export interface ProfileRow {
   goal: string | null;
   kg_per_week: number | null;
   gross_monthly_salary_huf: number | null;
+  daily_step_goal: number | null;
   created_at: string | null;
   updated_at: string | null;
   deleted: number;
@@ -85,6 +86,7 @@ export function profileRowToDto(row: ProfileRow): UserProfile {
     goal: row.goal as UserProfile.GoalEnum | null,
     kgPerWeek: row.kg_per_week,
     grossMonthlySalaryHuf: row.gross_monthly_salary_huf,
+    dailyStepGoal: row.daily_step_goal ?? null,
     createdAt: row.created_at ?? undefined,
     updatedAt: row.updated_at ?? undefined,
   };
@@ -94,12 +96,12 @@ export function profileRowToDto(row: ProfileRow): UserProfile {
 export function profileLocalWriteTask(dto: UserProfile): SqlTask {
   return {
     statement: `
-      INSERT INTO user_profile (id, birth_date, sex, height_cm, current_weight_kg, goal, kg_per_week, gross_monthly_salary_huf, _dirty, _local_only)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
+      INSERT INTO user_profile (id, birth_date, sex, height_cm, current_weight_kg, goal, kg_per_week, gross_monthly_salary_huf, daily_step_goal, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
       ON CONFLICT(id) DO UPDATE SET
         birth_date = excluded.birth_date, sex = excluded.sex, height_cm = excluded.height_cm,
         current_weight_kg = excluded.current_weight_kg, goal = excluded.goal, kg_per_week = excluded.kg_per_week,
-        gross_monthly_salary_huf = excluded.gross_monthly_salary_huf, _dirty = 1`,
+        gross_monthly_salary_huf = excluded.gross_monthly_salary_huf, daily_step_goal = excluded.daily_step_goal, _dirty = 1`,
     values: [
       dto.id,
       dto.birthDate ?? null,
@@ -109,6 +111,7 @@ export function profileLocalWriteTask(dto: UserProfile): SqlTask {
       dto.goal ?? null,
       dto.kgPerWeek ?? null,
       dto.grossMonthlySalaryHuf ?? null,
+      dto.dailyStepGoal ?? null,
     ],
   };
 }
@@ -117,12 +120,13 @@ export function profileLocalWriteTask(dto: UserProfile): SqlTask {
 export function profileServerApplyTask(dto: UserProfile): SqlTask {
   return {
     statement: `
-      INSERT INTO user_profile (id, birth_date, sex, height_cm, current_weight_kg, goal, kg_per_week, gross_monthly_salary_huf, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NULL, 0, 0)
+      INSERT INTO user_profile (id, birth_date, sex, height_cm, current_weight_kg, goal, kg_per_week, gross_monthly_salary_huf, daily_step_goal, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NULL, 0, 0)
       ON CONFLICT(id) DO UPDATE SET
         birth_date = excluded.birth_date, sex = excluded.sex, height_cm = excluded.height_cm,
         current_weight_kg = excluded.current_weight_kg, goal = excluded.goal, kg_per_week = excluded.kg_per_week,
-        gross_monthly_salary_huf = excluded.gross_monthly_salary_huf, created_at = excluded.created_at,
+        gross_monthly_salary_huf = excluded.gross_monthly_salary_huf, daily_step_goal = excluded.daily_step_goal,
+        created_at = excluded.created_at,
         updated_at = excluded.updated_at, deleted = 0, deleted_at = NULL, _dirty = 0, _local_only = 0, _needs_refetch = 0
       WHERE user_profile._dirty = 0`,
     values: [
@@ -134,6 +138,7 @@ export function profileServerApplyTask(dto: UserProfile): SqlTask {
       dto.goal ?? null,
       dto.kgPerWeek ?? null,
       dto.grossMonthlySalaryHuf ?? null,
+      dto.dailyStepGoal ?? null,
       dto.createdAt ?? null,
       dto.updatedAt ?? null,
     ],

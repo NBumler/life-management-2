@@ -44,6 +44,13 @@ properties:
     format: int64
     minimum: 0
     nullable: true
+  dailyStepGoal:
+    type: integer
+    format: int32
+    minimum: 1000
+    maximum: 100000
+    nullable: true
+    description: Napi lépéscél (backlog/136) — the widget / step-tracker progress measures against it.
   createdAt:
     type: string
     format: date-time

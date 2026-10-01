@@ -45,6 +45,9 @@ public class ProfileEntity {
 	@Column(name = "gross_monthly_salary_huf")
 	private Long grossMonthlySalaryHuf;
 
+	@Column(name = "daily_step_goal")
+	private Integer dailyStepGoal;
+
 	@Generated(event = EventType.INSERT)
 	@Column(name = "created_at", insertable = false, updatable = false)
 	private OffsetDateTime createdAt;
@@ -129,6 +132,14 @@ public class ProfileEntity {
 
 	public void setGrossMonthlySalaryHuf(Long grossMonthlySalaryHuf) {
 		this.grossMonthlySalaryHuf = grossMonthlySalaryHuf;
+	}
+
+	public Integer getDailyStepGoal() {
+		return dailyStepGoal;
+	}
+
+	public void setDailyStepGoal(Integer dailyStepGoal) {
+		this.dailyStepGoal = dailyStepGoal;
 	}
 
 	public OffsetDateTime getCreatedAt() {

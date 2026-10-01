@@ -6,6 +6,7 @@ import { TranslateService } from '@ngx-translate/core';
 
 import { LanguageService } from '../config/language.service';
 import { DailyStepLogRepository } from '../data/daily-step-log.repository';
+import { ProfileRepository } from '../data/profile.repository';
 import { TodayNutritionService, TodayNutritionSummary } from '../data/today-nutrition.service';
 import { NotificationTuningService } from '../notifications/notification-tuning.service';
 import { AuthSessionService } from '../session/auth-session.service';
@@ -34,6 +35,7 @@ describe('WidgetSnapshotService', () => {
   let isAuthenticated: ReturnType<typeof signal<boolean>>;
   let nutritionLoad: jasmine.Spy;
   let stepLoad: jasmine.Spy;
+  let profile: ReturnType<typeof signal<{ dailyStepGoal?: number | null } | null>>;
 
   function configure(native: boolean): WidgetSnapshotService {
     spyOn(Capacitor, 'isNativePlatform').and.returnValue(native);
@@ -41,6 +43,7 @@ describe('WidgetSnapshotService', () => {
     isAuthenticated = signal(true);
     nutritionLoad = jasmine.createSpy('nutritionLoad').and.resolveTo(undefined);
     stepLoad = jasmine.createSpy('stepLoad').and.resolveTo(undefined);
+    profile = signal<{ dailyStepGoal?: number | null } | null>(null);
 
     TestBed.configureTestingModule({
       providers: [
@@ -51,6 +54,7 @@ describe('WidgetSnapshotService', () => {
         { provide: DailyStepLogRepository, useValue: { items: signal([]), stepsForDay: () => 5400, load: stepLoad } },
         { provide: NotificationTuningService, useValue: { tuning: signal({ stepsLowThreshold: 2000 }) } },
         { provide: DataChangeNotifier, useValue: { tick: signal(0) } },
+        { provide: ProfileRepository, useValue: { profile, loaded: signal(true), load: () => Promise.resolve() } },
       ],
     });
     return TestBed.inject(WidgetSnapshotService);
@@ -69,6 +73,14 @@ describe('WidgetSnapshotService', () => {
     expect(snap?.steps).toEqual({ count: 5400, goal: 2000 });
     expect(snap?.nutrition?.kcal).toEqual({ intake: 1200, goal: 2200 });
     expect(snap?.labels.nutritionTitle).toBe('WIDGET.NUTRITION_TITLE');
+  });
+
+  it('measures step progress against the Profile daily step goal when set (backlog/136)', async () => {
+    const service = configure(true);
+    profile.set({ dailyStepGoal: 13000 });
+    await service.init();
+
+    expect((await readSnapshot())?.steps).toEqual({ count: 5400, goal: 13000 });
   });
 
   it('writes loggedIn:false / nutrition:null when the session is gone', async () => {

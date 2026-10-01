@@ -1319,7 +1319,10 @@ const SCHEMA_V46_STATEMENTS: string[] = [
   `ALTER TABLE workout_set_entry ADD COLUMN rpe REAL`,
 ];
 
-const SCHEMA_VERSION = 46;
+/** backlog/136 — napi lépéscél a Profilban; on-device tükre a backend `V50__user_profile_daily_step_goal.sql`-nek. */
+const SCHEMA_V47_STATEMENTS: string[] = [`ALTER TABLE user_profile ADD COLUMN daily_step_goal INTEGER`];
+
+const SCHEMA_VERSION = 47;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -1368,7 +1371,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 43, statements: SCHEMA_V43_STATEMENTS },
   { toVersion: 44, statements: SCHEMA_V44_STATEMENTS },
   { toVersion: 45, statements: SCHEMA_V45_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V46_STATEMENTS },
+  { toVersion: 46, statements: SCHEMA_V46_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V47_STATEMENTS },
 ];
 
 export interface SqlTask {
