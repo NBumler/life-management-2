@@ -23,9 +23,14 @@
 
   <ion-note class="load-summary">
     {{
-      'WORKOUT.WEEKLY.LOAD_SUMMARY'
+      (loadSummary().plannedClimbDays > 0 ? 'WORKOUT.WEEKLY.LOAD_SUMMARY_PLANNED' : 'WORKOUT.WEEKLY.LOAD_SUMMARY')
         | translate
-          : { climbing: loadSummary().climbingDays, workouts: loadSummary().workoutDays, rest: loadSummary().restDays }
+          : {
+              climbing: loadSummary().climbingDays,
+              planned: loadSummary().plannedClimbDays,
+              workouts: loadSummary().workoutDays,
+              rest: loadSummary().restDays,
+            }
     }}
   </ion-note>
 
@@ -65,10 +70,27 @@
           <ion-label>
             <h2>{{ ('WORKOUT.WEEKLY.DAY.' + day.dayOfWeek) | translate }}</h2>
             <p>{{ day.date }}</p>
-            @if (day.load.climbing > 0 || day.load.workouts > 0 || (day.load.rest && day.past)) {
+            @if (day.load.climbing > 0 || day.load.workouts > 0 || (day.load.rest && day.past) || day.load.missedClimb || day.plannable) {
               <div class="load-chips">
                 @if (day.load.climbing > 0) {
                   <ion-badge color="tertiary">{{ 'WORKOUT.WEEKLY.LOAD_CLIMBING' | translate }}</ion-badge>
+                } @else if (day.plannable) {
+                  <ion-button
+                    class="climb-toggle"
+                    size="small"
+                    [fill]="day.load.plannedClimb ? 'solid' : 'outline'"
+                    color="tertiary"
+                    (click)="toggleClimb(day)"
+                    [attr.aria-pressed]="day.load.plannedClimb"
+                  >
+                    {{ (day.load.plannedClimb ? 'WORKOUT.WEEKLY.CLIMB_PLANNED' : 'WORKOUT.WEEKLY.CLIMB_PLAN_ADD') | translate }}
+                  </ion-button>
+                }
+                @if (day.load.missedClimb) {
+                  <ion-badge color="medium">{{ 'WORKOUT.WEEKLY.CLIMB_MISSED' | translate }}</ion-badge>
+                }
+                @if (day.conflict) {
+                  <ion-badge color="warning">{{ 'WORKOUT.WEEKLY.CLIMB_CONFLICT' | translate }}</ion-badge>
                 }
                 @if (day.load.workouts > 0 && !day.completed) {
                   <ion-badge color="primary">{{ 'WORKOUT.WEEKLY.LOAD_WORKOUT' | translate }}</ion-badge>

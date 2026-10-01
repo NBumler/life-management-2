@@ -1231,7 +1231,12 @@
       "LOAD_CLIMBING": "Climbing",
       "LOAD_WORKOUT": "Workout",
       "LOAD_FINGERS": "Finger load",
-      "LOAD_REST": "Rest"
+      "LOAD_REST": "Rest",
+      "LOAD_SUMMARY_PLANNED": "Climbing {{climbing}} d (+{{planned}} planned) · Workout {{workouts}} d · Rest days {{rest}}",
+      "CLIMB_PLAN_ADD": "+ Climb",
+      "CLIMB_PLANNED": "Climb (planned)",
+      "CLIMB_MISSED": "Missed climb",
+      "CLIMB_CONFLICT": "Clash — consider moving the workout"
     },
     "SWIM": {
       "NEW": "New swim",

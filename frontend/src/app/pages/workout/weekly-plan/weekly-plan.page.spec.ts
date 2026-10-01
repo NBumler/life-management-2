@@ -1,8 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { provideTranslateService } from '@ngx-translate/core';
 
+import { CalendarEvent } from '../../../api/model/calendarEvent';
 import { WeeklyPlan } from '../../../api/model/weeklyPlan';
 import { WeeklyPlanSlot } from '../../../api/model/weeklyPlanSlot';
 import { WorkoutPlan } from '../../../api/model/workoutPlan';
@@ -11,7 +12,9 @@ import { ClimbingSessionRepository } from '../../../core/data/climbing-session.r
 import { WeeklyPlanRepository } from '../../../core/data/weekly-plan.repository';
 import { WorkoutPlanRepository } from '../../../core/data/workout-plan.repository';
 import { WorkoutSessionRepository } from '../../../core/data/workout-session.repository';
+import { today } from '../../../shared/local-date';
 import { WeeklyPlanPage } from './weekly-plan.page';
+import { addLocalDays, mondayOf } from './weekly-plan-adherence';
 
 const MON = WeeklyPlanSlot.DayOfWeekEnum.Monday;
 const WED = WeeklyPlanSlot.DayOfWeekEnum.Wednesday;
@@ -53,6 +56,12 @@ describe('WeeklyPlanPage — recurring schedule (backlog/127)', () => {
   let fixture: ComponentFixture<WeeklyPlanPage>;
   let component: WeeklyPlanPage;
   let weekly: FakeWeeklyRepository;
+  let events: {
+    load: () => Promise<void>;
+    items: ReturnType<typeof signal<CalendarEvent[]>>;
+    save: jasmine.Spy;
+    remove: jasmine.Spy;
+  };
 
   const plans = [
     { id: 'pA', name: 'A', active: true, deleted: false, exercises: [] },
@@ -61,6 +70,12 @@ describe('WeeklyPlanPage — recurring schedule (backlog/127)', () => {
 
   beforeEach(async () => {
     weekly = new FakeWeeklyRepository();
+    events = {
+      load: () => Promise.resolve(),
+      items: signal<CalendarEvent[]>([]),
+      save: jasmine.createSpy('save').and.resolveTo({}),
+      remove: jasmine.createSpy('remove').and.resolveTo(),
+    };
     await TestBed.configureTestingModule({
       imports: [WeeklyPlanPage],
       providers: [
@@ -76,7 +91,7 @@ describe('WeeklyPlanPage — recurring schedule (backlog/127)', () => {
           useValue: { load: () => Promise.resolve(), reload: () => Promise.resolve(), items: signal([]) },
         },
         { provide: ClimbingSessionRepository, useValue: { load: () => Promise.resolve(), items: signal([]) } },
-        { provide: CalendarEventRepository, useValue: { load: () => Promise.resolve(), items: signal([]) } },
+        { provide: CalendarEventRepository, useValue: events },
       ],
     }).compileComponents();
     fixture = TestBed.createComponent(WeeklyPlanPage);
@@ -137,5 +152,48 @@ describe('WeeklyPlanPage — recurring schedule (backlog/127)', () => {
     await component.assignDay(day(MON), 'pB');
 
     expect(weekly.saves.map((s) => s.weekStartDate)).toEqual(['2026-09-21']);
+  });
+
+  describe('planned climbs (backlog/143)', () => {
+    // next week (relative to the real today) — always plannable and inside the ±1 year event projection
+    const nextMonday = addLocalDays(mondayOf(today()), 7);
+    const future = addLocalDays(nextMonday, 2); // its Wednesday
+    function climbEvent(overrides: Partial<CalendarEvent>): CalendarEvent {
+      return { id: 'c1', title: 'Mászás', allDay: true, date: future, interval: 1, deleted: false, activityType: 'CLIMBING', ...overrides } as CalendarEvent;
+    }
+
+    beforeEach(() => component.weekStart.set(nextMonday));
+
+    it('"+ Mászás" on a free future day creates a one-off all-day CLIMBING event', async () => {
+      await component.toggleClimb(day(WED));
+      expect(events.save).toHaveBeenCalledWith(
+        jasmine.objectContaining({ date: future, allDay: true, frequency: null, activityType: 'CLIMBING' }),
+      );
+    });
+
+    it('a planned day shows plannedClimb, and the toggle deletes its one-off event', async () => {
+      events.items.set([climbEvent({})]);
+      expect(day(WED).load.plannedClimb).toBeTrue();
+
+      await component.toggleClimb(day(WED));
+      expect(events.remove).toHaveBeenCalledWith('c1');
+    });
+
+    it('a day covered only by a recurring climb opens that event instead of deleting the series', async () => {
+      events.items.set([climbEvent({ id: 'weekly', date: future, frequency: 'WEEKLY' })]);
+      const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+
+      await component.toggleClimb(day(WED));
+
+      expect(events.remove).not.toHaveBeenCalled();
+      expect(navigate).toHaveBeenCalledWith(['/tabs/tasks/events', 'weekly']);
+    });
+
+    it('a weekly slot plus a planned climb on the same day is a conflict', async () => {
+      await weekly.saveWeek(nextMonday, [{ dayOfWeek: WED, planId: 'pA' }]);
+      events.items.set([climbEvent({})]);
+      expect(day(WED).conflict).toBeTrue();
+      expect(component.loadSummary().plannedClimbDays).toBe(1);
+    });
   });
 });

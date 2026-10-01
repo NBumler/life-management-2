@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import {
   IonBadge,
   IonButton,
@@ -17,16 +17,19 @@ import {
   IonSelectOption,
   ViewWillEnter,
 } from '@ionic/angular/standalone';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
+import { CalendarEvent } from '../../../api/model/calendarEvent';
 import { WeeklyPlanSlot } from '../../../api/model/weeklyPlanSlot';
+import { CalendarEventRepository } from '../../../core/data/calendar-event.repository';
+import { projectEventOccurrences } from '../../../core/data/event-occurrence';
 import { ClimbingSessionRepository } from '../../../core/data/climbing-session.repository';
 import { WorkoutPlanRepository } from '../../../core/data/workout-plan.repository';
 import { WorkoutSessionRepository } from '../../../core/data/workout-session.repository';
 import { WeeklyPlanRepository } from '../../../core/data/weekly-plan.repository';
 import { today } from '../../../shared/local-date';
 import { LoadWarningsBannerComponent } from '../load-warnings-banner.component';
-import { DayLoad, dailyTrainingLoad, weekLoadSummary } from '../training-load';
+import { DayLoad, dailyTrainingLoad, plannedClimbDates, weekLoadSummary } from '../training-load';
 import { WorkoutSegmentHeaderComponent } from '../workout-segment-header.component';
 import { WEEK_DAYS, addLocalDays, isSlotCompleted, mondayOf, resolveEffectiveWeek } from './weekly-plan-adherence';
 
@@ -49,6 +52,10 @@ interface DayCell {
   load: DayLoad;
   /** Not in the future — only then can a load-free day count as a rest day. */
   past: boolean;
+  /** backlog/143 — today or later: a climb can be planned for this day. */
+  plannable: boolean;
+  /** backlog/143 — a weekly slot plan and a planned climb on the same (not yet done) day. */
+  conflict: boolean;
 }
 
 /**
@@ -89,6 +96,13 @@ interface DayCell {
         display: block;
         padding: 0 16px 8px;
       }
+      .climb-toggle {
+        margin: 0;
+        --padding-start: 8px;
+        --padding-end: 8px;
+        height: 24px;
+        font-size: 0.75rem;
+      }
       .load-chips {
         display: flex;
         flex-wrap: wrap;
@@ -124,6 +138,9 @@ export class WeeklyPlanPage implements OnInit, ViewWillEnter {
   private readonly weeklyRepository = inject(WeeklyPlanRepository);
   private readonly sessionRepository = inject(WorkoutSessionRepository);
   private readonly climbingRepository = inject(ClimbingSessionRepository);
+  private readonly eventRepository = inject(CalendarEventRepository);
+  private readonly translate = inject(TranslateService);
+  private readonly router = inject(Router);
   readonly todayIso = today();
 
   readonly weekStart = signal(mondayOf(today()));
@@ -140,6 +157,7 @@ export class WeeklyPlanPage implements OnInit, ViewWillEnter {
       WEEK_DAYS.map((_, index) => addLocalDays(this.weekStart(), index)),
       this.climbingRepository.items(),
       this.sessionRepository.items(),
+      { dates: plannedClimbDates(this.eventRepository.items(), this.todayIso), today: this.todayIso },
     ),
   );
 
@@ -166,6 +184,8 @@ export class WeeklyPlanPage implements OnInit, ViewWillEnter {
         completed: planId !== null && isSlotCompleted(sessions, start, planId),
         load: load[index],
         past: load[index].date <= this.todayIso,
+        plannable: load[index].date >= this.todayIso,
+        conflict: planId !== null && load[index].plannedClimb && !isSlotCompleted(sessions, start, planId),
       };
     });
   });
@@ -177,12 +197,49 @@ export class WeeklyPlanPage implements OnInit, ViewWillEnter {
       this.weeklyRepository.load(),
       this.sessionRepository.load(),
       this.climbingRepository.load(),
+      this.eventRepository.load(),
     ]);
   }
 
   ionViewWillEnter(): void {
     void this.sessionRepository.reload();
     void this.climbingRepository.load({ force: true });
+    void this.eventRepository.load();
+  }
+
+  /**
+   * backlog/143 — the day row's "+ Mászás" toggle. Off → a one-off all-day `CLIMBING` event for the day;
+   * on → its one-off climbing events are deleted. A day covered only by a recurring climbing event can't
+   * drop one occurrence (no instance exceptions, see Események) — the toggle opens that event instead.
+   */
+  async toggleClimb(day: DayCell): Promise<void> {
+    const climbingEvents = this.eventRepository
+      .items()
+      .filter((event) => !event.deleted && event.activityType === CalendarEvent.ActivityTypeEnum.Climbing)
+      .filter((event) => projectEventOccurrences(event, this.todayIso).includes(day.date));
+    if (climbingEvents.length === 0) {
+      await this.eventRepository.save({
+        title: this.translate.instant('TASKS.EVENTS.CLIMBING_TITLE'),
+        location: null,
+        notes: null,
+        allDay: true,
+        date: day.date,
+        startTime: null,
+        endTime: null,
+        frequency: null,
+        interval: 1,
+        activityType: CalendarEvent.ActivityTypeEnum.Climbing,
+      });
+      return;
+    }
+    const oneOffs = climbingEvents.filter((event) => !event.frequency);
+    if (oneOffs.length === 0) {
+      await this.router.navigate(['/tabs/tasks/events', climbingEvents[0].id]);
+      return;
+    }
+    for (const event of oneOffs) {
+      await this.eventRepository.remove(event.id);
+    }
   }
 
   shiftWeek(deltaWeeks: number): void {

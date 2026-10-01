@@ -1231,7 +1231,12 @@
       "LOAD_CLIMBING": "Mászás",
       "LOAD_WORKOUT": "Edzés",
       "LOAD_FINGERS": "Ujjterhelés",
-      "LOAD_REST": "Pihenő"
+      "LOAD_REST": "Pihenő",
+      "LOAD_SUMMARY_PLANNED": "Mászás {{climbing}} nap (+{{planned}} tervezett) · Edzés {{workouts}} nap · Pihenőnap {{rest}}",
+      "CLIMB_PLAN_ADD": "+ Mászás",
+      "CLIMB_PLANNED": "Mászás (tervezett)",
+      "CLIMB_MISSED": "Elmaradt mászás",
+      "CLIMB_CONFLICT": "Ütközés — edzés áthelyezése javasolt"
     },
     "SWIM": {
       "NEW": "Új úszás",
