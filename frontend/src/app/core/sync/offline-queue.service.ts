@@ -52,8 +52,10 @@ import { uuidV4 } from './uuid';
  *   has no such keys (= no cue, both hands, no RPE), so every type is identity.
  * - v15 → v16 (backlog/136): `UserProfile` gained a nullable `dailyStepGoal`. A pending profile write from
  *   before that app update has no such key (= no goal set), so every type is identity.
+ * - v16 → v17 (backlog/143): `CalendarEvent` gained a nullable `activityType`. A pending event write from
+ *   before that app update has no such key (= a plain event), so every type is identity.
  */
-export const OUTBOX_PAYLOAD_SCHEMA_VERSION = 16;
+export const OUTBOX_PAYLOAD_SCHEMA_VERSION = 17;
 
 /** documentation/Architektúra/Backend-offline first.md §6 "Tétel-újrapróbálkozási backoff" (jitter omitted — not load-bearing for correctness). */
 const RETRY_BACKOFF_MS = [2000, 8000, 30000, 120000, 600000];

@@ -80,6 +80,20 @@ class CalendarEventServiceTest {
 	}
 
 	@Test
+	void create_roundTripsClimbingActivityType() {
+		UUID userId = UUID.randomUUID();
+		UUID id = UUID.randomUUID();
+		when(repository.findById(id)).thenReturn(Optional.empty());
+		when(repository.saveAndFlush(any())).thenAnswer(inv -> inv.getArgument(0));
+		CalendarEvent dto = new CalendarEvent(id, "Mászás", true, LocalDate.of(2026, 10, 3), 1, false)
+				.activityType(CalendarEvent.ActivityTypeEnum.CLIMBING);
+
+		CalendarEvent saved = service.create(userId, dto);
+
+		assertThat(saved.getActivityType().orElse(null)).isEqualTo(CalendarEvent.ActivityTypeEnum.CLIMBING);
+	}
+
+	@Test
 	void create_acceptsAllDay_withoutTimes() {
 		UUID userId = UUID.randomUUID();
 		UUID id = UUID.randomUUID();

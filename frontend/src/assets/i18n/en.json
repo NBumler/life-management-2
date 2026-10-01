@@ -662,7 +662,11 @@
       "TIME_RANGE_ERROR": "End time must be after start time.",
       "DELETE_CONFIRM_TITLE": "Delete event",
       "DELETE_CONFIRM_MESSAGE": "Are you sure you want to delete \"{{title}}\"?",
-      "DELETE_CONFIRM_MESSAGE_RECURRING": "Are you sure you want to delete the recurring event \"{{title}}\"? The whole series will be deleted."
+      "DELETE_CONFIRM_MESSAGE_RECURRING": "Are you sure you want to delete the recurring event \"{{title}}\"? The whole series will be deleted.",
+      "TYPE_LABEL": "Type",
+      "TYPE_EVENT": "Event",
+      "TYPE_CLIMBING": "Climbing",
+      "CLIMBING_TITLE": "Climbing"
     },
     "CALENDAR": {
       "TODAY_BUTTON": "Today",

@@ -260,6 +260,9 @@ const STEPS_BY_VERSION: Readonly<Record<number, VersionSteps>> = {
   // backlog/136: `UserProfile.dailyStepGoal` added as a new nullable field — a missing key already means
   // "no goal" server-side, so no payload transform is needed.
   15: { default: identityStep },
+  // backlog/143: `CalendarEvent.activityType` added as a new nullable field — a missing key already means
+  // "a plain event" server-side, so no payload transform is needed.
+  16: { default: identityStep },
 };
 
 function buildMigrations(): ReadonlyMap<string, MigrationStep> {

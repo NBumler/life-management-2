@@ -51,6 +51,14 @@ properties:
     type: integer
     minimum: 1
     description: Ignored (but still stored) when frequency is null.
+  activityType:
+    type: string
+    enum:
+      - CLIMBING
+    nullable: true
+    description: >-
+      backlog/143 — typed event. CLIMBING = a planned climbing day (the weekly training load, load
+      warnings and rotation suggestion count it ahead of time). Null = a plain event.
   deleted:
     type: boolean
   deletedAt:

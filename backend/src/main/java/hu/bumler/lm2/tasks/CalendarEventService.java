@@ -91,6 +91,8 @@ class CalendarEventService {
 
 		entity.setTitle(dto.getTitle());
 		entity.setLocation(dto.getLocation().orElse(null));
+		CalendarEvent.ActivityTypeEnum activityType = dto.getActivityType().orElse(null);
+		entity.setActivityType(activityType == null ? null : activityType.getValue());
 		entity.setNotes(dto.getNotes().orElse(null));
 		entity.setAllDay(dto.getAllDay());
 		entity.setDate(dto.getDate());

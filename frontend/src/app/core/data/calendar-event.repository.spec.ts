@@ -63,6 +63,7 @@ describe('CalendarEventRepository', () => {
       endTime: '11:00',
       frequency: null,
       interval: 1,
+      activityType: null,
     });
 
     expect(saved.id).toBe('new-1');
@@ -95,6 +96,7 @@ describe('CalendarEventRepository', () => {
       endTime: '11:00',
       frequency: null,
       interval: 1,
+      activityType: null,
     });
     await repository.remove('e1');
 
@@ -115,6 +117,7 @@ describe('CalendarEventRepository', () => {
       endTime: '11:00',
       frequency: null,
       interval: 1,
+      activityType: null,
     });
 
     expect(syncEngine.requestDrainDebounced).not.toHaveBeenCalled();

@@ -1322,7 +1322,10 @@ const SCHEMA_V46_STATEMENTS: string[] = [
 /** backlog/136 — napi lépéscél a Profilban; on-device tükre a backend `V50__user_profile_daily_step_goal.sql`-nek. */
 const SCHEMA_V47_STATEMENTS: string[] = [`ALTER TABLE user_profile ADD COLUMN daily_step_goal INTEGER`];
 
-const SCHEMA_VERSION = 47;
+/** backlog/143 — tervezett mászás: `calendar_event.activity_type`; on-device tükre a backend `V51`-nek. */
+const SCHEMA_V48_STATEMENTS: string[] = [`ALTER TABLE calendar_event ADD COLUMN activity_type TEXT`];
+
+const SCHEMA_VERSION = 48;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -1372,7 +1375,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 44, statements: SCHEMA_V44_STATEMENTS },
   { toVersion: 45, statements: SCHEMA_V45_STATEMENTS },
   { toVersion: 46, statements: SCHEMA_V46_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V47_STATEMENTS },
+  { toVersion: 47, statements: SCHEMA_V47_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V48_STATEMENTS },
 ];
 
 export interface SqlTask {

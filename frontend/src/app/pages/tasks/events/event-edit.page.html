@@ -15,6 +15,15 @@
 <ion-content class="ion-padding">
   <form [formGroup]="form" (ngSubmit)="save()">
     <ion-list>
+      <ion-segment
+        [value]="form.controls.activityType.value ?? 'NONE'"
+        (ionChange)="setActivityType($any($event.detail.value) === 'NONE' ? null : $any($event.detail.value))"
+        [attr.aria-label]="'TASKS.EVENTS.TYPE_LABEL' | translate"
+      >
+        <ion-segment-button value="NONE">{{ 'TASKS.EVENTS.TYPE_EVENT' | translate }}</ion-segment-button>
+        <ion-segment-button [value]="ActivityTypeEnum.Climbing">{{ 'TASKS.EVENTS.TYPE_CLIMBING' | translate }}</ion-segment-button>
+      </ion-segment>
+
       <ion-item>
         <ion-input formControlName="title" [label]="'TASKS.EVENTS.TITLE_LABEL' | translate" labelPlacement="stacked" [autofocus]="eventId() === null"></ion-input>
       </ion-item>

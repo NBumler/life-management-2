@@ -31,7 +31,7 @@ describe('EventEditPage', () => {
     items: ReturnType<typeof signal<CalendarEvent[]>>;
   };
 
-  async function createFixture(routeId: string): Promise<void> {
+  async function createFixture(routeId: string, query: Record<string, string> = {}): Promise<void> {
     repository = jasmine.createSpyObj('CalendarEventRepository', ['load', 'save', 'remove']) as never;
     repository.load.and.resolveTo();
     repository.items = signal<CalendarEvent[]>([]);
@@ -41,7 +41,10 @@ describe('EventEditPage', () => {
       providers: [
         provideRouter([]),
         provideTranslateService(),
-        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: routeId }) } } },
+        {
+          provide: ActivatedRoute,
+          useValue: { snapshot: { paramMap: convertToParamMap({ id: routeId }), queryParamMap: convertToParamMap(query) } },
+        },
         { provide: CalendarEventRepository, useValue: repository },
         { provide: AlertController, useValue: jasmine.createSpyObj('AlertController', ['create']) },
       ],
@@ -116,5 +119,18 @@ describe('EventEditPage', () => {
     await destructive.handler!();
 
     expect(repository.remove).toHaveBeenCalledWith('e1');
+  });
+
+  it('backlog/143: ?type=CLIMBING&date= prefills an all-day "Mászás" and saves the activity type', async () => {
+    await createFixture('new', { type: 'CLIMBING', date: '2026-10-08' });
+    await fixture.componentInstance.ngOnInit();
+    repository.save.and.resolveTo(event());
+    spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
+
+    const form = fixture.componentInstance.form.getRawValue();
+    expect([form.activityType, form.allDay, form.date, form.title]).toEqual(['CLIMBING', true, '2026-10-08', 'TASKS.EVENTS.CLIMBING_TITLE']);
+
+    await fixture.componentInstance.save();
+    expect(repository.save.calls.mostRecent().args[0].activityType).toBe('CLIMBING');
   });
 });

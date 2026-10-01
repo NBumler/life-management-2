@@ -17,6 +17,8 @@ export interface CalendarEventSaveInput {
   endTime: string | null;
   frequency: CalendarEvent.FrequencyEnum | null;
   interval: number;
+  /** backlog/143 — `CLIMBING` = a planned climbing day; null = a plain event. */
+  activityType: CalendarEvent.ActivityTypeEnum | null;
 }
 
 /** documentation/Architektúra/Frontend.md `core/data/`: typed, signal-based facade over StorageBackend. */
@@ -46,6 +48,7 @@ export class CalendarEventRepository {
       endTime: input.endTime,
       frequency: input.frequency,
       interval: input.interval,
+      activityType: input.activityType,
       deleted: false,
     };
     const saved = await this.storage.upsertEvent(draft);

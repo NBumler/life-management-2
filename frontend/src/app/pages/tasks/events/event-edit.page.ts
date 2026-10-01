@@ -12,6 +12,8 @@ import {
   IonInput,
   IonItem,
   IonList,
+  IonSegment,
+  IonSegmentButton,
   IonSelect,
   IonSelectOption,
   IonText,
@@ -47,6 +49,8 @@ import { computeDefaultTimedTimes } from './event-time-defaults';
     IonItem,
     IonInput,
     IonToggle,
+    IonSegment,
+    IonSegmentButton,
     IonSelect,
     IonSelectOption,
     IonText,
@@ -63,6 +67,7 @@ export class EventEditPage implements OnInit {
   private readonly translate = inject(TranslateService);
 
   readonly FrequencyEnum = CalendarEvent.FrequencyEnum;
+  readonly ActivityTypeEnum = CalendarEvent.ActivityTypeEnum;
   readonly eventId = signal<string | null>(null);
   readonly timeRangeError = signal<string | null>(null);
 
@@ -76,6 +81,7 @@ export class EventEditPage implements OnInit {
     interval: this.fb.nonNullable.control<number>(1, [Validators.min(1)]),
     location: this.fb.control<string | null>(null),
     notes: this.fb.control<string | null>(null),
+    activityType: this.fb.control<CalendarEvent.ActivityTypeEnum | null>(null),
   });
 
   readonly allDayValue = toSignal(this.form.controls.allDay.valueChanges, { initialValue: this.form.controls.allDay.value });
@@ -98,6 +104,7 @@ export class EventEditPage implements OnInit {
           interval: existing.interval,
           location: existing.location ?? null,
           notes: existing.notes ?? null,
+          activityType: existing.activityType ?? null,
         });
       }
       return;
@@ -105,6 +112,28 @@ export class EventEditPage implements OnInit {
     const now = new Date();
     const defaults = computeDefaultTimedTimes(now.getHours(), now.getMinutes());
     this.form.patchValue({ startTime: defaults.startTime, endTime: defaults.endTime });
+    // backlog/143 — `?type=CLIMBING&date=…` (Heti terv) opens a prefilled planned-climb form.
+    const dateParam = this.route.snapshot.queryParamMap.get('date');
+    if (dateParam !== null && /^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
+      this.form.patchValue({ date: dateParam });
+    }
+    if (this.route.snapshot.queryParamMap.get('type') === CalendarEvent.ActivityTypeEnum.Climbing) {
+      this.setActivityType(CalendarEvent.ActivityTypeEnum.Climbing);
+    }
+  }
+
+  /**
+   * backlog/143 — "Típus: Esemény / Mászás". Switching to Mászás on a new event prefills the title
+   * (only when still empty) and makes it all-day; an existing event keeps its fields.
+   */
+  setActivityType(value: CalendarEvent.ActivityTypeEnum | null): void {
+    this.form.controls.activityType.setValue(value);
+    if (value === CalendarEvent.ActivityTypeEnum.Climbing && this.eventId() === null) {
+      if (this.form.controls.title.value.trim() === '') {
+        this.form.controls.title.setValue(this.translate.instant('TASKS.EVENTS.CLIMBING_TITLE'));
+      }
+      this.form.controls.allDay.setValue(true);
+    }
   }
 
   async save(): Promise<void> {
@@ -112,7 +141,7 @@ export class EventEditPage implements OnInit {
       this.form.markAllAsTouched();
       return;
     }
-    const { title, allDay, date, startTime, endTime, frequency, interval, location, notes } = this.form.getRawValue();
+    const { title, allDay, date, startTime, endTime, frequency, interval, location, notes, activityType } = this.form.getRawValue();
     if (!allDay) {
       if (startTime === null || endTime === null || endTime <= startTime) {
         this.timeRangeError.set(this.translate.instant('TASKS.EVENTS.TIME_RANGE_ERROR'));
@@ -131,6 +160,7 @@ export class EventEditPage implements OnInit {
       endTime: allDay ? null : endTime,
       frequency,
       interval: frequency === null ? 1 : interval,
+      activityType,
     });
     await this.router.navigateByUrl('/tabs/tasks/events');
   }

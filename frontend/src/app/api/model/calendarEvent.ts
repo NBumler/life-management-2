@@ -38,6 +38,10 @@ export interface CalendarEvent {
      * Ignored (but still stored) when frequency is null.
      */
     interval: number;
+    /**
+     * backlog/143 — typed event. CLIMBING = a planned climbing day (the weekly training load, load warnings and rotation suggestion count it ahead of time). Null = a plain event.
+     */
+    activityType?: CalendarEvent.ActivityTypeEnum | null;
     deleted: boolean;
     readonly deletedAt?: string | null;
     readonly createdAt?: string;
@@ -50,6 +54,10 @@ export namespace CalendarEvent {
         Yearly: 'YEARLY'
     } as const;
     export type FrequencyEnum = typeof FrequencyEnum[keyof typeof FrequencyEnum];
+    export const ActivityTypeEnum = {
+        Climbing: 'CLIMBING'
+    } as const;
+    export type ActivityTypeEnum = typeof ActivityTypeEnum[keyof typeof ActivityTypeEnum];
 }
 
 

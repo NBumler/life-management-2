@@ -17,6 +17,9 @@ class CalendarEventMapper {
 		if (entity.getFrequency() != null) {
 			dto.frequency(CalendarEvent.FrequencyEnum.fromValue(entity.getFrequency()));
 		}
+		if (entity.getActivityType() != null) {
+			dto.activityType(CalendarEvent.ActivityTypeEnum.fromValue(entity.getActivityType()));
+		}
 		dto.deletedAt(entity.getDeletedAt());
 		dto.createdAt(entity.getCreatedAt());
 		dto.updatedAt(entity.getUpdatedAt());

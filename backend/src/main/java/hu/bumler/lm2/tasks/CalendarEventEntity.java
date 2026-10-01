@@ -32,6 +32,9 @@ public class CalendarEventEntity {
 	@Column
 	private String location;
 
+	@Column(name = "activity_type")
+	private String activityType;
+
 	@Column
 	private String notes;
 
@@ -97,6 +100,14 @@ public class CalendarEventEntity {
 
 	public void setLocation(String location) {
 		this.location = location;
+	}
+
+	public String getActivityType() {
+		return activityType;
+	}
+
+	public void setActivityType(String activityType) {
+		this.activityType = activityType;
 	}
 
 	public String getNotes() {

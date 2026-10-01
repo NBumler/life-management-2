@@ -3075,6 +3075,7 @@ export interface CalendarEventRow {
   end_time: string | null;
   frequency: string | null;
   interval: number;
+  activity_type: string | null;
   created_at: string | null;
   updated_at: string | null;
   deleted: number;
@@ -3097,6 +3098,7 @@ export function calendarEventRowToDto(row: CalendarEventRow): CalendarEvent {
     endTime: row.end_time,
     frequency: row.frequency as CalendarEvent.FrequencyEnum | null,
     interval: row.interval,
+    activityType: (row.activity_type ?? null) as CalendarEvent.ActivityTypeEnum | null,
     deleted: row.deleted === 1,
     deletedAt: row.deleted_at,
     createdAt: row.created_at ?? undefined,
@@ -3107,12 +3109,12 @@ export function calendarEventRowToDto(row: CalendarEventRow): CalendarEvent {
 export function calendarEventLocalWriteTask(dto: CalendarEvent): SqlTask {
   return {
     statement: `
-      INSERT INTO calendar_event (id, title, location, notes, all_day, date, start_time, end_time, frequency, interval, _dirty, _local_only)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
+      INSERT INTO calendar_event (id, title, location, notes, all_day, date, start_time, end_time, frequency, interval, activity_type, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
       ON CONFLICT(id) DO UPDATE SET
         title = excluded.title, location = excluded.location, notes = excluded.notes, all_day = excluded.all_day,
         date = excluded.date, start_time = excluded.start_time, end_time = excluded.end_time,
-        frequency = excluded.frequency, interval = excluded.interval, _dirty = 1`,
+        frequency = excluded.frequency, interval = excluded.interval, activity_type = excluded.activity_type, _dirty = 1`,
     values: [
       dto.id,
       dto.title,
@@ -3124,6 +3126,7 @@ export function calendarEventLocalWriteTask(dto: CalendarEvent): SqlTask {
       dto.endTime ?? null,
       dto.frequency ?? null,
       dto.interval,
+      dto.activityType ?? null,
     ],
   };
 }
@@ -3131,13 +3134,14 @@ export function calendarEventLocalWriteTask(dto: CalendarEvent): SqlTask {
 export function calendarEventServerApplyTask(dto: CalendarEvent): SqlTask {
   return {
     statement: `
-      INSERT INTO calendar_event (id, title, location, notes, all_day, date, start_time, end_time, frequency, interval, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      INSERT INTO calendar_event (id, title, location, notes, all_day, date, start_time, end_time, frequency, interval, activity_type, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET
         title = excluded.title, location = excluded.location, notes = excluded.notes, all_day = excluded.all_day,
         date = excluded.date, start_time = excluded.start_time, end_time = excluded.end_time, frequency = excluded.frequency,
-        interval = excluded.interval, created_at = excluded.created_at, updated_at = excluded.updated_at,
-        deleted = excluded.deleted, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0, _needs_refetch = 0
+        interval = excluded.interval, activity_type = excluded.activity_type, created_at = excluded.created_at,
+        updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at,
+        _dirty = 0, _local_only = 0, _needs_refetch = 0
       WHERE calendar_event._dirty = 0`,
     values: [
       dto.id,
@@ -3150,6 +3154,7 @@ export function calendarEventServerApplyTask(dto: CalendarEvent): SqlTask {
       dto.endTime ?? null,
       dto.frequency ?? null,
       dto.interval,
+      dto.activityType ?? null,
       dto.createdAt ?? null,
       dto.updatedAt ?? null,
       dto.deleted ? 1 : 0,
