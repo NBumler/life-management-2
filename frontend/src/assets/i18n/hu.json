@@ -1183,7 +1183,12 @@
       "REPS_RANGE_INVERTED": "A tartomány alsó határa nem lehet nagyobb a felsőnél.",
       "FIELD_TARGET_RPE": "Cél RPE",
       "EXERCISE_NOTES": "Megjegyzés a gyakorlathoz",
-      "EXERCISE_NOTES_PLACEHOLDER": "Megjegyzés (pl. szék: 5, 3 mp negatív)"
+      "EXERCISE_NOTES_PLACEHOLDER": "Megjegyzés (pl. szék: 5, 3 mp negatív)",
+      "GROUP_MENU": "Csoport műveletek",
+      "GROUP_ACTIVATE": "Csoport aktiválása",
+      "GROUP_DEACTIVATE": "Csoport inaktiválása",
+      "GROUP_ONLY": "Csak ez a csoport legyen aktív",
+      "GROUP_CHANGED": "{{count}} sablon módosítva"
     },
     "WEEKLY": {
       "WEEK_OF": "Hét kezdete:",

@@ -1,11 +1,13 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
+  ActionSheetController,
   IonBackButton,
   IonButton,
   IonButtons,
   IonContent,
   IonHeader,
+  IonIcon,
   IonItem,
   IonLabel,
   IonList,
@@ -15,11 +17,13 @@ import {
   IonTitle,
   IonToggle,
   IonToolbar,
+  ToastController,
 } from '@ionic/angular/standalone';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 import { WorkoutPlan } from '../../../api/model/workoutPlan';
 import { WorkoutPlanRepository } from '../../../core/data/workout-plan.repository';
+import { GroupActivationMode, planGroupActivationChanges, planGroupKey } from './plan-group-activation';
 
 type PlanFilter = 'ACTIVE' | 'INACTIVE' | 'ALL';
 
@@ -51,6 +55,7 @@ interface PlanGroup {
     IonItem,
     IonLabel,
     IonToggle,
+    IonIcon,
     RouterLink,
     TranslatePipe,
   ],
@@ -58,6 +63,9 @@ interface PlanGroup {
 })
 export class PlanListPage implements OnInit {
   private readonly repository = inject(WorkoutPlanRepository);
+  private readonly actionSheetController = inject(ActionSheetController);
+  private readonly toastController = inject(ToastController);
+  private readonly translate = inject(TranslateService);
 
   readonly filter = signal<PlanFilter>('ACTIVE');
 
@@ -70,7 +78,7 @@ export class PlanListPage implements OnInit {
 
     const byLabel = new Map<string | null, WorkoutPlan[]>();
     for (const plan of plans) {
-      const key = plan.goalLabel?.trim() ? plan.goalLabel.trim() : null;
+      const key = planGroupKey(plan);
       const list = byLabel.get(key) ?? [];
       list.push(plan);
       byLabel.set(key, list);
@@ -95,5 +103,36 @@ export class PlanListPage implements OnInit {
     if (plan.active !== active) {
       await this.repository.setActive(plan, active);
     }
+  }
+
+  /** backlog/140 — the `goalLabel` group header's ⋮ menu: one-tap focus switch (e.g. "OAPU mód"). */
+  async openGroupMenu(label: string): Promise<void> {
+    const option = (mode: GroupActivationMode, key: string) => ({
+      text: this.translate.instant(key),
+      handler: () => void this.applyGroupActivation(label, mode),
+    });
+    const sheet = await this.actionSheetController.create({
+      header: label,
+      buttons: [
+        option('ACTIVATE', 'WORKOUT.PLAN.GROUP_ACTIVATE'),
+        option('DEACTIVATE', 'WORKOUT.PLAN.GROUP_DEACTIVATE'),
+        option('ONLY', 'WORKOUT.PLAN.GROUP_ONLY'),
+        { text: this.translate.instant('COMMON.CANCEL'), role: 'cancel' },
+      ],
+    });
+    await sheet.present();
+  }
+
+  /** Each changed template goes through the regular nested-PUT `setActive` (local write + outbox). */
+  async applyGroupActivation(label: string, mode: GroupActivationMode): Promise<void> {
+    const changes = planGroupActivationChanges(this.repository.items(), label, mode);
+    for (const change of changes) {
+      await this.repository.setActive(change.plan, change.active);
+    }
+    const toast = await this.toastController.create({
+      message: this.translate.instant('WORKOUT.PLAN.GROUP_CHANGED', { count: changes.length }),
+      duration: 2000,
+    });
+    await toast.present();
   }
 }

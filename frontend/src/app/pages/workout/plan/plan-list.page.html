@@ -28,7 +28,12 @@
     @for (group of groups(); track group.label) {
       <ion-list>
         @if (group.label !== null) {
-          <ion-list-header>{{ group.label }}</ion-list-header>
+          <ion-list-header>
+            <ion-label>{{ group.label }}</ion-label>
+            <ion-button fill="clear" (click)="openGroupMenu(group.label)" [attr.aria-label]="'WORKOUT.PLAN.GROUP_MENU' | translate">
+              <ion-icon slot="icon-only" name="ellipsis-vertical" aria-hidden="true"></ion-icon>
+            </ion-button>
+          </ion-list-header>
         }
         @for (plan of group.plans; track plan.id) {
           <ion-item button [routerLink]="[plan.id]" detail="true">

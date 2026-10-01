@@ -1183,7 +1183,12 @@
       "REPS_RANGE_INVERTED": "The lower bound cannot exceed the upper one.",
       "FIELD_TARGET_RPE": "Target RPE",
       "EXERCISE_NOTES": "Exercise note",
-      "EXERCISE_NOTES_PLACEHOLDER": "Note (e.g. bench 5, 3 s negative)"
+      "EXERCISE_NOTES_PLACEHOLDER": "Note (e.g. bench 5, 3 s negative)",
+      "GROUP_MENU": "Group actions",
+      "GROUP_ACTIVATE": "Activate group",
+      "GROUP_DEACTIVATE": "Deactivate group",
+      "GROUP_ONLY": "Only this group active",
+      "GROUP_CHANGED": "{{count}} templates changed"
     },
     "WEEKLY": {
       "WEEK_OF": "Week of:",
