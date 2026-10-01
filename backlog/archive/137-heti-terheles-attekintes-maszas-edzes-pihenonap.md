@@ -1,14 +1,14 @@
 ---
 id: 137
 type: feature
-status: ready
+status: done
 title: "Heti terhelés-áttekintés: mászás + otthoni edzés + pihenőnap egy 7 napos sávon"
 specs:
   - "[[Heti terv]]"
   - "[[Mászónapló]]"
 flag:
 created: 2026-10-01
-closed:
+closed: 2026-10-01
 ---
 
 # 137 — Heti terhelés-áttekintés
@@ -26,15 +26,15 @@ mászó-sessionöket nem mutatja. Pihenőnap-fogalom nincs.
 
 ## Elfogadási kritériumok
 
-- [ ] Pure TS `training-load.ts` (unit-teszttel): egy dátumtartományra naponként
+- [x] Pure TS `training-load.ts` (unit-teszttel): egy dátumtartományra naponként
       `{ climbing, workouts, fingerLoad, rest }`. `fingerLoad` = mászás VAGY
       `FOREARM_FINGERS` kategóriájú / `HANGBOARD_PINCH` kindú gyakorlat a naplóban. `rest` = se
       mászás, se edzésnapló (úszás / bicikli / lépés nem töri meg — könnyű aktivitás).
-- [ ] Heti terv dashboard: a napsorokon ikon a mászásra (a meglévő „Teljesítve” mellett),
+- [x] Heti terv dashboard: a napsorokon ikon a mászásra (a meglévő „Teljesítve” mellett),
       pihenőnap jelölés (csak múltbeli / mai napra); felül összesítő: „Mászás X · Edzés Y ·
       Pihenőnap Z” a naptári hétre.
-- [ ] Offline, csak helyi store.
-- [ ] [[Heti terv]] spec frissítve.
+- [x] Offline, csak helyi store.
+- [x] [[Heti terv]] spec frissítve.
 
 ## Terv / döntési napló
 
@@ -44,5 +44,6 @@ mászó-sessionöket nem mutatja. Pihenőnap-fogalom nincs.
 ## Lezáráskor (on-done)
 
 - Frissített specek: [[Heti terv]]
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — <mit>
-- Kód: <fő package-ek / fájlok>
+- `IMPLEMENTATION_STATUS.md` sor: 2026-10-01 — #137 heti terhelés-áttekintés
+- Kód: `pages/workout/training-load.ts`, `pages/workout/weekly-plan/weekly-plan.page.*` (`9e3b005`)
+- Megjegyzés: ikon helyett szöveges jelvények (Mászás / Edzés / Ujjterhelés / Pihenő) — 360 px-en olvashatóbb.

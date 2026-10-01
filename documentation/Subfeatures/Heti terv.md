@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-10-01
-verifikalt_commit: ee87eb6
+verifikalt_commit: 9e3b005
 ---
 
 # Heti terv
@@ -88,6 +88,14 @@ Egy későbbi hét, amelynek már saját sora van (pl. egy korábbi „Csak erre
 - **Teljesítve (adherence):** az adott héten létezik nem törölt `WorkoutSession`, ahol `planId` = a slot sablon ID-ja **és** `date` az adott `weekStartDate` hetébe esik. Nincs tartalmi egyezés-vizsgálat.
 - Egy sablon **többször** is teljesíthető egy héten (több session ugyanazzal a `planId`-del); a jelvényhez elég ≥1.
 
+#### Heti terhelés (`backlog/137`)
+
+A dashboard a beosztás mellett a hét **tényleges** terhelését is mutatja, a helyi [[Mászónapló]] és [[Edzésnapló]] alapján (`pages/workout/training-load.ts`, tiszta TS):
+
+- Naponként: `climbing` = aznapi élő mászó-sessionök száma; `workouts` = aznapi élő edzésnapló-sessionök száma; `fingerLoad` = mászás **vagy** egy élő `FOREARM_FINGERS` kategóriájú / `HANGBOARD_PINCH` kindú gyakorlat aznapi edzésben; `rest` = se mászás, se edzésnapló (úszás, bicikli, lépés könnyű aktivitás — nem töri meg a pihenőnapot).
+- Napsoronként jelvények a dátum alatt: **Mászás**, **Edzés** (csak ha a nap „Teljesítve” jelvényt nem kapott — a nem a slot-sablonból indított edzés), **Ujjterhelés** (ujj-gyakorlat mászás nélkül), **Pihenő** (csak mai / múltbeli napon; a jövőbeli nap még nem „pihent”).
+- Felül összesítő a naptári hétre: „Mászás X nap · Edzés Y nap · Pihenőnap Z” (a pihenőnap a mai napig számol). Hétváltáskor a megjelenített hétre számol.
+
 CRUD: sablon lista/szerkesztő; heti dashboard slot szerkesztés; soft delete sablonra / hétre (megerősítéssel). Sablon soft delete után a múltbeli sessionök `planId`-je megmarad; új slotba nem választható.
 
 ### UI/UX elvárások
@@ -121,6 +129,7 @@ Nincs nyitott kérdés.
 #### Backend-offline
 
 - Olvasás / írás helyi store-ból Backend-offline és Full-offline esetén is.
+- A heti terhelés kizárólag a helyi mászó- és edzésnapló-store-ból számol (nincs saját hívás), így Full-offline is teljes.
 - Create / update / soft-delete → outbox + kliens UUID; sync: [[Szinkronizációs központ]].
 - Szinkronizálatlan helyi draft elvetése: hard remove + outbox tisztítás.
 - Lásd [[Backend-offline first]].

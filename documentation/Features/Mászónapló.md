@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-25
-verifikalt_commit: aa61aee
+verifikalva: 2026-10-01
+verifikalt_commit: 9e3b005
 ---
 
 # Mászónapló
@@ -174,6 +174,10 @@ Testsúly \(m\): [[Profile]] aktuális kg — **nem** fagyasztódik. TRAD: \(m_{
 - Boulder: 1 sikeres kísérlet ≡ **4 m**; \(\text{Volume} = \sum_{\text{sikeres kísérletek}} 4 \times I_{\text{grade},i}\)
 
 A Volumen **edzésterhelési mutató, nem kalória és nem megmászott méter**; nincs mértékegysége (relatív pontszám), ezért nagy számok is normálisak. A felületen „Mászási volumen" címkével jelenik meg (nem csak „V" / „volumen"), és a Statisztika képernyőn egy súgó (ⓘ) gomb elmondja, mit jelent (`WORKOUT.CLIMBING.STATS_PAGE.VOLUME_HELP_*`). A session-szerkesztő élő előnézetében `~kcal · volumen N` formában (a „volumen" szó kiírva, nem „V").
+
+#### Heti terhelés
+
+A mászó-sessionök (dátum szerint, törölt nélkül) a [[Heti terv]] dashboard heti terhelés-áttekintésébe is bekerülnek (`backlog/137`): a mászónap „Mászás” jelvényt kap, ujjterhelő napnak számít, és nem pihenőnap.
 
 #### Statisztikák
 

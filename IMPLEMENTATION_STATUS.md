@@ -14,6 +14,9 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-01 — #137** Heti terhelés-áttekintés a Heti terv dashboardon: naponként Mászás / Edzés / Ujjterhelés /
+  Pihenő jelvény, felül „Mászás X nap · Edzés Y nap · Pihenőnap Z” — tiszta `training-load.ts` a helyi Mászónapló +
+  Edzésnapló alapján (a #138 figyelmeztetések és a #139 rotáció erre épül). Érintett: [[Heti terv]], [[Mászónapló]]
 - **2026-10-01 — #140** Sablon-csoport (`goalLabel`) egy koppintásos kapcsolója a sablon-lista csoport-fejlécén (⋮):
   Csoport aktiválása / inaktiválása / Csak ez a csoport legyen aktív — a meglévő nested PUT + outbox úton, csak a
   változó sablonokat menti. Érintett: [[Heti terv]]; kód: `pages/workout/plan/plan-list.page.*`, `plan-group-activation.ts`
