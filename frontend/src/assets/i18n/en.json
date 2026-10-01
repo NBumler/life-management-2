@@ -1210,7 +1210,12 @@
       "INHERITED_FROM": "The schedule set in the week of {{date}} applies (inherited).",
       "EDIT_MODE": "Apply changes",
       "EDIT_FROM_NOW": "From now on",
-      "EDIT_THIS_WEEK_ONLY": "This week only"
+      "EDIT_THIS_WEEK_ONLY": "This week only",
+      "LOAD_SUMMARY": "Climbing {{climbing}} d · Workout {{workouts}} d · Rest days {{rest}}",
+      "LOAD_CLIMBING": "Climbing",
+      "LOAD_WORKOUT": "Workout",
+      "LOAD_FINGERS": "Finger load",
+      "LOAD_REST": "Rest"
     },
     "SWIM": {
       "NEW": "New swim",

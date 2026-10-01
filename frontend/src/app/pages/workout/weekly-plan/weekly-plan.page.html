@@ -19,6 +19,14 @@
     </ion-buttons>
   </div>
 
+  <ion-note class="load-summary">
+    {{
+      'WORKOUT.WEEKLY.LOAD_SUMMARY'
+        | translate
+          : { climbing: loadSummary().climbingDays, workouts: loadSummary().workoutDays, rest: loadSummary().restDays }
+    }}
+  </ion-note>
+
   <div class="cta-row">
     <ion-button expand="block" fill="outline" routerLink="plans">{{ 'WORKOUT.WEEKLY.MANAGE_PLANS' | translate }}</ion-button>
   </div>
@@ -55,6 +63,22 @@
           <ion-label>
             <h2>{{ ('WORKOUT.WEEKLY.DAY.' + day.dayOfWeek) | translate }}</h2>
             <p>{{ day.date }}</p>
+            @if (day.load.climbing > 0 || day.load.workouts > 0 || (day.load.rest && day.past)) {
+              <div class="load-chips">
+                @if (day.load.climbing > 0) {
+                  <ion-badge color="tertiary">{{ 'WORKOUT.WEEKLY.LOAD_CLIMBING' | translate }}</ion-badge>
+                }
+                @if (day.load.workouts > 0 && !day.completed) {
+                  <ion-badge color="primary">{{ 'WORKOUT.WEEKLY.LOAD_WORKOUT' | translate }}</ion-badge>
+                }
+                @if (day.load.fingerLoad && day.load.climbing === 0) {
+                  <ion-badge color="warning">{{ 'WORKOUT.WEEKLY.LOAD_FINGERS' | translate }}</ion-badge>
+                }
+                @if (day.load.rest && day.past) {
+                  <ion-badge color="medium">{{ 'WORKOUT.WEEKLY.LOAD_REST' | translate }}</ion-badge>
+                }
+              </div>
+            }
             <ion-select
               [value]="day.planId ?? ''"
               interface="action-sheet"

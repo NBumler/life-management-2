@@ -20,10 +20,12 @@ import {
 import { TranslatePipe } from '@ngx-translate/core';
 
 import { WeeklyPlanSlot } from '../../../api/model/weeklyPlanSlot';
+import { ClimbingSessionRepository } from '../../../core/data/climbing-session.repository';
 import { WorkoutPlanRepository } from '../../../core/data/workout-plan.repository';
 import { WorkoutSessionRepository } from '../../../core/data/workout-session.repository';
 import { WeeklyPlanRepository } from '../../../core/data/weekly-plan.repository';
 import { today } from '../../../shared/local-date';
+import { DayLoad, dailyTrainingLoad, weekLoadSummary } from '../training-load';
 import { WorkoutSegmentHeaderComponent } from '../workout-segment-header.component';
 import { WEEK_DAYS, addLocalDays, isSlotCompleted, mondayOf, resolveEffectiveWeek } from './weekly-plan-adherence';
 
@@ -42,6 +44,10 @@ interface DayCell {
   planId: string | null;
   planName: string | null;
   completed: boolean;
+  /** backlog/137 — the day's actual training load (climbing / workout / finger load / rest). */
+  load: DayLoad;
+  /** Not in the future — only then can a load-free day count as a rest day. */
+  past: boolean;
 }
 
 /**
@@ -78,6 +84,16 @@ interface DayCell {
         display: block;
         margin-bottom: 8px;
       }
+      .load-summary {
+        display: block;
+        padding: 0 16px 8px;
+      }
+      .load-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin: 2px 0 4px;
+      }
     `,
   ],
   imports: [
@@ -105,6 +121,8 @@ export class WeeklyPlanPage implements OnInit, ViewWillEnter {
   private readonly planRepository = inject(WorkoutPlanRepository);
   private readonly weeklyRepository = inject(WeeklyPlanRepository);
   private readonly sessionRepository = inject(WorkoutSessionRepository);
+  private readonly climbingRepository = inject(ClimbingSessionRepository);
+  readonly todayIso = today();
 
   readonly weekStart = signal(mondayOf(today()));
 
@@ -114,12 +132,24 @@ export class WeeklyPlanPage implements OnInit, ViewWillEnter {
 
   readonly editMode = signal<WeeklyEditMode>('FROM_NOW');
 
+  /** backlog/137 — per-day load of the shown week, from the local climbing + workout logs only. */
+  readonly weekLoad = computed<DayLoad[]>(() =>
+    dailyTrainingLoad(
+      WEEK_DAYS.map((_, index) => addLocalDays(this.weekStart(), index)),
+      this.climbingRepository.items(),
+      this.sessionRepository.items(),
+    ),
+  );
+
+  readonly loadSummary = computed(() => weekLoadSummary(this.weekLoad(), this.todayIso));
+
   readonly days = computed<DayCell[]>(() => {
     const start = this.weekStart();
     const effective = this.effective();
     const slots = effective.slots;
     const sessions = this.sessionRepository.items();
     const plans = this.planRepository.items();
+    const load = this.weekLoad();
     return WEEK_DAYS.map((dayOfWeek, index) => {
       const slot = slots.find((entry) => entry.dayOfWeek === dayOfWeek) ?? null;
       const planId = slot?.planId ?? null;
@@ -132,17 +162,25 @@ export class WeeklyPlanPage implements OnInit, ViewWillEnter {
         planId,
         planName: plan?.name ?? (planId !== null ? '—' : null),
         completed: planId !== null && isSlotCompleted(sessions, start, planId),
+        load: load[index],
+        past: load[index].date <= this.todayIso,
       };
     });
   });
 
 
   async ngOnInit(): Promise<void> {
-    await Promise.all([this.planRepository.load(), this.weeklyRepository.load(), this.sessionRepository.load()]);
+    await Promise.all([
+      this.planRepository.load(),
+      this.weeklyRepository.load(),
+      this.sessionRepository.load(),
+      this.climbingRepository.load(),
+    ]);
   }
 
   ionViewWillEnter(): void {
     void this.sessionRepository.reload();
+    void this.climbingRepository.load({ force: true });
   }
 
   shiftWeek(deltaWeeks: number): void {
