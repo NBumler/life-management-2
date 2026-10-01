@@ -1004,7 +1004,9 @@
         "LAST_DONE": "utoljára: {{date}}",
         "NEVER_DONE": "még nem volt",
         "START": "Indítás",
-        "PICK_PLAN": "Terv indítása…"
+        "PICK_PLAN": "Terv indítása…",
+        "SLOT_FINGERS_NEAR_CLIMB": "Ez a sablon ujjgyakorlatot tartalmaz — a mai / holnapi mászás miatt nem javasolt.",
+        "ALL_PLANS_HAVE_FINGERS": "Minden aktív sablonban van ujjgyakorlat — a mászás közelében ezek kihagyása javasolt."
       }
     },
     "ACTIVE": {
@@ -1559,7 +1561,10 @@
       "NO_REST_DAY": "Az elmúlt 7 napban nem volt pihenőnap — heti 1–2 teljes pihenőnap javasolt.",
       "FINGER_LOAD": "Az elmúlt 7 napból legalább 5 ujjterhelő nap volt — az ínak és a pulley-k lassan regenerálódnak, pihentetés javasolt.",
       "CLIMBED_TODAY": "Ma már másztál — ma legfeljebb rövid törzs / prehab edzés javasolt.",
-      "MANY_CLIMBS": "Sok mászás a héten — az otthoni húzó- és ujjedzés kihagyható."
+      "MANY_CLIMBS": "Sok mászás a héten — az otthoni húzó- és ujjedzés kihagyható.",
+      "NO_REST_AHEAD": "A tervezett mászások és a heti beosztás mellett a következő 7 napban nem marad pihenőnap — érdemes egy napot szabadon hagyni.",
+      "CLIMB_PLANNED_TODAY": "Mára mászás van tervezve — ma legfeljebb rövid törzs / prehab edzés javasolt.",
+      "CLIMB_TOMORROW": "Holnap mászás — ma ujj- és nehéz húzóedzés nem javasolt."
     }
   },
   "WIDGET": {

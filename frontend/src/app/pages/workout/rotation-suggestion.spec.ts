@@ -2,7 +2,7 @@ import { WeeklyPlan } from '../../api/model/weeklyPlan';
 import { WeeklyPlanSlot } from '../../api/model/weeklyPlanSlot';
 import { WorkoutPlan } from '../../api/model/workoutPlan';
 import { WorkoutSession } from '../../api/model/workoutSession';
-import { doneToday, rotationOrder, todaySlotPlan } from './rotation-suggestion';
+import { doneToday, planHasFingerLoad, rotationOrder, suggestNextPlan, todaySlotPlan } from './rotation-suggestion';
 
 function plan(id: string, active = true, deleted = false): WorkoutPlan {
   return { id, name: id, active, deleted, exercises: [] } as unknown as WorkoutPlan;
@@ -58,5 +58,34 @@ describe('rotation-suggestion (backlog/139)', () => {
     expect(doneToday([session('A', '2026-10-01')], 'A', '2026-10-01')).toBeTrue();
     expect(doneToday([session('A', '2026-10-01', true)], 'A', '2026-10-01')).toBeFalse();
     expect(doneToday([session('A', '2026-09-30')], 'A', '2026-10-01')).toBeFalse();
+  });
+
+  describe('finger-aware suggestion (backlog/143)', () => {
+    function withExercises(id: string, category: string): WorkoutPlan {
+      return { ...plan(id), exercises: [{ id: `${id}-x`, deleted: false, exerciseCategory: category, exerciseKind: 'WEIGHTED_REPS' }] } as unknown as WorkoutPlan;
+    }
+    const fingers = withExercises('F', 'FOREARM_FINGERS');
+    const pull = withExercises('P', 'BACK');
+
+    it('planHasFingerLoad() detects a live FOREARM_FINGERS exercise', () => {
+      expect(planHasFingerLoad(fingers)).toBeTrue();
+      expect(planHasFingerLoad(pull)).toBeFalse();
+    });
+
+    it('avoidFingers skips the due finger template for the next finger-free one', () => {
+      const result = suggestNextPlan([fingers, pull], [], '2026-10-01', { avoidFingers: true });
+      expect([result?.candidate.plan.id, result?.fingerFallback]).toEqual(['P', false]);
+      expect(suggestNextPlan([fingers, pull], [], '2026-10-01')?.candidate.plan.id).toBe('F');
+    });
+
+    it('falls back to the due template (flagged) when every template has finger work', () => {
+      const result = suggestNextPlan([fingers], [], '2026-10-01', { avoidFingers: true });
+      expect([result?.candidate.plan.id, result?.fingerFallback]).toEqual(['F', true]);
+    });
+
+    it('excludes today\'s slot and templates already done today', () => {
+      const result = suggestNextPlan([A, B, C], [session('B', '2026-10-01')], '2026-10-01', { excludeId: 'A' });
+      expect(result?.candidate.plan.id).toBe('C');
+    });
   });
 });

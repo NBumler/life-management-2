@@ -12,6 +12,8 @@ function days(overrides: Record<string, Partial<DayLoad>> = {}): DayLoad[] {
     workouts: 0,
     fingerLoad: false,
     rest: true,
+    plannedClimb: false,
+    missedClimb: false,
     ...overrides[date],
   }));
 }
@@ -19,15 +21,15 @@ function days(overrides: Record<string, Partial<DayLoad>> = {}): DayLoad[] {
 const busy: Partial<DayLoad> = { workouts: 1, rest: false };
 const climb: Partial<DayLoad> = { climbing: 1, fingerLoad: true, rest: false };
 
-function codes(list: DayLoad[]): string[] {
-  return loadWarnings(list, TODAY).map((warning) => warning.code);
+function codes(list: DayLoad[], scheduled: ReadonlySet<string> = new Set()): string[] {
+  return loadWarnings(list, TODAY, scheduled).map((warning) => warning.code);
 }
 
 describe('load-warnings (backlog/138)', () => {
-  it('covers the 7 days before today (rest window) and today', () => {
+  it('covers the 7 days before today (rest window) through the 7-day look-ahead', () => {
     const dates = loadWarningDates(TODAY);
     expect(dates[0]).toBe(addLocalDays(TODAY, -7));
-    expect(dates[dates.length - 1]).toBe(TODAY);
+    expect(dates[dates.length - 1]).toBe(addLocalDays(TODAY, 6));
   });
 
   it('a quiet week has no warnings', () => {
@@ -69,5 +71,50 @@ describe('load-warnings (backlog/138)', () => {
       overrides[addLocalDays(TODAY, -offset)] = finger;
     }
     expect(codes(days(overrides))).toEqual(['FINGER_LOAD']);
+  });
+
+  describe('planned climbs (backlog/143)', () => {
+    const planned: Partial<DayLoad> = { plannedClimb: true, rest: false };
+
+    it('a climb planned today is CLIMB_PLANNED_TODAY (a logged one stays CLIMBED_TODAY)', () => {
+      expect(codes(days({ [TODAY]: planned }))).toEqual(['CLIMB_PLANNED_TODAY']);
+    });
+
+    it('a climb planned tomorrow is CLIMB_TOMORROW', () => {
+      expect(codes(days({ [addLocalDays(TODAY, 1)]: planned }))).toEqual(['CLIMB_TOMORROW']);
+    });
+
+    it('MANY_CLIMBS counts logged + planned climbs over the whole calendar week', () => {
+      const overrides = {
+        '2026-09-28': climb,
+        '2026-10-02': planned,
+        '2026-10-03': planned,
+        '2026-10-04': planned,
+      };
+      // 10-02 is tomorrow, so the look-ahead info shows too
+      expect(codes(days(overrides))).toEqual(['CLIMB_TOMORROW', 'MANY_CLIMBS']);
+    });
+
+    it('NO_REST_AHEAD when planned climbs + weekly slots leave no free day in the next 7 days', () => {
+      const overrides: Record<string, Partial<DayLoad>> = {};
+      const scheduled = new Set<string>();
+      for (let offset = 0; offset < 7; offset++) {
+        const date = addLocalDays(TODAY, offset);
+        if (offset % 2 === 1) {
+          overrides[date] = planned;
+        } else {
+          scheduled.add(date);
+        }
+      }
+      expect(codes(days(overrides), scheduled)).toContain('NO_REST_AHEAD');
+
+      scheduled.delete(addLocalDays(TODAY, 4));
+      expect(codes(days(overrides), scheduled)).not.toContain('NO_REST_AHEAD');
+    });
+
+    it('a fully scheduled week without any planned climb does not trigger NO_REST_AHEAD', () => {
+      const scheduled = new Set(loadWarningDates(TODAY).filter((date) => date >= TODAY));
+      expect(codes(days(), scheduled)).toEqual([]);
+    });
   });
 });

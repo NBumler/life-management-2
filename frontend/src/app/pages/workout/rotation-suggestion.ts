@@ -6,6 +6,7 @@
 import { WeeklyPlan } from '../../api/model/weeklyPlan';
 import { WorkoutPlan } from '../../api/model/workoutPlan';
 import { WorkoutSession } from '../../api/model/workoutSession';
+import { isFingerLoadExercise } from './training-load';
 import { WEEK_DAYS, mondayOf, resolveEffectiveWeek, weekDates } from './weekly-plan/weekly-plan-adherence';
 
 export interface RotationCandidate {
@@ -65,4 +66,39 @@ export function todaySlotPlan(weeks: readonly WeeklyPlan[], plans: readonly Work
 /** A session from `planId` is already logged today — the slot / suggestion is done for the day. */
 export function doneToday(sessions: readonly WorkoutSession[], planId: string, today: string): boolean {
   return sessions.some((session) => !session.deleted && session.planId === planId && session.date === today);
+}
+
+/** backlog/143 — the template has a live FOREARM_FINGERS / HANGBOARD_PINCH exercise (a finger day). */
+export function planHasFingerLoad(plan: WorkoutPlan): boolean {
+  return plan.exercises.some((exercise) => !exercise.deleted && isFingerLoadExercise(exercise));
+}
+
+export interface RotationSuggestion {
+  candidate: RotationCandidate;
+  /** backlog/143 — finger work was to be avoided, but every remaining template has it. */
+  fingerFallback: boolean;
+}
+
+/**
+ * The rotation's next template, skipping `excludeId` (today's slot) and templates already done today.
+ * backlog/143 `avoidFingers` (a climb today or tomorrow): finger-loading templates are skipped, unless
+ * no other is left — then the first one is still offered, flagged as a fallback.
+ */
+export function suggestNextPlan(
+  plans: readonly WorkoutPlan[],
+  sessions: readonly WorkoutSession[],
+  today: string,
+  options: { excludeId?: string | null; avoidFingers?: boolean } = {},
+): RotationSuggestion | null {
+  const candidates = rotationOrder(plans, sessions).filter(
+    (candidate) => candidate.plan.id !== options.excludeId && !doneToday(sessions, candidate.plan.id, today),
+  );
+  if (candidates.length === 0) {
+    return null;
+  }
+  if (!options.avoidFingers) {
+    return { candidate: candidates[0], fingerFallback: false };
+  }
+  const fingerFree = candidates.find((candidate) => !planHasFingerLoad(candidate.plan));
+  return fingerFree !== undefined ? { candidate: fingerFree, fingerFallback: false } : { candidate: candidates[0], fingerFallback: true };
 }

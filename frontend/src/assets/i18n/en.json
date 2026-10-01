@@ -1004,7 +1004,9 @@
         "LAST_DONE": "last: {{date}}",
         "NEVER_DONE": "not done yet",
         "START": "Start",
-        "PICK_PLAN": "Start a plan…"
+        "PICK_PLAN": "Start a plan…",
+        "SLOT_FINGERS_NEAR_CLIMB": "This template has finger work — not recommended with a climb today / tomorrow.",
+        "ALL_PLANS_HAVE_FINGERS": "Every active template has finger work — skipping it near a climb is recommended."
       }
     },
     "ACTIVE": {
@@ -1559,7 +1561,10 @@
       "NO_REST_DAY": "No rest day in the last 7 days — 1–2 full rest days a week are recommended.",
       "FINGER_LOAD": "At least 5 of the last 7 days loaded your fingers — tendons and pulleys recover slowly, rest is recommended.",
       "CLIMBED_TODAY": "You already climbed today — at most a short core / prehab session is recommended.",
-      "MANY_CLIMBS": "Lots of climbing this week — home pulling and finger work can be skipped."
+      "MANY_CLIMBS": "Lots of climbing this week — home pulling and finger work can be skipped.",
+      "NO_REST_AHEAD": "With the planned climbs and the weekly schedule, no rest day is left in the next 7 days — consider keeping one day free.",
+      "CLIMB_PLANNED_TODAY": "A climb is planned for today — at most a short core / prehab session is recommended.",
+      "CLIMB_TOMORROW": "Climbing tomorrow — finger and heavy pulling work is not recommended today."
     }
   },
   "WIDGET": {

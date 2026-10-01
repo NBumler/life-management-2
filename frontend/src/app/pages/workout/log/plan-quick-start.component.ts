@@ -3,6 +3,7 @@ import { Router, RouterLink } from '@angular/router';
 import { ActionSheetController, IonButton } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
+import { CalendarEventRepository } from '../../../core/data/calendar-event.repository';
 import { ClimbingSessionRepository } from '../../../core/data/climbing-session.repository';
 import { WeeklyPlanRepository } from '../../../core/data/weekly-plan.repository';
 import { WorkoutPlanRepository } from '../../../core/data/workout-plan.repository';
@@ -10,7 +11,7 @@ import { WorkoutSessionRepository } from '../../../core/data/workout-session.rep
 import { today } from '../../../shared/local-date';
 import { loadWarningsFor } from '../load-warnings';
 import { planGroupKey } from '../plan/plan-group-activation';
-import { doneToday, rotationOrder, todaySlotPlan } from '../rotation-suggestion';
+import { doneToday, planHasFingerLoad, suggestNextPlan, todaySlotPlan } from '../rotation-suggestion';
 
 const ACTIVE_ROUTE = '/tabs/workout/log/active';
 
@@ -38,8 +39,12 @@ const ACTIVE_ROUTE = '/tabs/workout/log/active';
               {{ 'WORKOUT.LOG.QUICK.START' | translate }}
             </ion-button>
           </div>
+          @if (todayPlanFingerWarning()) {
+            <p class="finger-note">{{ 'WORKOUT.LOG.QUICK.SLOT_FINGERS_NEAR_CLIMB' | translate }}</p>
+          }
         }
-        @if (suggestion(); as next) {
+        @if (rotation(); as rotationResult) {
+          @let next = rotationResult.candidate;
           <div class="qs-row">
             <div class="qs-text">
               <span class="qs-label">
@@ -63,6 +68,9 @@ const ACTIVE_ROUTE = '/tabs/workout/log/active';
               {{ 'WORKOUT.LOG.QUICK.START' | translate }}
             </ion-button>
           </div>
+          @if (rotationResult.fingerFallback) {
+            <p class="finger-note">{{ 'WORKOUT.LOG.QUICK.ALL_PLANS_HAVE_FINGERS' | translate }}</p>
+          }
         }
         <ion-button size="small" fill="clear" (click)="openPlanPicker()">{{ 'WORKOUT.LOG.QUICK.PICK_PLAN' | translate }}</ion-button>
       </div>
@@ -79,6 +87,11 @@ const ACTIVE_ROUTE = '/tabs/workout/log/active';
       .rest-hint {
         margin: 4px 0 8px;
         font-size: 0.875rem;
+        color: var(--ion-color-warning-shade);
+      }
+      .finger-note {
+        margin: 0 0 4px;
+        font-size: 0.75rem;
         color: var(--ion-color-warning-shade);
       }
       .qs-row {
@@ -113,6 +126,7 @@ export class PlanQuickStartComponent implements OnInit {
   private readonly weeklyRepository = inject(WeeklyPlanRepository);
   private readonly sessionRepository = inject(WorkoutSessionRepository);
   private readonly climbingRepository = inject(ClimbingSessionRepository);
+  private readonly eventRepository = inject(CalendarEventRepository);
   private readonly actionSheetController = inject(ActionSheetController);
   private readonly translate = inject(TranslateService);
   private readonly router = inject(Router);
@@ -128,23 +142,48 @@ export class PlanQuickStartComponent implements OnInit {
     return plan !== null && plan.active && !doneToday(this.sessionRepository.items(), plan.id, this.todayIso) ? plan : null;
   });
 
-  /** backlog/139 — the rotation's next template; only an alternative when today has a slot. */
-  readonly suggestion = computed(() => {
-    const sessions = this.sessionRepository.items();
-    const slotId = this.todayPlan()?.id ?? null;
-    return (
-      rotationOrder(this.planRepository.items(), sessions).find(
-        (candidate) => candidate.plan.id !== slotId && !doneToday(sessions, candidate.plan.id, this.todayIso),
-      ) ?? null
-    );
+  /** backlog/138 / backlog/143 — today's load rules, planned climbs and the weekly schedule included. */
+  private readonly warningCodes = computed(
+    () =>
+      new Set(
+        loadWarningsFor(this.todayIso, {
+          climbingSessions: this.climbingRepository.items(),
+          workoutSessions: this.sessionRepository.items(),
+          events: this.eventRepository.items(),
+          weeklyPlans: this.weeklyRepository.items(),
+          workoutPlans: this.planRepository.items(),
+        }).map((warning) => warning.code),
+      ),
+  );
+
+  /** A climb today (logged or planned) or tomorrow (planned) — finger work is not suggested (backlog/143). */
+  private readonly avoidFingers = computed(() => {
+    const codes = this.warningCodes();
+    return codes.has('CLIMBED_TODAY') || codes.has('CLIMB_PLANNED_TODAY') || codes.has('CLIMB_TOMORROW');
   });
 
-  /** backlog/138 "nincs pihenőnap" / "mászónap" — shown first; the starts stay available. */
-  readonly restHint = computed(() =>
-    loadWarningsFor(this.todayIso, this.climbingRepository.items(), this.sessionRepository.items()).some(
-      (warning) => warning.code === 'NO_REST_DAY' || warning.code === 'CLIMBED_TODAY',
-    ),
+  /**
+   * backlog/139 — the rotation's next template; only an alternative when today has a slot. backlog/143:
+   * near a climb, finger-loading templates are skipped (or flagged when nothing else is left).
+   */
+  readonly rotation = computed(() =>
+    suggestNextPlan(this.planRepository.items(), this.sessionRepository.items(), this.todayIso, {
+      excludeId: this.todayPlan()?.id ?? null,
+      avoidFingers: this.avoidFingers(),
+    }),
   );
+
+  /** backlog/143 — today's slot is a finger day, but there is a climb today / tomorrow. */
+  readonly todayPlanFingerWarning = computed(() => {
+    const plan = this.todayPlan();
+    return plan !== null && this.avoidFingers() && planHasFingerLoad(plan);
+  });
+
+  /** backlog/138 "nincs pihenőnap" / "mászónap" (logged or planned, backlog/143) — shown first; the starts stay available. */
+  readonly restHint = computed(() => {
+    const codes = this.warningCodes();
+    return codes.has('NO_REST_DAY') || codes.has('CLIMBED_TODAY') || codes.has('CLIMB_PLANNED_TODAY');
+  });
 
   async ngOnInit(): Promise<void> {
     await Promise.all([
@@ -152,6 +191,7 @@ export class PlanQuickStartComponent implements OnInit {
       this.weeklyRepository.load(),
       this.sessionRepository.load(),
       this.climbingRepository.load(),
+      this.eventRepository.load(),
     ]);
   }
 

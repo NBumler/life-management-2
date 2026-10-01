@@ -6,6 +6,7 @@ import { provideTranslateService } from '@ngx-translate/core';
 import { WeeklyPlan } from '../../../api/model/weeklyPlan';
 import { WeeklyPlanSlot } from '../../../api/model/weeklyPlanSlot';
 import { WorkoutPlan } from '../../../api/model/workoutPlan';
+import { CalendarEventRepository } from '../../../core/data/calendar-event.repository';
 import { ClimbingSessionRepository } from '../../../core/data/climbing-session.repository';
 import { WeeklyPlanRepository } from '../../../core/data/weekly-plan.repository';
 import { WorkoutPlanRepository } from '../../../core/data/workout-plan.repository';
@@ -75,6 +76,7 @@ describe('WeeklyPlanPage — recurring schedule (backlog/127)', () => {
           useValue: { load: () => Promise.resolve(), reload: () => Promise.resolve(), items: signal([]) },
         },
         { provide: ClimbingSessionRepository, useValue: { load: () => Promise.resolve(), items: signal([]) } },
+        { provide: CalendarEventRepository, useValue: { load: () => Promise.resolve(), items: signal([]) } },
       ],
     }).compileComponents();
     fixture = TestBed.createComponent(WeeklyPlanPage);
