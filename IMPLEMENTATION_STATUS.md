@@ -14,6 +14,10 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-01 — #054 + #139** Edzésnapló terv-gyorsindító: mai heti slot (elsőbbség), rotációs „Következő javasolt”
+  (legrégebben teljesített aktív sablon; slot esetén alternatíva), pihenő / prehab tipp a #138 szabályaira, „Terv
+  indítása…” lista minden aktív sablonnal. Érintett: [[Edzésnapló]], [[Heti terv]]; kód: `rotation-suggestion.ts`,
+  `pages/workout/log/plan-quick-start.component.ts`
 - **2026-10-01 — #138** Terhelés-figyelmeztetések (nem blokkoló sáv a Heti terv dashboardon és az Edzésnapló listán):
   nincs pihenőnap 7 napja, ≥ 5 ujjterhelő nap / 7, ma már másztál, ≥ 4 mászás a héten — tiszta `load-warnings.ts`,
   konstans küszöbök. Érintett: [[Heti terv]], [[Edzésnapló]]

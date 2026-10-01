@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-10-01
-verifikalt_commit: c5bb2b8
+verifikalt_commit: 2b8300e
 ---
 
 # Heti terv
@@ -96,6 +96,10 @@ A dashboard a beosztás mellett a hét **tényleges** terhelését is mutatja, a
 - Napsoronként jelvények a dátum alatt: **Mászás**, **Edzés** (csak ha a nap „Teljesítve” jelvényt nem kapott — a nem a slot-sablonból indított edzés), **Ujjterhelés** (ujj-gyakorlat mászás nélkül), **Pihenő** (csak mai / múltbeli napon; a jövőbeli nap még nem „pihent”).
 - Felül összesítő a naptári hétre: „Mászás X nap · Edzés Y nap · Pihenőnap Z” (a pihenőnap a mai napig számol). Hétváltáskor a megjelenített hétre számol.
 
+#### Rotációs javaslat (`backlog/139`)
+
+A fix napkiosztás mellett (nem helyette) az [[Edzésnapló]] terv-gyorsindítója rotációt is javasol: a „Következő javasolt” az aktív, élő sablonok közül a legrégebben teljesített (`planId` szerinti utolsó élő session dátuma; sosem teljesített → elsőbbség; holtversenyben a sablon-sorrend). Így egy A/B pár a ténylegesen edzett napokon halad tovább, a mászásmentes napok rendszertelensége nem töri meg. Ha a mai napra van (öröklött) heti slot, az elsőbbséget élvez, a rotációs javaslat csak alternatíva. A fókuszváltás (pl. „OAPU mód”) a sablon-csoport kapcsolóval (`backlog/140`) történik: csak az aktív sablonok vesznek részt a rotációban. Tiszta TS: `pages/workout/rotation-suggestion.ts` (`rotationOrder`, `todaySlotPlan`, `doneToday`).
+
 #### Terhelés-figyelmeztetések (`backlog/138`)
 
 Tiszta szabálymotor (`pages/workout/load-warnings.ts`) a fenti napi terhelés-soron, mindig a **mai** naphoz (a megjelenített héttől függetlenül). Csak tanács — a szövegezés „javasolt”, semmit nem tilt, push-értesítés nincs. A küszöbök konstansok (`REST_WINDOW_DAYS = 7`, `FINGER_LOAD_DAYS_LIMIT = 5`, `MANY_CLIMBS_PER_WEEK = 4`).
@@ -115,7 +119,7 @@ CRUD: sablon lista/szerkesztő; heti dashboard slot szerkesztés; soft delete sa
 
 - Sablonok lista + nested gyakorlat/cél-szett szerkesztő ([[Gyakorlat]] picker). Az ismétlésszám mező szöveges (`inputmode="tel"` — számbillentyűzet kötőjellel): `N` vagy `N-M` (szóköz, en-dash tűrve; `N-N` egyetlen értékké egyszerűsödik); értelmezhetetlen vagy fordított tartománynál a mező kerete piros, a szett sora alatt teljes szélességű hibaüzenet, és a mentés blokkolva. A parse / megjelenítés mezőtől független (`shared/target-range.ts`), hogy később más cél-mezők is kaphassanak tartományt. A cél-szett táblázat elrendezése az [[Edzésnapló]]-val közös (oszlopfejléc + szettenként egy sor, szett-típus jelvény, ⋮ gyakorlat-menü); a sablonban a `kind` mezői mellett egy „Pihenő / mp” (cél pihenő) oszlop is van. A szett-jelvény popoverében (típus / Oldal / **Cél RPE**) állítható az egyoldali cél-szett és a cél-RPE; „+ Új szett” egyoldali szett után a kezet váltogatja, a cél-RPE-t átviszi. A gyakorlat-fejléc alatt egysoros **megjegyzés** mező (max. 200 karakter, „Megjegyzés (pl. szék: 5, 3 mp negatív)”); üresen `null`-ként mentődik.
 - Sablonok lista szűrő: **Aktív** (alapértelmezett) / Inaktív / Mind; soronkénti aktív/inaktív kapcsoló (nincs szükség edit módba lépésre); opcionális `goalLabel` szerinti csoport-fejléc a listában. A címkés csoport-fejlécen ⋮ gomb → action sheet (`backlog/140`, fókuszváltás pl. „OAPU mód”): **Csoport aktiválása** (a csoport minden sablonja aktív), **Csoport inaktiválása**, **Csak ez a csoport legyen aktív** (a csoport aktív, minden más élő sablon — más csoportok és a címke nélküliek — inaktív). A művelet a szűrőtől függetlenül az összes élő sablonra hat, csak a ténylegesen változó sablonokat menti (mindegyiket a soronkénti kapcsolóval azonos nested PUT + outbox úton, `planGroupActivationChanges` — `pages/workout/plan/plan-group-activation.ts`), utána toast: „N sablon módosítva”. Megerősítés nincs: a művelet ugyanígy visszafordítható. A címke nélküli sablonoknak nincs fejléce, így csoport-menüje sem.
-- Heti dashboard slot kiosztás pickere és az [[Edzésnapló]] „Terv indítása” gyorsindítás listája csak aktív sablonokat kínál fel, `goalLabel` szerint csoportosítva, ha van címke.
+- Heti dashboard slot kiosztás pickere és az [[Edzésnapló]] „Terv indítása…” gyorsindítás listája (action sheet, „Csoport · Név”) csak aktív sablonokat kínál fel, `goalLabel` szerint csoportosítva, ha van címke.
 - Heti dashboard: 7 napos nézet; naphoz sablon rendelés; „Teljesítve” jelvény adherence szerint; CTA: Edzés indítása.
 - A hét-navigátor (előző hét ◂ / hét kezdete / következő hét ▸) **egy sorban** jelenik meg, a nyilak a hét-felirat két szélén (`.week-nav` flex-sor); a felirat tapja a mai hétre ugrik.
 - Örökölt hétnél jelzés: „A <dátum> héten beállított beosztás érvényes (öröklött)”; „Mostantól” / „Csak erre a hétre” szegmens a módosítás érvényességéhez. (A korábbi „Másolás következő hétre” akció megszűnt — az öröklés feleslegessé tette.)

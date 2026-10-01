@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-10-01
-verifikalt_commit: c5bb2b8
+verifikalt_commit: 2b8300e
 ---
 
 # Edzésnapló
@@ -143,7 +143,12 @@ PR típusok (badge a szett mellett): számított **1RM** megdöntés; **max súl
 
 #### Kapcsolat [[Heti terv]]
 
-- „Edzés indítása a tervből”: új session a `WorkoutPlan` sablonból; előtöltés (`rowsFromPlan`); `planId = WorkoutPlan.id`. Tartományos cél-ismétlés (`8–12`, [[Heti terv]]) a határok átlagával, felfelé kerekítve töltődik; a tartomány display-only `repsTarget`-ként a helyi draftban is megmarad és „cél: …” segédszövegként látszik (a session szettjén nincs tartomány-mező). Az előtöltő logika kész; belépője jelenleg a [[Heti terv]] heti dashboard nap-`START` gombja (`?planId=`). Az Edzésnapló dashboardon nincs önálló „Terv indítása" gyorsindító (aktív sablonok listája) — tervezett: `backlog/054-edzesnaplo-dashboard-terv-inditasa-gyorsindito-aktiv-sablonok-li.md`.
+- „Edzés indítása a tervből”: új session a `WorkoutPlan` sablonból; előtöltés (`rowsFromPlan`); `planId = WorkoutPlan.id`. Tartományos cél-ismétlés (`8–12`, [[Heti terv]]) a határok átlagával, felfelé kerekítve töltődik; a tartomány display-only `repsTarget`-ként a helyi draftban is megmarad és „cél: …” segédszövegként látszik (a session szettjén nincs tartomány-mező). Belépői (mind `?planId=`-vel nyitják az élő nézetet): a [[Heti terv]] heti dashboard nap-`START` gombja, és az Edzésnapló dashboard **terv-gyorsindítója** (lásd lent).
+- **Terv-gyorsindító (`backlog/054` + `backlog/139`, `plan-quick-start.component.ts`):** az Edzésnapló lista tetején, ha van aktív sablon **és nincs** folyamatban lévő piszkozat (akkor a „Folytatás” gomb látszik helyette — piszkozat mellett a `planId` úgysem érvényesülne). Tartalma felülről:
+  1. **Pihenő-tipp** — ha a [[Heti terv]] terhelés-szabályai közül a „nincs pihenőnap” vagy a „ma már másztál” aktív: „Ma pihenőnap vagy rövid prehab javasolt.”; ilyenkor az indító gombok körvonalasak (nem tiltott, csak nem hangsúlyos).
+  2. **Mai terv (heti beosztás)** — az aznapra érvényes (öröklött is) heti slot sablonja, egy tapos „Indítás”-sal; elsőbbséget élvez. Ha aznap már van session ebből a sablonból, eltűnik.
+  3. **Következő javasolt (rotáció)** — rögzített napkiosztás nélküli A/B rotáció: az aktív, élő sablonok közül az, amelyiket a legrégebben teljesítetted (a `planId` szerinti utolsó élő session dátuma; sosem teljesített → elsőbbség; holtversenyben a sablon-sorrend), a mai slotot és az aznap már teljesítettet kihagyva. Alatta „utoljára: <dátum>” / „még nem volt”. Ha van mai slot, „Alternatíva (rotáció)” címkével, körvonalas gombbal jelenik meg.
+  4. **„Terv indítása…”** — action sheet minden aktív sablonnal (`goalLabel`-csoportok ábécérendben „Csoport · Név” formában, a címke nélküliek a végén); tapra indul.
 - Eltérés szabad (nincs hiba); a napló a valóságot rögzíti.
 - **Adherence:** adott héten van-e session ugyanezzel a `planId`-del (részletek: [[Heti terv]]).
 - **Ad-hoc** terv nélkül: támogatott.

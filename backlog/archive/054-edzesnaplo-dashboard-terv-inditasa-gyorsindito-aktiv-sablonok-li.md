@@ -1,14 +1,14 @@
 ---
 id: 54
 type: feature
-status: ready
+status: done
 title: Edzesnaplo dashboard: Terv inditasa gyorsindito (aktiv sablonok listaja)
 specs:
   - "[[Edzésnapló]]"
   - "[[Heti terv]]"
 flag:
 created: 2026-09-02
-closed:
+closed: 2026-10-01
 ---
 
 # 54 — Edzesnaplo dashboard: Terv inditasa gyorsindito (aktiv sablonok listaja)
@@ -25,8 +25,8 @@ Lásd a motivációt + a hivatkozott spec(ek) `### Jelenlegi működés` szakasz
 
 ## Elfogadási kritériumok
 
-- [ ] Az érintett spec(ek) `### Jelenlegi működés` szakasza a leszállított viselkedést írja le.
-- [ ] Ha „Nem scope” blokkból jött: a blokk törölve, helyette a megvalósult működés prózája.
+- [x] Az érintett spec(ek) `### Jelenlegi működés` szakasza a leszállított viselkedést írja le.
+- [x] Ha „Nem scope” blokkból jött: a blokk törölve, helyette a megvalósult működés prózája.
 
 ## Terv / döntési napló
 
@@ -36,5 +36,5 @@ Lásd a motivációt + a hivatkozott spec(ek) `### Jelenlegi működés` szakasz
 ## Lezáráskor (on-done)
 
 - Frissített specek: [[Edzésnapló]], [[Heti terv]]
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — <mit>
-- Kód: <fő package-ek / fájlok>
+- `IMPLEMENTATION_STATUS.md` sor: 2026-10-01 — #054 + #139 terv-gyorsindító és rotáció
+- Kód: `pages/workout/log/plan-quick-start.component.ts`, `workout-log-list.page.*` (`2b8300e`)
