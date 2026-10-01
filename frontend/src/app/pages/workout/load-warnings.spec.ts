@@ -1,0 +1,73 @@
+import { DayLoad } from './training-load';
+import { loadWarningDates, loadWarnings } from './load-warnings';
+import { addLocalDays } from './weekly-plan/weekly-plan-adherence';
+
+const TODAY = '2026-10-01'; // a Thursday — Monday is 2026-09-28
+
+/** Days from `loadWarningDates(TODAY)`; `overrides` keyed by date. Default: a rest day. */
+function days(overrides: Record<string, Partial<DayLoad>> = {}): DayLoad[] {
+  return loadWarningDates(TODAY).map((date) => ({
+    date,
+    climbing: 0,
+    workouts: 0,
+    fingerLoad: false,
+    rest: true,
+    ...overrides[date],
+  }));
+}
+
+const busy: Partial<DayLoad> = { workouts: 1, rest: false };
+const climb: Partial<DayLoad> = { climbing: 1, fingerLoad: true, rest: false };
+
+function codes(list: DayLoad[]): string[] {
+  return loadWarnings(list, TODAY).map((warning) => warning.code);
+}
+
+describe('load-warnings (backlog/138)', () => {
+  it('covers the 7 days before today (rest window) and today', () => {
+    const dates = loadWarningDates(TODAY);
+    expect(dates[0]).toBe(addLocalDays(TODAY, -7));
+    expect(dates[dates.length - 1]).toBe(TODAY);
+  });
+
+  it('a quiet week has no warnings', () => {
+    expect(codes(days())).toEqual([]);
+  });
+
+  it('NO_REST_DAY when none of the 7 days before today was a rest day (today itself does not count)', () => {
+    const overrides: Record<string, Partial<DayLoad>> = {};
+    for (let offset = 1; offset <= 7; offset++) {
+      overrides[addLocalDays(TODAY, -offset)] = busy;
+    }
+    expect(codes(days(overrides))).toEqual(['NO_REST_DAY']);
+
+    overrides[addLocalDays(TODAY, -7)] = {};
+    expect(codes(days(overrides))).toEqual([]);
+  });
+
+  it('CLIMBED_TODAY is an info when today has a climbing session', () => {
+    const result = loadWarnings(days({ [TODAY]: climb }), TODAY);
+    expect(result).toEqual([{ code: 'CLIMBED_TODAY', severity: 'info' }]);
+  });
+
+  it('MANY_CLIMBS from 4 climbing days in the calendar week (last week does not count)', () => {
+    const overrides = {
+      '2026-09-27': climb, // previous Sunday
+      '2026-09-28': climb,
+      '2026-09-29': climb,
+      '2026-09-30': climb,
+    };
+    expect(codes(days(overrides))).toEqual([]);
+    // the 5th climbing day in a row also crosses the rolling finger-load limit
+    expect(codes(days({ ...overrides, [TODAY]: climb }))).toEqual(['FINGER_LOAD', 'CLIMBED_TODAY', 'MANY_CLIMBS']);
+  });
+
+  it('FINGER_LOAD from 5 finger-loading days in the rolling 7 days, today included', () => {
+    const finger: Partial<DayLoad> = { workouts: 1, fingerLoad: true, rest: false };
+    const overrides: Record<string, Partial<DayLoad>> = {};
+    for (let offset = 0; offset < 5; offset++) {
+      overrides[addLocalDays(TODAY, -offset)] = finger;
+    }
+    expect(codes(days(overrides))).toEqual(['FINGER_LOAD']);
+  });
+});

@@ -25,6 +25,7 @@ import { WorkoutPlanRepository } from '../../../core/data/workout-plan.repositor
 import { WorkoutSessionRepository } from '../../../core/data/workout-session.repository';
 import { WeeklyPlanRepository } from '../../../core/data/weekly-plan.repository';
 import { today } from '../../../shared/local-date';
+import { LoadWarningsBannerComponent } from '../load-warnings-banner.component';
 import { DayLoad, dailyTrainingLoad, weekLoadSummary } from '../training-load';
 import { WorkoutSegmentHeaderComponent } from '../workout-segment-header.component';
 import { WEEK_DAYS, addLocalDays, isSlotCompleted, mondayOf, resolveEffectiveWeek } from './weekly-plan-adherence';
@@ -113,6 +114,7 @@ interface DayCell {
     IonSelect,
     IonSelectOption,
     WorkoutSegmentHeaderComponent,
+    LoadWarningsBannerComponent,
     TranslatePipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -1540,6 +1540,12 @@
         "NOTIFICATION_TITLE": "Climbing session in progress",
         "NOTIFICATION_BODY": "{{context}} · started {{time}}"
       }
+    },
+    "LOAD_WARNING": {
+      "NO_REST_DAY": "No rest day in the last 7 days — 1–2 full rest days a week are recommended.",
+      "FINGER_LOAD": "At least 5 of the last 7 days loaded your fingers — tendons and pulleys recover slowly, rest is recommended.",
+      "CLIMBED_TODAY": "You already climbed today — at most a short core / prehab session is recommended.",
+      "MANY_CLIMBS": "Lots of climbing this week — home pulling and finger work can be skipped."
     }
   },
   "WIDGET": {

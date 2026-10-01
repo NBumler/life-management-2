@@ -3,6 +3,8 @@
 </ion-header>
 
 <ion-content>
+  <app-load-warnings-banner />
+
   @if (hasDraft()) {
     <div class="cta-row">
       <ion-button expand="block" color="warning" routerLink="active">{{ 'WORKOUT.LOG.RESUME' | translate }}</ion-button>

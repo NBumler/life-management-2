@@ -8,6 +8,7 @@ import { WorkoutSession } from '../../../api/model/workoutSession';
 import { ProfileRepository } from '../../../core/data/profile.repository';
 import { WorkoutDraftService } from '../../../core/data/workout-draft.service';
 import { WorkoutSessionRepository } from '../../../core/data/workout-session.repository';
+import { LoadWarningsBannerComponent } from '../load-warnings-banner.component';
 import { WorkoutSegmentHeaderComponent } from '../workout-segment-header.component';
 import { effectiveDurationMinutes, liveExercises, sessionKcal } from './workout-metrics';
 
@@ -39,6 +40,7 @@ interface SessionCard {
     IonNote,
     IonButton,
     WorkoutSegmentHeaderComponent,
+    LoadWarningsBannerComponent,
     TranslatePipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
