@@ -10,6 +10,7 @@ import { WorkoutDraftService } from '../../../core/data/workout-draft.service';
 import { WorkoutSessionRepository } from '../../../core/data/workout-session.repository';
 import { LoadWarningsBannerComponent } from '../load-warnings-banner.component';
 import { WorkoutSegmentHeaderComponent } from '../workout-segment-header.component';
+import { PlanQuickStartComponent } from './plan-quick-start.component';
 import { effectiveDurationMinutes, liveExercises, sessionKcal } from './workout-metrics';
 
 interface SessionCard {
@@ -41,6 +42,7 @@ interface SessionCard {
     IonButton,
     WorkoutSegmentHeaderComponent,
     LoadWarningsBannerComponent,
+    PlanQuickStartComponent,
     TranslatePipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,

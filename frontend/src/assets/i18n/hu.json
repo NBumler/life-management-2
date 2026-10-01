@@ -991,7 +991,17 @@
       "SAME_AS_LAST": "Ugyanaz, mint legutóbb",
       "EXERCISES_SHORT": "gyakorlat",
       "RESUME": "Aktív edzés folytatása",
-      "LOG_PAST": "Utólagos rögzítés"
+      "LOG_PAST": "Utólagos rögzítés",
+      "QUICK": {
+        "REST_HINT": "Ma pihenőnap vagy rövid prehab javasolt.",
+        "TODAY_SLOT": "Mai terv (heti beosztás)",
+        "NEXT": "Következő javasolt (rotáció)",
+        "ALTERNATIVE": "Alternatíva (rotáció)",
+        "LAST_DONE": "utoljára: {{date}}",
+        "NEVER_DONE": "még nem volt",
+        "START": "Indítás",
+        "PICK_PLAN": "Terv indítása…"
+      }
     },
     "ACTIVE": {
       "DISCARD": "Elvetés",

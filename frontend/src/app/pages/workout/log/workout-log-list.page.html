@@ -9,6 +9,8 @@
     <div class="cta-row">
       <ion-button expand="block" color="warning" routerLink="active">{{ 'WORKOUT.LOG.RESUME' | translate }}</ion-button>
     </div>
+  } @else {
+    <app-plan-quick-start />
   }
 
   <div class="cta-row">

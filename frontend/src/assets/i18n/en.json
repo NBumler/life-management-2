@@ -991,7 +991,17 @@
       "SAME_AS_LAST": "Same as last time",
       "EXERCISES_SHORT": "exercises",
       "RESUME": "Resume active workout",
-      "LOG_PAST": "Log a past workout"
+      "LOG_PAST": "Log a past workout",
+      "QUICK": {
+        "REST_HINT": "A rest day or a short prehab session is recommended today.",
+        "TODAY_SLOT": "Today's plan (weekly schedule)",
+        "NEXT": "Next suggested (rotation)",
+        "ALTERNATIVE": "Alternative (rotation)",
+        "LAST_DONE": "last: {{date}}",
+        "NEVER_DONE": "not done yet",
+        "START": "Start",
+        "PICK_PLAN": "Start a plan…"
+      }
     },
     "ACTIVE": {
       "DISCARD": "Discard",
