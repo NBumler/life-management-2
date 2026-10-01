@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-03
-verifikalt_commit: be28d88
+verifikalva: 2026-10-01
+verifikalt_commit: 4dbe414
 ---
 
 # Profile
@@ -33,6 +33,7 @@ Nincs profil-kitöltöttségi gate: hiányos / üres profil mellett is szabad a 
 | `goal` | ha kitöltve | `FAT_LOSS` / `MAINTENANCE` / `WEIGHT_GAIN` — UI: Fogyás / Megtartás / Tömegnövelés |
 | `kgPerWeek` | feltételes | Pozitív szám, 0.1–1.5. **`FAT_LOSS` / `WEIGHT_GAIN`:** mentéskor kötelező, ha a `goal` ki van töltve. **`MAINTENANCE`:** mező **rejtett**, érték ignorált (Δ = 0 a [[Tápérték kalkulátor]]ban). |
 | `grossMonthlySalaryHuf` | **opcionális** | Egész, `≥ 0`; [[Nettó fizetés kalkulátor]] |
+| `dailyStepGoal` | **opcionális** | Egész, **1000–100 000** (`backlog/136`, `V50` CHECK + OpenAPI `minimum`/`maximum`); napi lépéscél (pl. 13 000). A [[Lépésszám követés]] mai haladás-sávja és a korábbi napok ✓ jelölése, valamint az [[Android kezdőképernyő widget]] lépés-haladása ehhez mér. **Nem** azonos az [[Értesítések]] `STEPS_LOW` küszöbével (az külön, eszköz-szintű hangolás marad). Hibás érték → `PROFILE.VALIDATION_DAILY_STEP_GOAL` a mező alatt, mentés blokkolva. Szinkronizál (profil-mező), így minden eszközön ugyanaz. |
 | `createdAt` / `updatedAt` | rendszer | Audit |
 
 **Nincs** `activityLevel` / aktivitási szint — a PAL fix 1.2 a [[Tápérték kalkulátor]]ban; a napi aktivitás a [[Lépésszám követés]] + edzésnaplókból jön.
@@ -92,7 +93,7 @@ Nincs nyitott kérdés.
 
 ### Frontend
 
-- Profile page: form + Mentés; `WeightHistoryEntry` lista + edit/delete. A súly mezőkön
+- Profile page: form + Mentés (a „Napi lépéscél” mező `Validators.min/max` + egész-`pattern`, a határok `shared/step-goal.ts` `DAILY_STEP_GOAL_MIN/MAX`); `WeightHistoryEntry` lista + edit/delete. A súly mezőkön
   `oneDecimalPlaceValidator` (Reactive Forms) — >1 tizedesjegy → `oneDecimalPlace` hiba, `PROFILE.VALIDATION_ONE_DECIMAL` felirat, `save()` / `saveEntry()` nem hív repót.
 - Helyi profile store; változás után TDEE utility újrafuttatás ([[Tápérték kalkulátor]]).
 - Hiányos bemenet: fogyasztók `~` / homokóra — nincs navigációs zár.

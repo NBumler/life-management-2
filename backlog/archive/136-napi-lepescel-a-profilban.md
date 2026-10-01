@@ -1,7 +1,7 @@
 ---
 id: 136
 type: change-request
-status: ready
+status: done
 title: "Napi lépéscél a Profilban (pl. 13 000) — widget és lépés-képernyő haladása ehhez mér"
 specs:
   - "[[Profile]]"
@@ -9,7 +9,7 @@ specs:
   - "[[Android kezdőképernyő widget]]"
 flag:
 created: 2026-10-01
-closed:
+closed: 2026-10-01
 ---
 
 # 136 — Napi lépéscél a Profilban
@@ -28,14 +28,14 @@ nem tárol lépéscélt.
 
 ## Elfogadási kritériumok
 
-- [ ] `UserProfile.dailyStepGoal` (opcionális egész, 1000–100 000). Flyway + OpenAPI + SQLite +
+- [x] `UserProfile.dailyStepGoal` (opcionális egész, 1000–100 000). Flyway + OpenAPI + SQLite +
       outbox-verzió; Profil-szerkesztőben mező.
-- [ ] Android widget lépés-haladás: `dailyStepGoal`, ennek hiányában a régi fallback
+- [x] Android widget lépés-haladás: `dailyStepGoal`, ennek hiányában a régi fallback
       (`stepsLowThreshold`).
-- [ ] A [[Lépésszám követés]] képernyőn a mai nap haladás-sávja a célhoz mér, a listában
+- [x] A [[Lépésszám követés]] képernyőn a mai nap haladás-sávja a célhoz mér, a listában
       jelölve, mely napokon teljesült a cél.
-- [ ] A `STEPS_LOW` értesítés küszöbe változatlanul külön beállítás marad.
-- [ ] Specek frissítve.
+- [x] A `STEPS_LOW` értesítés küszöbe változatlanul külön beállítás marad.
+- [x] Specek frissítve.
 
 ## Terv / döntési napló
 
@@ -44,5 +44,7 @@ nem tárol lépéscélt.
 ## Lezáráskor (on-done)
 
 - Frissített specek: [[Profile]], [[Lépésszám követés]], [[Android kezdőképernyő widget]]
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — <mit>
-- Kód: <fő package-ek / fájlok>
+- `IMPLEMENTATION_STATUS.md` sor: 2026-10-01 — #136 napi lépéscél
+- Kód: `V50__user_profile_daily_step_goal.sql`, `profile/ProfileEntity|Mapper`, `shared/step-goal.ts`,
+  `core/widget/widget-snapshot.service.ts`, `pages/menu/profile/`, `pages/menu/steps/step-tracker.page.*`,
+  SQLite `SCHEMA_V47`, outbox v16 (`4dbe414`)

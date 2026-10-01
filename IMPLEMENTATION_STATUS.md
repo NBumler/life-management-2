@@ -14,6 +14,11 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-01 — #136** Napi lépéscél a Profilban (`dailyStepGoal`, 1000–100 000, syncel). A Lépésszám-képernyő
+  mai haladás-sávja és a korábbi napok ✓ jelölése, valamint az Android widget lépés-haladása ehhez mér (cél nélkül
+  a widget a régi `stepsLowThreshold` fallbacket használja; a STEPS_LOW riasztás küszöbe külön marad). V50 +
+  SCHEMA_V47 + outbox v16 — érintett: [[Profile]], [[Lépésszám követés]], [[Android kezdőképernyő widget]];
+  kód: `hu.bumler.lm2.profile`, `shared/step-goal.ts`, `core/widget`, `pages/menu/{profile,steps}`
 - **2026-10-01 — #133–#135** Sablon-gyakorlat megjegyzés (`notes`, max. 200, sablonból indítva a név alatt),
   egyoldali szettek (`side` LEFT/RIGHT a sablon- és napló-szetten; új szett váltogatja a kezet, javaslat
   oldalanként), opcionális RPE (6–10, 0,5 lépés; cél a sablonban, tényleges a naplóban; RPE 10 után nincs

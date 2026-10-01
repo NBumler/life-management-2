@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-09
-verifikalt_commit: 914302f
+verifikalva: 2026-10-01
+verifikalt_commit: 4dbe414
 ---
 
 # Android kezdőképernyő widget
@@ -21,7 +21,7 @@ leggyakoribb létrehozó flow-kat mutatják a helyi adatból, és koppintásra d
 | Widget | Launcher-név | Tartalom |
 |---|---|---|
 | **Mai étkezés állása** | „Mai étkezés állása" | Mai bevitt kalória + fehérje / szénhidrát / zsír a mai célhoz képest (haladás-sáv + „bevitt / cél" + hátralévő). Ugyanaz a szám, mint az [[Étkezés]] dashboard / a [[Kezdőlap]] „Mai étkezés állása" widget (`TodayNutritionService`). |
-| **Lépésszám** | „Lépésszám" | Mai lépésszám nagy számmal + haladás-sáv a `stepsLowThreshold`-hoz (default 2000) mint viszonyítási cél. |
+| **Lépésszám** | „Lépésszám" | Mai lépésszám nagy számmal + haladás-sáv a [[Profile]] napi lépéscéljához (`dailyStepGoal`, `backlog/136`); cél nélkül a régi viszonyítás, az [[Értesítések]] `stepsLowThreshold`-ja (default 2000). |
 | **Gyorsgombok** | „Gyorsgombok" | „Új étkezés" → `/tabs/food/meal/new`, „Új mászás" → `/tabs/workout/climbing`. |
 | **Kombinált összegző** | „Napi összegző" | Kalória + lépés egy kártyán + a két gyorsgomb. Ez az egyetlen átméretezhető widget. |
 
@@ -81,8 +81,9 @@ leggyakoribb létrehozó flow-kat mutatják a helyi adatból, és koppintásra d
   A téma-érzékeny widget külön jegy tárgya.
 - **Nincs user által testre szabható widget-tartalom / -sorrend.** A négy widget készlete fix.
 - **Csak Android.** Az iOS WidgetKit-widget külön jegy, az iOS build (`backlog/004`) után.
-- A „lépés-cél" nem dedikált beállítás — az [[Értesítések]] `stepsLowThreshold` hangolási értékét
-  (default 2000) használja viszonyításként.
+- A lépés-cél a [[Profile]] `dailyStepGoal`-ja; ha nincs beállítva, fallbackként az [[Értesítések]]
+  `stepsLowThreshold` hangolási értéke (default 2000) a viszonyítás — ez a „kevés lépés” riasztási
+  küszöb, nem valódi cél, ezért ilyenkor a sáv hamar megtelik.
 
 ### Nyitott kérdések
 
@@ -102,7 +103,9 @@ Nincs nyitott kérdés.
   `ActivityStepSyncService` / `NotificationSchedulerService` mintája). Egy debounce-olt (`600 ms`)
   `effect()` a `TodayNutritionService.summary()` + `DailyStepLogRepository.items()` +
   `LanguageService.activeLanguage()` + `AuthSessionService.isAuthenticated()` +
-  `NotificationTuningService.tuning()` + `DataChangeNotifier.tick()` felett; `tick` változáskor
+  `NotificationTuningService.tuning()` + `ProfileRepository.profile()` + `DataChangeNotifier.tick()` felett
+  (a lépés-cél `stepGoalOrNull(profile.dailyStepGoal) ?? tuning.stepsLowThreshold`; az első kiírás előtt
+  a profil betöltődik, ha még nem; a `todayNutrition.load()` a profilt is újratölti); `tick` változáskor
   `await todayNutrition.load()` + `stepLog.load()` a kiírás előtt (delta pull után a nem-cache-elt
   jelek elavulnak). `writeAndRefresh` → `Preferences.set(lm2_widgetSnapshot, …)` +
   `Lm2Widget.refresh()`.
