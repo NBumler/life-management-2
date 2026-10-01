@@ -102,7 +102,7 @@ A tervezett mászás egy `CLIMBING` típusú [[Események|esemény]] (egyszeri v
 
 - `plannedClimb` = ma / jövőbeli nap, tervezett mászással, rögzített mászó-session nélkül — nem pihenőnap, a szabályok mászónapként kezelik. Ha a mászást rögzíted, a nap sima „Mászás”.
 - `missedClimb` = múltbeli nap, terv volt, rögzítés nincs → szürke **„Elmaradt mászás”** jelvény; a számításban az a nap a tényleges adata szerint számít (pl. pihenőnap).
-- Napsoron (ma / jövő, rögzített mászás nélkül) kapcsoló-gomb: **„+ Mászás”** (körvonalas) → egyszeri, egész napos „Mászás” esemény létrehozása; **„Mászás (tervezett)”** (kitöltött) → az aznapi egyszeri mászás-esemény(ek) törlése. Ha a napot csak ismétlődő mászás-esemény fedi, a tap az esemény szerkesztőjét nyitja (egy előfordulás nem törölhető külön — [[Események]] „Tudatos korlát”).
+- Napsoron (ma / jövő, rögzített mászás nélkül) kapcsoló-gomb: **„+ Mászás”** (körvonalas) → egyszeri, egész napos „Mászás” esemény létrehozása; **„Mászás (tervezett)”** (kitöltött) → az aznapi egyszeri mászás-esemény(ek) törlése. Ha a napot csak ismétlődő mászás-esemény fedi, a tap az esemény szerkesztőjét nyitja (egy előfordulás nem törölhető külön — az [[Események]]ben nincs előfordulás-kivétel).
 - **„Ütközés — edzés áthelyezése javasolt”** jelvény: a napon heti slot sablon van (még nem teljesítve) **és** tervezett mászás.
 
 #### Rotációs javaslat (`backlog/139`)
