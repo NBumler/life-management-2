@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-10-01
-verifikalt_commit: 2b84319
+verifikalt_commit: ee87eb6
 ---
 
 # Heti terv
@@ -31,7 +31,7 @@ Fejlesztési sorrend: [[Gyakorlat]] → [[Edzésnapló]] → **Heti terv**.
 | `name` | Kötelező (pl. „Felsőtest A”, „Hangboard Heavy Day”) |
 | `notes` | Opcionális |
 | `active` | Boolean; alapértelmezett `true` létrehozáskor. Kikapcsolása **nem törlés**: a sablon megmarad a katalógusban és a rá mutató múltbeli `WorkoutSession.planId` / meglévő `WeeklyPlan` slot érintetlen, csak elrejtődik a pickerekből (heti slot kiosztás, „Edzés indítása a tervből” gyorsindítás). Bármikor visszakapcsolható. Tetszőleges számú sablon lehet egyszerre aktív — lásd „Aktív / inaktív sablonok” lent. |
-| `goalLabel` | Opcionális szöveg; tisztán megjelenítési célú csoportosító címke a listában és a pickerben (pl. „Alap rotáció”, „Cél: egykezes húzódzkodás”) — nincs hozzá üzleti logika |
+| `goalLabel` | Opcionális szöveg; csoportosító címke a listában és a pickerben (pl. „Alap rotáció”, „Cél: egykezes húzódzkodás”). Egyetlen hozzá kötött művelet a csoport egy koppintásos (de)aktiválása (`backlog/140`, lásd UI); a csoport kulcsa a trimmelt címke |
 | `defaultWorkoutType` | Opcionális `GENERAL_WEIGHTS` \| `HIIT_CIRCUIT` — session indításkor előtöltés |
 | `exercises` | `WorkoutPlanExercise[]` (nested) |
 | `deleted` | Soft delete |
@@ -93,7 +93,7 @@ CRUD: sablon lista/szerkesztő; heti dashboard slot szerkesztés; soft delete sa
 ### UI/UX elvárások
 
 - Sablonok lista + nested gyakorlat/cél-szett szerkesztő ([[Gyakorlat]] picker). Az ismétlésszám mező szöveges (`inputmode="tel"` — számbillentyűzet kötőjellel): `N` vagy `N-M` (szóköz, en-dash tűrve; `N-N` egyetlen értékké egyszerűsödik); értelmezhetetlen vagy fordított tartománynál a mező kerete piros, a szett sora alatt teljes szélességű hibaüzenet, és a mentés blokkolva. A parse / megjelenítés mezőtől független (`shared/target-range.ts`), hogy később más cél-mezők is kaphassanak tartományt. A cél-szett táblázat elrendezése az [[Edzésnapló]]-val közös (oszlopfejléc + szettenként egy sor, szett-típus jelvény, ⋮ gyakorlat-menü); a sablonban a `kind` mezői mellett egy „Pihenő / mp” (cél pihenő) oszlop is van. A szett-jelvény popoverében (típus / Oldal / **Cél RPE**) állítható az egyoldali cél-szett és a cél-RPE; „+ Új szett” egyoldali szett után a kezet váltogatja, a cél-RPE-t átviszi. A gyakorlat-fejléc alatt egysoros **megjegyzés** mező (max. 200 karakter, „Megjegyzés (pl. szék: 5, 3 mp negatív)”); üresen `null`-ként mentődik.
-- Sablonok lista szűrő: **Aktív** (alapértelmezett) / Inaktív / Mind; soronkénti aktív/inaktív kapcsoló (nincs szükség edit módba lépésre); opcionális `goalLabel` szerinti csoport-fejléc a listában.
+- Sablonok lista szűrő: **Aktív** (alapértelmezett) / Inaktív / Mind; soronkénti aktív/inaktív kapcsoló (nincs szükség edit módba lépésre); opcionális `goalLabel` szerinti csoport-fejléc a listában. A címkés csoport-fejlécen ⋮ gomb → action sheet (`backlog/140`, fókuszváltás pl. „OAPU mód”): **Csoport aktiválása** (a csoport minden sablonja aktív), **Csoport inaktiválása**, **Csak ez a csoport legyen aktív** (a csoport aktív, minden más élő sablon — más csoportok és a címke nélküliek — inaktív). A művelet a szűrőtől függetlenül az összes élő sablonra hat, csak a ténylegesen változó sablonokat menti (mindegyiket a soronkénti kapcsolóval azonos nested PUT + outbox úton, `planGroupActivationChanges` — `pages/workout/plan/plan-group-activation.ts`), utána toast: „N sablon módosítva”. Megerősítés nincs: a művelet ugyanígy visszafordítható. A címke nélküli sablonoknak nincs fejléce, így csoport-menüje sem.
 - Heti dashboard slot kiosztás pickere és az [[Edzésnapló]] „Terv indítása” gyorsindítás listája csak aktív sablonokat kínál fel, `goalLabel` szerint csoportosítva, ha van címke.
 - Heti dashboard: 7 napos nézet; naphoz sablon rendelés; „Teljesítve” jelvény adherence szerint; CTA: Edzés indítása.
 - A hét-navigátor (előző hét ◂ / hét kezdete / következő hét ▸) **egy sorban** jelenik meg, a nyilak a hét-felirat két szélén (`.week-nav` flex-sor); a felirat tapja a mai hétre ugrik.

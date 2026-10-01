@@ -14,6 +14,9 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-01 — #140** Sablon-csoport (`goalLabel`) egy koppintásos kapcsolója a sablon-lista csoport-fejlécén (⋮):
+  Csoport aktiválása / inaktiválása / Csak ez a csoport legyen aktív — a meglévő nested PUT + outbox úton, csak a
+  változó sablonokat menti. Érintett: [[Heti terv]]; kód: `pages/workout/plan/plan-list.page.*`, `plan-group-activation.ts`
 - **2026-10-01 — #136** Napi lépéscél a Profilban (`dailyStepGoal`, 1000–100 000, syncel). A Lépésszám-képernyő
   mai haladás-sávja és a korábbi napok ✓ jelölése, valamint az Android widget lépés-haladása ehhez mér (cél nélkül
   a widget a régi `stepsLowThreshold` fallbacket használja; a STEPS_LOW riasztás küszöbe külön marad). V50 +
