@@ -5,12 +5,17 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.MethodParameter;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import hu.bumler.lm2.api.model.ApiError;
 import hu.bumler.lm2.common.exception.CursorTooOldException;
@@ -223,5 +228,44 @@ class GlobalExceptionHandlerTest {
 		String message = "ERROR: duplicate key value violates unique constraint \"" + constraintName + "\"\n"
 				+ "  Detail: Key already exists.";
 		return new DataIntegrityViolationException("could not execute statement", new RuntimeException(message));
+	}
+
+	// --- backlog/146: Spring MVC client errors ---
+
+	@Test
+	void handleNoResource_returns404NotFound() {
+		ResponseEntity<ApiError> response = handler
+				.handleNoResource(new NoResourceFoundException(HttpMethod.GET, "/api/climbing-sessions", "api/climbing-sessions"));
+
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+		assertThat(response.getBody().getCode()).isEqualTo("NOT_FOUND");
+	}
+
+	@Test
+	void handleMethodNotSupported_returns405WithAllowHeader() {
+		ResponseEntity<ApiError> response = handler
+				.handleMethodNotSupported(new HttpRequestMethodNotSupportedException("DELETE", java.util.List.of("GET", "POST")));
+
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.METHOD_NOT_ALLOWED);
+		assertThat(response.getBody().getCode()).isEqualTo("METHOD_NOT_ALLOWED");
+		assertThat(response.getHeaders().getAllow()).containsExactlyInAnyOrder(HttpMethod.GET, HttpMethod.POST);
+	}
+
+	@Test
+	void handleMediaTypeNotSupported_returns415() {
+		ResponseEntity<ApiError> response = handler.handleMediaTypeNotSupported(new HttpMediaTypeNotSupportedException("text/plain"));
+
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNSUPPORTED_MEDIA_TYPE);
+		assertThat(response.getBody().getCode()).isEqualTo("UNSUPPORTED_MEDIA_TYPE");
+	}
+
+	@Test
+	void handleMissingParameter_returns400ValidationWithField() {
+		ResponseEntity<ApiError> response = handler
+				.handleMissingParameter(new MissingServletRequestParameterException("since", "String"));
+
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+		assertThat(response.getBody().getCode()).isEqualTo("VALIDATION_ERROR");
+		assertThat(response.getBody().getField().orElse(null)).isEqualTo("since");
 	}
 }

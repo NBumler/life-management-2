@@ -13,13 +13,20 @@ import hu.bumler.lm2.common.exception.ValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 /**
  * documentation/Architektúra/Backend.md "Hibakezelés": egy globális handler, stabil `code`
@@ -172,6 +179,53 @@ public class GlobalExceptionHandler {
 			body = body.field(fieldError.getField());
 		}
 		return ResponseEntity.badRequest().body(body);
+	}
+
+	// backlog/146: Spring MVC's own client-side errors. Without these they fell through to the generic
+	// 500 below — an ERROR-level stack trace for a typo'd URL, and an outbox item the client retries 5×
+	// as a "server fault" instead of sending it straight to ERROR. Logged at debug / warn, no trace.
+
+	/** No controller mapping (and no static resource) for the path. */
+	@ExceptionHandler(NoResourceFoundException.class)
+	ResponseEntity<ApiError> handleNoResource(NoResourceFoundException ex) {
+		log.debug("No endpoint: {} /{}", ex.getHttpMethod(), ex.getResourcePath());
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiError("NOT_FOUND", "No such endpoint"));
+	}
+
+	@ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+	ResponseEntity<ApiError> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex) {
+		log.debug("Method not allowed: {}", ex.getMessage());
+		ResponseEntity.BodyBuilder response = ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED);
+		if (ex.getSupportedHttpMethods() != null) {
+			response = response.allow(ex.getSupportedHttpMethods().toArray(new HttpMethod[0]));
+		}
+		return response.body(new ApiError("METHOD_NOT_ALLOWED", ex.getMessage()));
+	}
+
+	@ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+	ResponseEntity<ApiError> handleMediaTypeNotSupported(HttpMediaTypeNotSupportedException ex) {
+		log.debug("Unsupported media type: {}", ex.getMessage());
+		return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+				.body(new ApiError("UNSUPPORTED_MEDIA_TYPE", ex.getMessage()));
+	}
+
+	/** A required query parameter is missing — the same 400 VALIDATION_ERROR shape as a body field. */
+	@ExceptionHandler(MissingServletRequestParameterException.class)
+	ResponseEntity<ApiError> handleMissingParameter(MissingServletRequestParameterException ex) {
+		return ResponseEntity.badRequest()
+				.body(new ApiError("VALIDATION_ERROR", ex.getMessage()).field(ex.getParameterName()));
+	}
+
+	@ExceptionHandler(MissingRequestHeaderException.class)
+	ResponseEntity<ApiError> handleMissingHeader(MissingRequestHeaderException ex) {
+		return ResponseEntity.badRequest().body(new ApiError("VALIDATION_ERROR", ex.getMessage()).field(ex.getHeaderName()));
+	}
+
+	/** A path / query value that does not convert (e.g. a non-UUID `{id}`). */
+	@ExceptionHandler(MethodArgumentTypeMismatchException.class)
+	ResponseEntity<ApiError> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+		return ResponseEntity.badRequest()
+				.body(new ApiError("VALIDATION_ERROR", "Invalid value for '" + ex.getName() + "'").field(ex.getName()));
 	}
 
 	@ExceptionHandler(Exception.class)
