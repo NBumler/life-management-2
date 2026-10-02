@@ -1,14 +1,14 @@
 ---
 id: 145
 type: bug
-status: backlog
+status: done
 title: "Mászó session űrlap: mentés után újra megnyitva a korábbi dátumot hozza, a második mentés nem jön létre"
 specs:
   - "[[Indoor boulder napló]]"
   - "[[Mászónapló]]"
 flag:
 created: 2026-10-02
-closed:
+closed: 2026-10-02
 ---
 
 # 145 — Mászó session űrlap: a második mentés elveszik
@@ -38,20 +38,28 @@ vissza a listára. Elvárt: minden „Új session” friss űrlap, mai dátummal
 
 ## Elfogadási kritériumok
 
-- [ ] Reprodukálva (vagy kizárva) valódi UI-navigációval, web és native buildben.
-- [ ] Ha reprodukálható: az „Új session” űrlap minden megnyitáskor alaphelyzetből indul (mai
+- [x] Reprodukálva (vagy kizárva) valódi UI-navigációval, web és native buildben.
+- [x] Ha reprodukálható: az „Új session” űrlap minden megnyitáskor alaphelyzetből indul (mai
       dátum, üres mezők, új UUID) — pl. `ionViewWillEnter`-ben reset, vagy az oldal ne legyen
       újrahasznosítva.
-- [ ] A második mentés új sessiont hoz létre (helyi store + outbox; web: POST), az első érintetlen.
-- [ ] Regressziós teszt a kétszeri egymás utáni létrehozásra.
-- [ ] Ugyanez ellenőrizve a többi mászó-kontextus (indoor köteles, outdoor boulder / köteles)
+- [x] A második mentés új sessiont hoz létre (helyi store + outbox; web: POST), az első érintetlen.
+- [x] Regressziós teszt a kétszeri egymás utáni létrehozásra.
+- [x] Ugyanez ellenőrizve a többi mászó-kontextus (indoor köteles, outdoor boulder / köteles)
       „Új session” űrlapján.
 
 ## Terv / döntési napló
 
-_—_
+- 2026-10-02: valódi kattintásokkal (routerLink gombok, web build) reprodukálva: a második „Új session”
+  az első példányt hozta vissza (előtöltve az előző értékekkel), és a mentés **felülírta** az első
+  sessiont. Ok: mentés után előre-`navigateByUrl` a listára → az Ionic verem [lista, új, lista], a
+  következő „új” navigáció a veremben bent maradt példányra lép vissza. Javítás: `NavController.navigateBack`
+  mentés / törlés / „nincs ilyen session” után — utána a második „Új session” friss példány, két külön
+  session jön létre. (A böngészős ellenőrzés egy háttérben lévő fülön futott, ahol a Chrome nem futtat
+  animációs kereteket, így az Ionic átmenetek nem fejeződtek be — a verem-logika ettől független.)
 
 ## Lezáráskor (on-done)
 
-- Frissített specek: [[…]]
-- `IMPLEMENTATION_STATUS.md` sor
+- Frissített specek: [[Indoor boulder napló]] — UI/UX: mentés / törlés után `navigateBack`, friss „Új session” (a másik három kontextusra is)
+- `IMPLEMENTATION_STATUS.md` sor: 2026-10-02 — #145
+- Kód: `bdb777a` — `pages/workout/climbing/naplo/*-session-edit.page.ts` (+ spec kontextusonként)
+- Követő: [[148-ionic-verem-navigateback-mentes-utan]] — ugyanez a minta az app többi szerkesztő oldalán

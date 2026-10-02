@@ -14,6 +14,12 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-02 — #145** Mászónapló: a session-űrlap mentés / törlés után `navigateBack`-kel lép a listára (mind a 4
+  kontextus) — korábban a következő „Új session” az előző példányt hozta vissza, és felülírta az előző sessiont.
+  Érintett: [[Indoor boulder napló]]. Követő: #148 (ugyanez a minta más szerkesztő oldalakon).
+- **2026-10-02 — #147** Frontend tesztek: seed-napló + `JASMINE_SEED` visszajátszás, lassú-spec jelzés, ChromeHeadlessCI
+  időzítő-fojtás nélkül, a hangjelzés mockolva az ActiveWorkoutPage specben; 10 egymás utáni teljes futás zöld.
+  Érintett: [[Fejlesztői környezet]]
 - **2026-10-02 — #146** Backend: a Spring MVC kliens-hibái (ismeretlen útvonal, nem támogatott metódus / content-type,
   hiányzó / hibás paraméter) a globális hibaformában 404 / 405 / 415 / 400-ként mennek ki az 500-as fallback helyett,
   stack trace nélkül. Érintett: [[Backend]]

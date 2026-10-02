@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: 9a41447
+verifikalva: 2026-10-02
+verifikalt_commit: db7fb7b
 ---
 
 # Fejlesztői környezet
@@ -65,7 +65,7 @@ A `frontend/` belső szervezése (`pages/`, `shared/`, `core/`, `api/`) és a r�
 | Tesztek | `./gradlew test` · `npm test` (interaktív, `ChromeHeadlessCI` helyett `Chrome`-mal, watch módban) · `npm run test:ci` (nem-interaktív, egyszeri futás — CI és agent-munkamenetek ezt használják) |
 
 - A **web** kliens **relatív** `/api` útvonalat hív (dev: proxy, prod: reverse proxy) — így nincs CORS a böngészős fejlesztésben.
-- `npm run test:ci` (`frontend/`) a `karma.conf.js`-ben definiált `ChromeHeadlessCI` launcher-t használja (`ChromeHeadless` + `--no-sandbox --disable-gpu`), és `--watch=false`-szal egyszer fut le. Ezen a gépen a `karma-chrome-launcher` nem találja meg automatikusan a Chrome-ot: a `CHROME_BIN` env változót explicit be kell állítani a tényleges elérési útra (`C:\Program Files\Google\Chrome\Application\chrome.exe`). Bash toolból: `CHROME_BIN="/c/Program Files/Google/Chrome/Application/chrome.exe" npm run test:ci`.
+- `npm run test:ci` (`frontend/`) a `karma.conf.js`-ben definiált `ChromeHeadlessCI` launcher-t használja (`ChromeHeadless` + `--no-sandbox --disable-gpu`, valamint `backlog/147` óta `--disable-background-timer-throttling --disable-renderer-backgrounding --disable-backgrounding-occluded-windows --mute-audio`, hogy egy hosszú futás időzítői ne lassuljanak be és egy spec se nyúljon valódi hangeszközhöz), és `--watch=false`-szal egyszer fut le. A specek véletlen sorrendben futnak: a futás elején a log kiírja a seedet (`[jasmine] random order seed: <n>`), egy bukott sorrend pedig visszajátszható: `JASMINE_SEED=<n> npm run test:ci`. Az 1 s-nál lassabb specek `[jasmine] slow spec (<ms> ms): <név>` figyelmeztetést kapnak (`src/test.ts`) — egy véletlen 5 s-os timeout gyanúsítottja általában ezek között van. Ezen a gépen a `karma-chrome-launcher` nem találja meg automatikusan a Chrome-ot: a `CHROME_BIN` env változót explicit be kell állítani a tényleges elérési útra (`C:\Program Files\Google\Chrome\Application\chrome.exe`). Bash toolból: `CHROME_BIN="/c/Program Files/Google/Chrome/Application/chrome.exe" npm run test:ci`.
 - Env változók: `POSTGRES_*`, `LM2_JWT_SECRET`, `LM2_ADMIN_API_KEY`. A `.env.example` verziókövetett, a `.env` és a `backend/src/main/resources/application-local.yml` nem — [[Backend]].
 - Új user létrehozása fejlesztéshez: admin `curl` — [[Bejelentkezés]].
 

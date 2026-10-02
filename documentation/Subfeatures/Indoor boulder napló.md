@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-25
-verifikalt_commit: aa61aee
+verifikalva: 2026-10-02
+verifikalt_commit: bdb777a
 ---
 
 # Indoor boulder napló
@@ -59,6 +59,7 @@ CRUD: nested session mentés; soft delete; draft élő sessionhez.
 - **Élő session gyors-rögzítő rács** (`backlog/122`, csak élő módban): a kiválasztott terem élő színsávjai nehézség szerint, soronként `−` / sáv (színnel + a sessionbeli darabszámmal) / `+` gomb. Egy koppintás = egy **sikeres** kísérlet az adott sávval és módosítóval (stílus üres), rövid haptika. Terem nélkül / sáv nélküli teremnél figyelmeztetés. A rögzített kísérletek alatta kártyaként szerkeszthetők (pl. sikertelenre állítás). Élő / összegző folyamat: [[Mászónapló]].
 - „Új kísérlet" gomb a lista tetején és (≥1 kísérletnél) alján is, görgetés az új kártyához — [[Mászónapló]] `### UI/UX elvárások`.
 - Flow: Hub → Indoor Boulder csempe → Active session (vagy utólagos) → kísérlet hozzáadás (szín chip / parser) → pipa → Befejezés.
+- Mentés / törlés után az űrlap **visszalép a listára és lekerül a navigációs veremről** (Ionic `navigateBack`, `backlog/145`), így a következő „Új session” mindig friss űrlappal (mai dátum, új session-azonosító, üres mezők) nyílik, és nem írhatja felül az előzőleg mentett sessiont. Ugyanígy a másik három kontextus-napló ([[Indoor köteles napló]], [[Outdoor boulder napló]], [[Outdoor köteles napló]]).
 - Szín-sáv **chip-sor** a kiválasztott terem élő sávjaiból (nehézség szerint; chipenként sáv-színű pötty + név + fokozat-tartomány); koppintás választ, a kiválasztott chip újrakoppintása törli. Színsávos teremben a szöveges grade másodlagos: „vagy fokozat megadása” gomb mögött van (meglévő, grade-es kísérletnél nyitva); sáv nélküli teremben a grade-mező közvetlenül látszik.
 - Sikeres kísérletnél a **Stílus** választó mellett súgó (ⓘ) gomb (`app-help-button`) — onsight / flash / redpoint magyarázat; részletek: [[Mászónapló]] „Kísérlet stílus súgó”. A [[Mászónapló]] `ascentStyle` korábbi-megmászás figyelmeztetése **indoor bouldernél nincs**: a kísérlet csak `colorBandId` szín-sávra linkel, ami nem azonosít konkrét problémát, így nincs mihez hasonlítani.
 - **Mászótársak** combobox (`app-partner-combobox`): korábbi társak tap-elhető chip-ként, gépelve szűrhető + új név felvehető; részletek: [[Mászónapló]].
