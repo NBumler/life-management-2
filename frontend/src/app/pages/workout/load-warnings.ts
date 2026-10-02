@@ -2,14 +2,15 @@
  * documentation/Subfeatures/Heti terv.md "Terhelés-figyelmeztetések" (backlog/138) — a pure rule engine
  * over the per-day training load (`training-load.ts`, backlog/137). Advisory only ("javasolt", never
  * "tilos"): the warnings render as a non-blocking banner, nothing is ever prevented.
- * backlog/143: planned climbs (today / future) and the weekly schedule feed the forward-looking rules.
+ * backlog/143: planned climbs (today / future) feed the forward-looking rules; backlog/144: the
+ * look-ahead rest rule reads the rotation forecast (`training-forecast.ts`).
  */
 import { CalendarEvent } from '../../api/model/calendarEvent';
 import { ClimbingSession } from '../../api/model/climbingSession';
 import { WeeklyPlan } from '../../api/model/weeklyPlan';
 import { WorkoutPlan } from '../../api/model/workoutPlan';
 import { WorkoutSession } from '../../api/model/workoutSession';
-import { todaySlotPlan } from './rotation-suggestion';
+import { ForecastDay, forecastInputsFrom, trainingForecast } from './training-forecast';
 import { DayLoad, climbsOn, dailyTrainingLoad, plannedClimbDates } from './training-load';
 import { addLocalDays, mondayOf } from './weekly-plan/weekly-plan-adherence';
 
@@ -19,7 +20,7 @@ export const REST_WINDOW_DAYS = 7;
 export const MANY_CLIMBS_PER_WEEK = 4;
 /** Rolling 7 days (today included) — this many finger-loading days is a connective-tissue warning. */
 export const FINGER_LOAD_DAYS_LIMIT = 5;
-/** backlog/143 — look-ahead window (today included) that should keep at least one free day. */
+/** backlog/143 / backlog/144 — look-ahead window (today included) whose forecast should keep a rest day. */
 export const REST_AHEAD_DAYS = 7;
 
 export type LoadWarningCode =
@@ -42,7 +43,7 @@ export interface LoadWarningSources {
   workoutSessions: readonly WorkoutSession[];
   /** backlog/143 — `CLIMBING`-typed events are the planned climbs. */
   events?: readonly CalendarEvent[];
-  /** backlog/143 — the weekly schedule; a day with a slot plan is not a free day ahead. */
+  /** backlog/144 — the manual day overrides (WeeklyPlan slots) and the templates, for the forecast. */
   weeklyPlans?: readonly WeeklyPlan[];
   workoutPlans?: readonly WorkoutPlan[];
 }
@@ -66,10 +67,11 @@ export function loadWarningDates(today: string): string[] {
 }
 
 /**
- * `days` must cover `loadWarningDates(today)` (extra days are ignored). `scheduled` = dates with a
- * weekly slot plan (backlog/143 look-ahead). Ordered: warnings first, then infos.
+ * `days` must cover `loadWarningDates(today)` (extra days are ignored). `ahead` = the rotation forecast
+ * from today (backlog/144); `NO_REST_AHEAD` needs all `REST_AHEAD_DAYS` of it. Ordered: warnings first,
+ * then infos.
  */
-export function loadWarnings(days: readonly DayLoad[], today: string, scheduled: ReadonlySet<string> = new Set()): LoadWarning[] {
+export function loadWarnings(days: readonly DayLoad[], today: string, ahead: readonly ForecastDay[] = []): LoadWarning[] {
   const between = (from: string, to: string) => days.filter((day) => day.date >= from && day.date <= to);
   const todayLoad = days.find((day) => day.date === today);
   const tomorrowLoad = days.find((day) => day.date === addLocalDays(today, 1));
@@ -82,9 +84,10 @@ export function loadWarnings(days: readonly DayLoad[], today: string, scheduled:
   if (between(addLocalDays(today, -6), today).filter((day) => day.fingerLoad).length >= FINGER_LOAD_DAYS_LIMIT) {
     warnings.push({ code: 'FINGER_LOAD', severity: 'warning' });
   }
-  const ahead = between(today, addLocalDays(today, REST_AHEAD_DAYS - 1));
-  const busyAhead = (day: DayLoad) => climbsOn(day) || day.workouts > 0 || scheduled.has(day.date);
-  if (ahead.length === REST_AHEAD_DAYS && ahead.some((day) => day.plannedClimb) && ahead.every(busyAhead)) {
+  // backlog/144: the automatic forecast always leaves a rest day within 3 load days — only planned
+  // climbs or manual overrides can fill a whole week
+  const aheadWindow = ahead.filter((day) => day.date >= today && day.date <= addLocalDays(today, REST_AHEAD_DAYS - 1));
+  if (aheadWindow.length === REST_AHEAD_DAYS && aheadWindow.every((day) => day.kind !== 'REST')) {
     warnings.push({ code: 'NO_REST_AHEAD', severity: 'warning' });
   }
   if ((todayLoad?.climbing ?? 0) > 0) {
@@ -102,15 +105,6 @@ export function loadWarnings(days: readonly DayLoad[], today: string, scheduled:
   return warnings;
 }
 
-/** Dates (of `dates`) on which the effective weekly schedule assigns a live plan. */
-export function scheduledPlanDates(
-  dates: readonly string[],
-  weeklyPlans: readonly WeeklyPlan[],
-  workoutPlans: readonly WorkoutPlan[],
-): Set<string> {
-  return new Set(dates.filter((date) => todaySlotPlan(weeklyPlans, workoutPlans, date) !== null));
-}
-
 /** Convenience: build the load from the raw stores and evaluate the rules for `today`. */
 export function loadWarningsFor(today: string, sources: LoadWarningSources): LoadWarning[] {
   const dates = loadWarningDates(today);
@@ -118,10 +112,6 @@ export function loadWarningsFor(today: string, sources: LoadWarningSources): Loa
     dates: plannedClimbDates(sources.events ?? [], today),
     today,
   });
-  const scheduled = scheduledPlanDates(
-    dates.filter((date) => date >= today),
-    sources.weeklyPlans ?? [],
-    sources.workoutPlans ?? [],
-  );
-  return loadWarnings(days, today, scheduled);
+  const ahead = trainingForecast(forecastInputsFrom(today, sources), addLocalDays(today, REST_AHEAD_DAYS - 1));
+  return loadWarnings(days, today, ahead);
 }

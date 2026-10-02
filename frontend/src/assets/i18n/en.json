@@ -996,16 +996,21 @@
       "RESUME": "Resume active workout",
       "LOG_PAST": "Log a past workout",
       "QUICK": {
-        "REST_HINT": "A rest day or a short prehab session is recommended today.",
-        "TODAY_SLOT": "Today's plan (weekly schedule)",
-        "NEXT": "Next suggested (rotation)",
-        "ALTERNATIVE": "Alternative (rotation)",
+        "TODAY_SUGGESTION": "Today's suggestion",
+        "TODAY": "Today",
+        "DONE_TODAY": "Today's workout done",
+        "CLIMB_DAY": "Climbing day",
+        "CLIMB_DAY_SUB": "at most a short core / prehab session is recommended",
+        "REST_DAY": "Rest day",
+        "REST_AFTER_BLOCK": "after {{count}} load days",
+        "MANUAL": "set by hand",
+        "NEXT": "Next",
         "LAST_DONE": "last: {{date}}",
         "NEVER_DONE": "not done yet",
         "START": "Start",
         "PICK_PLAN": "Start a plan…",
-        "SLOT_FINGERS_NEAR_CLIMB": "This template has finger work — not recommended with a climb today / tomorrow.",
-        "ALL_PLANS_HAVE_FINGERS": "Every active template has finger work — skipping it near a climb is recommended."
+        "ALL_PLANS_HAVE_FINGERS": "Climbing tomorrow, but every active template has finger work — take it easier today.",
+        "OVERRIDE_FINGERS_NEAR_CLIMB": "This template has finger work — not recommended with tomorrow's climb."
       }
     },
     "ACTIVE": {

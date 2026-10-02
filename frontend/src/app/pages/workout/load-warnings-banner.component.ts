@@ -2,18 +2,19 @@ import { ChangeDetectionStrategy, Component, OnInit, computed, inject } from '@a
 import { IonIcon } from '@ionic/angular/standalone';
 import { TranslatePipe } from '@ngx-translate/core';
 
+import { CurrentDayService } from '../../core/config/current-day.service';
 import { CalendarEventRepository } from '../../core/data/calendar-event.repository';
 import { ClimbingSessionRepository } from '../../core/data/climbing-session.repository';
 import { WeeklyPlanRepository } from '../../core/data/weekly-plan.repository';
 import { WorkoutPlanRepository } from '../../core/data/workout-plan.repository';
 import { WorkoutSessionRepository } from '../../core/data/workout-session.repository';
-import { today } from '../../shared/local-date';
 import { loadWarningsFor } from './load-warnings';
 
 /**
  * backlog/138 — non-blocking training-load banner on the Heti terv dashboard and the Edzésnapló list.
- * Reads the local climbing + workout logs, planned climbs (backlog/143 `CLIMBING` events) and the weekly
- * schedule only (works Full-offline); renders nothing without warnings.
+ * Reads the local climbing + workout logs, planned climbs (backlog/143 `CLIMBING` events), the day
+ * overrides and the templates (the backlog/144 forecast) only — works Full-offline; renders nothing
+ * without warnings. "Ma" follows `CurrentDayService`, so an open screen moves on at midnight.
  */
 @Component({
   selector: 'app-load-warnings-banner',
@@ -65,9 +66,10 @@ export class LoadWarningsBannerComponent implements OnInit {
   private readonly eventRepository = inject(CalendarEventRepository);
   private readonly weeklyRepository = inject(WeeklyPlanRepository);
   private readonly planRepository = inject(WorkoutPlanRepository);
+  private readonly currentDay = inject(CurrentDayService);
 
   readonly warnings = computed(() =>
-    loadWarningsFor(today(), {
+    loadWarningsFor(this.currentDay.day(), {
       climbingSessions: this.climbingRepository.items(),
       workoutSessions: this.workoutRepository.items(),
       events: this.eventRepository.items(),

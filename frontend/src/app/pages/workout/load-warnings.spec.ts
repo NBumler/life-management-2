@@ -1,3 +1,4 @@
+import { ForecastDay } from './training-forecast';
 import { DayLoad } from './training-load';
 import { loadWarningDates, loadWarnings } from './load-warnings';
 import { addLocalDays } from './weekly-plan/weekly-plan-adherence';
@@ -21,8 +22,20 @@ function days(overrides: Record<string, Partial<DayLoad>> = {}): DayLoad[] {
 const busy: Partial<DayLoad> = { workouts: 1, rest: false };
 const climb: Partial<DayLoad> = { climbing: 1, fingerLoad: true, rest: false };
 
-function codes(list: DayLoad[], scheduled: ReadonlySet<string> = new Set()): string[] {
-  return loadWarnings(list, TODAY, scheduled).map((warning) => warning.code);
+function codes(list: DayLoad[], ahead: ForecastDay[] = []): string[] {
+  return loadWarnings(list, TODAY, ahead).map((warning) => warning.code);
+}
+
+/** A 7-day forecast from TODAY; `kinds[i]` is day i's kind. */
+function forecastAhead(kinds: ForecastDay['kind'][]): ForecastDay[] {
+  return kinds.map((kind, offset) => ({
+    date: addLocalDays(TODAY, offset),
+    kind,
+    reason: kind === 'CLIMB' ? 'PLANNED_CLIMB' : kind === 'REST' ? 'BLOCK_LIMIT' : 'ROTATION',
+    plan: null,
+    fingerFallback: false,
+    blockLength: 0,
+  }));
 }
 
 describe('load-warnings (backlog/138)', () => {
@@ -95,26 +108,13 @@ describe('load-warnings (backlog/138)', () => {
       expect(codes(days(overrides))).toEqual(['CLIMB_TOMORROW', 'MANY_CLIMBS']);
     });
 
-    it('NO_REST_AHEAD when planned climbs + weekly slots leave no free day in the next 7 days', () => {
-      const overrides: Record<string, Partial<DayLoad>> = {};
-      const scheduled = new Set<string>();
-      for (let offset = 0; offset < 7; offset++) {
-        const date = addLocalDays(TODAY, offset);
-        if (offset % 2 === 1) {
-          overrides[date] = planned;
-        } else {
-          scheduled.add(date);
-        }
-      }
-      expect(codes(days(overrides), scheduled)).toContain('NO_REST_AHEAD');
-
-      scheduled.delete(addLocalDays(TODAY, 4));
-      expect(codes(days(overrides), scheduled)).not.toContain('NO_REST_AHEAD');
+    it('NO_REST_AHEAD (backlog/144) when the 7-day forecast keeps no rest day', () => {
+      expect(codes(days(), forecastAhead(['WORKOUT', 'CLIMB', 'WORKOUT', 'CLIMB', 'WORKOUT', 'CLIMB', 'CLIMB']))).toContain('NO_REST_AHEAD');
+      expect(codes(days(), forecastAhead(['WORKOUT', 'CLIMB', 'REST', 'CLIMB', 'WORKOUT', 'CLIMB', 'CLIMB']))).not.toContain('NO_REST_AHEAD');
     });
 
-    it('a fully scheduled week without any planned climb does not trigger NO_REST_AHEAD', () => {
-      const scheduled = new Set(loadWarningDates(TODAY).filter((date) => date >= TODAY));
-      expect(codes(days(), scheduled)).toEqual([]);
+    it('a forecast shorter than the look-ahead window does not trigger NO_REST_AHEAD', () => {
+      expect(codes(days(), forecastAhead(['WORKOUT', 'CLIMB']))).toEqual([]);
     });
   });
 });
