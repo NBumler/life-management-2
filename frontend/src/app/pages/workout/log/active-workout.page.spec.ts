@@ -233,6 +233,9 @@ describe('ActiveWorkoutPage', () => {
 
   it('a rest-timer tick decrements restRemaining and clears it at zero', async () => {
     await setup();
+    // backlog/147: the expiry alarm would open a real WebAudio context (an audio-device init that can
+    // stall the test browser's main thread) — the beep itself is not under test here.
+    spyOn(component as unknown as { beep: () => void }, 'beep');
     await component.ngOnInit();
     component.onPicked([pick({ exerciseId: null })]);
     const row = component.exercises()[0];
