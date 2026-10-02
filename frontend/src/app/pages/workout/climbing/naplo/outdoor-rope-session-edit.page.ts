@@ -2,7 +2,7 @@ import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, ElementRef, Injector, OnDestroy, OnInit, WritableSignal, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import {
   AlertController,
   IonBackButton,
@@ -22,6 +22,7 @@ import {
   IonTitle,
   IonToggle,
   IonToolbar,
+  NavController,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
@@ -192,7 +193,12 @@ export class OutdoorRopeSessionEditPage implements OnInit, OnDestroy {
 
   /** backlog/122 — the `outdoor-rope/live` route: live session + summary on this same form. */
   readonly live = new ClimbingLiveController('outdoor-rope');
-  private readonly router = inject(Router);
+  /**
+   * backlog/145: leaving the form after save / delete must pop it off the Ionic stack (`navigateBack`).
+   * A forward `navigateByUrl` to the list kept this page in the stack, so the next "Új session" reused
+   * it — with the previous session's id and values, and its save overwrote that session.
+   */
+  private readonly navController = inject(NavController);
   private readonly fb = inject(FormBuilder);
   private readonly repository = inject(ClimbingSessionRepository);
   private readonly cragRepository = inject(CragRepository);
@@ -299,7 +305,7 @@ export class OutdoorRopeSessionEditPage implements OnInit, OnDestroy {
     if (idParam !== null && idParam !== 'new') {
       const existing = this.repository.byId(idParam);
       if (existing === undefined) {
-        await this.router.navigateByUrl('/tabs/workout/climbing/outdoor-rope');
+        await this.navController.navigateBack('/tabs/workout/climbing/outdoor-rope');
         return;
       }
       this.sessionId.set(idParam);
@@ -537,7 +543,7 @@ export class OutdoorRopeSessionEditPage implements OnInit, OnDestroy {
     if (this.live.isLive) {
       await this.live.finish();
     }
-    await this.router.navigateByUrl('/tabs/workout/climbing/outdoor-rope');
+    await this.navController.navigateBack('/tabs/workout/climbing/outdoor-rope');
   }
 
   async delete(): Promise<void> {
@@ -562,7 +568,7 @@ export class OutdoorRopeSessionEditPage implements OnInit, OnDestroy {
 
   private async deleteAndNavigateBack(id: string): Promise<void> {
     await this.repository.remove(id);
-    await this.router.navigateByUrl('/tabs/workout/climbing/outdoor-rope');
+    await this.navController.navigateBack('/tabs/workout/climbing/outdoor-rope');
   }
 
   /**

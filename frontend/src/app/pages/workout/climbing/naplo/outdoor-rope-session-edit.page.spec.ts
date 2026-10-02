@@ -1,7 +1,7 @@
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
-import { AlertController } from '@ionic/angular/standalone';
+import { AlertController, NavController } from '@ionic/angular/standalone';
 import { provideTranslateService } from '@ngx-translate/core';
 
 import { AscentAttempt } from '../../../../api/model/ascentAttempt';
@@ -171,6 +171,16 @@ describe('OutdoorRopeSessionEditPage', () => {
     component.addAttempt();
     expect(component.attempts()[1].sectorId()).toBe('s1');
     expect(component.attempts()[1].sectorName()).toBe('Főfal');
+  });
+
+  it('save() leaves the form with navigateBack, so the "new" page is popped off the stack (backlog/145)', async () => {
+    await setup();
+    const back = spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
+    component.form.patchValue({ cragId: 'c1', totalSessionDurationMinutes: 60 });
+
+    await component.save();
+
+    expect(back).toHaveBeenCalledWith('/tabs/workout/climbing/outdoor-rope');
   });
 
   it('save() forwards the OUTDOOR + ROPE context, the crag snapshot and a LEAD attempt with its sector', async () => {

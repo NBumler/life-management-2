@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
-import { AlertController } from '@ionic/angular/standalone';
+import { AlertController, NavController } from '@ionic/angular/standalone';
 import { provideTranslateService } from '@ngx-translate/core';
 
 import { ClimbingSession } from '../../../../api/model/climbingSession';
@@ -105,6 +105,16 @@ describe('IndoorBoulderSessionEditPage', () => {
     component.form.patchValue({ gymId: '' });
     await component.save();
     expect(saveSpy).not.toHaveBeenCalled();
+  });
+
+  it('save() leaves the form with navigateBack, so the "new" page is popped off the stack (backlog/145)', async () => {
+    await setup();
+    const back = spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
+    component.form.patchValue({ gymId: 'g1', totalSessionDurationMinutes: 60 });
+
+    await component.save();
+
+    expect(back).toHaveBeenCalledWith('/tabs/workout/climbing/indoor-boulder');
   });
 
   it('save() forwards the INDOOR + BOULDER context, the gym-name snapshot and a mapped attempt', async () => {
