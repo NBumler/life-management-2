@@ -33,22 +33,22 @@ javasolt (rotáció)” (`suggestNextPlan`), „Ugyanaz, mint legutóbb”.
 - [x] „Ugyanaz, mint legutóbb” gomb és logika törölve.
 - [x] `WeeklyPlanSlot.kind` (`PLAN` | `REST`), `planId` csak `PLAN`-nál kötelező; Flyway + OpenAPI +
       SQLite + outbox-verzió. A slot = egy napra szóló kézi felülírás (nincs öröklés).
-- [ ] Tiszta TS előrejelző (múlt: rögzített adat; ma / jövő napról napra):
-  - [ ] kézi felülírás nyer (sablon / pihenő);
-  - [ ] tervezett mászás → mászónap (terhelő, edzés nélkül);
-  - [ ] terhelő blokk limit felváltva 2 / 3 (előző blokk ≥ 3 → most 2, különben 3) → Pihenő;
-  - [ ] egyébként edzés: a rotáció következő sablonja (legrégebben csinált; az előrejelzett és a
+- [x] Tiszta TS előrejelző (múlt: rögzített adat; ma / jövő napról napra):
+  - [x] kézi felülírás nyer (sablon / pihenő);
+  - [x] tervezett mászás → mászónap (terhelő, edzés nélkül);
+  - [x] terhelő blokk limit felváltva 2 / 3 (előző blokk ≥ 3 → most 2, különben 3) → Pihenő;
+  - [x] egyébként edzés: a rotáció következő sablonja (legrégebben csinált; az előrejelzett és a
         felülírt napok is léptetik), mászás előtti napon ujjmentes;
-  - [ ] javasolt, de nem rögzített múltbeli nap = pihenőnap (a blokk újraindul);
-  - [ ] ma már rögzített edzés után aznapra nincs újabb javaslat.
-- [ ] [[Edzésnapló]] gyorsindító: „Mai javaslat: X [Indítás]” / „Ma pihenőnap” / „Ma mászás” /
+  - [x] javasolt, de nem rögzített múltbeli nap = pihenőnap (a blokk újraindul);
+  - [x] ma már rögzített edzés után aznapra nincs újabb javaslat.
+- [x] [[Edzésnapló]] gyorsindító: „Mai javaslat: X [Indítás]” / „Ma pihenőnap” / „Ma mászás” /
       „Mai edzés kész · Következő: X (nap)”; „Terv indítása…” marad.
 - [ ] [[Heti terv]] napsorok: múlt = tényleges jelvények („Edzés: sablonnév”); ma / jövő =
       előrejelzés („Javasolt: X” / „Pihenő” / „Mászás (tervezett)”, „kézi” jelölés); tap →
       action sheet: Automatikus (rotáció) / aktív sablonok / Pihenő. Megszűnik: slot-legördülő,
       „Mostantól / Csak erre a hétre”, öröklés, „Ütközés”, „Teljesítve”.
-- [ ] `NO_REST_AHEAD` az előrejelzésből számol.
-- [ ] Napváltás: a gyorsindító és a Heti terv a következő megjelenéskor az új napra számol.
+- [x] `NO_REST_AHEAD` az előrejelzésből számol.
+- [x] Napváltás: a gyorsindító és a Heti terv a következő megjelenéskor az új napra számol.
 - [ ] Specek frissítve.
 
 ## Terv / döntési napló
