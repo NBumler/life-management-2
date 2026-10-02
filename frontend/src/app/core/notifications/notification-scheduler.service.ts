@@ -390,6 +390,14 @@ export class NotificationSchedulerService {
 
     const desiredById = new Map<number, DesiredNotification>();
     for (const n of desired) {
+      // backlog/149 — STEPS_LOW is never OS-scheduled ahead of 20:00: an alarm queued at e.g. noon
+      // would fire at 20:00 against the noon step count, with no re-check of the steps walked since.
+      // Before 20:00 the native ReminderWorker owns it (live Health Connect read at 20:00); after
+      // 20:00 an app-open fires it immediately from the freshly synced count. Leaving it out of
+      // `desiredById` also makes step 1 cancel any such alarm an older build already queued.
+      if (n.type === 'STEPS_LOW' && new Date(n.fireAt) > now) {
+        continue;
+      }
       desiredById.set(notificationNumericId(n.type, n.key), n);
     }
 

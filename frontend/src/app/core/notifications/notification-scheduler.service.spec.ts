@@ -251,7 +251,8 @@ describe('NotificationSchedulerService', () => {
     expect(scheduledTypes(gateway)).not.toContain('STEPS_LOW');
   });
 
-  it('still fires STEPS_LOW when the fresh Health Connect count is also below the threshold', async () => {
+  it('still fires STEPS_LOW after 20:00 when the fresh Health Connect count is also below the threshold', async () => {
+    jasmine.clock().mockDate(new Date('2026-09-01T20:30:00'));
     const service = build();
     service.permission.set('granted');
     stepsForDay = 1000;
@@ -262,6 +263,38 @@ describe('NotificationSchedulerService', () => {
     await service.reevaluate('resume', true);
 
     expect(scheduledTypes(gateway)).toContain('STEPS_LOW');
+  });
+
+  // backlog/149 — an OS alarm queued before 20:00 fires against a stale count with no re-check.
+  it('never OS-schedules STEPS_LOW ahead of 20:00, leaving it to the background worker plan', async () => {
+    const service = build();
+    service.permission.set('granted');
+    stepsForDay = 1000; // 10:00, below threshold — the user may still walk plenty before 20:00
+
+    await service.reevaluate('resume', true);
+
+    expect(scheduledTypes(gateway)).not.toContain('STEPS_LOW');
+    const registry = JSON.parse((await Preferences.get({ key: 'lm2_notifScheduled' })).value!);
+    expect(Object.values(registry)).not.toContain(jasmine.objectContaining({ type: 'STEPS_LOW' }));
+    const plan = JSON.parse((await Preferences.get({ key: 'lm2_notifBgPlan' })).value!);
+    expect(plan.stepsLow).toEqual(jasmine.objectContaining({ key: today(), threshold: 2000 }));
+  });
+
+  it('cancels a pending 20:00 STEPS_LOW alarm an older build queued', async () => {
+    const service = build();
+    service.permission.set('granted');
+    stepsForDay = 1000;
+    const id = notificationNumericId('STEPS_LOW', today());
+    gateway.getPending.and.resolveTo({ notifications: [{ id }] } as never);
+    await Preferences.set({
+      key: 'lm2_notifScheduled',
+      value: JSON.stringify({ [id]: { type: 'STEPS_LOW', key: today(), fireAt: `${today()}T20:00:00`, lang: 'hu' } }),
+    });
+
+    await service.reevaluate('resume', true);
+
+    expect(gateway.cancelIds).toHaveBeenCalledWith([id]);
+    expect((await Preferences.get({ key: 'lm2_notifScheduled' })).value).toBe('{}');
   });
 
   it('does not re-fire a past-due notification that is already in the dedupe log', async () => {
