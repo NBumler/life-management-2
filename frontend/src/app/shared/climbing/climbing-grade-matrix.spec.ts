@@ -49,6 +49,8 @@ describe('climbing-grade-matrix', () => {
     expect(gradeToIndex('YDS', '5.14b')).toBe(40);
 
     expect(gradeToIndex('V_SCALE', 'V0')).toBe(10);
+    // backlog/152 — VB sits one V-step below V0.
+    expect(gradeToIndex('V_SCALE', 'VB')).toBe(8);
     expect(gradeToIndex('V_SCALE', 'V2')).toBe(14);
     expect(gradeToIndex('V_SCALE', 'V5')).toBe(20);
     expect(gradeToIndex('V_SCALE', 'V15')).toBe(40);

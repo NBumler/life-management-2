@@ -160,6 +160,8 @@ export const CLIMBING_GRADE_MATRIX: Readonly<Record<ClimbingScale, Readonly<Reco
   },
   // Boulder — V-Scale (Hueco)
   V_SCALE: {
+    // backlog/152 — `VB` ("V-Basic"), the Hueco grade below V0; one V-step (2) under it.
+    VB: 8,
     V0: 10,
     V1: 12,
     V2: 14,

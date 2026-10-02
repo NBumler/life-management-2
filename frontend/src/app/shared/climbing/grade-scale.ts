@@ -61,7 +61,8 @@ export function scalePostfix(scale: ClimbingScale): string {
 
 const SCALE_PATTERNS: Record<ClimbingScale, RegExp> = {
   // Nehézségi szint skálája.md "Regex (kontextus + string)"
-  V_SCALE: /^V\d+$/,
+  // backlog/152 — `VB` ("V-Basic") is the real Hueco grade below V0.
+  V_SCALE: /^V(B|\d+)$/,
   FONT: /^\d[A-C]\+?$/,
   YDS: /^5\.\d+[a-d]?$/,
   FRENCH: /^\d[a-c]\+?$/,

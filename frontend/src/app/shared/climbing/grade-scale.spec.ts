@@ -81,6 +81,22 @@ describe('grade-scale', () => {
         jasmine.objectContaining({ status: 'VALID', scale: 'FONT', absoluteDifficultyIndex: 28 }),
       );
     });
+
+    it('recognises VB (below V0) as a V-Scale boulder grade, case-insensitively (backlog/152)', () => {
+      expect(parseGrade('VB', 'BOULDER')).toEqual(
+        jasmine.objectContaining({ status: 'VALID', normalized: 'VB', scale: 'V_SCALE', absoluteDifficultyIndex: 8 }),
+      );
+      expect(parseGrade(' vb ', 'BOULDER')).toEqual(
+        jasmine.objectContaining({ status: 'VALID', normalized: 'VB', scale: 'V_SCALE', absoluteDifficultyIndex: 8 }),
+      );
+      // VB=8, V0=10 → 9
+      expect(parseGrade('VB/V0', 'BOULDER')).toEqual(
+        jasmine.objectContaining({ status: 'VALID', scale: 'V_SCALE', absoluteDifficultyIndex: 9 }),
+      );
+      // Only boulder scales know VB.
+      expect(parseGrade('VB', 'ROPE').status).toBe('UNKNOWN');
+      expect(parseGrade('VA', 'BOULDER').status).toBe('UNKNOWN');
+    });
   });
 
   describe('parseGrade — bare numbers', () => {
