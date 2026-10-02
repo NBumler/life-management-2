@@ -45,6 +45,15 @@ felvetette a Capacitor geolocation plugin használatát egy más kontextusban (c
 - [ ] Akkumulátor-kímélő GPS-mintavételezési mód hosszú túrákhoz — nem került döntésre, implementációs
       részletkérdésnek tekintjük, nem külön feature-döntésnek.
 
+### Közös alap a biciklivel (2026-10-02)
+
+A GPS-követés alaprétege (`core/geo/`: `LocationTrackingService`, `tracking-config.ts`,
+`track-buffer`, `geo-math.ts`, DEM-alapú `elevation.service`) és a plugin-választás a
+[[150-biciklizes-elo-gps-tracker]] jegyben készül (0–2. fázis), **teljesen eszközön, backend
+nélkül**. Ez a jegy ugyanerre épül, nem implementál saját GPS-réteget. Az itt nyitva hagyott
+„akkumulátor-kímélő mintavételezési mód” ott dől el (`ECO_INTERVAL_SECONDS`; az ECO mód csak akkor
+marad, ha a plugin valóban spórol vele).
+
 ### Nyitott kérdés
 
 - SOS-hívás natív telefonhívás-e (egyszerű `tel:` link a mentők számára + GPS-koordináta), vagy
