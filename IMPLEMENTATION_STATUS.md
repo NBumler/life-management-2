@@ -14,6 +14,12 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-02 — #144** Heti terv: a fix napi sablon-kiosztás (öröklés, „Mostantól / Csak erre a hétre”, „Ütközés”,
+  „Teljesítve”) helyett rotációs előrejelzés (`training-forecast.ts`): múlt = rögzített adat; ma / jövő: kézi
+  felülírás → tervezett mászás → felváltva 2 / 3 napos terhelő blokk utáni pihenő → a rotáció következő sablonja
+  (mászás előtt ujjmentes). Napi kézi felülírás (`WeeklyPlanSlot.kind` PLAN | REST, V52 + SCHEMA_V49 + outbox v18),
+  az Edzésnapló gyorsindító és a `NO_REST_AHEAD` is az előrejelzésből; „ma” napváltáskor frissül
+  (`CurrentDayService`). „Ugyanaz, mint legutóbb” megszűnt. Érintett: [[Heti terv]], [[Edzésnapló]]
 - **2026-10-01 — #143** Tervezett mászás = `CLIMBING` típusú esemény (`CalendarEvent.activityType`, V51 + SCHEMA_V48 +
   outbox v17): felvehető az Események űrlapján (Típus: Esemény / Mászás) és a Heti terv „+ Mászás” kapcsolójával. A heti
   terhelés / figyelmeztetések / rotáció mára és előre a tervvel is számol (mai / holnapi mászás, sok mászás a héten,

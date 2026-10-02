@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-10-01
-verifikalt_commit: e59bc75
+verifikalva: 2026-10-02
+verifikalt_commit: f8fa488
 ---
 
 # Események
@@ -48,7 +48,7 @@ Nem pipálható: az előfordulás a napján marad (múltbeli is látszik a horiz
 | `startTime` / `endTime` | `HH:mm` (24h, perc). `allDay = true` → mindkettő `null`. `allDay = false` → mindkettő kötelező, **ugyanaz a naptári nap**, `endTime > startTime`. |
 | `frequency` | Opcionális enum: `DAILY` \| `WEEKLY` \| `YEARLY`. Üres / `null` = egyszeri. |
 | `interval` | Egész `≥ 1`. `frequency` nélkül figyelmen kívül (tárolt default `1`). |
-| `activityType` | Opcionális enum (`backlog/143`): `CLIMBING` \| `null`. `CLIMBING` = **tervezett mászás** — a [[Heti terv]] heti terhelése, terhelés-figyelmeztetései és rotációs javaslata előre számol vele (egyszeri és ismétlődő is). `null` = általános esemény. `V51` CHECK. |
+| `activityType` | Opcionális enum (`backlog/143`): `CLIMBING` \| `null`. `CLIMBING` = **tervezett mászás** — a [[Heti terv]] heti terhelése, terhelés-figyelmeztetései és rotációs előrejelzése (mászónap, ujjmentes előző nap) előre számol vele (egyszeri és ismétlődő is). `null` = általános esemény. `V51` CHECK. |
 | `deleted` | Soft delete (`false` default); listák szűrik |
 | `createdAt` / `updatedAt` | Audit |
 

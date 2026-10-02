@@ -1,14 +1,14 @@
 ---
 id: 144
 type: change
-status: in-progress
+status: done
 title: "Heti terv: rotációs előrejelzés + kézi felülírás a fix napi kiosztás helyett; „Ugyanaz, mint legutóbb” megszűnik"
 specs:
   - "[[Heti terv]]"
   - "[[Edzésnapló]]"
 flag:
 created: 2026-10-02
-closed:
+closed: 2026-10-02
 ---
 
 # 144 — Rotációs előrejelzés a fix heti kiosztás helyett
@@ -43,13 +43,13 @@ javasolt (rotáció)” (`suggestNextPlan`), „Ugyanaz, mint legutóbb”.
   - [x] ma már rögzített edzés után aznapra nincs újabb javaslat.
 - [x] [[Edzésnapló]] gyorsindító: „Mai javaslat: X [Indítás]” / „Ma pihenőnap” / „Ma mászás” /
       „Mai edzés kész · Következő: X (nap)”; „Terv indítása…” marad.
-- [ ] [[Heti terv]] napsorok: múlt = tényleges jelvények („Edzés: sablonnév”); ma / jövő =
+- [x] [[Heti terv]] napsorok: múlt = tényleges jelvények („Edzés: sablonnév”); ma / jövő =
       előrejelzés („Javasolt: X” / „Pihenő” / „Mászás (tervezett)”, „kézi” jelölés); tap →
       action sheet: Automatikus (rotáció) / aktív sablonok / Pihenő. Megszűnik: slot-legördülő,
       „Mostantól / Csak erre a hétre”, öröklés, „Ütközés”, „Teljesítve”.
 - [x] `NO_REST_AHEAD` az előrejelzésből számol.
 - [x] Napváltás: a gyorsindító és a Heti terv a következő megjelenéskor az új napra számol.
-- [ ] Specek frissítve.
+- [x] Specek frissítve.
 
 ## Terv / döntési napló
 
@@ -64,5 +64,8 @@ javasolt (rotáció)” (`suggestNextPlan`), „Ugyanaz, mint legutóbb”.
 
 ## Lezáráskor (on-done)
 
-- Frissített specek: [[Heti terv]], [[Edzésnapló]]
-- `IMPLEMENTATION_STATUS.md` sor
+- Frissített specek: [[Heti terv]], [[Edzésnapló]] (+ [[Események]] hivatkozás)
+- `IMPLEMENTATION_STATUS.md` sor: 2026-10-02 — #144 rotációs előrejelzés
+- Kód: 1) `56638b6` („Ugyanaz, mint legutóbb” törlés, `WeeklyPlanSlot.kind`, V52 + SCHEMA_V49 + outbox v18);
+  2) `61d097d` (`training-forecast.ts`, gyorsindító, `NO_REST_AHEAD`, `CurrentDayService`);
+  3) `f8fa488` (Heti terv napsorok + kézi felülírás, a fix kiosztás UI törlése)

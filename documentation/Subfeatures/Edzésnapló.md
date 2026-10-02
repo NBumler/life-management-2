@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-10-01
-verifikalt_commit: e59bc75
+verifikalva: 2026-10-02
+verifikalt_commit: f8fa488
 ---
 
 # Edzésnapló
@@ -19,7 +19,7 @@ Elvégzett konditermi / súlyzós / HIIT / mászó-kiegészítő (hangboard, pin
 
 **Nem ide tartozik:** fal-/sziklamászás ([[Mászónapló]]), [[Úszás napló]], [[Biciklizés napló]], [[Lépésszám követés]] — külön modulok. A gyakorlat törzsadat: [[Gyakorlat]]; a tervezett rutinok: [[Heti terv]].
 
-Feature flag: az Edzésnapló **önállóan** is működik [[Heti terv]] nélkül (ad-hoc + „ugyanaz, mint legutóbb”).
+Feature flag: az Edzésnapló **önállóan** is működik [[Heti terv]] nélkül (ad-hoc indítás, utólagos rögzítés).
 
 ### Funkcionális leírás
 
@@ -143,16 +143,17 @@ PR típusok (badge a szett mellett): számított **1RM** megdöntés; **max súl
 
 #### Kapcsolat [[Heti terv]]
 
-- „Edzés indítása a tervből”: új session a `WorkoutPlan` sablonból; előtöltés (`rowsFromPlan`); `planId = WorkoutPlan.id`. Tartományos cél-ismétlés (`8–12`, [[Heti terv]]) a határok átlagával, felfelé kerekítve töltődik; a tartomány display-only `repsTarget`-ként a helyi draftban is megmarad és „cél: …” segédszövegként látszik (a session szettjén nincs tartomány-mező). Belépői (mind `?planId=`-vel nyitják az élő nézetet): a [[Heti terv]] heti dashboard nap-`START` gombja, és az Edzésnapló dashboard **terv-gyorsindítója** (lásd lent).
-- **Terv-gyorsindító (`backlog/054` + `backlog/139`, `plan-quick-start.component.ts`):** az Edzésnapló lista tetején, ha van aktív sablon **és nincs** folyamatban lévő piszkozat (akkor a „Folytatás” gomb látszik helyette — piszkozat mellett a `planId` úgysem érvényesülne). Tartalma felülről:
-  1. **Pihenő-tipp** — ha a [[Heti terv]] terhelés-szabályai közül a „nincs pihenőnap”, a „ma már másztál” vagy a „mára mászás van tervezve” (`backlog/143`) aktív: „Ma pihenőnap vagy rövid prehab javasolt.”; ilyenkor az indító gombok körvonalasak (nem tiltott, csak nem hangsúlyos).
-  2. **Mai terv (heti beosztás)** — az aznapra érvényes (öröklött is) heti slot sablonja, egy tapos „Indítás”-sal; elsőbbséget élvez. Ha aznap már van session ebből a sablonból, eltűnik. Ha a sablon ujjgyakorlatos és ma / holnap mászás van (`backlog/143`), alatta figyelmeztetés: „Ez a sablon ujjgyakorlatot tartalmaz — a mai / holnapi mászás miatt nem javasolt.”
-  3. **Következő javasolt (rotáció)** — rögzített napkiosztás nélküli A/B rotáció: az aktív, élő sablonok közül az, amelyiket a legrégebben teljesítetted (a `planId` szerinti utolsó élő session dátuma; sosem teljesített → elsőbbség; holtversenyben a sablon-sorrend), a mai slotot és az aznap már teljesítettet kihagyva. Alatta „utoljára: <dátum>” / „még nem volt”. Ha van mai slot, „Alternatíva (rotáció)” címkével, körvonalas gombbal jelenik meg. Mászás közelében az ujjgyakorlatos sablonokat kihagyja ([[Heti terv]] „Rotációs javaslat”).
-  4. **„Terv indítása…”** — action sheet minden aktív sablonnal (`goalLabel`-csoportok ábécérendben „Csoport · Név” formában, a címke nélküliek a végén); tapra indul.
-- Eltérés szabad (nincs hiba); a napló a valóságot rögzíti.
-- **Adherence:** adott héten van-e session ugyanezzel a `planId`-del (részletek: [[Heti terv]]).
-- **Ad-hoc** terv nélkül: támogatott.
-- **„Ugyanaz, mint legutóbb”:** legutóbbi session struktúra + súlyok másolása terv nélkül.
+- „Edzés indítása a tervből”: új session a `WorkoutPlan` sablonból; előtöltés (`rowsFromPlan`); `planId = WorkoutPlan.id`. Tartományos cél-ismétlés (`8–12`, [[Heti terv]]) a határok átlagával, felfelé kerekítve töltődik; a tartomány display-only `repsTarget`-ként a helyi draftban is megmarad és „cél: …” segédszövegként látszik (a session szettjén nincs tartomány-mező). Belépői (mind `?planId=`-vel nyitják az élő nézetet): a [[Heti terv]] mai napsorának „Edzés indítása” gombja (a mára előrejelzett sablonnal), és az Edzésnapló dashboard **terv-gyorsindítója** (lásd lent).
+- **Terv-gyorsindító (`backlog/054`, `backlog/144`, `plan-quick-start.component.ts`):** az Edzésnapló lista tetején, ha van aktív sablon **és nincs** folyamatban lévő piszkozat (akkor a „Folytatás” gomb látszik helyette — piszkozat mellett a `planId` úgysem érvényesülne). A [[Heti terv]] **rotációs előrejelzéséből** (`training-forecast.ts`) számol, így ugyanazt mondja, mint a Heti terv mai sora. Tartalma felülről:
+  1. **A mai nap** — az előrejelzés mai napja szerint egy sor:
+     - **„Mai javaslat”** + sablonnév + egy tapos „Indítás”; alatta „kézi beállítás” (a napot kézzel felülírtad), különben „utoljára: <dátum>” / „még nem volt”. Ha a javasolt sablon ujjgyakorlatos és holnapra mászás van tervezve: rotációs javaslatnál (minden aktív sablon ujjas) „Holnap mászás, de minden aktív sablonban van ujjgyakorlat — ma inkább könnyebben.”, kézi felülírásnál „Ez a sablon ujjgyakorlatot tartalmaz — a holnapi mászás miatt nem javasolt.”
+     - **„Mai edzés kész”** (+ a sablon neve) — ma már van rögzített edzés; aznapra nincs újabb javaslat.
+     - **„Mászónap”** — ma rögzített vagy tervezett mászás; „legfeljebb rövid törzs / prehab edzés javasolt”.
+     - **„Pihenőnap”** — „N terhelő nap után” (a terhelő blokk elérte a limitet) vagy „kézi beállítás”.
+  2. **„Következő”** — ha ma nincs indítható javaslat: a következő előrejelzett edzés sablonja, napja és dátuma (14 napon belül).
+  3. **„Terv indítása…”** — action sheet minden aktív sablonnal (`goalLabel`-csoportok ábécérendben „Csoport · Név” formában, a címke nélküliek a végén); tapra indul — az előrejelzéstől függetlenül bármelyik sablon indítható.
+
+  A „ma” a `CurrentDayService` jelzése (`core/config/current-day.service.ts`): előtérbe kerüléskor és percenként újraolvasva, így a nyitva hagyott gyorsindító éjfélkor az új napra vált.
 
 #### Statisztika
 
@@ -168,12 +169,12 @@ Tervezett (`backlog/055-edzesnaplo-statisztika-felulet-1rm-max-suly-gorbe-heti-v
 ### UI/UX elvárások
 
 - Belépés: [[Edzés]] tab → Edzésnapló (dashboard / lista).
-- Flow: Dashboard → Új edzés / Terv indítása / Ugyanaz mint legutóbb → Active Workout (vagy utólagos form) → gyakorlat modal → szettek → Befejezés → summary / dashboard frissülés.
+- Flow: Dashboard → Új edzés / Mai javaslat / Terv indítása → Active Workout (vagy utólagos form) → gyakorlat modal → szettek → Befejezés → summary / dashboard frissülés.
 - **Lista:** időrend (újabb elöl); soron: dátum, cím vagy típus, időtartam, megjelenített kcal (utility). A lista tetején a [[Heti terv]] **terhelés-figyelmeztetései** (`backlog/138`: nincs pihenőnap / sok ujjterhelés / ma már másztál / sok mászás a héten) nem blokkoló sávként — az edzés indítása ettől függetlenül szabad.
 - **Gyakorlat picker:** `ion-searchbar` + `ExerciseCategory` chipek + Kedvencek; ad-hoc létrehozás. A `<ion-modal>`-ben megjelenő `app-exercise-picker` a modal **teljes magasságát** kitölti (`:host` a megosztott `ion-modal-host-fill` mixin — `shared/styles/_ion-modal-host.scss`, `backlog/117` — flex-oszlop, `position: absolute; inset: 0`), így a találati lista a teljes rendelkezésre álló teret használja, nem egy-két sorra zsugorodik. Ugyanezt a mintát használja az [[Étkezés]] tétel-szerkesztő modalja is.
 - **Szettek:** gyakorlatonként egy szett-táblázat; `+ Új szett`; előző szett másolása; numerikus billentyűzet autofókusz. Az Active Workout gyors-növelő gombjai (`+2.5 kg` / `+5 kg` súlyos, `+1 ism.` repses gyakorlatnál) **szettenként egy kompakt sorban, a szett mezői alatt** vannak, így a megnövelt érték mindig látszik; a szett törlés (✕) a sor jobb szélén. Az utólagos formban nincsenek gyors-növelő gombok (az értéket úgyis begépeli a felhasználó).
 - **Szett-táblázat elrendezése** (sablon-szerkesztő, utólagos form és Active Workout egyaránt, közös `shared/styles/_set-row.scss` mixin + `setGridColumns()` a `workout-fields.ts`-ben): gyakorlatonként **egyszer** egy oszlopfejléc (rövid mezőnév + mértékegység, pl. „Súly / kg”), alatta szettenként **egy sor** keretes, label nélküli inputokkal pontosan a saját oszlopuk alatt — a `kind` szerint 1–4 számoszlop, így ~360 px-en sem tördel. Az első oszlop a sorszám + a szett **jelvénye**: a szett-típus rövid betűje (M = Munka, B = Bemelegítő, D = Dropset, R = Rest-pause, K = Kifáradásig), egyoldali szettnél mellette ◀ (bal) / ▶ (jobb), és ha van RPE, alatta kicsiben a szám (pl. „M◀” / „8.5”). A jelvény tapja a **szett-beállítások popovert** nyitja (`set-options-popover.component.ts`, mindhárom szerkesztőben közös): teljes nevű típus (rádiógombok), Oldal (Mindkettő / Bal / Jobb szegmens), RPE (– / 6 … 10, 0,5-ös lépés; a sablon-szerkesztőben „Cél RPE”). Minden választás azonnal érvényesül; a popover érintésre a háttérben zárul. Szett-oszlop az oldalnak és az RPE-nek nincs (a ~360 px-es táblázat nem bírná).
-- **Egyoldali szettek (`backlog/134`):** „+ Új szett” és „Előző másolása” egy egyoldali szett után **váltogatja** a kezet (bal → jobb → bal …), a mindkét kezes szett mindkét kezes marad; az új / másolt szett RPE-je üres (azt aznap kell rögzíteni). „Ugyanaz mint legutóbb” az oldalt átmásolja, az RPE-t nem; a meglévő session szerkesztése mindkettőt megőrzi.
+- **Egyoldali szettek (`backlog/134`):** „+ Új szett” és „Előző másolása” egy egyoldali szett után **váltogatja** a kezet (bal → jobb → bal …), a mindkét kezes szett mindkét kezes marad; az új / másolt szett RPE-je üres (azt aznap kell rögzíteni). A meglévő session szerkesztése az oldalt és az RPE-t is megőrzi.
 - **Sablonból indítva (`backlog/133`–`135`):** a sablon-gyakorlat megjegyzése (pl. „szék: 5”, „3–5 mp leengedés”) az Active Workout gyakorlat-neve alatt dőlt segédszövegként látszik (display-only, a draftban `planNotes`, a session nem tárolja); a cél-szettek oldala és cél-RPE-je a session szettjébe másolódik (a cél-RPE a tényleges RPE kezdőértéke). Active Workoutban a sor elején a „kész” pipa oszlop; ha a szett a sablonból tartomány-célt kapott, az ismétlés mező placeholdere a cél (pl. „8-12”).
 - **Gyakorlat műveletei:** a gyakorlat-fejléc jobb szélén egy ⋮ gomb action sheetet nyit (Mozgatás felfelé / lefelé — az első/utolsó gyakorlatnál a nem értelmezett irány hiányzik —, `WEIGHTED_REPS` / `BODYWEIGHT_REPS` kindnál „Bemelegítés generálása”, Eltávolítás), hogy a gyakorlatnév ne törjön két sorba.
 - **Bemelegítés generálása (`backlog/132`, ramping warm-up):** a gyakorlat **első WORKING szettjének** súlyából 3 `WARMUP` szettet szúr a szettlista elejére: 5 ism. × ~30%, 3 ism. × ~65%, 1 ism. × ~87%, 2,5 kg-ra kerekítve, 60 / 90 / 120 mp cél-pihenővel (`warmup-ramp.ts`: `rampWarmupSets`). A meglévő `WARMUP` szettek helyére kerülnek; az élő nézetben a már kipipált bemelegítők megmaradnak. **Rásegített (negatív kg) munkasúlynál** a mozgatott teher `testsúly + munkasúly` ([[Profile]] aktuális testsúly), a bemelegítők ennek hányadai, így nagyobb rásegítésként (negatívabb kg) mentődnek. Munkasúly nélkül (nincs / 0 kg) vagy rásegítésnél testsúly nélkül nem generál, hanem figyelmeztető toastot ad. Mindig abszolút kg mentődik — nincs %-mező. Mindhárom szerkesztőben (élő, utólagos, sablon) elérhető.
