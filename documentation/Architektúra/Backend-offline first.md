@@ -416,6 +416,7 @@ Elv: a külső integrációk **soha nincsenek** a saját backenden proxyzva ([[B
 | Külső hívás | `ONLINE` | `BACKEND_OFFLINE` | `FULL_OFFLINE` |
 |---|---|---|---|
 | Open Food Facts (`world.openfoodfacts.org/api/v2/product/{barcode}.json`) | megy | **megy** | nem — a vonalkód elmenthető, a sync gomb később lefuttatja ([[Vonalkódos élelmiszer beolvasás]]) |
+| Open-Meteo elevation (`api.open-meteo.com/v1/elevation`) — Túra útvonal-metrikák magassága | megy | **megy** | nem — a táv (eszközön számolva) látszik, a szintemelkedés / -csökkenés, az időbecslés és a magassági profil `~` (`backlog/151`; offline DEM: `backlog/150`) |
 | Vonalkód kamera (`@capacitor-mlkit/barcode-scanning`) | megy | megy | **megy** (eszközön belüli) |
 | Android Health Connect / Samsung Health | megy | megy | **megy** (eszközön belüli API — [[Lépésszám átszinkronizálása a Samsung Health-ből]]) |
 | Google Calendar OAuth / API | megy | megy | vár ([[Google Calendar szinkronizálása]]) |

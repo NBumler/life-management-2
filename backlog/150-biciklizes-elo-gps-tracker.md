@@ -58,7 +58,7 @@ folyamatban lévő élő session, **nem outbox-sor**: eszköz-lokális draft `@c
 | Haversine / távolság | `tura/GeoUtils.java`; TS-ben `offline-route-graph.ts`-ben (privát) | ✅ kiemelve `core/geo/`-ba |
 | A* útvonalkereső + él-snap (virtuális csomópont) + min-heap | `offline-route-graph.ts` (a backend `RouteSuggestionService` 1:1 TS-portja), **eszközön fut** | ✅ az algoritmus általánosítva, gráf-forrástól független |
 | Útvonal-gráf adat | `trail_segment` (OSM turistautak) — **csak a backendről** tölthető le | ❌ turistaút ≠ bicikliút; és a backend-függés a túrában is szabálysértés (→ [[151-tura-backend-offline-first-szabalysertesek]]) |
-| Táv + szintemelkedés + magassági profil | `RouteMetricsService` — **a backenden**, Open-Meteo hívással | ❌ így nem: §13 (külső API-t nem proxyzunk) és §14 (számítás kliensoldali pure TS) sérül → eszközre kerül, közösen a túrával |
+| Táv + szintemelkedés + magassági profil | #151 óta **eszközön**: `core/geo/route-metrics.ts` (+ `geo-math.ts`), a magasság közvetlenül a kliensből az Open-Meteótól (internet nélkül `null` / `~`) | ✅ közvetlenül; a magasság-forrás a build-asset DEM-re cserélendő (offline is) |
 | DEM (domborzat) | Open-Meteo API (backend hívja); terrarium raster-dem csempék a hillshade-hez (online) | ⚠️ helyette build-asset DEM (lásd lent) |
 | Térkép (MapLibre), offline csempe-tár | `tura.page.ts`, `offline-tile-store.ts` | ⚪ az élő képernyőn nem kell az első körben |
 
@@ -154,8 +154,9 @@ jegyben dől el; a 106 ugyanezt a réteget használja.
 
 ### Általános
 - [ ] Minden hangolható érték konstansként kiszervezve, kommentezve (`core/geo/tracking-config.ts`).
-- [ ] Web build: `offlineCapable === false` → nincs élő tracker (a kézi napló marad); a döntés
-      `FeatureFlags` / `offlineCapable` alapján, **nem** `Capacitor.isNativePlatform()`-on.
+- [ ] Web build: `offlineCapable === false` → nincs élő tracker (a kézi napló marad); a döntés az
+      `offlineCapable` képességen (a kódbázisban `Capacitor.isNativePlatform()`) történik, **nem**
+      platform-stringen (`getPlatform()`).
 - [ ] Unit tesztek: geo-matek, DEM-mintavétel + zajküszöb, A* a bicikli-gráfon, degradált becslés,
       hihetőség-ellenőrzés, tracker állapotgép (start / szünet / folytatás / stop / elvetés /
       újraindítás).
@@ -191,11 +192,11 @@ A backend nem szerepel a láncban.
 
 | Elem | Felelősség | Fogyasztók |
 |---|---|---|
-| `geo-math.ts` | haversine, polyline-hossz, resample (távolság szerint), pont–szakasz vetítés, Douglas–Peucker — pure, spec-elt | minden |
+| `geo-math.ts` | **#151-gyel elkészült:** haversine, polyline-hossz, pont távolságra, egyenletes resample. Bővítendő: pont–szakasz vetítés, Douglas–Peucker — pure, spec-elt | minden |
 | `tracking-config.ts` | **minden hangolható konstans** | tracker, 106 |
 | `location-tracking.service.ts` | plugin-wrapper: `start(mode)` / `pause` / `resume` / `stop`; módok `CONTINUOUS`, `INTERVAL`, `ENDPOINTS`; fix-szűrés; engedélyek; jel-állapot signal | bicikli, 106, 111 |
 | `track-buffer.ts` | nyers pontok eszköz-lokális append-only tárolása felvétel alatt | bicikli, 106 |
-| `dem.ts` + `elevation.service.ts` | magasság egy pontra a DEM-rácsból (bilineáris interpoláció); `metrics(points)` → táv, szintemelkedés, -csökkenés, profil (távolság alapú mintavétel + zajküszöb) — a backend `RouteMetricsService` logikájának eszközre költöztetése | bicikli, túra (#151) |
+| `dem.ts` + `elevation.service.ts` | magasság egy pontra a DEM-rácsból (bilineáris interpoláció); `metrics(points)` → táv, szintemelkedés, -csökkenés, profil (távolság alapú mintavétel + zajküszöb) — a #151-gyel már eszközre költözött `core/geo/route-metrics.ts` magasság-forrásának cseréje (Open-Meteo → DEM) és távolság alapú mintavétellel bővítése | bicikli, túra (#151) |
 | `route-graph.ts` + `routing.service.ts` | a mai `offline-route-graph.ts` A*-jának általánosítása: gráf-forrás interfész (bicikli-csomag / turistaút-csomag), profil szerinti él-súlyok; `route(profile, from, to)` | bicikli Becsült, túra (#151) |
 | `geo-asset.service.ts` | a csomag betöltése, csempénkénti lusta olvasás, verzió, lefedettség-ellenőrzés (`covers(point)`) | DEM, routing |
 
