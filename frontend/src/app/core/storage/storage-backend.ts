@@ -287,7 +287,9 @@ export interface WorkoutPlanDraft {
 export interface WeeklyPlanSlotSaveItem {
   id: string;
   dayOfWeek: WeeklyPlanSlot.DayOfWeekEnum;
-  planId: string;
+  /** backlog/144: PLAN = template override (`planId` set), REST = forced rest day (`planId` null). */
+  kind: WeeklyPlanSlot.KindEnum;
+  planId: string | null;
 }
 
 export interface WeeklyPlanDraft {

@@ -23,7 +23,7 @@ interface SessionCard {
 /**
  * documentation/Subfeatures/Edzésnapló.md "UI/UX: Lista" — the Edzés tab's default segment.
  * Time-ordered session cards (newest first) with date, title-or-type, duration and the utility kcal
- * figure. CTAs start the live Active Workout View (fresh, or "Ugyanaz mint legutóbb" via `?copyFrom`);
+ * figure. CTAs start the live Active Workout View (fresh);
  * a secondary link opens the post-hoc editor for logging a past session. A "folytatás" banner shows
  * whenever a live draft is parked (`WorkoutDraftService`).
  */
@@ -68,7 +68,6 @@ export class WorkoutLogListPage implements OnInit, ViewWillEnter {
   });
 
   readonly isEmpty = computed(() => this.repository.loaded() && this.cards().length === 0);
-  readonly mostRecentId = computed(() => this.cards()[0]?.session.id ?? null);
 
   async ngOnInit(): Promise<void> {
     await Promise.all([this.repository.load(), this.profileRepository.load(), this.draftService.refresh()]);

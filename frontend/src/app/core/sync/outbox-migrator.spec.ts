@@ -10,6 +10,7 @@ import {
   rewriteDbUnitToCs,
   stripClimbingSessionFailurePoint,
   climbingSessionWeatherToList,
+  addWeeklyPlanSlotKindDefault,
 } from './outbox-migrator';
 
 // documentation/Architektúra/Backend-offline first.md §7 "Payload-verziózás (app frissítés)".
@@ -402,6 +403,19 @@ describe('migrateOutboxItem', () => {
       expect(climbingSessionWeatherToList(listPayload, '/u').payload).toBe(listPayload);
       expect(climbingSessionWeatherToList(null, '/u')).toEqual({ payload: null, url: '/u' });
       expect(climbingSessionWeatherToList({ id: 'x' }, '/u')).toEqual({ payload: { id: 'x' }, url: '/u' });
+    });
+  });
+  describe('addWeeklyPlanSlotKindDefault (v17 → v18, backlog/144)', () => {
+    it('gives every pending slot kind PLAN, keeping an explicit kind', () => {
+      const payload = { id: 'w', slots: [{ id: 'a', planId: 'p' }, { id: 'b', kind: 'REST', planId: null }] };
+      expect(addWeeklyPlanSlotKindDefault(payload, '/u').payload).toEqual({
+        id: 'w',
+        slots: [{ id: 'a', planId: 'p', kind: 'PLAN' }, { id: 'b', kind: 'REST', planId: null }],
+      });
+    });
+
+    it('leaves a DELETE (null payload) untouched', () => {
+      expect(addWeeklyPlanSlotKindDefault(null, '/u')).toEqual({ payload: null, url: '/u' });
     });
   });
 });

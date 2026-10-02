@@ -992,7 +992,6 @@
     "LOG": {
       "EMPTY": "No workouts logged yet.",
       "NEW_SESSION": "New workout",
-      "SAME_AS_LAST": "Same as last time",
       "EXERCISES_SHORT": "exercises",
       "RESUME": "Resume active workout",
       "LOG_PAST": "Log a past workout",

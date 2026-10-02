@@ -231,17 +231,6 @@ describe('ActiveWorkoutPage', () => {
     expect(router.navigateByUrl).toHaveBeenCalledWith('/tabs/workout/log');
   });
 
-  it('?copyFrom= clones structure + weights with sets un-ticked', async () => {
-    await setup({ copyFrom: 'prev' });
-    repository.byId.and.returnValue(priorSession());
-    await component.ngOnInit();
-
-    expect(component.exercises().length).toBe(1);
-    const set = component.exercises()[0].sets()[0];
-    expect(set.weightKg()).toBe(100);
-    expect(set.isCompleted()).toBeFalse();
-  });
-
   it('a rest-timer tick decrements restRemaining and clears it at zero', async () => {
     await setup();
     await component.ngOnInit();

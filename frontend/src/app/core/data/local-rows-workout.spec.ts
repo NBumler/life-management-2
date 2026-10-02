@@ -1,8 +1,13 @@
+import { WeeklyPlanSlot } from '../../api/model/weeklyPlanSlot';
 import { WorkoutPlanExercise } from '../../api/model/workoutPlanExercise';
 import { WorkoutPlanSet } from '../../api/model/workoutPlanSet';
 import { WorkoutSetEntry } from '../../api/model/workoutSetEntry';
 import { SqlTask } from '../storage/local-database.service';
 import {
+  WeeklyPlanSlotRow,
+  weeklyPlanSlotLocalWriteTask,
+  weeklyPlanSlotRowToDto,
+  weeklyPlanSlotServerApplyTask,
   workoutPlanExerciseLocalWriteTask,
   workoutPlanExerciseServerApplyTask,
   workoutPlanSetLocalWriteTask,
@@ -84,4 +89,33 @@ describe('workout local-rows SQL tasks (backlog/133–135)', () => {
       expect(task.values![columns.indexOf('notes')]).toBe('szék: 5');
     });
   }
+});
+
+/** backlog/144 — a REST override has no template: `plan_id` is `''` on-device (NOT NULL column), `null` on the DTO. */
+describe('weekly plan slot local-rows (backlog/144)', () => {
+  const rest: WeeklyPlanSlot = {
+    id: 'sl',
+    weeklyPlanId: 'w',
+    dayOfWeek: WeeklyPlanSlot.DayOfWeekEnum.Tuesday,
+    kind: WeeklyPlanSlot.KindEnum.Rest,
+    planId: null,
+    deleted: false,
+  };
+
+  for (const [name, task] of [
+    ['local write', weeklyPlanSlotLocalWriteTask(rest)],
+    ['server apply', weeklyPlanSlotServerApplyTask(rest)],
+  ] as const) {
+    it(`${name}: binds kind and stores a REST slot's planId as ''`, () => {
+      expect(placeholderCount(task)).toBe(task.values!.length);
+      const columns = /\(([^)]*)\)/.exec(task.statement)![1].split(',').map((column) => column.trim());
+      expect(task.values![columns.indexOf('kind')]).toBe('REST');
+      expect(task.values![columns.indexOf('plan_id')]).toBe('');
+    });
+  }
+
+  it("reads plan_id '' back as a null planId", () => {
+    const row = { id: 'sl', weekly_plan_id: 'w', day_of_week: 'TUESDAY', kind: 'REST', plan_id: '', deleted: 0 } as WeeklyPlanSlotRow;
+    expect(weeklyPlanSlotRowToDto(row)).toEqual(jasmine.objectContaining({ kind: 'REST', planId: null }));
+  });
 });

@@ -2585,7 +2585,7 @@ export class SqliteStorageBackend implements StorageBackend {
 
     const localTasks: SqlTask[] = [weeklyPlanLocalWriteTask({ id: draft.id, weekStartDate: draft.weekStartDate })];
     for (const slot of draft.slots) {
-      localTasks.push(weeklyPlanSlotLocalWriteTask({ id: slot.id, weeklyPlanId: draft.id, dayOfWeek: slot.dayOfWeek, planId: slot.planId }));
+      localTasks.push(weeklyPlanSlotLocalWriteTask({ id: slot.id, weeklyPlanId: draft.id, dayOfWeek: slot.dayOfWeek, kind: slot.kind, planId: slot.planId }));
     }
     for (const existing of existingSlotRows) {
       if (existing.deleted === 0 && !incomingIds.has(existing.id)) {
@@ -2594,7 +2594,10 @@ export class SqliteStorageBackend implements StorageBackend {
     }
 
     // A slot referencing a WorkoutPlan created in the same offline session must wait for that plan's own POST first.
-    const dependsOn = await this.findLocalOnlyIds('workout_plan', draft.slots.map((slot) => slot.planId));
+    const dependsOn = await this.findLocalOnlyIds(
+      'workout_plan',
+      draft.slots.map((slot) => slot.planId).filter((planId): planId is string => planId !== null),
+    );
     const enqueue = await this.offlineQueue.buildEnqueueTasks({
       userId,
       method: isNew ? 'POST' : 'PUT',
@@ -3141,6 +3144,7 @@ function buildWeeklyPlanPayload(draft: WeeklyPlanDraft): WeeklyPlan {
       id: slot.id,
       weeklyPlanId: draft.id,
       dayOfWeek: slot.dayOfWeek,
+      kind: slot.kind,
       planId: slot.planId,
       deleted: false,
     })),

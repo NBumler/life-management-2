@@ -172,6 +172,24 @@ export function addShoppingListSaveToStorageDefault(payload: unknown, url: strin
 }
 
 /**
+ * v17 → v18 (backlog/144): `WeeklyPlanSlot.kind` (PLAN | REST) became required. Every slot queued
+ * before the update was a template assignment, so a missing `kind` is `'PLAN'`.
+ */
+export function addWeeklyPlanSlotKindDefault(payload: unknown, url: string): { payload: unknown; url: string } {
+  if (payload === null || typeof payload !== 'object' || Array.isArray(payload)) {
+    return { payload, url };
+  }
+  const week = payload as Record<string, unknown>;
+  if (!Array.isArray(week['slots'])) {
+    return { payload, url };
+  }
+  const slots = (week['slots'] as unknown[]).map((slot) =>
+    slot !== null && typeof slot === 'object' && !('kind' in slot) ? { ...(slot as Record<string, unknown>), kind: 'PLAN' } : slot,
+  );
+  return { payload: { ...week, slots }, url };
+}
+
+/**
  * v4 → v5 (backlog/084): the sector moved from `ClimbingSession` to `AscentAttempt`, and
  * `ClimbingSession.rockType` / `aspect` were removed. A `ClimbingSession` write still pending from
  * before that app update carries a session-level `sectorId` / `sectorName` (and `rockType` /
@@ -263,6 +281,9 @@ const STEPS_BY_VERSION: Readonly<Record<number, VersionSteps>> = {
   // backlog/143: `CalendarEvent.activityType` added as a new nullable field — a missing key already means
   // "a plain event" server-side, so no payload transform is needed.
   16: { default: identityStep },
+  // backlog/144: `WeeklyPlanSlot.kind` added as a new required field — a WeeklyPlan write still pending
+  // from before this update only ever carried template slots, so each slot gets `kind: 'PLAN'`.
+  17: { default: identityStep, overrides: { WeeklyPlan: addWeeklyPlanSlotKindDefault } },
 };
 
 function buildMigrations(): ReadonlyMap<string, MigrationStep> {

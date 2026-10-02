@@ -54,8 +54,11 @@ import { uuidV4 } from './uuid';
  *   before that app update has no such key (= no goal set), so every type is identity.
  * - v16 → v17 (backlog/143): `CalendarEvent` gained a nullable `activityType`. A pending event write from
  *   before that app update has no such key (= a plain event), so every type is identity.
+ * - v17 → v18 (backlog/144): `WeeklyPlanSlot` gained a required `kind` (PLAN | REST) and a nullable
+ *   `planId`. A pending WeeklyPlan write from before that app update only carried template slots, so
+ *   `addWeeklyPlanSlotKindDefault` stamps `kind: 'PLAN'` on each; every other type is identity.
  */
-export const OUTBOX_PAYLOAD_SCHEMA_VERSION = 17;
+export const OUTBOX_PAYLOAD_SCHEMA_VERSION = 18;
 
 /** documentation/Architektúra/Backend-offline first.md §6 "Tétel-újrapróbálkozási backoff" (jitter omitted — not load-bearing for correctness). */
 const RETRY_BACKOFF_MS = [2000, 8000, 30000, 120000, 600000];

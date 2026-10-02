@@ -1325,7 +1325,14 @@ const SCHEMA_V47_STATEMENTS: string[] = [`ALTER TABLE user_profile ADD COLUMN da
 /** backlog/143 — tervezett mászás: `calendar_event.activity_type`; on-device tükre a backend `V51`-nek. */
 const SCHEMA_V48_STATEMENTS: string[] = [`ALTER TABLE calendar_event ADD COLUMN activity_type TEXT`];
 
-const SCHEMA_VERSION = 48;
+/**
+ * backlog/144 — a heti slot egynapos kézi felülírás: `kind` PLAN | REST; on-device tükre a backend
+ * `V52`-nek. A `plan_id` NOT NULL marad (SQLite-ban ALTER-rel nem lazítható) — REST-nél `''`, amit a
+ * `weeklyPlanSlotRowToDto` `null`-ra fordít.
+ */
+const SCHEMA_V49_STATEMENTS: string[] = [`ALTER TABLE weekly_plan_slot ADD COLUMN kind TEXT NOT NULL DEFAULT 'PLAN'`];
+
+const SCHEMA_VERSION = 49;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -1376,7 +1383,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 45, statements: SCHEMA_V45_STATEMENTS },
   { toVersion: 46, statements: SCHEMA_V46_STATEMENTS },
   { toVersion: 47, statements: SCHEMA_V47_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V48_STATEMENTS },
+  { toVersion: 48, statements: SCHEMA_V48_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V49_STATEMENTS },
 ];
 
 export interface SqlTask {

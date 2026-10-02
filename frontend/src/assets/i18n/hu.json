@@ -992,7 +992,6 @@
     "LOG": {
       "EMPTY": "Még nincs edzés naplózva.",
       "NEW_SESSION": "Új edzés",
-      "SAME_AS_LAST": "Ugyanaz, mint legutóbb",
       "EXERCISES_SHORT": "gyakorlat",
       "RESUME": "Aktív edzés folytatása",
       "LOG_PAST": "Utólagos rögzítés",

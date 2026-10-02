@@ -83,8 +83,7 @@ interface ExerciseRow {
 
 /**
  * documentation/Subfeatures/Edzésnapló.md — the post-hoc create/edit form (route param `id` is an
- * existing session's uuid or the literal `new`; `?copyFrom=<id>` clones another session's structure +
- * weights for "Ugyanaz mint legutóbb"). The live Active Workout View (stopwatch, rest timer) is a
+ * existing session's uuid or the literal `new`). The live Active Workout View (stopwatch, rest timer) is a
  * separate screen that lands with the next slice; this one is the always-available fallback.
  */
 @Component({
@@ -183,7 +182,6 @@ export class WorkoutSessionEditPage implements OnInit {
     await Promise.all([this.repository.load(), this.profileRepository.load()]);
 
     const idParam = this.route.snapshot.paramMap.get('id');
-    const copyFrom = this.route.snapshot.queryParamMap.get('copyFrom');
 
     if (idParam !== null && idParam !== 'new') {
       const existing = this.repository.byId(idParam);
@@ -204,16 +202,7 @@ export class WorkoutSessionEditPage implements OnInit {
         durationMinutes: existing.durationMinutes ?? null,
         roundsCount: existing.roundsCount ?? null,
       });
-      this.exercises.set(this.rowsFromSession(existing, false));
-      return;
-    }
-
-    if (copyFrom !== null) {
-      const source = this.repository.byId(copyFrom);
-      if (source !== undefined) {
-        this.form.patchValue({ workoutType: source.workoutType });
-        this.exercises.set(this.rowsFromSession(source, true));
-      }
+      this.exercises.set(this.rowsFromSession(existing));
     }
   }
 
@@ -438,12 +427,12 @@ export class WorkoutSessionEditPage implements OnInit {
     };
   }
 
-  private rowsFromSession(session: WorkoutSession, freshIds: boolean): ExerciseRow[] {
+  private rowsFromSession(session: WorkoutSession): ExerciseRow[] {
     return session.exercises
       .filter((exercise) => !exercise.deleted)
       .sort((a, b) => a.orderIndex - b.orderIndex)
       .map((exercise) => ({
-        id: freshIds ? uuidV4() : exercise.id,
+        id: exercise.id,
         exerciseId: exercise.exerciseId ?? null,
         exerciseName: exercise.exerciseName,
         exerciseCategory: exercise.exerciseCategory,
@@ -454,7 +443,7 @@ export class WorkoutSessionEditPage implements OnInit {
             .filter((set) => !set.deleted)
             .sort((a, b) => a.orderIndex - b.orderIndex)
             .map((set) => ({
-              id: freshIds ? uuidV4() : set.id,
+              id: set.id,
               setType: signal(set.setType),
               reps: signal(set.reps ?? null),
               weightKg: signal(set.weightKg ?? null),
@@ -463,9 +452,8 @@ export class WorkoutSessionEditPage implements OnInit {
               distanceMeters: signal(set.distanceMeters ?? null),
               restTimeSeconds: signal(set.restTimeSeconds ?? null),
               side: signal<SetSide | null>(set.side ?? null),
-              // "Ugyanaz mint legutóbb" copies the hand, not the effort
-              rpe: signal<number | null>(freshIds ? null : (set.rpe ?? null)),
-              isCompleted: signal(freshIds ? false : set.isCompleted),
+              rpe: signal<number | null>(set.rpe ?? null),
+              isCompleted: signal(set.isCompleted),
             })),
         ),
       }));

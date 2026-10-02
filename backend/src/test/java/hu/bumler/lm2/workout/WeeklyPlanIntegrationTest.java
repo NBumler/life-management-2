@@ -58,7 +58,7 @@ class WeeklyPlanIntegrationTest {
 	}
 
 	private WeeklyPlanSlot slot(UUID id, UUID weeklyPlanId, WeeklyPlanSlot.DayOfWeekEnum day, UUID planId) {
-		return new WeeklyPlanSlot(id, weeklyPlanId, day, planId, false);
+		return new WeeklyPlanSlot(id, weeklyPlanId, day, WeeklyPlanSlot.KindEnum.PLAN, false).planId(planId);
 	}
 
 	@Test

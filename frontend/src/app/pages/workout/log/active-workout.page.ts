@@ -117,7 +117,7 @@ const TICK_MS = 1000;
  * a running stopwatch, a per-set rest timer that fires haptic + a short beep at expiry, PR badges,
  * and HIIT round helpers. The whole session is a device-local draft (`WorkoutDraftService`, not an
  * outbox row) that survives an app kill; only "Befejezés" builds a `WorkoutSessionDraft` and enqueues
- * it. `?copyFrom=<id>` seeds structure + weights for "Ugyanaz mint legutóbb".
+ * it.
  */
 @Component({
   selector: 'app-active-workout',
@@ -219,17 +219,10 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
       if (typeParam !== null && (WORKOUT_TYPES as string[]).includes(typeParam)) {
         this.workoutType.set(typeParam as WorkoutSession.WorkoutTypeEnum);
       }
-      const copyFrom = this.route.snapshot.queryParamMap.get('copyFrom');
-      const source = copyFrom !== null ? this.repository.byId(copyFrom) : undefined;
-      if (source !== undefined) {
-        this.workoutType.set(source.workoutType);
-        this.planId = source.planId ?? null;
-        this.exercises.set(this.rowsFromSession(source));
-      }
       // documentation/Subfeatures/Heti terv.md "Edzés indítása a tervből": preload structure + target
       // sets from a WorkoutPlan; the session's planId then points at that template for adherence.
       const planIdParam = this.route.snapshot.queryParamMap.get('planId');
-      if (source === undefined && planIdParam !== null) {
+      if (planIdParam !== null) {
         const plan = this.planRepository.byId(planIdParam);
         if (plan !== undefined && !plan.deleted) {
           this.planId = plan.id;
@@ -744,42 +737,6 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
         })),
       ),
     };
-  }
-
-  /** "Ugyanaz mint legutóbb": clone a prior session's structure + weights, sets un-ticked, fresh ids. */
-  private rowsFromSession(session: WorkoutSession): ExerciseRow[] {
-    return session.exercises
-      .filter((exercise) => !exercise.deleted)
-      .sort((a, b) => a.orderIndex - b.orderIndex)
-      .map((exercise) => ({
-        id: uuidV4(),
-        exerciseId: exercise.exerciseId ?? null,
-        exerciseName: exercise.exerciseName,
-        exerciseCategory: exercise.exerciseCategory,
-        exerciseKind: exercise.exerciseKind,
-        defaultRestTimeSeconds: this.catalogRestFor(exercise.exerciseId ?? null),
-        planNotes: null,
-        supersetGroup: signal(exercise.supersetGroup ?? null),
-        sets: signal(
-          exercise.sets
-            .filter((set) => !set.deleted)
-            .sort((a, b) => a.orderIndex - b.orderIndex)
-            .map((set) => ({
-              id: uuidV4(),
-              setType: signal(set.setType),
-              reps: signal(set.reps ?? null),
-              weightKg: signal(set.weightKg ?? null),
-              holdTimeSeconds: signal(set.holdTimeSeconds ?? null),
-              edgeSizeMm: signal(set.edgeSizeMm ?? null),
-              distanceMeters: signal(set.distanceMeters ?? null),
-              restTimeSeconds: signal(set.restTimeSeconds ?? null),
-              // the hand carries over; the effort (RPE) is today's to log
-              side: signal<SetSide | null>(set.side ?? null),
-              rpe: signal<number | null>(null),
-              isCompleted: signal(false),
-            })),
-        ),
-      }));
   }
 
   /** documentation/Subfeatures/Heti terv.md "Indítás": clone a template's structure + target sets, fresh ids, un-ticked. */

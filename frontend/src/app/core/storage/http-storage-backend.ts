@@ -624,6 +624,7 @@ export class HttpStorageBackend implements StorageBackend {
         id: slot.id,
         weeklyPlanId: draft.id,
         dayOfWeek: slot.dayOfWeek,
+        kind: slot.kind,
         planId: slot.planId,
         deleted: false,
       })),

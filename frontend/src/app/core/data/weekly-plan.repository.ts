@@ -108,14 +108,21 @@ export class WeeklyPlanRepository {
     return uuidV5(`WeeklyPlan:${userId}:${weekStartDate}`);
   }
 
-  /** Upsert the whole slot set for one week. Slots without an `id` get a fresh deterministic one from (weekId, dayOfWeek). */
-  async saveWeek(weekStartDate: string, slots: { dayOfWeek: WeeklyPlanSlotSaveItem['dayOfWeek']; planId: string; id?: string }[]): Promise<WeeklyPlan> {
+  /**
+   * Upsert the whole slot set for one week. Slots without an `id` get a fresh deterministic one from
+   * (weekId, dayOfWeek); without a `kind` a slot is a template (PLAN) override.
+   */
+  async saveWeek(
+    weekStartDate: string,
+    slots: { dayOfWeek: WeeklyPlanSlotSaveItem['dayOfWeek']; kind?: WeeklyPlanSlotSaveItem['kind']; planId: string | null; id?: string }[],
+  ): Promise<WeeklyPlan> {
     const id = await this.weekId(weekStartDate);
     const resolvedSlots: WeeklyPlanSlotSaveItem[] = [];
     for (const slot of slots) {
       resolvedSlots.push({
         id: slot.id ?? (await uuidV5(`WeeklyPlanSlot:${id}:${slot.dayOfWeek}`)),
         dayOfWeek: slot.dayOfWeek,
+        kind: slot.kind ?? 'PLAN',
         planId: slot.planId,
       });
     }

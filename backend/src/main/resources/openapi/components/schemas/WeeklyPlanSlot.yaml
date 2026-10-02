@@ -1,15 +1,15 @@
 type: object
 description: >-
-  documentation/Subfeatures/Heti terv.md "slots" — one day → template assignment on a WeeklyPlan. A
-  slot exists only where a template is assigned; clearing a day soft-deletes its slot. "max egy
-  sablon / nap az első körben" — at most one live slot per (weeklyPlanId, dayOfWeek). Only ever saved
-  nested inside a WeeklyPlan (documentation/Architektúra/Backend.md "Nested aggregate PUT"), but its
-  own sync row.
+  documentation/Subfeatures/Heti terv.md "Kézi felülírás" (backlog/144) — a one-day manual override of
+  the rotation forecast on a WeeklyPlan: PLAN = this template on that day, REST = a forced rest day.
+  A slot exists only where the day is overridden; back to "Automatikus" soft-deletes it. At most one
+  live slot per (weeklyPlanId, dayOfWeek). Only ever saved nested inside a WeeklyPlan
+  (documentation/Architektúra/Backend.md "Nested aggregate PUT"), but its own sync row.
 required:
   - id
   - weeklyPlanId
   - dayOfWeek
-  - planId
+  - kind
   - deleted
 properties:
   id:
@@ -28,10 +28,19 @@ properties:
       - FRIDAY
       - SATURDAY
       - SUNDAY
+  kind:
+    type: string
+    enum:
+      - PLAN
+      - REST
+    description: PLAN = template override (planId required); REST = forced rest day (planId null).
   planId:
     type: string
     format: uuid
-    description: '→ WorkoutPlan.id assigned to this day. A soft link — a plan soft-deleted later leaves the slot intact.'
+    nullable: true
+    description: >-
+      → WorkoutPlan.id for a PLAN override (400 VALIDATION when missing); always null for REST. A soft
+      link — a plan soft-deleted later leaves the slot intact.
   deleted:
     type: boolean
   deletedAt:

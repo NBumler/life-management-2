@@ -13,6 +13,7 @@ import hu.bumler.lm2.api.model.WeeklyPlan;
 import hu.bumler.lm2.api.model.WeeklyPlanSlot;
 import hu.bumler.lm2.common.exception.EntityDeletedException;
 import hu.bumler.lm2.common.exception.EntityNotFoundException;
+import hu.bumler.lm2.common.exception.ValidationException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -51,6 +52,7 @@ class WeeklyPlanServiceTest {
 	private static WeeklyPlanSlotEntity slotEntity(UUID id, UUID weeklyPlanId) {
 		WeeklyPlanSlotEntity entity = new WeeklyPlanSlotEntity(id, weeklyPlanId);
 		entity.setDayOfWeek("MONDAY");
+		entity.setKind("PLAN");
 		entity.setPlanId(UUID.randomUUID());
 		return entity;
 	}
@@ -60,7 +62,7 @@ class WeeklyPlanServiceTest {
 	}
 
 	private static WeeklyPlanSlot slot(UUID id, UUID weeklyPlanId, WeeklyPlanSlot.DayOfWeekEnum day, UUID planId) {
-		return new WeeklyPlanSlot(id, weeklyPlanId, day, planId, false);
+		return new WeeklyPlanSlot(id, weeklyPlanId, day, WeeklyPlanSlot.KindEnum.PLAN, false).planId(planId);
 	}
 
 	// --- create ---
@@ -88,6 +90,34 @@ class WeeklyPlanServiceTest {
 		assertThat(slotCaptor.getValue().getId()).isEqualTo(slotId);
 		assertThat(slotCaptor.getValue().getPlanId()).isEqualTo(planId);
 		assertThat(slotCaptor.getValue().getDayOfWeek()).isEqualTo("MONDAY");
+	}
+
+	@Test
+	void create_storesRestOverride_withoutPlanId() {
+		UUID weeklyId = UUID.randomUUID();
+		when(repository.findById(weeklyId)).thenReturn(Optional.empty());
+		when(slotRepository.findByWeeklyPlanId(weeklyId)).thenReturn(List.of());
+		WeeklyPlanSlot rest = new WeeklyPlanSlot(UUID.randomUUID(), weeklyId, WeeklyPlanSlot.DayOfWeekEnum.TUESDAY,
+				WeeklyPlanSlot.KindEnum.REST, false).planId(UUID.randomUUID());
+
+		service.create(UUID.randomUUID(), weeklyPlan(weeklyId, List.of(rest)));
+
+		ArgumentCaptor<WeeklyPlanSlotEntity> slotCaptor = ArgumentCaptor.forClass(WeeklyPlanSlotEntity.class);
+		verify(slotRepository).save(slotCaptor.capture());
+		assertThat(slotCaptor.getValue().getKind()).isEqualTo("REST");
+		assertThat(slotCaptor.getValue().getPlanId()).isNull();
+	}
+
+	@Test
+	void create_rejectsPlanOverride_withoutPlanId() {
+		UUID weeklyId = UUID.randomUUID();
+		when(repository.findById(weeklyId)).thenReturn(Optional.empty());
+		when(slotRepository.findByWeeklyPlanId(weeklyId)).thenReturn(List.of());
+		WeeklyPlanSlot slot = new WeeklyPlanSlot(UUID.randomUUID(), weeklyId, WeeklyPlanSlot.DayOfWeekEnum.TUESDAY,
+				WeeklyPlanSlot.KindEnum.PLAN, false);
+
+		assertThatThrownBy(() -> service.create(UUID.randomUUID(), weeklyPlan(weeklyId, List.of(slot))))
+				.isInstanceOf(ValidationException.class);
 	}
 
 	@Test

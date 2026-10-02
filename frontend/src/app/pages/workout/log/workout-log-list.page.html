@@ -15,11 +15,6 @@
 
   <div class="cta-row">
     <ion-button expand="block" routerLink="active">{{ 'WORKOUT.LOG.NEW_SESSION' | translate }}</ion-button>
-    @if (mostRecentId(); as lastId) {
-      <ion-button expand="block" fill="outline" [routerLink]="['active']" [queryParams]="{ copyFrom: lastId }">
-        {{ 'WORKOUT.LOG.SAME_AS_LAST' | translate }}
-      </ion-button>
-    }
     <ion-button expand="block" fill="clear" routerLink="new">{{ 'WORKOUT.LOG.LOG_PAST' | translate }}</ion-button>
   </div>
 

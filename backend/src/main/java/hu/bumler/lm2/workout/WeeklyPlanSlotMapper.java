@@ -9,7 +9,9 @@ class WeeklyPlanSlotMapper {
 
 	WeeklyPlanSlot toDto(WeeklyPlanSlotEntity entity) {
 		WeeklyPlanSlot dto = new WeeklyPlanSlot(entity.getId(), entity.getWeeklyPlanId(),
-				WeeklyPlanSlot.DayOfWeekEnum.fromValue(entity.getDayOfWeek()), entity.getPlanId(), entity.isDeleted());
+				WeeklyPlanSlot.DayOfWeekEnum.fromValue(entity.getDayOfWeek()),
+				WeeklyPlanSlot.KindEnum.fromValue(entity.getKind()), entity.isDeleted());
+		dto.planId(entity.getPlanId());
 		dto.deletedAt(entity.getDeletedAt());
 		dto.createdAt(entity.getCreatedAt());
 		dto.updatedAt(entity.getUpdatedAt());

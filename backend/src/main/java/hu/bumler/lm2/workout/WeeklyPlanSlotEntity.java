@@ -12,8 +12,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 /**
- * documentation/Subfeatures/Heti terv.md "slots" — one day → template assignment on a WeeklyPlan. A
- * slot exists only where a template is assigned; clearing a day soft-deletes its slot. No
+ * documentation/Subfeatures/Heti terv.md "Kézi felülírás" (backlog/144) — a one-day manual override of
+ * the rotation forecast: {@code PLAN} (a template) or {@code REST} (no template). A slot exists only
+ * where the day is overridden; back to automatic soft-deletes it. No
  * {@code user_id} — ownership flows through {@code weeklyPlanId}.
  */
 @Entity
@@ -29,7 +30,10 @@ public class WeeklyPlanSlotEntity {
 	@Column(name = "day_of_week", nullable = false)
 	private String dayOfWeek;
 
-	@Column(name = "plan_id", nullable = false)
+	@Column(nullable = false)
+	private String kind;
+
+	@Column(name = "plan_id")
 	private UUID planId;
 
 	@Generated(event = EventType.INSERT)
@@ -68,6 +72,14 @@ public class WeeklyPlanSlotEntity {
 
 	public void setDayOfWeek(String dayOfWeek) {
 		this.dayOfWeek = dayOfWeek;
+	}
+
+	public String getKind() {
+		return kind;
+	}
+
+	public void setKind(String kind) {
+		this.kind = kind;
 	}
 
 	public UUID getPlanId() {

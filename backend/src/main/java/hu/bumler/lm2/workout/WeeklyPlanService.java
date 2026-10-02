@@ -15,6 +15,7 @@ import hu.bumler.lm2.api.model.WeeklyPlanSlot;
 import hu.bumler.lm2.common.NestedChildResolver;
 import hu.bumler.lm2.common.exception.EntityDeletedException;
 import hu.bumler.lm2.common.exception.EntityNotFoundException;
+import hu.bumler.lm2.common.exception.ValidationException;
 
 /**
  * documentation/Subfeatures/Heti terv.md — per-user weekly assignment of templates to days. Nested
@@ -112,9 +113,14 @@ class WeeklyPlanService {
 				continue;
 			}
 			incomingSlotIds.add(slotDto.getId());
+			UUID planId = slotDto.getKind() == WeeklyPlanSlot.KindEnum.REST ? null : slotDto.getPlanId().orElse(null);
+			if (slotDto.getKind() == WeeklyPlanSlot.KindEnum.PLAN && planId == null) {
+				throw new ValidationException("a PLAN slot requires planId", "planId");
+			}
 			WeeklyPlanSlotEntity slotEntity = resolveSlot(entity.getId(), existingSlots, slotDto.getId());
 			slotEntity.setDayOfWeek(slotDto.getDayOfWeek().getValue());
-			slotEntity.setPlanId(slotDto.getPlanId());
+			slotEntity.setKind(slotDto.getKind().getValue());
+			slotEntity.setPlanId(planId);
 			slotRepository.save(slotEntity);
 		}
 		for (WeeklyPlanSlotEntity existing : existingSlots) {

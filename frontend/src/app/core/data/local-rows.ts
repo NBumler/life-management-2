@@ -1148,6 +1148,8 @@ export interface WeeklyPlanSlotRow {
   id: string;
   weekly_plan_id: string;
   day_of_week: string;
+  kind: string;
+  /** `''` for a REST override (the column is NOT NULL on-device). */
   plan_id: string;
   created_at: string | null;
   updated_at: string | null;
@@ -1164,7 +1166,8 @@ export function weeklyPlanSlotRowToDto(row: WeeklyPlanSlotRow): WeeklyPlanSlot {
     id: row.id,
     weeklyPlanId: row.weekly_plan_id,
     dayOfWeek: row.day_of_week as WeeklyPlanSlot.DayOfWeekEnum,
-    planId: row.plan_id,
+    kind: row.kind as WeeklyPlanSlot.KindEnum,
+    planId: row.plan_id === '' ? null : row.plan_id,
     deleted: row.deleted === 1,
     deletedAt: row.deleted_at,
     createdAt: row.created_at ?? undefined,
@@ -1172,14 +1175,14 @@ export function weeklyPlanSlotRowToDto(row: WeeklyPlanSlotRow): WeeklyPlanSlot {
   };
 }
 
-export function weeklyPlanSlotLocalWriteTask(dto: Pick<WeeklyPlanSlot, 'id' | 'weeklyPlanId' | 'dayOfWeek' | 'planId'>): SqlTask {
+export function weeklyPlanSlotLocalWriteTask(dto: Pick<WeeklyPlanSlot, 'id' | 'weeklyPlanId' | 'dayOfWeek' | 'kind' | 'planId'>): SqlTask {
   return {
     statement: `
-      INSERT INTO weekly_plan_slot (id, weekly_plan_id, day_of_week, plan_id, _dirty, _local_only)
-      VALUES (?, ?, ?, ?, 1, 1)
+      INSERT INTO weekly_plan_slot (id, weekly_plan_id, day_of_week, kind, plan_id, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, 1, 1)
       ON CONFLICT(id) DO UPDATE SET
-        day_of_week = excluded.day_of_week, plan_id = excluded.plan_id, deleted = 0, deleted_at = NULL, _dirty = 1`,
-    values: [dto.id, dto.weeklyPlanId, dto.dayOfWeek, dto.planId],
+        day_of_week = excluded.day_of_week, kind = excluded.kind, plan_id = excluded.plan_id, deleted = 0, deleted_at = NULL, _dirty = 1`,
+    values: [dto.id, dto.weeklyPlanId, dto.dayOfWeek, dto.kind, dto.planId ?? ''],
   };
 }
 
@@ -1194,10 +1197,10 @@ export function weeklyPlanSlotLocalRemoveTask(id: string): SqlTask {
 export function weeklyPlanSlotServerApplyTask(dto: WeeklyPlanSlot): SqlTask {
   return {
     statement: `
-      INSERT INTO weekly_plan_slot (id, weekly_plan_id, day_of_week, plan_id, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      INSERT INTO weekly_plan_slot (id, weekly_plan_id, day_of_week, kind, plan_id, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET
-        weekly_plan_id = excluded.weekly_plan_id, day_of_week = excluded.day_of_week, plan_id = excluded.plan_id,
+        weekly_plan_id = excluded.weekly_plan_id, day_of_week = excluded.day_of_week, kind = excluded.kind, plan_id = excluded.plan_id,
         created_at = excluded.created_at, updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at,
         _dirty = 0, _local_only = 0, _needs_refetch = 0
       WHERE weekly_plan_slot._dirty = 0`,
@@ -1205,7 +1208,8 @@ export function weeklyPlanSlotServerApplyTask(dto: WeeklyPlanSlot): SqlTask {
       dto.id,
       dto.weeklyPlanId,
       dto.dayOfWeek,
-      dto.planId,
+      dto.kind ?? WeeklyPlanSlot.KindEnum.Plan,
+      dto.planId ?? '',
       dto.createdAt ?? null,
       dto.updatedAt ?? null,
       dto.deleted ? 1 : 0,
