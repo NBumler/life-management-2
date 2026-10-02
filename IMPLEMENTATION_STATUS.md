@@ -14,6 +14,9 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-02 — #152** Nehézségi szint: a V-skála elfogadja a `V0` alatti `VB` („V-Basic”) boulder-fokozatot
+  (`absoluteDifficultyIndex` 8; kisbetűvel és `VB/V0` tartományként is), a boulder-súgó szövege frissítve (hu + en).
+  Érintett: [[Nehézségi szint skálája]], [[Nehézségi szint skálája (konverziós mátrix)]]
 - **2026-10-02 — #149** `STEPS_LOW`: 20:00 előtt már nem kerül OS-ütemezésre (a délelőtt sorba tett riasztás 20:00-kor
   a reggeli lépésszámmal, újraellenőrzés nélkül sült el); 20:00-kor a háttér-worker élő Health Connect olvasásból dönt,
   20:00 után app-nyitáskor friss sync után tüzel. Érintett: [[Értesítések]]

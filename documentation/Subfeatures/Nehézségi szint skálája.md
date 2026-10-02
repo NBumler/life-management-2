@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-19
-verifikalt_commit: f1d6d59
+verifikalva: 2026-10-02
+verifikalt_commit: 1497ba3
 ---
 
 # Nehézségi szint skálája
@@ -30,13 +30,13 @@ Input: `discipline` = Boulder \| Köteles (a dashboard kontextusból — nem use
 #### Boulder skálák
 
 - **Fontainebleau (Font):** mint francia, de betű **NAGY** (pl. `6A`, `6B+`); ugyanaz a jelölés nehezebb, mint a köteles francia
-- **V-skála (Hueco):** `V` + szám (`V0`…`V17`)
+- **V-skála (Hueco):** `V` + szám (`V0`…`V17`), valamint a `V0` alatti `VB` („V-Basic”) — `VB`, `V0`…`V17`
 
 #### Regex (kontextus + string)
 
 **Boulder:**
 
-- `^V\d+$` → V
+- `^V(B|\d+)$` → V (`VB` vagy `V` + szám)
 - `^\d[A-C]\+?$` → Font
 
 **Köteles:**

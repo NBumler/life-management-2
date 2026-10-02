@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-09
-verifikalt_commit: b03e284
+verifikalva: 2026-10-02
+verifikalt_commit: 1497ba3
 ---
 
 # Nehézségi szint skálája (konverziós mátrix)
@@ -27,6 +27,7 @@ A skálák közti nehézség-egyeztetés eredendően szakértői-konszenzus kér
 |---|---|---|---|---|---|
 | 2 | 3 | III | — | — | 5.4 |
 | 6 | 4 | IV | 4 | — | 5.6 |
+| 8 | — | — | — | VB | — |
 | 10 | 5a | V | 4 | V0 | 5.8 |
 | 12 | 5c | VI- | 6A | V1 | 5.9 |
 | 14 | 6a | VI | 5 | V2 | 5.10a |
@@ -44,6 +45,8 @@ A skálák közti nehézség-egyeztetés eredendően szakértői-konszenzus kér
 | 38 | 8b+ | XI | 8A+ | V14 | 5.14a |
 | 40 | 8c | XI+ | 8B | V15 | 5.14b |
 
+> A V-skála legalsó fokozata a `VB` („V-Basic”, a `V0` alatt) — `I_grade = 8`, egy V-lépésköz (2) a `V0` alatt.
+>
 > A `10`–`20` sorok az eredeti, kézzel megerősített öt anchor (nem módosultak); a többi sor ezek köré/fölé bővíti a táblát, szigorúan növekvő indexekkel, ismétlődő fokozat-címke nélkül.
 
 #### Előállítási módszer (a JSON-hoz)
