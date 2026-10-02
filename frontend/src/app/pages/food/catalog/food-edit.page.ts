@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import {
   AlertController,
   IonBackButton,
@@ -19,6 +19,7 @@ import {
   IonTitle,
   IonToolbar,
   ToastController,
+  NavController,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
@@ -84,7 +85,9 @@ function toParsedQuantity(amount: number | null | undefined, unit: string | null
 })
 export class FoodEditPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
+  // backlog/148: leave with navigateBack (never a forward navigateByUrl to the list) so this page is popped
+  // off the Ionic stack — otherwise the next visit to the same URL reuses this instance with its stale state.
+  private readonly navController = inject(NavController);
   private readonly fb = inject(FormBuilder);
   private readonly repository = inject(FoodRepository);
   private readonly alertController = inject(AlertController);
@@ -397,7 +400,7 @@ export class FoodEditPage implements OnInit {
     try {
       await this.repository.save(draft);
       this.duplicateError.set(null);
-      await this.router.navigateByUrl('/tabs/food/catalog');
+      await this.navController.navigateBack('/tabs/food/catalog');
     } catch (error) {
       if (error instanceof FoodDuplicateError) {
         this.duplicateError.set(this.translate.instant('FOOD.FORM.DUPLICATE_ERROR'));
@@ -426,6 +429,6 @@ export class FoodEditPage implements OnInit {
 
   private async deleteAndNavigateBack(id: string): Promise<void> {
     await this.repository.remove(id);
-    await this.router.navigateByUrl('/tabs/food/catalog');
+    await this.navController.navigateBack('/tabs/food/catalog');
   }
 }

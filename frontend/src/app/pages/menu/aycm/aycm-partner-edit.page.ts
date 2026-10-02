@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import {
   AlertController,
   IonBackButton,
@@ -18,6 +18,7 @@ import {
   IonTitle,
   IonToggle,
   IonToolbar,
+  NavController,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
@@ -63,7 +64,9 @@ type DayKey = (typeof DAY_KEYS)[number];
 })
 export class AycmPartnerEditPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
+  // backlog/148: leave with navigateBack (never a forward navigateByUrl to the list) so this page is popped
+  // off the Ionic stack — otherwise the next visit to the same URL reuses this instance with its stale state.
+  private readonly navController = inject(NavController);
   private readonly fb = inject(FormBuilder);
   private readonly repository = inject(AycmPartnerRepository);
   private readonly alertController = inject(AlertController);
@@ -110,7 +113,7 @@ export class AycmPartnerEditPage implements OnInit {
     if (idParam !== null && idParam !== 'new') {
       const existing = this.repository.partners().find((p) => p.id === idParam && !p.deleted);
       if (existing === undefined) {
-        await this.router.navigateByUrl(LIST_URL);
+        await this.navController.navigateBack(LIST_URL);
         return;
       }
       this.partnerId.set(idParam);
@@ -144,10 +147,10 @@ export class AycmPartnerEditPage implements OnInit {
       if (!this.isEdit) {
         // Stay on the editor so the user can add price rules to the fresh partner.
         this.partnerId.set(saved.id);
-        await this.router.navigate([LIST_URL, saved.id], { replaceUrl: true });
+        await this.navController.navigateForward([LIST_URL, saved.id], { replaceUrl: true });
         return;
       }
-      await this.router.navigateByUrl(LIST_URL);
+      await this.navController.navigateBack(LIST_URL);
     } catch (error) {
       if (error instanceof AycmPartnerNameConflictError) {
         this.nameError.set(this.translate.instant('AYCM.PARTNERS.NAME_TAKEN'));
@@ -299,6 +302,6 @@ export class AycmPartnerEditPage implements OnInit {
 
   private async deleteAndBack(id: string): Promise<void> {
     await this.repository.deletePartner(id);
-    await this.router.navigateByUrl(LIST_URL);
+    await this.navController.navigateBack(LIST_URL);
   }
 }

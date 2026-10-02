@@ -2,7 +2,7 @@ import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { ActivatedRoute, provideRouter } from '@angular/router';
-import { AlertController } from '@ionic/angular/standalone';
+import { AlertController, NavController } from '@ionic/angular/standalone';
 import { provideTranslateService } from '@ngx-translate/core';
 
 import { AycmPartner } from '../../../api/model/aycmPartner';
@@ -133,5 +133,27 @@ describe('AycmPartnerEditPage', () => {
     component.partnerForm.setValue({ name: 'Life1', notes: '' });
     await component.savePartner();
     expect(component.nameError()).not.toBeNull();
+  });
+
+  it('saving a new partner opens its own editor in place of the "new" page (replaceUrl, backlog/148)', async () => {
+    await setup('new');
+    const navController = TestBed.inject(NavController);
+    const forward = spyOn(navController, 'navigateForward').and.resolveTo(true);
+    const back = spyOn(navController, 'navigateBack').and.resolveTo(true);
+    component.partnerForm.patchValue({ name: 'Új partner' });
+
+    await component.savePartner();
+
+    expect(forward).toHaveBeenCalledOnceWith(['/tabs/menu/aycm/partners', 'p1'], { replaceUrl: true });
+    expect(back).not.toHaveBeenCalled();
+  });
+
+  it('saving an existing partner leaves with navigateBack (backlog/148)', async () => {
+    await setup('p1');
+    const back = spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
+
+    await component.savePartner();
+
+    expect(back).toHaveBeenCalledOnceWith('/tabs/menu/aycm/partners');
   });
 });

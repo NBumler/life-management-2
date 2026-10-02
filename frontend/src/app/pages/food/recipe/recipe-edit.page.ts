@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, Injector, OnInit, Signal, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import {
   AlertController,
   IonBackButton,
@@ -19,6 +19,7 @@ import {
   IonTextarea,
   IonTitle,
   IonToolbar,
+  NavController,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
@@ -77,7 +78,9 @@ interface IngredientRow {
 })
 export class RecipeEditPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
+  // backlog/148: leave with navigateBack (never a forward navigateByUrl to the list) so this page is popped
+  // off the Ionic stack — otherwise the next visit to the same URL reuses this instance with its stale state.
+  private readonly navController = inject(NavController);
   private readonly fb = inject(FormBuilder);
   private readonly injector = inject(Injector);
   private readonly repository = inject(RecipeRepository);
@@ -139,7 +142,7 @@ export class RecipeEditPage implements OnInit {
       if (existing === undefined) {
         // Deleted (or otherwise gone) recipe — a stale deep-link/back-navigation must not fall
         // through to editing, since Save would then PUT against the dead row (409 ENTITY_DELETED).
-        await this.router.navigateByUrl('/tabs/food/recipe');
+        await this.navController.navigateBack('/tabs/food/recipe');
         return;
       }
       this.recipeId.set(idParam);
@@ -230,7 +233,7 @@ export class RecipeEditPage implements OnInit {
     try {
       const saved = await this.repository.save(draft);
       this.recipeId.set(saved.id);
-      await this.router.navigateByUrl('/tabs/food/recipe');
+      await this.navController.navigateBack('/tabs/food/recipe');
     } catch (error) {
       if (error instanceof RecipeDuplicateError) {
         this.duplicateError.set(this.translate.instant('FOOD.RECIPE.DUPLICATE_ERROR'));
@@ -259,6 +262,6 @@ export class RecipeEditPage implements OnInit {
 
   private async deleteAndNavigateBack(id: string): Promise<void> {
     await this.repository.remove(id);
-    await this.router.navigateByUrl('/tabs/food/recipe');
+    await this.navController.navigateBack('/tabs/food/recipe');
   }
 }

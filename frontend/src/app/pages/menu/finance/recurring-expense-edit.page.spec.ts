@@ -1,7 +1,7 @@
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
-import { AlertController } from '@ionic/angular/standalone';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { AlertController, NavController } from '@ionic/angular/standalone';
 import { provideTranslateService } from '@ngx-translate/core';
 
 import { RecurringExpense } from '../../../api/model/recurringExpense';
@@ -60,8 +60,7 @@ describe('RecurringExpenseEditPage', () => {
       ],
     }).compileComponents();
 
-    spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
-    spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+    spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
     fixture = TestBed.createComponent(RecurringExpenseEditPage);
     component = fixture.componentInstance;
     await component.ngOnInit();
@@ -127,18 +126,16 @@ describe('RecurringExpenseEditPage', () => {
     saveSpy.and.resolveTo(row({ id: 'brand-new' }));
     component.form.patchValue({ name: 'Gym', amountHuf: 12000, nextBillingDate: '2026-10-05' });
     await component.save();
-    const router = TestBed.inject(Router);
-    expect(router.navigate).toHaveBeenCalledWith(['/tabs/menu/aycm'], {
+    const navController = TestBed.inject(NavController);
+    expect(navController.navigateBack).toHaveBeenCalledOnceWith(['/tabs/menu/aycm'], {
       queryParams: { createdExpenseId: 'brand-new' },
     });
-    expect(router.navigateByUrl).not.toHaveBeenCalled();
   });
 
   it('without ?returnTo, a successful create falls back to the list', async () => {
     await setup('new');
     component.form.patchValue({ name: 'Gym', amountHuf: 12000, nextBillingDate: '2026-10-05' });
     await component.save();
-    const router = TestBed.inject(Router);
-    expect(router.navigateByUrl).toHaveBeenCalledWith('/tabs/menu/finance/recurring-expenses');
+    expect(TestBed.inject(NavController).navigateBack).toHaveBeenCalledWith('/tabs/menu/finance/recurring-expenses');
   });
 });

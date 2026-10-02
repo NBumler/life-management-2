@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
 import {
   AlertController,
@@ -20,6 +20,7 @@ import {
   IonTitle,
   IonToolbar,
   ItemReorderEventDetail,
+  NavController,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
@@ -87,7 +88,9 @@ const DONE_STATUSES: ReadonlySet<PackingSessionItem.StatusEnum> = new Set([
 })
 export class PackingSessionDetailPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
+  // backlog/148: leave with navigateBack (never a forward navigateByUrl to the list) so this page is popped
+  // off the Ionic stack — otherwise the next visit to the same URL reuses this instance with its stale state.
+  private readonly navController = inject(NavController);
   private readonly fb = inject(FormBuilder);
   private readonly sessionRepository = inject(PackingSessionRepository);
   private readonly gearItemRepository = inject(GearItemRepository);
@@ -222,7 +225,7 @@ export class PackingSessionDetailPage implements OnInit {
 
   private async closeAndNavigateBack(): Promise<void> {
     await this.sessionRepository.close(this.sessionId);
-    await this.router.navigateByUrl('/tabs/menu/gear/sessions');
+    await this.navController.navigateBack('/tabs/menu/gear/sessions');
   }
 
   private applyDetail(detail: PackingSessionDetail): void {

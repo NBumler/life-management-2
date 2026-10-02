@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
-import { AlertController } from '@ionic/angular/standalone';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { AlertController, NavController } from '@ionic/angular/standalone';
 import { provideTranslateService } from '@ngx-translate/core';
 
 import { LifePlan } from '../../../api/model/lifePlan';
@@ -62,8 +62,7 @@ describe('LifePlanEditPage', () => {
     await createFixture('new');
     await fixture.componentInstance.ngOnInit();
     repository.save.and.resolveTo(plan({ id: 'new-1' }));
-    const router = TestBed.inject(Router);
-    const navigateSpy = spyOn(router, 'navigateByUrl').and.resolveTo(true);
+    const navigateSpy = spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
     fixture.componentInstance.form.setValue({ title: 'Maraton', status: LifePlan.StatusEnum.Planned, targetDate: null, notes: null });
 
     await fixture.componentInstance.save();
@@ -77,8 +76,7 @@ describe('LifePlanEditPage', () => {
     repository.items.set([plan({ id: 'p1' })]);
     await fixture.componentInstance.ngOnInit();
     repository.remove.and.resolveTo();
-    const router = TestBed.inject(Router);
-    spyOn(router, 'navigateByUrl').and.resolveTo(true);
+    spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
     const alertController = TestBed.inject(AlertController) as jasmine.SpyObj<AlertController>;
     const created = { present: jasmine.createSpy('present').and.resolveTo() };
     alertController.create.and.resolveTo(created as never);

@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
-import { AlertController } from '@ionic/angular/standalone';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { AlertController, NavController } from '@ionic/angular/standalone';
 import { provideTranslateService } from '@ngx-translate/core';
 
 import { Food } from '../../../api/model/food';
@@ -78,8 +78,7 @@ describe('ShoppingListEditorPage', () => {
 
   it('edit mode: a stale id no longer in the repository redirects back to the list overview', async () => {
     await createFixture('gone');
-    const router = TestBed.inject(Router);
-    const navigateSpy = spyOn(router, 'navigateByUrl').and.resolveTo(true);
+    const navigateSpy = spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
 
     await fixture.componentInstance.ngOnInit();
 
@@ -169,8 +168,7 @@ describe('ShoppingListEditorPage', () => {
     await createFixture('new');
     await fixture.componentInstance.ngOnInit();
     repository.save.and.resolveTo(shoppingList({ id: 'new-1' }));
-    const router = TestBed.inject(Router);
-    const navigateSpy = spyOn(router, 'navigateByUrl').and.resolveTo(true);
+    const navigateSpy = spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
 
     await fixture.componentInstance.save();
 
@@ -209,7 +207,7 @@ describe('ShoppingListEditorPage', () => {
     const [row] = fixture.componentInstance.items();
     (row as { name: { set: (v: string) => void } }).name.set('Mosószer');
     repository.save.and.resolveTo(shoppingList({ id: 'new-1' }));
-    spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
+    spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
 
     await fixture.componentInstance.save();
 
@@ -227,8 +225,7 @@ describe('ShoppingListEditorPage', () => {
     (row as { quantity: { set: (v: unknown) => void } }).quantity.set({ amount: 2, unit: 'cs' });
     fixture.componentInstance.form.controls.name.setValue('Heti bevásárlás');
     repository.save.and.resolveTo(shoppingList({ id: 'new-1' }));
-    const router = TestBed.inject(Router);
-    const navigateSpy = spyOn(router, 'navigateByUrl').and.resolveTo(true);
+    const navigateSpy = spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
 
     await fixture.componentInstance.save();
 
@@ -249,7 +246,7 @@ describe('ShoppingListEditorPage', () => {
 
     fixture.componentInstance.saveToStorage.set(false);
     repository.save.and.resolveTo(shoppingList({ id: 'new-1' }));
-    spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
+    spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
 
     await fixture.componentInstance.save();
 
@@ -269,8 +266,7 @@ describe('ShoppingListEditorPage', () => {
     repository.items.set([shoppingList()]);
     await fixture.componentInstance.ngOnInit();
     repository.remove.and.resolveTo();
-    const router = TestBed.inject(Router);
-    spyOn(router, 'navigateByUrl').and.resolveTo(true);
+    spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
     const created = { present: jasmine.createSpy('present').and.resolveTo() };
     alertController.create.and.resolveTo(created as never);
 

@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import {
   AlertController,
   IonBackButton,
@@ -20,6 +20,7 @@ import {
   IonSegmentButton,
   IonTitle,
   IonToolbar,
+  NavController,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
@@ -69,7 +70,9 @@ const NO_DURATION: ParsedQuantity<DurationUnit> = { amount: null, unit: null };
 })
 export class StorageEditPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
+  // backlog/148: leave with navigateBack (never a forward navigateByUrl to the list) so this page is popped
+  // off the Ionic stack — otherwise the next visit to the same URL reuses this instance with its stale state.
+  private readonly navController = inject(NavController);
   private readonly fb = inject(FormBuilder);
   private readonly repository = inject(StoredFoodRepository);
   readonly foodRepository = inject(FoodRepository);
@@ -119,7 +122,7 @@ export class StorageEditPage implements OnInit {
       if (existing === undefined) {
         // Deleted (or otherwise gone) item — a stale deep-link/back-navigation must not fall through
         // to the food-picker flow, since Save would then PUT against the dead row (409 ENTITY_DELETED).
-        await this.router.navigateByUrl('/tabs/food/storage');
+        await this.navController.navigateBack('/tabs/food/storage');
         return;
       }
       this.itemId.set(idParam);
@@ -198,7 +201,7 @@ export class StorageEditPage implements OnInit {
       deleted: false,
     };
     await this.repository.save(draft);
-    await this.router.navigateByUrl('/tabs/food/storage');
+    await this.navController.navigateBack('/tabs/food/storage');
   }
 
   async delete(): Promise<void> {
@@ -219,6 +222,6 @@ export class StorageEditPage implements OnInit {
 
   private async deleteAndNavigateBack(id: string): Promise<void> {
     await this.repository.remove(id);
-    await this.router.navigateByUrl('/tabs/food/storage');
+    await this.navController.navigateBack('/tabs/food/storage');
   }
 }

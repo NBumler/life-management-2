@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { NavController } from '@ionic/angular/standalone';
 import { provideTranslateService } from '@ngx-translate/core';
 
 import { Food } from '../../../api/model/food';
@@ -56,8 +57,7 @@ describe('ShoppingListCompletePage', () => {
 
   it('redirects to the list overview when the list no longer exists', async () => {
     await createFixture('gone');
-    const router = TestBed.inject(Router);
-    const navigateSpy = spyOn(router, 'navigateByUrl').and.resolveTo(true);
+    const navigateSpy = spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
 
     await fixture.componentInstance.ngOnInit();
 
@@ -94,7 +94,7 @@ describe('ShoppingListCompletePage', () => {
     ]);
     const result: ShoppingListCompleteResult = { archivedListId: 'sl1', createdStorageEntryIds: [], newActiveListId: 'new-1' };
     repository.complete.and.resolveTo(result);
-    spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
+    spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
 
     await fixture.componentInstance.ngOnInit();
 
@@ -117,8 +117,7 @@ describe('ShoppingListCompletePage', () => {
     await fixture.componentInstance.ngOnInit();
     const result: ShoppingListCompleteResult = { archivedListId: 'sl1', createdStorageEntryIds: ['x'], newActiveListId: null };
     repository.complete.and.resolveTo(result);
-    const router = TestBed.inject(Router);
-    const navigateSpy = spyOn(router, 'navigateByUrl').and.resolveTo(true);
+    const navigateSpy = spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
 
     await fixture.componentInstance.confirm();
 
@@ -135,7 +134,7 @@ describe('ShoppingListCompletePage', () => {
     await fixture.componentInstance.ngOnInit();
     const result: ShoppingListCompleteResult = { archivedListId: 'sl1', createdStorageEntryIds: [], newActiveListId: 'new-1' };
     repository.complete.and.resolveTo(result);
-    spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
+    spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
 
     await fixture.componentInstance.confirm();
 

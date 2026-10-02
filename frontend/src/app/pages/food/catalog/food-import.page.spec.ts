@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { Router, provideRouter } from '@angular/router';
-import { ToastController } from '@ionic/angular/standalone';
+import { provideRouter } from '@angular/router';
+import { NavController, ToastController } from '@ionic/angular/standalone';
 import { provideTranslateService } from '@ngx-translate/core';
 
 import { Food } from '../../../api/model/food';
@@ -52,8 +52,7 @@ describe('FoodImportPage', () => {
   it('import(): saves only the new rows, clears the textbox, and navigates back to the catalog', async () => {
     fixture.componentInstance.text.set([row({ 1: 'Tej' }), row({ 1: 'Tej' })].join('\n')); // second is a batch-internal duplicate
     repository.save.and.resolveTo({ id: 'x', name: 'Tej', deleted: false });
-    const router = TestBed.inject(Router);
-    const navigateSpy = spyOn(router, 'navigateByUrl').and.resolveTo(true);
+    const navigateSpy = spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
 
     await fixture.componentInstance.import();
 

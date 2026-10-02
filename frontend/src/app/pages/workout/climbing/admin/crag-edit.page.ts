@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import {
   AlertController,
   IonBackButton,
@@ -17,6 +17,7 @@ import {
   IonNote,
   IonTitle,
   IonToolbar,
+  NavController,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
@@ -54,7 +55,9 @@ import { SectorRepository } from '../../../../core/data/sector.repository';
 })
 export class CragEditPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
+  // backlog/148: leave with navigateBack (never a forward navigateByUrl to the list) so this page is popped
+  // off the Ionic stack — otherwise the next visit to the same URL reuses this instance with its stale state.
+  private readonly navController = inject(NavController);
   private readonly fb = inject(FormBuilder);
   private readonly repository = inject(CragRepository);
   private readonly sectorRepository = inject(SectorRepository);
@@ -82,7 +85,7 @@ export class CragEditPage implements OnInit {
     if (idParam !== null && idParam !== 'new') {
       const existing = this.repository.items().find((crag) => crag.id === idParam && !crag.deleted);
       if (existing === undefined) {
-        await this.router.navigateByUrl('/tabs/workout/climbing/admin/crags');
+        await this.navController.navigateBack('/tabs/workout/climbing/admin/crags');
         return;
       }
       this.cragId.set(idParam);
@@ -110,9 +113,9 @@ export class CragEditPage implements OnInit {
     };
     const saved = await this.repository.save(input);
     if (this.cragId() === null) {
-      await this.router.navigateByUrl(`/tabs/workout/climbing/admin/crags/${saved.id}`);
+      await this.navController.navigateForward(`/tabs/workout/climbing/admin/crags/${saved.id}`, { replaceUrl: true });
     } else {
-      await this.router.navigateByUrl('/tabs/workout/climbing/admin/crags');
+      await this.navController.navigateBack('/tabs/workout/climbing/admin/crags');
     }
   }
 
@@ -130,7 +133,7 @@ export class CragEditPage implements OnInit {
           text: this.translate.instant('COMMON.DELETE'),
           role: 'destructive',
           handler: () => {
-            void this.repository.remove(id).then(() => this.router.navigateByUrl('/tabs/workout/climbing/admin/crags'));
+            void this.repository.remove(id).then(() => this.navController.navigateBack('/tabs/workout/climbing/admin/crags'));
           },
         },
       ],

@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
-import { AlertController } from '@ionic/angular/standalone';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { AlertController, NavController } from '@ionic/angular/standalone';
 import { provideTranslateService } from '@ngx-translate/core';
 
 import { Sector } from '../../../../api/model/sector';
@@ -39,7 +39,8 @@ describe('SectorEditPage', () => {
       ],
     }).compileComponents();
 
-    spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
+    spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
+    spyOn(TestBed.inject(NavController), 'navigateForward').and.resolveTo(true);
 
     fixture = TestBed.createComponent(SectorEditPage);
     component = fixture.componentInstance;
@@ -77,5 +78,14 @@ describe('SectorEditPage', () => {
     component.form.patchValue({ name: '' });
     await component.save();
     expect(saveSpy).not.toHaveBeenCalled();
+  });
+
+  it('saving a new one opens its own editor in place of the "new" page (replaceUrl, backlog/148)', async () => {
+    await setup();
+    component.form.patchValue({ name: 'Szektor' });
+    await component.save();
+    const navController = TestBed.inject(NavController);
+    expect(navController.navigateForward).toHaveBeenCalledOnceWith('/tabs/workout/climbing/admin/crags/c1/sectors/s1', { replaceUrl: true });
+    expect(navController.navigateBack).not.toHaveBeenCalled();
   });
 });

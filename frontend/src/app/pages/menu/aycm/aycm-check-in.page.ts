@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import {
   AlertController,
   IonBackButton,
@@ -18,6 +18,7 @@ import {
   IonTitle,
   IonToolbar,
   ViewWillEnter,
+  NavController,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
@@ -67,7 +68,9 @@ function nowLocalTime(): string {
 })
 export class AycmCheckInPage implements OnInit, ViewWillEnter {
   private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
+  // backlog/148: leave with navigateBack (never a forward navigateByUrl to the list) so this page is popped
+  // off the Ionic stack — otherwise the next visit to the same URL reuses this instance with its stale state.
+  private readonly navController = inject(NavController);
   private readonly checkInRepo = inject(AycmCheckInRepository);
   private readonly partnerRepo = inject(AycmPartnerRepository);
   private readonly alertController = inject(AlertController);
@@ -216,7 +219,7 @@ export class AycmCheckInPage implements OnInit, ViewWillEnter {
         visitValueHuf: frozenRow.visitValueHuf,
         notes: frozenNotes.length > 0 ? frozenNotes : null,
       });
-      await this.router.navigateByUrl(LIST_URL);
+      await this.navController.navigateBack(LIST_URL);
       return;
     }
 
@@ -240,7 +243,7 @@ export class AycmCheckInPage implements OnInit, ViewWillEnter {
       visitValueHuf: rule?.listPriceHuf ?? 0,
       notes: notes.length > 0 ? notes : null,
     });
-    await this.router.navigateByUrl(LIST_URL);
+    await this.navController.navigateBack(LIST_URL);
   }
 
   async delete(): Promise<void> {
@@ -266,6 +269,6 @@ export class AycmCheckInPage implements OnInit, ViewWillEnter {
 
   private async deleteAndBack(id: string): Promise<void> {
     await this.checkInRepo.remove(id);
-    await this.router.navigateByUrl(LIST_URL);
+    await this.navController.navigateBack(LIST_URL);
   }
 }

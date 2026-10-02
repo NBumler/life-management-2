@@ -2,7 +2,7 @@ import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import {
   AlertController,
   IonBackButton,
@@ -18,6 +18,7 @@ import {
   IonSelectOption,
   IonTitle,
   IonToolbar,
+  NavController,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
@@ -58,7 +59,9 @@ import { SWIM_INTENSITIES, isOpenWater, swimDistanceMeters, swimKcal } from './s
 })
 export class SwimLogEditPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
+  // backlog/148: leave with navigateBack (never a forward navigateByUrl to the list) so this page is popped
+  // off the Ionic stack — otherwise the next visit to the same URL reuses this instance with its stale state.
+  private readonly navController = inject(NavController);
   private readonly fb = inject(FormBuilder);
   private readonly repository = inject(SwimLogRepository);
   private readonly profileRepository = inject(ProfileRepository);
@@ -118,7 +121,7 @@ export class SwimLogEditPage implements OnInit {
     if (idParam !== null && idParam !== 'new') {
       const existing = this.repository.items().find((log) => log.id === idParam && !log.deleted);
       if (existing === undefined) {
-        await this.router.navigateByUrl('/tabs/workout/swimming');
+        await this.navController.navigateBack('/tabs/workout/swimming');
         return;
       }
       this.logId.set(idParam);
@@ -149,7 +152,7 @@ export class SwimLogEditPage implements OnInit {
       distanceMeters: value.distanceMeters ?? null,
     };
     await this.repository.save(input);
-    await this.router.navigateByUrl('/tabs/workout/swimming');
+    await this.navController.navigateBack('/tabs/workout/swimming');
   }
 
   async delete(): Promise<void> {
@@ -174,7 +177,7 @@ export class SwimLogEditPage implements OnInit {
 
   private async deleteAndNavigateBack(id: string): Promise<void> {
     await this.repository.remove(id);
-    await this.router.navigateByUrl('/tabs/workout/swimming');
+    await this.navController.navigateBack('/tabs/workout/swimming');
   }
 }
 

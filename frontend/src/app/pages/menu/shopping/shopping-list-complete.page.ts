@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, WritableSignal, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import {
   IonBackButton,
   IonButton,
@@ -16,6 +16,7 @@ import {
   IonSelectOption,
   IonTitle,
   IonToolbar,
+  NavController,
 } from '@ionic/angular/standalone';
 import { TranslatePipe } from '@ngx-translate/core';
 
@@ -69,7 +70,9 @@ interface CheckedFoodRow {
 })
 export class ShoppingListCompletePage implements OnInit {
   private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
+  // backlog/148: leave with navigateBack (never a forward navigateByUrl to the list) so this page is popped
+  // off the Ionic stack — otherwise the next visit to the same URL reuses this instance with its stale state.
+  private readonly navController = inject(NavController);
   private readonly repository = inject(ShoppingListRepository);
   private readonly foodRepository = inject(FoodRepository);
 
@@ -90,7 +93,7 @@ export class ShoppingListCompletePage implements OnInit {
     const idParam = this.route.snapshot.paramMap.get('id');
     const list = this.repository.items().find((candidate) => candidate.id === idParam);
     if (list === undefined) {
-      await this.router.navigateByUrl('/tabs/menu/shopping');
+      await this.navController.navigateBack('/tabs/menu/shopping');
       return;
     }
     this.listId.set(list.id);
@@ -146,7 +149,7 @@ export class ShoppingListCompletePage implements OnInit {
       }));
       const draft = buildCompleteDraft(listId, list.items, wizardInputs, this.saveToStorage());
       await this.repository.complete(draft);
-      await this.router.navigateByUrl('/tabs/menu/shopping');
+      await this.navController.navigateBack('/tabs/menu/shopping');
     } finally {
       this.submitting.set(false);
     }

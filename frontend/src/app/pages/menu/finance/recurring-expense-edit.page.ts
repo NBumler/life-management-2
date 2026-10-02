@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import {
   AlertController,
   IonBackButton,
@@ -16,6 +16,7 @@ import {
   IonTitle,
   IonToggle,
   IonToolbar,
+  NavController,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
@@ -56,7 +57,9 @@ const LIST_URL = '/tabs/menu/finance/recurring-expenses';
 })
 export class RecurringExpenseEditPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
+  // backlog/148: leave with navigateBack (never a forward navigateByUrl to the list) so this page is popped
+  // off the Ionic stack — otherwise the next visit to the same URL reuses this instance with its stale state.
+  private readonly navController = inject(NavController);
   private readonly fb = inject(FormBuilder);
   private readonly repository = inject(RecurringExpenseRepository);
   private readonly alertController = inject(AlertController);
@@ -98,7 +101,7 @@ export class RecurringExpenseEditPage implements OnInit {
     if (idParam !== null && idParam !== 'new') {
       const existing = this.repository.items().find((row) => row.id === idParam && !row.deleted);
       if (existing === undefined) {
-        await this.router.navigateByUrl(LIST_URL);
+        await this.navController.navigateBack(LIST_URL);
         return;
       }
       this.expenseId.set(idParam);
@@ -141,10 +144,10 @@ export class RecurringExpenseEditPage implements OnInit {
       notes: notes.length > 0 ? notes : null,
     });
     if (this.returnTo !== null) {
-      await this.router.navigate([this.returnTo], { queryParams: { createdExpenseId: saved.id } });
+      await this.navController.navigateBack([this.returnTo], { queryParams: { createdExpenseId: saved.id } });
       return;
     }
-    await this.router.navigateByUrl(LIST_URL);
+    await this.navController.navigateBack(LIST_URL);
   }
 
   async delete(): Promise<void> {
@@ -171,7 +174,7 @@ export class RecurringExpenseEditPage implements OnInit {
 
   private async deleteAndNavigateBack(id: string): Promise<void> {
     await this.repository.remove(id);
-    await this.router.navigateByUrl(LIST_URL);
+    await this.navController.navigateBack(LIST_URL);
   }
 }
 

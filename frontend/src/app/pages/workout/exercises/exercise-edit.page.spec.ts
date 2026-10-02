@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
-import { AlertController } from '@ionic/angular/standalone';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { AlertController, NavController } from '@ionic/angular/standalone';
 import { provideTranslateService } from '@ngx-translate/core';
 
 import { Exercise } from '../../../api/model/exercise';
@@ -112,7 +112,7 @@ describe('ExerciseEditPage', () => {
     await fixture.componentInstance.ngOnInit();
     fillForm({ equipment: '  Rúd + állvány  ', description: '  Széles fogás, lassú excentrikus  ' });
     repository.save.and.resolveTo(exercise({ id: 'new-1' }));
-    const navigateSpy = spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
+    const navigateSpy = spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
 
     await fixture.componentInstance.save();
 
@@ -134,7 +134,7 @@ describe('ExerciseEditPage', () => {
     await fixture.componentInstance.ngOnInit();
     fillForm({ description: '   ' });
     repository.save.and.resolveTo(exercise({ id: 'new-1' }));
-    spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
+    spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
 
     await fixture.componentInstance.save();
 
@@ -155,7 +155,7 @@ describe('ExerciseEditPage', () => {
     await fixture.componentInstance.ngOnInit();
     fillForm();
     repository.save.and.rejectWith(new ExerciseNameConflictError('other-id'));
-    const navigateSpy = spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
+    const navigateSpy = spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
 
     await fixture.componentInstance.save();
 
@@ -176,7 +176,7 @@ describe('ExerciseEditPage', () => {
     repository.items.set([exercise({ id: 'e1' })]);
     await fixture.componentInstance.ngOnInit();
     repository.remove.and.resolveTo();
-    spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
+    spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
     const alertController = TestBed.inject(AlertController) as jasmine.SpyObj<AlertController>;
     const created = { present: jasmine.createSpy('present').and.resolveTo() };
     alertController.create.and.resolveTo(created as never);

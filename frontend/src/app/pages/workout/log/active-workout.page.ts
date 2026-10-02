@@ -1,6 +1,6 @@
 import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, WritableSignal, computed, inject, signal } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
 import { Haptics, NotificationType } from '@capacitor/haptics';
 import {
@@ -26,6 +26,7 @@ import {
   IonToolbar,
   PopoverController,
   ToastController,
+  NavController,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
@@ -152,7 +153,9 @@ const TICK_MS = 1000;
 })
 export class ActiveWorkoutPage implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
+  // backlog/148: leave with navigateBack (never a forward navigateByUrl to the list) so this page is popped
+  // off the Ionic stack — otherwise the next visit to the same URL reuses this instance with its stale state.
+  private readonly navController = inject(NavController);
   private readonly draftService = inject(WorkoutDraftService);
   private readonly repository = inject(WorkoutSessionRepository);
   private readonly exerciseRepository = inject(ExerciseRepository);
@@ -553,7 +556,7 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
     const draft = this.buildFinishDraft();
     await this.repository.save(draft);
     await this.draftService.clear();
-    await this.router.navigateByUrl('/tabs/workout/log');
+    await this.navController.navigateBack('/tabs/workout/log');
   }
 
   async discard(): Promise<void> {
@@ -574,7 +577,7 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
 
   private async discardConfirmed(): Promise<void> {
     await this.draftService.clear();
-    await this.router.navigateByUrl('/tabs/workout/log');
+    await this.navController.navigateBack('/tabs/workout/log');
   }
 
   // ---- serialization ----------------------------------------------------------------------

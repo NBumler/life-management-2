@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
-import { AlertController } from '@ionic/angular/standalone';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { AlertController, NavController } from '@ionic/angular/standalone';
 import { provideTranslateService } from '@ngx-translate/core';
 
 import { Food } from '../../../api/model/food';
@@ -109,8 +109,7 @@ describe('MealEditPage', () => {
 
   it('edit mode: a stale id no longer in the repository redirects back to the dashboard', async () => {
     await createFixture('gone');
-    const router = TestBed.inject(Router);
-    const navigateSpy = spyOn(router, 'navigateByUrl').and.resolveTo(true);
+    const navigateSpy = spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
 
     await fixture.componentInstance.ngOnInit();
 
@@ -195,7 +194,7 @@ describe('MealEditPage', () => {
       await createFixture('new');
       recipeRepository.items.set([recipe({ id: 'r1' })]);
       repository.save.and.resolveTo(meal({ id: 'new-1' }));
-      spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
+      spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
       await fixture.componentInstance.ngOnInit();
       fixture.componentInstance.togglePicker('recipe');
       fixture.componentInstance.togglePick('r1', []);
@@ -309,8 +308,7 @@ describe('MealEditPage', () => {
     fixture.componentInstance.togglePick('r1', []);
     fixture.componentInstance.confirmPicked();
     repository.save.and.resolveTo(meal({ id: 'new-1' }));
-    const router = TestBed.inject(Router);
-    const navigateSpy = spyOn(router, 'navigateByUrl').and.resolveTo(true);
+    const navigateSpy = spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
 
     await fixture.componentInstance.save();
 
@@ -327,7 +325,7 @@ describe('MealEditPage', () => {
     repository.items.set([meal({ id: 'm1', eatenAt: '2026-08-26T10:00:00.000Z', timeZoneId: 'Pacific/Auckland', items: [customMealItem()] })]);
     await fixture.componentInstance.ngOnInit();
     repository.save.and.resolveTo(meal({ id: 'm1' }));
-    spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
+    spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
 
     await fixture.componentInstance.save();
 
@@ -342,7 +340,7 @@ describe('MealEditPage', () => {
     await fixture.componentInstance.ngOnInit();
     fixture.componentInstance.form.controls.date.setValue('2026-08-20');
     repository.save.and.resolveTo(meal({ id: 'm1' }));
-    spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
+    spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
 
     await fixture.componentInstance.save();
 
@@ -356,8 +354,7 @@ describe('MealEditPage', () => {
     repository.items.set([meal()]);
     await fixture.componentInstance.ngOnInit();
     repository.remove.and.resolveTo();
-    const router = TestBed.inject(Router);
-    spyOn(router, 'navigateByUrl').and.resolveTo(true);
+    spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
     const created = { present: jasmine.createSpy('present').and.resolveTo() };
     alertController.create.and.resolveTo(created as never);
 

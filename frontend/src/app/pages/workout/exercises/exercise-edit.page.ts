@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import {
   AlertController,
   IonBackButton,
@@ -18,6 +18,7 @@ import {
   IonTitle,
   IonToggle,
   IonToolbar,
+  NavController,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
@@ -62,7 +63,9 @@ import {
 })
 export class ExerciseEditPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
+  // backlog/148: leave with navigateBack (never a forward navigateByUrl to the list) so this page is popped
+  // off the Ionic stack — otherwise the next visit to the same URL reuses this instance with its stale state.
+  private readonly navController = inject(NavController);
   private readonly fb = inject(FormBuilder);
   private readonly repository = inject(ExerciseRepository);
   private readonly alertController = inject(AlertController);
@@ -133,7 +136,7 @@ export class ExerciseEditPage implements OnInit {
         isFavorite,
       });
       this.nameConflictError.set(null);
-      await this.router.navigateByUrl('/tabs/workout/exercises');
+      await this.navController.navigateBack('/tabs/workout/exercises');
     } catch (error) {
       if (error instanceof ExerciseNameConflictError) {
         // documentation/Architektúra/Névegyediség.md: quote the user's own typed name back, not the normalized form.
@@ -162,6 +165,6 @@ export class ExerciseEditPage implements OnInit {
 
   private async deleteAndNavigateBack(id: string): Promise<void> {
     await this.repository.remove(id);
-    await this.router.navigateByUrl('/tabs/workout/exercises');
+    await this.navController.navigateBack('/tabs/workout/exercises');
   }
 }

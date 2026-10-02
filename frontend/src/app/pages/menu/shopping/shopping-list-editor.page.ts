@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, WritableSignal, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import {
   AlertController,
   IonBackButton,
@@ -21,6 +21,7 @@ import {
   IonTitle,
   IonToggle,
   IonToolbar,
+  NavController,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
@@ -122,7 +123,9 @@ function toSaveItem(row: ItemRow, sortOrder: number): ShoppingListItemSaveItem {
 })
 export class ShoppingListEditorPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
+  // backlog/148: leave with navigateBack (never a forward navigateByUrl to the list) so this page is popped
+  // off the Ionic stack — otherwise the next visit to the same URL reuses this instance with its stale state.
+  private readonly navController = inject(NavController);
   private readonly fb = inject(FormBuilder);
   private readonly repository = inject(ShoppingListRepository);
   readonly foodRepository = inject(FoodRepository);
@@ -169,7 +172,7 @@ export class ShoppingListEditorPage implements OnInit {
       if (existing === undefined || existing.deleted || existing.status === 'ARCHIVED') {
         // documentation/Subfeatures/Bevásárlás előzmény.md: an archived list is read-only history —
         // it has its own detail page. The editor only ever touches an ACTIVE list.
-        await this.router.navigateByUrl('/tabs/menu/shopping');
+        await this.navController.navigateBack('/tabs/menu/shopping');
         return;
       }
       this.listId.set(idParam);
@@ -281,7 +284,7 @@ export class ShoppingListEditorPage implements OnInit {
 
     const saved = await this.repository.save(draft);
     this.listId.set(saved.id);
-    await this.router.navigateByUrl('/tabs/menu/shopping');
+    await this.navController.navigateBack('/tabs/menu/shopping');
   }
 
   async delete(): Promise<void> {
@@ -302,6 +305,6 @@ export class ShoppingListEditorPage implements OnInit {
 
   private async deleteAndNavigateBack(id: string): Promise<void> {
     await this.repository.remove(id);
-    await this.router.navigateByUrl('/tabs/menu/shopping');
+    await this.navController.navigateBack('/tabs/menu/shopping');
   }
 }

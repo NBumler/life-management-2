@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import {
   AlertController,
   IonBackButton,
@@ -16,6 +16,7 @@ import {
   IonLabel,
   IonTitle,
   IonToolbar,
+  NavController,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
@@ -51,7 +52,9 @@ import { LifePlanRepository } from '../../../core/data/life-plan.repository';
 })
 export class LifePlanEditPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
+  // backlog/148: leave with navigateBack (never a forward navigateByUrl to the list) so this page is popped
+  // off the Ionic stack — otherwise the next visit to the same URL reuses this instance with its stale state.
+  private readonly navController = inject(NavController);
   private readonly fb = inject(FormBuilder);
   private readonly repository = inject(LifePlanRepository);
   private readonly alertController = inject(AlertController);
@@ -91,7 +94,7 @@ export class LifePlanEditPage implements OnInit {
     }
     const { title, status, targetDate, notes } = this.form.getRawValue();
     await this.repository.save({ id: this.planId() ?? undefined, title, status, targetDate: targetDate ?? null, notes: notes ?? null });
-    await this.router.navigateByUrl('/tabs/tasks/life-plans');
+    await this.navController.navigateBack('/tabs/tasks/life-plans');
   }
 
   async delete(): Promise<void> {
@@ -112,6 +115,6 @@ export class LifePlanEditPage implements OnInit {
 
   private async deleteAndNavigateBack(id: string): Promise<void> {
     await this.repository.remove(id);
-    await this.router.navigateByUrl('/tabs/tasks/life-plans');
+    await this.navController.navigateBack('/tabs/tasks/life-plans');
   }
 }

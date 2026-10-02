@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
-import { AlertController, PopoverController, ToastController } from '@ionic/angular/standalone';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { AlertController, NavController, PopoverController, ToastController } from '@ionic/angular/standalone';
 import { provideTranslateService } from '@ngx-translate/core';
 
 import { WorkoutExerciseEntry } from '../../../api/model/workoutExerciseEntry';
@@ -85,7 +85,7 @@ describe('PlanEditPage', () => {
 
     beforeEach(() => {
       saveSpy = spyOn(TestBed.inject(WorkoutPlanRepository), 'save').and.resolveTo({ id: 'p1' } as WorkoutPlan);
-      spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
+      spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
       component.form.patchValue({ name: 'Felsőtest' });
       component.onPicked([pick()]);
     });
@@ -159,7 +159,7 @@ describe('PlanEditPage', () => {
   });
   it('saves the exercise cue (trimmed) and the side + RPE of every target set (backlog/133–135)', async () => {
     const planSave = spyOn(TestBed.inject(WorkoutPlanRepository), 'save').and.resolveTo({ id: 'p1' } as WorkoutPlan);
-    spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
+    spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
     component.form.controls.name.setValue('OAPU');
     component.onPicked([pick()]);
     const row = component.exercises()[0];
@@ -180,12 +180,23 @@ describe('PlanEditPage', () => {
 
   it('saves an empty cue as null', async () => {
     const planSave = spyOn(TestBed.inject(WorkoutPlanRepository), 'save').and.resolveTo({ id: 'p1' } as WorkoutPlan);
-    spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
+    spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
     component.form.controls.name.setValue('Alap');
     component.onPicked([pick()]);
 
     await component.save();
 
     expect(planSave.calls.mostRecent().args[0].exercises[0].notes).toBeNull();
+  });
+
+  it('save() leaves the form with navigateBack, so the "new" page is popped off the stack (backlog/148)', async () => {
+    spyOn(TestBed.inject(WorkoutPlanRepository), 'save').and.resolveTo({ id: 'p1' } as WorkoutPlan);
+    const back = spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
+    component.form.controls.name.setValue('Alap');
+    component.onPicked([pick()]);
+
+    await component.save();
+
+    expect(back).toHaveBeenCalledOnceWith('/tabs/workout/weekly-plan/plans');
   });
 });

@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import {
   AlertController,
   IonBackButton,
@@ -14,6 +14,7 @@ import {
   IonTitle,
   IonToolbar,
   ViewWillEnter,
+  NavController,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
@@ -48,7 +49,9 @@ const TRACKER_URL = '/tabs/menu/steps';
 })
 export class StepLogEditPage implements OnInit, ViewWillEnter {
   private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
+  // backlog/148: leave with navigateBack (never a forward navigateByUrl to the list) so this page is popped
+  // off the Ionic stack — otherwise the next visit to the same URL reuses this instance with its stale state.
+  private readonly navController = inject(NavController);
   private readonly repository = inject(DailyStepLogRepository);
   private readonly alertController = inject(AlertController);
   private readonly translate = inject(TranslateService);
@@ -100,7 +103,7 @@ export class StepLogEditPage implements OnInit, ViewWillEnter {
     this.saving.set(true);
     try {
       await this.repository.saveManual(this.date(), value);
-      await this.router.navigateByUrl(TRACKER_URL);
+      await this.navController.navigateBack(TRACKER_URL);
     } finally {
       this.saving.set(false);
     }
@@ -128,6 +131,6 @@ export class StepLogEditPage implements OnInit, ViewWillEnter {
 
   private async deleteAndBack(id: string): Promise<void> {
     await this.repository.remove(id);
-    await this.router.navigateByUrl(TRACKER_URL);
+    await this.navController.navigateBack(TRACKER_URL);
   }
 }

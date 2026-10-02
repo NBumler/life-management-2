@@ -38,6 +38,22 @@
       }
     },
     {
+      "files": [
+        "src/app/pages/**/*-edit.page.ts",
+        "src/app/pages/**/*-editor.page.ts",
+        "src/app/pages/**/active-workout.page.ts"
+      ],
+      "rules": {
+        "no-restricted-syntax": [
+          "error",
+          {
+            "selector": "CallExpression[callee.object.property.name='router'][callee.property.name=/^navigate(ByUrl)?$/]",
+            "message": "Edit pages leave via NavController (navigateBack, or navigateForward with replaceUrl) so the Ionic stack drops this page — a forward router navigation keeps it alive and the next visit reuses its stale state (backlog/145, backlog/148)."
+          }
+        ]
+      }
+    },
+    {
       "files": ["*.html"],
       "extends": ["plugin:@angular-eslint/template/recommended"],
       "rules": {}

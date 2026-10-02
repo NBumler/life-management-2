@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
-import { AlertController } from '@ionic/angular/standalone';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { AlertController, NavController } from '@ionic/angular/standalone';
 import { provideTranslateService } from '@ngx-translate/core';
 
 import { HouseholdRoom } from '../../../api/model/householdRoom';
@@ -73,8 +73,7 @@ describe('HouseholdTaskEditPage', () => {
     await createFixture('new');
     await fixture.componentInstance.ngOnInit();
     taskRepository.save.and.resolveTo(task());
-    const router = TestBed.inject(Router);
-    const navigateSpy = spyOn(router, 'navigateByUrl').and.resolveTo(true);
+    const navigateSpy = spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
     fixture.componentInstance.form.patchValue({ name: 'Porszívózás' });
     fixture.componentInstance.toggleRoom('r1');
     fixture.componentInstance.toggleRoom('r2');
@@ -98,8 +97,7 @@ describe('HouseholdTaskEditPage', () => {
         }
         return task({ roomId: input.roomId });
       });
-      const router = TestBed.inject(Router);
-      const navigateSpy = spyOn(router, 'navigateByUrl').and.resolveTo(true);
+      const navigateSpy = spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
       fixture.componentInstance.form.patchValue({ name: 'Porszívózás' });
       fixture.componentInstance.toggleRoom('r1');
       fixture.componentInstance.toggleRoom('r2');
@@ -131,8 +129,7 @@ describe('HouseholdTaskEditPage', () => {
     taskRepository.items.set([task({ id: 't1', lastCompletedAt: '2026-01-01T00:00:00Z' })]);
     await fixture.componentInstance.ngOnInit();
     taskRepository.save.and.resolveTo(task());
-    const router = TestBed.inject(Router);
-    spyOn(router, 'navigateByUrl').and.resolveTo(true);
+    spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
 
     await fixture.componentInstance.save();
 
@@ -144,8 +141,7 @@ describe('HouseholdTaskEditPage', () => {
     taskRepository.items.set([task({ id: 't1' })]);
     await fixture.componentInstance.ngOnInit();
     taskRepository.remove.and.resolveTo();
-    const router = TestBed.inject(Router);
-    spyOn(router, 'navigateByUrl').and.resolveTo(true);
+    spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
     const alertController = TestBed.inject(AlertController) as jasmine.SpyObj<AlertController>;
     const created = { present: jasmine.createSpy('present').and.resolveTo() };
     alertController.create.and.resolveTo(created as never);

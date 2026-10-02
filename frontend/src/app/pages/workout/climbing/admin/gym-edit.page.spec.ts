@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
-import { AlertController } from '@ionic/angular/standalone';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { AlertController, NavController } from '@ionic/angular/standalone';
 import { provideTranslateService } from '@ngx-translate/core';
 
 import { Gym } from '../../../../api/model/gym';
@@ -42,7 +42,8 @@ describe('GymEditPage', () => {
       ],
     }).compileComponents();
 
-    spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
+    spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
+    spyOn(TestBed.inject(NavController), 'navigateForward').and.resolveTo(true);
 
     fixture = TestBed.createComponent(GymEditPage);
     component = fixture.componentInstance;
@@ -105,5 +106,14 @@ describe('GymEditPage', () => {
     component.form.patchValue({ name: 'Ütköző' });
     await component.save();
     expect(component.nameConflict()).toBe(true);
+  });
+
+  it('saving a new one opens its own editor in place of the "new" page (replaceUrl, backlog/148)', async () => {
+    await setup();
+    component.form.patchValue({ name: 'Terem', boulder: true, rope: false });
+    await component.save();
+    const navController = TestBed.inject(NavController);
+    expect(navController.navigateForward).toHaveBeenCalledOnceWith('/tabs/workout/climbing/admin/gyms/g1', { replaceUrl: true });
+    expect(navController.navigateBack).not.toHaveBeenCalled();
   });
 });

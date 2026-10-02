@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import {
   AlertController,
   IonBackButton,
@@ -17,6 +17,7 @@ import {
   IonNote,
   IonTitle,
   IonToolbar,
+  NavController,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
@@ -60,7 +61,9 @@ import { AspectPickerComponent } from '../../../../shared/aspect-picker/aspect-p
 })
 export class SectorEditPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
+  // backlog/148: leave with navigateBack (never a forward navigateByUrl to the list) so this page is popped
+  // off the Ionic stack — otherwise the next visit to the same URL reuses this instance with its stale state.
+  private readonly navController = inject(NavController);
   private readonly fb = inject(FormBuilder);
   private readonly repository = inject(SectorRepository);
   private readonly routeRepository = inject(RouteRepository);
@@ -121,7 +124,9 @@ export class SectorEditPage implements OnInit {
     };
     const saved = await this.repository.save(input);
     if (this.sectorId() === null) {
-      await this.router.navigateByUrl(`/tabs/workout/climbing/admin/crags/${this.cragId()}/sectors/${saved.id}`);
+      await this.navController.navigateForward(`/tabs/workout/climbing/admin/crags/${this.cragId()}/sectors/${saved.id}`, {
+        replaceUrl: true,
+      });
     } else {
       await this.navigateBack();
     }
@@ -150,6 +155,6 @@ export class SectorEditPage implements OnInit {
   }
 
   private navigateBack(): Promise<boolean> {
-    return this.router.navigateByUrl(`/tabs/workout/climbing/admin/crags/${this.cragId()}`);
+    return this.navController.navigateBack(`/tabs/workout/climbing/admin/crags/${this.cragId()}`);
   }
 }

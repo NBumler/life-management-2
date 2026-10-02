@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
-import { AlertController } from '@ionic/angular/standalone';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { AlertController, NavController } from '@ionic/angular/standalone';
 import { provideTranslateService } from '@ngx-translate/core';
 
 import { GearItem } from '../../../../api/model/gearItem';
@@ -45,8 +45,8 @@ describe('PackingTemplateEditorPage', () => {
       await createFixture('new');
       await fixture.componentInstance.ngOnInit();
       repository.save.and.resolveTo(templateDetail({ id: 'new-1' }));
-      const router = TestBed.inject(Router);
-      const navigateSpy = spyOn(router, 'navigate').and.resolveTo(true);
+      // backlog/148: navigateBack, so the "new" editor is popped off the Ionic stack.
+      const navigateSpy = spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
       fixture.componentInstance.form.setValue({ name: 'Tél', notes: null });
 
       await fixture.componentInstance.save();
@@ -63,12 +63,14 @@ describe('PackingTemplateEditorPage', () => {
     repository.getDetail.and.resolveTo(templateDetail({ id: 't1', name: 'Tél' }));
     await fixture.componentInstance.ngOnInit();
     repository.save.and.resolveTo(templateDetail({ id: 't1', name: 'Tél 2' }));
-    const router = TestBed.inject(Router);
-    const navigateSpy = spyOn(router, 'navigate').and.resolveTo(true);
+    const navController = TestBed.inject(NavController);
+    const navigateSpy = spyOn(navController, 'navigateBack').and.resolveTo(true);
+    const forwardSpy = spyOn(navController, 'navigateForward').and.resolveTo(true);
     fixture.componentInstance.form.setValue({ name: 'Tél 2', notes: null });
 
     await fixture.componentInstance.save();
 
     expect(navigateSpy).not.toHaveBeenCalled();
+    expect(forwardSpy).not.toHaveBeenCalled();
   });
 });

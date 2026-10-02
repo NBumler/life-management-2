@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
 import {
   IonAccordion,
   IonAccordionGroup,
@@ -18,6 +17,7 @@ import {
   IonTitle,
   IonToolbar,
   ToastController,
+  NavController,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
@@ -54,7 +54,9 @@ import { ImportRow, parseFoodImportBatch } from './food-import';
 })
 export class FoodImportPage implements OnInit {
   private readonly repository = inject(FoodRepository);
-  private readonly router = inject(Router);
+  // backlog/148: leave with navigateBack (never a forward navigateByUrl to the list) so this page is popped
+  // off the Ionic stack — otherwise the next visit to the same URL reuses this instance with its stale state.
+  private readonly navController = inject(NavController);
   private readonly toastController = inject(ToastController);
   private readonly translate = inject(TranslateService);
 
@@ -94,6 +96,6 @@ export class FoodImportPage implements OnInit {
       color: 'success',
     });
     await toast.present();
-    await this.router.navigateByUrl('/tabs/food/catalog');
+    await this.navController.navigateBack('/tabs/food/catalog');
   }
 }

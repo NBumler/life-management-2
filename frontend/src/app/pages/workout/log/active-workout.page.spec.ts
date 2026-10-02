@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
-import { AlertController, PopoverController } from '@ionic/angular/standalone';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { AlertController, NavController, PopoverController } from '@ionic/angular/standalone';
 import { provideTranslateService } from '@ngx-translate/core';
 
 import { Exercise } from '../../../api/model/exercise';
@@ -81,7 +81,7 @@ describe('ActiveWorkoutPage', () => {
     items: ReturnType<typeof signal<WorkoutSession[]>>;
   };
   let exerciseRepository: { load: jasmine.Spy; items: ReturnType<typeof signal<Exercise[]>> };
-  let router: jasmine.SpyObj<Pick<Router, 'navigateByUrl'>>;
+  let navController: jasmine.SpyObj<Pick<NavController, 'navigateBack'>>;
   let draftService: WorkoutDraftService;
   let popoverCreate: jasmine.Spy;
 
@@ -92,8 +92,8 @@ describe('ActiveWorkoutPage', () => {
     repository.save.and.resolveTo({ exercises: [] } as unknown as WorkoutSession);
 
     exerciseRepository = { load: jasmine.createSpy('load').and.resolveTo(), items: signal<Exercise[]>([]) };
-    router = jasmine.createSpyObj('Router', ['navigateByUrl']);
-    router.navigateByUrl.and.resolveTo(true);
+    navController = jasmine.createSpyObj('NavController', ['navigateBack']);
+    navController.navigateBack.and.resolveTo(true);
     popoverCreate = jasmine.createSpy('create').and.resolveTo({ present: () => Promise.resolve() });
 
     await TestBed.configureTestingModule({
@@ -105,7 +105,7 @@ describe('ActiveWorkoutPage', () => {
         { provide: ExerciseRepository, useValue: exerciseRepository },
         { provide: WorkoutPlanRepository, useValue: { load: () => Promise.resolve(), byId: () => plan, items: signal([]) } },
         { provide: ProfileRepository, useValue: { load: () => Promise.resolve(), profile: signal(null) } },
-        { provide: Router, useValue: router },
+        { provide: NavController, useValue: navController },
         { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(queryParams) } } },
         {
           provide: AlertController,
@@ -228,7 +228,7 @@ describe('ActiveWorkoutPage', () => {
     expect(repository.save).toHaveBeenCalled();
     expect(repository.save.calls.mostRecent().args[0].id).toBe(draftId!);
     expect(draftService.draft()).toBeNull();
-    expect(router.navigateByUrl).toHaveBeenCalledWith('/tabs/workout/log');
+    expect(navController.navigateBack).toHaveBeenCalledWith('/tabs/workout/log');
   });
 
   it('a rest-timer tick decrements restRemaining and clears it at zero', async () => {

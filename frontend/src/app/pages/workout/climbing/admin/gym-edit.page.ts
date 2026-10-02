@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import {
   AlertController,
   IonBackButton,
@@ -19,6 +19,7 @@ import {
   IonNote,
   IonTitle,
   IonToolbar,
+  NavController,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
@@ -64,7 +65,9 @@ import { IndoorRouteRepository } from '../../../../core/data/indoor-route.reposi
 })
 export class GymEditPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
+  // backlog/148: leave with navigateBack (never a forward navigateByUrl to the list) so this page is popped
+  // off the Ionic stack — otherwise the next visit to the same URL reuses this instance with its stale state.
+  private readonly navController = inject(NavController);
   private readonly fb = inject(FormBuilder);
   private readonly repository = inject(GymRepository);
   private readonly bandRepository = inject(GymColorBandRepository);
@@ -106,7 +109,7 @@ export class GymEditPage implements OnInit {
     if (idParam !== null && idParam !== 'new') {
       const existing = this.repository.items().find((gym) => gym.id === idParam && !gym.deleted);
       if (existing === undefined) {
-        await this.router.navigateByUrl('/tabs/workout/climbing/admin/gyms');
+        await this.navController.navigateBack('/tabs/workout/climbing/admin/gyms');
         return;
       }
       this.gymId.set(idParam);
@@ -155,9 +158,9 @@ export class GymEditPage implements OnInit {
       const saved = await this.repository.save(input);
       // Stay on the page for a fresh gym so the colour-band / route sub-lists become usable.
       if (this.gymId() === null) {
-        await this.router.navigateByUrl(`/tabs/workout/climbing/admin/gyms/${saved.id}`);
+        await this.navController.navigateForward(`/tabs/workout/climbing/admin/gyms/${saved.id}`, { replaceUrl: true });
       } else {
-        await this.router.navigateByUrl('/tabs/workout/climbing/admin/gyms');
+        await this.navController.navigateBack('/tabs/workout/climbing/admin/gyms');
       }
     } catch (error) {
       if (error instanceof GymNameConflictError) {
@@ -190,6 +193,6 @@ export class GymEditPage implements OnInit {
 
   private async deleteAndNavigateBack(id: string): Promise<void> {
     await this.repository.remove(id);
-    await this.router.navigateByUrl('/tabs/workout/climbing/admin/gyms');
+    await this.navController.navigateBack('/tabs/workout/climbing/admin/gyms');
   }
 }

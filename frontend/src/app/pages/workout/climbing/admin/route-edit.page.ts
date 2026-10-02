@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import {
   AlertController,
   IonBackButton,
@@ -16,6 +16,7 @@ import {
   IonRadioGroup,
   IonTitle,
   IonToolbar,
+  NavController,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
@@ -56,7 +57,9 @@ import { AspectPickerComponent } from '../../../../shared/aspect-picker/aspect-p
 })
 export class RouteEditPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
+  // backlog/148: leave with navigateBack (never a forward navigateByUrl to the list) so this page is popped
+  // off the Ionic stack — otherwise the next visit to the same URL reuses this instance with its stale state.
+  private readonly navController = inject(NavController);
   private readonly fb = inject(FormBuilder);
   private readonly repository = inject(RouteRepository);
   private readonly sectorRepository = inject(SectorRepository);
@@ -165,6 +168,6 @@ export class RouteEditPage implements OnInit {
   }
 
   private navigateBack(): Promise<boolean> {
-    return this.router.navigateByUrl(`/tabs/workout/climbing/admin/crags/${this.cragId()}/sectors/${this.sectorId()}`);
+    return this.navController.navigateBack(`/tabs/workout/climbing/admin/crags/${this.cragId()}/sectors/${this.sectorId()}`);
   }
 }
