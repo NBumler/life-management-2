@@ -139,9 +139,9 @@ public class GlobalExceptionHandler {
 	}
 
 	// backlog/tura-utvonaltervezo/103-... 2.3 fázis: a magassági profil egy külső, publikus API-tól
-	// függ (Open-Meteo). Ez sosem a kliens hibája, ezért 502 — a route-metrics hívás elbukik, de a
-	// kliens ettől függetlenül tud nevet adni és menteni az útvonalat metrika nélkül (ld. HikeRoute
-	// nullable mezői).
+	// függ (Open-Meteo). Ez sosem a kliens hibája, ezért 502. backlog/151 óta csak az admin
+	// katalógus-upsert (CuratedRouteService) hívja szerveroldalon; a felhasználói útvonalak
+	// metrikája a kliensen számolódik.
 	@ExceptionHandler(ElevationUnavailableException.class)
 	ResponseEntity<ApiError> handleElevationUnavailable(ElevationUnavailableException ex) {
 		log.warn("Elevation lookup failed: {}", ex.getMessage());

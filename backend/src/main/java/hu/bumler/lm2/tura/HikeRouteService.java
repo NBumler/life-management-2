@@ -84,8 +84,8 @@ class HikeRouteService {
 		}
 		entity.setName(name);
 		entity.setCoordinates(TrailSegmentMapper.flatten(dto.getCoordinates()));
-		// backlog/tura-utvonaltervezo/103-... 2.3 fázis: a kliens a /api/tura/route-metrics eredményét
-		// küldi el ezekben a mezőkben; opcionálisak, nincs rájuk validáció (ld. HikeRoute.yaml).
+		// backlog/tura-utvonaltervezo/103-... 2.3 fázis: a kliens által (backlog/151 óta eszközön)
+		// számolt metrikák; opcionálisak, nincs rájuk validáció (ld. HikeRoute.yaml).
 		entity.setDistanceMeters(toDouble(dto.getDistanceMeters().orElse(null)));
 		entity.setElevationGainMeters(toDouble(dto.getElevationGainMeters().orElse(null)));
 		entity.setElevationLossMeters(toDouble(dto.getElevationLossMeters().orElse(null)));

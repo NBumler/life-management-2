@@ -1,5 +1,6 @@
 import { RouteSuggestion } from '../../../api/model/routeSuggestion';
 import { TrailSegment } from '../../../api/model/trailSegment';
+import { haversineMeters } from '../../../core/geo/geo-math';
 
 /**
  * backlog/tura-utvonaltervezo/105-... 4. fázis — a backend `RouteSuggestionService` (2.2 fázis) A*
@@ -12,15 +13,6 @@ import { TrailSegment } from '../../../api/model/trailSegment';
 
 const MAX_SNAP_DISTANCE_METERS = 2_000;
 const NODE_KEY_PRECISION = 1_000_000;
-const EARTH_RADIUS_METERS = 6_371_000;
-
-function haversineMeters(lon1: number, lat1: number, lon2: number, lat2: number): number {
-	const toRad = (deg: number) => (deg * Math.PI) / 180;
-	const dLat = toRad(lat2 - lat1);
-	const dLon = toRad(lon2 - lon1);
-	const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
-	return 2 * EARTH_RADIUS_METERS * Math.asin(Math.min(1, Math.sqrt(a)));
-}
 
 interface Edge {
 	to: string;

@@ -1,18 +1,17 @@
 package hu.bumler.lm2.tura;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import hu.bumler.lm2.api.model.ElevationProfilePoint;
-import hu.bumler.lm2.api.model.RouteMetrics;
 import hu.bumler.lm2.common.exception.ValidationException;
 
 /**
- * backlog/tura-utvonaltervezo/103-... 2.3 fázis — táv/idő/szintkülönbség-becslés + magassági profil
- * egy (kézzel rajzolt vagy automatikusan generált) útvonalhoz. A táv a nyers waypointokból, a
+ * backlog/tura-utvonaltervezo/103-... 2.3 fázis — táv/idő/szintkülönbség-becslés egy útvonalhoz.
+ * backlog/151 óta **csak az admin katalógus-upsert** ({@link CuratedRouteService}) használja, a
+ * katalógus-sor denormalizált metrikáihoz; a felhasználói útvonalak metrikája a kliensen számolódik
+ * (`frontend/.../core/geo/route-metrics.ts`, ugyanezekkel a konstansokkal — Backend-offline first §14). A táv a nyers waypointokból, a
  * magassági profil pedig egy egyenletesen elosztott mintasoron (ld. {@link #resample}) áll elő,
  * hogy egy sok pontból álló A*-útvonal se generáljon feleslegesen sok elevation API-hívást.
  */
@@ -40,7 +39,12 @@ class RouteMetricsService {
 		this.elevationClient = elevationClient;
 	}
 
-	RouteMetrics compute(List<double[]> coordinates) {
+	/** A katalógus-sor denormalizált metrikái (a magassági profilt a katalógus nem tárolja). */
+	record ComputedRouteMetrics(double distanceMeters, double elevationGainMeters, double elevationLossMeters,
+			double estimatedDurationMinutes) {
+	}
+
+	ComputedRouteMetrics compute(List<double[]> coordinates) {
 		if (coordinates == null || coordinates.size() < 2) {
 			throw new ValidationException("Route needs at least 2 points", "coordinates");
 		}
@@ -66,13 +70,7 @@ class RouteMetricsService {
 
 		double durationMinutes = (distanceMeters / 1000.0) * MINUTES_PER_KILOMETER + gain / METERS_ASCENT_PER_MINUTE;
 
-		List<ElevationProfilePoint> profile = new ArrayList<>(samples.size());
-		for (int i = 0; i < samples.size(); i++) {
-			profile.add(new ElevationProfilePoint(BigDecimal.valueOf(samples.get(i)[2]), BigDecimal.valueOf(elevations.get(i))));
-		}
-
-		return new RouteMetrics(BigDecimal.valueOf(distanceMeters), BigDecimal.valueOf(gain), BigDecimal.valueOf(loss),
-				BigDecimal.valueOf(Math.round(durationMinutes)), profile);
+		return new ComputedRouteMetrics(distanceMeters, gain, loss, Math.round(durationMinutes));
 	}
 
 	private static double totalDistance(List<double[]> coordinates) {

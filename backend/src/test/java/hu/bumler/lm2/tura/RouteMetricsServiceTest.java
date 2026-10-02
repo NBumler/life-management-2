@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import hu.bumler.lm2.api.model.RouteMetrics;
 import hu.bumler.lm2.common.exception.ValidationException;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -20,18 +19,16 @@ import static org.assertj.core.api.Assertions.within;
 class RouteMetricsServiceTest {
 
 	@Test
-	void computesDistanceAndFlatProfile_forATwoPointRouteWithNoElevationChange() {
+	void computesDistanceAndNoGain_forATwoPointRouteWithNoElevationChange() {
 		RouteMetricsService service = new RouteMetricsService(points -> points.stream().map(p -> 500.0).toList());
 
 		// Kb. 1 fok szélességi kör Magyarország táján kb. 111 km — ez csak durva ellenőrzés a
 		// haversine-számításra, nem pontos érték.
-		RouteMetrics metrics = service.compute(List.of(new double[] { 19.0, 47.0 }, new double[] { 19.0, 47.01 }));
+		RouteMetricsService.ComputedRouteMetrics metrics = service.compute(List.of(new double[] { 19.0, 47.0 }, new double[] { 19.0, 47.01 }));
 
-		assertThat(metrics.getDistanceMeters().doubleValue()).isCloseTo(1112.0, within(20.0));
-		assertThat(metrics.getElevationGainMeters().doubleValue()).isZero();
-		assertThat(metrics.getElevationLossMeters().doubleValue()).isZero();
-		assertThat(metrics.getProfile()).isNotEmpty();
-		assertThat(metrics.getProfile().get(0).getDistanceMeters().doubleValue()).isZero();
+		assertThat(metrics.distanceMeters()).isCloseTo(1112.0, within(20.0));
+		assertThat(metrics.elevationGainMeters()).isZero();
+		assertThat(metrics.elevationLossMeters()).isZero();
 	}
 
 	@Test
@@ -47,12 +44,12 @@ class RouteMetricsServiceTest {
 		};
 		RouteMetricsService service = new RouteMetricsService(alternating);
 
-		RouteMetrics metrics = service.compute(List.of(new double[] { 19.0, 47.0 }, new double[] { 19.0, 47.02 }));
+		RouteMetricsService.ComputedRouteMetrics metrics = service.compute(List.of(new double[] { 19.0, 47.0 }, new double[] { 19.0, 47.02 }));
 
-		assertThat(metrics.getElevationGainMeters().doubleValue()).isGreaterThan(0);
-		assertThat(metrics.getElevationLossMeters().doubleValue()).isGreaterThan(0);
+		assertThat(metrics.elevationGainMeters()).isGreaterThan(0);
+		assertThat(metrics.elevationLossMeters()).isGreaterThan(0);
 		// Naismith: alap idő + emelkedési idő, mindkettő pozitív hozzájárulás.
-		assertThat(metrics.getEstimatedDurationMinutes().doubleValue()).isGreaterThan(0);
+		assertThat(metrics.estimatedDurationMinutes()).isGreaterThan(0);
 	}
 
 	@Test
@@ -67,10 +64,10 @@ class RouteMetricsServiceTest {
 		};
 		RouteMetricsService service = new RouteMetricsService(noisyFlat);
 
-		RouteMetrics metrics = service.compute(List.of(new double[] { 19.0, 47.0 }, new double[] { 19.0, 47.02 }));
+		RouteMetricsService.ComputedRouteMetrics metrics = service.compute(List.of(new double[] { 19.0, 47.0 }, new double[] { 19.0, 47.02 }));
 
-		assertThat(metrics.getElevationGainMeters().doubleValue()).isZero();
-		assertThat(metrics.getElevationLossMeters().doubleValue()).isZero();
+		assertThat(metrics.elevationGainMeters()).isZero();
+		assertThat(metrics.elevationLossMeters()).isZero();
 	}
 
 	@Test

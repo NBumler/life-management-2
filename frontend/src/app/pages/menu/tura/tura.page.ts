@@ -41,12 +41,12 @@ import { CuratedRouteActivityType } from '../../../api/model/curatedRouteActivit
 import { CuratedRouteDifficulty } from '../../../api/model/curatedRouteDifficulty';
 import { HikeRoute } from '../../../api/model/hikeRoute';
 import { HikeRouteDay } from '../../../api/model/hikeRouteDay';
-import { RouteMetrics } from '../../../api/model/routeMetrics';
 import { Bbox, TrailSegmentRepository } from '../../../core/data/trail-segment.repository';
 import { CuratedRouteFilter, CuratedRouteRepository } from '../../../core/data/curated-route.repository';
 import { HikeRouteRepository } from '../../../core/data/hike-route.repository';
 import { RouteMetricsRepository } from '../../../core/data/route-metrics.repository';
 import { RouteSuggestionRepository } from '../../../core/data/route-suggestion.repository';
+import { RouteMetricsResult } from '../../../core/geo/route-metrics';
 import { elevationProfilePolylinePoints } from './elevation-profile-svg';
 import { draftRouteToFeatureCollection, draftWaypointsToFeatureCollection, hikeRoutesToFeatureCollection } from './hike-routes-geojson';
 import { OFFLINE_TILE_PROTOCOL, registerOfflineTileProtocol } from './offline-map-protocol';
@@ -230,10 +230,10 @@ export class TuraPage implements AfterViewInit, OnDestroy {
 	protected readonly offlineCapable = Capacitor.isNativePlatform();
 	protected readonly showOfflinePanel = signal(false);
 	/** backlog/tura-utvonaltervezo/103-... 2.3 fázis — a draft() útvonalhoz tartozó, utoljára sikeresen kiszámolt metrika. */
-	protected readonly metrics = signal<RouteMetrics | null>(null);
+	protected readonly metrics = signal<RouteMetricsResult | null>(null);
 	protected readonly profilePoints = computed(() => {
-		const metrics = this.metrics();
-		return metrics ? elevationProfilePolylinePoints(metrics.profile, PROFILE_CHART_WIDTH, PROFILE_CHART_HEIGHT) : '';
+		const profile = this.metrics()?.profile;
+		return profile ? elevationProfilePolylinePoints(profile, PROFILE_CHART_WIDTH, PROFILE_CHART_HEIGHT) : '';
 	});
 
 	private metricsRequestId = 0;
@@ -626,10 +626,10 @@ export class TuraPage implements AfterViewInit, OnDestroy {
 			name,
 			coordinates: this.draft(),
 			distanceMeters: metrics?.distanceMeters,
-			elevationGainMeters: metrics?.elevationGainMeters,
-			elevationLossMeters: metrics?.elevationLossMeters,
-			estimatedDurationMinutes: metrics?.estimatedDurationMinutes,
-			elevationProfile: metrics?.profile,
+			elevationGainMeters: metrics?.elevationGainMeters ?? undefined,
+			elevationLossMeters: metrics?.elevationLossMeters ?? undefined,
+			estimatedDurationMinutes: metrics?.estimatedDurationMinutes ?? undefined,
+			elevationProfile: metrics?.profile ?? undefined,
 			days,
 		});
 		this.draft.set([]);
@@ -640,9 +640,9 @@ export class TuraPage implements AfterViewInit, OnDestroy {
 
 	/**
 	 * backlog/tura-utvonaltervezo/103-... 2.4 fázis — a belső töréspontokból (dayBreaks) építi fel a
-	 * mentendő HikeRouteDay listát; minden napra külön meghívja az /api/tura/route-metrics-et a nap
-	 * saját szakaszára (online, best-effort — hiba esetén az adott nap metrika nélkül marad, ugyanaz
-	 * a minta, mint a route-szintű refreshMetrics-nél).
+	 * mentendő HikeRouteDay listát; minden napra külön kiszámolja a metrikát a nap saját szakaszára
+	 * (backlog/151: eszközön — a táv mindig megvan, a magasság-függő mezők internet nélkül `null`,
+	 * ugyanaz a minta, mint a route-szintű refreshMetrics-nél).
 	 */
 	private async buildDaysPayload(): Promise<HikeRouteDay[] | undefined> {
 		const breaks = this.dayBreaks();
@@ -669,7 +669,7 @@ export class TuraPage implements AfterViewInit, OnDestroy {
 		return days;
 	}
 
-	private async computeDaySegmentMetrics(segment: number[][]): Promise<RouteMetrics | null> {
+	private async computeDaySegmentMetrics(segment: number[][]): Promise<RouteMetricsResult | null> {
 		if (segment.length < 2) {
 			return null;
 		}
@@ -680,7 +680,7 @@ export class TuraPage implements AfterViewInit, OnDestroy {
 		}
 	}
 
-	/** backlog/tura-utvonaltervezo/103-... 2.3 fázis — online, best-effort: hiba esetén a felhasználó metrika nélkül is menthet. */
+	/** backlog/tura-utvonaltervezo/103-... 2.3 fázis; backlog/151 — eszközön számolva: a táv mindig megvan, a magasság-függő mezők internet nélkül `null` (`~`). */
 	private async refreshMetrics(coordinates: number[][], requestId: number): Promise<void> {
 		try {
 			const result = await this.routeMetrics.compute(coordinates);
@@ -694,18 +694,28 @@ export class TuraPage implements AfterViewInit, OnDestroy {
 		}
 	}
 
-	protected formatDistance(meters: number): string {
+	/** backlog/151 — `null` = nem számolható (pl. internet nélkül nincs magassági adat) → `~`, soha nem `0` (Backend-offline first §14). */
+	protected formatDistance(meters: number | null | undefined): string {
+		if (meters == null) {
+			return '~';
+		}
 		return `${(meters / 1000).toFixed(1)} km`;
 	}
 
-	protected formatDuration(minutes: number): string {
+	protected formatDuration(minutes: number | null | undefined): string {
+		if (minutes == null) {
+			return '~';
+		}
 		const totalMinutes = Math.round(minutes);
 		const hours = Math.floor(totalMinutes / 60);
 		const mins = totalMinutes % 60;
 		return hours > 0 ? `${hours} ó ${mins} p` : `${mins} p`;
 	}
 
-	protected formatElevation(meters: number): string {
+	protected formatElevation(meters: number | null | undefined): string {
+		if (meters == null) {
+			return '~';
+		}
 		return `${Math.round(meters)} m`;
 	}
 

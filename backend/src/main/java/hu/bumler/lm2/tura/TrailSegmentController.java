@@ -7,26 +7,21 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 import hu.bumler.lm2.api.TuraApi;
-import hu.bumler.lm2.api.model.RouteMetrics;
-import hu.bumler.lm2.api.model.RouteMetricsRequest;
 import hu.bumler.lm2.api.model.RouteSuggestion;
 import hu.bumler.lm2.api.model.TrailSegment;
 import hu.bumler.lm2.api.model.TrailSegmentImportRequest;
 import hu.bumler.lm2.api.model.TrailSegmentImportResponse;
 
-/** backlog/tura-utvonaltervezo/103-... / 104-... — bbox lekérdezés + admin import + automatikus útvonal-javaslat + metrika-számítás, thin controller. */
+/** backlog/tura-utvonaltervezo/103-... / 104-... — bbox lekérdezés + admin import + automatikus útvonal-javaslat, thin controller. (A metrika-számítás backlog/151 óta a kliensen fut.) */
 @RestController
 class TrailSegmentController implements TuraApi {
 
 	private final TrailSegmentService service;
 	private final RouteSuggestionService routeSuggestionService;
-	private final RouteMetricsService routeMetricsService;
 
-	TrailSegmentController(TrailSegmentService service, RouteSuggestionService routeSuggestionService,
-			RouteMetricsService routeMetricsService) {
+	TrailSegmentController(TrailSegmentService service, RouteSuggestionService routeSuggestionService) {
 		this.service = service;
 		this.routeSuggestionService = routeSuggestionService;
-		this.routeMetricsService = routeMetricsService;
 	}
 
 	@Override
@@ -47,12 +42,5 @@ class TrailSegmentController implements TuraApi {
 			BigDecimal endLat) {
 		return ResponseEntity.ok(routeSuggestionService.suggest(country, startLon.doubleValue(), startLat.doubleValue(),
 				endLon.doubleValue(), endLat.doubleValue()));
-	}
-
-	@Override
-	public ResponseEntity<RouteMetrics> computeRouteMetrics(RouteMetricsRequest request) {
-		List<double[]> coordinates = request.getCoordinates().stream()
-				.map(pair -> new double[] { pair.get(0).doubleValue(), pair.get(1).doubleValue() }).toList();
-		return ResponseEntity.ok(routeMetricsService.compute(coordinates));
 	}
 }

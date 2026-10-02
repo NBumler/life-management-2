@@ -34,7 +34,7 @@ describe('RouteSuggestionRepository', () => {
 		expect(repository.loading()).toBeFalse();
 	});
 
-	it('suggest(): calls the API with the given country and points, and returns the result', async () => {
+	it('suggest(): with no on-device connection, asks the backend (accelerator) and returns its result', async () => {
 		const suggestion: RouteSuggestion = { found: true, coordinates: [[19.0, 47.0], [19.1, 47.1]], distanceMeters: 123 };
 		turaService.suggestRoute.and.returnValue(of(suggestion));
 
@@ -53,8 +53,7 @@ describe('RouteSuggestionRepository', () => {
 		expect(repository.loading()).toBeFalse();
 	});
 
-	it('suggest(): falls back to the on-device offline route graph when the network call fails', async () => {
-		turaService.suggestRoute.and.returnValue(throwError(() => new Error('network down')));
+	it('suggest(): finds the route on-device first, without calling the backend (backlog/151)', async () => {
 		trailSegments.segments = () => [
 			{
 				id: 's1',
@@ -70,10 +69,11 @@ describe('RouteSuggestionRepository', () => {
 		const result = await repository.suggest('HU', [19.0, 47.0], [19.05, 47.0]);
 
 		expect(result.found).toBeTrue();
+		expect(turaService.suggestRoute).not.toHaveBeenCalled();
 		expect(repository.loading()).toBeFalse();
 	});
 
-	it('suggest(): offline fallback reports not-found when the loaded segments have no connecting path', async () => {
+	it('suggest(): no on-device path and the backend unreachable → the local not-found result', async () => {
 		turaService.suggestRoute.and.returnValue(throwError(() => new Error('network down')));
 		trailSegments.segments = () => [];
 

@@ -161,8 +161,6 @@ paths:
     $ref: 'openapi/paths/tura-trail-segments.yaml'
   /api/tura/route-suggestion:
     $ref: 'openapi/paths/tura-route-suggestion.yaml'
-  /api/tura/route-metrics:
-    $ref: 'openapi/paths/tura-route-metrics.yaml'
   /api/admin/tura/trail-segments/import:
     $ref: 'openapi/paths/admin-tura-trail-segments-import.yaml'
   /api/hike-routes:
@@ -388,10 +386,6 @@ components:
       $ref: 'openapi/components/schemas/TrailSegmentImportResponse.yaml'
     RouteSuggestion:
       $ref: 'openapi/components/schemas/RouteSuggestion.yaml'
-    RouteMetricsRequest:
-      $ref: 'openapi/components/schemas/RouteMetricsRequest.yaml'
-    RouteMetrics:
-      $ref: 'openapi/components/schemas/RouteMetrics.yaml'
     ElevationProfilePoint:
       $ref: 'openapi/components/schemas/ElevationProfilePoint.yaml'
     HikeRoute:

@@ -92,9 +92,11 @@
           <span>↑{{ formatElevation(m.elevationGainMeters) }}</span>
           <span>↓{{ formatElevation(m.elevationLossMeters) }}</span>
         </div>
-        <svg class="route-metrics-chart" viewBox="0 0 300 60" preserveAspectRatio="none">
-          <polyline [attr.points]="profilePoints()" fill="none" stroke="#1a73e8" stroke-width="2"></polyline>
-        </svg>
+        @if (m.profile) {
+          <svg class="route-metrics-chart" viewBox="0 0 300 60" preserveAspectRatio="none">
+            <polyline [attr.points]="profilePoints()" fill="none" stroke="#1a73e8" stroke-width="2"></polyline>
+          </svg>
+        }
       </div>
     </ion-toolbar>
   </ion-footer>

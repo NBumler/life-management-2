@@ -8,12 +8,14 @@ import { TrailSegmentRepository } from './trail-segment.repository';
 
 /**
  * backlog/tura-utvonaltervezo/103-... 2.2 fázis. Ugyanazt a mintát követi, mint
- * `TrailSegmentRepository`: nem `StorageBackend` façade, hanem közvetlen wrapper a generált
- * `TuraService` fölött — a route-javaslat egy stateless számítás eredménye, nem
- * perzisztált/szinkronizált entitás. backlog/tura-utvonaltervezo/105-... 4. fázis: ha a hálózati
- * hívás hibázik, a már betöltött (a viewportból vagy egy letöltött offline régióból származó)
- * `TrailSegmentRepository.segments()` adaton fut le ugyanaz az A* on-device (`offline-route-graph.ts`)
- * — a felhasználó szemszögéből ugyanaz az "Automatikus" mód, csak a backend nélkül.
+ * `TrailSegmentRepository`: nem `StorageBackend` façade, hanem közvetlen wrapper — a route-javaslat
+ * egy stateless számítás eredménye, nem perzisztált/szinkronizált entitás.
+ *
+ * backlog/151 — **eszköz-elsőbbség** (Backend-offline first §14): az A* először on-device fut
+ * (`offline-route-graph.ts`) a már betöltött (viewportból vagy letöltött offline régióból származó)
+ * `TrailSegmentRepository.segments()` adaton. A backend `suggestRoute` csak gyorsító tartalék, ha a
+ * helyi adatban nincs összeköttetés (a szerver a két pont köré táguló bbox-ban, a viewporton túl is
+ * keres); ha az is elérhetetlen, a helyi "nincs útvonal" eredmény marad.
  */
 @Injectable({ providedIn: 'root' })
 export class RouteSuggestionRepository {
@@ -25,9 +27,15 @@ export class RouteSuggestionRepository {
 	async suggest(countryCode: string, start: readonly number[], end: readonly number[]): Promise<RouteSuggestion> {
 		this.loading.set(true);
 		try {
-			return await firstValueFrom(this.turaService.suggestRoute(countryCode, start[0], start[1], end[0], end[1]));
-		} catch {
-			return suggestRouteOffline(this.trailSegments.segments(), start, end);
+			const local = suggestRouteOffline(this.trailSegments.segments(), start, end);
+			if (local.found) {
+				return local;
+			}
+			try {
+				return await firstValueFrom(this.turaService.suggestRoute(countryCode, start[0], start[1], end[0], end[1]));
+			} catch {
+				return local;
+			}
 		} finally {
 			this.loading.set(false);
 		}

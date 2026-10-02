@@ -1,24 +1,31 @@
 import { Injectable, inject, signal } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
 
-import { RouteMetrics } from '../../api/model/routeMetrics';
-import { TuraService } from '../../api/api/tura.service';
+import { OpenMeteoElevationService } from '../geo/open-meteo-elevation.service';
+import { RouteMetricsResult, computeRouteMetrics, routeMetricsSamples } from '../geo/route-metrics';
 
 /**
- * backlog/tura-utvonaltervezo/103-... 2.3 fázis. documentation/Architektúra/Frontend.md `core/data/`:
- * mirrors RouteSuggestionRepository — közvetlenül becsomagolja a generált API-hívást, mert az
- * eredmény stateless/nem szinkronizált számítás (a `TuraPage` dönti el, mikor kéri le és mit kezd
- * az eredménnyel, ld. mentéskor a HikeRoute denormalizált mezőit).
+ * backlog/tura-utvonaltervezo/103-... 2.3 fázis; backlog/151 — route metrics are computed on the
+ * device (`core/geo/route-metrics.ts`), not by the backend. The distance is always available; the
+ * elevation-dependent fields need elevation data, fetched directly from an external API — when that
+ * fails (no internet), they are `null` and the UI shows `~`. Stateless computation, not a persisted /
+ * synced entity — the `TuraPage` decides when to ask and what to do with the result.
  */
 @Injectable({ providedIn: 'root' })
 export class RouteMetricsRepository {
-  private readonly turaService = inject(TuraService);
+  private readonly elevation = inject(OpenMeteoElevationService);
   readonly loading = signal(false);
 
-  async compute(coordinates: readonly number[][]): Promise<RouteMetrics> {
+  async compute(coordinates: readonly number[][]): Promise<RouteMetricsResult> {
     this.loading.set(true);
     try {
-      return await firstValueFrom(this.turaService.computeRouteMetrics({ coordinates: coordinates as number[][] }));
+      const samples = routeMetricsSamples(coordinates);
+      let elevations: number[] | null;
+      try {
+        elevations = await this.elevation.fetchElevations(samples);
+      } catch {
+        elevations = null;
+      }
+      return computeRouteMetrics(coordinates, samples, elevations);
     } finally {
       this.loading.set(false);
     }
