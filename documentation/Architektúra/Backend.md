@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-03
-verifikalt_commit: e6b8617
+verifikalva: 2026-10-02
+verifikalt_commit: ba05ae0
 ---
 
 # Backend
@@ -157,6 +157,7 @@ Szerződés és szemantika: [[Backend-offline first]] (SSOT) — itt csak az imp
 - Domain kivételek a service-ből (`EntityNotFoundException`, `EntityDeletedException`, `UniqueViolationException`), a handler képezi HTTP-re. `500`-nál nincs stack trace vagy belső üzenet a kliensnek.
 - Postgres `23505` (unique violation) elkapva → `409` + `UNIQUE_VIOLATION` + a `field`; az index-név → mező leképezés a `common` csomagban egy helyen él.
 - `PUT` törölt entitáson → `409` + `ENTITY_DELETED`; idegen user sora → `404` (nem `403`, enumeration ellen) — [[Bejelentkezés]].
+- A Spring MVC saját kliens-hibái is ebben az alakban, a megfelelő 4xx-szel (`backlog/146`): ismeretlen útvonal → `404` `NOT_FOUND`; nem támogatott metódus → `405` `METHOD_NOT_ALLOWED` (`Allow` fejléccel); nem támogatott content-type → `415` `UNSUPPORTED_MEDIA_TYPE`; hiányzó kötelező query paraméter / fejléc, vagy nem konvertálható path / query érték (pl. nem UUID `{id}`) → `400` `VALIDATION_ERROR` + `field`; olvashatatlan body → `400` `MALFORMED_REQUEST`. Ezek stack trace nélkül, legfeljebb debug / warn szinten logolnak, és — mivel nem 5xx — a kliens outboxa sem próbálja újra őket „szerverhibaként”.
 
 #### Kötelező elvek
 

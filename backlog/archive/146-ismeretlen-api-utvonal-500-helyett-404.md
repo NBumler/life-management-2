@@ -1,13 +1,13 @@
 ---
 id: 146
 type: bug
-status: backlog
+status: done
 title: "Ismeretlen API-útvonal: 500 INTERNAL_ERROR helyett 404 NOT_FOUND"
 specs:
   - "[[Backend]]"
 flag:
 created: 2026-10-02
-closed:
+closed: 2026-10-02
 ---
 
 # 146 — Ismeretlen API-útvonalra 500 jön 404 helyett
@@ -37,20 +37,23 @@ A `GlobalExceptionHandler` catch-all `@ExceptionHandler(Exception.class)` ága e
 
 ## Elfogadási kritériumok
 
-- [ ] Nem létező útvonal → `404` + stabil `code` (pl. `NOT_FOUND`), ERROR-szintű stack trace nélkül
+- [x] Nem létező útvonal → `404` + stabil `code` (pl. `NOT_FOUND`), ERROR-szintű stack trace nélkül
       (legfeljebb DEBUG / WARN egy sor).
-- [ ] A Spring MVC kliens-hibák a megfelelő 4xx-et adják ugyanabban a hibaformában: nem támogatott
+- [x] A Spring MVC kliens-hibák a megfelelő 4xx-et adják ugyanabban a hibaformában: nem támogatott
       metódus → `405`, nem támogatott content-type → `415`, hiányzó kötelező query paraméter /
       típushibás path változó → `400` `VALIDATION`.
-- [ ] Integrációs teszt az ismeretlen útvonalra és legalább a 405-re.
-- [ ] [[Backend]] hibaforma-szakasza kiegészítve a fenti kódokkal.
+- [x] Integrációs teszt az ismeretlen útvonalra és legalább a 405-re.
+- [x] [[Backend]] hibaforma-szakasza kiegészítve a fenti kódokkal.
 
 ## Terv / döntési napló
 
-_Lehetőség: a handler a `ResponseEntityExceptionHandler`-ből származik (a Spring MVC kivételek
-státuszát átveszi), vagy explicit `@ExceptionHandler(NoResourceFoundException.class)` és társai._
+- 2026-10-02: explicit `@ExceptionHandler`-ek a meglévő handlerben (nem `ResponseEntityExceptionHandler`
+  leszármazás) — így a hibaforma (`ApiError`) és a `code`-ok egy helyen, a többi handlerrel azonos stílusban.
 
 ## Lezáráskor (on-done)
 
-- Frissített specek: [[Backend]]
-- `IMPLEMENTATION_STATUS.md` sor
+- Frissített specek: [[Backend]] — „Hibakezelés”: a Spring MVC kliens-hibák kódjai
+- `IMPLEMENTATION_STATUS.md` sor: 2026-10-02 — #146
+- Kód: `ba05ae0` — `common/GlobalExceptionHandler.java` (NoResourceFound / MethodNotSupported /
+  MediaTypeNotSupported / MissingServletRequestParameter / MissingRequestHeader / MethodArgumentTypeMismatch),
+  `GlobalExceptionHandlerTest`, `MvcErrorMappingIntegrationTest`

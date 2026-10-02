@@ -14,6 +14,9 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-02 — #146** Backend: a Spring MVC kliens-hibái (ismeretlen útvonal, nem támogatott metódus / content-type,
+  hiányzó / hibás paraméter) a globális hibaformában 404 / 405 / 415 / 400-ként mennek ki az 500-as fallback helyett,
+  stack trace nélkül. Érintett: [[Backend]]
 - **2026-10-02 — #144** Heti terv: a fix napi sablon-kiosztás (öröklés, „Mostantól / Csak erre a hétre”, „Ütközés”,
   „Teljesítve”) helyett rotációs előrejelzés (`training-forecast.ts`): múlt = rögzített adat; ma / jövő: kézi
   felülírás → tervezett mászás → felváltva 2 / 3 napos terhelő blokk utáni pihenő → a rotáció következő sablonja
