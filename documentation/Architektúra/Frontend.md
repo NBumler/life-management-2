@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-20
-verifikalt_commit: 1047919
+verifikalva: 2026-10-02
+verifikalt_commit: 0a9f1bb
 ---
 
 # Frontend
@@ -107,6 +107,15 @@ Alul **legfeljebb 5 gomb** (Ionic tabs). A tab lista **konfigurációból** (fea
 - A szegmens a tab **gyökér** oldalán él; mélyebb képernyő (részletek, szerkesztő, aktív edzés) **push**-sal nyílik, és a szegmens nem látszik rajta. Vissza a stackben a kiinduló szegmensre tér.
 - Kikapcsolt flag → a szegmens eltűnik (a szegmenssáv rövidebb lesz). Ha egyetlen szegmens marad, a sáv rejtve van.
 - A tab utolsó route-ját a **munkamenet** alatt az Ionic tab stack őrzi; cold start után az alapértelmezett szegmens nyílik (nincs device-local szegmens-emlékezet az első körben).
+
+##### Szerkesztő oldal elhagyása (stack-szabály)
+
+Az Ionic a stackben maradt oldalt **újrahasznosítja**, ha ugyanarra az URL-re (query paraméterek nélkül) navigálnak újra: az `ngOnInit` nem fut le még egyszer, az oldal a régi állapotával (űrlap-értékek, mentett entitás-azonosító) nyílik. Egy előre-navigálás (`router.navigateByUrl` / `router.navigate`) a listára ezért a szerkesztőt **bent hagyja** a stackben ([lista, új, lista]), és a következő „Új …” ezt a példányt hozza vissza — ahol az oldal mentés után megtartja az entitás-azonosítót, a második mentés **felülírja** az elsőt (`backlog/145`, `backlog/148`). Szabály:
+
+- A szerkesztő / űrlap oldal (mentés, törlés, „nincs ilyen elem”, mégse) a szülő listára **`NavController.navigateBack`**-kel lép vissza — ez leveszi a stackről (ha a lista nincs a stackben, a lista lesz a gyökér). Query paraméter átadása is így megy (pl. `navigateBack([returnTo], { queryParams: { createdExpenseId } })`).
+- Ha egy új entitás mentése után a **saját szerkesztőjére** kell átmenni (terem, szikla, szektor, AYCM-partner — a mentés után válnak elérhetővé az al-listák), az **`navigateForward(<id-s url>, { replaceUrl: true })`**: az „új” oldal kikerül a stackből.
+- Ugyanez érvényes az aktív edzésre (`/tabs/workout/log/active`): befejezés / elvetés után `navigateBack`, különben a következő edzés-indítás a régi példányt (régi session-azonosítóval) kapná vissza.
+- Lint őrzi: a `pages/**/*-edit.page.ts`, `*-editor.page.ts` és `active-workout.page.ts` fájlokban a `router.navigate` / `router.navigateByUrl` hívás hiba (`no-restricted-syntax`, `frontend/.eslintrc.json`).
 
 ##### Route-térkép
 

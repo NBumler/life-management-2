@@ -14,6 +14,10 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-02 — #148** Szerkesztő oldalak (29 db) mentés / törlés után `NavController.navigateBack`-kel lépnek a
+  listára (új entitás saját szerkesztőjére `navigateForward` + `replaceUrl`); lint-szabály tiltja a router
+  előre-navigálását a szerkesztő oldalakon. Korábban a más képernyőről nyitott szerkesztő a stackben ragadt, és
+  újranyitáskor régi értékekkel jött vissza. Érintett: [[Frontend]]
 - **2026-10-02 — #145** Mászónapló: a session-űrlap mentés / törlés után `navigateBack`-kel lép a listára (mind a 4
   kontextus) — korábban a következő „Új session” az előző példányt hozta vissza, és felülírta az előző sessiont.
   Érintett: [[Indoor boulder napló]]. Követő: #148 (ugyanez a minta más szerkesztő oldalakon).
