@@ -1214,9 +1214,6 @@
       "WEEK_OF": "Week of:",
       "MANAGE_PLANS": "Manage templates",
       "NO_ACTIVE_PLANS": "No active workout template yet.",
-      "ASSIGN": "Pick a template",
-      "REST_DAY": "Rest day",
-      "DONE": "Done",
       "START": "Start workout",
       "DAY": {
         "MONDAY": "Monday",
@@ -1227,10 +1224,6 @@
         "SATURDAY": "Saturday",
         "SUNDAY": "Sunday"
       },
-      "INHERITED_FROM": "The schedule set in the week of {{date}} applies (inherited).",
-      "EDIT_MODE": "Apply changes",
-      "EDIT_FROM_NOW": "From now on",
-      "EDIT_THIS_WEEK_ONLY": "This week only",
       "LOAD_SUMMARY": "Climbing {{climbing}} d · Workout {{workouts}} d · Rest days {{rest}}",
       "LOAD_CLIMBING": "Climbing",
       "LOAD_WORKOUT": "Workout",
@@ -1240,7 +1233,13 @@
       "CLIMB_PLAN_ADD": "+ Climb",
       "CLIMB_PLANNED": "Climb (planned)",
       "CLIMB_MISSED": "Missed climb",
-      "CLIMB_CONFLICT": "Clash — consider moving the workout"
+      "SUGGESTED": "Suggested: {{name}}",
+      "FORECAST_REST": "Rest",
+      "MANUAL": "manual",
+      "WORKOUT_DONE": "Workout: {{name}}",
+      "OVERRIDE_HINT": "Set this day by hand — the rotation continues from here.",
+      "OVERRIDE_AUTO": "Automatic (rotation)",
+      "OVERRIDE_REST": "Rest day"
     },
     "SWIM": {
       "NEW": "New swim",
@@ -1571,7 +1570,7 @@
       "FINGER_LOAD": "At least 5 of the last 7 days loaded your fingers — tendons and pulleys recover slowly, rest is recommended.",
       "CLIMBED_TODAY": "You already climbed today — at most a short core / prehab session is recommended.",
       "MANY_CLIMBS": "Lots of climbing this week — home pulling and finger work can be skipped.",
-      "NO_REST_AHEAD": "With the planned climbs and the weekly schedule, no rest day is left in the next 7 days — consider keeping one day free.",
+      "NO_REST_AHEAD": "With the planned climbs and manual day settings, no rest day is left in the next 7 days — consider keeping one day free.",
       "CLIMB_PLANNED_TODAY": "A climb is planned for today — at most a short core / prehab session is recommended.",
       "CLIMB_TOMORROW": "Climbing tomorrow — finger and heavy pulling work is not recommended today."
     }

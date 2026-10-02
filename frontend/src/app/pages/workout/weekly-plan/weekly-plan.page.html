@@ -47,92 +47,74 @@
         <ion-label color="primary">{{ 'WORKOUT.PLAN.ADD' | translate }}</ion-label>
       </ion-item>
     </ion-list>
-  } @else {
-    <div class="schedule-meta">
-      @if (effective().inherited) {
-        <ion-note class="inherited-note">
-          {{ 'WORKOUT.WEEKLY.INHERITED_FROM' | translate: { date: effective().sourceWeekStart } }}
-        </ion-note>
-      }
-      <ion-segment
-        class="edit-mode"
-        [value]="editMode()"
-        (ionChange)="editMode.set($any($event.detail.value))"
-        [attr.aria-label]="'WORKOUT.WEEKLY.EDIT_MODE' | translate"
-      >
-        <ion-segment-button value="FROM_NOW">{{ 'WORKOUT.WEEKLY.EDIT_FROM_NOW' | translate }}</ion-segment-button>
-        <ion-segment-button value="THIS_WEEK_ONLY">{{ 'WORKOUT.WEEKLY.EDIT_THIS_WEEK_ONLY' | translate }}</ion-segment-button>
-      </ion-segment>
-    </div>
-    <ion-list>
-      @for (day of days(); track day.dayOfWeek) {
-        <ion-item lines="full">
-          <ion-label>
-            <h2>{{ ('WORKOUT.WEEKLY.DAY.' + day.dayOfWeek) | translate }}</h2>
-            <p>{{ day.date }}</p>
-            @if (day.load.climbing > 0 || day.load.workouts > 0 || (day.load.rest && day.past) || day.load.missedClimb || day.plannable) {
-              <div class="load-chips">
-                @if (day.load.climbing > 0) {
-                  <ion-badge color="tertiary">{{ 'WORKOUT.WEEKLY.LOAD_CLIMBING' | translate }}</ion-badge>
-                } @else if (day.plannable) {
-                  <ion-button
-                    class="climb-toggle"
-                    size="small"
-                    [fill]="day.load.plannedClimb ? 'solid' : 'outline'"
-                    color="tertiary"
-                    (click)="toggleClimb(day)"
-                    [attr.aria-pressed]="day.load.plannedClimb"
-                  >
-                    {{ (day.load.plannedClimb ? 'WORKOUT.WEEKLY.CLIMB_PLANNED' : 'WORKOUT.WEEKLY.CLIMB_PLAN_ADD') | translate }}
-                  </ion-button>
-                }
-                @if (day.load.missedClimb) {
-                  <ion-badge color="medium">{{ 'WORKOUT.WEEKLY.CLIMB_MISSED' | translate }}</ion-badge>
-                }
-                @if (day.conflict) {
-                  <ion-badge color="warning">{{ 'WORKOUT.WEEKLY.CLIMB_CONFLICT' | translate }}</ion-badge>
-                }
-                @if (day.load.workouts > 0 && !day.completed) {
-                  <ion-badge color="primary">{{ 'WORKOUT.WEEKLY.LOAD_WORKOUT' | translate }}</ion-badge>
-                }
-                @if (day.load.fingerLoad && day.load.climbing === 0) {
-                  <ion-badge color="warning">{{ 'WORKOUT.WEEKLY.LOAD_FINGERS' | translate }}</ion-badge>
-                }
-                @if (day.load.rest && day.past) {
-                  <ion-badge color="medium">{{ 'WORKOUT.WEEKLY.LOAD_REST' | translate }}</ion-badge>
-                }
-              </div>
-            }
-            <ion-select
-              [value]="day.planId ?? ''"
-              interface="action-sheet"
-              [placeholder]="'WORKOUT.WEEKLY.ASSIGN' | translate"
-              (ionChange)="assignDay(day, $any($event.target).value)"
-              [aria-label]="'WORKOUT.WEEKLY.ASSIGN' | translate"
-            >
-              <ion-select-option value="">{{ 'WORKOUT.WEEKLY.REST_DAY' | translate }}</ion-select-option>
-              @for (plan of activePlans(); track plan.id) {
-                <ion-select-option [value]="plan.id">{{ plan.name }}</ion-select-option>
-              }
-            </ion-select>
-          </ion-label>
-
-          @if (day.completed) {
-            <ion-badge slot="end" color="success">{{ 'WORKOUT.WEEKLY.DONE' | translate }}</ion-badge>
-          }
-          @if (day.planId) {
-            <ion-button
-              slot="end"
-              size="small"
-              routerLink="/tabs/workout/log/active"
-              [queryParams]="{ planId: day.planId }"
-            >
-              {{ 'WORKOUT.WEEKLY.START' | translate }}
-            </ion-button>
-          }
-        </ion-item>
-      }
-    </ion-list>
-
   }
+
+  <ion-list>
+    @for (day of days(); track day.dayOfWeek) {
+      <ion-item lines="full">
+        <ion-label>
+          <h2>{{ ('WORKOUT.WEEKLY.DAY.' + day.dayOfWeek) | translate }}</h2>
+          <p>{{ day.date }}</p>
+          <div class="load-chips">
+            @if (day.load.climbing > 0) {
+              <ion-badge color="tertiary">{{ 'WORKOUT.WEEKLY.LOAD_CLIMBING' | translate }}</ion-badge>
+            } @else if (day.plannable) {
+              <ion-button
+                class="climb-toggle"
+                size="small"
+                [fill]="day.load.plannedClimb ? 'solid' : 'outline'"
+                color="tertiary"
+                (click)="toggleClimb(day)"
+                [attr.aria-pressed]="day.load.plannedClimb"
+              >
+                {{ (day.load.plannedClimb ? 'WORKOUT.WEEKLY.CLIMB_PLANNED' : 'WORKOUT.WEEKLY.CLIMB_PLAN_ADD') | translate }}
+              </ion-button>
+            }
+            @if (day.load.missedClimb) {
+              <ion-badge color="medium">{{ 'WORKOUT.WEEKLY.CLIMB_MISSED' | translate }}</ion-badge>
+            }
+            @for (name of day.loggedWorkouts; track $index) {
+              <ion-badge color="primary">
+                @if (name !== null) {
+                  {{ 'WORKOUT.WEEKLY.WORKOUT_DONE' | translate: { name: name } }}
+                } @else {
+                  {{ 'WORKOUT.WEEKLY.LOAD_WORKOUT' | translate }}
+                }
+              </ion-badge>
+            }
+            @if (day.load.fingerLoad && day.load.climbing === 0) {
+              <ion-badge color="warning">{{ 'WORKOUT.WEEKLY.LOAD_FINGERS' | translate }}</ion-badge>
+            }
+            @if (day.load.rest && day.past) {
+              <ion-badge color="medium">{{ 'WORKOUT.WEEKLY.LOAD_REST' | translate }}</ion-badge>
+            }
+            @if (showsForecastChip(day) && day.forecast; as forecast) {
+              <ion-button
+                class="forecast-chip"
+                size="small"
+                [fill]="forecast.reason === 'OVERRIDE' ? 'solid' : 'outline'"
+                [color]="forecast.kind === 'WORKOUT' ? 'primary' : 'medium'"
+                (click)="openOverride(day)"
+              >
+                @if (forecast.kind === 'WORKOUT') {
+                  {{ 'WORKOUT.WEEKLY.SUGGESTED' | translate: { name: forecast.plan?.name } }}
+                } @else {
+                  {{ 'WORKOUT.WEEKLY.FORECAST_REST' | translate }}
+                }
+                @if (forecast.reason === 'OVERRIDE') {
+                  · {{ 'WORKOUT.WEEKLY.MANUAL' | translate }}
+                }
+              </ion-button>
+            }
+          </div>
+        </ion-label>
+
+        @if (todayStartPlan(day); as plan) {
+          <ion-button slot="end" size="small" routerLink="/tabs/workout/log/active" [queryParams]="{ planId: plan.id }">
+            {{ 'WORKOUT.WEEKLY.START' | translate }}
+          </ion-button>
+        }
+      </ion-item>
+    }
+  </ion-list>
 </ion-content>

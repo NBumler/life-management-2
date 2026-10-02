@@ -1214,9 +1214,6 @@
       "WEEK_OF": "Hét kezdete:",
       "MANAGE_PLANS": "Sablonok kezelése",
       "NO_ACTIVE_PLANS": "Még nincs aktív edzéssablon.",
-      "ASSIGN": "Sablon választása",
-      "REST_DAY": "Pihenőnap",
-      "DONE": "Teljesítve",
       "START": "Edzés indítása",
       "DAY": {
         "MONDAY": "Hétfő",
@@ -1227,10 +1224,6 @@
         "SATURDAY": "Szombat",
         "SUNDAY": "Vasárnap"
       },
-      "INHERITED_FROM": "A {{date}} héten beállított beosztás érvényes (öröklött).",
-      "EDIT_MODE": "Módosítás érvényessége",
-      "EDIT_FROM_NOW": "Mostantól",
-      "EDIT_THIS_WEEK_ONLY": "Csak erre a hétre",
       "LOAD_SUMMARY": "Mászás {{climbing}} nap · Edzés {{workouts}} nap · Pihenőnap {{rest}}",
       "LOAD_CLIMBING": "Mászás",
       "LOAD_WORKOUT": "Edzés",
@@ -1240,7 +1233,13 @@
       "CLIMB_PLAN_ADD": "+ Mászás",
       "CLIMB_PLANNED": "Mászás (tervezett)",
       "CLIMB_MISSED": "Elmaradt mászás",
-      "CLIMB_CONFLICT": "Ütközés — edzés áthelyezése javasolt"
+      "SUGGESTED": "Javasolt: {{name}}",
+      "FORECAST_REST": "Pihenő",
+      "MANUAL": "kézi",
+      "WORKOUT_DONE": "Edzés: {{name}}",
+      "OVERRIDE_HINT": "Kézi beállítás erre a napra — a rotáció innen folytatódik.",
+      "OVERRIDE_AUTO": "Automatikus (rotáció)",
+      "OVERRIDE_REST": "Pihenőnap"
     },
     "SWIM": {
       "NEW": "Új úszás",
@@ -1571,7 +1570,7 @@
       "FINGER_LOAD": "Az elmúlt 7 napból legalább 5 ujjterhelő nap volt — az ínak és a pulley-k lassan regenerálódnak, pihentetés javasolt.",
       "CLIMBED_TODAY": "Ma már másztál — ma legfeljebb rövid törzs / prehab edzés javasolt.",
       "MANY_CLIMBS": "Sok mászás a héten — az otthoni húzó- és ujjedzés kihagyható.",
-      "NO_REST_AHEAD": "A tervezett mászások és a heti beosztás mellett a következő 7 napban nem marad pihenőnap — érdemes egy napot szabadon hagyni.",
+      "NO_REST_AHEAD": "A tervezett mászások és a kézi beállítások mellett a következő 7 napban nem marad pihenőnap — érdemes egy napot szabadon hagyni.",
       "CLIMB_PLANNED_TODAY": "Mára mászás van tervezve — ma legfeljebb rövid törzs / prehab edzés javasolt.",
       "CLIMB_TOMORROW": "Holnap mászás — ma ujj- és nehéz húzóedzés nem javasolt."
     }

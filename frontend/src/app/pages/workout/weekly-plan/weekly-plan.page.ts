@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import {
+  ActionSheetButton,
+  ActionSheetController,
   IonBadge,
   IonButton,
   IonButtons,
@@ -11,59 +13,53 @@ import {
   IonLabel,
   IonList,
   IonNote,
-  IonSegment,
-  IonSegmentButton,
-  IonSelect,
-  IonSelectOption,
   ViewWillEnter,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 import { CalendarEvent } from '../../../api/model/calendarEvent';
 import { WeeklyPlanSlot } from '../../../api/model/weeklyPlanSlot';
+import { WorkoutPlan } from '../../../api/model/workoutPlan';
+import { CurrentDayService } from '../../../core/config/current-day.service';
 import { CalendarEventRepository } from '../../../core/data/calendar-event.repository';
 import { projectEventOccurrences } from '../../../core/data/event-occurrence';
 import { ClimbingSessionRepository } from '../../../core/data/climbing-session.repository';
 import { WorkoutPlanRepository } from '../../../core/data/workout-plan.repository';
 import { WorkoutSessionRepository } from '../../../core/data/workout-session.repository';
 import { WeeklyPlanRepository } from '../../../core/data/weekly-plan.repository';
-import { today } from '../../../shared/local-date';
 import { LoadWarningsBannerComponent } from '../load-warnings-banner.component';
-import { DayLoad, dailyTrainingLoad, plannedClimbDates, weekLoadSummary } from '../training-load';
+import { ForecastDay, forecastInputsFrom, trainingForecast } from '../training-forecast';
+import { DayLoad, dailyTrainingLoad, weekLoadSummary } from '../training-load';
 import { WorkoutSegmentHeaderComponent } from '../workout-segment-header.component';
-import { WEEK_DAYS, addLocalDays, isSlotCompleted, mondayOf, resolveEffectiveWeek } from './weekly-plan-adherence';
+import { WEEK_DAYS, addLocalDays, mondayOf } from './weekly-plan-adherence';
 
-/**
- * backlog/127 — how an edit applies: `FROM_NOW` saves this week's schedule, which every later week
- * without its own row then inherits; `THIS_WEEK_ONLY` is a one-off exception — the following week is
- * pinned to the schedule that applied before the edit, so it resumes there.
- */
-export type WeeklyEditMode = 'FROM_NOW' | 'THIS_WEEK_ONLY';
+/** A manual override choice: back to the automatic forecast, a template, or a forced rest day. */
+export type OverrideChoice = { kind: 'AUTO' } | { kind: 'PLAN'; planId: string } | { kind: 'REST' };
 
 interface DayCell {
   dayOfWeek: WeeklyPlanSlot.DayOfWeekEnum;
   date: string;
-  /** This week's own slot id for the day; null when the day has no own live slot (none, or inherited). */
-  slotId: string | null;
-  planId: string | null;
-  planName: string | null;
-  completed: boolean;
   /** backlog/137 — the day's actual training load (climbing / workout / finger load / rest). */
   load: DayLoad;
-  /** Not in the future — only then can a load-free day count as a rest day. */
+  /** Before today — the row shows only what was logged. */
   past: boolean;
-  /** backlog/143 — today or later: a climb can be planned for this day. */
+  /** Today or later — a climb can be planned, the forecast shows, the day can be overridden. */
   plannable: boolean;
-  /** backlog/143 — a weekly slot plan and a planned climb on the same (not yet done) day. */
-  conflict: boolean;
+  /** backlog/144 — the forecast for today / a future day (null for a past day). */
+  forecast: ForecastDay | null;
+  /** Names of the templates of the day's logged workouts (`null` entry = an ad-hoc workout). */
+  loggedWorkouts: (string | null)[];
+  /** This week's own live override slot for the day, if any. */
+  overrideSlot: WeeklyPlanSlot | null;
 }
 
 /**
- * documentation/Subfeatures/Heti terv.md "Heti dashboard" — a 7-day view of the current calendar
- * week: assign an active template to each day, a "Teljesítve" badge per adherence
- * (`weekly-plan-adherence.ts`), a thumb-zone "Edzés indítása" CTA that opens the live view preloaded
- * from the plan, plus prev/next week nav. backlog/127: a week without its own schedule inherits the
- * last earlier one (`resolveEffectiveWeek`); an edit applies "from now" or "only this week".
+ * documentation/Subfeatures/Heti terv.md "Heti dashboard" (backlog/144) — a 7-day view of a calendar
+ * week. Past days show what was logged; today and the future show the rotation forecast
+ * (`training-forecast.ts`): the suggested template, a rest day or a planned climb. A forecast chip
+ * opens an action sheet to override the day by hand (a template or a rest day, saved as this week's
+ * WeeklyPlan slot — no inheritance) or to put it back to automatic. "+ Mászás" plans a climb
+ * (backlog/143). Prev / next week nav; "ma" follows `CurrentDayService`.
  */
 @Component({
   selector: 'app-weekly-plan',
@@ -85,23 +81,30 @@ interface DayCell {
       .week-nav ion-buttons {
         flex: none;
       }
-      .schedule-meta {
-        padding: 0 16px 8px;
-      }
-      .inherited-note {
-        display: block;
-        margin-bottom: 8px;
-      }
       .load-summary {
         display: block;
         padding: 0 16px 8px;
       }
-      .climb-toggle {
+      .climb-toggle,
+      .forecast-chip {
         margin: 0;
         --padding-start: 8px;
         --padding-end: 8px;
         height: 24px;
         font-size: 0.75rem;
+        text-transform: none;
+      }
+      /* A long template name wraps instead of being clipped next to the row's start button. */
+      .forecast-chip {
+        height: auto;
+        min-height: 24px;
+        max-width: 100%;
+        --padding-top: 3px;
+        --padding-bottom: 3px;
+      }
+      .forecast-chip::part(native) {
+        white-space: normal;
+        text-align: start;
       }
       .load-chips {
         display: flex;
@@ -117,16 +120,12 @@ interface DayCell {
     IonContent,
     IonList,
     IonNote,
-    IonSegment,
-    IonSegmentButton,
     IonItem,
     IonLabel,
     IonBadge,
     IonButton,
     IonButtons,
     IonIcon,
-    IonSelect,
-    IonSelectOption,
     WorkoutSegmentHeaderComponent,
     LoadWarningsBannerComponent,
     TranslatePipe,
@@ -139,57 +138,67 @@ export class WeeklyPlanPage implements OnInit, ViewWillEnter {
   private readonly sessionRepository = inject(WorkoutSessionRepository);
   private readonly climbingRepository = inject(ClimbingSessionRepository);
   private readonly eventRepository = inject(CalendarEventRepository);
+  private readonly currentDay = inject(CurrentDayService);
+  private readonly actionSheetController = inject(ActionSheetController);
   private readonly translate = inject(TranslateService);
   private readonly router = inject(Router);
-  readonly todayIso = today();
 
-  readonly weekStart = signal(mondayOf(today()));
+  readonly weekStart = signal(mondayOf(this.currentDay.day()));
 
   readonly activePlans = computed(() => this.planRepository.activePlans());
 
-  readonly effective = computed(() => resolveEffectiveWeek(this.weeklyRepository.items(), this.weekStart()));
-
-  readonly editMode = signal<WeeklyEditMode>('FROM_NOW');
-
-  /** backlog/137 — per-day load of the shown week, from the local climbing + workout logs only. */
-  readonly weekLoad = computed<DayLoad[]>(() =>
-    dailyTrainingLoad(
-      WEEK_DAYS.map((_, index) => addLocalDays(this.weekStart(), index)),
-      this.climbingRepository.items(),
-      this.sessionRepository.items(),
-      { dates: plannedClimbDates(this.eventRepository.items(), this.todayIso), today: this.todayIso },
-    ),
+  private readonly forecastInputs = computed(() =>
+    forecastInputsFrom(this.currentDay.day(), {
+      climbingSessions: this.climbingRepository.items(),
+      workoutSessions: this.sessionRepository.items(),
+      events: this.eventRepository.items(),
+      weeklyPlans: this.weeklyRepository.items(),
+      workoutPlans: this.planRepository.items(),
+    }),
   );
 
-  readonly loadSummary = computed(() => weekLoadSummary(this.weekLoad(), this.todayIso));
+  /** backlog/137 / backlog/143 — per-day load of the shown week (logged, plus planned climbs from today). */
+  readonly weekLoad = computed<DayLoad[]>(() => {
+    const inputs = this.forecastInputs();
+    return dailyTrainingLoad(
+      WEEK_DAYS.map((_, index) => addLocalDays(this.weekStart(), index)),
+      inputs.climbingSessions,
+      inputs.workoutSessions,
+      { dates: inputs.plannedClimbs, today: inputs.today },
+    );
+  });
+
+  readonly loadSummary = computed(() => weekLoadSummary(this.weekLoad(), this.currentDay.day()));
+
+  /** backlog/144 — the forecast from today to the end of the shown week, by date. */
+  private readonly weekForecast = computed(() => {
+    const weekEnd = addLocalDays(this.weekStart(), 6);
+    return new Map(trainingForecast(this.forecastInputs(), weekEnd).map((day) => [day.date, day]));
+  });
 
   readonly days = computed<DayCell[]>(() => {
-    const start = this.weekStart();
-    const effective = this.effective();
-    const slots = effective.slots;
-    const sessions = this.sessionRepository.items();
-    const plans = this.planRepository.items();
+    const today = this.currentDay.day();
     const load = this.weekLoad();
+    const forecast = this.weekForecast();
+    const plans = this.planRepository.items();
+    const sessions = this.sessionRepository.items();
+    const ownSlots = (this.weeklyRepository.byWeekStart(this.weekStart())?.slots ?? []).filter((slot) => !slot.deleted);
     return WEEK_DAYS.map((dayOfWeek, index) => {
-      const slot = slots.find((entry) => entry.dayOfWeek === dayOfWeek) ?? null;
-      const planId = slot?.planId ?? null;
-      const plan = planId === null ? undefined : plans.find((entry) => entry.id === planId && !entry.deleted);
+      const date = load[index].date;
       return {
         dayOfWeek,
-        date: addLocalDays(start, index),
-        // an inherited slot row belongs to another week — never carry its id into this week's save
-        slotId: effective.inherited ? null : (slot?.id ?? null),
-        planId,
-        planName: plan?.name ?? (planId !== null ? '—' : null),
-        completed: planId !== null && isSlotCompleted(sessions, start, planId),
+        date,
         load: load[index],
-        past: load[index].date <= this.todayIso,
-        plannable: load[index].date >= this.todayIso,
-        conflict: planId !== null && load[index].plannedClimb && !isSlotCompleted(sessions, start, planId),
+        past: date < today,
+        plannable: date >= today,
+        forecast: forecast.get(date) ?? null,
+        loggedWorkouts: sessions
+          .filter((session) => !session.deleted && session.date === date)
+          .map((session) => plans.find((plan) => plan.id === session.planId)?.name ?? null),
+        overrideSlot: ownSlots.find((slot) => slot.dayOfWeek === dayOfWeek) ?? null,
       };
     });
   });
-
 
   async ngOnInit(): Promise<void> {
     await Promise.all([
@@ -202,9 +211,24 @@ export class WeeklyPlanPage implements OnInit, ViewWillEnter {
   }
 
   ionViewWillEnter(): void {
+    this.currentDay.refresh();
     void this.sessionRepository.reload();
     void this.climbingRepository.load({ force: true });
     void this.eventRepository.load();
+  }
+
+  /** The forecast chip is shown on today / future days that are not (yet) logged and not climbing days. */
+  showsForecastChip(day: DayCell): boolean {
+    return day.forecast !== null && day.forecast.reason !== 'LOGGED' && day.forecast.kind !== 'CLIMB';
+  }
+
+  /** Today's still-pending forecast workout — the row's "Edzés indítása" CTA. */
+  todayStartPlan(day: DayCell): WorkoutPlan | null {
+    const forecast = day.forecast;
+    if (day.date !== this.currentDay.day() || forecast === null || forecast.kind !== 'WORKOUT' || forecast.reason === 'LOGGED') {
+      return null;
+    }
+    return forecast.plan;
   }
 
   /**
@@ -216,7 +240,7 @@ export class WeeklyPlanPage implements OnInit, ViewWillEnter {
     const climbingEvents = this.eventRepository
       .items()
       .filter((event) => !event.deleted && event.activityType === CalendarEvent.ActivityTypeEnum.Climbing)
-      .filter((event) => projectEventOccurrences(event, this.todayIso).includes(day.date));
+      .filter((event) => projectEventOccurrences(event, this.currentDay.day()).includes(day.date));
     if (climbingEvents.length === 0) {
       await this.eventRepository.save({
         title: this.translate.instant('TASKS.EVENTS.CLIMBING_TITLE'),
@@ -247,49 +271,59 @@ export class WeeklyPlanPage implements OnInit, ViewWillEnter {
   }
 
   goToday(): void {
-    this.weekStart.set(mondayOf(today()));
+    this.weekStart.set(mondayOf(this.currentDay.day()));
+  }
+
+  /** backlog/144 — the override action sheet: automatic (when overridden), every active template, rest day. */
+  async openOverride(day: DayCell): Promise<void> {
+    const buttons: ActionSheetButton[] = [];
+    if (day.overrideSlot !== null) {
+      buttons.push({
+        text: this.translate.instant('WORKOUT.WEEKLY.OVERRIDE_AUTO'),
+        handler: () => void this.setOverride(day, { kind: 'AUTO' }),
+      });
+    }
+    for (const plan of this.activePlans()) {
+      buttons.push({ text: plan.name, handler: () => void this.setOverride(day, { kind: 'PLAN', planId: plan.id }) });
+    }
+    buttons.push(
+      { text: this.translate.instant('WORKOUT.WEEKLY.OVERRIDE_REST'), handler: () => void this.setOverride(day, { kind: 'REST' }) },
+      { text: this.translate.instant('COMMON.CANCEL'), role: 'cancel' },
+    );
+    const sheet = await this.actionSheetController.create({
+      header: `${this.translate.instant('WORKOUT.WEEKLY.DAY.' + day.dayOfWeek)} · ${day.date}`,
+      subHeader: this.translate.instant('WORKOUT.WEEKLY.OVERRIDE_HINT'),
+      buttons,
+    });
+    await sheet.present();
   }
 
   /**
-   * Assign / change / clear a day. `planId === ''` (the "none" option) clears the slot. The whole
-   * week's effective schedule (own or inherited) is saved as this week's own row.
+   * backlog/144 — saves the day's override as this week's own slot set (every other own slot kept with
+   * its id); `AUTO` drops the day's slot so the forecast decides again. Only today / future days.
    */
-  async assignDay(day: DayCell, planId: string): Promise<void> {
-    const next = planId === '' ? null : planId;
-    if (next === day.planId) {
+  async setOverride(day: DayCell, choice: OverrideChoice): Promise<void> {
+    if (!day.plannable) {
       return;
     }
     const weekStart = this.weekStart();
-    const before = this.days();
-    if (this.editMode() === 'THIS_WEEK_ONLY') {
-      await this.pinFollowingWeek(weekStart, before);
-    }
-    // Carry each day's own slot id through so re-assigning a day updates the same row (and undeletes
-    // it if it was cleared before) instead of relying on the deterministic-id fallback.
-    const slots = before
-      .map((cell) => ({
-        dayOfWeek: cell.dayOfWeek,
-        planId: cell.dayOfWeek === day.dayOfWeek ? next : cell.planId,
-        id: cell.slotId ?? undefined,
-      }))
-      .filter((cell): cell is { dayOfWeek: WeeklyPlanSlot.DayOfWeekEnum; planId: string; id: string | undefined } => cell.planId !== null);
-    await this.weeklyRepository.saveWeek(weekStart, slots);
-  }
-
-  /**
-   * "Csak erre a hétre": unless the following week already has its own schedule, give it one equal to
-   * what applied before this edit — otherwise it would inherit the exception.
-   */
-  private async pinFollowingWeek(weekStart: string, before: DayCell[]): Promise<void> {
-    const nextWeekStart = addLocalDays(weekStart, 7);
-    if (this.weeklyRepository.byWeekStart(nextWeekStart) !== undefined) {
+    const own = (this.weeklyRepository.byWeekStart(weekStart)?.slots ?? []).filter((slot) => !slot.deleted);
+    const others = own
+      .filter((slot) => slot.dayOfWeek !== day.dayOfWeek)
+      .map((slot) => ({ id: slot.id, dayOfWeek: slot.dayOfWeek, kind: slot.kind, planId: slot.planId ?? null }));
+    if (choice.kind === 'AUTO') {
+      if (day.overrideSlot === null) {
+        return;
+      }
+      await this.weeklyRepository.saveWeek(weekStart, others);
       return;
     }
-    await this.weeklyRepository.saveWeek(
-      nextWeekStart,
-      before
-        .filter((cell) => cell.planId !== null)
-        .map((cell) => ({ dayOfWeek: cell.dayOfWeek, planId: cell.planId as string })),
-    );
+    const slot = {
+      id: day.overrideSlot?.id,
+      dayOfWeek: day.dayOfWeek,
+      kind: choice.kind === 'REST' ? WeeklyPlanSlot.KindEnum.Rest : WeeklyPlanSlot.KindEnum.Plan,
+      planId: choice.kind === 'PLAN' ? choice.planId : null,
+    };
+    await this.weeklyRepository.saveWeek(weekStart, [...others, slot]);
   }
 }
