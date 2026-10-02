@@ -14,6 +14,9 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-02 — #149** `STEPS_LOW`: 20:00 előtt már nem kerül OS-ütemezésre (a délelőtt sorba tett riasztás 20:00-kor
+  a reggeli lépésszámmal, újraellenőrzés nélkül sült el); 20:00-kor a háttér-worker élő Health Connect olvasásból dönt,
+  20:00 után app-nyitáskor friss sync után tüzel. Érintett: [[Értesítések]]
 - **2026-10-02 — #148** Szerkesztő oldalak (29 db) mentés / törlés után `NavController.navigateBack`-kel lépnek a
   listára (új entitás saját szerkesztőjére `navigateForward` + `replaceUrl`); lint-szabály tiltja a router
   előre-navigálását a szerkesztő oldalakon. Korábban a más képernyőről nyitott szerkesztő a stackben ragadt, és
