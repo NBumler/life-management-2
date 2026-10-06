@@ -12,6 +12,7 @@
     "test:ci": "ng test --browsers=ChromeHeadlessCI --watch=false",
     "lint": "ng lint",
     "verify:outbox": "node scripts/verify-outbox-payload-schema.mjs",
+    "build:geo-assets": "node ../scripts/build-geo-assets.mjs",
     "gen:assets": "capacitor-assets generate --android && node scripts/gen-notification-icons.mjs",
     "gen:api": "openapi-generator-cli generate -i ../backend/src/main/resources/openapi.yaml -g typescript-angular -o src/app/api --additional-properties=ngVersion=20.3.25,providedInRoot=true,withInterfaces=true,supportsES6=true --global-property=skipFormModel=false"
   },
@@ -69,6 +70,7 @@
     "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-jsdoc": "^48.2.1",
     "eslint-plugin-prefer-arrow": "1.2.2",
+    "geotiff": "^2.1.3",
     "jasmine-core": "~5.1.0",
     "jasmine-spec-reporter": "~5.0.0",
     "karma": "~6.4.0",

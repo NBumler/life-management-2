@@ -32,3 +32,6 @@ target/
 *.war
 .gradle/
 build/
+
+# Geo build-asset (backlog/150): scripts/build-geo-assets.mjs állítja elő, az APK-ba épül, nem commitoljuk
+frontend/src/assets/geo/

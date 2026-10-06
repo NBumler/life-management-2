@@ -388,6 +388,22 @@ Becsült).** Az ECO külön, `deferred` jegyben tartva: [[153-biciklizes-eco-ene
   becslés ~53–57 MB `int16`, tömörítve még mérendő.
 - **APK-növekmény:** még nem mérve (release build nem készült).
 
+**Valódi, mért build-asset (2026-10-06, `scripts/build-geo-assets.mjs`, nem becslés):**
+
+| Csomag | Fájlok | Nyers | Deflate (APK-ban ennyi) |
+|---|---|---|---|
+| DEM 3″ (Copernicus GLO-90, HU-bbox, 1 cella átlapolással) | 28 `.bin` | 57,7 MB | ~19,6 MB |
+| Bicikli-úthálózat (OSM Geofabrik extract, 0,25°-os csempék) | 336 `.bin` | 40,1 MB | ~31,5 MB |
+| Manifest | `manifest.json` | 0,07 MB | — |
+| **Összes** | | **~97,8 MB** | **~51 MB (mért: a tgz 51,3 MB)** |
+
+- Bicikli: 863 528 bicikli-út, 6 866 360 csomópont; csempénként átfedéssel 880 537 út-darab.
+  A tényleges szám a becsült (~26–52 MB) tartományon belül van; a deflate-hatékonyság alacsony
+  (a delták zajosak), ez a későbbi optimalizálás lehetséges pontja.
+- Az APK-növekmény a zip-tömörített méret, ~51 MB (becslés a tgz-ből). A tényleges release APK
+  delta csak valódi `cap sync` + APK-build után mérhető, az még hátravan.
+- A csomag git-ignored (`frontend/src/assets/geo/`), az APK-ba épül, a repó nem nő vele.
+
 **Felhasználói döntések (2026-10-06):**
 - A geo csomag az **APK-ba épül** (csomag-tárolás: (a)). A build-idő / telepítési lassulás később
   újra mérhető, ha zavaró lesz; első körben a teljes backend-offline first szabály érvényes.
