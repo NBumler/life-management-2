@@ -1,23 +1,23 @@
 import { TestBed } from '@angular/core/testing';
 
-import { OpenMeteoElevationService } from '../geo/open-meteo-elevation.service';
+import { ElevationService } from '../geo/elevation.service';
 import { PROFILE_SAMPLE_COUNT } from '../geo/route-metrics';
 import { RouteMetricsRepository } from './route-metrics.repository';
 
 /** backlog/151 — metrics are computed on the device; only the elevation lookup is external. */
 describe('RouteMetricsRepository', () => {
 	let repository: RouteMetricsRepository;
-	let elevation: jasmine.SpyObj<OpenMeteoElevationService>;
+	let elevation: jasmine.SpyObj<ElevationService>;
 	const coordinates = [
 		[19.0, 47.0],
 		[19.0, 47.01],
 	];
 
 	beforeEach(() => {
-		elevation = jasmine.createSpyObj('OpenMeteoElevationService', ['fetchElevations']);
+		elevation = jasmine.createSpyObj('ElevationService', ['fetchElevations']);
 
 		TestBed.configureTestingModule({
-			providers: [{ provide: OpenMeteoElevationService, useValue: elevation }],
+			providers: [{ provide: ElevationService, useValue: elevation }],
 		});
 		repository = TestBed.inject(RouteMetricsRepository);
 	});

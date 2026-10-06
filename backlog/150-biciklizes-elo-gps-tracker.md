@@ -416,6 +416,23 @@ Becsült).** Az ECO külön, `deferred` jegyben tartva: [[153-biciklizes-eco-ene
 - Korábbi döntés: a becsült méret elfogadható, az 1. fázis indulhat. A **mért** csomagméret és az
   APK-delta ismeretében **újra rá kell kérdezni**, hogy megfelel-e.
 
+### Geo-csomag másik gépen (friss klón)
+
+A `frontend/src/assets/geo/` tartalma git-ignored, a repóban nincs. Friss klónból így áll elő:
+
+1. `cd frontend && npm install` (a `geotiff` build-only függőség is ebből jön).
+2. `npm run build:geo-assets` — kb. 1 óra: letölti a 28 DEM-GeoTIFF-et (~140 MB) és az OSM PBF-et
+   (`hungary-latest.osm.pbf`, ~326 MB) a `%TEMP%\lm2-geo-cache\` alá, majd előállítja a csomagot.
+   Újrafuttatás a cache-ből gyorsabb. Ha már van PBF a cache-ben, az a letöltést kihagyja; más
+   helyről a `--pbf <fájl>` kapcsolóval adható meg.
+3. Ellenőrzés: `frontend/src/assets/geo/manifest.json` létezik, `dem/` 28 fájl, `bike/` 336 fájl.
+4. Az APK-build (`scripts/install-android.ps1` vagy `npm run build` + `cap sync`) ezt már beviszi.
+
+Ha a 2. lépés kimarad: az app és a tesztek futnak, de a DEM- és bicikli-adat hiányzik, a magasság
+az Open-Meteo-tól jön (online), offline `~`. A csomag verzióját a `manifest.json` `generatedAt`
+mezője adja; a forrás PBF dátumát a manifest jelenleg nem rögzíti (Geofabrik a `hungary-latest`
+fájlt frissíti), ezt a következő csomag-verziónál érdemes beírni.
+
 ## Lezáráskor (on-done)
 
 - Frissített specek: [[Biciklizés napló]] — élő tracker, módok, `trackingMode` / `startedAt`,

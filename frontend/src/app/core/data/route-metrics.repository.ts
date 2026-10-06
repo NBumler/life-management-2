@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 
-import { OpenMeteoElevationService } from '../geo/open-meteo-elevation.service';
+import { ElevationService } from '../geo/elevation.service';
 import { RouteMetricsResult, computeRouteMetrics, routeMetricsSamples } from '../geo/route-metrics';
 
 /**
@@ -12,7 +12,7 @@ import { RouteMetricsResult, computeRouteMetrics, routeMetricsSamples } from '..
  */
 @Injectable({ providedIn: 'root' })
 export class RouteMetricsRepository {
-  private readonly elevation = inject(OpenMeteoElevationService);
+  private readonly elevation = inject(ElevationService);
   readonly loading = signal(false);
 
   async compute(coordinates: readonly number[][]): Promise<RouteMetricsResult> {
