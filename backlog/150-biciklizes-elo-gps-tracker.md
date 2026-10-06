@@ -400,8 +400,12 @@ Becsült).** Az ECO külön, `deferred` jegyben tartva: [[153-biciklizes-eco-ene
 - Bicikli: 863 528 bicikli-út, 6 866 360 csomópont; csempénként átfedéssel 880 537 út-darab.
   A tényleges szám a becsült (~26–52 MB) tartományon belül van; a deflate-hatékonyság alacsony
   (a delták zajosak), ez a későbbi optimalizálás lehetséges pontja.
-- Az APK-növekmény a zip-tömörített méret, ~51 MB (becslés a tgz-ből). A tényleges release APK
-  delta csak valódi `cap sync` + APK-build után mérhető, az még hátravan.
+- **Mért APK-növekmény:** a `cap sync` + `gradlew assembleDebug` után a debug APK 95,9 MB; a
+  zip-központi könyvtárból a `assets/public/assets/geo/` 365 bejegyzés (28 DEM + 336 bicikli +
+  manifest) tömörített mérete **53,7 MB**, ez a geo-csomag pontos hozzájárulása. A release APK
+  asset-tömörítése ugyanígy működik, az érték várhatóan megegyezik; release-buildet még nem mértünk.
+- Megjegyzés: a csomag nélkül a `geo-asset.service` `null`-t ad (nincs elevation / bicikli-út), nem
+  hibázik. A csomagot az APK-build előtt kell előállítani: `npm run build:geo-assets`.
 - A csomag git-ignored (`frontend/src/assets/geo/`), az APK-ba épül, a repó nem nő vele.
 
 **Felhasználói döntések (2026-10-06):**
