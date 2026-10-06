@@ -363,8 +363,8 @@ A [[151-tura-backend-offline-first-szabalysertesek]] az 1. fázis után indulhat
 definíciója nem valósítható meg vele**. Távolságalapú ECO (pl. 200 m-enként) készíthető, viszont
 a GPS-hardver ilyenkor is folyamatosan fut — csak a visszahívások és a mentések száma csökken, az
 akkumulátor-megtakarítás ezért kicsi. Ha az ECO-t az akkumulátor miatt akarjuk, a Transistorsoft
-licenc vagy saját plugin kellene. **Javaslat: ECO kimarad, 2 mód (Pontos, Becsült)**; ez a döntés
-a felhasználóé.
+licenc vagy saját plugin kellene. **Döntés (2026-10-06, felhasználó): ECO kimarad, 2 mód (Pontos,
+Becsült).** Az ECO külön, `deferred` jegyben tartva: [[153-biciklizes-eco-energiatakarekos-mod]].
 
 ### Méret-jóváhagyás
 
@@ -379,7 +379,8 @@ a felhasználóé.
 - **Bicikli-úthálózat:** még nem mérve (OSM HU extract nincs letöltve).
 - **APK-növekmény:** még nem mérve (release build nem készült).
 
-_Válasz és dátum: (a mért APK-delta és a bicikli-gráf méret után, a felhasználó dönt)._
+**Felhasználói döntés (2026-10-06):** a becsült méret elfogadható, az 1. fázis indulhat. A
+tényleges (mért) csomagméret és az APK-delta ismeretében **újra rá kell kérdezni**, hogy megfelel-e.
 
 ## Lezáráskor (on-done)
 
