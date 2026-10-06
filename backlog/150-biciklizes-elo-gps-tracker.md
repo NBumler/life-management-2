@@ -416,6 +416,26 @@ Becsült).** Az ECO külön, `deferred` jegyben tartva: [[153-biciklizes-eco-ene
 - Korábbi döntés: a becsült méret elfogadható, az 1. fázis indulhat. A **mért** csomagméret és az
   APK-delta ismeretében **újra rá kell kérdezni**, hogy megfelel-e.
 
+### Bicikli-routing mérése a valódi csomagon (2026-10-06)
+
+`core/geo/routing.service.ts` (BIKE, a két pont körüli csempékből épített gráf). Node-on mérve, a
+valódi `frontend/src/assets/geo/` csomaggal (asztali gép, a telefon lassabb lesz):
+
+| Útvonal | Csempék | Út-darab | Útvonal | Teljes idő |
+|---|---|---|---|---|
+| Budapest centrum → Budakeszi | 4 | 113 710 | 11,0 km (légvonal 8,2) | 8,2 s |
+| Budapest → Gödöllő | 6 | 135 461 | 33,0 km (26,4) | 8,4 s |
+| Budapest → Esztergom | 9 | 158 267 | 47,2 km (39,5) | 12,4 s |
+| Deák tér → Margitsziget (belső pont) | 4 | 113 710 | — | nincs út |
+
+- **Sebesség: nem teljesíti a célt** (plan: < 2 s / 50 km). A gráf-építés 5–6 s, a keresés 2–7 s.
+  Okok: a `RouteGraph` sztring-kulcsokkal épít, a `snapToNearestEdge` minden élre végigmegy.
+  Következő lépés: térbeli index a illesztéshez, és egész csomópont-azonosítók, vagy a gráf
+  csempénkénti gyorsítótárazása.
+- **Margitsziget:** a belső pont nem kapott utat. Valószínűleg a sziget belső utai csak gyalogos
+  (`footway`, bicycle-tag nélkül), így nincs összefüggő biciklis kapcsolat. Ez adat-lefedettség
+  kérdése, nem hibás számítás; a szabály szerint nincs becslés, `null` a válasz.
+
 ### Geo-csomag másik gépen (friss klón)
 
 A `frontend/src/assets/geo/` tartalma git-ignored, a repóban nincs. Friss klónból így áll elő:
