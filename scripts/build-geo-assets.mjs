@@ -668,9 +668,22 @@ async function buildBike() {
 
 // --- Főprogram -------------------------------------------------------------------------------------
 
+/** Ha a manifest és minden benne felsorolt csempe-fájl megvan, a build már kész (újraépítés: --force). */
+function existingPackageIsComplete() {
+	const manifestPath = join(OUT, 'manifest.json');
+	if (!existsSync(manifestPath)) {
+		return false;
+	}
+	const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+	return [...manifest.dem, ...manifest.bike].every((entry) => existsSync(join(OUT, entry.file)));
+}
+
 async function main() {
 	if (FORCE) {
 		rmSync(OUT, { recursive: true, force: true });
+	} else if (existingPackageIsComplete()) {
+		log(`a csomag már kész (${join(OUT, 'manifest.json')}); újraépítéshez: --force`);
+		return;
 	}
 	ensureDir(OUT);
 
