@@ -351,12 +351,35 @@ A [[151-tura-backend-offline-first-szabalysertesek]] az 1. fázis után indulhat
 
 ### Plugin döntés
 
-_A 0. fázis után töltendő ki._
+**Spike-eredmény (2026-10-06, részleges — eszköz-mérés még hátravan):**
+
+| Jelölt | Verzió | Licenc | Időalapú intervallum | Távolságszűrő | Háttér / foreground service | Ítélet |
+|---|---|---|---|---|---|---|
+| `@capacitor-community/background-geolocation` | 1.2.26 | MIT | **nincs** | igen (`distanceFilter`) | igen (`backgroundMessage` = értesítés) | jó alap, de az ECO „20 s-onként" nem valósítható meg vele |
+| `@transistorsoft/capacitor-background-geolocation` | 9.6.1 | CUSTOM (fizetős release-licenc) | igen (a dokumentáció szerint) | igen | igen | kiváló, de licencköltség és nem ingyenes csomag |
+| `@capacitor/geolocation` | 8.2.3 | MIT | — | — | **nincs háttér** | csak előtérben; a háttér-követelményt nem teljesíti |
+
+**Következtetés:** a közösségi plugin ingyenes és elég a Pontos módhoz, de az **ECO mód időalapú
+definíciója nem valósítható meg vele**. Távolságalapú ECO (pl. 200 m-enként) készíthető, viszont
+a GPS-hardver ilyenkor is folyamatosan fut — csak a visszahívások és a mentések száma csökken, az
+akkumulátor-megtakarítás ezért kicsi. Ha az ECO-t az akkumulátor miatt akarjuk, a Transistorsoft
+licenc vagy saját plugin kellene. **Javaslat: ECO kimarad, 2 mód (Pontos, Becsült)**; ez a döntés
+a felhasználóé.
 
 ### Méret-jóváhagyás
 
-_A 0. fázis után töltendő ki: mért csomagméret (DEM / bicikli-gráf / turistaút-gráf), APK előtte →
-utána, a felhasználó válasza és dátuma._
+**Mért / becsült méretek (2026-10-06):**
+
+- **Turistaút-gráf (mért, a meglévő adatbázisból):** 230 611 szakasz, 2 810 289 csomópont
+  (átlag 12,2 pont/szakasz). A nyers Postgres-szöveges alak ~61 MB; bináris, `Int32` 1e-5 fokos
+  kvantálással (~1,1 m) ~22 MB nyersen, deflate-tel becslés szerint ~10–15 MB. **Becslés, nem
+  mért fájl.**
+- **DEM (becsült, nincs letöltve):** HU ~26,7 M minta 3″-en → ~53 MB nyers `int16`; 6″-en ~13 MB.
+  Sima síkságon jól tömörül; a tényleges méret a spike-ban mérendő.
+- **Bicikli-úthálózat:** még nem mérve (OSM HU extract nincs letöltve).
+- **APK-növekmény:** még nem mérve (release build nem készült).
+
+_Válasz és dátum: (a mért APK-delta és a bicikli-gráf méret után, a felhasználó dönt)._
 
 ## Lezáráskor (on-done)
 
