@@ -376,11 +376,25 @@ Becsült).** Az ECO külön, `deferred` jegyben tartva: [[153-biciklizes-eco-ene
   mért fájl.**
 - **DEM (becsült, nincs letöltve):** HU ~26,7 M minta 3″-en → ~53 MB nyers `int16`; 6″-en ~13 MB.
   Sima síkságon jól tömörül; a tényleges méret a spike-ban mérendő.
-- **Bicikli-úthálózat:** még nem mérve (OSM HU extract nincs letöltve).
+- **Bicikli-úthálózat (mért, Overpass API-ból, 2026-10-06):** a HU területen a bicikli-szűrésre
+  illeszkedő utak száma **992 156** (`out count`). Mintavétel 6 db 0,2°×0,2°-os dobozon (96 951 út):
+  átlag **6,5 csomópont-hivatkozás/út**, a csomópontok ~72%-a egyedi. Becsült geometria-pontszám
+  országosan **~6,45 M**. Bináris becslés: `Int32` 1e-5 fokos kvantálással (mint a turistaút-gráf)
+  ~52 MB nyersen; delta-kódolt `Int16` tengelyekkel ~26 MB nyersen; plusz út-fejlécek ~6 MB;
+  deflate után a tényleges érték ettől lényegesen kisebb lehet. **Felső becslés:** a szűrő szélesebb
+  a végső profilnál (`footway`/`steps` csak `bicycle=yes|designated` esetén kerül be), a végleges
+  szám ennél kisebb.
+- **DEM 3″ döntés:** a felhasználó a 3″ (pontosabb, nagyobb) felbontást választotta; a nyers
+  becslés ~53–57 MB `int16`, tömörítve még mérendő.
 - **APK-növekmény:** még nem mérve (release build nem készült).
 
-**Felhasználói döntés (2026-10-06):** a becsült méret elfogadható, az 1. fázis indulhat. A
-tényleges (mért) csomagméret és az APK-delta ismeretében **újra rá kell kérdezni**, hogy megfelel-e.
+**Felhasználói döntések (2026-10-06):**
+- A geo csomag az **APK-ba épül** (csomag-tárolás: (a)). A build-idő / telepítési lassulás később
+  újra mérhető, ha zavaró lesz; első körben a teljes backend-offline first szabály érvényes.
+- DEM-felbontás: **3″**.
+- A bicikli-hálózat méréséhez az **Overpass API** (a 104-es importhoz hasonlóan) a mérési forrás.
+- Korábbi döntés: a becsült méret elfogadható, az 1. fázis indulhat. A **mért** csomagméret és az
+  APK-delta ismeretében **újra rá kell kérdezni**, hogy megfelel-e.
 
 ## Lezáráskor (on-done)
 
