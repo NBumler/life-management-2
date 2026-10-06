@@ -377,9 +377,9 @@ Becsült).** Az ECO külön, `deferred` jegyben tartva: [[153-biciklizes-eco-ene
 - **DEM (becsült, nincs letöltve):** HU ~26,7 M minta 3″-en → ~53 MB nyers `int16`; 6″-en ~13 MB.
   Sima síkságon jól tömörül; a tényleges méret a spike-ban mérendő.
 - **Bicikli-úthálózat (mért, Overpass API-ból, 2026-10-06):** a HU területen a bicikli-szűrésre
-  illeszkedő utak száma **992 156** (`out count`). Mintavétel 6 db 0,2°×0,2°-os dobozon (96 951 út):
-  átlag **6,5 csomópont-hivatkozás/út**, a csomópontok ~72%-a egyedi. Becsült geometria-pontszám
-  országosan **~6,45 M**. Bináris becslés: `Int32` 1e-5 fokos kvantálással (mint a turistaút-gráf)
+  illeszkedő utak száma **992 156** (`out count`). Mintavétel 9 db 0,2°×0,2°-os dobozon (122 417 út; egy
+  doboz Overpass-hibával kiesett): átlag **6,40 csomópont-hivatkozás/út**, a csomópontok ~76%-a
+  egyedi. Becsült geometria-pontszám országosan **~6,35 M**. Bináris becslés: `Int32` 1e-5 fokos kvantálással (mint a turistaút-gráf)
   ~52 MB nyersen; delta-kódolt `Int16` tengelyekkel ~26 MB nyersen; plusz út-fejlécek ~6 MB;
   deflate után a tényleges érték ettől lényegesen kisebb lehet. **Felső becslés:** a szűrő szélesebb
   a végső profilnál (`footway`/`steps` csak `bicycle=yes|designated` esetén kerül be), a végleges
