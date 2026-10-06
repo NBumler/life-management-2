@@ -1,15 +1,21 @@
 ---
 id: 105
 type: feature
-status: done
+status: blocked
 title: Túra — offline térkép-letöltés és offline útvonalszámítás
 specs: []
 flag: menu.tura
 created: 2026-09-13
-closed: 2026-09-16
+closed:
 ---
 
 # 105 — Túra — offline térkép-letöltés és offline útvonalszámítás
+
+> **Részben kész, blokkolva (2026-10-06):** a régiónkénti letöltés és a cache-olt térkép kész; az
+> útvonalszámítás csak **korábban letöltött** régión belül működik. Ha a telefon soha nem
+> töltötte le a területet, nincs turistaút-adat és nincs offline útvonal — a letöltés a backendről
+> kéri a szakaszokat. A teljes offline (build asset) változat a [[151-tura-backend-offline-first-szabalysertesek]]
+> turistaút-gráf pontján, a #150 méret-jóváhagyására vár.
 
 ## Motiváció / probléma
 
@@ -29,6 +35,9 @@ delta-sync) más entitásokra épül, térképi csempe-/vektoradat offline táro
 - [x] Az offline térkép-tárolás módja explicit rákötve a [[Backend-offline first]] kontraktra:
       melyik connectivity-state-ben mi működik (`ONLINE`, `BACKEND_OFFLINE`, `FULL_OFFLINE`) — ld.
       "### Megvalósítás" alább.
+- [ ] Turistaút-adat és útvonalszámítás letöltés nélkül is: friss telepítés, soha nem letöltött
+      régió, repülőgép mód — a turistaút-gráf build asset (ld. [[151-tura-backend-offline-first-szabalysertesek]]).
+      **Blokkolva a #150 méret-jóváhagyásán.**
 
 ## Terv / döntési napló
 
@@ -106,14 +115,16 @@ delta-sync) más entitásokra épül, térképi csempe-/vektoradat offline táro
 - **Tudatos korlátok**: (1) csak az OSM alaptérkép tölthető le, a többi réteg online-only marad;
   (2) egy "régió" a letöltéskori térkép-viewport bbox-a, nincs közigazgatási/szabadon rajzolt
   terület-választás; (3) a letöltés best-effort — egy-egy sikertelen csempe-letöltés csendben
-  kimarad, nem hiúsítja meg a teljes régiót.
+  kimarad, nem hiúsítja meg a teljes régiót; (4) **a turistaút-szakaszokat a letöltés a backendről
+  kéri** — ez a régió-letöltéshez szükséges online kapcsolat, és a 151-es jegy szerint a
+  "soha nem letöltött" eszköz számára szabálysértés, amíg a gráf nem build asset.
 
 ## Lezáráskor (on-done)
 
 - Frissített specek: nincs — a `documentation/` spec a teljes 103–111 ticket-család befejezése után
   készül el, a 102-es esernyő-ticket döntése szerint.
-- `IMPLEMENTATION_STATUS.md` sor: 2026-09-16 — #105 (offline térkép-letöltés + offline
-  útvonalszámítás, 4. fázis)
+- `IMPLEMENTATION_STATUS.md` sor: 2026-09-16 — #105 részleges (letöltés + cache kész, a teljes
+  offline útvonal blokkolva a 151/150 build-asset ponton).
 - Kód: `frontend/src/app/pages/menu/tura/offline-*.ts` (új), `core/data/trail-segment.repository.ts`
   + `core/data/route-suggestion.repository.ts` (offline fallback), `@capacitor/filesystem` új
   függőség — nincs backend-változás.

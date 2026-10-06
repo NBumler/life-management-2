@@ -147,18 +147,13 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
   `autocapitalize="sentences"`-t kapott — korábban egyáltalán nem kapitalizált a natív billentyűzet,
   pedig a legtöbb route/crag/sector név tulajdonnévként nagybetűvel kezdődik. (Javítva ugyanaznap:
   az eredeti implementáció tévesen `autocapitalize="off"`-ot állított be egy félreértés miatt.)
-- **2026-09-16 — #105** Túra — offline térkép-letöltés és offline útvonalszámítás. Új "Offline
-  területek" panel (csak natív platformon): a felhasználó letöltheti az aktuális térkép-viewportot
-  (z12–z15, max. 2500 csempe/régió) az alapértelmezett OSM alaptérkép-rétegből, Capacitor
-  Filesystem-be mentve (`Directory.Data`) — a topo/szatellit/hillshade réteg tudatosan online-only
-  marad. Egy `tura-offline-tile://` MapLibre-protokoll fűzi a letöltött csempe-cache-t a hálózati
-  kérés elé, hogy BACKEND_OFFLINE/FULL_OFFLINE alatt is megjelenjen a korábban letöltött terület.
-  Offline útvonalszámítás: a backend `RouteSuggestionService` A* gráf-keresésének 1:1 TS-portja
-  (`offline-route-graph.ts`), amit a `TrailSegmentRepository`/`RouteSuggestionRepository` a hálózati
-  hívás hibájára automatikusan aktivál — nincs külön "offline mód" kapcsoló. Nincs backend-változás.
-  A natív-only letöltés/cache/valódi-offline-routing útvonal fizikai eszközön nem lett
-  végigtesztelve ebben a körben (csak kódszinten/unit teszttel ellenőrizve). Részletek: `backlog/
-  archive/105-tura-offline-terkep-es-utvonalszamitas.md`.
+- **2026-09-16 — #105 (részleges, blokkolva 2026-10-06)** Túra — offline térkép-letöltés
+  régiónként: "Offline területek" panel (csak natív platformon), a viewport letölthető az OSM
+  alaptérkép-rétegből (z12–z15, max. 2500 csempe), Capacitor Filesystemben, MapLibre-protokollal a
+  cache a hálózati kérés elé fűzve. Offline útvonalszámítás: a backend A*-jának TS-portja, de csak
+  **letöltött régión belül** — a turistaút-adat a letöltéskor a backendről jön; a teljes offline
+  (build asset) a 151/150 jegyekre vár. Natív eszközön nem lett végigtesztelve. Részletek: `backlog/
+  tura-utvonaltervezo/105-tura-offline-terkep-es-utvonalszamitas.md`.
 - **2026-09-16 — #104** Túra — turistaút-adatforrás integráció. Valós, teljes országos magyar
   turistaút-hálózat (230 611 szakasz, 6375 OSM `route=hiking` reláció) betöltve a `trail_segment`
   táblába — kézzel indítható `scripts/import-hiking-trails.mjs` script tölti le Overpass API-ból
