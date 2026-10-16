@@ -432,6 +432,49 @@ valódi `frontend/src/assets/geo/` csomaggal (asztali gép, a telefon lassabb le
   Okok: a `RouteGraph` sztring-kulcsokkal épít, a `snapToNearestEdge` minden élre végigmegy.
   Következő lépés: térbeli index a illesztéshez, és egész csomópont-azonosítók, vagy a gráf
   csempénkénti gyorsítótárazása.
+
+### Routing-teljesítmény, 2. kör (2026-10-17)
+
+Három változás a `core/geo/route-graph.ts`-ben és a `routing.service.ts`-ben, a fenti mérés alapján:
+
+1. **Egész csomópont-azonosító** a korábbi sztring-kulcs helyett (beágyazott `Map<number, Map<number,
+   number>>` a dedup-hoz építéskor, utána sima egész index). A nyilvános felület (a csomópont-
+   azonosító típusa, egyébként átlátszó) `string`-ről `number`-re vált, minden hívó (`offline-route-
+   graph.ts`, `bike-routing-profile.ts`, `routing.service.ts`) ettől függetlenül működik.
+2. **Rácsos térbeli index** (`SNAP_GRID_CELL_DEG = 0,01°`) a `snapToNearestEdge`-hez: a teljes
+   élhalmaz helyett csak a pont körüli, a `maxDistanceMeters`-nek megfelelő cellákat nézi át.
+3. **Gráf-gyorsítótár** a `RoutingService`-ben, az érintett csempe-fájlnevek szerint kulcsolva (max 3,
+   FIFO-kiszorítás) — ha a felhasználó ugyanabban a térségben próbál több útvonalat, a gráfot csak az
+   első lekérdezés építi fel.
+
+**Újramérve, ugyanazokon a valódi útvonalakon:**
+
+| Útvonal | Előtte (teljes idő) | Utána (teljes idő) | Keresés (illesztés + A*) előtte → utána |
+|---|---|---|---|
+| Budapest centrum → Budakeszi (11 km) | 8,2 s | 3,1 s | 2,4 s → 0,1 s |
+| Budapest → Gödöllő (33 km) | 8,4 s | 7,2 s | 3,6 s → 1,1 s |
+| Budapest → Esztergom (47 km) | 12,4 s | 7,5 s | 6,1 s → 1,7 s |
+
+- A **keresési fázis** (illesztés + A*) a rácsos index után szinte elhanyagolható (0,1–1,7 s, korábban
+  2,4–6,1 s volt) — ez a tervezett javítás bejött.
+- A **gráf-építés maradt a fő költség** (2,9–5,6 s): minden lekérdezés a bbox teljes úthálózatát
+  dekódolja gráffá, függetlenül attól, hogy a végső útvonal melyik szakaszt használja ténylegesen.
+  A gyorsítótár ezt csak **ismételt** lekérdezésnél spórolja meg (ugyanaz a térség, más start/cél) —
+  ez valós használati mintát fed le (a felhasználó egy térségben próbálgat), de az **első** (hideg)
+  lekérdezést nem gyorsítja.
+- **A < 2 s / 50 km cél hideg lekérdezésre így sem teljesül** (3,1–7,5 s, asztali gépen — telefonon
+  ennél lassabb lesz). Ha ez a cél nem alkudható, a következő lépések közül kell választani:
+  - **Web Worker**: nem gyorsítja a számítást, de a fő szálat nem blokkolja — a UI válaszképes marad
+    számítás közben (valószínűleg ez a legjobb ár/érték, mert a felhasználói élményt oldja meg).
+  - **Úttípus-szűrés hosszú útvonalra**: a `residential`/`service` osztályú (apró, sűrű, városi)
+    utakat csak az induló/célpont közeli csempékben tartsuk meg, távolabb csak a nagyobb (bicikliút,
+    másodrendű) hálózatot — kevesebb él, gyorsabb építés, de kerülő utak nélkül.
+  - **Kétszintű keresés**: ritka "gerinc"-gráf (kerékpárút + fő utak) a távoli szakaszhoz, finom gráf
+    csak a start/cél közvetlen környékén — nagyobb átalakítás, nem fér bele ebbe a körbe.
+- Teszt: `routing.service.spec.ts` két új esettel (gyorsítótár-találat ugyanazon csempe-halmazon,
+  újraépítés eltérő csempe-halmazon); `geo-asset.service.spec.ts` kiegészítve a
+  `bikeWaysIntersecting` új (`tileFiles` + `ways`) visszatérési alakjára. 1954 teszt zöld, lint és
+  `npm run build` is zöld.
 - **Margitsziget:** a belső pont nem kapott utat. Valószínűleg a sziget belső utai csak gyalogos
   (`footway`, bicycle-tag nélkül), így nincs összefüggő biciklis kapcsolat. Ez adat-lefedettség
   kérdése, nem hibás számítás; a szabály szerint nincs becslés, `null` a válasz.

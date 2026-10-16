@@ -93,11 +93,15 @@ export class GeoAssetService {
 		return null;
 	}
 
-	/** A bbox-ot érintő bicikli-csempék összes útja (a csempék átfedése miatt duplikátumokkal). */
-	async bikeWaysIntersecting(bbox: BboxTuple): Promise<BikeWay[]> {
+	/**
+	 * A bbox-ot érintő bicikli-csempék összes útja (a csempék átfedése miatt duplikátumokkal), a
+	 * `tileFiles`-szel együtt — a `RoutingService` ebből képez gráf-gyorsítótár kulcsot, hogy ugyanazt
+	 * a térséget ne építse fel újra minden lekérdezésnél.
+	 */
+	async bikeWaysIntersecting(bbox: BboxTuple): Promise<{ tileFiles: string[]; ways: BikeWay[] }> {
 		const manifest = await this.manifest();
 		if (!manifest) {
-			return [];
+			return { tileFiles: [], ways: [] };
 		}
 		const tiles = manifest.bike.filter((tile) => bboxesIntersect(tile.bbox, bbox));
 		const perTile = await Promise.all(tiles.map((tile) => this.loadBike(tile)));
@@ -107,7 +111,7 @@ export class GeoAssetService {
 				ways.push(way);
 			}
 		}
-		return ways;
+		return { tileFiles: tiles.map((tile) => tile.file), ways };
 	}
 
 	private loadDem(tile: GeoManifestDemTile): Promise<DemGrid> {

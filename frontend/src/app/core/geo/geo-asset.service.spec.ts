@@ -52,7 +52,7 @@ describe('GeoAssetService', () => {
 
 		expect(await service.covers(19.5, 47.5)).toBeFalse();
 		expect(await service.elevationAt(19.5, 47.5)).toBeNull();
-		expect(await service.bikeWaysIntersecting([19, 47, 20, 48])).toEqual([]);
+		expect(await service.bikeWaysIntersecting([19, 47, 20, 48])).toEqual({ tileFiles: [], ways: [] });
 	});
 
 	it('answers coverage from the manifest bbox', async () => {
@@ -79,5 +79,17 @@ describe('GeoAssetService', () => {
 		await loadManifest(MANIFEST);
 
 		expect(await service.elevationAt(19.9, 47.9)).toBeNull();
+	});
+
+	it('bikeWaysIntersecting(): reports which tile files matched, for the caller to key a cache on', async () => {
+		await loadManifest(MANIFEST);
+
+		const pending = service.bikeWaysIntersecting([19.1, 47.1, 19.2, 47.2]);
+		// A manifest már betöltve van, a csempe kérése a következő microtask-ban indul.
+		await new Promise((resolve) => setTimeout(resolve));
+		const req = http.expectOne('assets/geo/bike/a.bin');
+		req.flush(new Uint8Array([0x4c, 0x4d, 0x42, 0x4b, 1, 0, 0, 0, 0, 0, 0, 0]).buffer);
+
+		expect(await pending).toEqual({ tileFiles: ['bike/a.bin'], ways: [] });
 	});
 });
