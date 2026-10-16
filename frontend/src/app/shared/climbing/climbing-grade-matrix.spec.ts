@@ -16,15 +16,62 @@ describe('climbing-grade-matrix', () => {
     expect(BOULDER_SCALES).toEqual(['FONT', 'V_SCALE']);
   });
 
+  // backlog/155 — the French / Font 3–5 band (optional sub-letter) may share indices; everything
+  // else is one label per integer. The band is checked in an explicit easiest-first order because
+  // `Object.entries` lists integer-like keys (`'3'`, `'4'`, `'5'`) first, not in table order.
+  const SHARED_LOW_BAND = /^[345]([a-cA-C]\+?)?$/;
+  const LOW_BAND_ORDER: Partial<Record<ClimbingScale, readonly string[]>> = {
+    // The bare French 5 (= 9, pre-155 anchor) sits below 5a; the other bare steps mid-letter.
+    FRENCH: ['3a', '3a+', '3', '3b', '3b+', '3c', '3c+', '4a', '4a+', '4', '4b', '4b+', '4c', '4c+',
+      '5', '5a', '5a+', '5b', '5b+', '5c', '5c+'],
+    FONT: ['3A', '3A+', '3', '3B', '3B+', '3C', '3C+', '4A', '4A+', '4', '4B', '4B+', '4C', '4C+',
+      '5A', '5A+', '5', '5B', '5B+', '5C', '5C+'],
+  };
+
   for (const scale of ['FRENCH', 'YDS', 'UIAA', 'FONT', 'V_SCALE'] as ClimbingScale[]) {
-    it(`${scale}: indices are strictly increasing and unique`, () => {
-      const values = Object.values(CLIMBING_GRADE_MATRIX[scale]);
-      for (let i = 1; i < values.length; i += 1) {
-        expect(values[i]).toBeGreaterThan(values[i - 1]);
+    it(`${scale}: indices strictly increase outside the 3–5 band and never decrease within it`, () => {
+      const entries = Object.entries(CLIMBING_GRADE_MATRIX[scale]);
+      const isLowBand = (label: string) => (scale === 'FRENCH' || scale === 'FONT') && SHARED_LOW_BAND.test(label);
+      const upper = entries.filter(([label]) => !isLowBand(label)).map(([, index]) => index);
+      for (let i = 1; i < upper.length; i += 1) {
+        expect(upper[i]).toBeGreaterThan(upper[i - 1]);
       }
-      expect(new Set(values).size).toBe(values.length);
+      const order = LOW_BAND_ORDER[scale];
+      if (order) {
+        expect(entries.filter(([label]) => isLowBand(label)).length).toBe(order.length);
+        const low = order.map((label) => gradeToIndex(scale, label) as number);
+        for (let i = 1; i < low.length; i += 1) {
+          expect(low[i]).withContext(order[i]).toBeGreaterThanOrEqual(low[i - 1]);
+        }
+        expect(upper[0]).toBeGreaterThan(low[low.length - 1]);
+      }
     });
   }
+
+  it('covers every 3–5 French / Font step with and without its optional sub-letter (backlog/155)', () => {
+    for (const digit of ['3', '4', '5']) {
+      expect(gradeToIndex('FRENCH', digit)).not.toBeNull();
+      expect(gradeToIndex('FONT', digit)).not.toBeNull();
+      for (const letter of ['a', 'b', 'c']) {
+        for (const plus of ['', '+']) {
+          expect(gradeToIndex('FRENCH', `${digit}${letter}${plus}`)).withContext(`${digit}${letter}${plus}`).not.toBeNull();
+          expect(gradeToIndex('FONT', `${digit}${letter.toUpperCase()}${plus}`))
+            .withContext(`${digit}${letter.toUpperCase()}${plus}`)
+            .not.toBeNull();
+        }
+      }
+    }
+    // The bare French steps keep their pre-155 indices; Font 3–5 is aligned to the V-Scale.
+    expect(gradeToIndex('FRENCH', '3')).toBe(2);
+    expect(gradeToIndex('FRENCH', '4')).toBe(6);
+    expect(gradeToIndex('FRENCH', '5')).toBe(9);
+    expect(gradeToIndex('FONT', '3')).toBe(5);
+    expect(gradeToIndex('FONT', '4')).toBe(8);
+    expect(gradeToIndex('FONT', '4C+')).toBe(gradeToIndex('V_SCALE', 'V0'));
+    expect(gradeToIndex('FONT', '5')).toBe(gradeToIndex('V_SCALE', 'V1'));
+    expect(gradeToIndex('FONT', '5C')).toBe(gradeToIndex('V_SCALE', 'V2'));
+    expect(gradeToIndex('FONT', '6A')).toBe(gradeToIndex('V_SCALE', 'V3'));
+  });
 
   it('reproduces the fixed anchor rows verbatim (French / UIAA / YDS / V-Scale)', () => {
     // matrix.md "Referencia-anchor tábla" — the hand-confirmed 10–20 rows and their extension.
@@ -65,14 +112,14 @@ describe('climbing-grade-matrix', () => {
   });
 
   it('aligns cross-scale grades at the shared anchor indices', () => {
-    // index 14: French 6a · UIAA VI · YDS 5.10a · V2 · Font 5
+    // index 14: French 6a · UIAA VI · YDS 5.10a · V2 · Font 5C
     expect(
       [
         gradeToIndex('FRENCH', '6a'),
         gradeToIndex('UIAA', 'VI'),
         gradeToIndex('YDS', '5.10a'),
         gradeToIndex('V_SCALE', 'V2'),
-        gradeToIndex('FONT', '5'),
+        gradeToIndex('FONT', '5C'),
       ],
     ).toEqual([14, 14, 14, 14, 14]);
     // index 20: French 7a · UIAA VIII- · YDS 5.11c · V5 · Font 6C

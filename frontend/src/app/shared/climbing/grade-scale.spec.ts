@@ -114,7 +114,7 @@ describe('grade-scale', () => {
         jasmine.objectContaining({ status: 'VALID', scale: 'FRENCH', absoluteDifficultyIndex: 9 }),
       );
       expect(parseGrade('4', 'BOULDER')).toEqual(
-        jasmine.objectContaining({ status: 'VALID', scale: 'FONT', absoluteDifficultyIndex: 12 }),
+        jasmine.objectContaining({ status: 'VALID', scale: 'FONT', absoluteDifficultyIndex: 8 }),
       );
     });
 
@@ -127,9 +127,43 @@ describe('grade-scale', () => {
         jasmine.objectContaining({ status: 'VALID', scale: 'FRENCH', absoluteDifficultyIndex: 2 }),
       );
       expect(parseGrade('3', 'BOULDER')).toEqual(
-        jasmine.objectContaining({ status: 'VALID', scale: 'FONT', absoluteDifficultyIndex: 10 }),
+        jasmine.objectContaining({ status: 'VALID', scale: 'FONT', absoluteDifficultyIndex: 5 }),
       );
       expect(parseGrade('2', 'ROPE').status).toBe('AMBIGUOUS');
+    });
+
+    // backlog/155 — 3–5 take an optional sub-letter (6 up it stays mandatory).
+    it('accepts an optional sub-letter on the 3–5 French / Font steps', () => {
+      expect(parseGrade('5A', 'BOULDER')).toEqual(
+        jasmine.objectContaining({ status: 'VALID', scale: 'FONT', absoluteDifficultyIndex: 11 }),
+      );
+      expect(parseGrade('3c+', 'BOULDER')).toEqual(
+        jasmine.objectContaining({ status: 'VALID', normalized: '3C+', scale: 'FONT', absoluteDifficultyIndex: 7 }),
+      );
+      expect(parseGrade('4b', 'ROPE')).toEqual(
+        jasmine.objectContaining({ status: 'VALID', scale: 'FRENCH', absoluteDifficultyIndex: 6 }),
+      );
+      expect(parseGrade('5a+', 'ROPE')).toEqual(
+        jasmine.objectContaining({ status: 'VALID', scale: 'FRENCH', absoluteDifficultyIndex: 10 }),
+      );
+      expect(parseGrade('6', 'BOULDER').status).toBe('AMBIGUOUS');
+    });
+
+    it('resolves ranges and shorthands over the new 3–5 sub-letter steps', () => {
+      // Font 5A=11, 5B=12 → 11; 5A+=11 → 11
+      expect(parseGrade('5A/B', 'BOULDER')).toEqual(
+        jasmine.objectContaining({ status: 'VALID', scale: 'FONT', absoluteDifficultyIndex: 11 }),
+      );
+      expect(parseGrade('5A/+', 'BOULDER')).toEqual(
+        jasmine.objectContaining({ status: 'VALID', scale: 'FONT', absoluteDifficultyIndex: 11 }),
+      );
+      // French 4a=5, 4b=6 → 5; 4c=8, 4c+=8 → 8
+      expect(parseGrade('4a/b', 'ROPE')).toEqual(
+        jasmine.objectContaining({ status: 'VALID', scale: 'FRENCH', absoluteDifficultyIndex: 5 }),
+      );
+      expect(parseGrade('4c/+', 'ROPE')).toEqual(
+        jasmine.objectContaining({ status: 'VALID', scale: 'FRENCH', absoluteDifficultyIndex: 8 }),
+      );
     });
 
     it('treats a bare number >= 6 as AMBIGUOUS until a chip is chosen', () => {

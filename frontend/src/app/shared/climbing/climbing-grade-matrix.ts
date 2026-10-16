@@ -8,12 +8,12 @@
  *    UIAA, YDS and V-Scale cells of every anchor row are reproduced here verbatim.
  *  - The Font (boulder) column of the anchor table is acknowledged-inconsistent by the spec
  *    ("±1 alfokozat", repeated `4` / `6A`, non-monotonic `5`). Its self-consistent tail (`6B`=18 …
- *    `8B`=40) is reproduced verbatim; the five broken low cells are rationalised to a strictly
- *    increasing, de-duplicated ladder (`3`=10, `4`=12, `5`=14, `6A`=16) aligned to the V-Scale
- *    anchors it shares a row with — exactly the "interpolate around/between the fixed anchors,
- *    strictly increasing, no repeated labels" mandate of the "Előállítási módszer" section.
- *  - Every label within a scale gets a unique, strictly increasing integer; steps are deliberately
- *    non-uniform (grade difficulty is not linear).
+ *    `8B`=40) is reproduced verbatim; the broken low cells are rationalised against the V-Scale
+ *    anchors (backlog/155: `3`=5, `4`=8, `4C+`=10≈V0, `5`=12≈V1, `5C`=14≈V2, `6A`=16≈V3).
+ *  - Indices never decrease along a scale's table order. From `6a` / `6A` up (and on every
+ *    other scale) each label has its own integer; in the French / Font 3–5 band the optional
+ *    sub-letters (backlog/155) outnumber the free integers, so neighbouring steps may share one.
+ *    Steps are deliberately non-uniform (grade difficulty is not linear).
  *
  * Kept as a client-only TS constant on purpose (not `shared/fixtures/*.json`): the M2a/M2a-o/M2b
  * backend deliberately never computes a grade index — `RouteService` stores `guidebookGrade`
@@ -38,12 +38,29 @@ export const BOULDER_SCALES: readonly ClimbingScale[] = ['FONT', 'V_SCALE'];
 export const CLIMBING_GRADE_MATRIX: Readonly<Record<ClimbingScale, Readonly<Record<string, number>>>> = {
   // Rope — French sport
   FRENCH: {
+    // backlog/155 — 3–5 take an optional sub-letter (6 up it is mandatory). The bare 3 / 4 / 5
+    // keep their indices; the lettered steps share the few integers of the 1–13 band (non-unique).
+    '3a': 1,
+    '3a+': 1,
     '3': 2,
+    '3b': 2,
+    '3b+': 3,
+    '3c': 3,
+    '3c+': 4,
+    '4a': 5,
+    '4a+': 5,
     '4': 6,
+    '4b': 6,
+    '4b+': 7,
+    '4c': 8,
+    '4c+': 8,
     '5': 9,
     '5a': 10,
+    '5a+': 10,
     '5b': 11,
+    '5b+': 11,
     '5c': 12,
+    '5c+': 13,
     '6a': 14,
     '6a+': 15,
     '6b': 16,
@@ -135,9 +152,29 @@ export const CLIMBING_GRADE_MATRIX: Readonly<Record<ClimbingScale, Readonly<Reco
   },
   // Boulder — Fontainebleau
   FONT: {
-    '3': 10,
-    '4': 12,
-    '5': 14,
+    // backlog/155 — 3–5 take an optional sub-letter (6 up it is mandatory), aligned to the V-Scale
+    // (4C+ ≈ V0 = 10, 5 ≈ V1 = 12, 5C ≈ V2 = 14); the lettered steps share the 4–15 band (non-unique).
+    '3A': 4,
+    '3A+': 4,
+    '3': 5,
+    '3B': 5,
+    '3B+': 5,
+    '3C': 6,
+    '3C+': 7,
+    '4A': 7,
+    '4A+': 8,
+    '4': 8,
+    '4B': 8,
+    '4B+': 9,
+    '4C': 9,
+    '4C+': 10,
+    '5A': 11,
+    '5A+': 11,
+    '5': 12,
+    '5B': 12,
+    '5B+': 13,
+    '5C': 14,
+    '5C+': 15,
     '6A': 16,
     '6A+': 17,
     '6B': 18,
