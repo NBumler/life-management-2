@@ -1,13 +1,13 @@
 ---
 id: 154
 type: change-request
-status: ready
+status: done
 title: Active Workout — összecsukható gyakorlatok + kész / nincs kész színjelölés
 specs:
   - "[[Edzésnapló]]"
 flag:
 created: 2026-10-17
-closed:
+closed: 2026-10-17
 ---
 
 # 154 — Active Workout — összecsukható gyakorlatok + kész / nincs kész színjelölés
@@ -38,33 +38,33 @@ szintű kész-állapot / összesítés nincs, és a gyakorlatok nem csukhatók �
 
 ### A) Összecsukható gyakorlatok
 
-- [ ] Az Active Workoutban a gyakorlat fejlécére (név területére) tappolva a gyakorlat törzse
+- [x] Az Active Workoutban a gyakorlat fejlécére (név területére) tappolva a gyakorlat törzse
       (szett-táblázat, „Legutóbb” sor, javaslat, „+ Új szett” stb.) összecsukódik / kinyílik;
       a fejlécen chevron jelzi az állapotot. A ⋮ gomb tapja továbbra is csak az action sheetet
       nyitja, nem csuk.
-- [ ] Összecsukott állapotban a fejlécen látszik egy rövid összesítő (pl. „3 / 4 szett”).
-- [ ] Alapértelmezés edzés indításakor: minden gyakorlat nyitva.
-- [ ] Amikor egy gyakorlat **utolsó** nyitott szettjét kipipálom (a gyakorlat ezzel késszé válik),
+- [x] Összecsukott állapotban a fejlécen látszik egy rövid összesítő (pl. „3 / 4 szett”).
+- [x] Alapértelmezés edzés indításakor: minden gyakorlat nyitva.
+- [x] Amikor egy gyakorlat **utolsó** nyitott szettjét kipipálom (a gyakorlat ezzel késszé válik),
       a gyakorlat **automatikusan összecsukódik**. Kézzel újra kinyitható; egy pipa visszavétele
       nem nyitja ki magától.
-- [ ] Az összecsukott állapot a helyi piszkozattal együtt megmarad: app-újraindítás /
+- [x] Az összecsukott állapot a helyi piszkozattal együtt megmarad: app-újraindítás /
       „Folytatás” után ugyanazok a gyakorlatok vannak összecsukva.
-- [ ] Az összecsukott állapot tisztán kliensoldali UI-állapot: nem kerül a `WorkoutSession`
+- [x] Az összecsukott állapot tisztán kliensoldali UI-állapot: nem kerül a `WorkoutSession`
       payloadba, nincs OpenAPI / Flyway / outbox-változás.
-- [ ] ~360 px szélességen (Galaxy A55) a fejléc nem tördel két sorba a chevron / összesítő miatt.
+- [x] ~360 px szélességen (Galaxy A55) a fejléc nem tördel két sorba a chevron / összesítő miatt.
 
 ### B) Kész / nincs kész színjelölés
 
-- [ ] Egy gyakorlat **kész**, ha legalább egy szettje van és **minden** szettje kipipált
+- [x] Egy gyakorlat **kész**, ha legalább egy szettje van és **minden** szettje kipipált
       (`isCompleted = true`); egyébként **nincs kész**.
-- [ ] Kész gyakorlat fejléce zöld, nem kész gyakorlaté piros jelölést kap (pl. bal oldali
+- [x] Kész gyakorlat fejléce zöld, nem kész gyakorlaté piros jelölést kap (pl. bal oldali
       színsáv / fejléc-háttér); **szett nélküli** gyakorlat **szürke** (semleges). A színek a téma
       (light / dark) tokenjeiből jönnek, mindkét témában olvashatóan.
-- [ ] Az utolsó szett kipipálásakor / egy pipa visszavételekor a szín azonnal vált (signal-alapú
+- [x] Az utolsó szett kipipálásakor / egy pipa visszavételekor a szín azonnal vált (signal-alapú
       computed, OnPush).
-- [ ] A szín mellett nem csak színnel kódolt jel is van (pl. ✓ ikon a kész gyakorlaton), hogy
+- [x] A szín mellett nem csak színnel kódolt jel is van (pl. ✓ ikon a kész gyakorlaton), hogy
       színtévesztőknek is egyértelmű legyen.
-- [ ] Unit teszt a kész-állapot számításra (üres szettlista → szürke, részben kész → piros,
+- [x] Unit teszt a kész-állapot számításra (üres szettlista → szürke, részben kész → piros,
       mind kész → zöld) és az automatikus összecsukásra.
 
 ## Terv / döntési napló
@@ -83,7 +83,8 @@ szintű kész-állapot / összesítés nincs, és a gyakorlatok nem csukhatók �
 
 ## Lezáráskor (on-done)
 
-- Frissített specek: [[Edzésnapló]] — `### UI/UX elvárások`: összecsukható gyakorlatok +
-  kész-színjelölés az Active Workoutban
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — <mit>
-- Kód: `frontend/src/app/pages/workout/log/active-workout.page.*`
+- Frissített specek: [[Edzésnapló]] — `### UI/UX elvárások`: új „Összecsukható gyakorlatok +
+  kész-jelölés” bullet; `#### Backend-offline`: kliensoldali, outbox-hatás nélküli állapot
+- `IMPLEMENTATION_STATUS.md` sor: 2026-10-17 — #154 Active Workout összecsukható gyakorlatok + kész színjelölés
+- Kód: `pages/workout/log/active-workout.page.*`, `pages/workout/log/workout-fields.ts` (`exerciseStatus`),
+  `core/data/workout-draft.service.ts` (`ActiveExerciseDraft.collapsed`), i18n `hu.json` / `en.json`

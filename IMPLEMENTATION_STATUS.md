@@ -14,6 +14,10 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-17 — #154** Active Workout: a gyakorlat-kártyák a fejlécre tappolva összecsukhatók, az utolsó szett
+  kipipálásakor automatikusan összecsukódnak (az állapot a piszkozattal megmarad); bal oldali színsáv: zöld = kész,
+  piros = van nyitott szett, szürke = nincs szett, kész gyakorlaton ✓.
+  Érintett: [[Edzésnapló]]; kód: `pages/workout/log`, `core/data/workout-draft.service.ts`
 - **2026-10-02 — #152** Nehézségi szint: a V-skála elfogadja a `V0` alatti `VB` („V-Basic”) boulder-fokozatot
   (`absoluteDifficultyIndex` 8; kisbetűvel és `VB/V0` tartományként is), a boulder-súgó szövege frissítve (hu + en).
   Érintett: [[Nehézségi szint skálája]], [[Nehézségi szint skálája (konverziós mátrix)]]
