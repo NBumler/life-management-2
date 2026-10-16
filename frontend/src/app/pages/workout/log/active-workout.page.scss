@@ -19,44 +19,9 @@
   padding: 0 16px 4px;
 }
 
-// backlog/154 — the exercise card's done state as a left stripe (green = every set ticked, red = sets
-// still open, grey = no sets yet) plus a ✓ mark, so the colour is never the only cue
-.exercise-card {
-  --exercise-status-color: var(--ion-color-medium);
-  border-left: 4px solid var(--exercise-status-color);
-
-  &[data-status='OPEN'] {
-    --exercise-status-color: var(--ion-color-danger);
-  }
-
-  &[data-status='DONE'] {
-    --exercise-status-color: var(--ion-color-success);
-  }
-}
-
-.exercise-head {
-  cursor: pointer;
-
-  h2 {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-}
-
+// backlog/154 — the header name truncates between the collapse chevron and the ✓ mark
 .exercise-name {
-  min-width: 0;
+  margin: 0 4px;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.collapse-chevron {
-  flex: none;
-  color: var(--ion-color-medium);
-}
-
-.done-mark {
-  flex: none;
-  color: var(--exercise-status-color);
 }

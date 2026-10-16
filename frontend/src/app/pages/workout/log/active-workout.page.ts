@@ -175,6 +175,8 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
   readonly setTypes = SET_TYPES;
   readonly visibleFields = visibleFields;
   readonly sideMark = sideMark;
+  /** backlog/154 — the card's left stripe: green = every set ticked, red = sets still open, grey = no sets yet. */
+  readonly statusColors: Record<ExerciseStatus, string> = { EMPTY: 'medium', OPEN: 'danger', DONE: 'success' };
 
   private sessionId = '';
   private startedAtMs = 0;

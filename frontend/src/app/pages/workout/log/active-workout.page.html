@@ -65,7 +65,7 @@
   @for (row of exercises(); track row.id) {
     @let status = statusOf(row);
     @let collapsed = row.collapsed();
-    <ion-list class="exercise-card" [attr.data-status]="status">
+    <ion-list class="exercise-card" [attr.data-status]="status" [style.border-left]="'4px solid var(--ion-color-' + statusColors[status] + ')'">
       <ion-item lines="none">
         <ion-label
           class="exercise-head"
@@ -76,11 +76,11 @@
           (click)="toggleCollapsed(row)"
           (keydown.enter)="toggleCollapsed(row)"
         >
-          <h2>
-            <ion-icon class="collapse-chevron" [name]="collapsed ? 'chevron-forward-outline' : 'chevron-down-outline'" aria-hidden="true"></ion-icon>
+          <h2 class="ion-display-flex ion-align-items-center">
+            <ion-icon color="medium" [name]="collapsed ? 'chevron-forward-outline' : 'chevron-down-outline'" aria-hidden="true"></ion-icon>
             <span class="exercise-name">{{ row.exerciseName }}</span>
             @if (status === 'DONE') {
-              <ion-icon class="done-mark" name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
+              <ion-icon class="done-mark" color="success" name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
             }
           </h2>
           @if (collapsed) {
