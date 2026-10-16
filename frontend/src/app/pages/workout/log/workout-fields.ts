@@ -165,3 +165,13 @@ export function sideMark(side: SetSide | null | undefined): string {
 export function nextSide(previous: SetSide | null | undefined): SetSide | null {
   return previous === 'LEFT' ? 'RIGHT' : previous === 'RIGHT' ? 'LEFT' : null;
 }
+
+/** backlog/154 — an exercise's progress in the live view: no sets yet, some sets open, every set ticked. */
+export type ExerciseStatus = 'EMPTY' | 'OPEN' | 'DONE';
+
+export function exerciseStatus(completed: readonly boolean[]): ExerciseStatus {
+  if (completed.length === 0) {
+    return 'EMPTY';
+  }
+  return completed.every((done) => done) ? 'DONE' : 'OPEN';
+}

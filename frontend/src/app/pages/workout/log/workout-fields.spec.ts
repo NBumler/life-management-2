@@ -3,6 +3,7 @@ import { WorkoutPlanExercise } from '../../../api/model/workoutPlanExercise';
 import { WorkoutPlanSet } from '../../../api/model/workoutPlanSet';
 import { WorkoutSetEntry } from '../../../api/model/workoutSetEntry';
 import {
+  exerciseStatus,
   nextSide,
   sideMark,
   PLAN_TO_ENTRY_CATEGORY,
@@ -130,6 +131,15 @@ describe('workout-fields', () => {
       expect(sideMark('LEFT')).toBe('◀');
       expect(sideMark('RIGHT')).toBe('▶');
       expect(sideMark(null)).toBe('');
+    });
+  });
+
+  describe('exerciseStatus (backlog/154)', () => {
+    it('is EMPTY without sets, OPEN while a set is unticked, DONE once every set is ticked', () => {
+      expect(exerciseStatus([])).toBe('EMPTY');
+      expect(exerciseStatus([true, false])).toBe('OPEN');
+      expect(exerciseStatus([false])).toBe('OPEN');
+      expect(exerciseStatus([true, true])).toBe('DONE');
     });
   });
 });

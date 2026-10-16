@@ -1031,7 +1031,9 @@
       "PR_VOLUME": "Volumen PR",
       "REPS_TARGET": "cél: {{range}}",
       "LAST_TIME": "Legutóbb ({{date}}): {{summary}}",
-      "SUGGESTION": "Javaslat: {{weight}} kg"
+      "SUGGESTION": "Javaslat: {{weight}} kg",
+      "SETS_DONE": "{{done}} / {{total}} szett",
+      "TOGGLE_EXERCISE": "Gyakorlat összecsukása / kinyitása"
     },
     "SESSION": {
       "NEW_TITLE": "Új edzés",

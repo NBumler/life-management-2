@@ -45,6 +45,8 @@ export interface ActiveExerciseDraft {
   defaultRestTimeSeconds: number | null;
   /** backlog/133 — the plan exercise's cue ("szék: 5"), shown under the name; display-only, never saved. */
   planNotes?: string | null;
+  /** backlog/154 — the exercise card is collapsed in the live view; display-only, never saved. */
+  collapsed?: boolean;
   sets: ActiveSetDraft[];
 }
 

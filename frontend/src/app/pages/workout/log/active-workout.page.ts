@@ -56,6 +56,8 @@ import {
   SET_TYPES,
   SetSide,
   WORKOUT_TYPES,
+  ExerciseStatus,
+  exerciseStatus,
   formatStopwatch,
   moveById,
   nextRestValue,
@@ -105,6 +107,8 @@ interface ExerciseRow {
   defaultRestTimeSeconds: number | null;
   /** backlog/133 — the plan exercise's cue ("szék: 5"), display-only. */
   planNotes: string | null;
+  /** backlog/154 — the card's body (sets, hints) is hidden; kept in the draft so "Folytatás" restores it. */
+  collapsed: WritableSignal<boolean>;
   supersetGroup: WritableSignal<number | null>;
   sets: WritableSignal<SetRow[]>;
 }
@@ -481,15 +485,35 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
 
   /**
    * documentation/Subfeatures/Edzésnapló.md "szett pipa → Rest Timer indul": ticking the set both
-   * marks it done and starts the rest countdown (set override → catalog default → 90s). Un-ticking
-   * just clears the flag.
+   * marks it done and starts the rest countdown (set override → catalog default → 90s). Ticking the
+   * exercise's last open set also collapses its card (backlog/154). Un-ticking just clears the flag.
    */
   toggleComplete(row: ExerciseRow, set: SetRow): void {
     const done = !set.isCompleted();
     set.isCompleted.set(done);
     if (done) {
       this.startRest(set.restTimeSeconds() ?? row.defaultRestTimeSeconds ?? DEFAULT_REST_SECONDS);
+      if (this.statusOf(row) === 'DONE') {
+        row.collapsed.set(true);
+      }
     }
+    void this.persist();
+  }
+
+  // ---- collapse + done colouring (backlog/154) ------------------------------------------------
+
+  statusOf(row: ExerciseRow): ExerciseStatus {
+    return exerciseStatus(row.sets().map((set) => set.isCompleted()));
+  }
+
+  /** "3 / 4 szett" in the collapsed header. */
+  setsDone(row: ExerciseRow): { done: number; total: number } {
+    const sets = row.sets();
+    return { done: sets.filter((set) => set.isCompleted()).length, total: sets.length };
+  }
+
+  toggleCollapsed(row: ExerciseRow): void {
+    row.collapsed.update((collapsed) => !collapsed);
     void this.persist();
   }
 
@@ -607,6 +631,7 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
         supersetGroup: row.supersetGroup(),
         defaultRestTimeSeconds: row.defaultRestTimeSeconds,
         planNotes: row.planNotes,
+        collapsed: row.collapsed(),
         sets: row.sets().map((set) => ({
           id: set.id,
           setType: set.setType(),
@@ -722,6 +747,7 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
       exerciseKind: exercise.exerciseKind,
       defaultRestTimeSeconds: exercise.defaultRestTimeSeconds,
       planNotes: exercise.planNotes ?? null,
+      collapsed: signal(exercise.collapsed ?? false),
       supersetGroup: signal(exercise.supersetGroup),
       sets: signal(
         exercise.sets.map((set) => ({
@@ -755,6 +781,7 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
         exerciseKind: PLAN_TO_ENTRY_KIND[exercise.exerciseKind],
         defaultRestTimeSeconds: this.catalogRestFor(exercise.exerciseId),
         planNotes: exercise.notes ?? null,
+        collapsed: signal(false),
         supersetGroup: signal(exercise.supersetGroup ?? null),
         sets: signal(
           exercise.targetSets
@@ -789,6 +816,7 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
       exerciseKind: result.exerciseKind,
       defaultRestTimeSeconds: this.catalogRestFor(result.exerciseId),
       planNotes: null,
+      collapsed: signal(false),
       supersetGroup: signal<number | null>(null),
       sets: signal([this.emptySetRow(undefined)]),
     };

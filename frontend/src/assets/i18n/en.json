@@ -1031,7 +1031,9 @@
       "PR_VOLUME": "Volume PR",
       "REPS_TARGET": "target: {{range}}",
       "LAST_TIME": "Last time ({{date}}): {{summary}}",
-      "SUGGESTION": "Suggestion: {{weight}} kg"
+      "SUGGESTION": "Suggestion: {{weight}} kg",
+      "SETS_DONE": "{{done}} / {{total}} sets",
+      "TOGGLE_EXERCISE": "Collapse / expand exercise"
     },
     "EXERCISES": {
       "TITLE": "Exercises",

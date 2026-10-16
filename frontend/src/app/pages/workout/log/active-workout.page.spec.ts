@@ -463,4 +463,82 @@ describe('ActiveWorkoutPage', () => {
     expect([set.setType(), set.side(), set.rpe()]).toEqual(['FAILURE', 'RIGHT', 9.5]);
     expect(draftService.draft()?.exercises[0].sets[0].rpe).toBe(9.5);
   });
+
+  it('ticking the last open set turns the card green and auto-collapses it; un-ticking does not reopen (backlog/154)', async () => {
+    await setup();
+    spyOn(component as unknown as { beep: () => void }, 'beep');
+    await component.ngOnInit();
+    component.onPicked([pick()]);
+    const row = component.exercises()[0];
+    component.addSet(row);
+    fixture.detectChanges();
+    const host: HTMLElement = fixture.nativeElement;
+    const card = (): HTMLElement => host.querySelector('.exercise-card') as HTMLElement;
+
+    expect(card().dataset['status']).toBe('OPEN');
+    component.toggleComplete(row, row.sets()[0]);
+    fixture.detectChanges();
+    expect(row.collapsed()).toBeFalse();
+    expect(card().dataset['status']).toBe('OPEN');
+
+    component.toggleComplete(row, row.sets()[1]);
+    fixture.detectChanges();
+    expect(card().dataset['status']).toBe('DONE');
+    expect(row.collapsed()).toBeTrue();
+    expect(host.querySelector('.set-table')).toBeNull();
+    expect(host.querySelector('.done-mark')).not.toBeNull();
+    expect(component.setsDone(row)).toEqual({ done: 2, total: 2 });
+
+    component.toggleComplete(row, row.sets()[1]);
+    fixture.detectChanges();
+    expect(card().dataset['status']).toBe('OPEN');
+    expect(row.collapsed()).toBeTrue();
+  });
+
+  it('an exercise without sets is grey (EMPTY) and the header tap toggles the card (backlog/154)', async () => {
+    await setup();
+    await component.ngOnInit();
+    component.onPicked([pick()]);
+    const row = component.exercises()[0];
+    component.removeSet(row, row.sets()[0]);
+    fixture.detectChanges();
+    const host: HTMLElement = fixture.nativeElement;
+
+    expect((host.querySelector('.exercise-card') as HTMLElement).dataset['status']).toBe('EMPTY');
+    (host.querySelector('.exercise-head') as HTMLElement).click();
+    fixture.detectChanges();
+    expect(row.collapsed()).toBeTrue();
+    expect(host.querySelector('.set-table')).toBeNull();
+    (host.querySelector('.exercise-head') as HTMLElement).click();
+    fixture.detectChanges();
+    expect(row.collapsed()).toBeFalse();
+    expect(host.querySelector('.set-table')).not.toBeNull();
+  });
+
+  it('the collapsed state is kept in the draft and restored on resume (backlog/154)', async () => {
+    await setup();
+    await component.ngOnInit();
+    component.onPicked([pick()]);
+    component.toggleCollapsed(component.exercises()[0]);
+    await Promise.resolve();
+    expect(draftService.draft()?.exercises[0].collapsed).toBeTrue();
+
+    fixture.destroy();
+    fixture = TestBed.createComponent(ActiveWorkoutPage);
+    component = fixture.componentInstance;
+    await component.ngOnInit();
+
+    expect(component.exercises()[0].collapsed()).toBeTrue();
+  });
+
+  it('the collapsed flag never reaches the saved session payload (backlog/154)', async () => {
+    await setup();
+    await component.ngOnInit();
+    component.onPicked([pick()]);
+    component.toggleCollapsed(component.exercises()[0]);
+
+    await component.finish();
+
+    expect(Object.keys(repository.save.calls.mostRecent().args[0].exercises[0])).not.toContain('collapsed');
+  });
 });
