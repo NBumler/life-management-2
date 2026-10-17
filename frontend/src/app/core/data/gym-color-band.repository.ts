@@ -15,7 +15,6 @@ export interface GymColorBandSaveInput {
   gymId: string;
   name: string;
   hexColor: string;
-  variant: GymColorBand.VariantEnum;
   gradeLower: string;
   gradeUpper: string;
   absoluteDifficultyIndexLower: number;
@@ -84,7 +83,6 @@ export class GymColorBandRepository {
       gymId: input.gymId,
       name: input.name,
       hexColor: canonical,
-      variant: input.variant,
       gradeLower: input.gradeLower,
       gradeUpper: input.gradeUpper,
       absoluteDifficultyIndexLower: input.absoluteDifficultyIndexLower,

@@ -76,7 +76,6 @@ class GymColorBandService {
 	private void applyFields(GymColorBandEntity entity, GymColorBand dto) {
 		applyHexColor(entity, dto.getHexColor());
 		entity.setName(dto.getName());
-		entity.setVariant(dto.getVariant().getValue());
 		entity.setGradeLower(dto.getGradeLower());
 		entity.setGradeUpper(dto.getGradeUpper());
 		entity.setAbsoluteDifficultyIndexLower(dto.getAbsoluteDifficultyIndexLower());

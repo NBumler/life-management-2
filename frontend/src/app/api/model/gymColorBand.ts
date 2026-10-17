@@ -20,7 +20,6 @@ export interface GymColorBand {
      * 3- or 6-digit CSS hex, with or without a leading \'#\'. Stored canonicalised.
      */
     hexColor: string;
-    variant: GymColorBand.VariantEnum;
     gradeLower: string;
     gradeUpper: string;
     absoluteDifficultyIndexLower: number;
@@ -30,13 +29,4 @@ export interface GymColorBand {
     readonly createdAt?: string;
     readonly updatedAt?: string;
 }
-export namespace GymColorBand {
-    export const VariantEnum = {
-        Plus: 'PLUS',
-        Minus: 'MINUS',
-        Neutral: 'NEUTRAL'
-    } as const;
-    export type VariantEnum = typeof VariantEnum[keyof typeof VariantEnum];
-}
-
 

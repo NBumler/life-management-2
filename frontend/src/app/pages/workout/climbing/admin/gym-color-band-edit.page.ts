@@ -14,15 +14,12 @@ import {
   IonItem,
   IonList,
   IonNote,
-  IonSelect,
-  IonSelectOption,
   IonTitle,
   IonToolbar,
   NavController,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
-import { GymColorBand } from '../../../../api/model/gymColorBand';
 import { GymColorBandHexConflictError, GymColorBandRepository, GymColorBandSaveInput } from '../../../../core/data/gym-color-band.repository';
 import { parseGrade } from '../../../../shared/climbing/grade-scale';
 import { GradeInputComponent } from '../../../../shared/grade-input/grade-input.component';
@@ -57,8 +54,6 @@ const HEX_PICKER_FALLBACK = '#888888';
     IonItem,
     IonInput,
     IonNote,
-    IonSelect,
-    IonSelectOption,
     TranslatePipe,
     GradeInputComponent,
   ],
@@ -74,8 +69,6 @@ export class GymColorBandEditPage implements OnInit {
   private readonly alertController = inject(AlertController);
   private readonly translate = inject(TranslateService);
 
-  readonly variants = Object.values(GymColorBand.VariantEnum);
-
   readonly bandId = signal<string | null>(null);
   readonly gymId = signal<string>('');
   readonly hexConflict = signal(false);
@@ -83,7 +76,6 @@ export class GymColorBandEditPage implements OnInit {
   readonly form = this.fb.nonNullable.group({
     name: this.fb.nonNullable.control('', [Validators.required]),
     hexColor: this.fb.nonNullable.control('', [Validators.required, Validators.pattern(HEX_PATTERN)]),
-    variant: this.fb.nonNullable.control<GymColorBand.VariantEnum>(GymColorBand.VariantEnum.Neutral),
     gradeLower: this.fb.nonNullable.control('', [Validators.required]),
     gradeUpper: this.fb.nonNullable.control('', [Validators.required]),
   });
@@ -120,7 +112,6 @@ export class GymColorBandEditPage implements OnInit {
       this.form.reset({
         name: existing.name,
         hexColor: existing.hexColor,
-        variant: existing.variant,
         gradeLower: existing.gradeLower,
         gradeUpper: existing.gradeUpper,
       });
@@ -148,7 +139,6 @@ export class GymColorBandEditPage implements OnInit {
       gymId: this.gymId(),
       name: v.name.trim(),
       hexColor: v.hexColor,
-      variant: v.variant,
       gradeLower: this.lowerParse().normalized,
       gradeUpper: this.upperParse().normalized,
       absoluteDifficultyIndexLower: lower,

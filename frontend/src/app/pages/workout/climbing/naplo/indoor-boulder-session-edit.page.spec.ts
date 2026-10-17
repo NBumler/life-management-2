@@ -25,7 +25,6 @@ function band(overrides: Partial<GymColorBand> = {}): GymColorBand {
     gymId: 'g1',
     name: 'Piros',
     hexColor: '#ff0000',
-    variant: GymColorBand.VariantEnum.Neutral,
     gradeLower: '6A',
     gradeUpper: '6B',
     absoluteDifficultyIndexLower: 10,

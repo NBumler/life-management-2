@@ -33,14 +33,13 @@ class GymColorBandServiceTest {
 	}
 
 	private static GymColorBand dto(UUID id, UUID gymId, String hex) {
-		return new GymColorBand(id, gymId, "Piros", hex, GymColorBand.VariantEnum.NEUTRAL, "6A", "6B", 40, 44, false);
+		return new GymColorBand(id, gymId, "Piros", hex, "6A", "6B", 40, 44, false);
 	}
 
 	private static GymColorBandEntity entity(UUID id, UUID userId, UUID gymId, String canonicalHex) {
 		GymColorBandEntity e = new GymColorBandEntity(id, userId, gymId);
 		e.setName("Kék");
 		e.setHexColor(canonicalHex);
-		e.setVariant("NEUTRAL");
 		e.setGradeLower("5C");
 		e.setGradeUpper("6A");
 		e.setAbsoluteDifficultyIndexLower(30);

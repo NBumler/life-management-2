@@ -57,8 +57,10 @@ import { uuidV4 } from './uuid';
  * - v17 → v18 (backlog/144): `WeeklyPlanSlot` gained a required `kind` (PLAN | REST) and a nullable
  *   `planId`. A pending WeeklyPlan write from before that app update only carried template slots, so
  *   `addWeeklyPlanSlotKindDefault` stamps `kind: 'PLAN'` on each; every other type is identity.
+ * - v18 → v19 (backlog/156): `GymColorBand.variant` was removed. `stripGymColorBandVariant` drops the
+ *   key from a pending band write (the value never carried meaning); every other type is identity.
  */
-export const OUTBOX_PAYLOAD_SCHEMA_VERSION = 18;
+export const OUTBOX_PAYLOAD_SCHEMA_VERSION = 19;
 
 /** documentation/Architektúra/Backend-offline first.md §6 "Tétel-újrapróbálkozási backoff" (jitter omitted — not load-bearing for correctness). */
 const RETRY_BACKOFF_MS = [2000, 8000, 30000, 120000, 600000];

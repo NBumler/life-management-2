@@ -60,18 +60,6 @@
       }
 
       <ion-item>
-        <ion-select
-          formControlName="variant"
-          [label]="'WORKOUT.CLIMBING.BAND.FIELD_VARIANT' | translate"
-          label-placement="stacked"
-        >
-          @for (option of variants; track option) {
-            <ion-select-option [value]="option">{{ ('WORKOUT.CLIMBING.VARIANT.' + option) | translate }}</ion-select-option>
-          }
-        </ion-select>
-      </ion-item>
-
-      <ion-item>
         <app-grade-input
           formControlName="gradeLower"
           discipline="BOULDER"

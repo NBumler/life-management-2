@@ -248,7 +248,7 @@ class ClimbingIndoorMasterIntegrationTest {
 	}
 
 	private static GymColorBand band(UUID id, UUID gymId, String hex) {
-		return new GymColorBand(id, gymId, "Piros", hex, GymColorBand.VariantEnum.NEUTRAL, "6A", "6B", 40, 44, false);
+		return new GymColorBand(id, gymId, "Piros", hex, "6A", "6B", 40, 44, false);
 	}
 
 	private static IndoorRoute route(UUID id, UUID gymId, String name) {

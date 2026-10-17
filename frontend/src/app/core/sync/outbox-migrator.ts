@@ -190,6 +190,19 @@ export function addWeeklyPlanSlotKindDefault(payload: unknown, url: string): { p
 }
 
 /**
+ * v18 → v19 (backlog/156): `GymColorBand.variant` was removed — nothing ever read it (the in-band
+ * position lives on `AscentAttempt.bandModifier`), so the key is simply dropped.
+ */
+export function stripGymColorBandVariant(payload: unknown, url: string): { payload: unknown; url: string } {
+  if (payload === null || typeof payload !== 'object' || Array.isArray(payload) || !('variant' in payload)) {
+    return { payload, url };
+  }
+  const band: Record<string, unknown> = { ...(payload as Record<string, unknown>) };
+  delete band['variant'];
+  return { payload: band, url };
+}
+
+/**
  * v4 → v5 (backlog/084): the sector moved from `ClimbingSession` to `AscentAttempt`, and
  * `ClimbingSession.rockType` / `aspect` were removed. A `ClimbingSession` write still pending from
  * before that app update carries a session-level `sectorId` / `sectorName` (and `rockType` /
@@ -284,6 +297,8 @@ const STEPS_BY_VERSION: Readonly<Record<number, VersionSteps>> = {
   // backlog/144: `WeeklyPlanSlot.kind` added as a new required field — a WeeklyPlan write still pending
   // from before this update only ever carried template slots, so each slot gets `kind: 'PLAN'`.
   17: { default: identityStep, overrides: { WeeklyPlan: addWeeklyPlanSlotKindDefault } },
+  // backlog/156: `GymColorBand.variant` removed — a pending band write drops the key.
+  18: { default: identityStep, overrides: { GymColorBand: stripGymColorBandVariant } },
 };
 
 function buildMigrations(): ReadonlyMap<string, MigrationStep> {

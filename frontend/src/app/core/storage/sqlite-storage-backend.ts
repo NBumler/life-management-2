@@ -1233,7 +1233,6 @@ export class SqliteStorageBackend implements StorageBackend {
         gymId: '',
         name: '',
         hexColor: '#000000',
-        variant: GymColorBand.VariantEnum.Neutral,
         gradeLower: '',
         gradeUpper: '',
         absoluteDifficultyIndexLower: 0,

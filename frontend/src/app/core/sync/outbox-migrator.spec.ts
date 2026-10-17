@@ -11,6 +11,7 @@ import {
   stripClimbingSessionFailurePoint,
   climbingSessionWeatherToList,
   addWeeklyPlanSlotKindDefault,
+  stripGymColorBandVariant,
 } from './outbox-migrator';
 
 // documentation/Architektúra/Backend-offline first.md §7 "Payload-verziózás (app frissítés)".
@@ -416,6 +417,18 @@ describe('migrateOutboxItem', () => {
 
     it('leaves a DELETE (null payload) untouched', () => {
       expect(addWeeklyPlanSlotKindDefault(null, '/u')).toEqual({ payload: null, url: '/u' });
+    });
+  });
+
+  describe('stripGymColorBandVariant (v18 → v19, backlog/156)', () => {
+    it('drops the variant key, keeping every other field', () => {
+      const payload = { id: 'b', name: 'Piros', variant: 'PLUS', gradeLower: '6A' };
+      expect(stripGymColorBandVariant(payload, '/u').payload).toEqual({ id: 'b', name: 'Piros', gradeLower: '6A' });
+    });
+
+    it('leaves a DELETE (null payload) and an already-migrated payload untouched', () => {
+      expect(stripGymColorBandVariant(null, '/u')).toEqual({ payload: null, url: '/u' });
+      expect(stripGymColorBandVariant({ id: 'b' }, '/u')).toEqual({ payload: { id: 'b' }, url: '/u' });
     });
   });
 });

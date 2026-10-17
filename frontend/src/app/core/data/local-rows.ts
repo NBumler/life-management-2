@@ -1892,12 +1892,16 @@ export function gymTombstoneTask(id: string, deletedAt: string | null, updatedAt
   };
 }
 
+/**
+ * backlog/156 — the local `gym_color_band.variant` column is a dead field (dropped server-side in
+ * V54; kept here since not every on-device SQLite build allows `DROP COLUMN`). Nothing reads it; the
+ * writes below fill it with a constant `'NEUTRAL'` only to satisfy its `NOT NULL`.
+ */
 export interface GymColorBandRow {
   id: string;
   gym_id: string;
   name: string;
   hex_color: string;
-  variant: string;
   grade_lower: string;
   grade_upper: string;
   absolute_difficulty_index_lower: number;
@@ -1918,7 +1922,6 @@ export function gymColorBandRowToDto(row: GymColorBandRow): GymColorBand {
     gymId: row.gym_id,
     name: row.name,
     hexColor: row.hex_color,
-    variant: row.variant as GymColorBand.VariantEnum,
     gradeLower: row.grade_lower,
     gradeUpper: row.grade_upper,
     absoluteDifficultyIndexLower: row.absolute_difficulty_index_lower,
@@ -1934,9 +1937,9 @@ export function gymColorBandLocalWriteTask(dto: GymColorBand): SqlTask {
   return {
     statement: `
       INSERT INTO gym_color_band (id, gym_id, name, hex_color, variant, grade_lower, grade_upper, absolute_difficulty_index_lower, absolute_difficulty_index_upper, _dirty, _local_only)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
+      VALUES (?, ?, ?, ?, 'NEUTRAL', ?, ?, ?, ?, 1, 1)
       ON CONFLICT(id) DO UPDATE SET
-        gym_id = excluded.gym_id, name = excluded.name, hex_color = excluded.hex_color, variant = excluded.variant,
+        gym_id = excluded.gym_id, name = excluded.name, hex_color = excluded.hex_color,
         grade_lower = excluded.grade_lower, grade_upper = excluded.grade_upper,
         absolute_difficulty_index_lower = excluded.absolute_difficulty_index_lower,
         absolute_difficulty_index_upper = excluded.absolute_difficulty_index_upper, _dirty = 1`,
@@ -1945,7 +1948,6 @@ export function gymColorBandLocalWriteTask(dto: GymColorBand): SqlTask {
       dto.gymId,
       dto.name,
       dto.hexColor,
-      dto.variant,
       dto.gradeLower,
       dto.gradeUpper,
       dto.absoluteDifficultyIndexLower,
@@ -1958,9 +1960,9 @@ export function gymColorBandServerApplyTask(dto: GymColorBand): SqlTask {
   return {
     statement: `
       INSERT INTO gym_color_band (id, gym_id, name, hex_color, variant, grade_lower, grade_upper, absolute_difficulty_index_lower, absolute_difficulty_index_upper, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      VALUES (?, ?, ?, ?, 'NEUTRAL', ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET
-        gym_id = excluded.gym_id, name = excluded.name, hex_color = excluded.hex_color, variant = excluded.variant,
+        gym_id = excluded.gym_id, name = excluded.name, hex_color = excluded.hex_color,
         grade_lower = excluded.grade_lower, grade_upper = excluded.grade_upper,
         absolute_difficulty_index_lower = excluded.absolute_difficulty_index_lower,
         absolute_difficulty_index_upper = excluded.absolute_difficulty_index_upper,
@@ -1972,7 +1974,6 @@ export function gymColorBandServerApplyTask(dto: GymColorBand): SqlTask {
       dto.gymId,
       dto.name,
       dto.hexColor,
-      dto.variant,
       dto.gradeLower,
       dto.gradeUpper,
       dto.absoluteDifficultyIndexLower,

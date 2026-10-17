@@ -1320,11 +1320,6 @@
         "LEAD": "Lead",
         "TRAD": "Trad"
       },
-      "VARIANT": {
-        "PLUS": "Plus (+)",
-        "MINUS": "Minus (−)",
-        "NEUTRAL": "Neutral"
-      },
       "GYM": {
         "NEW": "New gym",
         "EMPTY": "No gyms yet. Add one.",
@@ -1350,7 +1345,6 @@
         "HEX_INVALID": "Enter a 3- or 6-digit hex colour (e.g. #f0a or #ff00aa).",
         "HEX_CONFLICT": "This gym already has a band with this colour.",
         "HEX_PICKER_LABEL": "Pick a colour from the palette",
-        "FIELD_VARIANT": "Variant",
         "FIELD_GRADE_LOWER": "Lower grade",
         "FIELD_GRADE_UPPER": "Upper grade",
         "INDEX_PREVIEW": "Difficulty index",

@@ -36,9 +36,6 @@ public class GymColorBandEntity {
 	@Column(name = "hex_color", nullable = false)
 	private String hexColor;
 
-	@Column(nullable = false)
-	private String variant;
-
 	@Column(name = "grade_lower", nullable = false)
 	private String gradeLower;
 
@@ -100,14 +97,6 @@ public class GymColorBandEntity {
 
 	public void setHexColor(String hexColor) {
 		this.hexColor = hexColor;
-	}
-
-	public String getVariant() {
-		return variant;
-	}
-
-	public void setVariant(String variant) {
-		this.variant = variant;
 	}
 
 	public String getGradeLower() {

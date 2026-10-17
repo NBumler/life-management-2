@@ -23,7 +23,6 @@ describe('GymColorBandEditPage', () => {
       gymId,
       name: 'Piros',
       hexColor: '#ff00aa',
-      variant: GymColorBand.VariantEnum.Neutral,
       gradeLower: '6A',
       gradeUpper: '6B',
       absoluteDifficultyIndexLower: 16,
