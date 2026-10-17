@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-10-17
-verifikalt_commit: 8583cd4
+verifikalt_commit: 2650d26
 ---
 
 # Heti terv
