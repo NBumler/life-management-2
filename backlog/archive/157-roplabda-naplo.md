@@ -1,16 +1,17 @@
 ---
 id: 157
 type: feature
-status: in-progress
+status: done
 title: Röplabda napló — nagyon óvatos (alulbecslő) MET kalória
 specs:
   - "[[Röplabda napló]]"
   - "[[Tápérték kalkulátor]]"
   - "[[Edzés]]"
   - "[[Frontend]]"
+  - "[[Kezdőlap]]"
 flag: edzes.roplabda
 created: 2026-10-17
-closed:
+closed: 2026-10-17
 ---
 
 # 157 — Röplabda napló — nagyon óvatos (alulbecslő) MET kalória
@@ -43,17 +44,17 @@ Nincs röplabda az appban. Rokon minta: [[Úszás napló]], [[Biciklizés napló
 
 ## Elfogadási kritériumok
 
-- [ ] Lapos, user-owned `VolleyballLog` entitás (backend + OpenAPI + sync + lokális SQLite + outbox),
+- [x] Lapos, user-owned `VolleyballLog` entitás (backend + OpenAPI + sync + lokális SQLite + outbox),
       az `SwimLog` mintájára: `date`, `durationMinutes` (1–240, **pályán töltött idő**),
       opcionális `intensity` (`LIGHT`/`MODERATE`/`HARD`, csak statisztika), opcionális `setsPlayed`,
       opcionális `notes`.
-- [ ] `kcal = VOLLEYBALL_NET_MET (2.0) × m × durationMinutes / 60` — **egyetlen fix nettó MET**,
+- [x] `kcal = VOLLEYBALL_NET_MET (2.0) × m × durationMinutes / 60` — **egyetlen fix nettó MET**,
       az `intensity` nem befolyásolja (75 kg × 90 perc = 225 kcal bármilyen meccsre).
-- [ ] `durationMinutes` > 240 → 400 a backenden, az űrlap nem engedi menteni.
-- [ ] Edzés tab „Röplabda” szegmens `edzes.roplabda` flag mögött (lista + szerkesztő, élő kcal
+- [x] `durationMinutes` > 240 → 400 a backenden, az űrlap nem engedi menteni.
+- [x] Edzés tab „Röplabda” szegmens `edzes.roplabda` flag mögött (lista + szerkesztő, élő kcal
       előnézet, súgók: pályán töltött idő; intenzitás csak statisztika; óvatos becslés).
-- [ ] `activityExtraKcal` és a Kezdőlap „mai edzések” widget tartalmazza.
-- [ ] Spec: új [[Röplabda napló]], [[Tápérték kalkulátor]] MET tábla, [[Edzés]], [[Frontend]].
+- [x] `activityExtraKcal` és a Kezdőlap „mai edzések” widget tartalmazza.
+- [x] Spec: új [[Röplabda napló]], [[Tápérték kalkulátor]] MET tábla, [[Edzés]], [[Frontend]].
 
 ## Terv / döntési napló
 
@@ -69,6 +70,10 @@ Nincs röplabda az appban. Rokon minta: [[Úszás napló]], [[Biciklizés napló
 
 ## Lezáráskor (on-done)
 
-- Frissített specek: …
-- `IMPLEMENTATION_STATUS.md` sor: …
-- Kód: …
+- Frissített specek: új [[Röplabda napló]] (entitás, kanonikus kcal, `#### Tudatos korlát` a kutatással);
+  [[Tápérték kalkulátor]] — Röplabda MET sor; [[Edzés]] — szegmens + gyerek lista + `V55`; [[Kezdőlap]] — „Mai
+  edzések” röplabda sor; [[Frontend]] — route + `edzes.roplabda` flag
+- `IMPLEMENTATION_STATUS.md` sor: 2026-10-17 — #157 Röplabda napló
+- Kód: `f5e98c3` — `hu.bumler.lm2.workout.VolleyballLog*`, `V55__volleyball_log.sql`, `VolleyballLog.yaml`;
+  `pages/workout/volleyball`, `volleyball-log.repository`, `activity-kcal`, `local-rows`, `local-database` (V50),
+  `sync-engine`, outbox (v20 + snapshot), `today-workouts`/`today-nutrition`/`notification-scheduler`/`meal-dashboard`, i18n

@@ -94,7 +94,7 @@ Alul **legfeljebb 5 gomb** (Ionic tabs). A tab lista **konfigurációból** (fea
 |---|---|---|---|---|
 | 1 | **Kezdőlap** | `/tabs/home` | [[Kezdőlap]] | config-vezérelt widget-verem: gyorsgombok + „mai étkezés állása"; `tab.kezdolap` flag |
 | 2 | **Kaja** | `/tabs/food` | [[Étkezés]] dashboard | szegmens: Étkezés · Tárolás · Katalógus · Recept · Stat |
-| 3 | **Edzés** | `/tabs/workout` | [[Edzésnapló]] | szegmens: Edzésnapló · Heti terv · Mászás · Úszás · Bicikli (+ [[Gyakorlat]] a fejlécben) |
+| 3 | **Edzés** | `/tabs/workout` | [[Edzésnapló]] | szegmens: Edzésnapló · Heti terv · Mászás · Úszás · Bicikli · Röplabda (+ [[Gyakorlat]] a fejlécben) |
 | 4 | **Feladatok** | `/tabs/tasks` | [[Tennivalók]] hub | 4 csempe: Háztartási · Élet tervek · Naptár · Események |
 | 5 | **Menü** | `/tabs/menu` | menülista | a többi feature + beállítások + Kijelentkezés |
 
@@ -135,6 +135,7 @@ A gyerek route-ok pontos alakja a feature specekben marad; itt a gyökerek köte
 | `/tabs/workout/climbing` | Mászónapló hub (4 csempe + admin) | [[Mászónapló]] |
 | `/tabs/workout/swimming` | Úszás napló | [[Úszás napló]] |
 | `/tabs/workout/cycling` | Biciklizés napló | [[Biciklizés napló]] |
+| `/tabs/workout/volleyball` | Röplabda napló | [[Röplabda napló]] |
 | `/tabs/workout/exercises` | Gyakorlat törzsadat (fejléc belépő) | [[Gyakorlat]] |
 | `/tabs/tasks/household` · `/life-plans` · `/calendar` · `/events` | Feladatok hub gyerekei | [[Háztartási feladatok]], [[Élet tervek]], [[Naptár]], [[Események]] |
 | `/tabs/tasks/events/google` | Google export beállítás (Események fejléc belépő) | [[Google Calendar szinkronizálása]] |
@@ -203,6 +204,7 @@ Az `offlineCapable` **nem** feature flag, hanem platform-képesség (natív = `t
 | `edzes.maszonaplo` | Mászás szegmens + hub + admin + 4 kontextus | [[Mászónapló]] |
 | `edzes.uszas` | Úszás szegmens | [[Úszás napló]] |
 | `edzes.bicikli` | Bicikli szegmens | [[Biciklizés napló]] |
+| `edzes.roplabda` | Röplabda szegmens | [[Röplabda napló]] |
 | `tab.feladatok` | Feladatok tab + Háztartási csempe | [[Tennivalók]] |
 | `feladatok.eletTervek` | Élet tervek csempe | [[Élet tervek]] |
 | `feladatok.naptar` | Naptár csempe | [[Naptár]] |

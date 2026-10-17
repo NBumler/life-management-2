@@ -11,7 +11,7 @@ verifikalt_commit: aa61aee
 |---|---|
 | **Státusz** | `Kész` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Profile]], [[Edzés]], [[Edzésnapló]], [[Mászónapló]], [[Biciklizés napló]], [[Lépésszám követés]], [[Úszás napló]], [[Étkezés]], [[Értesítések]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Profile]], [[Edzés]], [[Edzésnapló]], [[Mászónapló]], [[Biciklizés napló]], [[Röplabda napló]], [[Lépésszám követés]], [[Úszás napló]], [[Étkezés]], [[Értesítések]], [[Backend-offline first]] |
 
 ### Jelenlegi működés
 
@@ -71,6 +71,8 @@ MET táblák (részletek a napló specekben is):
 **Úszás** ([[Úszás napló]]): egy `intensity` enum — `CASUAL`/`BREASTSTROKE`/`MIXED` 5.5; `BACKSTROKE` 7.0; `CRAWL_FREESTYLE` 8.0; `OPEN_WATER` 9.5; `BUTTERFLY`/`VIGOROUS` 11.0.
 
 **Bicikli** ([[Biciklizés napló]]): `CITY` 4.0; `STATIONARY` 6.0; `ROAD_LEISURE` 6.8; `MOUNTAIN_TRAIL` 8.5; `ROAD_VIGOROUS` 10.0.
+
+**Röplabda** ([[Röplabda napló]]): **egyetlen fix nettó MET 2.0** (bruttó 3.0 − nyugalmi 1; a Compendium legalacsonyabb röplabda-értéke), csak a pályán töltött idő, plafon 240 perc; az opcionális `intensity` **nem** módosítja — szándékosan alulbecslő (`#### Tudatos korlát` a specben).
 
 **Mászás** ([[Mászónapló]]): **aktív/passzív MET modell** (nem teljes session-idő × egy MET). Aktív bázis: boulder **5.8 → 9.5** a mászó 90 napos referenciaszintjéhez mért nehézség szerint (ismeretlen grade: 8.8), kötél **7.0** (másodmászó: ×0.8); rest: kötél **2.0**, boulder **3.0**; `pumpRating` az aktív MET-et módosítja; TRAD: testsúly +6 kg az aktív ágon. Aktív idő: boulder 45 s × `attemptCount`; kötél m × (25/45/60 s) safety szerint. Részletek és fallback: [[Mászónapló]].
 

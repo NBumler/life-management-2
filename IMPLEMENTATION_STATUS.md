@@ -14,6 +14,11 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-17 — #157** Röplabda napló: új Edzés-szegmens (`edzes.roplabda`), lapos `VolleyballLog` (pályán töltött
+  idő 1–240 perc, opcionális intenzitás / szettszám / megjegyzés csak statisztika). Kalória szándékosan alulbecslő:
+  egyetlen fix nettó MET 2.0 (Compendium legalacsonyabb röplabda-érték − nyugalmi 1), intenzitástól független.
+  `V55`, helyi `SCHEMA_V50`, outbox payload v20; Kezdőlap „Mai edzések” sor.
+  Érintett: [[Röplabda napló]], [[Tápérték kalkulátor]], [[Edzés]], [[Kezdőlap]], [[Frontend]]; kód: `hu.bumler.lm2.workout.VolleyballLog*`, `pages/workout/volleyball`
 - **2026-10-17 — #156** Mászó admin: a színsáv felesleges „Változat” (`variant`, `PLUS`/`MINUS`/`NEUTRAL`)
   mezője megszűnt — semmi nem olvasta, a sávon belüli +/− a kísérlet `bandModifier`-én van. `V54` eldobta az
   oszlopot; helyben holt mező marad; outbox payload v19 (`stripGymColorBandVariant`).
