@@ -91,6 +91,90 @@ Ezért a nyújtás **saját adatmodellt** kap; az `Exercise` nem kap nullable me
   nyújtás). A sablon-tétel saját értéket tárol (másolat, nem élő hivatkozás), így sablononként
   felülírható. (Felhasználói döntés.)
 
+### Implementációs terv (2026-10-17)
+
+Verziószámok a mostani állapot szerint (a commit előtt újra ellenőrizni — párhuzamos munka):
+Flyway `V57`, helyi `SCHEMA_V52`, outbox payload `v22`.
+
+1. **Flyway `V57__stretch_exercise.sql`**
+   - `stretch_exercise` tábla: `id`, `user_id`, `name`, `name_normalized`, `category` (CHECK, 13
+     érték), `description` (CHECK ≤ 1000), `equipment`, `is_favorite`,
+     `default_hold_seconds integer NOT NULL DEFAULT 30 CHECK (> 0)`,
+     `default_per_side boolean NOT NULL DEFAULT false`, `deleted` / `deleted_at`, audit.
+   - Partial unique index `(user_id, name_normalized) WHERE deleted = false`,
+     `(user_id, updated_at)` index, `set_updated_at` trigger.
+   - `HIPS` / `NECK`: a `V35` mintájára DROP + ADD a három meglévő category CHECK-en
+     (`exercise_catalog`, `workout_exercise_entry`, `workout_plan_exercise`). UPDATE nincs.
+   - `sync_changes` view teljes újradefiniálása a `V55` alapján, `+ 'StretchExercise'` sorral.
+2. **OpenAPI**
+   - Új sémák: `StretchExercise.yaml` és `StretchExerciseList.yaml`.
+   - Új path-ok: `stretch-exercises.yaml` és `stretch-exercises-item.yaml`
+     (`/api/stretch-exercises[/{id}]`), bekötve az `openapi.yaml`-ba.
+   - `HIPS` / `NECK` az inline category enumokba: `Exercise.yaml`, `WorkoutExerciseEntry.yaml`,
+     `WorkoutPlanExercise.yaml`. Inline marad (nem `$ref`), mert egy közös komponens a generált
+     `Exercise.CategoryEnum` típusneveket mindenhol átírná.
+3. **Backend Java** (`hu.bumler.lm2.workout`): `StretchExercise{Entity,Repository,Mapper,Service,
+   Controller,SyncDataLoader}` az `Exercise*` 1:1 tükreként. Ugyanaz a névnormalizálás és
+   `409 UNIQUE_VIOLATION` + `conflictingId`, POST-upsert, `PUT` törölt soron `409 ENTITY_DELETED`.
+   Tesztek:
+   - `StretchExerciseServiceTest`;
+   - `StretchExerciseIntegrationTest`: CRUD, idempotens POST, élő-sor egyediség, külön névtér az
+     `exercise_catalog`-tól, sync feed, idegen sor 404;
+   - `ExerciseIntegrationTest`: `HIPS` / `NECK` elfogadva.
+4. **Frontend adatréteg**
+   - `npm run gen:api`.
+   - `local-database.service.ts` `SCHEMA_V52`: `stretch_exercise` tábla (a helyi `exercise_catalog`
+     tükre, + `default_hold_seconds`, `default_per_side`).
+   - `core/data/local-rows.ts`: `StretchExerciseRow`, `stretchExerciseRowToDto`,
+     `stretchExerciseLocalWriteTask`, `stretchExerciseServerApplyTask`.
+   - `StorageBackend`: `listStretchExercises` / `upsertStretchExercise` / `deleteStretchExercise`;
+     SQLite és HTTP implementáció a `VolleyballLog` mintájára (never-synced draft → hard remove).
+   - `sync-engine.service.ts`: `buildServerApplyTasks`, `applyTombstone`, `buildApplyTasks`,
+     `refetchNeeded` ágak.
+   - `outbox-entity-registry.ts`: bejegyzés + név-ütközés Fix ág (mint az `Exercise`-nél).
+   - `offline-queue.service.ts` v21 → **v22** identity (új entitás + enum-bővítés), változásnapló
+     sor. `npm run verify:outbox -- --write`.
+   - `core/data/stretch-exercise.repository.ts`: signal-os `items()`, `save`, `setFavorite`,
+     `delete`, az `ExerciseRepository` tükre.
+5. **Kategória-címkék**: `exercise-labels.ts` `EXERCISE_CATEGORIES` + `HIPS` / `NECK` label kulcs,
+   `hu.json` / `en.json`. A két generált enum-típus (`Exercise.CategoryEnum`,
+   `StretchExercise.CategoryEnum`) azonos literál-unió, ezért egy közös
+   `type ExerciseCategory = Exercise.CategoryEnum` alias elég.
+6. **Flag**
+   - `feature-flags.service.ts`: `'edzes.nyujtas'` a unióba, a listába, és szülőnek `tab.edzes`.
+   - `assets/config/features.json`: `"edzes.nyujtas": true`.
+7. **Szűrő-logika (pure):** `pages/workout/exercises/catalog-filter.ts`.
+   - `CatalogEntry = { type: 'STRENGTH'; exercise } | { type: 'STRETCH'; stretch }`.
+   - `filterCatalog(entries, { types: ReadonlySet, categories: ReadonlySet, favoritesOnly, query })`:
+     csoporton belül VAGY, csoportok között ÉS, üres halmaz = nincs szűrés.
+   - A [[168-nyujto-sablonok]] sablonlistája és nyújtó pickere is ezt használja.
+8. **Katalógus lista** (`exercise-list.page.ts/.html`)
+   - Szűrő-állapot: `typeFilter` és `categoryFilter` → `signal<Set<…>>`; a toggle kivesz vagy
+     hozzáad.
+   - A két repository összefésülve, `byCatalogName` sorrendben.
+   - Típus-chipek csak `edzes.nyujtas` mellett.
+   - A sor alcíme típus szerint; tap → `exercises/:id` vagy `exercises/stretch/:id`.
+   - A kedvenc-csillag a megfelelő repositoryt hívja.
+9. **Szerkesztő**
+   - Új `pages/workout/exercises/stretch-exercise-edit.page.ts`, a mezők a jegy szerint.
+   - Route-ok: `exercises/stretch/new` és `exercises/stretch/:id`, `featureFlagGuard('edzes.nyujtas')`.
+   - Létrehozáskor mindkét szerkesztő tetején Erősítés / Nyújtás szegmens; váltáskor
+     `navigateForward(..., { replaceUrl: true })` a másik `new` route-ra. A szegmens az első mező,
+     így gépelt adat még nem vész el.
+   - Szerkesztéskor a szegmens nem jelenik meg.
+10. **Tesztek**:
+    - `catalog-filter.spec.ts`: VAGY / ÉS, üres halmazok, kereső a leírásra / eszközre;
+    - `stretch-exercise.repository.spec.ts`;
+    - `exercise-list.page.spec.ts`: többes chip, típus-chip flag nélkül rejtve;
+    - `stretch-exercise-edit.page.spec.ts`;
+    - local-rows, registry és sync-engine apply specek.
+11. **Lezárás**:
+    - zöld gate: `./gradlew test`, `test:ci`, `lint`, `build`, `verify:outbox`;
+    - [[Gyakorlat]]: új „Entitás — `StretchExercise`” szakasz, enum + `HIPS` / `NECK`, lista UI,
+      Backend-offline, Backend;
+    - [[Edzés]] és [[Frontend]] flag registry;
+    - `IMPLEMENTATION_STATUS.md`, archiválás.
+
 ## Lezáráskor (on-done)
 
 - Frissített specek: [[Gyakorlat]] — …

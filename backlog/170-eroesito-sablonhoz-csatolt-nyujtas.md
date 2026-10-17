@@ -65,6 +65,65 @@ része, csak hivatkozott: több erősítő sablon is ugyanazt használhatja.
   szolgál, ahogy a [[Heti terv]]ben a kézi felülírás / múltbeli `planId` is érvényes marad inaktív
   sablonra.
 
+- 2026-10-17 — A „Később” kártya elrejtése (×) eszköz-lokális megjelenítési állapot: `Preferences`, a
+  rejtett `workoutSessionId`-k listája, mai napra szűrve. A „van-e még nyújtás” állapot ettől függetlenül
+  a `StretchSession.workoutSessionId`-ből származik.
+
+### Implementációs terv (2026-10-17)
+
+Várható verziók (commit előtt újraellenőrizni): Flyway `V60`, `SCHEMA_V55`, outbox `v25`.
+
+1. **Flyway `V60__workout_plan_stretch_plan.sql`:** `ALTER TABLE workout_plan ADD COLUMN
+   stretch_plan_id uuid REFERENCES stretch_plan (id)`, nullable.
+2. **OpenAPI / Java**
+   - `WorkoutPlan.yaml` + nullable `stretchPlanId`; `WorkoutPlanMapper`.
+   - `WorkoutPlanService.saveTree`: nem saját vagy nem létező nyújtó sablon → 404. Törölt nyújtó
+     sablonra mutató érték elfogadott (FK él); a kliens tisztítja.
+   - `WorkoutPlanIntegrationTest` bővítés.
+3. **Frontend adatréteg**
+   - `gen:api`.
+   - `SCHEMA_V55`: `ALTER TABLE workout_plan ADD COLUMN stretch_plan_id TEXT`.
+   - `local-rows.ts` workout plan row ↔ DTO; a `workoutPlanApplyTasks` és a
+     `workoutPlanLocalWriteTask` viszi az oszlopot.
+   - outbox **v25** identity (opcionális mező, hiánya = `null`). `verify:outbox -- --write`.
+4. **Pure helper:** `pages/workout/stretch/linked-stretch.ts`.
+   - `linkedStretchPlan(plan, stretchPlans)`: élő (nem törölt) nyújtó sablon vagy `null`; az
+     inaktív is érvényes.
+   - `pendingLinkedStretches(today, sessions, plans, stretchPlans, stretchSessions, dismissed)`:
+     a mai, sablonos erősítő sessionök, amelyeknek van csatolt nyújtásuk, de nincs hozzájuk kötött
+     élő `StretchSession`.
+   - Spec: törölt / inaktív / ad-hoc / már elvégzett / elrejtett esetek.
+5. **Sablon-szerkesztő** (`plan-edit.page.ts/.html`)
+   - „Nyújtás az edzés után” `ion-select`, csak `edzes.nyujtas` mellett.
+   - Opciók: „Nincs” + aktív nyújtó sablonok. A jelenlegi inaktív csatolás „(inaktív)” címkével
+     megjelenik.
+   - Törölt hivatkozás → a mező „Nincs”-et mutat, és mentéskor `null`.
+   - `plan-list.page`: alcím-utótag „· + Nyújtás: <név>”.
+6. **Nyújtó sablon törlése** (`stretch-plan-edit.page.ts`): a megerősítő szöveg a hivatkozó élő
+   erősítő sablonok számával bővül (`WorkoutPlanRepository.items()` szűrése).
+7. **Edzés vége** (`active-workout.page.ts` `finish()`)
+   - Mentés után, ha a draft `planId`-jére a `linkedStretchPlan` nem `null` → alert / action sheet:
+     „Nyújtás: <név> (~N perc)” (`stretchPlanDurationSeconds`).
+   - **Indítás:** `navigateRoot`-szerű csere az `active-stretch` route-ra (`stretchPlanId`,
+     `workoutSessionId`), hogy a vissza gomb ne az üres élő edzésre vigyen. A `backlog/148`
+     navigációs szabályt ellenőrizni.
+   - **Később:** a meglévő `navigateBack('/tabs/workout/log')`.
+   - Ha van már folyamatban lévő nyújtó draft, az „Indítás” előbb rákérdez az elvetésére.
+8. **Dashboard-kártya**
+   - `workout-log-list.page` / `plan-quick-start`: „Nyújtás indítása: <név>” kártya a
+     `pendingLinkedStretches` alapján. × → a `Preferences` rejtett-lista.
+   - Az élő nyújtásból mentett session `workoutSessionId`-je zárja a kártyát.
+9. **Tesztek**:
+   - `linked-stretch.spec.ts`;
+   - `active-workout.page.spec.ts`: finish csatolással / nélküle / ad-hoc; Indítás navigációja,
+     Később;
+   - `plan-edit.page.spec.ts`: select, inaktív címke, törölt → null;
+   - log-list kártya; local-rows / sync spec.
+10. **Lezárás**:
+    - [[Heti terv]] (`stretchPlanId`, életciklus), [[Edzésnapló]] (befejezés utáni flow, kártya),
+      `Nyújtás` spec (a 169-ből) kereszthivatkozás;
+    - gate, status, archiválás.
+
 ## Lezáráskor (on-done)
 
 - Frissített specek: [[Heti terv]] — …; [[Edzésnapló]] — …
