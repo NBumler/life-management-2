@@ -12,6 +12,7 @@
     "test:ci": "ng test --browsers=ChromeHeadlessCI --watch=false",
     "lint": "ng lint",
     "verify:outbox": "node scripts/verify-outbox-payload-schema.mjs",
+    "verify:i18n": "node scripts/verify-i18n.mjs",
     "build:geo-assets": "node ../scripts/build-geo-assets.mjs",
     "gen:assets": "capacitor-assets generate --android && node scripts/gen-notification-icons.mjs",
     "gen:api": "openapi-generator-cli generate -i ../backend/src/main/resources/openapi.yaml -g typescript-angular -o src/app/api --additional-properties=ngVersion=20.3.25,providedInRoot=true,withInterfaces=true,supportsES6=true --global-property=skipFormModel=false"

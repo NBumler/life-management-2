@@ -50,6 +50,7 @@ cd frontend && npm test                      # interactive Karma, watch mode, Ch
 cd frontend && npm run test:ci                # non-interactive, single run — use this in CI / agent sessions
 cd frontend && npm run lint
 cd frontend && npm run verify:outbox          # outbox payload-schema drift guard (backlog/080); -- --write re-accepts the snapshot
+cd frontend && npm run verify:i18n            # hu/en key + placeholder parity, literal keys in code exist (backlog/015)
 cd frontend && npm run gen:api                # regenerate the Angular API client from backend/src/main/resources/openapi.yaml
 ```
 `verify:outbox` hashes every outbox-carried DTO's OpenAPI shape against
@@ -57,7 +58,9 @@ cd frontend && npm run gen:api                # regenerate the Angular API clien
 an outbox payload's shape: bump `OUTBOX_PAYLOAD_SCHEMA_VERSION` (`offline-queue.service.ts`) and add a
 migration step per affected entity in `outbox-migrator.ts` (`STEPS_BY_VERSION`) — then
 `npm run verify:outbox -- --write` and commit the snapshot. This is part of the green gate below (it
-needs no Node build, just `node`).
+needs no Node build, just `node`). `verify:i18n` is the same kind of plain-`node` gate step: a new
+i18n key must land in **both** `hu.json` and `en.json` with the same `{{params}}`; dynamically built
+keys (`'X.Y_' + v`) aren't seen statically — a dev build logs `[i18n] Missing translation key` for those.
 `test:ci` uses the `ChromeHeadlessCI` Karma launcher, which does not auto-discover Chrome on this
 machine — set `CHROME_BIN` explicitly. From the Bash tool:
 ```
@@ -274,7 +277,7 @@ touch it.
 ## Notes
 
 - **Git workflow: work directly on `master`.** This is a solo repo — do **not** create feature
-  branches. Commit each finished, green (tests + lint + build + `verify:outbox`) slice straight to `master` with a
+  branches. Commit each finished, green (tests + lint + build + `verify:outbox` + `verify:i18n`) slice straight to `master` with a
   descriptive message. This overrides the default "if on the default branch, branch first" behavior.
 - The MVP is delivered: `documentation/` describes the current, implemented behavior (audited against
   code — `backlog/audit/ROLLUP.md`). Check a feature's own spec under `documentation/Features/` or

@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-10-17
-verifikalt_commit: 2adf800
+verifikalt_commit: 2540786
 ---
 
 # Fejlesztői környezet
@@ -63,6 +63,7 @@ A `frontend/` belső szervezése (`pages/`, `shared/`, `core/`, `api/`) és a r�
 | API kliens generálás | `cd frontend && npm run gen:api` (a spec: `backend/src/main/resources/openapi.yaml`) |
 | App-ikonok / splash generálás | `cd frontend && npm run gen:assets` — a forrás SVG-k a `frontend/assets/`-ben (`icon-foreground.svg`, `icon-background.svg`, `icon-only.svg`, `splash.svg`, `splash-dark.svg`, `notification-icon.svg`); `@capacitor/assets` rendereli a launcher-adaptív ikont + splash-t, a `scripts/gen-notification-icons.mjs` a `ic_stat_notify` státuszsor-ikont és a web favicont. A kimenetek verziókövetettek. |
 | Tesztek | `./gradlew test` · `npm test` (interaktív, `ChromeHeadlessCI` helyett `Chrome`-mal, watch módban) · `npm run test:ci` (nem-interaktív, egyszeri futás — CI és agent-munkamenetek ezt használják) |
+| Statikus ellenőrzések | `npm run verify:outbox` — outbox payload séma-drift ([[Backend-offline first]] „Payload-verziózás”) · `npm run verify:i18n` — hu/en kulcs- és placeholder-paritás + a kódban szó szerint használt kulcsok léteznek ([[Nyelv választás]], `backlog/015`). Mindkettő sima `node`, build nélkül; a zöld kapu (teszt + lint + build + ez a kettő) része. |
 
 - A **web** kliens **relatív** `/api` útvonalat hív (dev: proxy, prod: reverse proxy) — így nincs CORS a böngészős fejlesztésben.
 - `npm run test:ci` (`frontend/`) a `karma.conf.js`-ben definiált `ChromeHeadlessCI` launcher-t használja (`ChromeHeadless` + `--no-sandbox --disable-gpu`, valamint `backlog/147` óta `--disable-background-timer-throttling --disable-renderer-backgrounding --disable-backgrounding-occluded-windows --mute-audio`, hogy egy hosszú futás időzítői ne lassuljanak be és egy spec se nyúljon valódi hangeszközhöz), és `--watch=false`-szal egyszer fut le. A specek véletlen sorrendben futnak: a futás elején a log kiírja a seedet (`[jasmine] random order seed: <n>`), egy bukott sorrend pedig visszajátszható: `JASMINE_SEED=<n> npm run test:ci`. Az 1 s-nál lassabb specek `[jasmine] slow spec (<ms> ms): <név>` figyelmeztetést kapnak (`src/test.ts`) — egy véletlen 5 s-os timeout gyanúsítottja általában ezek között van. A `src/test.ts` az app ikon-registryjét is betölti (`registerIcons()`), és egy `[Ionicons Warning] Could not load icon` figyelmeztetés bukja a specet (`backlog/158`): a hiányzó ikon a `core/config/icons.ts`-be veendő fel ([[Frontend]] „Kötelező elvek”). Az ikon lazy töltődik, így a hiba ritkán a renderelő spec utáni specen jelenik meg. Ezen a gépen a `karma-chrome-launcher` nem találja meg automatikusan a Chrome-ot: a `CHROME_BIN` env változót explicit be kell állítani a tényleges elérési útra (`C:\Program Files\Google\Chrome\Application\chrome.exe`). Bash toolból: `CHROME_BIN="/c/Program Files/Google/Chrome/Application/chrome.exe" npm run test:ci`.

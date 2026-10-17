@@ -14,6 +14,10 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-17 — #015** Hiányzó i18n kulcs: központi `DevMissingTranslationHandler` (a kulcsot mutatja, dev
+  buildben kulcsonként egy `console.warn`), és új `npm run verify:i18n` zöld-kapu lépés (hu/en kulcs- és
+  placeholder-paritás + a kódban szó szerint használt kulcsok léteznek). — érintett: [[Nyelv választás]],
+  [[Fejlesztői környezet]]; kód: `core/config/dev-missing-translation.handler.ts`, `scripts/verify-i18n.mjs`
 - **2026-10-17 — #164** Nettó MET az erőedzés / úszás / bicikli kalóriában: `(MET − 1) × m × óra`, mert a
   nyugalmi 1 MET-et a `maintenanceKcal = BMR × 1.2` már fedezi (75 kg-nál −75 kcal / edzésóra). Közös
   `shared/net-met.ts` (a mászás eddig privát, már nettó helperje is ide költözött); a táblák bruttók maradnak.

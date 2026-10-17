@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: f9ca94e
+verifikalva: 2026-10-17
+verifikalt_commit: 2540786
 ---
 
 # Nyelv választás
@@ -57,8 +57,8 @@ Az OS-nél ütemezett lokális értesítések szövege az ütemezés pillanatáb
 #### Hiányzó kulcs
 
 - Hiányzó kulcs esetén a fallback nyelv a **`hu`** (`provideTranslateService({ fallbackLang: 'hu' })`); ha ott sincs, a kulcs jelenik meg (nem üres szöveg).
-- A központi `MissingTranslationHandler` és a dev-build konzol-figyelmeztetés jelenleg **hiányzik** — tervezett: `backlog/015-nyelv-valasztas-missingtranslationhandler-hianyzo-kulcs-dev-warn.md`.
-- **A `hu.json` és az `en.json` kulcshalmaza azonos** (jelenleg paritásban), de ezt még nem kényszeríti build-idejű / CI ellenőrzés — tervezett (ugyanaz a jegy): `backlog/015-nyelv-valasztas-missingtranslationhandler-hianyzo-kulcs-dev-warn.md`.
+- Ilyenkor a központi `MissingTranslationHandler` (`DevMissingTranslationHandler`, `backlog/015`) fut: a kulcsot adja vissza (a fenti viselkedés), és **dev buildben** kulcsonként egyszer `console.warn`-t ír (`[i18n] Missing translation key: <kulcs>`). Production buildben néma.
+- **A `hu.json` és az `en.json` kulcshalmaza azonos**, és ezt az `npm run verify:i18n` ellenőrzés (a zöld kapu része — [[Fejlesztői környezet]]) kényszeríti: piros, ha egy kulcs csak az egyik nyelvben van, ha egy érték nem szöveg (vagy szöveg-tömb, pl. hónapnevek), ha ugyanannak a kulcsnak a két nyelvben eltér a `{{param}}` placeholder-készlete (tömbnél a hossza), vagy ha a kódban **szó szerint** használt kulcs (`'A.B.C' | translate`, `instant('A.B.C')`) egyik fájlban sincs. A dinamikusan összerakott kulcsokat (`'SYNC.STATE_' + state`) a statikus ellenőrzés nem látja — azokat a dev-figyelmeztetés fogja meg.
 
 ### UI/UX elvárások
 
@@ -86,7 +86,7 @@ Nincs nyitott kérdés.
 - **ngx-translate** (starter kit konvenció), `assets/i18n/hu.json` és `en.json`; egymásba ágyazott kulcsstruktúra, `feature.képernyő.elem` konvenció.
 - `LanguageService` (root, [[Frontend]] `core/config/`): a beállítás signalja, a rendszernyelv feloldása (`hu`/`en`, egyébként `hu`), `TranslateService.use(...)`. Az Angular locale (`registerLocaleData`, `LOCALE_ID`) bekötése tervezett (`backlog/014-nyelv-valasztas-angular-locale-id-registerlocaledata-bekotese.md`). A natív értesítés-újraütemezést a scheduler `effect`-je figyeli a `LanguageService` signaljából (nem a service maga váltja ki).
 - A nyelv betöltése az app init része (a témával együtt, hálózat nélkül) — [[Frontend]] indulási sorrend.
-- Központi `MissingTranslationHandler` és build-idejű kulcs-paritás ellenőrzés: tervezett (`backlog/015-nyelv-valasztas-missingtranslationhandler-hianyzo-kulcs-dev-warn.md`).
+- `core/config/dev-missing-translation.handler.ts`: a `provideTranslateService({ missingTranslationHandler })`-ben bekötött hiányzó-kulcs handler (`isDevMode()`-os, kulcsonként deduplikált figyelmeztetés). Kulcs-paritás és literál-kulcs ellenőrzés: `frontend/scripts/verify-i18n.mjs` (`npm run verify:i18n`).
 
 #### Backend-offline
 
