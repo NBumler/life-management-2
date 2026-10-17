@@ -5,8 +5,9 @@
  * day for the Étkezés dashboard's `activityExtraKcal`. Mirrors `swimming/swim-metrics.ts`.
  */
 import { BikeRideLog } from '../../../api/model/bikeRideLog';
+import { netMet } from '../../../shared/net-met';
 
-/** documentation/Features/Biciklizés napló.md "Kalória (kanonikus)": MET per intensity. */
+/** documentation/Features/Biciklizés napló.md "Kalória (kanonikus)": **gross** MET per intensity (charged net, backlog/164). */
 export const BIKE_MET: Record<BikeRideLog.IntensityEnum, number> = {
   [BikeRideLog.IntensityEnum.City]: 4.0,
   [BikeRideLog.IntensityEnum.Stationary]: 6.0,
@@ -25,7 +26,8 @@ export const BIKE_INTENSITIES: readonly BikeRideLog.IntensityEnum[] = [
 ];
 
 /**
- * documentation/Features/Biciklizés napló.md canonical: kcal = MET(intensity) × m × durationMinutes / 60.
+ * documentation/Features/Biciklizés napló.md canonical: kcal = (MET(intensity) − 1) × m × durationMinutes / 60
+ * — net MET (`shared/net-met.ts`, backlog/164).
  * `m` is the CURRENT profile weight, never frozen into the log. Returns 0 when weight is
  * missing/non-positive or the duration is 0/negative. `distanceKm` / `elevationGainMeters` never enter.
  */
@@ -39,7 +41,7 @@ export function bikeKcal(
   if (log.durationMinutes == null || log.durationMinutes <= 0) {
     return 0;
   }
-  return BIKE_MET[log.intensity] * bodyWeightKg * (log.durationMinutes / 60);
+  return netMet(BIKE_MET[log.intensity]) * bodyWeightKg * (log.durationMinutes / 60);
 }
 
 /**

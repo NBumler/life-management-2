@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: 39829a9
+verifikalva: 2026-10-17
+verifikalt_commit: fc2ba63
 ---
 
 # Biciklizés napló
@@ -38,13 +38,14 @@ CRUD: lista (`deleted = false`), létrehozás, szerkesztés, törlés (soft dele
 
 #### Kalória (kanonikus — [[Tápérték kalkulátor]])
 
-\[\text{kcal} = \text{MET}(\text{intensity}) \times m \times \frac{\text{durationMinutes}}{60}\]
+\[\text{kcal} = (\text{MET}(\text{intensity}) - 1) \times m \times \frac{\text{durationMinutes}}{60}\]
 
+- **Nettó MET** (`backlog/164`): a táblázat **bruttó** (Compendium-)értékeiből a nyugalmi 1 MET levonódik (`(MET − 1)`, `shared/net-met.ts`), mert azt a `maintenanceKcal = BMR × 1.2` már fedezi — így edzésóránként ~`1 × m` kcal nem számolódik kétszer. Lásd [[Tápérték kalkulátor]].
 - \(m\): aktuális testsúly kg-ban a [[Profile]]-ból — **nem** fagyasztódik a naplóba.
 - A napló **nem tárol** `activityExtraKcal` / testsúly mezőt; a napi összeg a Tápérték kalkulátor pure utility-je számolja (profilsúly / napló változásra újraszámol).
 - `distanceKm` és `elevationGainMeters` **nem** szerepelnek a képletben.
 
-| `intensity` | MET | Megjegyzés |
+| `intensity` | MET (bruttó) | Megjegyzés |
 |---|---|---|
 | `CITY` | 4.0 | &lt;16 km/h, kényelmes városi |
 | `STATIONARY` | 6.0 | Szobabicikli / görgő |

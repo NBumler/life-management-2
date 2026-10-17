@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-10-17
-verifikalt_commit: b0c6d57
+verifikalt_commit: fc2ba63
 ---
 
 # Tápérték kalkulátor
@@ -64,9 +64,15 @@ Konstans: `STEP_BASELINE = 3000` (nem konfigurálható). Szabályok: [[Lépéssz
 
 #### Edzéskalória — univerzális MET
 
-\[\text{kcal} = \text{MET} \times m \times \frac{\text{durationMinutes}}{60}\]
+\[\text{kcal} = (\text{MET} - 1) \times m \times \frac{\text{durationMinutes}}{60}\]
 
-MET táblák (részletek a napló specekben is):
+**Nettó MET** (`backlog/164`, ACSM-konvenció): a napi alap `maintenanceKcal = BMR × 1.2` a nyugalmi
+égetést (1 MET) már a teljes 24 órára tartalmazza, ezért az `activityExtraKcal` csak a nyugalmi
+**feletti** energiát adja hozzá: minden napló a bruttó MET-ből levonja a `RESTING_MET = 1.0`-t
+(`shared/net-met.ts`, negatívba nem megy). Az alábbi táblák **bruttó** (Compendium-)értékek; ahol
+egy napló eleve fix nettó MET-et ad meg (röplabda, nyújtás), az szerepel nettóként.
+
+MET táblák (bruttó; részletek a napló specekben is):
 
 **Úszás** ([[Úszás napló]]): egy `intensity` enum — `CASUAL`/`BREASTSTROKE`/`MIXED` 5.5; `BACKSTROKE` 7.0; `CRAWL_FREESTYLE` 8.0; `OPEN_WATER` 9.5; `BUTTERFLY`/`VIGOROUS` 11.0.
 
@@ -74,7 +80,7 @@ MET táblák (részletek a napló specekben is):
 
 **Röplabda** ([[Röplabda napló]]): **egyetlen fix nettó MET 2.0** (bruttó 3.0 − nyugalmi 1; a Compendium legalacsonyabb röplabda-értéke), csak a pályán töltött idő, plafon 240 perc; az opcionális `intensity` **nem** módosítja — szándékosan alulbecslő (`#### Tudatos korlát` a specben).
 
-**Mászás** ([[Mászónapló]]): **aktív/passzív MET modell** (nem teljes session-idő × egy MET). Aktív bázis: boulder **5.8 → 9.5** a mászó 90 napos referenciaszintjéhez mért nehézség szerint (ismeretlen grade: 8.8), kötél **7.0** (másodmászó: ×0.8); rest: kötél **2.0**, boulder **3.0**; `pumpRating` az aktív MET-et módosítja; TRAD: testsúly +6 kg az aktív ágon. Aktív idő: boulder 45 s × `attemptCount`; kötél m × (25/45/60 s) safety szerint. Részletek és fallback: [[Mászónapló]].
+**Mászás** ([[Mászónapló]]): **aktív/passzív MET modell**, zónánként szintén nettó MET-tel (nem teljes session-idő × egy MET). Aktív bázis: boulder **5.8 → 9.5** a mászó 90 napos referenciaszintjéhez mért nehézség szerint (ismeretlen grade: 8.8), kötél **7.0** (másodmászó: ×0.8); rest: kötél **2.0**, boulder **3.0**; `pumpRating` az aktív MET-et módosítja; TRAD: testsúly +6 kg az aktív ágon. Aktív idő: boulder 45 s × `attemptCount`; kötél m × (25/45/60 s) safety szerint. Részletek és fallback: [[Mászónapló]].
 
 **Erőedzés** ([[Edzésnapló]]): `GENERAL_WEIGHTS` 5.0; `HIIT_CIRCUIT` 8.0.
 

@@ -10,8 +10,9 @@ import { WorkoutExerciseEntry } from '../../../api/model/workoutExerciseEntry';
 import { WorkoutSession } from '../../../api/model/workoutSession';
 import { WorkoutSetEntry } from '../../../api/model/workoutSetEntry';
 import { normalizeName } from '../../../shared/name-normalization';
+import { netMet } from '../../../shared/net-met';
 
-/** documentation/Features/Tápérték kalkulátor.md "Erőedzés": MET per workoutType. */
+/** documentation/Features/Tápérték kalkulátor.md "Erőedzés": **gross** MET per workoutType (charged net, backlog/164). */
 export const WORKOUT_MET: Record<WorkoutSession.WorkoutTypeEnum, number> = {
   [WorkoutSession.WorkoutTypeEnum.GeneralWeights]: 5.0,
   [WorkoutSession.WorkoutTypeEnum.HiitCircuit]: 8.0,
@@ -70,8 +71,8 @@ export function effectiveDurationMinutes(session: WorkoutSession): number {
 }
 
 /**
- * documentation/Features/Tápérték kalkulátor.md canonical: kcal = MET(workoutType) × m ×
- * durationMinutes / 60. `m` is the CURRENT profile weight, never frozen into the session. Returns 0
+ * documentation/Features/Tápérték kalkulátor.md canonical: kcal = (MET(workoutType) − 1) × m ×
+ * durationMinutes / 60 — net MET (`shared/net-met.ts`, backlog/164). `m` is the CURRENT profile weight, never frozen into the session. Returns 0
  * when weight is missing/non-positive or the effective duration is 0.
  */
 export function sessionKcal(session: WorkoutSession, bodyWeightKg: number | null): number {
@@ -82,7 +83,7 @@ export function sessionKcal(session: WorkoutSession, bodyWeightKg: number | null
   if (minutes <= 0) {
     return 0;
   }
-  return WORKOUT_MET[session.workoutType] * bodyWeightKg * (minutes / 60);
+  return netMet(WORKOUT_MET[session.workoutType]) * bodyWeightKg * (minutes / 60);
 }
 
 /**

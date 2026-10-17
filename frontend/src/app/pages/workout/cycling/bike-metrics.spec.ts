@@ -19,9 +19,9 @@ describe('bike-metrics', () => {
   });
 
   describe('bikeKcal', () => {
-    it('applies MET × weight × minutes/60', () => {
+    it('applies net MET (gross − 1, backlog/164) × weight × minutes/60', () => {
       const kcal = bikeKcal({ intensity: BikeRideLog.IntensityEnum.RoadVigorous, durationMinutes: 90 }, 80);
-      expect(kcal).toBeCloseTo(10.0 * 80 * (90 / 60), 6);
+      expect(kcal).toBeCloseTo((10.0 - 1) * 80 * (90 / 60), 6);
     });
 
     it('is 0 when the body weight is missing or non-positive', () => {

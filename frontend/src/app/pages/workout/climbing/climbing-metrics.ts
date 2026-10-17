@@ -18,6 +18,7 @@
  * surprisingly large.
  */
 import { ClimbingDiscipline } from '../../../shared/climbing/grade-scale';
+import { netMet } from '../../../shared/net-met';
 
 export type { ClimbingDiscipline };
 export type ClimbingSafetyStyle = 'TOPROPE' | 'LEAD' | 'TRAD';
@@ -45,16 +46,6 @@ export const CLIMBING_MET = {
    *  deliberate double 0.8, ≈0.64× the leader). */
   SECOND_CLIMBER_FACTOR: 0.8,
 } as const;
-
-/**
- * 1 MET ≈ the resting metabolic rate. Every zone is charged `(grossMET − RESTING_MET)` so the result
- * is energy **above rest** — the correct thing to add to a TDEE that already includes 24 h of RMR.
- */
-export const RESTING_MET = 1.0;
-
-function netMet(grossMet: number): number {
-  return Math.max(0, grossMet - RESTING_MET);
-}
 
 /** Mászónapló.md "Aktív idő" — 45 s per boulder go: the row's `attemptCount` (≥ 1) × this. */
 export const BOULDER_SECONDS_PER_GO = 45;

@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-10-17
-verifikalt_commit: 685ec41
+verifikalt_commit: fc2ba63
 ---
 
 # Edzésnapló
@@ -123,15 +123,16 @@ PR típusok (badge a szett mellett): számított **1RM** megdöntés; **max súl
 
 #### Kalória (kanonikus — [[Tápérték kalkulátor]])
 
-\[\text{kcal} = \text{MET}(\text{workoutType}) \times m \times \frac{\text{durationMinutes}}{60}\]
+\[\text{kcal} = (\text{MET}(\text{workoutType}) - 1) \times m \times \frac{\text{durationMinutes}}{60}\]
 
-| `workoutType` | MET |
+| `workoutType` | MET (bruttó) |
 |---|---|
 | `GENERAL_WEIGHTS` | 5.0 |
 | `HIIT_CIRCUIT` | 8.0 |
 
 - \(m\): aktuális testsúly kg a [[Profile]]-ból — **nem** fagyasztódik a sessionbe.
 - A session **nem tárol** `activityExtraKcal` / testsúly mezőt.
+- **Nettó MET** (`backlog/164`): a táblázat **bruttó** (Compendium-)értékeiből a nyugalmi 1 MET levonódik (`(MET − 1)`, `shared/net-met.ts`), mert azt a `maintenanceKcal = BMR × 1.2` már fedezi — így edzésóránként ~`1 × m` kcal nem számolódik kétszer. Lásd [[Tápérték kalkulátor]].
 - MET a **teljes** `durationMinutes`-re vonatkozik (HIIT-nél a rövid pihenők benne vannak).
 - **Hiányzó időtartam fallback:** ha nincs megadható / számítható `durationMinutes`, becslés: \(\text{szettek száma} \times 3\) perc (kcal / előnézet); a mentett `durationMinutes` felülírható kézzel.
 

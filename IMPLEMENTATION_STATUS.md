@@ -14,6 +14,11 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-17 — #164** Nettó MET az erőedzés / úszás / bicikli kalóriában: `(MET − 1) × m × óra`, mert a
+  nyugalmi 1 MET-et a `maintenanceKcal = BMR × 1.2` már fedezi (75 kg-nál −75 kcal / edzésóra). Közös
+  `shared/net-met.ts` (a mászás eddig privát, már nettó helperje is ide költözött); a táblák bruttók maradnak.
+  — érintett: [[Tápérték kalkulátor]], [[Úszás napló]], [[Biciklizés napló]], [[Edzésnapló]]; kód: `shared/net-met.ts`,
+  `pages/workout/{log,swimming,cycling,climbing}`
 - **2026-10-17 — #129** Nem csendes mentés a grade-mezős climbing admin szerkesztőkön (színsáv, beltéri út,
   outdoor route, boulder probléma): érvénytelen mentésnél minden hibás mező alatt azonnali, lefordított hiba
   (`COMMON.FIELD_REQUIRED`, a grade-input új `[showRequired]` → `ERROR_REQUIRED`); nem várt hibánál

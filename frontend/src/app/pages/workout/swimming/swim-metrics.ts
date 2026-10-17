@@ -5,8 +5,9 @@
  * over a day for the Étkezés dashboard's `activityExtraKcal`.
  */
 import { SwimLog } from '../../../api/model/swimLog';
+import { netMet } from '../../../shared/net-met';
 
-/** documentation/Features/Úszás napló.md "Kalória (kanonikus)": MET per intensity. */
+/** documentation/Features/Úszás napló.md "Kalória (kanonikus)": **gross** MET per intensity (charged net, backlog/164). */
 export const SWIM_MET: Record<SwimLog.IntensityEnum, number> = {
   [SwimLog.IntensityEnum.Casual]: 5.5,
   [SwimLog.IntensityEnum.Breaststroke]: 5.5,
@@ -35,7 +36,8 @@ export function isOpenWater(intensity: SwimLog.IntensityEnum): boolean {
 }
 
 /**
- * documentation/Features/Úszás napló.md canonical: kcal = MET(intensity) × m × durationMinutes / 60.
+ * documentation/Features/Úszás napló.md canonical: kcal = (MET(intensity) − 1) × m × durationMinutes / 60
+ * — net MET (`shared/net-met.ts`, backlog/164).
  * `m` is the CURRENT profile weight, never frozen into the log. Returns 0 when weight is
  * missing/non-positive or the duration is 0/negative.
  */
@@ -49,7 +51,7 @@ export function swimKcal(
   if (log.durationMinutes == null || log.durationMinutes <= 0) {
     return 0;
   }
-  return SWIM_MET[log.intensity] * bodyWeightKg * (log.durationMinutes / 60);
+  return netMet(SWIM_MET[log.intensity]) * bodyWeightKg * (log.durationMinutes / 60);
 }
 
 /**

@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: 39829a9
+verifikalva: 2026-10-17
+verifikalt_commit: fc2ba63
 ---
 
 # Úszás napló
@@ -41,14 +41,15 @@ CRUD: lista (`deleted = false`), létrehozás, szerkesztés, törlés (soft dele
 
 #### Kalória (kanonikus — [[Tápérték kalkulátor]])
 
-\[\text{kcal} = \text{MET}(\text{intensity}) \times m \times \frac{\text{durationMinutes}}{60}\]
+\[\text{kcal} = (\text{MET}(\text{intensity}) - 1) \times m \times \frac{\text{durationMinutes}}{60}\]
 
+- **Nettó MET** (`backlog/164`): a táblázat **bruttó** (Compendium-)értékeiből a nyugalmi 1 MET levonódik (`(MET − 1)`, `shared/net-met.ts`), mert azt a `maintenanceKcal = BMR × 1.2` már fedezi — így edzésóránként ~`1 × m` kcal nem számolódik kétszer. Lásd [[Tápérték kalkulátor]].
 - \(m\): aktuális testsúly kg a [[Profile]]-ból — **nem** fagyasztódik a naplóba.
 - A napló **nem tárol** `activityExtraKcal` / testsúly mezőt; a napi összeg a Tápérték utility számolja.
 - `poolLengthMeters`, `lapCount`, `distanceMeters` **nem** szerepelnek a képletben.
 - Nincs sebesség- / MET-auto-hint (szándékosan, ellentétben a [[Biciklizés napló]]val).
 
-| `intensity` | MET | Megjegyzés |
+| `intensity` | MET (bruttó) | Megjegyzés |
 |---|---|---|
 | `CASUAL` | 5.5 | Könnyű / laza |
 | `BREASTSTROKE` | 5.5 | Mellúszás |

@@ -86,14 +86,14 @@ describe('workout-metrics', () => {
   });
 
   describe('sessionKcal', () => {
-    it('applies MET(GENERAL_WEIGHTS)=5 × weight × minutes/60', () => {
+    it('applies net MET (GENERAL_WEIGHTS 5 − 1, backlog/164) × weight × minutes/60', () => {
       const s = session({ durationMinutes: 60 });
-      expect(sessionKcal(s, 80)).toBeCloseTo(5 * 80 * 1);
+      expect(sessionKcal(s, 80)).toBeCloseTo((5 - 1) * 80 * 1);
     });
 
-    it('applies MET(HIIT_CIRCUIT)=8', () => {
+    it('applies net MET (HIIT_CIRCUIT 8 − 1)', () => {
       const s = session({ workoutType: WorkoutSession.WorkoutTypeEnum.HiitCircuit, durationMinutes: 30 });
-      expect(sessionKcal(s, 70)).toBeCloseTo(8 * 70 * 0.5);
+      expect(sessionKcal(s, 70)).toBeCloseTo((8 - 1) * 70 * 0.5);
     });
 
     it('is 0 when the body weight is missing', () => {

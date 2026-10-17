@@ -20,9 +20,9 @@ describe('swim-metrics', () => {
   });
 
   describe('swimKcal', () => {
-    it('applies MET × weight × minutes/60', () => {
+    it('applies net MET (gross − 1, backlog/164) × weight × minutes/60', () => {
       const kcal = swimKcal({ intensity: SwimLog.IntensityEnum.CrawlFreestyle, durationMinutes: 45 }, 80);
-      expect(kcal).toBeCloseTo(8.0 * 80 * (45 / 60), 6);
+      expect(kcal).toBeCloseTo((8.0 - 1) * 80 * (45 / 60), 6);
     });
 
     it('is 0 when the body weight is missing or non-positive', () => {

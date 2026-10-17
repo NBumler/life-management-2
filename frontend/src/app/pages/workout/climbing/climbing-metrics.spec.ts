@@ -2,7 +2,6 @@ import {
   BOULDER_SECONDS_PER_GO,
   CLIMBING_MET,
   ClimbingKcalInput,
-  RESTING_MET,
   boulderActiveMet,
   climbingKcal,
   climbingVolume,
@@ -11,6 +10,7 @@ import {
   resolveBoulderReferenceIndex,
   resolveSessionDurationMinutes,
 } from './climbing-metrics';
+import { RESTING_MET } from '../../../shared/net-met';
 
 /** Every zone is charged `(grossMET − RESTING_MET)` (ACSM net-energy convention — see climbing-metrics.ts). */
 const ROPE_LEAD_NET = CLIMBING_MET.ACTIVE_ROPE_LEAD - RESTING_MET;
