@@ -2595,6 +2595,7 @@ export class SqliteStorageBackend implements StorageBackend {
         inRotation: draft.inRotation,
         goalLabel: draft.goalLabel,
         defaultWorkoutType: draft.defaultWorkoutType,
+        stretchPlanId: draft.stretchPlanId ?? null,
       }),
     ];
     for (const exercise of draft.exercises) {
@@ -2623,7 +2624,11 @@ export class SqliteStorageBackend implements StorageBackend {
     // documentation/Architektúra/Backend-offline first.md §10 "Függőségi láncok": an exercise line
     // referencing an exercise_catalog row created in the same offline session must wait for that
     // exercise's own POST first (workout_plan_exercise.exercise_id is a NOT NULL FK).
-    const dependsOn = await this.findLocalOnlyIds('exercise_catalog', draft.exercises.map((exercise) => exercise.exerciseId));
+    // backlog/170: likewise an attached stretching template created in the same offline session.
+    const dependsOn = [
+      ...(await this.findLocalOnlyIds('exercise_catalog', draft.exercises.map((exercise) => exercise.exerciseId))),
+      ...(await this.findLocalOnlyIds('stretch_plan', draft.stretchPlanId ? [draft.stretchPlanId] : [])),
+    ];
     const enqueue = await this.offlineQueue.buildEnqueueTasks({
       userId,
       method: isNew ? 'POST' : 'PUT',
@@ -3456,6 +3461,7 @@ function buildWorkoutPlanPayload(draft: WorkoutPlanDraft): WorkoutPlan {
     inRotation: draft.inRotation,
     goalLabel: draft.goalLabel,
     defaultWorkoutType: draft.defaultWorkoutType,
+    stretchPlanId: draft.stretchPlanId ?? null,
     deleted: false,
     exercises: draft.exercises.map((exercise) => ({
       id: exercise.id,

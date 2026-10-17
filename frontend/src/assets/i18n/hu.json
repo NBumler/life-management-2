@@ -1021,7 +1021,8 @@
       "RESUME_STRETCH": "Nyújtás folytatása",
       "STRETCH_ROW": "Nyújtás · {{name}}",
       "STRETCH_ADHOC": "Szabad",
-      "STRETCHES_SHORT": "nyújtás"
+      "STRETCHES_SHORT": "nyújtás",
+      "PENDING_STRETCH": "Nyújtás az edzés után: {{name}}"
     },
     "ACTIVE": {
       "DISCARD": "Elvetés",
@@ -1043,7 +1044,13 @@
       "LAST_TIME": "Legutóbb ({{date}}): {{summary}}",
       "SUGGESTION": "Javaslat: {{weight}} kg",
       "SETS_DONE": "{{done}} / {{total}} szett",
-      "TOGGLE_EXERCISE": "Gyakorlat összecsukása / kinyitása"
+      "TOGGLE_EXERCISE": "Gyakorlat összecsukása / kinyitása",
+      "STRETCH_OFFER_TITLE": "Nyújtás: {{name}}",
+      "STRETCH_OFFER_MESSAGE": "Az edzés elmentve. Indulhat a nyújtás (~{{minutes}} perc)?",
+      "STRETCH_START": "Indítás",
+      "STRETCH_LATER": "Később",
+      "STRETCH_REPLACE_TITLE": "Félbehagyott nyújtás",
+      "STRETCH_REPLACE_MESSAGE": "Van egy félbehagyott nyújtásod. Elveted, hogy ez induljon?"
     },
     "SESSION": {
       "NEW_TITLE": "Új edzés",
@@ -1244,7 +1251,12 @@
       "GROUP_ONLY": "Csak ez a csoport legyen aktív",
       "GROUP_CHANGED": "{{count}} sablon módosítva",
       "ADD_STRENGTH": "Erősítő sablon",
-      "ADD_STRETCH": "Nyújtó sablon"
+      "ADD_STRETCH": "Nyújtó sablon",
+      "FIELD_STRETCH_AFTER": "Nyújtás az edzés után",
+      "FIELD_STRETCH_AFTER_HINT": "Az edzés befejezése után felajánlja ezt a nyújtó sablont.",
+      "STRETCH_NONE": "Nincs",
+      "STRETCH_INACTIVE": "inaktív",
+      "STRETCH_SUFFIX": "+ Nyújtás: {{name}}"
     },
     "WEEKLY": {
       "WEEK_OF": "Hét kezdete:",
@@ -1652,7 +1664,8 @@
       "ADD_ITEM": "Nyújtás hozzáadása",
       "TOTAL": "Összesen ~{{minutes}} perc",
       "ROW_SUMMARY": "Nyújtás · {{count}} gyakorlat · ~{{minutes}} perc",
-      "PER_SIDE_SHORT": "oldalanként"
+      "PER_SIDE_SHORT": "oldalanként",
+      "DELETE_LINKED": "{{count}} erősítő sablonhoz csatolva — azoknál a csatolás megszűnik."
     },
     "STRETCH_PICKER": {
       "TITLE": "Nyújtás választása",

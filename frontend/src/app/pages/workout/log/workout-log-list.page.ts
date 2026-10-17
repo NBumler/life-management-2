@@ -1,7 +1,7 @@
 import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { IonButton, IonContent, IonHeader, IonItem, IonLabel, IonList, IonNote, ViewWillEnter } from '@ionic/angular/standalone';
+import { IonButton, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonNote, ViewWillEnter } from '@ionic/angular/standalone';
 import { TranslatePipe } from '@ngx-translate/core';
 
 import { StretchSession } from '../../../api/model/stretchSession';
@@ -9,12 +9,16 @@ import { WorkoutSession } from '../../../api/model/workoutSession';
 import { FeatureFlagsService } from '../../../core/config/feature-flags.service';
 import { ProfileRepository } from '../../../core/data/profile.repository';
 import { StretchDraftService } from '../../../core/data/stretch-draft.service';
+import { StretchOfferDismissalsService } from '../../../core/data/stretch-offer-dismissals.service';
 import { StretchPlanRepository } from '../../../core/data/stretch-plan.repository';
 import { StretchSessionRepository } from '../../../core/data/stretch-session.repository';
 import { WorkoutDraftService } from '../../../core/data/workout-draft.service';
+import { WorkoutPlanRepository } from '../../../core/data/workout-plan.repository';
+import { CurrentDayService } from '../../../core/config/current-day.service';
 import { WorkoutSessionRepository } from '../../../core/data/workout-session.repository';
 import { LoadWarningsBannerComponent } from '../load-warnings-banner.component';
 import { WorkoutSegmentHeaderComponent } from '../workout-segment-header.component';
+import { pendingLinkedStretches } from '../stretch/linked-stretch';
 import { stretchKcal } from '../stretch/stretch-metrics';
 import { PlanQuickStartComponent } from './plan-quick-start.component';
 import { effectiveDurationMinutes, liveExercises, sessionKcal } from './workout-metrics';
@@ -60,6 +64,7 @@ type LogCard = SessionCard | StretchCard;
     IonLabel,
     IonNote,
     IonButton,
+    IonIcon,
     WorkoutSegmentHeaderComponent,
     LoadWarningsBannerComponent,
     PlanQuickStartComponent,
@@ -75,6 +80,9 @@ export class WorkoutLogListPage implements OnInit, ViewWillEnter {
   private readonly stretchRepository = inject(StretchSessionRepository);
   private readonly stretchPlanRepository = inject(StretchPlanRepository);
   private readonly featureFlags = inject(FeatureFlagsService);
+  private readonly workoutPlanRepository = inject(WorkoutPlanRepository);
+  private readonly dismissals = inject(StretchOfferDismissalsService);
+  private readonly currentDay = inject(CurrentDayService);
 
   readonly hasDraft = this.draftService.hasDraft;
   readonly hasStretchDraft = this.stretchDraftService.hasDraft;
@@ -111,6 +119,24 @@ export class WorkoutLogListPage implements OnInit, ViewWillEnter {
     return [...strength, ...stretch].sort((a, b) => (a.session.date < b.session.date ? 1 : a.session.date > b.session.date ? -1 : 0));
   });
 
+  /** backlog/170 — today's template workouts whose attached stretch is still to do ("Nyújtás indítása" cards). */
+  readonly pendingStretches = computed(() =>
+    this.stretchEnabled
+      ? pendingLinkedStretches(
+          this.currentDay.day(),
+          this.repository.items(),
+          this.workoutPlanRepository.items(),
+          this.stretchPlanRepository.items(),
+          this.stretchRepository.items(),
+          this.dismissals.dismissed(),
+        )
+      : [],
+  );
+
+  dismissStretch(workoutSessionId: string): void {
+    void this.dismissals.dismiss(workoutSessionId);
+  }
+
   asStrength(card: LogCard): SessionCard | null {
     return card.type === 'STRENGTH' ? card : null;
   }
@@ -130,7 +156,15 @@ export class WorkoutLogListPage implements OnInit, ViewWillEnter {
       this.repository.load(),
       this.profileRepository.load(),
       this.draftService.refresh(),
-      ...(this.stretchEnabled ? [this.stretchRepository.load(), this.stretchPlanRepository.load(), this.stretchDraftService.refresh()] : []),
+      ...(this.stretchEnabled
+        ? [
+            this.stretchRepository.load(),
+            this.stretchPlanRepository.load(),
+            this.stretchDraftService.refresh(),
+            this.workoutPlanRepository.load(),
+            this.dismissals.refresh(),
+          ]
+        : []),
     ]);
   }
 
@@ -139,6 +173,7 @@ export class WorkoutLogListPage implements OnInit, ViewWillEnter {
     void this.draftService.refresh();
     if (this.stretchEnabled) {
       void this.stretchDraftService.refresh();
+      void this.stretchRepository.reload();
     }
   }
 }

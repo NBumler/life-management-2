@@ -36,6 +36,13 @@ properties:
     type: string
     nullable: true
     description: 'Display-only grouping label in the list / picker ("Alap rotáció", "Cél: …"). No business logic.'
+  stretchPlanId:
+    type: string
+    format: uuid
+    nullable: true
+    description: >-
+      backlog/170 — the stretching template offered after a workout of this template ("Nyújtás az edzés
+      után"). A reference, not ownership (many strength templates may share one). 404 when not the caller's.
   defaultWorkoutType:
     type: string
     enum:

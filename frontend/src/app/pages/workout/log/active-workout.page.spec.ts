@@ -5,6 +5,7 @@ import { AlertController, NavController, PopoverController } from '@ionic/angula
 import { provideTranslateService } from '@ngx-translate/core';
 
 import { Exercise } from '../../../api/model/exercise';
+import { StretchPlan } from '../../../api/model/stretchPlan';
 import { WorkoutExerciseEntry } from '../../../api/model/workoutExerciseEntry';
 import { WorkoutPlan } from '../../../api/model/workoutPlan';
 import { WorkoutSession } from '../../../api/model/workoutSession';
@@ -16,6 +17,7 @@ import { WorkoutPlanRepository } from '../../../core/data/workout-plan.repositor
 import { WorkoutSessionRepository } from '../../../core/data/workout-session.repository';
 import { ExercisePickResult } from '../../../shared/exercise-picker/exercise-picker.component';
 import { ActiveWorkoutPage } from './active-workout.page';
+import { StretchPlanRepository } from '../../../core/data/stretch-plan.repository';
 import { AlertTone } from '../../../shared/alert-tone';
 
 function pick(overrides: Partial<ExercisePickResult> = {}): ExercisePickResult {
@@ -82,7 +84,9 @@ describe('ActiveWorkoutPage', () => {
     items: ReturnType<typeof signal<WorkoutSession[]>>;
   };
   let exerciseRepository: { load: jasmine.Spy; items: ReturnType<typeof signal<Exercise[]>> };
-  let navController: jasmine.SpyObj<Pick<NavController, 'navigateBack'>>;
+  let navController: jasmine.SpyObj<Pick<NavController, 'navigateBack' | 'navigateForward'>>;
+  let stretchPlans: ReturnType<typeof signal<StretchPlan[]>>;
+  let alertRoles: string[];
   let draftService: WorkoutDraftService;
   let popoverCreate: jasmine.Spy;
 
@@ -93,8 +97,11 @@ describe('ActiveWorkoutPage', () => {
     repository.save.and.resolveTo({ exercises: [] } as unknown as WorkoutSession);
 
     exerciseRepository = { load: jasmine.createSpy('load').and.resolveTo(), items: signal<Exercise[]>([]) };
-    navController = jasmine.createSpyObj('NavController', ['navigateBack']);
+    navController = jasmine.createSpyObj('NavController', ['navigateBack', 'navigateForward']);
     navController.navigateBack.and.resolveTo(true);
+    navController.navigateForward.and.resolveTo(true);
+    stretchPlans = signal<StretchPlan[]>([]);
+    alertRoles = [];
     popoverCreate = jasmine.createSpy('create').and.resolveTo({ present: () => Promise.resolve() });
 
     await TestBed.configureTestingModule({
@@ -110,8 +117,16 @@ describe('ActiveWorkoutPage', () => {
         { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(queryParams) } } },
         {
           provide: AlertController,
-          useValue: { create: () => Promise.resolve({ present: () => Promise.resolve() }) },
+          // backlog/170 — each alert dismisses with the next queued role ("cancel" when none is queued).
+          useValue: {
+            create: () =>
+              Promise.resolve({
+                present: () => Promise.resolve(),
+                onDidDismiss: () => Promise.resolve({ role: alertRoles.shift() ?? 'cancel' }),
+              }),
+          },
         },
+        { provide: StretchPlanRepository, useValue: { load: () => Promise.resolve(), items: stretchPlans } },
       ],
     })
       .overrideComponent(ActiveWorkoutPage, { set: { providers: [{ provide: PopoverController, useValue: { create: popoverCreate } }] } })
@@ -230,6 +245,48 @@ describe('ActiveWorkoutPage', () => {
     expect(repository.save.calls.mostRecent().args[0].id).toBe(draftId!);
     expect(draftService.draft()).toBeNull();
     expect(navController.navigateBack).toHaveBeenCalledWith('/tabs/workout/log');
+  });
+
+  describe('attached stretch after finishing (backlog/170)', () => {
+    const linkedPlan = { id: 'pA', name: 'A', active: true, inRotation: true, deleted: false, stretchPlanId: 'S', exercises: [] } as unknown as WorkoutPlan;
+    const stretchPlan: StretchPlan = { id: 'S', name: 'Esti', active: false, deleted: false, items: [] };
+
+    it('"Indítás": back to the log, then the live stretch for this session', async () => {
+      await setup({ planId: 'pA' }, linkedPlan);
+      stretchPlans.set([stretchPlan]);
+      await component.ngOnInit();
+      const sessionId = draftService.draft()?.sessionId;
+      alertRoles.push('confirm');
+
+      await component.finish();
+
+      expect(navController.navigateBack).toHaveBeenCalledWith('/tabs/workout/log');
+      expect(navController.navigateForward).toHaveBeenCalledWith('/tabs/workout/log/stretch/active', {
+        queryParams: { stretchPlanId: 'S', workoutSessionId: sessionId },
+      });
+    });
+
+    it('"Később": the workout is saved and nothing starts', async () => {
+      await setup({ planId: 'pA' }, linkedPlan);
+      stretchPlans.set([stretchPlan]);
+      await component.ngOnInit();
+
+      await component.finish();
+
+      expect(repository.save).toHaveBeenCalled();
+      expect(navController.navigateForward).not.toHaveBeenCalled();
+    });
+
+    it('no offer when the attached template is deleted', async () => {
+      await setup({ planId: 'pA' }, linkedPlan);
+      stretchPlans.set([{ ...stretchPlan, deleted: true }]);
+      await component.ngOnInit();
+      alertRoles.push('confirm');
+
+      await component.finish();
+
+      expect(navController.navigateForward).not.toHaveBeenCalled();
+    });
   });
 
   it('a rest-timer tick decrements restRemaining and clears it at zero', async () => {

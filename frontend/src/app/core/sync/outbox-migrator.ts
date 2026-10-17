@@ -328,6 +328,8 @@ const STEPS_BY_VERSION: Readonly<Record<number, VersionSteps>> = {
   22: { default: identityStep },
   // backlog/169: brand-new `StretchSession` entity — nothing pending can predate it.
   23: { default: identityStep },
+  // backlog/170: `WorkoutPlan` gained an optional `stretchPlanId` — absent = no attached stretch (null).
+  24: { default: identityStep },
 };
 
 function buildMigrations(): ReadonlyMap<string, MigrationStep> {

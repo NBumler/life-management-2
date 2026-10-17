@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-10-17
-verifikalt_commit: b0c6d57
+verifikalt_commit: 685ec41
 ---
 
 # Edzésnapló
@@ -170,6 +170,8 @@ Tervezett (`backlog/055-edzesnaplo-statisztika-felulet-1rm-max-suly-gorbe-heti-v
 
 - Belépés: [[Edzés]] tab → Edzésnapló (dashboard / lista).
 - Flow: Dashboard → Új edzés / Mai javaslat / Terv indítása → Active Workout (vagy utólagos form) → gyakorlat modal → szettek → Befejezés → summary / dashboard frissülés.
+- **Csatolt nyújtás (`backlog/170`):** ha az edzés sablonjának van élő csatolt nyújtó sablonja ([[Heti terv]] `stretchPlanId`), a „Befejezés” **mentése után** felugrik: „Nyújtás: <név>” / „Az edzés elmentve. Indulhat a nyújtás (~N perc)?” — **Indítás** / **Később**. Indításkor a lista oldalra lép vissza, onnan nyílik a [[Nyújtás]] élő nézete a sablonnal és ezzel az edzéssel (`workoutSessionId`), így a vissza gomb nem a befejezett edzésre visz; ha van félbehagyott nyújtás, előbb az elvetésére kérdez. Az edzés mindkét esetben mentve van. Ad-hoc edzés után nincs felajánlás.
+- **„Nyújtás az edzés után” kártya (`backlog/170`):** a lista tetején mindaddig, amíg egy mai, sablonos edzéshez tartozó csatolt nyújtásból nincs hozzá kötött nyújtó session: „Nyújtás az edzés után: <név>” + **Indítás** + ×. Az × az adott edzés kártyáját aznapra elrejti (eszköz-lokális, `StretchOfferDismissalsService`); hogy van-e még teendő, azt a `StretchSession.workoutSessionId` dönti el (`pages/workout/stretch/linked-stretch.ts`).
 - **Lista:** időrend (újabb nap elöl); soron: dátum, cím vagy típus, időtartam, megjelenített kcal (utility). A nyújtó sessionök ([[Nyújtás]], `backlog/169`) ugyanebben a listában, „Nyújtás · <sablon>” sorral; a lista CTA-i között „Új nyújtás” (félbehagyott nyújtásnál „Nyújtás folytatása”). A lista tetején a [[Heti terv]] **terhelés-figyelmeztetései** (`backlog/138`: nincs pihenőnap / sok ujjterhelés / ma már másztál / sok mászás a héten) nem blokkoló sávként — az edzés indítása ettől függetlenül szabad.
 - **Gyakorlat picker:** `ion-searchbar` + `ExerciseCategory` chipek + Kedvencek; ad-hoc létrehozás. A `<ion-modal>`-ben megjelenő `app-exercise-picker` a modal **teljes magasságát** kitölti (`:host` a megosztott `ion-modal-host-fill` mixin — `shared/styles/_ion-modal-host.scss`, `backlog/117` — flex-oszlop, `position: absolute; inset: 0`), így a találati lista a teljes rendelkezésre álló teret használja, nem egy-két sorra zsugorodik. Ugyanezt a mintát használja az [[Étkezés]] tétel-szerkesztő modalja is.
 - **Szettek:** gyakorlatonként egy szett-táblázat; `+ Új szett`; előző szett másolása; numerikus billentyűzet autofókusz. Az Active Workout gyors-növelő gombjai (`+2.5 kg` / `+5 kg` súlyos, `+1 ism.` repses gyakorlatnál) **szettenként egy kompakt sorban, a szett mezői alatt** vannak, így a megnövelt érték mindig látszik; a szett törlés (✕) a sor jobb szélén. Az utólagos formban nincsenek gyors-növelő gombok (az értéket úgyis begépeli a felhasználó).

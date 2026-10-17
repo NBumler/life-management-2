@@ -597,6 +597,7 @@ export class HttpStorageBackend implements StorageBackend {
       inRotation: draft.inRotation,
       goalLabel: draft.goalLabel,
       defaultWorkoutType: draft.defaultWorkoutType,
+      stretchPlanId: draft.stretchPlanId ?? null,
       deleted: false,
       exercises: draft.exercises.map((exercise) => ({
         id: exercise.id,

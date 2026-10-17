@@ -283,6 +283,8 @@ export interface WorkoutPlanDraft {
   inRotation: boolean;
   goalLabel: string | null;
   defaultWorkoutType: WorkoutPlan.DefaultWorkoutTypeEnum | null;
+  /** backlog/170 — the attached stretching template (a reference); absent / null = none. */
+  stretchPlanId?: string | null;
   exercises: WorkoutPlanExerciseSaveItem[];
 }
 

@@ -1482,7 +1482,13 @@ const SCHEMA_V54_STATEMENTS: string[] = [
   `CREATE INDEX IF NOT EXISTS idx_stretch_session_item_session_id ON stretch_session_item (session_id)`,
 ];
 
-const SCHEMA_VERSION = 54;
+/**
+ * backlog/170 — `workout_plan.stretch_plan_id`: the stretching template offered after a workout of this
+ * strength template (a reference); on-device tükre a backend `V60__workout_plan_stretch_plan.sql`-nek.
+ */
+const SCHEMA_V55_STATEMENTS: string[] = [`ALTER TABLE workout_plan ADD COLUMN stretch_plan_id TEXT`];
+
+const SCHEMA_VERSION = 55;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -1539,7 +1545,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 51, statements: SCHEMA_V51_STATEMENTS },
   { toVersion: 52, statements: SCHEMA_V52_STATEMENTS },
   { toVersion: 53, statements: SCHEMA_V53_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V54_STATEMENTS },
+  { toVersion: 54, statements: SCHEMA_V54_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V55_STATEMENTS },
 ];
 
 export interface SqlTask {

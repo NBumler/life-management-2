@@ -1,5 +1,5 @@
 {
-  "payloadSchemaVersion": 24,
+  "payloadSchemaVersion": 25,
   "entities": {
     "AycmCheckIn": "5050bb69ed3adf81c152c637b748050512395f739cc029e99bdc578cb539ed28",
     "AycmPartner": "c0471c6686aa5775df5f2bd120cad172e84ff8c9e1cbf40ba3400b6434188cbb",
@@ -40,7 +40,7 @@
     "VolleyballLog": "0593129ec6205dbf8c793b30f5d0a56a091b293362beaa04988446b16a319abf",
     "WeeklyPlan": "0713dc15b57b0a7d5c30ec70b90c376f6a9d0054d265466eefdbb1d79ddb493f",
     "WeightHistoryEntry": "d8341801379aad465211c1b29295606d772bb042ecf6c7caa60b7521013a3e53",
-    "WorkoutPlan": "96d7baa1ce24f340285252a1a8d3667f41db4644b965801e9fe9c1757055a4d7",
+    "WorkoutPlan": "6ed1fec97784a80a433bd21b64a9a16f8eec8b46d75b1a94c90a0ad51513d659",
     "WorkoutSession": "335bac0a02be8456eb9166c1502ccfa2eee92b0a0a0627408df02497715920a3"
   }
 }

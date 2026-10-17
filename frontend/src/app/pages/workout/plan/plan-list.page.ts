@@ -29,6 +29,7 @@ import { FeatureFlagsService } from '../../../core/config/feature-flags.service'
 import { StretchPlanRepository, liveStretchItems } from '../../../core/data/stretch-plan.repository';
 import { WorkoutPlanRepository } from '../../../core/data/workout-plan.repository';
 import { EXERCISE_TYPES, EXERCISE_TYPE_LABEL_KEYS, ExerciseType, toggleInSet } from '../exercises/catalog-filter';
+import { linkedStretchPlan } from '../stretch/linked-stretch';
 import { stretchPlanDurationMinutes } from '../stretch/stretch-timing';
 import { GroupActivationMode, planGroupActivationChanges, planGroupKey } from './plan-group-activation';
 
@@ -131,6 +132,9 @@ export class PlanListPage implements OnInit {
   readonly liveExerciseCount = (plan: WorkoutPlan): number => plan.exercises.filter((exercise) => !exercise.deleted).length;
   readonly liveItemCount = (plan: StretchPlan): number => liveStretchItems(plan).length;
   readonly stretchMinutes = (plan: StretchPlan): number => stretchPlanDurationMinutes(liveStretchItems(plan));
+  /** backlog/170 — the strength row's "· + Nyújtás: <név>" suffix (a deleted link shows nothing). */
+  readonly linkedStretchName = (plan: WorkoutPlan): string | null =>
+    this.stretchEnabled ? (linkedStretchPlan(plan, this.stretchRepository.items())?.name ?? null) : null;
 
   async ngOnInit(): Promise<void> {
     await Promise.all([this.repository.load(), this.stretchEnabled ? this.stretchRepository.load() : Promise.resolve()]);

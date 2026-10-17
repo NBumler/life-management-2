@@ -147,6 +147,7 @@ export class WorkoutPlanRepository {
       inRotation: plan.inRotation,
       goalLabel: plan.goalLabel ?? null,
       defaultWorkoutType: plan.defaultWorkoutType ?? null,
+      stretchPlanId: plan.stretchPlanId ?? null,
       exercises: plan.exercises
         .filter((exercise) => !exercise.deleted)
         .sort((a, b) => a.orderIndex - b.orderIndex)

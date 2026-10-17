@@ -13,6 +13,34 @@
     <app-plan-quick-start />
   }
 
+  @for (pending of pendingStretches(); track pending.workoutSession.id) {
+    <ion-list data-pending-stretch>
+      <ion-item lines="none">
+        <ion-label class="ion-text-wrap">
+          <h3>{{ 'WORKOUT.LOG.PENDING_STRETCH' | translate: { name: pending.stretchPlan.name } }}</h3>
+        </ion-label>
+        <ion-button
+          slot="end"
+          size="small"
+          routerLink="stretch/active"
+          [queryParams]="{ stretchPlanId: pending.stretchPlan.id, workoutSessionId: pending.workoutSession.id }"
+        >
+          {{ 'WORKOUT.LOG.QUICK.START' | translate }}
+        </ion-button>
+        <ion-button
+          slot="end"
+          size="small"
+          fill="clear"
+          color="medium"
+          (click)="dismissStretch(pending.workoutSession.id)"
+          [attr.aria-label]="'COMMON.CLOSE' | translate"
+        >
+          <ion-icon slot="icon-only" name="close-outline" aria-hidden="true"></ion-icon>
+        </ion-button>
+      </ion-item>
+    </ion-list>
+  }
+
   @if (stretchEnabled && hasStretchDraft()) {
     <div class="cta-row">
       <ion-button expand="block" color="warning" routerLink="stretch/active">{{ 'WORKOUT.LOG.RESUME_STRETCH' | translate }}</ion-button>

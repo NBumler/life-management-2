@@ -30,6 +30,10 @@ export interface WorkoutPlan {
      */
     goalLabel?: string | null;
     /**
+     * backlog/170 — the stretching template offered after a workout of this template (\"Nyújtás az edzés után\"). A reference, not ownership (many strength templates may share one). 404 when not the caller\'s.
+     */
+    stretchPlanId?: string | null;
+    /**
      * Optional — pre-fills the session\'s workoutType when a workout is started from this template.
      */
     defaultWorkoutType?: WorkoutPlan.DefaultWorkoutTypeEnum | null;

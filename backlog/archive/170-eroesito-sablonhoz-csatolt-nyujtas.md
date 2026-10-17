@@ -1,14 +1,14 @@
 ---
 id: 170
 type: feature
-status: ready
+status: done
 title: Erősítő sablonhoz csatolt nyújtó sablon — edzés végén felajánlott nyújtás
 specs:
   - "[[Heti terv]]"
   - "[[Edzésnapló]]"
 flag: edzes.nyujtas
 created: 2026-10-17
-closed:
+closed: 2026-10-17
 ---
 
 # 170 — Erősítő sablonhoz csatolt nyújtó sablon — edzés végén felajánlott nyújtás
@@ -28,20 +28,20 @@ része, csak hivatkozott: több erősítő sablon is ugyanazt használhatja.
 
 ## Elfogadási kritériumok
 
-- [ ] `WorkoutPlan.stretchPlanId`: opcionális UUID → `StretchPlan` (**hivatkozás, nem tulajdonlás**).
+- [x] `WorkoutPlan.stretchPlanId`: opcionális UUID → `StretchPlan` (**hivatkozás, nem tulajdonlás**).
       Backend: Flyway nullable FK oszlop `workout_plan.stretch_plan_id`, OpenAPI, mapper. Helyi
       séma, outbox payload verzió + migrációs lépés (`stretchPlanId: null`), `verify:outbox`.
-- [ ] Erősítő sablon-szerkesztő: „Nyújtás az edzés után” választó (egy darab, csak aktív nyújtó
+- [x] Erősítő sablon-szerkesztő: „Nyújtás az edzés után” választó (egy darab, csak aktív nyújtó
       sablon, „Nincs” opcióval). Egy nyújtó sablon **több** erősítő sablonhoz is csatolható.
       A sablon listában a soron „· + Nyújtás: <név>” utótag.
-- [ ] **Életciklus:** a nyújtó sablon módosítása mindenhol érvényes, ahol csatolva van (élő
+- [x] **Életciklus:** a nyújtó sablon módosítása mindenhol érvényes, ahol csatolva van (élő
       hivatkozás, nincs másolat). Inaktív nyújtó sablon csatolva marad és működik, a szerkesztő
       „inaktív” jelzést mutat; a picker újraválasztásra nem kínálja fel. **Törölt** nyújtó sablont
       a csatolás figyelmen kívül hagy (mintha nem lenne). A nyújtó sablon törlés-dialógusa
       jelzi, ha erősítő sablon(ok) hivatkoznak rá („N erősítő sablonhoz csatolva”).
       A nyújtó sablon törlése nem módosítja az erősítő sablonokat (nincs cascade-írás); a szerkesztő
       következő mentésekor a törölt hivatkozás `null`-ra tisztul.
-- [ ] **Edzés vége:** ha a session `planId`-jéhez tartozó erősítő sablonnak van élő csatolt
+- [x] **Edzés vége:** ha a session `planId`-jéhez tartozó erősítő sablonnak van élő csatolt
       nyújtó sablonja, a „Befejezés” mentése **után** egy lap jelenik meg:
       „Nyújtás: <sablon> (~N perc) — **Indítás** / **Később**”.
       - Indítás → a [[169-nyujto-session-vezetett-idozito-es-naplo]] élő nézete a nyújtó sablonnal,
@@ -51,8 +51,8 @@ része, csak hivatkozott: több erősítő sablon is ugyanazt használhatja.
         rejtem (×). Az állapot a sessionből származik (`workoutSessionId`-re szűrve), nem külön
         tárolt flag.
       - Az erősítő session a nyújtástól függetlenül mentve van; a nyújtás elmaradása semmit nem ront.
-- [ ] Ad-hoc (terv nélküli) erősítő edzés után nincs felajánlás.
-- [ ] Specek: [[Heti terv]] (`stretchPlanId`, életciklus), [[Edzésnapló]] (befejezés utáni flow,
+- [x] Ad-hoc (terv nélküli) erősítő edzés után nincs felajánlás.
+- [x] Specek: [[Heti terv]] (`stretchPlanId`, életciklus), [[Edzésnapló]] (befejezés utáni flow,
       dashboard-kártya); `#### Backend-offline` (outbox verzió).
 
 ## Terv / döntési napló
@@ -124,8 +124,18 @@ Várható verziók (commit előtt újraellenőrizni): Flyway `V60`, `SCHEMA_V55`
       `Nyújtás` spec (a 169-ből) kereszthivatkozás;
     - gate, status, archiválás.
 
+- 2026-10-17 — Implementáláskor: a felajánlás egy alert (Indítás / Később), a háttérre koppintás „Később”-nek számít.
+  Indításkor előbb `navigateBack` a listára, majd `navigateForward` a nyújtásra — így az élő edzés oldala lekerül
+  az Ionic stackről (`backlog/148`).
+- 2026-10-17 — Implementáláskor: a `WorkoutPlanDraft.stretchPlanId` opcionális (hiánya = `null`), így a meglévő
+  draft-építők (pl. a csoport-aktiválás `setActive`-ja, ami explicit továbbadja) nem igényeltek módosítást.
+
 ## Lezáráskor (on-done)
 
-- Frissített specek: [[Heti terv]] — …; [[Edzésnapló]] — …
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — #170 csatolt nyújtás
-- Kód: `workout` (backend), `pages/workout/plan/plan-edit.page.ts`, `pages/workout/log/active-workout.page.ts`, local schema, outbox migrator
+- Frissített specek: [[Heti terv]] — `stretchPlanId` mező és életciklus, szerkesztő-választó, lista-utótag,
+  törlés-figyelmeztetés, Backend-offline (`SCHEMA_V55`, outbox v25), Backend (`V60`); [[Edzésnapló]] — befejezés
+  utáni felajánlás, „Nyújtás az edzés után” kártya; [[Nyújtás]] — indítási pontok.
+- `IMPLEMENTATION_STATUS.md` sor: 2026-10-17 — #170 csatolt nyújtás
+- Kód: `WorkoutPlan*` (backend), `V60__workout_plan_stretch_plan.sql`, `pages/workout/stretch/linked-stretch.ts`,
+  `core/data/stretch-offer-dismissals.service.ts`, `pages/workout/plan/` (szerkesztő, lista, nyújtó törlés),
+  `pages/workout/log/active-workout.page.ts`, `workout-log-list.page.*`, local schema, outbox migrator

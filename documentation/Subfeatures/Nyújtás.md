@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-10-17
-verifikalt_commit: b0c6d57
+verifikalt_commit: 685ec41
 ---
 
 # Nyújtás
@@ -80,7 +80,7 @@ nyújtások összege (`stretchKcalForDay`) beleszámít az `activityExtraKcal`-b
 
 ### UI/UX elvárások
 
-- **Indítás:** az [[Edzésnapló]] lista „Új nyújtás” gombja (szabad, üres session); a „Terv indítása…” lap
+- **Indítás:** erősítő edzés befejezése után a sablonhoz csatolt nyújtás felajánlása, illetve az Edzésnapló „Nyújtás az edzés után” kártyája (`backlog/170`, [[Edzésnapló]]) — ezek kitöltik a `workoutSessionId`-t; az [[Edzésnapló]] lista „Új nyújtás” gombja (szabad, üres session); a „Terv indítása…” lap
   nyújtó sablonjai („Nyújtás · <név>”); a [[Heti terv]] mai sorának „Nyújtás indítása” gombja, ha a nap
   nyújtó felülírás és aznap még nincs abból a sablonból nyújtás; a terv-gyorsindító „Nyújtás indítása”
   gombja ugyanekkor. Félbehagyott nyújtásnál a listán „Nyújtás folytatása” látszik az „Új nyújtás” helyett.

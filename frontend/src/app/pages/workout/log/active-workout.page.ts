@@ -30,8 +30,12 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 import { WorkoutExerciseEntry } from '../../../api/model/workoutExerciseEntry';
 import { WorkoutPlan } from '../../../api/model/workoutPlan';
+import { StretchPlan } from '../../../api/model/stretchPlan';
 import { WorkoutSession } from '../../../api/model/workoutSession';
 import { WorkoutSetEntry } from '../../../api/model/workoutSetEntry';
+import { FeatureFlagsService } from '../../../core/config/feature-flags.service';
+import { StretchDraftService } from '../../../core/data/stretch-draft.service';
+import { StretchPlanRepository, liveStretchItems } from '../../../core/data/stretch-plan.repository';
 import { ExerciseRepository } from '../../../core/data/exercise.repository';
 import { ProfileRepository } from '../../../core/data/profile.repository';
 import { WorkoutPlanRepository } from '../../../core/data/workout-plan.repository';
@@ -123,6 +127,12 @@ const TICK_MS = 1000;
  * outbox row) that survives an app kill; only "Befejezés" builds a `WorkoutSessionDraft` and enqueues
  * it.
  */
+import { linkedStretchPlan } from '../stretch/linked-stretch';
+import { stretchPlanDurationMinutes } from '../stretch/stretch-timing';
+
+/** backlog/170 — the live stretching view. */
+const STRETCH_ROUTE = '/tabs/workout/log/stretch/active';
+
 @Component({
   selector: 'app-active-workout',
   templateUrl: 'active-workout.page.html',
@@ -169,6 +179,9 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
   private readonly toastController = inject(ToastController);
   private readonly popoverController = inject(PopoverController);
   private readonly translate = inject(TranslateService);
+  private readonly stretchPlanRepository = inject(StretchPlanRepository);
+  private readonly stretchDraftService = inject(StretchDraftService);
+  private readonly featureFlags = inject(FeatureFlagsService);
 
   readonly workoutTypes = WORKOUT_TYPES;
   readonly setTypes = SET_TYPES;
@@ -214,6 +227,7 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
       this.planRepository.load(),
       this.profileRepository.load(),
       this.draftService.refresh(),
+      this.stretchPlanRepository.load(),
     ]);
 
     const existing = this.draftService.draft();
@@ -553,7 +567,56 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
     const draft = this.buildFinishDraft();
     await this.repository.save(draft);
     await this.draftService.clear();
+    const stretchPlan = this.featureFlags.isEnabled('edzes.nyujtas')
+      ? linkedStretchPlan(this.planId === null ? undefined : this.planRepository.byId(this.planId), this.stretchPlanRepository.items())
+      : null;
+    const startStretch = stretchPlan !== null && (await this.offerStretch(stretchPlan));
     await this.navController.navigateBack('/tabs/workout/log');
+    if (startStretch && stretchPlan !== null) {
+      // backlog/170 — popped back to the log first, so "back" from the stretch never returns to the finished workout.
+      await this.navController.navigateForward(STRETCH_ROUTE, {
+        queryParams: { stretchPlanId: stretchPlan.id, workoutSessionId: draft.id },
+      });
+    }
+  }
+
+  /**
+   * backlog/170 — "Nyújtás: <név> (~N perc) — Indítás / Később". The workout is already saved either way.
+   * A stretch still in progress must be discarded first (one live stretch at a time). Resolves true = start.
+   */
+  private async offerStretch(stretchPlan: StretchPlan): Promise<boolean> {
+    const offer = await this.alertController.create({
+      header: this.translate.instant('WORKOUT.ACTIVE.STRETCH_OFFER_TITLE', { name: stretchPlan.name }),
+      message: this.translate.instant('WORKOUT.ACTIVE.STRETCH_OFFER_MESSAGE', {
+        minutes: stretchPlanDurationMinutes(liveStretchItems(stretchPlan)),
+      }),
+      buttons: [
+        { text: this.translate.instant('WORKOUT.ACTIVE.STRETCH_LATER'), role: 'cancel' },
+        { text: this.translate.instant('WORKOUT.ACTIVE.STRETCH_START'), role: 'confirm' },
+      ],
+    });
+    await offer.present();
+    if ((await offer.onDidDismiss()).role !== 'confirm') {
+      return false;
+    }
+    await this.stretchDraftService.refresh();
+    if (!this.stretchDraftService.hasDraft()) {
+      return true;
+    }
+    const replace = await this.alertController.create({
+      header: this.translate.instant('WORKOUT.ACTIVE.STRETCH_REPLACE_TITLE'),
+      message: this.translate.instant('WORKOUT.ACTIVE.STRETCH_REPLACE_MESSAGE'),
+      buttons: [
+        { text: this.translate.instant('COMMON.CANCEL'), role: 'cancel' },
+        { text: this.translate.instant('WORKOUT.STRETCH_SESSION.DISCARD'), role: 'destructive' },
+      ],
+    });
+    await replace.present();
+    if ((await replace.onDidDismiss()).role !== 'destructive') {
+      return false;
+    }
+    await this.stretchDraftService.clear();
+    return true;
   }
 
   async discard(): Promise<void> {

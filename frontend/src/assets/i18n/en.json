@@ -1021,7 +1021,8 @@
       "RESUME_STRETCH": "Resume stretching",
       "STRETCH_ROW": "Stretching · {{name}}",
       "STRETCH_ADHOC": "Free",
-      "STRETCHES_SHORT": "stretches"
+      "STRETCHES_SHORT": "stretches",
+      "PENDING_STRETCH": "Stretch after the workout: {{name}}"
     },
     "ACTIVE": {
       "DISCARD": "Discard",
@@ -1043,7 +1044,13 @@
       "LAST_TIME": "Last time ({{date}}): {{summary}}",
       "SUGGESTION": "Suggestion: {{weight}} kg",
       "SETS_DONE": "{{done}} / {{total}} sets",
-      "TOGGLE_EXERCISE": "Collapse / expand exercise"
+      "TOGGLE_EXERCISE": "Collapse / expand exercise",
+      "STRETCH_OFFER_TITLE": "Stretching: {{name}}",
+      "STRETCH_OFFER_MESSAGE": "Workout saved. Start the stretch (~{{minutes}} min)?",
+      "STRETCH_START": "Start",
+      "STRETCH_LATER": "Later",
+      "STRETCH_REPLACE_TITLE": "Unfinished stretch",
+      "STRETCH_REPLACE_MESSAGE": "You have an unfinished stretch. Discard it to start this one?"
     },
     "EXERCISES": {
       "TITLE": "Exercises",
@@ -1244,7 +1251,12 @@
       "GROUP_ONLY": "Only this group active",
       "GROUP_CHANGED": "{{count}} templates changed",
       "ADD_STRENGTH": "Strength template",
-      "ADD_STRETCH": "Stretching template"
+      "ADD_STRETCH": "Stretching template",
+      "FIELD_STRETCH_AFTER": "Stretch after the workout",
+      "FIELD_STRETCH_AFTER_HINT": "Offered when a workout of this template is finished.",
+      "STRETCH_NONE": "None",
+      "STRETCH_INACTIVE": "inactive",
+      "STRETCH_SUFFIX": "+ Stretch: {{name}}"
     },
     "WEEKLY": {
       "WEEK_OF": "Week of:",
@@ -1652,7 +1664,8 @@
       "ADD_ITEM": "Add stretch",
       "TOTAL": "Total ~{{minutes}} min",
       "ROW_SUMMARY": "Stretching · {{count}} stretches · ~{{minutes}} min",
-      "PER_SIDE_SHORT": "per side"
+      "PER_SIDE_SHORT": "per side",
+      "DELETE_LINKED": "Attached to {{count}} strength template(s) — the link is dropped there."
     },
     "STRETCH_PICKER": {
       "TITLE": "Pick stretches",

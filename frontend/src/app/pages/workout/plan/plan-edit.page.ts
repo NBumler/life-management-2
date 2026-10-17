@@ -27,10 +27,13 @@ import {
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
+import { StretchPlan } from '../../../api/model/stretchPlan';
 import { WorkoutPlan } from '../../../api/model/workoutPlan';
+import { FeatureFlagsService } from '../../../core/config/feature-flags.service';
 import { WorkoutPlanExercise } from '../../../api/model/workoutPlanExercise';
 import { WorkoutPlanSet } from '../../../api/model/workoutPlanSet';
 import { ProfileRepository } from '../../../core/data/profile.repository';
+import { StretchPlanRepository } from '../../../core/data/stretch-plan.repository';
 import { WorkoutPlanRepository } from '../../../core/data/workout-plan.repository';
 import { WorkoutPlanDraft, WorkoutPlanExerciseSaveItem } from '../../../core/storage/storage-backend';
 import { uuidV4 } from '../../../core/sync/uuid';
@@ -132,6 +135,8 @@ export class PlanEditPage implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly repository = inject(WorkoutPlanRepository);
   private readonly profileRepository = inject(ProfileRepository);
+  private readonly stretchPlanRepository = inject(StretchPlanRepository);
+  private readonly featureFlags = inject(FeatureFlagsService);
   private readonly alertController = inject(AlertController);
   private readonly actionSheetController = inject(ActionSheetController);
   private readonly toastController = inject(ToastController);
@@ -226,8 +231,18 @@ export class PlanEditPage implements OnInit {
 
   readonly isEditing = computed(() => this.planId() !== null);
 
+  /** backlog/170 — "Nyújtás az edzés után": the attached stretching template (a reference), or null. */
+  readonly stretchPlanId = signal<string | null>(null);
+  readonly stretchEnabled = this.featureFlags.isEnabled('edzes.nyujtas');
+  /** The active stretching templates, plus the attached one when it has since been made inactive (shown as such). */
+  readonly stretchOptions = computed<StretchPlan[]>(() => {
+    const active = this.stretchPlanRepository.activePlans();
+    const current = this.stretchPlanId() === null ? undefined : this.stretchPlanRepository.byId(this.stretchPlanId() as string);
+    return current !== undefined && !current.deleted && !current.active ? [...active, current] : active;
+  });
+
   async ngOnInit(): Promise<void> {
-    await Promise.all([this.repository.load(), this.profileRepository.load()]);
+    await Promise.all([this.repository.load(), this.profileRepository.load(), this.stretchPlanRepository.load()]);
     const idParam = this.route.snapshot.paramMap.get('id');
     if (idParam !== null && idParam !== 'new') {
       const existing = this.repository.byId(idParam);
@@ -245,6 +260,9 @@ export class PlanEditPage implements OnInit {
         inRotation: existing.inRotation,
       });
       this.exercises.set(this.rowsFromPlan(existing));
+      // backlog/170 — a link to a since-deleted stretching template reads as "none" and is cleared on save.
+      const linked = existing.stretchPlanId ? this.stretchPlanRepository.byId(existing.stretchPlanId) : undefined;
+      this.stretchPlanId.set(linked !== undefined && !linked.deleted ? linked.id : null);
     }
   }
 
@@ -350,6 +368,7 @@ export class PlanEditPage implements OnInit {
       inRotation: value.inRotation,
       goalLabel: value.goalLabel?.trim() ? value.goalLabel.trim() : null,
       defaultWorkoutType: value.defaultWorkoutType,
+      stretchPlanId: this.stretchPlanId(),
       exercises: this.exercises().map((row, exerciseIndex) => this.exerciseToSaveItem(row, exerciseIndex)),
     };
   }

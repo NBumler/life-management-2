@@ -19,6 +19,7 @@ class WorkoutPlanMapper {
 				entity.isDeleted());
 		dto.notes(entity.getNotes());
 		dto.goalLabel(entity.getGoalLabel());
+		dto.stretchPlanId(entity.getStretchPlanId());
 		if (entity.getDefaultWorkoutType() != null) {
 			dto.defaultWorkoutType(WorkoutPlan.DefaultWorkoutTypeEnum.fromValue(entity.getDefaultWorkoutType()));
 		}

@@ -34,16 +34,18 @@ class WorkoutPlanService {
 	private final WorkoutPlanMapper mapper;
 	private final WorkoutPlanExerciseMapper exerciseMapper;
 	private final WorkoutPlanSetMapper setMapper;
+	private final StretchPlanRepository stretchPlanRepository;
 
 	WorkoutPlanService(WorkoutPlanRepository repository, WorkoutPlanExerciseRepository exerciseRepository,
 			WorkoutPlanSetRepository setRepository, WorkoutPlanMapper mapper, WorkoutPlanExerciseMapper exerciseMapper,
-			WorkoutPlanSetMapper setMapper) {
+			WorkoutPlanSetMapper setMapper, StretchPlanRepository stretchPlanRepository) {
 		this.repository = repository;
 		this.exerciseRepository = exerciseRepository;
 		this.setRepository = setRepository;
 		this.mapper = mapper;
 		this.exerciseMapper = exerciseMapper;
 		this.setMapper = setMapper;
+		this.stretchPlanRepository = stretchPlanRepository;
 	}
 
 	@Transactional(readOnly = true)
@@ -79,7 +81,7 @@ class WorkoutPlanService {
 		if (entity.isDeleted()) {
 			entity.undelete();
 		}
-		return saveTree(entity, dto);
+		return saveTree(userId, entity, dto);
 	}
 
 	@Transactional
@@ -89,7 +91,7 @@ class WorkoutPlanService {
 		if (entity.isDeleted()) {
 			throw new EntityDeletedException("Workout plan already deleted");
 		}
-		return saveTree(entity, dto);
+		return saveTree(userId, entity, dto);
 	}
 
 	/** Soft delete, idempotent, cascading to every live exercise line and target set on the plan. */
@@ -117,8 +119,9 @@ class WorkoutPlanService {
 	 * by id is the only signal. Rows missing from the incoming list are soft-deleted; the response
 	 * always lists every row, live or tombstoned (WorkoutPlan.yaml).
 	 */
-	private WorkoutPlan saveTree(WorkoutPlanEntity entity, WorkoutPlan dto) {
+	private WorkoutPlan saveTree(UUID userId, WorkoutPlanEntity entity, WorkoutPlan dto) {
 		applyPlanFields(entity, dto);
+		entity.setStretchPlanId(requireOwnStretchPlan(userId, dto.getStretchPlanId().orElse(null)));
 		repository.saveAndFlush(entity);
 
 		List<WorkoutPlanExerciseEntity> existingExercises = exerciseRepository.findByPlanId(entity.getId());
@@ -248,6 +251,18 @@ class WorkoutPlanService {
 	private Map<UUID, List<WorkoutPlanSetEntity>> setsByExerciseFor(List<UUID> planExerciseIds) {
 		return setRepository.findByPlanExerciseIdIn(planExerciseIds).stream()
 				.collect(Collectors.groupingBy(WorkoutPlanSetEntity::getPlanExerciseId));
+	}
+
+	/**
+	 * backlog/170 — the attached stretching template must be the caller's own (404 otherwise, never 403). A
+	 * soft-deleted own template is accepted: the client clears such a link on its next save.
+	 */
+	private UUID requireOwnStretchPlan(UUID userId, UUID stretchPlanId) {
+		if (stretchPlanId != null) {
+			stretchPlanRepository.findByIdAndUserId(stretchPlanId, userId)
+					.orElseThrow(() -> new EntityNotFoundException("No such stretch plan"));
+		}
+		return stretchPlanId;
 	}
 
 	private static WorkoutPlanEntity requireOwner(WorkoutPlanEntity entity, UUID userId) {

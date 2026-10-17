@@ -8,6 +8,7 @@ import { StretchExercise } from '../../../api/model/stretchExercise';
 import { StretchPlan } from '../../../api/model/stretchPlan';
 import { StretchPlanItem } from '../../../api/model/stretchPlanItem';
 import { StretchPlanRepository } from '../../../core/data/stretch-plan.repository';
+import { WorkoutPlanRepository } from '../../../core/data/workout-plan.repository';
 import { StretchPlanEditPage } from './stretch-plan-edit.page';
 
 function stretch(id: string, overrides: Partial<StretchExercise> = {}): StretchExercise {
@@ -81,6 +82,17 @@ describe('StretchPlanEditPage (backlog/168)', () => {
         provideTranslateService(),
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: routeId }) } } },
         { provide: StretchPlanRepository, useValue: repository },
+        {
+          provide: WorkoutPlanRepository,
+          useValue: {
+            load: () => Promise.resolve(),
+            items: signal([
+              { id: 'w1', stretchPlanId: 'p1', deleted: false },
+              { id: 'w2', stretchPlanId: 'p1', deleted: true },
+              { id: 'w3', stretchPlanId: null, deleted: false },
+            ]),
+          },
+        },
         { provide: NavController, useValue: navController },
         { provide: AlertController, useValue: jasmine.createSpyObj('AlertController', ['create']) },
       ],
@@ -134,5 +146,10 @@ describe('StretchPlanEditPage (backlog/168)', () => {
     expect(page.items().map((row) => row.id)).toEqual(['i2', 'i1']);
     page.removeItem(page.items()[0]);
     expect(page.buildDraft().items.map((item) => [item.id, item.orderIndex])).toEqual([['i1', 0]]);
+  });
+
+  it('backlog/170 — counts the live strength templates that have this stretch attached', async () => {
+    const page = await create('p1');
+    expect(page.linkedStrengthCount('p1')).toBe(1);
   });
 });

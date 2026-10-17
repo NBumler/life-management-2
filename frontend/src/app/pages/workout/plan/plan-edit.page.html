@@ -51,6 +51,29 @@
           {{ 'WORKOUT.PLAN.FIELD_IN_ROTATION' | translate }}
         </ion-toggle>
       </ion-item>
+      @if (stretchEnabled) {
+        <ion-item>
+          <ion-select
+            data-stretch-link
+            [label]="'WORKOUT.PLAN.FIELD_STRETCH_AFTER' | translate"
+            label-placement="stacked"
+            interface="popover"
+            [value]="stretchPlanId()"
+            (ionChange)="stretchPlanId.set($any($event.detail.value) ?? null)"
+            [helperText]="'WORKOUT.PLAN.FIELD_STRETCH_AFTER_HINT' | translate"
+          >
+            <ion-select-option [value]="null">{{ 'WORKOUT.PLAN.STRETCH_NONE' | translate }}</ion-select-option>
+            @for (option of stretchOptions(); track option.id) {
+              <ion-select-option [value]="option.id">
+                {{ option.name }}
+                @if (!option.active) {
+                  ({{ 'WORKOUT.PLAN.STRETCH_INACTIVE' | translate }})
+                }
+              </ion-select-option>
+            }
+          </ion-select>
+        </ion-item>
+      }
     </ion-list>
   </form>
 

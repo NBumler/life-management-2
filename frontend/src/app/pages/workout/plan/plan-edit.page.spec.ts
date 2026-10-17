@@ -5,8 +5,10 @@ import { AlertController, NavController, PopoverController, ToastController } fr
 import { provideTranslateService } from '@ngx-translate/core';
 
 import { WorkoutExerciseEntry } from '../../../api/model/workoutExerciseEntry';
+import { StretchPlan } from '../../../api/model/stretchPlan';
 import { WorkoutPlan } from '../../../api/model/workoutPlan';
 import { ProfileRepository } from '../../../core/data/profile.repository';
+import { StretchPlanRepository } from '../../../core/data/stretch-plan.repository';
 import { WorkoutPlanRepository } from '../../../core/data/workout-plan.repository';
 import { ExercisePickResult } from '../../../shared/exercise-picker/exercise-picker.component';
 import { PlanEditPage } from './plan-edit.page';
@@ -20,6 +22,12 @@ function pick(overrides: Partial<ExercisePickResult> = {}): ExercisePickResult {
     ...overrides,
   };
 }
+
+/** backlog/170 — the stretching templates the "Nyújtás az edzés után" select can offer. */
+const STRETCH_PLANS: StretchPlan[] = [
+  { id: 'S1', name: 'Esti', active: true, deleted: false, items: [] },
+  { id: 'S2', name: 'Régi', active: false, deleted: false, items: [] },
+];
 
 describe('PlanEditPage', () => {
   let fixture: ComponentFixture<PlanEditPage>;
@@ -39,6 +47,15 @@ describe('PlanEditPage', () => {
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'new' }) } } },
         { provide: AlertController, useValue: { create: () => Promise.resolve({ present: () => Promise.resolve() }) } },
         { provide: ToastController, useValue: { create: toastCreate } },
+        {
+          provide: StretchPlanRepository,
+          useValue: {
+            load: () => Promise.resolve(),
+            items: signal<StretchPlan[]>(STRETCH_PLANS),
+            activePlans: () => STRETCH_PLANS.filter((plan) => plan.active && !plan.deleted),
+            byId: (id: string) => STRETCH_PLANS.find((plan) => plan.id === id),
+          },
+        },
       ],
     })
       .overrideComponent(PlanEditPage, {
@@ -210,5 +227,18 @@ describe('PlanEditPage', () => {
     await component.save();
 
     expect(back).toHaveBeenCalledOnceWith('/tabs/workout/weekly-plan/plans');
+  });
+
+  describe('"Nyújtás az edzés után" (backlog/170)', () => {
+    it('offers the active stretching templates, plus the attached one while it is inactive', () => {
+      expect(component.stretchOptions().map((plan) => plan.id)).toEqual(['S1']);
+      component.stretchPlanId.set('S2');
+      expect(component.stretchOptions().map((plan) => plan.id)).toEqual(['S1', 'S2']);
+    });
+
+    it('the pick goes into the saved draft', () => {
+      component.stretchPlanId.set('S1');
+      expect((component as unknown as { buildDraft: () => { stretchPlanId: string | null } }).buildDraft().stretchPlanId).toBe('S1');
+    });
   });
 });

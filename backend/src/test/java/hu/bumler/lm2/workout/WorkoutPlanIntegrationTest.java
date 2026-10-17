@@ -22,6 +22,7 @@ import hu.bumler.lm2.api.model.AdminCreateUserRequest;
 import hu.bumler.lm2.api.model.AuthTokens;
 import hu.bumler.lm2.api.model.Exercise;
 import hu.bumler.lm2.api.model.LoginRequest;
+import hu.bumler.lm2.api.model.StretchPlan;
 import hu.bumler.lm2.api.model.WorkoutPlan;
 import hu.bumler.lm2.api.model.WorkoutPlanExercise;
 import hu.bumler.lm2.api.model.WorkoutPlanSet;
@@ -220,6 +221,28 @@ class WorkoutPlanIntegrationTest {
 		assertThat(body).contains(id.toString()).contains("\"entityType\":\"WorkoutPlan\"");
 		assertThat(body).contains(exId.toString()).contains("\"entityType\":\"WorkoutPlanExercise\"");
 		assertThat(body).contains(setId.toString()).contains("\"entityType\":\"WorkoutPlanSet\"");
+	}
+
+	@Test
+	void stretchPlanLink_roundTrips_isClearable_andAForeignOneIsNotFound() throws Exception {
+		// backlog/170 — "Nyújtás az edzés után": a reference to the caller's own stretching template.
+		String token = registerAndLogin("wp-stretch-link");
+		String other = registerAndLogin("wp-stretch-other");
+		UUID stretchPlanId = UUID.randomUUID();
+		mockMvc.perform(post("/api/stretch-plans").contentType(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+				.content(json(new StretchPlan(stretchPlanId, "Esti", true, false, List.of()))))
+				.andExpect(status().isOk());
+		UUID id = UUID.randomUUID();
+
+		createPlan(token, plan(id, List.of()).stretchPlanId(stretchPlanId)).andExpect(status().isOk())
+				.andExpect(jsonPath("$.stretchPlanId").value(stretchPlanId.toString()));
+		mockMvc.perform(put("/api/workout-plans/" + id).contentType(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + token).content(json(plan(id, List.of()))))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.stretchPlanId").doesNotExist());
+
+		createPlan(other, plan(UUID.randomUUID(), List.of()).stretchPlanId(stretchPlanId)).andExpect(status().isNotFound());
 	}
 
 	private ResultActions createPlan(String token, WorkoutPlan dto) throws Exception {

@@ -72,8 +72,10 @@ import { uuidV4 } from './uuid';
  *   update has no such key (= no stretching template), so every type is identity.
  * - v23 → v24 (backlog/169): brand-new `StretchSession` entity — no pending write of it can predate this
  *   app update, so every type is identity.
+ * - v24 → v25 (backlog/170): `WorkoutPlan` gained a nullable `stretchPlanId`. A pending template write from
+ *   before that app update has no such key (= nothing attached), so every type is identity.
  */
-export const OUTBOX_PAYLOAD_SCHEMA_VERSION = 24;
+export const OUTBOX_PAYLOAD_SCHEMA_VERSION = 25;
 
 /** documentation/Architektúra/Backend-offline first.md §6 "Tétel-újrapróbálkozási backoff" (jitter omitted — not load-bearing for correctness). */
 const RETRY_BACKOFF_MS = [2000, 8000, 30000, 120000, 600000];

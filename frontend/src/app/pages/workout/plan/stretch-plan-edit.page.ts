@@ -27,6 +27,7 @@ import { StretchExercise } from '../../../api/model/stretchExercise';
 import { StretchPlan } from '../../../api/model/stretchPlan';
 import { StretchPlanItem } from '../../../api/model/stretchPlanItem';
 import { StretchPlanRepository, liveStretchItems } from '../../../core/data/stretch-plan.repository';
+import { WorkoutPlanRepository } from '../../../core/data/workout-plan.repository';
 import { StretchPlanDraft } from '../../../core/storage/storage-backend';
 import { uuidV4 } from '../../../core/sync/uuid';
 import { StretchPickerComponent } from '../../../shared/stretch-picker/stretch-picker.component';
@@ -107,6 +108,7 @@ export class StretchPlanEditPage implements OnInit {
   private readonly navController = inject(NavController);
   private readonly fb = inject(FormBuilder);
   private readonly repository = inject(StretchPlanRepository);
+  private readonly workoutPlanRepository = inject(WorkoutPlanRepository);
   private readonly alertController = inject(AlertController);
   private readonly translate = inject(TranslateService);
 
@@ -137,7 +139,7 @@ export class StretchPlanEditPage implements OnInit {
   );
 
   async ngOnInit(): Promise<void> {
-    await this.repository.load();
+    await Promise.all([this.repository.load(), this.workoutPlanRepository.load()]);
     const idParam = this.route.snapshot.paramMap.get('id');
     if (idParam !== null && idParam !== 'new') {
       const existing = this.repository.byId(idParam);
@@ -187,14 +189,21 @@ export class StretchPlanEditPage implements OnInit {
     await this.navController.navigateBack('/tabs/workout/weekly-plan/plans');
   }
 
+  /** backlog/170 — live strength templates that have this stretching template attached. */
+  linkedStrengthCount(id: string): number {
+    return this.workoutPlanRepository.items().filter((plan) => !plan.deleted && plan.stretchPlanId === id).length;
+  }
+
   async delete(): Promise<void> {
     const id = this.planId();
     if (id === null) {
       return;
     }
+    const linked = this.linkedStrengthCount(id);
+    const message = this.translate.instant('WORKOUT.STRETCH_PLAN.DELETE_CONFIRM_MESSAGE');
     const alert = await this.alertController.create({
       header: this.translate.instant('WORKOUT.STRETCH_PLAN.DELETE_CONFIRM_TITLE'),
-      message: this.translate.instant('WORKOUT.STRETCH_PLAN.DELETE_CONFIRM_MESSAGE'),
+      message: linked > 0 ? `${message} ${this.translate.instant('WORKOUT.STRETCH_PLAN.DELETE_LINKED', { count: linked })}` : message,
       buttons: [
         { text: this.translate.instant('COMMON.CANCEL'), role: 'cancel' },
         { text: this.translate.instant('COMMON.DELETE'), role: 'destructive', handler: () => void this.deleteAndNavigateBack(id) },

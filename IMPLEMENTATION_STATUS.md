@@ -14,6 +14,12 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-17 — #170** Erősítő sablonhoz csatolt nyújtás: `WorkoutPlan.stretchPlanId` (hivatkozás — egy nyújtó
+  sablon több erősítőhöz is mehet; inaktívra működik, törölt csatolást az app figyelmen kívül hagy és mentéskor
+  tisztít). Sablon-szerkesztőben „Nyújtás az edzés után” választó, listában „+ Nyújtás” utótag. Az edzés
+  befejezése után felajánlás (Indítás / Később); „Később” esetén aznapra „Nyújtás az edzés után” kártya az
+  Edzésnapló tetején (×-szel elrejthető). `V60`, `SCHEMA_V55`, outbox v25. Érintett: [[Heti terv]],
+  [[Edzésnapló]], [[Nyújtás]]; kód: `workout` (backend), `pages/workout/stretch/linked-stretch.ts`, `pages/workout/log/`, `pages/workout/plan/`
 - **2026-10-17 — #169** Nyújtó session: új `StretchSession` + `StretchSessionItem`; vezetett, falióra-alapú
   időzítő (Készülj / Tartás fázisok, bal-jobb oldal, ismétlés, szünet / vissza / kihagyás), hang + rezgés,
   ébren tartott képernyő, app-kill után szüneteltetve visszaálló piszkozat. Napló az Edzésnapló listában,

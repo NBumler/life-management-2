@@ -46,6 +46,10 @@ public class WorkoutPlanEntity {
 	@Column(name = "default_workout_type")
 	private String defaultWorkoutType;
 
+	/** backlog/170 — the attached stretching template (a reference, not owned). */
+	@Column(name = "stretch_plan_id")
+	private UUID stretchPlanId;
+
 	@Generated(event = EventType.INSERT)
 	@Column(name = "created_at", insertable = false, updatable = false)
 	private OffsetDateTime createdAt;
@@ -149,5 +153,13 @@ public class WorkoutPlanEntity {
 	public void undelete() {
 		this.deleted = false;
 		this.deletedAt = null;
+	}
+
+	public UUID getStretchPlanId() {
+		return stretchPlanId;
+	}
+
+	public void setStretchPlanId(UUID stretchPlanId) {
+		this.stretchPlanId = stretchPlanId;
 	}
 }

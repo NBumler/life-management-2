@@ -39,7 +39,7 @@ class WorkoutPlanServiceTest {
 		exerciseRepository = mock(WorkoutPlanExerciseRepository.class);
 		setRepository = mock(WorkoutPlanSetRepository.class);
 		service = new WorkoutPlanService(repository, exerciseRepository, setRepository, new WorkoutPlanMapper(),
-				new WorkoutPlanExerciseMapper(), new WorkoutPlanSetMapper());
+				new WorkoutPlanExerciseMapper(), new WorkoutPlanSetMapper(), mock(StretchPlanRepository.class));
 		when(repository.saveAndFlush(any())).thenAnswer(inv -> inv.getArgument(0));
 		when(exerciseRepository.findByPlanIdIn(any())).thenReturn(List.of());
 		when(setRepository.findByPlanExerciseIdIn(any())).thenReturn(List.of());

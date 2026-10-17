@@ -870,6 +870,8 @@ export interface WorkoutPlanRow {
   in_rotation: number;
   goal_label: string | null;
   default_workout_type: string | null;
+  /** backlog/170 — the attached stretching template; null when none. */
+  stretch_plan_id: string | null;
   created_at: string | null;
   updated_at: string | null;
   deleted: number;
@@ -890,6 +892,7 @@ export function workoutPlanRowToDto(row: WorkoutPlanRow): Omit<WorkoutPlan, 'exe
     inRotation: row.in_rotation === 1,
     goalLabel: row.goal_label,
     defaultWorkoutType: (row.default_workout_type as WorkoutPlan.DefaultWorkoutTypeEnum | null) ?? null,
+    stretchPlanId: row.stretch_plan_id ?? null,
     deleted: row.deleted === 1,
     deletedAt: row.deleted_at,
     createdAt: row.created_at ?? undefined,
@@ -897,16 +900,20 @@ export function workoutPlanRowToDto(row: WorkoutPlanRow): Omit<WorkoutPlan, 'exe
   };
 }
 
-type WorkoutPlanWriteInput = Pick<WorkoutPlan, 'id' | 'name' | 'notes' | 'active' | 'inRotation' | 'goalLabel' | 'defaultWorkoutType'>;
+type WorkoutPlanWriteInput = Pick<
+  WorkoutPlan,
+  'id' | 'name' | 'notes' | 'active' | 'inRotation' | 'goalLabel' | 'defaultWorkoutType' | 'stretchPlanId'
+>;
 
 export function workoutPlanLocalWriteTask(dto: WorkoutPlanWriteInput): SqlTask {
   return {
     statement: `
-      INSERT INTO workout_plan (id, name, notes, active, in_rotation, goal_label, default_workout_type, _dirty, _local_only)
-      VALUES (?, ?, ?, ?, ?, ?, ?, 1, 1)
+      INSERT INTO workout_plan (id, name, notes, active, in_rotation, goal_label, default_workout_type, stretch_plan_id, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
       ON CONFLICT(id) DO UPDATE SET
         name = excluded.name, notes = excluded.notes, active = excluded.active, in_rotation = excluded.in_rotation,
-        goal_label = excluded.goal_label, default_workout_type = excluded.default_workout_type, deleted = 0, deleted_at = NULL, _dirty = 1`,
+        goal_label = excluded.goal_label, default_workout_type = excluded.default_workout_type,
+        stretch_plan_id = excluded.stretch_plan_id, deleted = 0, deleted_at = NULL, _dirty = 1`,
     values: [
       dto.id,
       dto.name,
@@ -915,6 +922,7 @@ export function workoutPlanLocalWriteTask(dto: WorkoutPlanWriteInput): SqlTask {
       dto.inRotation ? 1 : 0,
       dto.goalLabel ?? null,
       dto.defaultWorkoutType ?? null,
+      dto.stretchPlanId ?? null,
     ],
   };
 }
@@ -922,11 +930,11 @@ export function workoutPlanLocalWriteTask(dto: WorkoutPlanWriteInput): SqlTask {
 export function workoutPlanServerApplyTask(dto: Omit<WorkoutPlan, 'exercises'>): SqlTask {
   return {
     statement: `
-      INSERT INTO workout_plan (id, name, notes, active, in_rotation, goal_label, default_workout_type, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      INSERT INTO workout_plan (id, name, notes, active, in_rotation, goal_label, default_workout_type, stretch_plan_id, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET
         name = excluded.name, notes = excluded.notes, active = excluded.active, in_rotation = excluded.in_rotation,
-        goal_label = excluded.goal_label,
+        goal_label = excluded.goal_label, stretch_plan_id = excluded.stretch_plan_id,
         default_workout_type = excluded.default_workout_type, created_at = excluded.created_at, updated_at = excluded.updated_at,
         deleted = excluded.deleted, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0, _needs_refetch = 0
       WHERE workout_plan._dirty = 0`,
@@ -938,6 +946,7 @@ export function workoutPlanServerApplyTask(dto: Omit<WorkoutPlan, 'exercises'>):
       dto.inRotation ? 1 : 0,
       dto.goalLabel ?? null,
       dto.defaultWorkoutType ?? null,
+      dto.stretchPlanId ?? null,
       dto.createdAt ?? null,
       dto.updatedAt ?? null,
       dto.deleted ? 1 : 0,
