@@ -18,6 +18,7 @@ import {
   IonTitle,
   IonToolbar,
   NavController,
+  ToastController,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
@@ -63,11 +64,14 @@ export class IndoorRouteEditPage implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly repository = inject(IndoorRouteRepository);
   private readonly alertController = inject(AlertController);
+  private readonly toastController = inject(ToastController);
   private readonly translate = inject(TranslateService);
 
   readonly disciplines = Object.values(IndoorRoute.DisciplineEnum);
 
   readonly routeId = signal<string | null>(null);
+  /** backlog/129 — a save was attempted; an invalid save is never silent, every failing field shows its error. */
+  readonly submitAttempted = signal(false);
   readonly gymId = signal<string>('');
 
   readonly form = this.fb.nonNullable.group({
@@ -113,6 +117,7 @@ export class IndoorRouteEditPage implements OnInit {
     const index = this.gradeIndex();
     if (this.form.invalid || index === null) {
       this.form.markAllAsTouched();
+      this.submitAttempted.set(true);
       return;
     }
     const v = this.form.getRawValue();
@@ -126,7 +131,18 @@ export class IndoorRouteEditPage implements OnInit {
       sector: v.sector?.trim() ? v.sector.trim() : null,
       topoNumber: v.topoNumber?.trim() ? v.topoNumber.trim() : null,
     };
-    await this.repository.save(input);
+    try {
+      await this.repository.save(input);
+    } catch (error) {
+      console.error('IndoorRoute save failed', error);
+      const toast = await this.toastController.create({
+        message: this.translate.instant('COMMON.SAVE_FAILED'),
+        duration: 3000,
+        color: 'danger',
+      });
+      await toast.present();
+      return;
+    }
     await this.navigateBack();
   }
 

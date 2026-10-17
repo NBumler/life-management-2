@@ -14,6 +14,12 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-17 — #129** Nem csendes mentés a grade-mezős climbing admin szerkesztőkön (színsáv, beltéri út,
+  outdoor route, boulder probléma): érvénytelen mentésnél minden hibás mező alatt azonnali, lefordított hiba
+  (`COMMON.FIELD_REQUIRED`, a grade-input új `[showRequired]` → `ERROR_REQUIRED`); nem várt hibánál
+  `COMMON.SAVE_FAILED` toast. A súgó / hibaüzenet-rész a #155-tel tárgytalan lett. — érintett:
+  [[Nehézségi szint skálája]], [[Indoor boulder admin]], [[Indoor köteles admin]], [[Outdoor boulder admin]],
+  [[Outdoor köteles admin]]; kód: `shared/grade-input`, `pages/workout/climbing/admin`
 - **2026-10-17 — #170** Erősítő sablonhoz csatolt nyújtás: `WorkoutPlan.stretchPlanId` (hivatkozás — egy nyújtó
   sablon több erősítőhöz is mehet; inaktívra működik, törölt csatolást az app figyelmen kívül hagy és mentéskor
   tisztít). Sablon-szerkesztőben „Nyújtás az edzés után” választó, listában „+ Nyújtás” utótag. Az edzés

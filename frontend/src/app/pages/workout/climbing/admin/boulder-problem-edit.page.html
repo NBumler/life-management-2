@@ -22,6 +22,11 @@
           label-placement="stacked"
         ></ion-input>
       </ion-item>
+      @if (submitAttempted() && form.controls.name.invalid) {
+        <ion-item lines="none">
+          <ion-note color="danger">{{ 'COMMON.FIELD_REQUIRED' | translate }}</ion-note>
+        </ion-item>
+      }
       <ion-item>
         <ion-input
           formControlName="topoNumber"
@@ -38,6 +43,11 @@
           label-placement="stacked"
         ></ion-input>
       </ion-item>
+      @if (submitAttempted() && form.controls.guidebookGrade.invalid) {
+        <ion-item lines="none">
+          <ion-note color="danger">{{ 'COMMON.FIELD_REQUIRED' | translate }}</ion-note>
+        </ion-item>
+      }
     </ion-list>
 
     @if (problemId()) {

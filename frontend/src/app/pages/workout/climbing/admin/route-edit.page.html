@@ -23,6 +23,11 @@
           autocapitalize="sentences"
         ></ion-input>
       </ion-item>
+      @if (submitAttempted() && form.controls.name.invalid) {
+        <ion-item lines="none">
+          <ion-note color="danger">{{ 'COMMON.FIELD_REQUIRED' | translate }}</ion-note>
+        </ion-item>
+      }
       <ion-item>
         <ion-input
           formControlName="topoNumber"
@@ -39,6 +44,11 @@
           label-placement="stacked"
         ></ion-input>
       </ion-item>
+      @if (submitAttempted() && form.controls.guidebookGrade.invalid) {
+        <ion-item lines="none">
+          <ion-note color="danger">{{ 'COMMON.FIELD_REQUIRED' | translate }}</ion-note>
+        </ion-item>
+      }
       <ion-radio-group formControlName="protectionType" [allowEmptySelection]="true" class="protection-type">
         <ion-item lines="none">
           <ion-note>{{ 'WORKOUT.CLIMBING.ROUTE.FIELD_PROTECTION' | translate }}</ion-note>

@@ -1,14 +1,17 @@
 ---
 id: 129
 type: bug
-status: ready
+status: done
 title: "[PRIO] Font/francia fokozat: a súgó és a hibaüzenet félrevezet (3A/4A érvénytelen), a színsáv mentése pedig csendben elnyeli a hibát"
 specs:
   - "[[Nehézségi szint skálája]]"
   - "[[Indoor boulder admin]]"
+  - "[[Indoor köteles admin]]"
+  - "[[Outdoor boulder admin]]"
+  - "[[Outdoor köteles admin]]"
 flag:
 created: 2026-09-25
-closed:
+closed: 2026-10-17
 ---
 
 # 129 — [PRIO] Font/francia fokozat: félrevezető súgó és hibaüzenet + csendes mentés a színsáv-szerkesztőn
@@ -83,8 +86,23 @@ Szakmai forrás (a Font skála 3–5 betű nélkül, a betű 6-tól):
   mentést. A kezdeti hipotézisek (rossz `gymId`, lista-cache, SQLite/outbox hiba, natív
   színválasztó) elvetve.
 
+- **2026-10-17 — újraszabás a #155 után:** a #155 a Font / francia skálán 3–5 között opcionálissá
+  tette a betűt (`3A`…`5C+`, `3a`…`5c+` érvényes, a súgó ezt mondja, a `4A+` / `4a+` hibaüzenet-példa
+  így már valódi fokozat). A súgó / hibaüzenet / „célzott 3–5 betűs hiba” kritériumok ezzel
+  **tárgytalanok**. Megmaradt rész: a csendes mentés.
+- **Megoldás:** `submitAttempted` signal a négy grade-mezős admin szerkesztőn (színsáv, beltéri út,
+  outdoor route, boulder probléma). Érvénytelen mentésnél: `COMMON.FIELD_REQUIRED` a név / szabad
+  szöveges grade alatt; a `GradeInputComponent` új `[showRequired]` inputja az üres mezőre
+  `SHARED.GRADE_INPUT.ERROR_REQUIRED`-et ad és a függő debounce-ot azonnal lefuttatja. Nem várt
+  repository-hiba: `COMMON.SAVE_FAILED` toast + `console.error`, az oldal nyitva marad (eddig a
+  színsávon re-throw, a többin kezeletlen promise-rejection volt).
+- A nem grade-mezős climbing admin szerkesztők (gym, crag, sector) ugyanígy csendesek a kötelező
+  névnél — a jegy hatókörén kívül, nem javítva.
+
 ## Lezáráskor (on-done)
 
-- Frissített specek: [[…]] — melyik szakasz, egy sor mit változott
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — <mit>
-- Kód: <fő package-ek / fájlok>
+- Frissített specek: [[Nehézségi szint skálája]] (UI/UX: `showRequired` / `ERROR_REQUIRED`),
+  [[Indoor boulder admin]], [[Indoor köteles admin]], [[Outdoor boulder admin]], [[Outdoor köteles admin]]
+  (UI/UX: nem csendes mentés; Outdoor köteles: a `guidebookGrade` szabad szöveg, nem a grade-komponens)
+- `IMPLEMENTATION_STATUS.md` sor: 2026-10-17 — #129 nem csendes mentés a grade-mezős climbing admin szerkesztőkön
+- Kód: `shared/grade-input/grade-input.component.ts`, `pages/workout/climbing/admin/{gym-color-band,indoor-route,route,boulder-problem}-edit.page.*`, `assets/i18n/{hu,en}.json`

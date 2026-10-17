@@ -14,7 +14,9 @@
     "DONE": "Kész",
     "DECREASE": "Csökkentés",
     "INCREASE": "Növelés",
-    "OK": "OK"
+    "OK": "OK",
+    "FIELD_REQUIRED": "Kötelező mező.",
+    "SAVE_FAILED": "A mentés nem sikerült. Próbáld újra."
   },
   "LOGIN": {
     "TITLE": "Bejelentkezés",
@@ -718,7 +720,8 @@
       "ERROR_UNKNOWN": "A fokozat nem ismerhető fel. Nézd meg a súgót a példákért.",
       "ERROR_AMBIGUOUS": "Egészítsd ki a fokozatot (pl. 6 → 6a), vagy válassz a javaslatokból.",
       "ERROR_MISSING_LETTER_BOULDER": "Font skálán betű is kell a szám mellé, pl. 4A+ (nem elég a puszta +/−).",
-      "ERROR_MISSING_LETTER_ROPE": "Francia skálán betű kell a szám mellé (pl. 4a+), UIAA-ban pedig római szám (pl. IV+) — a puszta +/− önmagában nem elég."
+      "ERROR_MISSING_LETTER_ROPE": "Francia skálán betű kell a szám mellé (pl. 4a+), UIAA-ban pedig római szám (pl. IV+) — a puszta +/− önmagában nem elég.",
+      "ERROR_REQUIRED": "A fokozat megadása kötelező."
     },
     "ASPECT_PICKER": {
       "GROUP_LABEL": "Fekvés (égtáj)",

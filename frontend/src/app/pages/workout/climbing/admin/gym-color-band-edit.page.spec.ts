@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
-import { AlertController, NavController } from '@ionic/angular/standalone';
+import { AlertController, NavController, ToastController } from '@ionic/angular/standalone';
 import { provideTranslateService } from '@ngx-translate/core';
 
 import { GymColorBand } from '../../../../api/model/gymColorBand';
@@ -15,6 +15,8 @@ import { GymColorBandEditPage } from './gym-color-band-edit.page';
 describe('GymColorBandEditPage', () => {
   let fixture: ComponentFixture<GymColorBandEditPage>;
   let component: GymColorBandEditPage;
+  let toastCreateSpy: jasmine.Spy;
+  let navigateBackSpy: jasmine.Spy;
   let saveSpy: jasmine.Spy<(input: GymColorBandSaveInput) => Promise<GymColorBand>>;
 
   async function setup(idParam = 'new', gymId = 'g1'): Promise<void> {
@@ -29,6 +31,8 @@ describe('GymColorBandEditPage', () => {
       absoluteDifficultyIndexUpper: 18,
       deleted: false,
     });
+
+    toastCreateSpy = jasmine.createSpy('create').and.resolveTo({ present: () => Promise.resolve() });
 
     await TestBed.configureTestingModule({
       imports: [GymColorBandEditPage],
@@ -46,10 +50,11 @@ describe('GymColorBandEditPage', () => {
           },
         },
         { provide: AlertController, useValue: { create: () => Promise.resolve({ present: () => Promise.resolve() }) } },
+        { provide: ToastController, useValue: { create: toastCreateSpy } },
       ],
     }).compileComponents();
 
-    spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
+    navigateBackSpy = spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
 
     fixture = TestBed.createComponent(GymColorBandEditPage);
     component = fixture.componentInstance;
@@ -87,6 +92,26 @@ describe('GymColorBandEditPage', () => {
     component.form.patchValue({ name: 'Piros', hexColor: 'red', gradeLower: '6A', gradeUpper: '6B' });
     await component.save();
     expect(saveSpy).not.toHaveBeenCalled();
+  });
+
+  it('backlog/129 — an invalid save is never silent: it flags the attempt so every failing field shows its error', async () => {
+    await setup();
+    expect(component.submitAttempted()).toBe(false);
+    component.form.patchValue({ name: '', hexColor: '#F0A', gradeLower: '3A', gradeUpper: '' });
+    await component.save();
+    expect(saveSpy).not.toHaveBeenCalled();
+    expect(component.submitAttempted()).toBe(true);
+    expect(component.form.controls.name.touched).toBe(true);
+  });
+
+  it('backlog/129 — save() shows a toast on an unexpected repository error and stays on the page', async () => {
+    await setup();
+    spyOn(console, 'error');
+    saveSpy.and.rejectWith(new Error('boom'));
+    component.form.patchValue({ name: 'Piros', hexColor: '#F0A', gradeLower: '6A', gradeUpper: '6B' });
+    await component.save();
+    expect(toastCreateSpy).toHaveBeenCalledWith(jasmine.objectContaining({ message: 'COMMON.SAVE_FAILED', color: 'danger' }));
+    expect(navigateBackSpy).not.toHaveBeenCalled();
   });
 
   it('save() surfaces a hex conflict instead of throwing', async () => {

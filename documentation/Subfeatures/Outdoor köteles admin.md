@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-24
-verifikalt_commit: edde907
+verifikalva: 2026-10-17
+verifikalt_commit: abb37fb
 ---
 
 # Outdoor köteles admin
@@ -36,7 +36,9 @@ Naplózáskor a Route kiválasztása előtölti a **hossz / pitch / grade** ért
 
 ### UI/UX elvárások
 
-Route CRUD a szektor alatt; grade a [[Nehézségi szint skálája]] komponenssel. A szerkesztő űrlapon opcionális `topoNumber` mező (a név alatt); a szektor route-listája és a napló picker a sorszámot a név elé fűzi (`12 · Sárga áthajlás`), és a fenti természetes rendezéssel rendez. A fekvés (`aspect`) mező helyén az `app-aspect-picker` négyzetes égtáj-választó áll (`ion-input` helyett), ugyanígy a `Sector` szerkesztőn is. A szektorok listájában a `defaultAspect` a **lokalizált** égtáj-névvel jelenik meg (`SHARED.ASPECT_PICKER.FULL.*`), nem nyers enum-kóddal.
+Route CRUD a szektor alatt; a grade (`guidebookGrade`) szabad szöveges, kötelező mező, verbatim tárolva — a napló értelmezi a [[Nehézségi szint skálája]] parserrel. A szerkesztő űrlapon opcionális `topoNumber` mező (a név alatt); a szektor route-listája és a napló picker a sorszámot a név elé fűzi (`12 · Sárga áthajlás`), és a fenti természetes rendezéssel rendez. A fekvés (`aspect`) mező helyén az `app-aspect-picker` négyzetes égtáj-választó áll (`ion-input` helyett), ugyanígy a `Sector` szerkesztőn is. A szektorok listájában a `defaultAspect` a **lokalizált** égtáj-névvel jelenik meg (`SHARED.ASPECT_PICKER.FULL.*`), nem nyers enum-kóddal.
+
+- **Mentés soha nem csendes** (`backlog/129`): érvénytelen űrlapnál a Mentés nem navigál el, és a route-szerkesztőn a hibás mező (név, `guidebookGrade`) alatt azonnal lefordított hiba jelenik meg (`COMMON.FIELD_REQUIRED`). Nem várt mentési hibánál (`COMMON.SAVE_FAILED`) toast jelenik meg, az oldal nyitva marad.
 
 ### Megjegyzések
 

@@ -56,10 +56,11 @@ describe('BoulderProblemEditPage', () => {
     );
   });
 
-  it('save() does nothing when the required name is missing', async () => {
+  it('save() does not save, and flags the attempt, when the required name is missing', async () => {
     await setup();
     component.form.patchValue({ name: '' });
     await component.save();
     expect(saveSpy).not.toHaveBeenCalled();
+    expect(component.submitAttempted()).toBe(true); // backlog/129 — the failing field shows its error
   });
 });

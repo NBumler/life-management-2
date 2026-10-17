@@ -22,6 +22,11 @@
           label-placement="stacked"
         ></ion-input>
       </ion-item>
+      @if (submitAttempted() && form.controls.name.invalid) {
+        <ion-item lines="none">
+          <ion-note color="danger">{{ 'COMMON.FIELD_REQUIRED' | translate }}</ion-note>
+        </ion-item>
+      }
 
       <ion-item>
         <ion-input
@@ -63,6 +68,7 @@
         <app-grade-input
           formControlName="gradeLower"
           discipline="BOULDER"
+          [showRequired]="submitAttempted()"
           [label]="'WORKOUT.CLIMBING.BAND.FIELD_GRADE_LOWER' | translate"
         />
       </ion-item>
@@ -70,6 +76,7 @@
         <app-grade-input
           formControlName="gradeUpper"
           discipline="BOULDER"
+          [showRequired]="submitAttempted()"
           [label]="'WORKOUT.CLIMBING.BAND.FIELD_GRADE_UPPER' | translate"
         />
       </ion-item>

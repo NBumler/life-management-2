@@ -17,6 +17,7 @@ import {
   IonTitle,
   IonToolbar,
   NavController,
+  ToastController,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
@@ -67,11 +68,14 @@ export class GymColorBandEditPage implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly repository = inject(GymColorBandRepository);
   private readonly alertController = inject(AlertController);
+  private readonly toastController = inject(ToastController);
   private readonly translate = inject(TranslateService);
 
   readonly bandId = signal<string | null>(null);
   readonly gymId = signal<string>('');
   readonly hexConflict = signal(false);
+  /** backlog/129 — a save was attempted; an invalid save is never silent, every failing field shows its error. */
+  readonly submitAttempted = signal(false);
 
   readonly form = this.fb.nonNullable.group({
     name: this.fb.nonNullable.control('', [Validators.required]),
@@ -131,6 +135,7 @@ export class GymColorBandEditPage implements OnInit {
     const upper = this.upperIndex();
     if (this.form.invalid || lower === null || upper === null) {
       this.form.markAllAsTouched();
+      this.submitAttempted.set(true);
       return;
     }
     const v = this.form.getRawValue();
@@ -152,7 +157,13 @@ export class GymColorBandEditPage implements OnInit {
         this.hexConflict.set(true);
         return;
       }
-      throw error;
+      console.error('GymColorBand save failed', error);
+      const toast = await this.toastController.create({
+        message: this.translate.instant('COMMON.SAVE_FAILED'),
+        duration: 3000,
+        color: 'danger',
+      });
+      await toast.present();
     }
   }
 

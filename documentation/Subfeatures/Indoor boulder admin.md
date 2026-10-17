@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-10-17
-verifikalt_commit: ae4abad
+verifikalt_commit: abb37fb
 ---
 
 # Indoor boulder admin
@@ -54,7 +54,8 @@ CRUD: terem lista, szín-sávok nested vagy külön; soft delete; megerősítés
   minta: a súgó-gomb `shared/help-input/`). A paletta választása visszaírja a szöveges mezőt a
   kanonikus (`#rrggbb`, kisbetűs) alakra; amíg a szöveges mező nem érvényes 6-jegyű hex, a paletta
   gomb egy semleges szürke (`#888888`) mintaszínnel nyílik.
-- Egyedi hex validáció mentéskor (a kanonikus alakon — [[Névegyediség]]).
+- Egyedi hex validáció mentéskor (a kanonikus alakon — [[Névegyediség]]); ütközésnél `HEX_CONFLICT` hiba a mező alatt.
+- **Mentés soha nem csendes** (`backlog/129`): érvénytelen űrlapnál a Mentés nem navigál el, és minden hibás mező (név, hex, alsó / felső fokozat) alatt azonnal lefordított hiba jelenik meg — üres kötelező mező: `COMMON.FIELD_REQUIRED`; üres / fel nem ismert / kétértelmű fokozat: a fokozat-mező saját hibája (üresen `SHARED.GRADE_INPUT.ERROR_REQUIRED`). Nem várt mentési hibánál (`COMMON.SAVE_FAILED`) toast jelenik meg, az oldal nyitva marad.
 
 ### Megjegyzések
 

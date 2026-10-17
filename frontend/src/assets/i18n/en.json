@@ -14,7 +14,9 @@
     "DONE": "Done",
     "DECREASE": "Decrease",
     "INCREASE": "Increase",
-    "OK": "OK"
+    "OK": "OK",
+    "FIELD_REQUIRED": "This field is required.",
+    "SAVE_FAILED": "Saving failed. Please try again."
   },
   "LOGIN": {
     "TITLE": "Log in",
@@ -718,7 +720,8 @@
       "ERROR_UNKNOWN": "Grade not recognised. Check the help for examples.",
       "ERROR_AMBIGUOUS": "Complete the grade (e.g. 6 → 6a), or pick one of the suggestions.",
       "ERROR_MISSING_LETTER_BOULDER": "Font grades need a letter next to the number, e.g. 4A+ (a bare +/− is not enough).",
-      "ERROR_MISSING_LETTER_ROPE": "French grades need a letter next to the number (e.g. 4a+), UIAA needs a roman numeral (e.g. IV+) — a bare +/− alone is not enough."
+      "ERROR_MISSING_LETTER_ROPE": "French grades need a letter next to the number (e.g. 4a+), UIAA needs a roman numeral (e.g. IV+) — a bare +/− alone is not enough.",
+      "ERROR_REQUIRED": "A grade is required."
     },
     "ASPECT_PICKER": {
       "GROUP_LABEL": "Aspect (compass direction)",

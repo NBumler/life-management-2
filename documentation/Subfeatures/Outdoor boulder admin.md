@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-09
-verifikalt_commit: b5d1556
+verifikalva: 2026-10-17
+verifikalt_commit: abb37fb
 ---
 
 # Outdoor boulder admin
@@ -38,6 +38,8 @@ Nincs `GymColorBand`. Soft delete: [[Mászónapló]]. Térkép/fotó UI: **nem**
 ### UI/UX elvárások
 
 Hierarchikus admin (helyszín → szektor → problémák). Belépés: hub Admin / napló gyorslink.
+
+- **Mentés soha nem csendes** (`backlog/129`): érvénytelen űrlapnál a Mentés nem navigál el, és a probléma-szerkesztőn a hibás mező (név, `guidebookGrade`) alatt azonnal lefordított hiba jelenik meg — üres kötelező mező: `COMMON.FIELD_REQUIRED`. Nem várt mentési hibánál (`COMMON.SAVE_FAILED`) toast jelenik meg, az oldal nyitva marad.
 
 ### Megjegyzések
 

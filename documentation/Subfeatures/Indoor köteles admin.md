@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-06
-verifikalt_commit: 99ba651
+verifikalva: 2026-10-17
+verifikalt_commit: abb37fb
 ---
 
 # Indoor köteles admin
@@ -35,6 +35,8 @@ Nincs multi-pitch master. Soft delete: [[Mászónapló]].
 ### UI/UX elvárások
 
 Gym szerkesztő köteles tab/szekció: falmagasság, safety flags, opcionális beltéri utak CRUD. Belépés: hub Admin vagy napló gyorslink.
+
+- **Mentés soha nem csendes** (`backlog/129`): érvénytelen űrlapnál a Mentés nem navigál el, és minden hibás mező (beltéri út: név, fokozat) alatt azonnal lefordított hiba jelenik meg — üres kötelező mező: `COMMON.FIELD_REQUIRED`; üres / fel nem ismert / kétértelmű fokozat: a fokozat-mező saját hibája (üresen `SHARED.GRADE_INPUT.ERROR_REQUIRED`). Nem várt mentési hibánál (`COMMON.SAVE_FAILED`) toast jelenik meg, az oldal nyitva marad.
 
 ### Megjegyzések
 

@@ -17,6 +17,7 @@ import {
   IonTitle,
   IonToolbar,
   NavController,
+  ToastController,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
@@ -64,6 +65,7 @@ export class RouteEditPage implements OnInit {
   private readonly repository = inject(RouteRepository);
   private readonly sectorRepository = inject(SectorRepository);
   private readonly alertController = inject(AlertController);
+  private readonly toastController = inject(ToastController);
   private readonly translate = inject(TranslateService);
 
   readonly protectionTypes: readonly Route.ProtectionTypeEnum[] = [
@@ -74,6 +76,8 @@ export class RouteEditPage implements OnInit {
   ];
 
   readonly routeId = signal<string | null>(null);
+  /** backlog/129 — a save was attempted; an invalid save is never silent, every failing field shows its error. */
+  readonly submitAttempted = signal(false);
   readonly cragId = signal<string>('');
   readonly sectorId = signal<string>('');
 
@@ -126,6 +130,7 @@ export class RouteEditPage implements OnInit {
   async save(): Promise<void> {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.submitAttempted.set(true);
       return;
     }
     const v = this.form.getRawValue();
@@ -141,7 +146,18 @@ export class RouteEditPage implements OnInit {
       topoNumber: v.topoNumber?.trim() ? v.topoNumber.trim() : null,
       protectionType: v.protectionType ?? null,
     };
-    await this.repository.save(input);
+    try {
+      await this.repository.save(input);
+    } catch (error) {
+      console.error('Route save failed', error);
+      const toast = await this.toastController.create({
+        message: this.translate.instant('COMMON.SAVE_FAILED'),
+        duration: 3000,
+        color: 'danger',
+      });
+      await toast.present();
+      return;
+    }
     await this.navigateBack();
   }
 

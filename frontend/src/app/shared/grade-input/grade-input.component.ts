@@ -49,6 +49,18 @@ export class GradeInputComponent implements ControlValueAccessor, OnDestroy {
   @Input() label = '';
   @Input() placeholder = '';
 
+  /**
+   * backlog/129 — the parent's save was attempted: an empty field now shows a "required" error
+   * instead of nothing, and a pending debounced parse is flushed so the inline error appears at once.
+   */
+  @Input()
+  set showRequired(v: boolean) {
+    this.requiredShown = v;
+    if (v) {
+      this.flushParse();
+    }
+  }
+
   @Input()
   set value(v: string | null) {
     this.applyText(v ?? '', false);
@@ -63,6 +75,7 @@ export class GradeInputComponent implements ControlValueAccessor, OnDestroy {
   /** Debounced parse driving the badge / chips / inline error. */
   readonly parsed = signal<GradeParseResult>(EMPTY_PARSE);
 
+  private requiredShown = false;
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
   private onChange: (value: string) => void = () => {};
   private onTouched: () => void = () => {};
@@ -116,6 +129,8 @@ export class GradeInputComponent implements ControlValueAccessor, OnDestroy {
   get errorKey(): string | null {
     const result = this.parsed();
     switch (result.status) {
+      case 'EMPTY':
+        return this.requiredShown ? 'SHARED.GRADE_INPUT.ERROR_REQUIRED' : null;
       case 'UNKNOWN':
         if (isBareNumberWithModifier(result.normalized)) {
           return this.discipline === 'BOULDER'

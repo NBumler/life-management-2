@@ -11,9 +11,11 @@ import {
   IonInput,
   IonItem,
   IonList,
+  IonNote,
   IonTitle,
   IonToolbar,
   NavController,
+  ToastController,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
@@ -38,6 +40,7 @@ import { BoulderProblemRepository, BoulderProblemSaveInput } from '../../../../c
     IonList,
     IonItem,
     IonInput,
+    IonNote,
     TranslatePipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -50,9 +53,12 @@ export class BoulderProblemEditPage implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly repository = inject(BoulderProblemRepository);
   private readonly alertController = inject(AlertController);
+  private readonly toastController = inject(ToastController);
   private readonly translate = inject(TranslateService);
 
   readonly problemId = signal<string | null>(null);
+  /** backlog/129 — a save was attempted; an invalid save is never silent, every failing field shows its error. */
+  readonly submitAttempted = signal(false);
   readonly cragId = signal<string>('');
   readonly sectorId = signal<string>('');
 
@@ -86,6 +92,7 @@ export class BoulderProblemEditPage implements OnInit {
   async save(): Promise<void> {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.submitAttempted.set(true);
       return;
     }
     const v = this.form.getRawValue();
@@ -96,7 +103,18 @@ export class BoulderProblemEditPage implements OnInit {
       guidebookGrade: v.guidebookGrade.trim(),
       topoNumber: v.topoNumber?.trim() ? v.topoNumber.trim() : null,
     };
-    await this.repository.save(input);
+    try {
+      await this.repository.save(input);
+    } catch (error) {
+      console.error('BoulderProblem save failed', error);
+      const toast = await this.toastController.create({
+        message: this.translate.instant('COMMON.SAVE_FAILED'),
+        duration: 3000,
+        color: 'danger',
+      });
+      await toast.present();
+      return;
+    }
     await this.navigateBack();
   }
 

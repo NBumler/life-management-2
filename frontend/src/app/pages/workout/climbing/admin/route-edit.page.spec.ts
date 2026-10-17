@@ -137,11 +137,12 @@ describe('RouteEditPage', () => {
     );
   });
 
-  it('save() does nothing while the required grade is missing', async () => {
+  it('save() does not save, and flags the attempt, while the required grade is missing', async () => {
     await setup();
     component.form.patchValue({ name: 'Sárkányfészek', guidebookGrade: '' });
     await component.save();
     expect(saveSpy).not.toHaveBeenCalled();
+    expect(component.submitAttempted()).toBe(true); // backlog/129 — the failing field shows its error
   });
 
   it('save() forwards a trimmed topo number, or null when blank (backlog/079)', async () => {

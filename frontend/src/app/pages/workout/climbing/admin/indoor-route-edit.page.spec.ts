@@ -70,10 +70,11 @@ describe('IndoorRouteEditPage', () => {
     );
   });
 
-  it('save() does nothing while the grade is unparseable', async () => {
+  it('save() does not save, and flags the attempt, while the grade is unparseable', async () => {
     await setup();
     component.form.patchValue({ name: 'Sárga 12', discipline: IndoorRoute.DisciplineEnum.Rope, grade: 'nope' });
     await component.save();
     expect(saveSpy).not.toHaveBeenCalled();
+    expect(component.submitAttempted()).toBe(true); // backlog/129 — the failing field shows its error
   });
 });

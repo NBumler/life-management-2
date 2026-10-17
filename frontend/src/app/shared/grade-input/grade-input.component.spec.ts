@@ -95,6 +95,20 @@ describe('GradeInputComponent', () => {
     expect(component.helpTextKey).toBe('SHARED.GRADE_INPUT.HELP_ROPE');
   });
 
+  it('backlog/129 — an empty field shows no error until showRequired, then a "required" error', () => {
+    expect(component.errorKey).toBeNull();
+    component.showRequired = true;
+    expect(component.errorKey).toBe('SHARED.GRADE_INPUT.ERROR_REQUIRED');
+  });
+
+  it('backlog/129 — showRequired flushes a pending debounced parse so the inline error shows at once', fakeAsync(() => {
+    component.onInput('nope');
+    expect(component.errorKey).toBeNull(); // still debounced
+    component.showRequired = true;
+    expect(component.errorKey).toBe('SHARED.GRADE_INPUT.ERROR_UNKNOWN');
+    tick(250);
+  }));
+
   it('setDisabledState() toggles the disabled signal', () => {
     component.setDisabledState(true);
     expect(component.disabled()).toBe(true);
