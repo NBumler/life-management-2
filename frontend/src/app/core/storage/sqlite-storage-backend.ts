@@ -2508,6 +2508,7 @@ export class SqliteStorageBackend implements StorageBackend {
         name: draft.name,
         notes: draft.notes,
         active: draft.active,
+        inRotation: draft.inRotation,
         goalLabel: draft.goalLabel,
         defaultWorkoutType: draft.defaultWorkoutType,
       }),
@@ -2595,7 +2596,7 @@ export class SqliteStorageBackend implements StorageBackend {
     await this.db.executeTransaction([...tasks, ...enqueue.outboxTasks]);
     await this.offlineQueue.refreshCounts(userId);
     if (enqueue.hardRemoveLocalEntity) {
-      return { id, name: '', active: true, deleted: true, exercises: [] };
+      return { id, name: '', active: true, inRotation: true, deleted: true, exercises: [] };
     }
     return this.readWorkoutPlan(id);
   }
@@ -3156,6 +3157,7 @@ function buildWorkoutPlanPayload(draft: WorkoutPlanDraft): WorkoutPlan {
     name: draft.name,
     notes: draft.notes,
     active: draft.active,
+    inRotation: draft.inRotation,
     goalLabel: draft.goalLabel,
     defaultWorkoutType: draft.defaultWorkoutType,
     deleted: false,

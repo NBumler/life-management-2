@@ -12,6 +12,7 @@ import {
   climbingSessionWeatherToList,
   addWeeklyPlanSlotKindDefault,
   stripGymColorBandVariant,
+  addWorkoutPlanInRotationDefault,
 } from './outbox-migrator';
 
 // documentation/Architektúra/Backend-offline first.md §7 "Payload-verziózás (app frissítés)".
@@ -429,6 +430,26 @@ describe('migrateOutboxItem', () => {
     it('leaves a DELETE (null payload) and an already-migrated payload untouched', () => {
       expect(stripGymColorBandVariant(null, '/u')).toEqual({ payload: null, url: '/u' });
       expect(stripGymColorBandVariant({ id: 'b' }, '/u')).toEqual({ payload: { id: 'b' }, url: '/u' });
+    });
+  });
+
+  describe('addWorkoutPlanInRotationDefault (v20 → v21, backlog/165)', () => {
+    it('stamps inRotation: true on a pending plan write that predates the field', () => {
+      const payload = { id: 'p', name: 'Húzás', active: true, exercises: [] };
+      expect(addWorkoutPlanInRotationDefault(payload, '/u').payload).toEqual({ ...payload, inRotation: true });
+    });
+
+    it('leaves a DELETE (null payload) and an already-migrated payload untouched', () => {
+      expect(addWorkoutPlanInRotationDefault(null, '/u')).toEqual({ payload: null, url: '/u' });
+      const migrated = { id: 'p', inRotation: false };
+      expect(addWorkoutPlanInRotationDefault(migrated, '/u')).toEqual({ payload: migrated, url: '/u' });
+    });
+
+    it('is registered for WorkoutPlan only', () => {
+      const stale = item({ entityType: 'WorkoutPlan', payloadVersion: 20, payload: { id: 'p', active: true } });
+      expect(migrateOutboxItem(stale, 21).payload).toEqual({ id: 'p', active: true, inRotation: true });
+      const other = item({ entityType: 'WorkoutSession', payloadVersion: 20, payload: { id: 's' } });
+      expect(migrateOutboxItem(other, 21).payload).toEqual({ id: 's' });
     });
   });
 });

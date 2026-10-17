@@ -149,9 +149,9 @@ PR típusok (badge a szett mellett): számított **1RM** megdöntés; **max súl
      - **„Mai javaslat”** + sablonnév + egy tapos „Indítás”; alatta „kézi beállítás” (a napot kézzel felülírtad), különben „utoljára: <dátum>” / „még nem volt”. Ha a javasolt sablon ujjgyakorlatos és holnapra mászás van tervezve: rotációs javaslatnál (minden aktív sablon ujjas) „Holnap mászás, de minden aktív sablonban van ujjgyakorlat — ma inkább könnyebben.”, kézi felülírásnál „Ez a sablon ujjgyakorlatot tartalmaz — a holnapi mászás miatt nem javasolt.”
      - **„Mai edzés kész”** (+ a sablon neve) — ma már van rögzített edzés; aznapra nincs újabb javaslat.
      - **„Mászónap”** — ma rögzített vagy tervezett mászás; „legfeljebb rövid törzs / prehab edzés javasolt”.
-     - **„Pihenőnap”** — „N terhelő nap után” (a terhelő blokk elérte a limitet) vagy „kézi beállítás”.
+     - **„Pihenőnap”** — „N terhelő nap után” (a terhelő blokk elérte a limitet), „kézi beállítás”, vagy „nincs rotációban lévő aktív sablon” (minden aktív sablon rotáción kívüli, `backlog/165`).
   2. **„Következő”** — ha ma nincs indítható javaslat: a következő előrejelzett edzés sablonja, napja és dátuma (14 napon belül).
-  3. **„Terv indítása…”** — action sheet minden aktív sablonnal (`goalLabel`-csoportok ábécérendben „Csoport · Név” formában, a címke nélküliek a végén); tapra indul — az előrejelzéstől függetlenül bármelyik sablon indítható.
+  3. **„Terv indítása…”** — action sheet minden aktív sablonnal, a rotáción kívüliekkel is ([[Heti terv]] `inRotation`, `backlog/165`) (`goalLabel`-csoportok ábécérendben „Csoport · Név” formában, a címke nélküliek a végén); tapra indul — az előrejelzéstől függetlenül bármelyik sablon indítható.
 
   A „ma” a `CurrentDayService` jelzése (`core/config/current-day.service.ts`): előtérbe kerüléskor és percenként újraolvasva, így a nyitva hagyott gyorsindító éjfélkor az új napra vált.
 

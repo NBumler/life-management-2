@@ -53,7 +53,7 @@ class WorkoutPlanIntegrationTest {
 	private ObjectMapper objectMapper;
 
 	private WorkoutPlan plan(UUID id, List<WorkoutPlanExercise> exercises) {
-		return new WorkoutPlan(id, "Felsőtest A", true, exercises, false);
+		return new WorkoutPlan(id, "Felsőtest A", true, true, exercises, false);
 	}
 
 	private WorkoutPlanExercise exercise(UUID id, UUID planId, UUID exerciseId, int orderIndex, List<WorkoutPlanSet> targetSets) {
@@ -134,6 +134,26 @@ class WorkoutPlanIntegrationTest {
 		mockMvc.perform(get("/api/workout-plans/" + id).header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.active").value(false));
+	}
+
+	@Test
+	void update_persistsTheInRotationFlag_independentlyOfActive() throws Exception {
+		String token = registerAndLogin("wp-in-rotation");
+		UUID id = UUID.randomUUID();
+		createPlan(token, plan(id, List.of())).andExpect(status().isOk()).andExpect(jsonPath("$.inRotation").value(true));
+
+		WorkoutPlan manualOnly = plan(id, List.of());
+		manualOnly.inRotation(false);
+		mockMvc.perform(put("/api/workout-plans/" + id).contentType(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + token).content(json(manualOnly)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.active").value(true))
+				.andExpect(jsonPath("$.inRotation").value(false));
+
+		mockMvc.perform(get("/api/workout-plans/" + id).header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.active").value(true))
+				.andExpect(jsonPath("$.inRotation").value(false));
 	}
 
 	@Test

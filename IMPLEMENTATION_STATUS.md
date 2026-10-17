@@ -14,6 +14,10 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-17 — #165** Sablon „Rotációban” kapcsoló: új `WorkoutPlan.inRotation` (alapból `true`), az `active`-tól
+  független. Rotáción kívüli aktív sablont a rotációs előrejelzés kihagy, de a pickerek (heti kézi beállítás, „Terv
+  indítása…”) felkínálják; a belőle rögzített edzés terhelő nap, az A/B sorrendet nem tolja el. `V56`, helyi
+  `SCHEMA_V51`, outbox payload v21 (`addWorkoutPlanInRotationDefault`). Mellékjavítás: `verify:outbox` CRLF-független hash.
 - **2026-10-17 — #162** Backend Jackson 3 + JSpecify: openapi-generator `useSpringBoot4` / `useJackson3` /
   `useJspecify`; a deprecated (removal) Jackson 2 converter helyett Boot 4 saját `JsonMapper`-e
   (`JsonNullableJackson3Module` + `FAIL_ON_UNKNOWN_PROPERTIES` ki); a kód `tools.jackson.*`-ra. 0 javac warning.

@@ -22,6 +22,10 @@ export interface WorkoutPlan {
      */
     active: boolean;
     /**
+     * backlog/165 — default true on create. false = an active template the rotation forecast skips; the pickers still offer it (manual start / one-day override only). Independent of `active`.
+     */
+    inRotation: boolean;
+    /**
      * Display-only grouping label in the list / picker (\"Alap rotáció\", \"Cél: …\"). No business logic.
      */
     goalLabel?: string | null;

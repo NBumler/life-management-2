@@ -204,6 +204,17 @@ export function stripGymColorBandVariant(payload: unknown, url: string): { paylo
 }
 
 /**
+ * v20 → v21 (backlog/165): `WorkoutPlan.inRotation` became required. Every template queued before the
+ * update took part in the rotation, so a missing `inRotation` is `true`.
+ */
+export function addWorkoutPlanInRotationDefault(payload: unknown, url: string): { payload: unknown; url: string } {
+  if (payload === null || typeof payload !== 'object' || Array.isArray(payload) || 'inRotation' in payload) {
+    return { payload, url };
+  }
+  return { payload: { ...(payload as Record<string, unknown>), inRotation: true }, url };
+}
+
+/**
  * v4 → v5 (backlog/084): the sector moved from `ClimbingSession` to `AscentAttempt`, and
  * `ClimbingSession.rockType` / `aspect` were removed. A `ClimbingSession` write still pending from
  * before that app update carries a session-level `sectorId` / `sectorName` (and `rockType` /
@@ -302,6 +313,9 @@ const STEPS_BY_VERSION: Readonly<Record<number, VersionSteps>> = {
   18: { default: identityStep, overrides: { GymColorBand: stripGymColorBandVariant } },
   // backlog/163: brand-new `VolleyballLog` entity — nothing to transform.
   19: { default: identityStep },
+  // backlog/165: `WorkoutPlan.inRotation` added as a new required field — a pending template write from
+  // before this update was in the rotation, so it gets `inRotation: true`.
+  20: { default: identityStep, overrides: { WorkoutPlan: addWorkoutPlanInRotationDefault } },
 };
 
 function buildMigrations(): ReadonlyMap<string, MigrationStep> {

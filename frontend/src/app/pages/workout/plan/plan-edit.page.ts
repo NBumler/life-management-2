@@ -19,6 +19,7 @@ import {
   IonSelectOption,
   IonTextarea,
   IonTitle,
+  IonToggle,
   IonToolbar,
   PopoverController,
   ToastController,
@@ -115,6 +116,7 @@ const WORKOUT_TYPE_VALUES = Object.values(WorkoutPlan.DefaultWorkoutTypeEnum);
     IonLabel,
     IonSelect,
     IonSelectOption,
+    IonToggle,
     IonModal,
     TranslatePipe,
   ],
@@ -218,6 +220,8 @@ export class PlanEditPage implements OnInit {
     goalLabel: this.fb.control<string | null>(null),
     defaultWorkoutType: this.fb.control<WorkoutPlan.DefaultWorkoutTypeEnum | null>(null),
     notes: this.fb.control<string | null>(null),
+    /** backlog/165 — off: still offered by the pickers, but the rotation forecast skips it. */
+    inRotation: this.fb.nonNullable.control(true),
   });
 
   readonly isEditing = computed(() => this.planId() !== null);
@@ -238,6 +242,7 @@ export class PlanEditPage implements OnInit {
         goalLabel: existing.goalLabel ?? null,
         defaultWorkoutType: existing.defaultWorkoutType ?? null,
         notes: existing.notes ?? null,
+        inRotation: existing.inRotation,
       });
       this.exercises.set(this.rowsFromPlan(existing));
     }
@@ -342,6 +347,7 @@ export class PlanEditPage implements OnInit {
       name: value.name.trim(),
       notes: value.notes?.trim() ? value.notes.trim() : null,
       active: this.active,
+      inRotation: value.inRotation,
       goalLabel: value.goalLabel?.trim() ? value.goalLabel.trim() : null,
       defaultWorkoutType: value.defaultWorkoutType,
       exercises: this.exercises().map((row, exerciseIndex) => this.exerciseToSaveItem(row, exerciseIndex)),

@@ -39,7 +39,12 @@
           <ion-item button [routerLink]="[plan.id]" detail="true">
             <ion-label>
               <h2>{{ plan.name }}</h2>
-              <p>{{ liveExerciseCount(plan) }} {{ 'WORKOUT.PLAN.EXERCISES_SHORT' | translate }}</p>
+              <p>
+                {{ liveExerciseCount(plan) }} {{ 'WORKOUT.PLAN.EXERCISES_SHORT' | translate }}
+                @if (!plan.inRotation) {
+                  · {{ 'WORKOUT.PLAN.MANUAL_ONLY_BADGE' | translate }}
+                }
+              </p>
             </ion-label>
             <ion-toggle
               slot="end"

@@ -1356,7 +1356,13 @@ const SCHEMA_V50_STATEMENTS: string[] = [
   `CREATE INDEX IF NOT EXISTS idx_volleyball_log_volleyball_date ON volleyball_log (volleyball_date DESC)`,
 ];
 
-const SCHEMA_VERSION = 50;
+/**
+ * backlog/165 — `workout_plan.in_rotation`: an active template the rotation forecast skips (the pickers
+ * still offer it); on-device tükre a backend `V56__workout_plan_in_rotation.sql`-nek.
+ */
+const SCHEMA_V51_STATEMENTS: string[] = [`ALTER TABLE workout_plan ADD COLUMN in_rotation INTEGER NOT NULL DEFAULT 1`];
+
+const SCHEMA_VERSION = 51;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -1409,7 +1415,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 47, statements: SCHEMA_V47_STATEMENTS },
   { toVersion: 48, statements: SCHEMA_V48_STATEMENTS },
   { toVersion: 49, statements: SCHEMA_V49_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V50_STATEMENTS },
+  { toVersion: 50, statements: SCHEMA_V50_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V51_STATEMENTS },
 ];
 
 export interface SqlTask {

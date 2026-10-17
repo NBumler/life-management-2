@@ -24,6 +24,7 @@ function plan(id: string, category = 'BACK'): WorkoutPlan {
     id,
     name: `Plan ${id}`,
     active: true,
+    inRotation: true,
     deleted: false,
     exercises: [{ id: `${id}-x`, deleted: false, exerciseCategory: category, exerciseKind: 'WEIGHTED_REPS' }],
   } as unknown as WorkoutPlan;

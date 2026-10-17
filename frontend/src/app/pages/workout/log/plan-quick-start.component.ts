@@ -65,6 +65,8 @@ const NEXT_LOOKAHEAD_DAYS = 14;
                   <span class="qs-sub">
                     @if (day.reason === 'OVERRIDE') {
                       {{ 'WORKOUT.LOG.QUICK.MANUAL' | translate }}
+                    } @else if (day.reason === 'NO_PLANS') {
+                      {{ 'WORKOUT.LOG.QUICK.NO_ROTATION_PLANS' | translate }}
                     } @else {
                       {{ 'WORKOUT.LOG.QUICK.REST_AFTER_BLOCK' | translate: { count: day.blockLength } }}
                     }

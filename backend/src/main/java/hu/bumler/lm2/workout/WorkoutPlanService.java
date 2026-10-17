@@ -192,6 +192,7 @@ class WorkoutPlanService {
 		entity.setName(dto.getName());
 		entity.setNotes(dto.getNotes().orElse(null));
 		entity.setActive(Boolean.TRUE.equals(dto.getActive()));
+		entity.setInRotation(Boolean.TRUE.equals(dto.getInRotation()));
 		entity.setGoalLabel(dto.getGoalLabel().orElse(null));
 		WorkoutPlan.DefaultWorkoutTypeEnum type = dto.getDefaultWorkoutType().orElse(null);
 		entity.setDefaultWorkoutType(type == null ? null : type.getValue());

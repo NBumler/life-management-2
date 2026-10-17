@@ -274,6 +274,8 @@ export interface WorkoutPlanDraft {
   name: string;
   notes: string | null;
   active: boolean;
+  /** backlog/165 — false: active (offered by the pickers) but skipped by the rotation forecast. */
+  inRotation: boolean;
   goalLabel: string | null;
   defaultWorkoutType: WorkoutPlan.DefaultWorkoutTypeEnum | null;
   exercises: WorkoutPlanExerciseSaveItem[];

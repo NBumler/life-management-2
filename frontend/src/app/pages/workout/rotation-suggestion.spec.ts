@@ -2,8 +2,8 @@ import { WorkoutPlan } from '../../api/model/workoutPlan';
 import { WorkoutSession } from '../../api/model/workoutSession';
 import { planHasFingerLoad, rotationOrder } from './rotation-suggestion';
 
-function plan(id: string, active = true, deleted = false): WorkoutPlan {
-  return { id, name: id, active, deleted, exercises: [] } as unknown as WorkoutPlan;
+function plan(id: string, active = true, deleted = false, inRotation = true): WorkoutPlan {
+  return { id, name: id, active, inRotation, deleted, exercises: [] } as unknown as WorkoutPlan;
 }
 
 function session(planId: string | null, date: string, deleted = false): WorkoutSession {
@@ -36,6 +36,10 @@ describe('rotation-suggestion (backlog/139)', () => {
 
   it('skips inactive and deleted templates', () => {
     expect(rotationOrder([plan('X', false), plan('Y', true, true), A], []).map((entry) => entry.plan.id)).toEqual(['A']);
+  });
+
+  it('skips active templates kept out of the rotation (backlog/165)', () => {
+    expect(rotationOrder([plan('M', true, false, false), A, B], []).map((entry) => entry.plan.id)).toEqual(['A', 'B']);
   });
 
   describe('finger-aware suggestion (backlog/143)', () => {

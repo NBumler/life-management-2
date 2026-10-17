@@ -8,11 +8,12 @@ import { addLocalDays } from './weekly-plan/weekly-plan-adherence';
 /** 2026-10-05 is a Monday. */
 const TODAY = '2026-10-05';
 
-function plan(id: string, category = 'BACK', active = true): WorkoutPlan {
+function plan(id: string, category = 'BACK', active = true, inRotation = true): WorkoutPlan {
   return {
     id,
     name: id,
     active,
+    inRotation,
     deleted: false,
     exercises: [{ id: `${id}-x`, deleted: false, exerciseCategory: category, exerciseKind: 'WEIGHTED_REPS' }],
   } as unknown as WorkoutPlan;
@@ -116,6 +117,30 @@ describe('training-forecast (backlog/144)', () => {
   it('without an active template a free day is a rest day', () => {
     const result = forecast({ plans: [plan('X', 'BACK', false)] }, 1);
     expect(result[0]).toEqual(jasmine.objectContaining({ kind: 'REST', reason: 'NO_PLANS' }));
+  });
+
+  describe('templates kept out of the rotation (backlog/165)', () => {
+    const extra = plan('X', 'FOREARM_FINGERS', true, false);
+
+    it('are never suggested — the A / B forecast is unchanged', () => {
+      expect(compact(forecast({ plans: [plan('A'), extra, plan('B')] }, 10))).toEqual(compact(forecast({}, 10)));
+    });
+
+    it('a manual override to one is a load day, and the rotation continues where it was', () => {
+      const result = forecast({ plans: [plan('A'), extra, plan('B')], overrides: new Map([[day(0), { kind: 'PLAN', planId: 'X' }]]) }, 7);
+      expect(compact(result)).toEqual(['W:X', 'W:A', 'R', 'W:B', 'W:A', 'W:B', 'R']);
+      expect(result[0].reason).toBe('OVERRIDE');
+    });
+
+    it('a logged session from one counts toward the block limit but does not shift A / B', () => {
+      const result = forecast({ plans: [plan('A'), extra, plan('B')], workoutSessions: [workout(day(-2), 'A'), workout(day(-1), 'X')] }, 2);
+      expect(compact(result)).toEqual(['R', 'W:B']);
+    });
+
+    it('with only such templates active a free day is a rest day', () => {
+      const result = forecast({ plans: [extra] }, 1);
+      expect(result[0]).toEqual(jasmine.objectContaining({ kind: 'REST', reason: 'NO_PLANS' }));
+    });
   });
 
   it('overridesByDate(): every live slot of every live week, by date — no inheritance', () => {

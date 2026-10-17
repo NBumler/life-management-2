@@ -185,7 +185,7 @@ class WeeklyPlanIntegrationTest {
 
 	private UUID createWorkoutPlan(String token) throws Exception {
 		UUID id = UUID.randomUUID();
-		WorkoutPlan dto = new WorkoutPlan(id, "Felsőtest A", true, List.of(), false);
+		WorkoutPlan dto = new WorkoutPlan(id, "Felsőtest A", true, true, List.of(), false);
 		mockMvc.perform(post("/api/workout-plans").contentType(MediaType.APPLICATION_JSON)
 				.header(HttpHeaders.AUTHORIZATION, "Bearer " + token).content(json(dto)))
 				.andExpect(status().isOk());

@@ -70,8 +70,8 @@ describe('WeeklyPlanPage — rotation forecast (backlog/144)', () => {
   };
 
   const plans = [
-    { id: 'pA', name: 'A', active: true, deleted: false, exercises: [] },
-    { id: 'pB', name: 'B', active: true, deleted: false, exercises: [] },
+    { id: 'pA', name: 'A', active: true, inRotation: true, deleted: false, exercises: [] },
+    { id: 'pB', name: 'B', active: true, inRotation: true, deleted: false, exercises: [] },
   ] as unknown as WorkoutPlan[];
 
   beforeEach(async () => {

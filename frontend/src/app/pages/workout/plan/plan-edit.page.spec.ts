@@ -178,6 +178,18 @@ describe('PlanEditPage', () => {
     ]);
   });
 
+  it('a new template is in the rotation by default; the toggle saves it as manual-only (backlog/165)', async () => {
+    const planSave = spyOn(TestBed.inject(WorkoutPlanRepository), 'save').and.resolveTo({ id: 'p1' } as WorkoutPlan);
+    spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
+    component.form.controls.name.setValue('Ujjerő extra');
+    expect(component.form.controls.inRotation.value).toBeTrue();
+
+    component.form.controls.inRotation.setValue(false);
+    await component.save();
+
+    expect(planSave.calls.mostRecent().args[0]).toEqual(jasmine.objectContaining({ active: true, inRotation: false }));
+  });
+
   it('saves an empty cue as null', async () => {
     const planSave = spyOn(TestBed.inject(WorkoutPlanRepository), 'save').and.resolveTo({ id: 'p1' } as WorkoutPlan);
     spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);

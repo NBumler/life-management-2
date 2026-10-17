@@ -30,13 +30,15 @@ function lastDateByPlan(sessions: readonly WorkoutSession[]): Map<string, string
 }
 
 /**
- * Active, live templates ordered by "due-ness": never-done first, then the oldest last session. Ties
- * keep the input order (the repository's creation order), so a fresh A/B pair starts with A.
+ * Active, live, in-rotation templates ordered by "due-ness": never-done first, then the oldest last
+ * session. Ties keep the input order (the repository's creation order), so a fresh A/B pair starts
+ * with A. An `inRotation: false` template (backlog/165) is skipped here only — the pickers still offer
+ * it, and a session started from it never shifts the others' order (each plan keeps its own last date).
  */
 export function rotationOrder(plans: readonly WorkoutPlan[], sessions: readonly WorkoutSession[]): RotationCandidate[] {
   const latest = lastDateByPlan(sessions);
   return plans
-    .filter((plan) => !plan.deleted && plan.active)
+    .filter((plan) => !plan.deleted && plan.active && plan.inRotation)
     .map((plan, index) => ({ plan, lastDate: latest.get(plan.id) ?? null, index }))
     .sort((a, b) => {
       if (a.lastDate !== b.lastDate) {

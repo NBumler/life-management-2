@@ -11,6 +11,7 @@ required:
   - id
   - name
   - active
+  - inRotation
   - deleted
   - exercises
 properties:
@@ -26,6 +27,11 @@ properties:
   active:
     type: boolean
     description: Default true on create. false = hidden from the slot / "Terv indítása" pickers, not deleted.
+  inRotation:
+    type: boolean
+    description: >-
+      backlog/165 — default true on create. false = an active template the rotation forecast skips; the
+      pickers still offer it (manual start / one-day override only). Independent of `active`.
   goalLabel:
     type: string
     nullable: true

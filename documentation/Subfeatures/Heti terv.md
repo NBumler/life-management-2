@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-10-02
-verifikalt_commit: f8fa488
+verifikalva: 2026-10-17
+verifikalt_commit: 8583cd4
 ---
 
 # Heti terv
@@ -19,6 +19,8 @@ Edzéssablonok (rutinok) és a **rotációs előrejelzés** („mit kéne csiná
 
 Tetszőleges számú `WorkoutPlan` sablon létezhet, és közülük tetszőleges számú lehet egyszerre **aktív**. Ez teszi lehetővé, hogy egy állandó alap-rotáció (pl. „A” / „B” nap) mellett átmenetileg cél-specifikus sablonok is aktiválhatók legyenek — pl. egy időszakos edzéscél miatt bevezetett extra sablonok —, anélkül hogy az alap sablonokat törölni kellene; a blokk végén az alap sablonok egyszerűen visszaaktiválhatók.
 
+Egy aktív sablon **rotáción kívülire** is állítható (`inRotation = false`, `backlog/165`): ilyenkor az előrejelzés soha nem javasolja, de a pickerek felkínálják, így kézzel (heti kézi beállítás, „Terv indítása…”) kivételesen bármikor beiktatható — pl. egy OAPU húzás / nyomás rotáció mellé egy alkalmi ujjerő-edzés, ami nem tolja el az A/B sorrendet.
+
 Fejlesztési sorrend: [[Gyakorlat]] → [[Edzésnapló]] → **Heti terv**.
 
 ### Funkcionális leírás
@@ -31,6 +33,7 @@ Fejlesztési sorrend: [[Gyakorlat]] → [[Edzésnapló]] → **Heti terv**.
 | `name` | Kötelező (pl. „Felsőtest A”, „Hangboard Heavy Day”) |
 | `notes` | Opcionális |
 | `active` | Boolean; alapértelmezett `true` létrehozáskor. Kikapcsolása **nem törlés**: a sablon megmarad a katalógusban és a rá mutató múltbeli `WorkoutSession.planId` / meglévő kézi felülírás érintetlen, csak kimarad a rotációból és elrejtődik a pickerekből (heti felülíró menü, „Terv indítása…”). Bármikor visszakapcsolható. Tetszőleges számú sablon lehet egyszerre aktív — lásd „Aktív / inaktív sablonok” lent. |
+| `inRotation` | Boolean; alapértelmezett `true` létrehozáskor (`backlog/165`). `false`: a sablon aktív marad — a pickerek felkínálják —, de a rotációs előrejelzés kihagyja. Az `active`-tól független; csak aktív sablonnál van hatása. |
 | `goalLabel` | Opcionális szöveg; csoportosító címke a listában és a pickerben (pl. „Alap rotáció”, „Cél: egykezes húzódzkodás”). Egyetlen hozzá kötött művelet a csoport egy koppintásos (de)aktiválása (`backlog/140`, lásd UI); a csoport kulcsa a trimmelt címke |
 | `defaultWorkoutType` | Opcionális `GENERAL_WEIGHTS` \| `HIIT_CIRCUIT` — session indításkor előtöltés |
 | `exercises` | `WorkoutPlanExercise[]` (nested) |
@@ -41,7 +44,15 @@ Fejlesztési sorrend: [[Gyakorlat]] → [[Edzésnapló]] → **Heti terv**.
 
 - Új sablon létrehozáskor `active = true`. A sablon lista fejlécén / soronként kapcsolható; nincs szükség edit módba lépésre.
 - **A rotáció és a pickerek csak aktív, nem törölt sablonokat használnak**: rotációs előrejelzés, heti felülíró menü, [[Edzésnapló]] „Terv indítása…”. A sablon lista (katalógus) képernyő viszont Aktív / Inaktív / Mind szűrővel az inaktívakat is mutatja, hogy visszakapcsolhatók legyenek.
-- Egy már megadott kézi felülírás vagy múltbeli session `planId`-je akkor is érvényes marad, ha az általa hivatkozott sablon időközben inaktívvá válik — az `active` mező csak azt befolyásolja, hogy a sablon részt vesz-e a rotációban és felkínálásra kerül-e.
+- **Rotáción kívüli sablon** (`active = true`, `inRotation = false`, `backlog/165`): a pickerek (heti felülíró menü, „Terv indítása…”) felkínálják, a rotációs előrejelzés nem. Új sablon `inRotation = true`; a sablon-szerkesztő „Rotációban” kapcsolójával állítható.
+
+  | `active` | `inRotation` | Rotációs előrejelzés | Pickerek |
+  |---|---|---|---|
+  | ✓ | ✓ | részt vesz | felkínálja |
+  | ✓ | ✗ | kimarad | felkínálja |
+  | ✗ | bármi | kimarad | nem kínálja fel |
+- Egy már megadott kézi felülírás vagy múltbeli session `planId`-je akkor is érvényes marad, ha az általa hivatkozott sablon időközben inaktívvá (vagy rotáción kívülivé) válik — az `active` / `inRotation` mező csak azt befolyásolja, hogy a sablon részt vesz-e a rotációban és felkínálásra kerül-e.
+- A csoport-műveletek (`backlog/140`) csak az `active` mezőt állítják, az `inRotation`-t nem.
 - Nincs felső korlát az egyszerre aktív sablonok számára.
 
 #### Entitás — `WorkoutPlanExercise` / cél-szettek
@@ -95,9 +106,9 @@ A tervezett mászás egy `CLIMBING` típusú [[Események|esemény]] (egyszeri v
 - `missedClimb` = múltbeli nap, terv volt, rögzítés nincs → szürke **„Elmaradt mászás”** jelvény; a számításban az a nap a tényleges adata szerint számít (pl. pihenőnap).
 - Napsoron (ma / jövő, rögzített mászás nélkül) kapcsoló-gomb: **„+ Mászás”** (körvonalas) → egyszeri, egész napos „Mászás” esemény létrehozása; **„Mászás (tervezett)”** (kitöltött) → az aznapi egyszeri mászás-esemény(ek) törlése. Ha a napot csak ismétlődő mászás-esemény fedi, a tap az esemény szerkesztőjét nyitja (egy előfordulás nem törölhető külön — az [[Események]]ben nincs előfordulás-kivétel).
 
-#### Rotációs előrejelzés (`backlog/139`, `backlog/144`)
+#### Rotációs előrejelzés (`backlog/139`, `backlog/144`, `backlog/165`)
 
-Egyetlen tiszta TS előrejelzés (`pages/workout/training-forecast.ts`: `trainingForecast`, `forecastInputsFrom`, `overridesByDate`) adja a heti nézet mai / jövőbeli sorait **és** az [[Edzésnapló]] gyorsindítóját. Bemenet: aktív sablonok, rögzített edzések és mászások, tervezett mászások ([[Események]] `CLIMBING`), kézi felülírások.
+Egyetlen tiszta TS előrejelzés (`pages/workout/training-forecast.ts`: `trainingForecast`, `forecastInputsFrom`, `overridesByDate`) adja a heti nézet mai / jövőbeli sorait **és** az [[Edzésnapló]] gyorsindítóját. Bemenet: sablonok (a rotációhoz az aktív, rotációban lévők — `rotationOrder`, `pages/workout/rotation-suggestion.ts`), rögzített edzések és mászások, tervezett mászások ([[Események]] `CLIMBING`), kézi felülírások.
 
 - **Múlt (tegnapig):** a rögzített adat. Terhelő nap = rögzített mászás vagy edzés. A javasolt, de nem rögzített nap **pihenőnap** — utána a blokk újraindul.
 - **Ma:** ha már van rögzített mászás / edzés, a nap az, ami történt (`LOGGED`) — aznapra nincs újabb javaslat. Különben ugyanaz, mint a jövő.
@@ -105,8 +116,9 @@ Egyetlen tiszta TS előrejelzés (`pages/workout/training-forecast.ts`: `trainin
   1. **Kézi felülírás** nyer: `REST` → pihenő; `PLAN` → az a sablon.
   2. **Tervezett mászás** → mászónap (terhelő nap, edzés nélkül).
   3. **Blokklimit:** ha az egymást követő terhelő napok száma elérte a limitet → pihenőnap. A limit **felváltva 2 / 3**: az előző lezárt blokk ≥ 3 napos volt (vagy nincs előzmény) → 2, különben 3 (`nextBlockLimit`). Az aktuális blokkot és az előzőt a rögzített múlt (60 nap) adja, az előrejelzés innen folytatja.
-  4. Egyébként **edzés: a rotáció következő sablonja** — az aktív, élő sablonok közül a legrégebben csinált (sosem csinált elsőbbséggel, holtversenyben a sablon-sorrend). Az előrejelzett és a felülírt napok is léptetik a rotációt, így egy felülírás után onnan folytatódik. **Mászás előtti napon** a következő ujjmentes sablon (élő `FOREARM_FINGERS` / `HANGBOARD_PINCH` gyakorlat nélküli, `planHasFingerLoad`); ha minden sablon ujjas, a soron következő, `fingerFallback` jelzéssel.
-- Aktív sablon nélkül a szabad nap pihenőnap (`NO_PLANS`).
+  4. Egyébként **edzés: a rotáció következő sablonja** — az aktív, rotációban lévő (`inRotation`), élő sablonok közül a legrégebben csinált (sosem csinált elsőbbséggel, holtversenyben a sablon-sorrend). Az előrejelzett és a felülírt napok is léptetik a rotációt, így egy felülírás után onnan folytatódik. **Mászás előtti napon** a következő ujjmentes sablon (élő `FOREARM_FINGERS` / `HANGBOARD_PINCH` gyakorlat nélküli, `planHasFingerLoad`); ha minden sablon ujjas, a soron következő, `fingerFallback` jelzéssel.
+- Aktív, rotációban lévő sablon nélkül a szabad nap pihenőnap (`NO_PLANS`); a gyorsindító ilyenkor „nincs rotációban lévő aktív sablon” alcímet mutat, a rotáción kívüli sablonok kézzel továbbra is indíthatók.
+- **Rotáción kívüli sablon** (`backlog/165`): kézi felülírásként (1. lépés) érvényes, és a belőle rögzített / felülírt edzés **terhelő nap** (blokklimit, terhelés-figyelmeztetések). A rotáció sorrendjét nem tolja el — a rotáció sablononként az utolsó edzés dátumát nézi, így a többi sablon onnan folytatódik, ahol tartott.
 - A fókuszváltás (pl. „OAPU mód”) a sablon-csoport kapcsolóval (`backlog/140`) történik: csak az aktív sablonok vesznek részt a rotációban.
 - A „ma” a `CurrentDayService` jelzése (előtérbe kerüléskor és percenként újraolvasva), így a nyitva hagyott nézet éjfélkor átáll.
 
@@ -130,9 +142,9 @@ CRUD: sablon lista/szerkesztő; napi kézi felülírás a heti nézetben; soft d
 
 ### UI/UX elvárások
 
-- Sablonok lista + nested gyakorlat/cél-szett szerkesztő ([[Gyakorlat]] picker). Az ismétlésszám mező szöveges (`inputmode="tel"` — számbillentyűzet kötőjellel): `N` vagy `N-M` (szóköz, en-dash tűrve; `N-N` egyetlen értékké egyszerűsödik); értelmezhetetlen vagy fordított tartománynál a mező kerete piros, a szett sora alatt teljes szélességű hibaüzenet, és a mentés blokkolva. A parse / megjelenítés mezőtől független (`shared/target-range.ts`), hogy később más cél-mezők is kaphassanak tartományt. A cél-szett táblázat elrendezése az [[Edzésnapló]]-val közös (oszlopfejléc + szettenként egy sor, szett-típus jelvény, ⋮ gyakorlat-menü); a sablonban a `kind` mezői mellett egy „Pihenő / mp” (cél pihenő) oszlop is van. A szett-jelvény popoverében (típus / Oldal / **Cél RPE**) állítható az egyoldali cél-szett és a cél-RPE; „+ Új szett” egyoldali szett után a kezet váltogatja, a cél-RPE-t átviszi. A gyakorlat-fejléc alatt egysoros **megjegyzés** mező (max. 200 karakter, „Megjegyzés (pl. szék: 5, 3 mp negatív)”); üresen `null`-ként mentődik.
-- Sablonok lista szűrő: **Aktív** (alapértelmezett) / Inaktív / Mind; soronkénti aktív/inaktív kapcsoló (nincs szükség edit módba lépésre); opcionális `goalLabel` szerinti csoport-fejléc a listában. A címkés csoport-fejlécen ⋮ gomb → action sheet (`backlog/140`, fókuszváltás pl. „OAPU mód”): **Csoport aktiválása** (a csoport minden sablonja aktív), **Csoport inaktiválása**, **Csak ez a csoport legyen aktív** (a csoport aktív, minden más élő sablon — más csoportok és a címke nélküliek — inaktív). A művelet a szűrőtől függetlenül az összes élő sablonra hat, csak a ténylegesen változó sablonokat menti (mindegyiket a soronkénti kapcsolóval azonos nested PUT + outbox úton, `planGroupActivationChanges` — `pages/workout/plan/plan-group-activation.ts`), utána toast: „N sablon módosítva”. Megerősítés nincs: a művelet ugyanígy visszafordítható. A címke nélküli sablonoknak nincs fejléce, így csoport-menüje sem.
-- A heti nézet felülíró menüje és az [[Edzésnapló]] „Terv indítása…” listája (action sheet; a „Terv indítása…”-ban „Csoport · Név”) csak aktív sablonokat kínál fel.
+- Sablonok lista + nested gyakorlat/cél-szett szerkesztő ([[Gyakorlat]] picker). Az ismétlésszám mező szöveges (`inputmode="tel"` — számbillentyűzet kötőjellel): `N` vagy `N-M` (szóköz, en-dash tűrve; `N-N` egyetlen értékké egyszerűsödik); értelmezhetetlen vagy fordított tartománynál a mező kerete piros, a szett sora alatt teljes szélességű hibaüzenet, és a mentés blokkolva. A parse / megjelenítés mezőtől független (`shared/target-range.ts`), hogy később más cél-mezők is kaphassanak tartományt. A cél-szett táblázat elrendezése az [[Edzésnapló]]-val közös (oszlopfejléc + szettenként egy sor, szett-típus jelvény, ⋮ gyakorlat-menü); a sablonban a `kind` mezői mellett egy „Pihenő / mp” (cél pihenő) oszlop is van. A szett-jelvény popoverében (típus / Oldal / **Cél RPE**) állítható az egyoldali cél-szett és a cél-RPE; „+ Új szett” egyoldali szett után a kezet váltogatja, a cél-RPE-t átviszi. A gyakorlat-fejléc alatt egysoros **megjegyzés** mező (max. 200 karakter, „Megjegyzés (pl. szék: 5, 3 mp negatív)”); üresen `null`-ként mentődik. A sablon-adatok alatt **„Rotációban”** kapcsoló (`backlog/165`, alapból bekapcsolva) segédszöveggel: „Kikapcsolva a rotáció kihagyja, de kézzel (heti terv, Terv indítása) továbbra is indítható.”
+- Sablonok lista szűrő: **Aktív** (alapértelmezett) / Inaktív / Mind; soronkénti aktív/inaktív kapcsoló (nincs szükség edit módba lépésre); rotáción kívüli sablon sorában a gyakorlatszám után „· Rotáción kívül”; opcionális `goalLabel` szerinti csoport-fejléc a listában. A címkés csoport-fejlécen ⋮ gomb → action sheet (`backlog/140`, fókuszváltás pl. „OAPU mód”): **Csoport aktiválása** (a csoport minden sablonja aktív), **Csoport inaktiválása**, **Csak ez a csoport legyen aktív** (a csoport aktív, minden más élő sablon — más csoportok és a címke nélküliek — inaktív). A művelet a szűrőtől függetlenül az összes élő sablonra hat, csak a ténylegesen változó sablonokat menti (mindegyiket a soronkénti kapcsolóval azonos nested PUT + outbox úton, `planGroupActivationChanges` — `pages/workout/plan/plan-group-activation.ts`), utána toast: „N sablon módosítva”. Megerősítés nincs: a művelet ugyanígy visszafordítható. A címke nélküli sablonoknak nincs fejléce, így csoport-menüje sem.
+- A heti nézet felülíró menüje és az [[Edzésnapló]] „Terv indítása…” listája (action sheet; a „Terv indítása…”-ban „Csoport · Név”) csak aktív sablonokat kínál fel — a rotáción kívülieket is.
 - Heti dashboard: 7 napos nézet. Múltbeli nap: a rögzített jelvények. Mai / jövőbeli nap: „+ Mászás” kapcsoló, és — ha a nap nem mászónap és nem rögzített — egy **előrejelzés-chip**: „Javasolt: <sablon>” (körvonalas) vagy „Pihenő”; kézi felülírásnál kitöltött, „· kézi” utótaggal. Hosszú sablonnév a chipen belül tördelődik. A mai sor végén „Edzés indítása” a mára javasolt sablonnal.
 - **Kézi felülírás:** a chip tapjára action sheet — fejléc „<nap> · <dátum>”, alcím „Kézi beállítás erre a napra — a rotáció innen folytatódik.”; gombok: **Automatikus (rotáció)** (csak felülírt napon), az aktív sablonok, **Pihenőnap**, Mégse. A választás azonnal ment (a hét saját slotjai, a többi nap felülírása megmarad).
 - A hét-navigátor (előző hét ◂ / hét kezdete / következő hét ▸) **egy sorban** jelenik meg, a nyilak a hét-felirat két szélén (`.week-nav` flex-sor); a felirat tapja a mai hétre ugrik.
@@ -144,7 +156,7 @@ Nincs bonyolult progresszió-motor — a napló ghost values / PR viszi a progre
 
 Fix napi sablon-kiosztás (és annak heti öröklése) szándékosan nincs (`backlog/144`): rendszertelen mászás mellett a rotáció + egynapos kézi felülírás követi a valóságot, a fix kiosztás csak ütközéseket és kézi tologatást termelt.
 
-Az `active` mező szándékosan sablon-szintű kapcsoló, nem egy külön „sablon-készlet” / „program” entitás — tetszőleges kombináció aktiválható egyszerre, nincs kikényszerített „csak egy aktív készlet” szabály. Nagyon gyakori, alacsony volumenű, egy-két gyakorlatos sessionök (pl. napi rövid, nem bukásig menő kiegészítő gyakorlás) külön modell nélkül, sima [[Edzésnapló]] sessionként rögzíthetők — nincs szükség rájuk külön „mikro-session” típusra.
+Az `active` mező szándékosan sablon-szintű kapcsoló, nem egy külön „sablon-készlet” / „program” entitás — tetszőleges kombináció aktiválható egyszerre, nincs kikényszerített „csak egy aktív készlet” szabály. Az `inRotation` (`backlog/165`) ugyanígy egy tőle független, sablon-szintű második kapcsoló, nem háromállású státusz — így a csoport-aktiválás változatlanul csak az `active`-ot kezeli. Nagyon gyakori, alacsony volumenű, egy-két gyakorlatos sessionök (pl. napi rövid, nem bukásig menő kiegészítő gyakorlás) külön modell nélkül, sima [[Edzésnapló]] sessionként rögzíthetők — nincs szükség rájuk külön „mikro-session” típusra.
 
 ### Nyitott kérdések
 
@@ -161,15 +173,15 @@ Nincs nyitott kérdés.
 #### Backend-offline
 
 - Olvasás / írás helyi store-ból Backend-offline és Full-offline esetén is.
-- A heti terhelés, a rotációs előrejelzés és a terhelés-figyelmeztetések kizárólag a helyi mászó- és edzésnapló-, esemény- (tervezett mászás), heti felülírás- és sablon store-ból számolnak (nincs saját hívás), így Full-offline is teljesek. A „+ Mászás” kapcsoló a szokásos esemény-írási úton, a kézi felülírás a `WeeklyPlan` nested mentésen (helyi store + egy outbox elem) ment. Outbox payload v18: a frissítés előtt sorban álló `WeeklyPlan` mentések slotjai `kind: 'PLAN'`-t kapnak (`addWeeklyPlanSlotKindDefault`).
+- A heti terhelés, a rotációs előrejelzés és a terhelés-figyelmeztetések kizárólag a helyi mászó- és edzésnapló-, esemény- (tervezett mászás), heti felülírás- és sablon store-ból számolnak (nincs saját hívás), így Full-offline is teljesek. A „+ Mászás” kapcsoló a szokásos esemény-írási úton, a kézi felülírás a `WeeklyPlan` nested mentésen (helyi store + egy outbox elem) ment. Outbox payload v18: a frissítés előtt sorban álló `WeeklyPlan` mentések slotjai `kind: 'PLAN'`-t kapnak (`addWeeklyPlanSlotKindDefault`). Outbox payload v21 (`backlog/165`): a frissítés előtt sorban álló `WorkoutPlan` mentések `inRotation: true`-t kapnak (`addWorkoutPlanInRotationDefault`); helyi SQLite `SCHEMA_V51`: `workout_plan.in_rotation INTEGER NOT NULL DEFAULT 1`.
 - Create / update / soft-delete → outbox + kliens UUID; sync: [[Szinkronizációs központ]].
 - Szinkronizálatlan helyi draft elvetése: hard remove + outbox tisztítás.
 - Lásd [[Backend-offline first]].
 
 ### Backend
 
-- Táblák: `workout_plan` (`active boolean`, default `true`; `goal_label` opcionális szöveg), `workout_plan_exercise`, `workout_plan_set`, `weekly_plan` + `weekly_plan_slot` (`kind` `PLAN` | `REST`, `plan_id` nullable, CHECK: `PLAN` ↔ `plan_id` nem null — `V52`).
-- OpenAPI: nested plan CRUD; weekly plan CRUD; listák `deleted = false`. Aktiválás/inaktiválás sima mező-update (nincs külön endpoint), ugyanazon a nested PUT-on megy át, mint bármely más sablon-módosítás.
+- Táblák: `workout_plan` (`active boolean`, default `true`; `in_rotation boolean NOT NULL DEFAULT true` — `V56`, `backlog/165`; `goal_label` opcionális szöveg), `workout_plan_exercise`, `workout_plan_set`, `weekly_plan` + `weekly_plan_slot` (`kind` `PLAN` | `REST`, `plan_id` nullable, CHECK: `PLAN` ↔ `plan_id` nem null — `V52`).
+- OpenAPI: nested plan CRUD; weekly plan CRUD; listák `deleted = false`. Aktiválás/inaktiválás és az `inRotation` (kötelező mező) sima mező-update (nincs külön endpoint), ugyanazon a nested PUT-on megy át, mint bármely más sablon-módosítás.
 - Auth / user scope.
 
 ### Nyitott kérdések

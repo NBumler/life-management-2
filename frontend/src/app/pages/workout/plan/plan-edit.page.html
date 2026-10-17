@@ -46,6 +46,11 @@
       <ion-item>
         <ion-textarea formControlName="notes" [label]="'WORKOUT.PLAN.FIELD_NOTES' | translate" label-placement="stacked" [autoGrow]="true"></ion-textarea>
       </ion-item>
+      <ion-item>
+        <ion-toggle formControlName="inRotation" [helperText]="'WORKOUT.PLAN.FIELD_IN_ROTATION_HINT' | translate">
+          {{ 'WORKOUT.PLAN.FIELD_IN_ROTATION' | translate }}
+        </ion-toggle>
+      </ion-item>
     </ion-list>
   </form>
 

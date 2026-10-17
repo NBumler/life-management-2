@@ -144,6 +144,7 @@ export class WorkoutPlanRepository {
       name: plan.name,
       notes: plan.notes ?? null,
       active,
+      inRotation: plan.inRotation,
       goalLabel: plan.goalLabel ?? null,
       defaultWorkoutType: plan.defaultWorkoutType ?? null,
       exercises: plan.exercises

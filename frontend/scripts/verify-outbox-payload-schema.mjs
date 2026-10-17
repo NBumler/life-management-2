@@ -89,7 +89,9 @@ function hashEntity(rootFile) {
   for (const file of files) {
     hash.update(file, 'utf8');
     hash.update('\0');
-    hash.update(readFileSync(join(SCHEMA_DIR, file)));
+    // CRLF → LF: a Windows checkout (core.autocrlf) must hash the same as an LF one, or a fresh
+    // worktree / clone reports every entity as changed.
+    hash.update(readFileSync(join(SCHEMA_DIR, file), 'utf8').replace(/\r\n/g, '\n'), 'utf8');
     hash.update('\0');
   }
   return { hash: hash.digest('hex'), files };

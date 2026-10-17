@@ -570,6 +570,7 @@ export class HttpStorageBackend implements StorageBackend {
       name: draft.name,
       notes: draft.notes,
       active: draft.active,
+      inRotation: draft.inRotation,
       goalLabel: draft.goalLabel,
       defaultWorkoutType: draft.defaultWorkoutType,
       deleted: false,

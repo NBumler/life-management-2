@@ -61,8 +61,11 @@ import { uuidV4 } from './uuid';
  *   key from a pending band write (the value never carried meaning); every other type is identity.
  * - v19 → v20 (backlog/163): brand-new `VolleyballLog` entity — no pending write of it can predate this
  *   app update, so every type is identity.
+ * - v20 → v21 (backlog/165): `WorkoutPlan` gained a required `inRotation`. A pending template write from
+ *   before that app update was in the rotation, so `addWorkoutPlanInRotationDefault` stamps
+ *   `inRotation: true`; every other type is identity.
  */
-export const OUTBOX_PAYLOAD_SCHEMA_VERSION = 20;
+export const OUTBOX_PAYLOAD_SCHEMA_VERSION = 21;
 
 /** documentation/Architektúra/Backend-offline first.md §6 "Tétel-újrapróbálkozási backoff" (jitter omitted — not load-bearing for correctness). */
 const RETRY_BACKOFF_MS = [2000, 8000, 30000, 120000, 600000];

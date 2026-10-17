@@ -15,7 +15,8 @@ class WorkoutPlanMapper {
 	 * for this plan, live or tombstoned — see WorkoutPlan.yaml for why.
 	 */
 	WorkoutPlan toDto(WorkoutPlanEntity entity, List<WorkoutPlanExercise> exercises) {
-		WorkoutPlan dto = new WorkoutPlan(entity.getId(), entity.getName(), entity.isActive(), exercises, entity.isDeleted());
+		WorkoutPlan dto = new WorkoutPlan(entity.getId(), entity.getName(), entity.isActive(), entity.isInRotation(), exercises,
+				entity.isDeleted());
 		dto.notes(entity.getNotes());
 		dto.goalLabel(entity.getGoalLabel());
 		if (entity.getDefaultWorkoutType() != null) {

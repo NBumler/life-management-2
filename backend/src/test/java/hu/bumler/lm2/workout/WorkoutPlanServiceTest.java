@@ -69,7 +69,7 @@ class WorkoutPlanServiceTest {
 	}
 
 	private static WorkoutPlan plan(UUID id, List<WorkoutPlanExercise> exercises) {
-		return new WorkoutPlan(id, "Felsőtest A", true, exercises, false);
+		return new WorkoutPlan(id, "Felsőtest A", true, true, exercises, false);
 	}
 
 	private static WorkoutPlanExercise exercise(UUID id, UUID planId, int orderIndex, List<WorkoutPlanSet> targetSets) {

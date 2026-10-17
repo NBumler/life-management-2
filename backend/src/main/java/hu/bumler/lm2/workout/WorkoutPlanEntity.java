@@ -36,6 +36,10 @@ public class WorkoutPlanEntity {
 	@Column(nullable = false)
 	private boolean active = true;
 
+	/** backlog/165 — false keeps an active template out of the rotation forecast; the pickers still offer it. */
+	@Column(name = "in_rotation", nullable = false)
+	private boolean inRotation = true;
+
 	@Column(name = "goal_label")
 	private String goalLabel;
 
@@ -94,6 +98,14 @@ public class WorkoutPlanEntity {
 
 	public void setActive(boolean active) {
 		this.active = active;
+	}
+
+	public boolean isInRotation() {
+		return inRotation;
+	}
+
+	public void setInRotation(boolean inRotation) {
+		this.inRotation = inRotation;
 	}
 
 	public String getGoalLabel() {
