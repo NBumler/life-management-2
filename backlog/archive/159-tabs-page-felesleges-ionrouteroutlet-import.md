@@ -1,12 +1,12 @@
 ---
 id: 159
 type: change-request
-status: ready
+status: done
 title: NG8113 build warning — felesleges IonRouterOutlet import a TabsPage-ben
 specs: []
 flag:
 created: 2026-10-17
-closed:
+closed: 2026-10-17
 ---
 
 # 159 — NG8113 build warning — felesleges IonRouterOutlet import a TabsPage-ben
@@ -30,8 +30,8 @@ eltakarná az oldalt és elnyelné a tapokat) — az import ennek a javításnak
 
 ## Elfogadási kritériumok
 
-- [ ] `IonRouterOutlet` eltávolítva az `imports` tömbből és az import-sorból.
-- [ ] `npm run build` NG8113 nélkül; tab-navigáció változatlanul működik (a kommentben leírt
+- [x] `IonRouterOutlet` eltávolítva az `imports` tömbből és az import-sorból.
+- [x] `npm run build` NG8113 nélkül; tab-navigáció változatlanul működik (a kommentben leírt
       tap-elnyelés nem tér vissza).
 
 ## Terv / döntési napló
@@ -41,5 +41,5 @@ _—_
 ## Lezáráskor (on-done)
 
 - Frissített specek: — (nincs viselkedésváltozás)
-- `IMPLEMENTATION_STATUS.md` sor: …
+- `IMPLEMENTATION_STATUS.md` sor: 2026-10-17 — NG8113 megszűnt
 - Kód: `frontend/src/app/pages/tabs/tabs.page.ts`

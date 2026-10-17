@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-06
-verifikalt_commit: 651f710
+verifikalva: 2026-10-17
+verifikalt_commit: 2adf800
 ---
 
 # Backend-offline first
@@ -256,7 +256,7 @@ Az outbox tételek **túlélik az alkalmazás frissítését** ([[Bejelentkezés
 - **Két mechanikus őr a szabály mögött** (`backlog/080` — korábban csak próza volt, és a `#77` `failurePoint`→`notes` mezőtörléséhez lemaradt a migrátor-lépés, ami egy telefonon beragadt egy `ClimbingSession` POST-ot):
   - **Séma-drift check** — `npm run verify:outbox` (`scripts/verify-outbox-payload-schema.mjs`) minden outbox-hordozott DTO OpenAPI-alakját (a `$ref`-tranzitív fájlzárt tartalmának hashe) egy commitolt snapshothoz (`outbox-payload-schema.snapshot.json`) veti. Mezőalak-változás **piros**, amíg az `OUTBOX_PAYLOAD_SCHEMA_VERSION` bump + a migrátor-lépés + a `--write` (snapshot újra-elfogadás, a PR diffben látszik) meg nem történt. Része a zöld-check kapunak ([[Fejlesztői környezet]]).
   - **Verzió→lépések teljesség** — az `outbox-migrator.ts` `MIGRATIONS` map generatívan épül (`STEPS_BY_VERSION` per-verzió `default` + `overrides`, minden entitástípusra minden `v < VERSION`-ra), így nem lehet lyuk; bumpolt verzió `STEPS_BY_VERSION` bejegyzés nélkül modultöltéskor dob, és `outbox-migrator.spec.ts` is asszertálja a per-kulcs teljességet.
-- **Szerver-oldali tolerancia** (`backlog/080`): a backend `ObjectMapper` `FAIL_ON_UNKNOWN_PROPERTIES` **ki van kapcsolva** — egy régi offline payloadból eltávolított / átnevezett mezőt a szerver csendben elhagy, nem `500`-zik (a `@Valid` a hiányzó **kötelező** mezőt így is elkapja). Egy tényleg parse-olhatatlan body `400 MALFORMED_REQUEST` (nem az általános `500` fallback, amit a drain `5×` újrapróbálna). Így egy migrátorból kimaradt mező a legrosszabb esetben is **átmegy**, nem bénítja meg a tételt.
+- **Szerver-oldali tolerancia** (`backlog/080`): a backend Jackson 3 `JsonMapper` (`common/JacksonConfig` `JsonMapperBuilderCustomizer`) `FAIL_ON_UNKNOWN_PROPERTIES` **ki van kapcsolva** — egy régi offline payloadból eltávolított / átnevezett mezőt a szerver csendben elhagy, nem `500`-zik (a `@Valid` a hiányzó **kötelező** mezőt így is elkapja). Egy tényleg parse-olhatatlan body `400 MALFORMED_REQUEST` (nem az általános `500` fallback, amit a drain `5×` újrapróbálna). Így egy migrátorból kimaradt mező a legrosszabb esetben is **átmegy**, nem bénítja meg a tételt.
 
 #### 8. Olvasási út — pull (delta sync)
 

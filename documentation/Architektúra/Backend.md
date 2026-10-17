@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-10-02
-verifikalt_commit: ba05ae0
+verifikalva: 2026-10-17
+verifikalt_commit: 2adf800
 ---
 
 # Backend
@@ -108,7 +108,7 @@ backend/
 
 | Profil | Generátor | Kimenet | Verziókövetve |
 |---|---|---|---|
-| Java API interface + DTO | openapi-generator `spring`, `interfaceOnly=true`, `useTags=true`, jakarta validation | `backend/build/generated/openapi/` | **Nem** — build-time Gradle task a `compileJava` előtt |
+| Java API interface + DTO | openapi-generator `spring`, `interfaceOnly=true`, `useTags=true`, jakarta validation, `useSpringBoot4` / `useJackson3` / `useJspecify` (JSpecify `@Nullable` + `@NullMarked` package-info) | `backend/build/generated/openapi/` | **Nem** — build-time Gradle task a `compileJava` előtt |
 | Angular kliens | openapi-generator `typescript-angular`, `providedInRoot=true` | `frontend/src/app/api/` | **Igen** — commitolva |
 
 - **Egy generátor implementáció, két profil.** Így ugyanaz a kód értelmezi a specet mindkét oldalon: discriminator, `oneOf`, `nullable`, nested aggregate. Ez a polimorf `ClimbingSession` DTO ([[Mászónapló]]) és a nested fa-mentések miatt számít. Ezért **nem** `ng-openapi-gen`, amit a starter kit javasol — szándékos eltérés, két generátor két értelmezést jelentene.
@@ -191,5 +191,5 @@ Nincs aggregált „Kaja API" a szülőben. A szerződés **erőforrás / tag al
 
 ### Nyitott kérdések
 
-- Az openapi-generator `7.24.0` `spring` profilja Spring Boot `4.1.0`-val fordul (`useBeanValidation` / `useJakartaEe` pinelve); ~40 controller implementálja a generált interfészeket, a build zöld — a tartalék (kézzel írt API interface) nem kellett. A jövőbeli verzió-emeléskori re-check karbantartási emlékeztető: `> Tervezett: backlog/008-openapi-generator-spring-boot-4-kimenet-ellenorzes.md`.
+- Az openapi-generator `7.24.0` `spring` profilja Spring Boot `4.1.0`-val fordul (`useBeanValidation` / `useJakartaEe` / `useSpringBoot4` / `useJackson3` / `useJspecify` pinelve); a generált modellek a Boot saját, auto-konfigurált Jackson 3 `JsonMapper`-én mennek át (`common/JacksonConfig`: `JsonNullableJackson3Module` bean + `FAIL_ON_UNKNOWN_PROPERTIES` ki, `backlog/162`) — külön Jackson 2 converter nincs, a backend kód is `tools.jackson.*`-ot használ; ~40 controller implementálja a generált interfészeket, a build zöld — a tartalék (kézzel írt API interface) nem kellett. A jövőbeli verzió-emeléskori re-check karbantartási emlékeztető: `> Tervezett: backlog/008-openapi-generator-spring-boot-4-kimenet-ellenorzes.md`.
 - Prod üzemeltetés / hosting és TLS: `> Tervezett: backlog/006-prod-hosting-tls.md`.

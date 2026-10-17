@@ -1,13 +1,13 @@
 ---
 id: 161
 type: change-request
-status: ready
+status: done
 title: Android build — Groovy space-assignment deprecation (Gradle 10) az app/build.gradle-ben
 specs:
   - "[[Fejlesztői környezet]]"
 flag:
 created: 2026-10-17
-closed:
+closed: 2026-10-17
 ---
 
 # 161 — Android build — Groovy space-assignment deprecation (Gradle 10) az app/build.gradle-ben
@@ -33,10 +33,10 @@ de ugyanaz a szintaxis.
 
 ## Elfogadási kritériumok
 
-- [ ] `coreLibraryDesugaringEnabled = true`; a fájl többi property-beállítása is `=`
+- [x] `coreLibraryDesugaringEnabled = true`; a fájl többi property-beállítása is `=`
       szintaxisra hozva, ahol a DSL engedi.
-- [ ] `assembleDebug --warning-mode all` nem jelez deprecation-t az `app/build.gradle`-re.
-- [ ] Debug APK telepíthető, Health Connect lépésolvasás működik (desugaring él).
+- [x] `assembleDebug --warning-mode all` nem jelez deprecation-t az `app/build.gradle`-re.
+- [x] Debug APK telepíthető, Health Connect lépésolvasás működik (desugaring él).
 
 ## Terv / döntési napló
 
@@ -52,5 +52,5 @@ Tudatosan **nem** része a jegynek (nem saját kód; `cap sync` / npm-frissíté
 ## Lezáráskor (on-done)
 
 - Frissített specek: — (nincs viselkedésváltozás)
-- `IMPLEMENTATION_STATUS.md` sor: …
+- `IMPLEMENTATION_STATUS.md` sor: 2026-10-17 — Gradle 10 deprecation megszűnt
 - Kód: `frontend/android/app/build.gradle`

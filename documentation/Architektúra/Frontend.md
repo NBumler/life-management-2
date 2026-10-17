@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-10-02
-verifikalt_commit: 0a9f1bb
+verifikalva: 2026-10-17
+verifikalt_commit: 2adf800
 ---
 
 # Frontend
@@ -44,6 +44,12 @@ Nincs nyitott kérdés.
 - **i18n:** ngx-translate — [[Nyelv választás]] (`hu.json`, `en.json`).
 - **Téma:** [[Dark&Light mode]].
 - **Natív runtime:** Capacitor.
+- **Bundle budget** (`angular.json`, production): initial `2.5mb` warning / `5mb` error (`backlog/160`).
+  Az initial ~2 MB nagyja az Ionic (`@ionic/core` + `@ionic/angular/standalone`, ami a form-komponenseket
+  — input, textarea, select, toggle, searchbar — statikusan behúzza) és a bootstrapkor kellő core
+  (`SyncEngine` + generált API service-ek, `local-rows`, SQLite backend); oldal / feature-komponens nincs
+  benne, minden route lazy. Ezért a warning-küszöb tudatosan emelt; egy új feature initial-be kerülése
+  route-szintű lazy loadinggal kezelendő, nem újabb emeléssel.
 
 ##### Verziópolitika
 
@@ -283,6 +289,12 @@ Platform-kényelmi pluginok (splash screen, status bar, keyboard) szükség szer
   Étkezés tétel-szerkesztőjénél). Ha a modal `ng-template`-je közvetlenül `<ion-header>`/`<ion-content>`-et
   ír (nem egy külön komponensre mutat, pl. `sync.page.html`, `tura.page.html`), ez a szabály nem
   vonatkozik rá.
+- **Minden `<ion-icon name="…">` ikon szerepel a `core/config/icons.ts` `registerIcons()` listájában**
+  (`backlog/157`). Az ikonok SVG-adata bootstrapkor `addIcons()`-szal regisztrálódik; a natív WebView
+  egyedi sémáján az Ionicons hálózati fallbackje nem működik, így egy kifelejtett ikon a készüléken
+  üres helyként renderelődik. Őr: a `src/test.ts` ugyanezt a registryt tölti be, és egy
+  `[Ionicons Warning] Could not load icon` figyelmeztetés bukja azt a specet, ami renderelte
+  (`backlog/158`) — ez csak a spec-lefedett sablonokat védi.
 
 #### Platform-képességmátrix
 

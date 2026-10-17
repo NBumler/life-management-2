@@ -14,6 +14,15 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-17 — #162** Backend Jackson 3 + JSpecify: openapi-generator `useSpringBoot4` / `useJackson3` /
+  `useJspecify`; a deprecated (removal) Jackson 2 converter helyett Boot 4 saját `JsonMapper`-e
+  (`JsonNullableJackson3Module` + `FAIL_ON_UNKNOWN_PROPERTIES` ki); a kód `tools.jackson.*`-ra. 0 javac warning.
+  Érintett: [[Backend]], [[Backend-offline first]]; kód: `hu.bumler.lm2.common.JacksonConfig`, `build.gradle.kts`
+- **2026-10-17 — #157–#161** Frontend build/test warningok: két hiányzó ikon regisztrálva (élő mászás banner,
+  pakolás időjárás — eddig üresek voltak); Karma betölti az ikon-registryt és ismeretlen ikonra bukik
+  (4492 sor zaj megszűnt); NG8113 (felesleges `IonRouterOutlet`); initial budget warning 2.5mb (elemzés a #160-ban);
+  `app/build.gradle` Gradle 10-kompatibilis értékadás.
+  Érintett: [[Frontend]], [[Fejlesztői környezet]]; kód: `core/config/icons.ts`, `src/test.ts`, `angular.json`, `android/app/build.gradle`
 - **2026-10-17 — #163** Röplabda napló: új Edzés-szegmens (`edzes.roplabda`), lapos `VolleyballLog` (pályán töltött
   idő 1–240 perc, opcionális intenzitás / szettszám / megjegyzés csak statisztika). Kalória szándékosan alulbecslő:
   egyetlen fix nettó MET 2.0 (Compendium legalacsonyabb röplabda-érték − nyugalmi 1), intenzitástól független.

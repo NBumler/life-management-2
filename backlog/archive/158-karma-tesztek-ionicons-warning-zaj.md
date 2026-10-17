@@ -1,13 +1,13 @@
 ---
 id: 158
 type: change-request
-status: ready
+status: done
 title: Karma tesztek — ~4500 sor Ionicons warning / URL TypeError zaj megszüntetése
 specs:
   - "[[Fejlesztői környezet]]"
 flag:
 created: 2026-10-17
-closed:
+closed: 2026-10-17
 ---
 
 # 158 — Karma tesztek — ~4500 sor Ionicons warning / URL TypeError zaj megszüntetése
@@ -33,20 +33,23 @@ Ok: a `registerIcons()` csak a `src/main.ts`-ben fut, a `src/test.ts` nem hívja
 
 ## Elfogadási kritériumok
 
-- [ ] `src/test.ts` meghívja a `registerIcons()`-t (ugyanaz a registry, mint az appban).
-- [ ] `test:ci` kimenetében 0 `Ionicons Warning` és 0 `Failed to construct 'URL'` sor.
-- [ ] (Javasolt) nem regisztrált ikon → a spec bukjon (pl. `console.warn` spy a
+- [x] `src/test.ts` meghívja a `registerIcons()`-t (ugyanaz a registry, mint az appban).
+- [x] `test:ci` kimenetében 0 `Ionicons Warning` és 0 `Failed to construct 'URL'` sor.
+- [x] (Javasolt) nem regisztrált ikon → a spec bukjon (pl. `console.warn` spy a
       `[Ionicons Warning]` prefixre egy globális `afterEach`-ben), hogy egy registryből
       kifelejtett ikon tesztben derüljön ki, ne a készüléken.
-- [ ] A maradék konzol-üzenetek (pl. `[steps] STEPS_LOW pre-notification Health Connect read
+- [x] A maradék konzol-üzenetek (pl. `[steps] STEPS_LOW pre-notification Health Connect read
       failed` a hibaág-tesztekben) átnézve; ami nem szándékos, elnémítva vagy spy-olva.
 
 ## Terv / döntési napló
 
-_—_
+`registerIcons()` a `test.ts`-ben; `console.warn` wrapper gyűjti az `[Ionicons Warning]` sorokat, globális
+`afterEach` `fail()`-el. Az ion-icon lazy tölt, így a hiba ritkán a következő specre csúszik — elfogadva, a
+cél a futás bukása. Eredmény: 0 Ionicons / 0 URL TypeError sor, a futás ~37 s → ~18 s. A maradék
+`[steps] STEPS_LOW … Health Connect read failed` ERROR egy szándékos hibaág-teszt kimenete, maradt.
 
 ## Lezáráskor (on-done)
 
-- Frissített specek: [[Fejlesztői környezet]] — teszt-futtatás szakasz, ha a „bukik ismeretlen ikonra” szabály bekerül
-- `IMPLEMENTATION_STATUS.md` sor: …
+- Frissített specek: [[Fejlesztői környezet]] — teszt-futtatás szakasz: ikon-registry betöltés + bukás ismeretlen ikonra; [[Frontend]] „Kötelező elvek”
+- `IMPLEMENTATION_STATUS.md` sor: 2026-10-17 — Karma ikon-zaj megszűnt, ismeretlen ikon bukja a specet
 - Kód: `frontend/src/test.ts`

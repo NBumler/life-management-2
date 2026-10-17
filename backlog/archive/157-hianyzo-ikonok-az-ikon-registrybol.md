@@ -1,7 +1,7 @@
 ---
 id: 157
 type: bug
-status: ready
+status: done
 title: Két ikon hiányzik az ikon-registryből (élő mászás banner, pakolás időjárás)
 specs:
   - "[[Mászónapló]]"
@@ -9,7 +9,7 @@ specs:
   - "[[Frontend]]"
 flag:
 created: 2026-10-17
-closed:
+closed: 2026-10-17
 ---
 
 # 157 — Két ikon hiányzik az ikon-registryből (élő mászás banner, pakolás időjárás)
@@ -34,18 +34,20 @@ A többi literál ikonnév (`name="…"`, `icon: '…'`, `'…-outline'`) mind s
 
 ## Elfogadási kritériumok
 
-- [ ] `radioButtonOnOutline` és `partlySunnyOutline` import + regisztráció a `core/config/icons.ts`-ben.
-- [ ] Regressziós védelem: egy spec, ami a `src/app` alatti literál ikonneveket összeveti a
+- [x] `radioButtonOnOutline` és `partlySunnyOutline` import + regisztráció a `core/config/icons.ts`-ben.
+- [x] Regressziós védelem: egy spec, ami a `src/app` alatti literál ikonneveket összeveti a
       registryvel, **vagy** a [[158-karma-tesztek-ionicons-warning-zaj]] szerinti
       „ismeretlen ikon → teszthiba” mechanizmus.
-- [ ] Mindkét képernyőn látható az ikon (böngésző / készülék).
+- [x] Mindkét képernyőn látható az ikon (böngésző / készülék).
 
 ## Terv / döntési napló
 
-_—_
+A regressziós védelem a #158 „ismeretlen ikon → teszthiba” őre lett (nem statikus grep-spec). Ellenőrizve:
+az `add-outline` ideiglenes kivételével 104 spec bukott. Korlát: csak spec-lefedett sablont véd — a
+`climbing-live-banner` komponensnek nincs specje.
 
 ## Lezáráskor (on-done)
 
-- Frissített specek: [[…]] — …
-- `IMPLEMENTATION_STATUS.md` sor: …
+- Frissített specek: [[Frontend]] — „Kötelező elvek”: új szabály, minden ion-icon szerepel a registryben (+ teszt-őr). [[Mászónapló]] / [[Pakolás]] viselkedés-leírása nem változott (vizuális hiba volt).
+- `IMPLEMENTATION_STATUS.md` sor: 2026-10-17 — két hiányzó ikon regisztrálva
 - Kód: `frontend/src/app/core/config/icons.ts`
