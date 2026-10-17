@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-19
-verifikalt_commit: f1d6d59
+verifikalva: 2026-10-17
+verifikalt_commit: ae4abad
 ---
 
 # Indoor boulder admin
@@ -38,7 +38,6 @@ Beltéri boulder **terem + szín-sáv** törzsadat. Egyedi boulder problémák *
 | `gymId` | FK → `Gym` |
 | `name` | Kötelező (pl. „Piros”) |
 | `hexColor` | Kötelező; **egyedi a terem élő szín-sávjai között** (nem lehet két azonos hex). Kanonikus alak (`#rrggbb`, rövid forma kifejtve, kisbetűs) és összehasonlítás: [[Névegyediség]] |
-| `variant` | Enum: `PLUS` \| `MINUS` \| `NEUTRAL` (`+` / `−` / semleges) |
 | `gradeLower` | [[Nehézségi szint skálája]] — alsó bound (boulder skála) |
 | `gradeUpper` | Felső bound |
 | `absoluteDifficultyIndexLower` / `Upper` | Mátrixból számolt |
@@ -49,7 +48,7 @@ CRUD: terem lista, szín-sávok nested vagy külön; soft delete; megerősítés
 ### UI/UX elvárások
 
 - Belépés: [[Mászónapló]] hub Admin, vagy Indoor Boulder napló jobb felső admin.
-- Terem szerkesztő + színlista; grade alsó/felső a shared nehézség komponenssel.
+- Terem szerkesztő + színlista (sávonként szín, név, `alsó–felső` fokozat); grade alsó/felső a shared nehézség komponenssel.
 - `hexColor` bevitel kétféleképp: szabad szöveges `ion-input` (`#rrggbb`/rövid forma) **és** a mező
   végén (`slot="end"`) egy gomb, ami egy natív `input[type=color]` színpalettát nyit (`backlog/115`,
   minta: a súgó-gomb `shared/help-input/`). A paletta választása visszaírja a szöveges mezőt a
@@ -60,6 +59,10 @@ CRUD: terem lista, szín-sávok nested vagy külön; soft delete; megerősítés
 ### Megjegyzések
 
 Reference admin a többi indoor masterhez. Outdoor: [[Outdoor boulder admin]] (Crag hierarchia).
+
+A sávnak nincs saját `+` / `−` változata: azt, hogy egy probléma a sáv melyik részén volt, a beltéri
+boulder kísérlet `bandModifier`-e rögzíti ([[Mászónapló]]) — `MINUS` a sáv alsó, `PLUS` a felső
+indexét választja. (A korábbi, sehol nem használt `variant` mező `backlog/156`-tal megszűnt.)
 
 ### Nyitott kérdések
 
@@ -74,10 +77,14 @@ Terem / szín-sáv CRUD; offline store.
 #### Backend-offline
 
 Helyi store + outbox; kliens UUID; soft delete. Sync: [[Szinkronizációs központ]]. Lásd [[Backend-offline first]].
+A helyi `gym_color_band.variant` oszlop holt mező (nem minden on-device SQLite build enged
+`DROP COLUMN`-t): semmi nem olvassa, az írás konstans `'NEUTRAL'`-lal tölti a `NOT NULL` miatt. A
+`variant` kulcsot hordozó, még el nem küldött outbox-tételekből az outbox-migrátor (payload v19)
+leveszi.
 
 ### Backend
 
-Táblák: `gym`, `gym_color_band`. OpenAPI a [[Mászónapló]] climbing master tag alatt. Auth / user scope (saját termek).
+Táblák: `gym`, `gym_color_band` (a `variant` oszlopot `V54` eldobta). OpenAPI a [[Mászónapló]] climbing master tag alatt. Auth / user scope (saját termek).
 
 ### Nyitott kérdések
 

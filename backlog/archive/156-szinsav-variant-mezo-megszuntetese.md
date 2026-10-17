@@ -1,13 +1,14 @@
 ---
 id: 156
 type: change-request
-status: in-progress
+status: done
 title: Színsáv — a felesleges „Változat” (variant) mező megszüntetése
 specs:
   - "[[Indoor boulder admin]]"
   - "[[Mászónapló]]"
 flag:
 created: 2026-10-17
+closed: 2026-10-17
 ---
 
 # 156 — Színsáv — a felesleges „Változat” (variant) mező megszüntetése
@@ -29,15 +30,15 @@ választja —, a sáv saját `variant`-ja semmibe nem számít bele.
 
 ## Elfogadási kritériumok
 
-- [ ] A színsáv szerkesztőben nincs „Változat” mező; a terem sávlistája csak a fokozat-sávot írja ki.
-- [ ] `GymColorBand` OpenAPI séma, backend entitás / mapper / service: nincs `variant`; Flyway
+- [x] A színsáv szerkesztőben nincs „Változat” mező; a terem sávlistája csak a fokozat-sávot írja ki.
+- [x] `GymColorBand` OpenAPI séma, backend entitás / mapper / service: nincs `variant`; Flyway
       migráció eldobja a `gym_color_band.variant` oszlopot.
-- [ ] Helyi SQLite: az oszlop holt mezőként marad (precedens: V30 / V36 — nem minden on-device
+- [x] Helyi SQLite: az oszlop holt mezőként marad (precedens: V30 / V36 — nem minden on-device
       SQLite build enged `DROP COLUMN`-t); a row-mapper nem olvassa, az írás konstans `'NEUTRAL'`-lal
       tölti a `NOT NULL` megkötés miatt.
-- [ ] Outbox: `OUTBOX_PAYLOAD_SCHEMA_VERSION` bump, a függő `GymColorBand` payloadokból a migrátor
+- [x] Outbox: `OUTBOX_PAYLOAD_SCHEMA_VERSION` bump, a függő `GymColorBand` payloadokból a migrátor
       leveszi a `variant` kulcsot.
-- [ ] A `bandModifier` működése változatlan.
+- [x] A `bandModifier` működése változatlan.
 
 ## Terv / döntési napló
 
@@ -45,7 +46,8 @@ választja —, a sáv saját `variant`-ja semmibe nem számít bele.
 
 ## Lezáráskor (on-done)
 
-- Frissített specek: [[Indoor boulder admin]] — adatmodellből a `variant` kikerül; [[Mászónapló]] — a
-  `bandModifier` sorból a „független a variant-tól” megjegyzés kikerül
+- Frissített specek: [[Indoor boulder admin]] — adatmodellből a `variant` kikerül, Megjegyzések: a +/−
+  a kísérlet `bandModifier`-én, Backend-offline: holt helyi oszlop + outbox v19, Backend: `V54`;
+  [[Mászónapló]] — a `bandModifier` sorból a „független a variant-tól” megjegyzés kikerül
 - `IMPLEMENTATION_STATUS.md` sor: 2026-10-17 — #156 színsáv `variant` mező megszüntetése
-- Kód: `climbing` (backend), `gym-color-band-edit.page`, `gym-color-band.repository`, `local-rows`, `outbox-migrator`
+- Kód: `ae4abad` — `hu.bumler.lm2.climbing.GymColorBand*`, `V54__gym_color_band_drop_variant.sql`, `GymColorBand.yaml`; `gym-color-band-edit.page`, `gym-edit.page.html`, `gym-color-band.repository`, `local-rows`, `outbox-migrator` (+ spec, snapshot), i18n

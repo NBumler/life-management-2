@@ -14,6 +14,9 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-17 — #156** Mászó admin: a színsáv felesleges „Változat” (`variant`, `PLUS`/`MINUS`/`NEUTRAL`)
+  mezője megszűnt — semmi nem olvasta, a sávon belüli +/− a kísérlet `bandModifier`-én van. `V54` eldobta az
+  oszlopot; helyben holt mező marad; outbox payload v19 (`stripGymColorBandVariant`).
 - **2026-10-17 — #155** Nehézségi szint: a francia és a Font skála `3`–`5` fokon opcionális al-betűt fogad
   (`5A`, `4b`, `3C+` …; `6`-tól kötelező marad); a Font alsó sáv a V-skálához igazítva (`3`/`4`/`5` → 5/8/12,
   `4C+`≈V0, `5C`≈V2), a sávban közös indexek megengedettek. `V53` egyszer újraszámolta a tárolt Font szín-sáv
