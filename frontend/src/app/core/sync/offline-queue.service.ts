@@ -67,8 +67,11 @@ import { uuidV4 } from './uuid';
  * - v21 → v22 (backlog/167): brand-new `StretchExercise` entity, and the shared exercise category enum
  *   gained `HIPS` / `NECK` (`Exercise`, `WorkoutSession` / `WorkoutPlan` snapshots). A widening never
  *   invalidates an older payload, so every type is identity.
+ * - v22 → v23 (backlog/168): brand-new `StretchPlan` entity; `WeeklyPlanSlot` (nested in `WeeklyPlan`)
+ *   gained a nullable `stretchPlanId` and a `STRETCH` kind. A pending week write from before that app
+ *   update has no such key (= no stretching template), so every type is identity.
  */
-export const OUTBOX_PAYLOAD_SCHEMA_VERSION = 22;
+export const OUTBOX_PAYLOAD_SCHEMA_VERSION = 23;
 
 /** documentation/Architektúra/Backend-offline first.md §6 "Tétel-újrapróbálkozási backoff" (jitter omitted — not load-bearing for correctness). */
 const RETRY_BACKOFF_MS = [2000, 8000, 30000, 120000, 600000];

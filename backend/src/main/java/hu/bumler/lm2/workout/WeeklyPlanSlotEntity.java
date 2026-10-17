@@ -13,7 +13,8 @@ import jakarta.persistence.Table;
 
 /**
  * documentation/Subfeatures/Heti terv.md "Kézi felülírás" (backlog/144) — a one-day manual override of
- * the rotation forecast: {@code PLAN} (a template) or {@code REST} (no template). A slot exists only
+ * the rotation forecast: {@code PLAN} (a template), {@code REST} (no template) or {@code STRETCH} (a
+ * stretching template — a rest day for the rotation, backlog/168). A slot exists only
  * where the day is overridden; back to automatic soft-deletes it. No
  * {@code user_id} — ownership flows through {@code weeklyPlanId}.
  */
@@ -35,6 +36,10 @@ public class WeeklyPlanSlotEntity {
 
 	@Column(name = "plan_id")
 	private UUID planId;
+
+	/** backlog/168 — the stretching template of a STRETCH override; null for PLAN / REST. */
+	@Column(name = "stretch_plan_id")
+	private UUID stretchPlanId;
 
 	@Generated(event = EventType.INSERT)
 	@Column(name = "created_at", insertable = false, updatable = false)
@@ -88,6 +93,14 @@ public class WeeklyPlanSlotEntity {
 
 	public void setPlanId(UUID planId) {
 		this.planId = planId;
+	}
+
+	public UUID getStretchPlanId() {
+		return stretchPlanId;
+	}
+
+	public void setStretchPlanId(UUID stretchPlanId) {
+		this.stretchPlanId = stretchPlanId;
 	}
 
 	public OffsetDateTime getCreatedAt() {

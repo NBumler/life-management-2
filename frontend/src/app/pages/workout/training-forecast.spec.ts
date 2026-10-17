@@ -1,4 +1,5 @@
 import { ClimbingSession } from '../../api/model/climbingSession';
+import { StretchPlan } from '../../api/model/stretchPlan';
 import { WeeklyPlan } from '../../api/model/weeklyPlan';
 import { WorkoutPlan } from '../../api/model/workoutPlan';
 import { WorkoutSession } from '../../api/model/workoutSession';
@@ -159,8 +160,36 @@ describe('training-forecast (backlog/144)', () => {
     ] as unknown as WeeklyPlan[];
     const overrides = overridesByDate(weeks);
     expect([...overrides.entries()]).toEqual([
-      [day(2), { kind: 'PLAN', planId: 'A' }],
-      [day(4), { kind: 'REST', planId: null }],
+      [day(2), { kind: 'PLAN', planId: 'A', stretchPlanId: null }],
+      [day(4), { kind: 'REST', planId: null, stretchPlanId: null }],
     ]);
+  });
+
+  describe('stretching overrides (backlog/168)', () => {
+    const stretch = (id: string, deleted = false) => ({ id, name: id, active: true, deleted, items: [] }) as StretchPlan;
+
+    it('a STRETCH day is a rest day carrying its template — it closes the block and the rotation does not advance', () => {
+      const overrides = new Map<string, DayOverride>([[day(1), { kind: 'STRETCH', planId: null, stretchPlanId: 'S' }]]);
+      const result = forecast({ overrides, stretchPlans: [stretch('S')] }, 4);
+      expect(compact(result)).toEqual(['W:A', 'R', 'W:B', 'W:A']);
+      expect(result[1]).toEqual(jasmine.objectContaining({ kind: 'REST', reason: 'OVERRIDE' }));
+      expect(result[1].stretchPlan?.id).toBe('S');
+    });
+
+    it('a STRETCH override to a deleted / unknown template leaves the day automatic', () => {
+      const overrides = new Map<string, DayOverride>([[day(0), { kind: 'STRETCH', planId: null, stretchPlanId: 'S' }]]);
+      expect(forecast({ overrides, stretchPlans: [stretch('S', true)] }, 1)[0].reason).toBe('ROTATION');
+      expect(forecast({ overrides }, 1)[0].reason).toBe('ROTATION');
+    });
+
+    it('overridesByDate() carries the stretchPlanId of a STRETCH slot', () => {
+      const week = {
+        id: 'w1',
+        weekStartDate: TODAY,
+        deleted: false,
+        slots: [{ id: 's1', weeklyPlanId: 'w1', dayOfWeek: 'TUESDAY', kind: 'STRETCH', planId: null, stretchPlanId: 'S', deleted: false }],
+      } as unknown as WeeklyPlan;
+      expect(overridesByDate([week]).get(day(1))).toEqual({ kind: 'STRETCH', planId: null, stretchPlanId: 'S' });
+    });
   });
 });

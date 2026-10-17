@@ -1,0 +1,13 @@
+@use '../styles/ion-modal-host' as modal-host;
+
+// Rendered as the sole child of an `<ion-modal>`'s `<ng-template>` — see shared/styles/_ion-modal-host.scss.
+:host {
+  @include modal-host.ion-modal-host-fill;
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 12px;
+}

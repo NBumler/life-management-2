@@ -4,6 +4,7 @@ import { Router, provideRouter } from '@angular/router';
 import { provideTranslateService } from '@ngx-translate/core';
 
 import { CalendarEvent } from '../../../api/model/calendarEvent';
+import { StretchPlan } from '../../../api/model/stretchPlan';
 import { WeeklyPlan } from '../../../api/model/weeklyPlan';
 import { WeeklyPlanSlot } from '../../../api/model/weeklyPlanSlot';
 import { WorkoutPlan } from '../../../api/model/workoutPlan';
@@ -11,6 +12,7 @@ import { WorkoutSession } from '../../../api/model/workoutSession';
 import { CurrentDayService } from '../../../core/config/current-day.service';
 import { CalendarEventRepository } from '../../../core/data/calendar-event.repository';
 import { ClimbingSessionRepository } from '../../../core/data/climbing-session.repository';
+import { StretchPlanRepository } from '../../../core/data/stretch-plan.repository';
 import { WeeklyPlanRepository } from '../../../core/data/weekly-plan.repository';
 import { WorkoutPlanRepository } from '../../../core/data/workout-plan.repository';
 import { WorkoutSessionRepository } from '../../../core/data/workout-session.repository';
@@ -21,7 +23,13 @@ import { addLocalDays } from './weekly-plan-adherence';
 const TODAY = '2026-10-07';
 const MONDAY = '2026-10-05';
 
-type SaveSlot = { dayOfWeek: WeeklyPlanSlot.DayOfWeekEnum; kind?: WeeklyPlanSlot.KindEnum; planId: string | null; id?: string };
+type SaveSlot = {
+  dayOfWeek: WeeklyPlanSlot.DayOfWeekEnum;
+  kind?: WeeklyPlanSlot.KindEnum;
+  planId: string | null;
+  stretchPlanId?: string | null;
+  id?: string;
+};
 
 /** In-memory stand-in for WeeklyPlanRepository: `saveWeek` replaces the week's row like the real one. */
 class FakeWeeklyRepository {
@@ -49,6 +57,7 @@ class FakeWeeklyRepository {
         dayOfWeek: slot.dayOfWeek,
         kind: slot.kind ?? 'PLAN',
         planId: slot.planId,
+        stretchPlanId: slot.stretchPlanId ?? null,
         deleted: false,
       })),
     };
@@ -73,6 +82,7 @@ describe('WeeklyPlanPage — rotation forecast (backlog/144)', () => {
     { id: 'pA', name: 'A', active: true, inRotation: true, deleted: false, exercises: [] },
     { id: 'pB', name: 'B', active: true, inRotation: true, deleted: false, exercises: [] },
   ] as unknown as WorkoutPlan[];
+  const stretchPlans = signal<StretchPlan[]>([{ id: 'sN', name: 'Esti', active: true, deleted: false, items: [] }]);
 
   beforeEach(async () => {
     weekly = new FakeWeeklyRepository();
@@ -99,6 +109,10 @@ describe('WeeklyPlanPage — rotation forecast (backlog/144)', () => {
           useValue: { load: () => Promise.resolve(), reload: () => Promise.resolve(), items: sessions },
         },
         { provide: ClimbingSessionRepository, useValue: { load: () => Promise.resolve(), items: signal([]) } },
+        {
+          provide: StretchPlanRepository,
+          useValue: { load: () => Promise.resolve(), items: stretchPlans, activePlans: () => stretchPlans().filter((p) => p.active && !p.deleted) },
+        },
         { provide: CalendarEventRepository, useValue: events },
       ],
     }).compileComponents();
@@ -137,7 +151,7 @@ describe('WeeklyPlanPage — rotation forecast (backlog/144)', () => {
     await component.setOverride(day(TODAY), { kind: 'PLAN', planId: 'pB' });
 
     expect(weekly.saves).toEqual([
-      { weekStartDate: MONDAY, slots: [{ id: undefined, dayOfWeek: 'WEDNESDAY', kind: 'PLAN', planId: 'pB' }] },
+      { weekStartDate: MONDAY, slots: [{ id: undefined, dayOfWeek: 'WEDNESDAY', kind: 'PLAN', planId: 'pB', stretchPlanId: null }] },
     ]);
     expect(day(TODAY).forecast?.reason).toBe('OVERRIDE');
     expect(forecastFromToday().slice(0, 2)).toEqual(['W:pB', 'W:pA']);
@@ -152,6 +166,25 @@ describe('WeeklyPlanPage — rotation forecast (backlog/144)', () => {
     const last = weekly.saves[weekly.saves.length - 1];
     expect(last.slots.map((slot) => [slot.dayOfWeek, slot.kind, slot.planId])).toEqual([['THURSDAY', 'PLAN', 'pA']]);
     expect(day(TODAY).forecast?.reason).toBe('ROTATION');
+  });
+
+  it('backlog/168 — a stretching override is a rest day with the template on the chip; the rotation does not advance', async () => {
+    await component.setOverride(day(TODAY), { kind: 'STRETCH', stretchPlanId: 'sN' });
+
+    const last = weekly.saves[weekly.saves.length - 1];
+    expect(last.slots).toEqual([{ id: undefined, dayOfWeek: 'WEDNESDAY', kind: 'STRETCH', planId: null, stretchPlanId: 'sN' }]);
+    expect(day(TODAY).forecast).toEqual(jasmine.objectContaining({ kind: 'REST', reason: 'OVERRIDE' }));
+    expect(day(TODAY).forecast?.stretchPlan?.name).toBe('Esti');
+    // a rest day: the block restarts and A is still next
+    expect(forecastFromToday().slice(0, 3)).toEqual(['REST', 'W:pA', 'W:pB']);
+  });
+
+  it('backlog/168 — a stretching override to a deleted template leaves the day automatic', async () => {
+    await component.setOverride(day(TODAY), { kind: 'STRETCH', stretchPlanId: 'sN' });
+    stretchPlans.set([{ id: 'sN', name: 'Esti', active: true, deleted: true, items: [] }]);
+
+    expect(day(TODAY).forecast?.reason).toBe('ROTATION');
+    stretchPlans.set([{ id: 'sN', name: 'Esti', active: true, deleted: false, items: [] }]);
   });
 
   it('a past day cannot be overridden', async () => {

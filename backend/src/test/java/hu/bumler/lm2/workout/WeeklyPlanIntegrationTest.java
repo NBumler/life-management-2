@@ -21,6 +21,7 @@ import hu.bumler.lm2.TestcontainersConfiguration;
 import hu.bumler.lm2.api.model.AdminCreateUserRequest;
 import hu.bumler.lm2.api.model.AuthTokens;
 import hu.bumler.lm2.api.model.LoginRequest;
+import hu.bumler.lm2.api.model.StretchPlan;
 import hu.bumler.lm2.api.model.WeeklyPlan;
 import hu.bumler.lm2.api.model.WeeklyPlanSlot;
 import hu.bumler.lm2.api.model.WorkoutPlan;
@@ -176,6 +177,54 @@ class WeeklyPlanIntegrationTest {
 
 		assertThat(body).contains(id.toString()).contains("\"entityType\":\"WeeklyPlan\"");
 		assertThat(body).contains(slotId.toString()).contains("\"entityType\":\"WeeklyPlanSlot\"");
+	}
+
+	@Test
+	void stretchSlot_isSavedWithItsStretchPlan_andAnyPlanIdIsDropped() throws Exception {
+		// backlog/168 — STRETCH = a stretching template on that day (a rest day for the rotation).
+		String token = registerAndLogin("wkp-stretch");
+		UUID stretchPlanId = createStretchPlan(token);
+		UUID workoutPlanId = createWorkoutPlan(token);
+		UUID id = UUID.randomUUID();
+		WeeklyPlanSlot stretch = new WeeklyPlanSlot(UUID.randomUUID(), id, WeeklyPlanSlot.DayOfWeekEnum.WEDNESDAY,
+				WeeklyPlanSlot.KindEnum.STRETCH, false).stretchPlanId(stretchPlanId).planId(workoutPlanId);
+
+		createWeeklyPlan(token, weeklyPlan(id, List.of(stretch))).andExpect(status().isOk())
+				.andExpect(jsonPath("$.slots[0].kind").value("STRETCH"))
+				.andExpect(jsonPath("$.slots[0].stretchPlanId").value(stretchPlanId.toString()))
+				.andExpect(jsonPath("$.slots[0].planId").doesNotExist());
+	}
+
+	@Test
+	void stretchSlot_withoutStretchPlanId_isAValidationError() throws Exception {
+		String token = registerAndLogin("wkp-stretch-missing");
+		UUID id = UUID.randomUUID();
+		WeeklyPlanSlot stretch = new WeeklyPlanSlot(UUID.randomUUID(), id, WeeklyPlanSlot.DayOfWeekEnum.WEDNESDAY,
+				WeeklyPlanSlot.KindEnum.STRETCH, false);
+
+		createWeeklyPlan(token, weeklyPlan(id, List.of(stretch))).andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.field").value("stretchPlanId"));
+	}
+
+	@Test
+	void stretchSlot_pointingAtAnotherUsersStretchPlan_isNotFound() throws Exception {
+		String owner = registerAndLogin("wkp-stretch-owner");
+		String attacker = registerAndLogin("wkp-stretch-attacker");
+		UUID foreignStretchPlanId = createStretchPlan(owner);
+		UUID id = UUID.randomUUID();
+		WeeklyPlanSlot stretch = new WeeklyPlanSlot(UUID.randomUUID(), id, WeeklyPlanSlot.DayOfWeekEnum.WEDNESDAY,
+				WeeklyPlanSlot.KindEnum.STRETCH, false).stretchPlanId(foreignStretchPlanId);
+
+		createWeeklyPlan(attacker, weeklyPlan(id, List.of(stretch))).andExpect(status().isNotFound());
+	}
+
+	private UUID createStretchPlan(String token) throws Exception {
+		UUID id = UUID.randomUUID();
+		StretchPlan dto = new StretchPlan(id, "Esti nyújtás", true, false, List.of());
+		mockMvc.perform(post("/api/stretch-plans").contentType(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + token).content(json(dto)))
+				.andExpect(status().isOk());
+		return id;
 	}
 
 	private ResultActions createWeeklyPlan(String token, WeeklyPlan dto) throws Exception {

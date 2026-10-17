@@ -1,7 +1,8 @@
 type: object
 description: >-
   documentation/Subfeatures/Heti terv.md "Kézi felülírás" (backlog/144) — a one-day manual override of
-  the rotation forecast on a WeeklyPlan: PLAN = this template on that day, REST = a forced rest day.
+  the rotation forecast on a WeeklyPlan: PLAN = this template on that day, REST = a forced rest day,
+  STRETCH = a stretching template on that day (backlog/168 — a rest day for the rotation).
   A slot exists only where the day is overridden; back to "Automatikus" soft-deletes it. At most one
   live slot per (weeklyPlanId, dayOfWeek). Only ever saved nested inside a WeeklyPlan
   (documentation/Architektúra/Backend.md "Nested aggregate PUT"), but its own sync row.
@@ -33,7 +34,10 @@ properties:
     enum:
       - PLAN
       - REST
-    description: PLAN = template override (planId required); REST = forced rest day (planId null).
+      - STRETCH
+    description: >-
+      PLAN = template override (planId required); REST = forced rest day (planId null); STRETCH =
+      stretching template (stretchPlanId required, planId null — backlog/168).
   planId:
     type: string
     format: uuid
@@ -41,6 +45,14 @@ properties:
     description: >-
       → WorkoutPlan.id for a PLAN override (400 VALIDATION when missing); always null for REST. A soft
       link — a plan soft-deleted later leaves the slot intact.
+  stretchPlanId:
+    type: string
+    format: uuid
+    nullable: true
+    description: >-
+      backlog/168 — → StretchPlan.id for a STRETCH override (400 VALIDATION when missing, 404 when not the
+      caller's); always null for PLAN / REST. A soft link — a stretching plan soft-deleted later leaves
+      the slot intact (the forecast ignores it).
   deleted:
     type: boolean
   deletedAt:

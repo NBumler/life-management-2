@@ -38,7 +38,8 @@ class WeeklyPlanServiceTest {
 	void setUp() {
 		repository = mock(WeeklyPlanRepository.class);
 		slotRepository = mock(WeeklyPlanSlotRepository.class);
-		service = new WeeklyPlanService(repository, slotRepository, new WeeklyPlanMapper(), new WeeklyPlanSlotMapper());
+		service = new WeeklyPlanService(repository, slotRepository, new WeeklyPlanMapper(), new WeeklyPlanSlotMapper(),
+				mock(StretchPlanRepository.class));
 		when(repository.saveAndFlush(any())).thenAnswer(inv -> inv.getArgument(0));
 		when(slotRepository.findByWeeklyPlanIdIn(any())).thenReturn(List.of());
 	}

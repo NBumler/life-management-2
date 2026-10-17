@@ -14,6 +14,12 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-17 — #168** Nyújtó sablonok: új `StretchPlan` + `StretchPlanItem` (tartás, oldalanként, ismétlés,
+  megjegyzés; a tétel a gyakorlat alapértékeivel töltődik elő), aktív / inaktív kapcsoló, a `goalLabel` csoportok
+  közösek az erősítő sablonokkal. A nyújtó sablon soha nem rotál; heti kézi felülírásként (`STRETCH` slot)
+  pihenőnap a nyújtó sablonnal. Sablonlista típus-chipekkel, „Új sablon” → típusválasztó, nyújtó szerkesztő +
+  picker. `V58`, helyi `SCHEMA_V53`, outbox payload v23. Érintett: [[Heti terv]]; kód: `workout` (backend),
+  `pages/workout/plan/`, `training-forecast.ts`, `weekly-plan/`, `shared/stretch-picker/`
 - **2026-10-17 — #167** Nyújtó gyakorlatok: új, user-owned `StretchExercise` entitás (név, kategória, leírás,
   eszközigény, kedvenc + alap tartás / oldalanként előtöltés), külön tábla — a meglévő gyakorlatok adatmódosítás
   nélkül erősítők. Közös `ExerciseCategory` + `HIPS` / `NECK`. A Gyakorlat katalógus egy listában mutatja a két

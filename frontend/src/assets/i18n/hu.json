@@ -1235,7 +1235,9 @@
       "GROUP_ACTIVATE": "Csoport aktiválása",
       "GROUP_DEACTIVATE": "Csoport inaktiválása",
       "GROUP_ONLY": "Csak ez a csoport legyen aktív",
-      "GROUP_CHANGED": "{{count}} sablon módosítva"
+      "GROUP_CHANGED": "{{count}} sablon módosítva",
+      "ADD_STRENGTH": "Erősítő sablon",
+      "ADD_STRETCH": "Nyújtó sablon"
     },
     "WEEKLY": {
       "WEEK_OF": "Hét kezdete:",
@@ -1266,7 +1268,9 @@
       "WORKOUT_DONE": "Edzés: {{name}}",
       "OVERRIDE_HINT": "Kézi beállítás erre a napra — a rotáció innen folytatódik.",
       "OVERRIDE_AUTO": "Automatikus (rotáció)",
-      "OVERRIDE_REST": "Pihenőnap"
+      "OVERRIDE_REST": "Pihenőnap",
+      "OVERRIDE_STRETCH": "Nyújtás · {{name}}",
+      "FORECAST_STRETCH": "Nyújtás: {{name}}"
     },
     "SWIM": {
       "NEW": "Új úszás",
@@ -1626,6 +1630,24 @@
       "NO_REST_AHEAD": "A tervezett mászások és a kézi beállítások mellett a következő 7 napban nem marad pihenőnap — érdemes egy napot szabadon hagyni.",
       "CLIMB_PLANNED_TODAY": "Mára mászás van tervezve — ma legfeljebb rövid törzs / prehab edzés javasolt.",
       "CLIMB_TOMORROW": "Holnap mászás — ma ujj- és nehéz húzóedzés nem javasolt."
+    },
+    "STRETCH_PLAN": {
+      "NEW_TITLE": "Új nyújtó sablon",
+      "EDIT_TITLE": "Nyújtó sablon szerkesztése",
+      "NAME_PLACEHOLDER": "pl. Esti nyújtás",
+      "DELETE_CONFIRM_TITLE": "Nyújtó sablon törlése",
+      "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd ezt a nyújtó sablont? A korábbi nyújtások érintetlenek maradnak.",
+      "FIELD_HOLD": "Tartás (mp)",
+      "FIELD_REPETITIONS": "Ismétlés",
+      "NOTES_PLACEHOLDER": "pl. lassan, mélyen kilélegezve",
+      "ADD_ITEM": "Nyújtás hozzáadása",
+      "TOTAL": "Összesen ~{{minutes}} perc",
+      "ROW_SUMMARY": "Nyújtás · {{count}} gyakorlat · ~{{minutes}} perc",
+      "PER_SIDE_SHORT": "oldalanként"
+    },
+    "STRETCH_PICKER": {
+      "TITLE": "Nyújtás választása",
+      "EMPTY": "Még nincs nyújtó gyakorlat — a Gyakorlatok katalógusban vehetsz fel újat."
     }
   },
   "WIDGET": {

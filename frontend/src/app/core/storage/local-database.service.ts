@@ -1390,7 +1390,52 @@ const SCHEMA_V52_STATEMENTS: string[] = [
   `CREATE INDEX IF NOT EXISTS idx_stretch_exercise_live_name ON stretch_exercise (name COLLATE NOCASE) WHERE deleted = 0`,
 ];
 
-const SCHEMA_VERSION = 52;
+/**
+ * backlog/168 — documentation/Subfeatures/Heti terv.md "Nyújtó sablonok": stretching templates + items, and
+ * the weekly override's `stretch_plan_id` (a STRETCH slot); on-device tükre a backend
+ * `V58__stretch_plan.sql`-nek. A slot `plan_id` NOT NULL marad — STRETCH-nél is `''`.
+ */
+const SCHEMA_V53_STATEMENTS: string[] = [
+  `CREATE TABLE IF NOT EXISTS stretch_plan (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    notes TEXT,
+    active INTEGER NOT NULL DEFAULT 1,
+    goal_label TEXT,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE TABLE IF NOT EXISTS stretch_plan_item (
+    id TEXT PRIMARY KEY,
+    plan_id TEXT NOT NULL,
+    stretch_exercise_id TEXT NOT NULL,
+    stretch_name TEXT NOT NULL,
+    stretch_category TEXT NOT NULL,
+    order_index INTEGER NOT NULL DEFAULT 0,
+    hold_seconds INTEGER NOT NULL,
+    per_side INTEGER NOT NULL DEFAULT 0,
+    repetitions INTEGER NOT NULL DEFAULT 1,
+    notes TEXT,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_stretch_plan_item_plan_id ON stretch_plan_item (plan_id)`,
+  `ALTER TABLE weekly_plan_slot ADD COLUMN stretch_plan_id TEXT`,
+];
+
+const SCHEMA_VERSION = 53;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -1445,7 +1490,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 49, statements: SCHEMA_V49_STATEMENTS },
   { toVersion: 50, statements: SCHEMA_V50_STATEMENTS },
   { toVersion: 51, statements: SCHEMA_V51_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V52_STATEMENTS },
+  { toVersion: 52, statements: SCHEMA_V52_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V53_STATEMENTS },
 ];
 
 export interface SqlTask {

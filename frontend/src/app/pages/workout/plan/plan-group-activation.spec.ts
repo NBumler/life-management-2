@@ -28,4 +28,15 @@ describe('planGroupActivationChanges (backlog/140)', () => {
   it('ONLY activates the group and deactivates every other live template, ungrouped included', () => {
     expect(summary('ONLY')).toEqual(['a1:false', 'a2:false', 'o1:true', 'x:false']);
   });
+
+  it('backlog/168 — is generic: stretching templates of the same label switch the same way', () => {
+    const stretch = [
+      { id: 's1', goalLabel: 'OAPU', active: false, deleted: false },
+      { id: 's2', goalLabel: null, active: true, deleted: false },
+    ];
+    expect(planGroupActivationChanges(stretch, 'OAPU', 'ONLY').map((change) => `${change.plan.id}:${change.active}`)).toEqual([
+      's1:true',
+      's2:false',
+    ]);
+  });
 });

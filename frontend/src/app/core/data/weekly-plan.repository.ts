@@ -114,7 +114,13 @@ export class WeeklyPlanRepository {
    */
   async saveWeek(
     weekStartDate: string,
-    slots: { dayOfWeek: WeeklyPlanSlotSaveItem['dayOfWeek']; kind?: WeeklyPlanSlotSaveItem['kind']; planId: string | null; id?: string }[],
+    slots: {
+      dayOfWeek: WeeklyPlanSlotSaveItem['dayOfWeek'];
+      kind?: WeeklyPlanSlotSaveItem['kind'];
+      planId: string | null;
+      stretchPlanId?: string | null;
+      id?: string;
+    }[],
   ): Promise<WeeklyPlan> {
     const id = await this.weekId(weekStartDate);
     const resolvedSlots: WeeklyPlanSlotSaveItem[] = [];
@@ -124,6 +130,7 @@ export class WeeklyPlanRepository {
         dayOfWeek: slot.dayOfWeek,
         kind: slot.kind ?? 'PLAN',
         planId: slot.planId,
+        stretchPlanId: slot.stretchPlanId ?? null,
       });
     }
     const saved = await this.storage.saveWeeklyPlan({ id, weekStartDate, slots: resolvedSlots });

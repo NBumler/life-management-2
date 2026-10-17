@@ -21,9 +21,11 @@ import { CalendarEvent } from '../../../api/model/calendarEvent';
 import { WeeklyPlanSlot } from '../../../api/model/weeklyPlanSlot';
 import { WorkoutPlan } from '../../../api/model/workoutPlan';
 import { CurrentDayService } from '../../../core/config/current-day.service';
+import { FeatureFlagsService } from '../../../core/config/feature-flags.service';
 import { CalendarEventRepository } from '../../../core/data/calendar-event.repository';
 import { projectEventOccurrences } from '../../../core/data/event-occurrence';
 import { ClimbingSessionRepository } from '../../../core/data/climbing-session.repository';
+import { StretchPlanRepository } from '../../../core/data/stretch-plan.repository';
 import { WorkoutPlanRepository } from '../../../core/data/workout-plan.repository';
 import { WorkoutSessionRepository } from '../../../core/data/workout-session.repository';
 import { WeeklyPlanRepository } from '../../../core/data/weekly-plan.repository';
@@ -33,8 +35,12 @@ import { DayLoad, dailyTrainingLoad, weekLoadSummary } from '../training-load';
 import { WorkoutSegmentHeaderComponent } from '../workout-segment-header.component';
 import { WEEK_DAYS, addLocalDays, mondayOf } from './weekly-plan-adherence';
 
-/** A manual override choice: back to the automatic forecast, a template, or a forced rest day. */
-export type OverrideChoice = { kind: 'AUTO' } | { kind: 'PLAN'; planId: string } | { kind: 'REST' };
+/** A manual override choice: back to the automatic forecast, a template, a forced rest day, or a stretching template (backlog/168). */
+export type OverrideChoice =
+  | { kind: 'AUTO' }
+  | { kind: 'PLAN'; planId: string }
+  | { kind: 'REST' }
+  | { kind: 'STRETCH'; stretchPlanId: string };
 
 interface DayCell {
   dayOfWeek: WeeklyPlanSlot.DayOfWeekEnum;
@@ -134,6 +140,8 @@ interface DayCell {
 })
 export class WeeklyPlanPage implements OnInit, ViewWillEnter {
   private readonly planRepository = inject(WorkoutPlanRepository);
+  private readonly stretchPlanRepository = inject(StretchPlanRepository);
+  private readonly featureFlags = inject(FeatureFlagsService);
   private readonly weeklyRepository = inject(WeeklyPlanRepository);
   private readonly sessionRepository = inject(WorkoutSessionRepository);
   private readonly climbingRepository = inject(ClimbingSessionRepository);
@@ -146,6 +154,10 @@ export class WeeklyPlanPage implements OnInit, ViewWillEnter {
   readonly weekStart = signal(mondayOf(this.currentDay.day()));
 
   readonly activePlans = computed(() => this.planRepository.activePlans());
+  /** backlog/168 — offered by the override sheet; never part of the rotation. */
+  readonly activeStretchPlans = computed(() =>
+    this.featureFlags.isEnabled('edzes.nyujtas') ? this.stretchPlanRepository.activePlans() : [],
+  );
 
   private readonly forecastInputs = computed(() =>
     forecastInputsFrom(this.currentDay.day(), {
@@ -154,6 +166,7 @@ export class WeeklyPlanPage implements OnInit, ViewWillEnter {
       events: this.eventRepository.items(),
       weeklyPlans: this.weeklyRepository.items(),
       workoutPlans: this.planRepository.items(),
+      stretchPlans: this.stretchPlanRepository.items(),
     }),
   );
 
@@ -203,6 +216,7 @@ export class WeeklyPlanPage implements OnInit, ViewWillEnter {
   async ngOnInit(): Promise<void> {
     await Promise.all([
       this.planRepository.load(),
+      this.stretchPlanRepository.load(),
       this.weeklyRepository.load(),
       this.sessionRepository.load(),
       this.climbingRepository.load(),
@@ -286,6 +300,12 @@ export class WeeklyPlanPage implements OnInit, ViewWillEnter {
     for (const plan of this.activePlans()) {
       buttons.push({ text: plan.name, handler: () => void this.setOverride(day, { kind: 'PLAN', planId: plan.id }) });
     }
+    for (const plan of this.activeStretchPlans()) {
+      buttons.push({
+        text: this.translate.instant('WORKOUT.WEEKLY.OVERRIDE_STRETCH', { name: plan.name }),
+        handler: () => void this.setOverride(day, { kind: 'STRETCH', stretchPlanId: plan.id }),
+      });
+    }
     buttons.push(
       { text: this.translate.instant('WORKOUT.WEEKLY.OVERRIDE_REST'), handler: () => void this.setOverride(day, { kind: 'REST' }) },
       { text: this.translate.instant('COMMON.CANCEL'), role: 'cancel' },
@@ -310,7 +330,13 @@ export class WeeklyPlanPage implements OnInit, ViewWillEnter {
     const own = (this.weeklyRepository.byWeekStart(weekStart)?.slots ?? []).filter((slot) => !slot.deleted);
     const others = own
       .filter((slot) => slot.dayOfWeek !== day.dayOfWeek)
-      .map((slot) => ({ id: slot.id, dayOfWeek: slot.dayOfWeek, kind: slot.kind, planId: slot.planId ?? null }));
+      .map((slot) => ({
+        id: slot.id,
+        dayOfWeek: slot.dayOfWeek,
+        kind: slot.kind,
+        planId: slot.planId ?? null,
+        stretchPlanId: slot.stretchPlanId ?? null,
+      }));
     if (choice.kind === 'AUTO') {
       if (day.overrideSlot === null) {
         return;
@@ -318,11 +344,18 @@ export class WeeklyPlanPage implements OnInit, ViewWillEnter {
       await this.weeklyRepository.saveWeek(weekStart, others);
       return;
     }
+    const kind =
+      choice.kind === 'REST'
+        ? WeeklyPlanSlot.KindEnum.Rest
+        : choice.kind === 'STRETCH'
+          ? WeeklyPlanSlot.KindEnum.Stretch
+          : WeeklyPlanSlot.KindEnum.Plan;
     const slot = {
       id: day.overrideSlot?.id,
       dayOfWeek: day.dayOfWeek,
-      kind: choice.kind === 'REST' ? WeeklyPlanSlot.KindEnum.Rest : WeeklyPlanSlot.KindEnum.Plan,
+      kind,
       planId: choice.kind === 'PLAN' ? choice.planId : null,
+      stretchPlanId: choice.kind === 'STRETCH' ? choice.stretchPlanId : null,
     };
     await this.weeklyRepository.saveWeek(weekStart, [...others, slot]);
   }

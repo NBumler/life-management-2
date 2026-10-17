@@ -33,6 +33,7 @@ const ALL_ENTITY_TYPES = [
   'StretchExercise',
   'WorkoutSession',
   'WorkoutPlan',
+  'StretchPlan',
   'WeeklyPlan',
   'SwimLog',
   'BikeRideLog',
@@ -320,6 +321,10 @@ const STEPS_BY_VERSION: Readonly<Record<number, VersionSteps>> = {
   // backlog/167: brand-new `StretchExercise` entity + `HIPS` / `NECK` category values (an enum widening
   // never invalidates an older payload) — nothing to rewrite.
   21: { default: identityStep },
+  // backlog/168: brand-new `StretchPlan` entity; `WeeklyPlanSlot` gained an optional `stretchPlanId` and a
+  // `STRETCH` kind — a pending week write from before this update has neither, which the server reads as
+  // "no stretching template" (null), identical to the old behaviour.
+  22: { default: identityStep },
 };
 
 function buildMigrations(): ReadonlyMap<string, MigrationStep> {

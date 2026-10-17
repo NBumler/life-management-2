@@ -1,0 +1,61 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>{{ 'WORKOUT.STRETCH_PICKER.TITLE' | translate }}</ion-title>
+    <ion-buttons slot="start">
+      <ion-button (click)="cancel()">{{ 'COMMON.CANCEL' | translate }}</ion-button>
+    </ion-buttons>
+    <ion-buttons slot="end">
+      <ion-button [strong]="true" [disabled]="pickedIds().size === 0" (click)="confirm()">{{ 'WORKOUT.PICKER.ADD' | translate }}</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-searchbar
+      [value]="query()"
+      (ionInput)="query.set($any($event.target).value ?? '')"
+      [placeholder]="'WORKOUT.EXERCISES.SEARCH_PLACEHOLDER' | translate"
+    ></ion-searchbar>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="chip-row">
+    <ion-chip [outline]="!favoritesOnly()" [color]="favoritesOnly() ? 'primary' : undefined" (click)="toggleFavoritesOnly()">
+      {{ 'WORKOUT.EXERCISES.FAVORITES_FILTER' | translate }}
+    </ion-chip>
+    @for (category of categories; track category) {
+      <ion-chip
+        [outline]="!categoryFilter().has(category)"
+        [color]="categoryFilter().has(category) ? 'primary' : undefined"
+        (click)="toggleCategory(category)"
+      >
+        {{ categoryLabelKeys[category] | translate }}
+      </ion-chip>
+    }
+  </div>
+
+  <ion-list>
+    @for (stretch of filtered(); track stretch.id) {
+      <ion-item button (click)="togglePick(stretch.id)">
+        <ion-checkbox slot="start" [checked]="isPicked(stretch.id)" (click)="$event.preventDefault()"></ion-checkbox>
+        <ion-label>
+          <h2>{{ stretch.name }}</h2>
+          <p>
+            {{ categoryLabelKeys[stretch.category] | translate }} · {{ stretch.defaultHoldSeconds }} mp
+            @if (stretch.defaultPerSide) {
+              · {{ 'WORKOUT.STRETCH_PLAN.PER_SIDE_SHORT' | translate }}
+            }
+          </p>
+        </ion-label>
+      </ion-item>
+    }
+    @if (isEmpty()) {
+      <ion-item>
+        <ion-label color="medium" class="ion-text-wrap">{{ 'WORKOUT.STRETCH_PICKER.EMPTY' | translate }}</ion-label>
+      </ion-item>
+    } @else if (filtered().length === 0) {
+      <ion-item>
+        <ion-label color="medium">{{ 'WORKOUT.EXERCISES.NO_RESULTS' | translate }}</ion-label>
+      </ion-item>
+    }
+  </ion-list>
+</ion-content>

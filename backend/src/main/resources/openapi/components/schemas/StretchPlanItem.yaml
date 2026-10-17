@@ -1,0 +1,77 @@
+type: object
+description: >-
+  documentation/Subfeatures/Heti terv.md "Entitás — StretchPlanItem" (backlog/168) — one stretch in a
+  stretching template. `stretchName` / `stretchCategory` are a snapshot taken at edit time (category
+  values match StretchExercise.yaml exactly, kept inline). `holdSeconds` / `perSide` are prefilled from
+  the StretchExercise defaults when the item is added, then owned by the item. Only ever saved nested
+  inside a StretchPlan, but its own sync row.
+required:
+  - id
+  - planId
+  - stretchExerciseId
+  - stretchName
+  - stretchCategory
+  - orderIndex
+  - holdSeconds
+  - perSide
+  - repetitions
+  - deleted
+properties:
+  id:
+    type: string
+    format: uuid
+  planId:
+    type: string
+    format: uuid
+  stretchExerciseId:
+    type: string
+    format: uuid
+  stretchName:
+    type: string
+    minLength: 1
+  stretchCategory:
+    type: string
+    enum:
+      - CHEST
+      - BACK
+      - LEGS
+      - SHOULDERS
+      - BICEPS
+      - TRICEPS
+      - ABS
+      - LOWER_BACK
+      - OBLIQUES
+      - FOREARM_FINGERS
+      - FULL_BODY
+      - HIPS
+      - NECK
+  orderIndex:
+    type: integer
+  holdSeconds:
+    type: integer
+    minimum: 1
+  perSide:
+    type: boolean
+    description: true = the hold runs on the left, then on the right side.
+  repetitions:
+    type: integer
+    minimum: 1
+  notes:
+    type: string
+    maxLength: 200
+    nullable: true
+  deleted:
+    type: boolean
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

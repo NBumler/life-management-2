@@ -1,14 +1,14 @@
 ---
 id: 168
 type: feature
-status: ready
+status: done
 title: Nyújtó sablonok — StretchPlan, aktív/inaktív, rotáción kívül, heti „Nyújtás” felülírás
 specs:
   - "[[Heti terv]]"
   - "[[Edzésnapló]]"
 flag: edzes.nyujtas
 created: 2026-10-17
-closed:
+closed: 2026-10-17
 ---
 
 # 168 — Nyújtó sablonok — StretchPlan, aktív/inaktív, rotáción kívül, heti „Nyújtás” felülírás
@@ -31,39 +31,39 @@ FK a `workout_plan`-ra.
 
 ## Elfogadási kritériumok
 
-- [ ] **Meglévő sablonok = erősítő sablonok:** adatmigráció nélkül; a `workout_plan` tábla az erősítő
+- [x] **Meglévő sablonok = erősítő sablonok:** adatmigráció nélkül; a `workout_plan` tábla az erősítő
       sablonok tábla. UI: „Erősítő sablon” / „Nyújtó sablon”.
-- [ ] Új, user-owned entitás **`StretchPlan`**: `id`, `name` (kötelező; **nem** egyedi, mint a
+- [x] Új, user-owned entitás **`StretchPlan`**: `id`, `name` (kötelező; **nem** egyedi, mint a
       `WorkoutPlan`-nál), `notes`, `active` (default `true`), `goalLabel` (opcionális, mint a
       `WorkoutPlan`-nál), `deleted`, audit. Nincs `inRotation`, mert a nyújtó sablon soha nem rotál.
-- [ ] Nested gyerek **`StretchPlanItem`**: `id`, `stretchExerciseId` → [[Gyakorlat]] `StretchExercise`,
+- [x] Nested gyerek **`StretchPlanItem`**: `id`, `stretchExerciseId` → [[Gyakorlat]] `StretchExercise`,
       snapshot `stretchName` / `stretchCategory` (mint a `WorkoutPlanExercise`), `orderIndex`,
       `holdSeconds` (kötelező, > 0; felvételkor a gyakorlat `defaultHoldSeconds`-ából), `perSide`
       (boolean; `true` → bal, majd jobb oldal; felvételkor a gyakorlat `defaultPerSide`-jából),
       `repetitions` (kötelező, ≥ 1; alapból 1), `notes` (opcionális, max. 200).
       Mentés: **nested aggregate PUT** (`NestedChildResolver`; kliens tükör a
       `sqlite-storage-backend.ts`-ben, egy tranzakció + egy outbox elem).
-- [ ] Sablon-szerkesztő a nyújtó típushoz: név, megjegyzés, címke; rendezhető tétellista; nyújtó
+- [x] Sablon-szerkesztő a nyújtó típushoz: név, megjegyzés, címke; rendezhető tétellista; nyújtó
       gyakorlat **picker** (kereső, kategória-chipek, Kedvencek, csak nyújtó gyakorlatok). A tétel
       sorában: tartás (mp), oldalanként kapcsoló, ismétlés, megjegyzés. Számított teljes időtartam
       előnézet: `Σ holdSeconds × repetitions × (perSide ? 2 : 1)`.
-- [ ] **Sablon lista:** típus-szűrő chipek (**Erősítés** / **Nyújtás**, többes kiválasztás, mint a
+- [x] **Sablon lista:** típus-szűrő chipek (**Erősítés** / **Nyújtás**, többes kiválasztás, mint a
       [[167-nyujto-gyakorlat-katalogus]] katalógusánál) a meglévő Aktív / Inaktív / Mind szűrő
       mellett. Soronkénti aktív kapcsoló a nyújtó sablonon is. A `goalLabel` csoport-műveletek
       (`backlog/140`) mindkét típusra hatnak.
-- [ ] Új sablon létrehozásakor először a típust kell választani (Erősítés / Nyújtás).
-- [ ] **Rotáció:** a nyújtó sablon **soha** nem kerül a rotációs előrejelzésbe, a blokklimitbe, a
+- [x] Új sablon létrehozásakor először a típust kell választani (Erősítés / Nyújtás).
+- [x] **Rotáció:** a nyújtó sablon **soha** nem kerül a rotációs előrejelzésbe, a blokklimitbe, a
       terhelés-figyelmeztetésekbe és az ujjterhelés-számításba.
-- [ ] **Heti kézi felülírás:** új slot-kind **`STRETCH`** (új nullable `stretch_plan_id` FK →
+- [x] **Heti kézi felülírás:** új slot-kind **`STRETCH`** (új nullable `stretch_plan_id` FK →
       `stretch_plan`; CHECK: `STRETCH` ↔ `stretch_plan_id` nem null és `plan_id` null). A felülíró
       action sheetben az aktív nyújtó sablonok is szerepelnek (pl. „Nyújtás · <név>”).
       A `STRETCH` nap az előrejelzésben **pihenőnap** (a blokk lezárul, a rotáció nem lép). A chipen
       „Nyújtás: <sablon> · kézi” látszik.
-- [ ] Soft delete megerősítéssel (+ tételek cascade). A törölt nyújtó sablonra mutató `STRETCH`
+- [x] Soft delete megerősítéssel (+ tételek cascade). A törölt nyújtó sablonra mutató `STRETCH`
       felülírást az előrejelzés figyelmen kívül hagyja (a nap automatikus).
-- [ ] Helyi SQLite séma (`SCHEMA_Vn`), outbox payload verzió + migrációs lépés (`WeeklyPlan` slot
+- [x] Helyi SQLite séma (`SCHEMA_Vn`), outbox payload verzió + migrációs lépés (`WeeklyPlan` slot
       `stretchPlanId: null` default), `verify:outbox` snapshot.
-- [ ] Specek: [[Heti terv]] (két sablontípus, `STRETCH` slot, rotációs szabály), [[Edzésnapló]]
+- [x] Specek: [[Heti terv]] (két sablontípus, `STRETCH` slot, rotációs szabály), [[Edzésnapló]]
       ahol a „Terv indítása…” hivatkozik; `#### Backend-offline`.
 
 ## Terv / döntési napló
@@ -175,8 +175,18 @@ Várható verziók (commit előtt újraellenőrizni): Flyway `V58`, `SCHEMA_V53`
     - [[Edzésnapló]] érintett hivatkozásai;
     - gate, status, archiválás.
 
+- 2026-10-17 — Implementáláskor: a nyújtó sablon-tétel sorrendje fel / le nyilakkal állítható (a sablon-szerkesztő
+  ⋮ menü helyett közvetlen gombok — egy tételnek nincs más művelete). Külön `StretchPlanServiceTest` nem készült:
+  a nested fa minden ágát a `StretchPlanIntegrationTest` valódi DB-n fedi.
+- 2026-10-17 — Implementáláskor: a `ForecastDay.stretchPlan` opcionális mező (nem új `ForecastKind`), így a
+  meglévő `REST` ág (blokk-lezárás, figyelmeztetések) változatlanul érvényes rá.
+
 ## Lezáráskor (on-done)
 
-- Frissített specek: [[Heti terv]] — …
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — #168 nyújtó sablonok
-- Kód: `workout` (backend), `pages/workout/plan/`, `training-forecast.ts`, `weekly-plan/`, local schema, outbox migrator
+- Frissített specek: [[Heti terv]] — két sablontípus, `StretchPlan` / `StretchPlanItem` entitás, időtartam-szabály,
+  `STRETCH` slot, rotációs szabály (1. lépés), sablon-lista / nyújtó szerkesztő / felülíró menü UI, Backend-offline
+  (`SCHEMA_V53`, outbox v23), Backend (`V58`).
+- `IMPLEMENTATION_STATUS.md` sor: 2026-10-17 — #168 nyújtó sablonok
+- Kód: `hu.bumler.lm2.workout.StretchPlan*`, `WeeklyPlanService`, `V58__stretch_plan.sql`, `core/data/stretch-plan.repository.ts`,
+  storage backendek, sync engine, outbox, `shared/stretch-picker/`, `pages/workout/plan/` (lista, `stretch-plan-edit.page.*`,
+  `plan-group-activation.ts`), `pages/workout/stretch/stretch-timing.ts`, `training-forecast.ts`, `weekly-plan/`

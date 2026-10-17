@@ -98,6 +98,8 @@
               >
                 @if (forecast.kind === 'WORKOUT') {
                   {{ 'WORKOUT.WEEKLY.SUGGESTED' | translate: { name: forecast.plan?.name } }}
+                } @else if (forecast.stretchPlan) {
+                  {{ 'WORKOUT.WEEKLY.FORECAST_STRETCH' | translate: { name: forecast.stretchPlan.name } }}
                 } @else {
                   {{ 'WORKOUT.WEEKLY.FORECAST_REST' | translate }}
                 }

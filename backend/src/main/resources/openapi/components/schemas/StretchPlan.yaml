@@ -1,0 +1,50 @@
+type: object
+description: >-
+  documentation/Subfeatures/Heti terv.md "Nyújtó sablonok" (backlog/168) — a stretching template.
+  documentation/Architektúra/Backend.md "Nested aggregate PUT": StretchPlan + its StretchPlanItem rows
+  saved/read as one tree on every endpoint including the plain list — `items` always lists every row,
+  live or soft-deleted (the client filters `deleted = false` itself). A stretching template never takes
+  part in the rotation forecast; `active` only drives the pickers, exactly like WorkoutPlan.active.
+required:
+  - id
+  - name
+  - active
+  - deleted
+  - items
+properties:
+  id:
+    type: string
+    format: uuid
+  name:
+    type: string
+    minLength: 1
+    description: Not unique (same as WorkoutPlan.name).
+  notes:
+    type: string
+    nullable: true
+  active:
+    type: boolean
+    description: Default true on create. false = hidden from the pickers, not deleted.
+  goalLabel:
+    type: string
+    nullable: true
+    description: Display-only grouping label in the template list (shared with WorkoutPlan.goalLabel groups).
+  deleted:
+    type: boolean
+  items:
+    type: array
+    items:
+      $ref: 'StretchPlanItem.yaml'
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

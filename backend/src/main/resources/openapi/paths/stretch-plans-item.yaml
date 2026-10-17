@@ -1,0 +1,72 @@
+parameters:
+  - name: id
+    in: path
+    required: true
+    schema:
+      type: string
+      format: uuid
+get:
+  operationId: getStretchPlan
+  tags:
+    - stretch-plans
+  summary: The full plan tree. A soft-deleted plan returns 200 with deleted=true (not 404).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/StretchPlan.yaml'
+    '404':
+      description: No such plan.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+put:
+  operationId: updateStretchPlan
+  tags:
+    - stretch-plans
+  summary: >-
+    Full tree replace (documentation/Architektúra/Backend.md "Nested aggregate PUT"): items not present
+    in the body are soft-deleted, last-write-wins on the whole aggregate. `active` is
+    just another field on this body — no dedicated activate/deactivate endpoint.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/StretchPlan.yaml'
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/StretchPlan.yaml'
+    '409':
+      description: Entity already deleted.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+    '400':
+      description: An item is missing a required field.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+delete:
+  operationId: deleteStretchPlan
+  tags:
+    - stretch-plans
+  summary: >-
+    Soft delete, idempotent. Cascades to soft-deleting every item on this plan.
+    Existing WeeklyPlan STRETCH slots that reference it are left intact (the forecast ignores them).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/StretchPlan.yaml'

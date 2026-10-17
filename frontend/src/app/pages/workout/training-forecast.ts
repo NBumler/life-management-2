@@ -3,7 +3,8 @@
  * One forecast drives both the Heti terv day rows and the Edzésnapló quick start: the past is what was
  * actually logged; today (until something is logged) and every future day is decided day by day:
  *
- *   1. a manual override (a WeeklyPlan slot: a template, or a forced rest day) wins;
+ *   1. a manual override (a WeeklyPlan slot: a template, a forced rest day, or — backlog/168 — a
+ *      stretching template, which is a rest day for the rotation) wins;
  *   2. a planned climb (backlog/143 `CLIMBING` event) makes a climbing day — a load day, no workout;
  *   3. once the current run of load days reaches the block limit, the day is a rest day — the limit
  *      alternates 2 / 3 (the previous block was ≥ 3 long → now 2, otherwise 3);
@@ -15,6 +16,7 @@
  */
 import { CalendarEvent } from '../../api/model/calendarEvent';
 import { ClimbingSession } from '../../api/model/climbingSession';
+import { StretchPlan } from '../../api/model/stretchPlan';
 import { WeeklyPlan } from '../../api/model/weeklyPlan';
 import { WeeklyPlanSlot } from '../../api/model/weeklyPlanSlot';
 import { WorkoutPlan } from '../../api/model/workoutPlan';
@@ -29,10 +31,11 @@ export const SHORT_BLOCK_DAYS = 2;
 /** How far back the logged history is scanned for the current block and the previous block's length. */
 const HISTORY_DAYS = 60;
 
-/** A one-day manual override (WeeklyPlan slot, backlog/144): a template, or a forced rest day. */
+/** A one-day manual override (WeeklyPlan slot, backlog/144): a template, a forced rest day, or a stretching template (backlog/168). */
 export interface DayOverride {
   kind: WeeklyPlanSlot.KindEnum;
   planId: string | null;
+  stretchPlanId?: string | null;
 }
 
 export type ForecastKind = 'CLIMB' | 'WORKOUT' | 'REST';
@@ -58,6 +61,8 @@ export interface ForecastDay {
   fingerFallback: boolean;
   /** BLOCK_LIMIT: the length of the load block that ended the day before. */
   blockLength: number;
+  /** backlog/168 — REST by a STRETCH override: the stretching template of the day. */
+  stretchPlan?: StretchPlan | null;
 }
 
 export interface ForecastInputs {
@@ -69,6 +74,8 @@ export interface ForecastInputs {
   plannedClimbs: ReadonlySet<string>;
   /** backlog/144 manual overrides by date (`overridesByDate`). */
   overrides: ReadonlyMap<string, DayOverride>;
+  /** backlog/168 — resolves a STRETCH override; a deleted / unknown one leaves the day automatic. */
+  stretchPlans?: readonly StretchPlan[];
 }
 
 /** The raw local stores the forecast reads (each list may be empty). */
@@ -78,6 +85,7 @@ export interface ForecastSources {
   events?: readonly CalendarEvent[];
   weeklyPlans?: readonly WeeklyPlan[];
   workoutPlans?: readonly WorkoutPlan[];
+  stretchPlans?: readonly StretchPlan[];
 }
 
 export function forecastInputsFrom(today: string, sources: ForecastSources): ForecastInputs {
@@ -88,6 +96,7 @@ export function forecastInputsFrom(today: string, sources: ForecastSources): For
     climbingSessions: sources.climbingSessions,
     plannedClimbs: plannedClimbDates(sources.events ?? [], today),
     overrides: overridesByDate(sources.weeklyPlans ?? []),
+    stretchPlans: sources.stretchPlans ?? [],
   };
 }
 
@@ -103,7 +112,11 @@ export function overridesByDate(weeks: readonly WeeklyPlan[]): Map<string, DayOv
         continue;
       }
       const date = addLocalDays(week.weekStartDate, WEEK_DAYS.indexOf(slot.dayOfWeek));
-      overrides.set(date, { kind: slot.kind ?? WeeklyPlanSlot.KindEnum.Plan, planId: slot.planId ?? null });
+      overrides.set(date, {
+        kind: slot.kind ?? WeeklyPlanSlot.KindEnum.Plan,
+        planId: slot.planId ?? null,
+        stretchPlanId: slot.stretchPlanId ?? null,
+      });
     }
   }
   return overrides;
@@ -164,6 +177,8 @@ export function trainingForecast(inputs: ForecastInputs, until: string): Forecas
       .map((candidate) => [candidate.plan.id, candidate.lastDate as string]),
   );
   const livePlan = (id: string | null) => (id === null ? undefined : inputs.plans.find((plan) => plan.id === id && !plan.deleted));
+  const liveStretchPlan = (id: string | null | undefined) =>
+    id ? (inputs.stretchPlans ?? []).find((plan) => plan.id === id && !plan.deleted) : undefined;
 
   const days: ForecastDay[] = [];
   for (let date = today; date <= until; date = addLocalDays(date, 1)) {
@@ -195,6 +210,11 @@ export function trainingForecast(inputs: ForecastInputs, until: string): Forecas
     const override = inputs.overrides.get(date);
     if (override?.kind === WeeklyPlanSlot.KindEnum.Rest) {
       return { ...base, kind: 'REST', reason: 'OVERRIDE' };
+    }
+    // backlog/168 — a stretching day is a rest day for the rotation: it closes the block, no template advances.
+    const overrideStretch = override?.kind === WeeklyPlanSlot.KindEnum.Stretch ? liveStretchPlan(override.stretchPlanId) : undefined;
+    if (overrideStretch !== undefined) {
+      return { ...base, kind: 'REST', reason: 'OVERRIDE', stretchPlan: overrideStretch };
     }
     const overridePlan = override?.kind === WeeklyPlanSlot.KindEnum.Plan ? livePlan(override.planId) : undefined;
     if (overridePlan !== undefined) {

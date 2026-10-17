@@ -344,6 +344,12 @@ export const routes: Routes = [
                 children: [
                   { path: '', loadComponent: () => import('./pages/workout/plan/plan-list.page').then((m) => m.PlanListPage) },
                   { path: 'new', loadComponent: () => import('./pages/workout/plan/plan-edit.page').then((m) => m.PlanEditPage) },
+                  {
+                    // backlog/168 — stretching templates (Heti terv.md "Nyújtó sablonok").
+                    path: 'stretch/:id',
+                    canActivate: [featureFlagGuard('edzes.nyujtas')],
+                    loadComponent: () => import('./pages/workout/plan/stretch-plan-edit.page').then((m) => m.StretchPlanEditPage),
+                  },
                   { path: ':id', loadComponent: () => import('./pages/workout/plan/plan-edit.page').then((m) => m.PlanEditPage) },
                 ],
               },

@@ -75,6 +75,8 @@ api/storedFoods.service.ts
 api/storedFoods.serviceInterface.ts
 api/stretchExercises.service.ts
 api/stretchExercises.serviceInterface.ts
+api/stretchPlans.service.ts
+api/stretchPlans.serviceInterface.ts
 api/swimLogs.service.ts
 api/swimLogs.serviceInterface.ts
 api/sync.service.ts
@@ -153,6 +155,8 @@ model/shoppingListCompleteResponse.ts
 model/shoppingListItem.ts
 model/storedFood.ts
 model/stretchExercise.ts
+model/stretchPlan.ts
+model/stretchPlanItem.ts
 model/swimLog.ts
 model/syncChangeItem.ts
 model/syncChangesResponse.ts

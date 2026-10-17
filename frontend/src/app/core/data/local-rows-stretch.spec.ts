@@ -1,7 +1,16 @@
 import { StretchExercise } from '../../api/model/stretchExercise';
+import { StretchPlanItem } from '../../api/model/stretchPlanItem';
 import { SqlTask } from '../storage/local-database.service';
 import {
   StretchExerciseRow,
+  WeeklyPlanSlotRow,
+  stretchPlanItemLocalWriteTask,
+  stretchPlanItemRowToDto,
+  stretchPlanItemServerApplyTask,
+  stretchPlanLocalWriteTask,
+  stretchPlanServerApplyTask,
+  weeklyPlanSlotLocalWriteTask,
+  weeklyPlanSlotRowToDto,
   stretchExerciseLocalWriteTask,
   stretchExerciseRowToDto,
   stretchExerciseServerApplyTask,
@@ -67,5 +76,65 @@ describe('stretch exercise local-rows (backlog/167)', () => {
       _needs_refetch: 0,
     };
     expect(stretchExerciseRowToDto(row)).toEqual(dto);
+  });
+});
+
+/** backlog/168 — `stretch_plan` / `stretch_plan_item` (SCHEMA_V53) and the weekly slot's `stretch_plan_id`. */
+describe('stretch plan local-rows (backlog/168)', () => {
+  it('plan and item writes bind every column in order', () => {
+    const planTask = stretchPlanLocalWriteTask({ id: 'p', name: 'Esti', notes: null, active: true, goalLabel: 'G' });
+    expect(placeholderCount(planTask)).toBe(planTask.values?.length ?? -1);
+    expect(planTask.values).toEqual(['p', 'Esti', null, 1, 'G']);
+
+    const itemTask = stretchPlanItemLocalWriteTask({
+      id: 'i',
+      planId: 'p',
+      stretchExerciseId: 'e',
+      stretchName: 'Vádli',
+      stretchCategory: StretchPlanItem.StretchCategoryEnum.Legs,
+      orderIndex: 2,
+      holdSeconds: 30,
+      perSide: true,
+      repetitions: 3,
+      notes: 'lassan',
+    });
+    expect(placeholderCount(itemTask)).toBe(itemTask.values?.length ?? -1);
+    expect(itemTask.values).toEqual(['i', 'p', 'e', 'Vádli', 'LEGS', 2, 30, 1, 3, 'lassan']);
+  });
+
+  it('server-apply tasks bind every column', () => {
+    const plan = stretchPlanServerApplyTask({ id: 'p', name: 'Esti', active: false, deleted: false });
+    expect(placeholderCount(plan)).toBe(plan.values?.length ?? -1);
+    const item = stretchPlanItemServerApplyTask(
+      stretchPlanItemRowToDto({
+        id: 'i',
+        plan_id: 'p',
+        stretch_exercise_id: 'e',
+        stretch_name: 'Vádli',
+        stretch_category: 'LEGS',
+        order_index: 0,
+        hold_seconds: 30,
+        per_side: 0,
+        repetitions: 1,
+        notes: null,
+        created_at: null,
+        updated_at: null,
+        deleted: 0,
+        deleted_at: null,
+        _dirty: 0,
+        _local_only: 0,
+        _sync_error: 0,
+        _needs_refetch: 0,
+      }),
+    );
+    expect(placeholderCount(item)).toBe(item.values?.length ?? -1);
+  });
+
+  it('a STRETCH slot writes stretch_plan_id and an empty plan_id, and reads them back', () => {
+    const task = weeklyPlanSlotLocalWriteTask({ id: 's', weeklyPlanId: 'w', dayOfWeek: 'MONDAY', kind: 'STRETCH', planId: null, stretchPlanId: 'p' });
+    expect(placeholderCount(task)).toBe(task.values?.length ?? -1);
+    expect(task.values).toEqual(['s', 'w', 'MONDAY', 'STRETCH', '', 'p']);
+    const row = { id: 's', weekly_plan_id: 'w', day_of_week: 'MONDAY', kind: 'STRETCH', plan_id: '', stretch_plan_id: 'p', deleted: 0 } as WeeklyPlanSlotRow;
+    expect(weeklyPlanSlotRowToDto(row)).toEqual(jasmine.objectContaining({ kind: 'STRETCH', planId: null, stretchPlanId: 'p' }));
   });
 });

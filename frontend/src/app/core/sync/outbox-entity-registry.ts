@@ -226,6 +226,11 @@ async function workoutPlanCurrentPayload(ctx: OutboxEntityFixContext): Promise<u
   return ctx.storage.getWorkoutPlan(ctx.targetEntityId);
 }
 
+/** documentation/Subfeatures/Heti terv.md "Nyújtó sablonok": plan + items are always saved together, POST and PUT alike. */
+async function stretchPlanCurrentPayload(ctx: OutboxEntityFixContext): Promise<unknown> {
+  return ctx.storage.getStretchPlan(ctx.targetEntityId);
+}
+
 /** documentation/Features/Mászónapló.md: session + attempts + pitches are always saved together, POST and PUT alike. */
 async function climbingSessionCurrentPayload(ctx: OutboxEntityFixContext): Promise<unknown> {
   return ctx.storage.getClimbingSession(ctx.targetEntityId);
@@ -415,6 +420,14 @@ export class OutboxEntityRegistryService {
       // Nested aggregate (plan + exercises + target sets, one body) — excluded from Fix per spec, see buildFixWriteTask doc above.
       buildFixWriteTask: null,
       // documentation/Subfeatures/Heti terv.md: WorkoutPlan.name is not unique (matches LifePlan/CalendarEvent).
+      nameUniqueness: null,
+    },
+    StretchPlan: {
+      table: 'stretch_plan',
+      currentPayload: stretchPlanCurrentPayload,
+      // Nested aggregate (plan + items, one body) — excluded from Fix, same as WorkoutPlan.
+      buildFixWriteTask: null,
+      // backlog/168: StretchPlan.name is not unique (same as WorkoutPlan).
       nameUniqueness: null,
     },
     WeeklyPlan: {

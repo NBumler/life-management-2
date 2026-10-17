@@ -1,0 +1,129 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/workout/weekly-plan/plans"></ion-back-button>
+    </ion-buttons>
+    <ion-title>
+      {{ (isEditing() ? 'WORKOUT.STRETCH_PLAN.EDIT_TITLE' : 'WORKOUT.STRETCH_PLAN.NEW_TITLE') | translate }}
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button [strong]="true" [disabled]="hasItemErrors()" (click)="save()">{{ 'COMMON.SAVE' | translate }}</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <form [formGroup]="form">
+    <ion-list>
+      <ion-item>
+        <ion-input
+          formControlName="name"
+          [label]="'WORKOUT.PLAN.FIELD_NAME' | translate"
+          [placeholder]="'WORKOUT.STRETCH_PLAN.NAME_PLACEHOLDER' | translate"
+          label-placement="stacked"
+        ></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input
+          formControlName="goalLabel"
+          [label]="'WORKOUT.PLAN.FIELD_GOAL_LABEL' | translate"
+          [placeholder]="'WORKOUT.PLAN.FIELD_GOAL_LABEL_PLACEHOLDER' | translate"
+          label-placement="stacked"
+        ></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-textarea formControlName="notes" [label]="'WORKOUT.PLAN.FIELD_NOTES' | translate" label-placement="stacked" [autoGrow]="true"></ion-textarea>
+      </ion-item>
+    </ion-list>
+  </form>
+
+  @for (row of items(); track row.id; let first = $first; let last = $last) {
+    <ion-list [attr.data-item-id]="row.id">
+      <ion-item lines="none">
+        <div class="item-head" style="width: 100%">
+          <ion-label class="ion-text-wrap">
+            <h2>{{ row.stretchName }}</h2>
+            <p>{{ categoryLabelKeys[row.stretchCategory] | translate }}</p>
+          </ion-label>
+          @if (!first) {
+            <ion-button fill="clear" size="small" (click)="moveItem(row, -1)" [attr.aria-label]="'COMMON.MOVE_UP' | translate">
+              <ion-icon slot="icon-only" name="chevron-up-outline" aria-hidden="true"></ion-icon>
+            </ion-button>
+          }
+          @if (!last) {
+            <ion-button fill="clear" size="small" (click)="moveItem(row, 1)" [attr.aria-label]="'COMMON.MOVE_DOWN' | translate">
+              <ion-icon slot="icon-only" name="chevron-down-outline" aria-hidden="true"></ion-icon>
+            </ion-button>
+          }
+          <ion-button fill="clear" size="small" color="danger" (click)="removeItem(row)" [attr.aria-label]="'COMMON.REMOVE' | translate">
+            <ion-icon slot="icon-only" name="close-outline" aria-hidden="true"></ion-icon>
+          </ion-button>
+        </div>
+      </ion-item>
+      <div class="item-grid">
+        <ion-item>
+          <ion-input
+            type="number"
+            inputmode="numeric"
+            min="1"
+            [label]="'WORKOUT.STRETCH_PLAN.FIELD_HOLD' | translate"
+            label-placement="stacked"
+            [value]="row.holdSeconds()"
+            (ionInput)="setNumber(row.holdSeconds, $any($event.target).value)"
+            [color]="row.holdSeconds() >= 1 ? undefined : 'danger'"
+          ></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-input
+            type="number"
+            inputmode="numeric"
+            min="1"
+            [label]="'WORKOUT.STRETCH_PLAN.FIELD_REPETITIONS' | translate"
+            label-placement="stacked"
+            [value]="row.repetitions()"
+            (ionInput)="setNumber(row.repetitions, $any($event.target).value)"
+            [color]="row.repetitions() >= 1 ? undefined : 'danger'"
+          ></ion-input>
+        </ion-item>
+      </div>
+      <ion-item>
+        <ion-toggle [checked]="row.perSide()" (ionChange)="row.perSide.set($any($event.target).checked)">
+          {{ 'WORKOUT.EXERCISES.STRETCH.FIELD_DEFAULT_PER_SIDE' | translate }}
+        </ion-toggle>
+      </ion-item>
+      <ion-item>
+        <ion-input
+          [label]="'WORKOUT.PLAN.EXERCISE_NOTES' | translate"
+          label-placement="stacked"
+          [placeholder]="'WORKOUT.STRETCH_PLAN.NOTES_PLACEHOLDER' | translate"
+          [maxlength]="notesMax"
+          [value]="row.notes()"
+          (ionInput)="row.notes.set($any($event.target).value ?? '')"
+        ></ion-input>
+      </ion-item>
+    </ion-list>
+  }
+
+  <div class="ion-padding">
+    <ion-button expand="block" fill="outline" (click)="openPicker()">
+      <ion-icon slot="start" name="add-outline" aria-hidden="true"></ion-icon>
+      {{ 'WORKOUT.STRETCH_PLAN.ADD_ITEM' | translate }}
+    </ion-button>
+  </div>
+
+  <ion-note class="total" data-total>
+    {{ 'WORKOUT.STRETCH_PLAN.TOTAL' | translate: { minutes: totalMinutes() } }}
+  </ion-note>
+
+  @if (isEditing()) {
+    <div class="ion-padding">
+      <ion-button expand="block" fill="clear" color="danger" (click)="delete()">{{ 'COMMON.DELETE' | translate }}</ion-button>
+    </div>
+  }
+</ion-content>
+
+<ion-modal [isOpen]="pickerOpen()" (didDismiss)="pickerOpen.set(false)">
+  <ng-template>
+    <app-stretch-picker (confirmed)="onPicked($event)" (cancelled)="pickerOpen.set(false)"></app-stretch-picker>
+  </ng-template>
+</ion-modal>

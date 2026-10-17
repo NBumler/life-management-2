@@ -1,0 +1,38 @@
+get:
+  operationId: listStretchPlans
+  tags:
+    - stretch-plans
+  summary: Every live stretching plan (deleted = false) owned by the caller — active and inactive alike — each with its live+tombstoned item rows.
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/StretchPlanList.yaml'
+post:
+  operationId: createStretchPlan
+  tags:
+    - stretch-plans
+  summary: >-
+    Create a stretching plan with its items in one request — idempotent upsert on the
+    client-supplied id (documentation/Architektúra/Backend-offline first.md §11 nested aggregate save).
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/StretchPlan.yaml'
+  responses:
+    '200':
+      description: Created or, on retry with the same id, the existing tree.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/StretchPlan.yaml'
+    '400':
+      description: An item is missing a required field.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'

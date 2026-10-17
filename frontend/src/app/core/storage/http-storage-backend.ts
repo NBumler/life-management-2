@@ -18,6 +18,7 @@ import { ShoppingListsService } from '../../api/api/shoppingLists.service';
 import { StoredFoodsService } from '../../api/api/storedFoods.service';
 import { SwimLogsService } from '../../api/api/swimLogs.service';
 import { StretchExercisesService } from '../../api/api/stretchExercises.service';
+import { StretchPlansService } from '../../api/api/stretchPlans.service';
 import { VolleyballLogsService } from '../../api/api/volleyballLogs.service';
 import { BikeRideLogsService } from '../../api/api/bikeRideLogs.service';
 import { RecurringExpensesService } from '../../api/api/recurringExpenses.service';
@@ -56,6 +57,7 @@ import { ShoppingList } from '../../api/model/shoppingList';
 import { StoredFood } from '../../api/model/storedFood';
 import { SwimLog } from '../../api/model/swimLog';
 import { StretchExercise } from '../../api/model/stretchExercise';
+import { StretchPlan } from '../../api/model/stretchPlan';
 import { VolleyballLog } from '../../api/model/volleyballLog';
 import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { RecurringExpense } from '../../api/model/recurringExpense';
@@ -95,6 +97,7 @@ import {
   StorageBackend,
   WeeklyPlanDraft,
   WorkoutPlanDraft,
+  StretchPlanDraft,
   WorkoutSessionDraft,
   ClimbingSessionDraft,
   buildShoppingListCompleteRequestPayload,
@@ -113,6 +116,7 @@ export class HttpStorageBackend implements StorageBackend {
   private readonly lifePlansApi = inject(LifePlansService);
   private readonly exercisesApi = inject(ExercisesService);
   private readonly stretchExercisesApi = inject(StretchExercisesService);
+  private readonly stretchPlansApi = inject(StretchPlansService);
   private readonly householdRoomsApi = inject(HouseholdRoomsService);
   private readonly householdTasksApi = inject(HouseholdTasksService);
   private readonly eventsApi = inject(EventsService);
@@ -626,6 +630,32 @@ export class HttpStorageBackend implements StorageBackend {
     return firstValueFrom(this.workoutPlansApi.deleteWorkoutPlan(id));
   }
 
+  listStretchPlans(): Promise<StretchPlan[]> {
+    return firstValueFrom(this.stretchPlansApi.listStretchPlans());
+  }
+
+  getStretchPlan(id: string): Promise<StretchPlan> {
+    return firstValueFrom(this.stretchPlansApi.getStretchPlan(id));
+  }
+
+  /** POST with an existing id is an idempotent upsert server-side, so this covers both create and update. */
+  saveStretchPlan(draft: StretchPlanDraft): Promise<StretchPlan> {
+    const dto: StretchPlan = {
+      id: draft.id,
+      name: draft.name,
+      notes: draft.notes,
+      active: draft.active,
+      goalLabel: draft.goalLabel,
+      deleted: false,
+      items: draft.items.map((item) => ({ ...item, planId: draft.id, deleted: false })),
+    };
+    return firstValueFrom(this.stretchPlansApi.createStretchPlan(dto));
+  }
+
+  deleteStretchPlan(id: string): Promise<StretchPlan> {
+    return firstValueFrom(this.stretchPlansApi.deleteStretchPlan(id));
+  }
+
   listWeeklyPlans(): Promise<WeeklyPlan[]> {
     return firstValueFrom(this.weeklyPlansApi.listWeeklyPlans());
   }
@@ -646,6 +676,7 @@ export class HttpStorageBackend implements StorageBackend {
         dayOfWeek: slot.dayOfWeek,
         kind: slot.kind,
         planId: slot.planId,
+        stretchPlanId: slot.stretchPlanId,
         deleted: false,
       })),
     };

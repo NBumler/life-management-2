@@ -5,7 +5,7 @@
     </ion-buttons>
     <ion-title>{{ 'WORKOUT.PLAN.LIST_TITLE' | translate }}</ion-title>
     <ion-buttons slot="end">
-      <ion-button routerLink="new">{{ 'WORKOUT.PLAN.ADD' | translate }}</ion-button>
+      <ion-button (click)="addTemplate()">{{ 'WORKOUT.PLAN.ADD' | translate }}</ion-button>
     </ion-buttons>
   </ion-toolbar>
   <ion-toolbar>
@@ -15,6 +15,22 @@
       <ion-segment-button value="ALL">{{ 'WORKOUT.PLAN.FILTER_ALL' | translate }}</ion-segment-button>
     </ion-segment>
   </ion-toolbar>
+  @if (stretchEnabled) {
+    <ion-toolbar>
+      <div class="filter-chips">
+        @for (type of types; track type) {
+          <ion-chip
+            [attr.data-type]="type"
+            [outline]="!typeFilter().has(type)"
+            [color]="typeFilter().has(type) ? 'tertiary' : undefined"
+            (click)="toggleType(type)"
+          >
+            <ion-label>{{ typeLabelKeys[type] | translate }}</ion-label>
+          </ion-chip>
+        }
+      </div>
+    </ion-toolbar>
+  }
 </ion-header>
 
 <ion-content>
@@ -35,22 +51,27 @@
             </ion-button>
           </ion-list-header>
         }
-        @for (plan of group.plans; track plan.id) {
-          <ion-item button [routerLink]="[plan.id]" detail="true">
+        @for (entry of group.entries; track trackEntry(entry)) {
+          <ion-item button [routerLink]="rowLink(entry)" detail="true" [attr.data-entry-type]="entry.type">
             <ion-label>
-              <h2>{{ plan.name }}</h2>
+              <h2>{{ entry.plan.name }}</h2>
               <p>
-                {{ liveExerciseCount(plan) }} {{ 'WORKOUT.PLAN.EXERCISES_SHORT' | translate }}
-                @if (!plan.inRotation) {
-                  · {{ 'WORKOUT.PLAN.MANUAL_ONLY_BADGE' | translate }}
+                @if (asStrength(entry); as plan) {
+                  {{ liveExerciseCount(plan) }} {{ 'WORKOUT.PLAN.EXERCISES_SHORT' | translate }}
+                  @if (!plan.inRotation) {
+                    · {{ 'WORKOUT.PLAN.MANUAL_ONLY_BADGE' | translate }}
+                  }
+                }
+                @if (asStretch(entry); as plan) {
+                  {{ 'WORKOUT.STRETCH_PLAN.ROW_SUMMARY' | translate: { count: liveItemCount(plan), minutes: stretchMinutes(plan) } }}
                 }
               </p>
             </ion-label>
             <ion-toggle
               slot="end"
-              [checked]="plan.active"
+              [checked]="entry.plan.active"
               (click)="$event.stopPropagation()"
-              (ionChange)="toggleActive(plan, $any($event.target).checked)"
+              (ionChange)="toggleActive(entry, $any($event.target).checked)"
               [attr.aria-label]="'WORKOUT.PLAN.TOGGLE_ACTIVE' | translate"
             ></ion-toggle>
           </ion-item>

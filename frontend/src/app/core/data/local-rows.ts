@@ -19,6 +19,8 @@ import { ShoppingListItem } from '../../api/model/shoppingListItem';
 import { StoredFood } from '../../api/model/storedFood';
 import { SwimLog } from '../../api/model/swimLog';
 import { StretchExercise } from '../../api/model/stretchExercise';
+import { StretchPlan } from '../../api/model/stretchPlan';
+import { StretchPlanItem } from '../../api/model/stretchPlanItem';
 import { VolleyballLog } from '../../api/model/volleyballLog';
 import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { RecurringExpense } from '../../api/model/recurringExpense';
@@ -1264,8 +1266,10 @@ export interface WeeklyPlanSlotRow {
   weekly_plan_id: string;
   day_of_week: string;
   kind: string;
-  /** `''` for a REST override (the column is NOT NULL on-device). */
+  /** `''` for a REST / STRETCH override (the column is NOT NULL on-device). */
   plan_id: string;
+  /** backlog/168 — the stretching template of a STRETCH override; null otherwise. */
+  stretch_plan_id: string | null;
   created_at: string | null;
   updated_at: string | null;
   deleted: number;
@@ -1283,6 +1287,7 @@ export function weeklyPlanSlotRowToDto(row: WeeklyPlanSlotRow): WeeklyPlanSlot {
     dayOfWeek: row.day_of_week as WeeklyPlanSlot.DayOfWeekEnum,
     kind: row.kind as WeeklyPlanSlot.KindEnum,
     planId: row.plan_id === '' ? null : row.plan_id,
+    stretchPlanId: row.stretch_plan_id ?? null,
     deleted: row.deleted === 1,
     deletedAt: row.deleted_at,
     createdAt: row.created_at ?? undefined,
@@ -1290,14 +1295,17 @@ export function weeklyPlanSlotRowToDto(row: WeeklyPlanSlotRow): WeeklyPlanSlot {
   };
 }
 
-export function weeklyPlanSlotLocalWriteTask(dto: Pick<WeeklyPlanSlot, 'id' | 'weeklyPlanId' | 'dayOfWeek' | 'kind' | 'planId'>): SqlTask {
+export function weeklyPlanSlotLocalWriteTask(
+  dto: Pick<WeeklyPlanSlot, 'id' | 'weeklyPlanId' | 'dayOfWeek' | 'kind' | 'planId' | 'stretchPlanId'>,
+): SqlTask {
   return {
     statement: `
-      INSERT INTO weekly_plan_slot (id, weekly_plan_id, day_of_week, kind, plan_id, _dirty, _local_only)
-      VALUES (?, ?, ?, ?, ?, 1, 1)
+      INSERT INTO weekly_plan_slot (id, weekly_plan_id, day_of_week, kind, plan_id, stretch_plan_id, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, 1, 1)
       ON CONFLICT(id) DO UPDATE SET
-        day_of_week = excluded.day_of_week, kind = excluded.kind, plan_id = excluded.plan_id, deleted = 0, deleted_at = NULL, _dirty = 1`,
-    values: [dto.id, dto.weeklyPlanId, dto.dayOfWeek, dto.kind, dto.planId ?? ''],
+        day_of_week = excluded.day_of_week, kind = excluded.kind, plan_id = excluded.plan_id,
+        stretch_plan_id = excluded.stretch_plan_id, deleted = 0, deleted_at = NULL, _dirty = 1`,
+    values: [dto.id, dto.weeklyPlanId, dto.dayOfWeek, dto.kind, dto.planId ?? '', dto.stretchPlanId ?? null],
   };
 }
 
@@ -1312,10 +1320,11 @@ export function weeklyPlanSlotLocalRemoveTask(id: string): SqlTask {
 export function weeklyPlanSlotServerApplyTask(dto: WeeklyPlanSlot): SqlTask {
   return {
     statement: `
-      INSERT INTO weekly_plan_slot (id, weekly_plan_id, day_of_week, kind, plan_id, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      INSERT INTO weekly_plan_slot (id, weekly_plan_id, day_of_week, kind, plan_id, stretch_plan_id, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET
         weekly_plan_id = excluded.weekly_plan_id, day_of_week = excluded.day_of_week, kind = excluded.kind, plan_id = excluded.plan_id,
+        stretch_plan_id = excluded.stretch_plan_id,
         created_at = excluded.created_at, updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at,
         _dirty = 0, _local_only = 0, _needs_refetch = 0
       WHERE weekly_plan_slot._dirty = 0`,
@@ -1325,6 +1334,7 @@ export function weeklyPlanSlotServerApplyTask(dto: WeeklyPlanSlot): SqlTask {
       dto.dayOfWeek,
       dto.kind ?? WeeklyPlanSlot.KindEnum.Plan,
       dto.planId ?? '',
+      dto.stretchPlanId ?? null,
       dto.createdAt ?? null,
       dto.updatedAt ?? null,
       dto.deleted ? 1 : 0,
@@ -1339,6 +1349,206 @@ export function weeklyPlanSlotTombstoneTask(id: string, deletedAt: string | null
     statement: `
       INSERT INTO weekly_plan_slot (id, weekly_plan_id, day_of_week, plan_id, updated_at, deleted, deleted_at, _dirty, _local_only)
       VALUES (?, '', 'MONDAY', '', ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+// --- Heti terv: StretchPlan → StretchPlanItem (backlog/168 — two-level nested aggregate) ---
+
+export interface StretchPlanRow {
+  id: string;
+  name: string;
+  notes: string | null;
+  active: number;
+  goal_label: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+/** Omits `items` — a StretchPlan row alone never carries them, see readStretchPlan in SqliteStorageBackend. */
+export function stretchPlanRowToDto(row: StretchPlanRow): Omit<StretchPlan, 'items'> {
+  return {
+    id: row.id,
+    name: row.name,
+    notes: row.notes,
+    active: row.active === 1,
+    goalLabel: row.goal_label,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+export function stretchPlanLocalWriteTask(dto: Pick<StretchPlan, 'id' | 'name' | 'notes' | 'active' | 'goalLabel'>): SqlTask {
+  return {
+    statement: `
+      INSERT INTO stretch_plan (id, name, notes, active, goal_label, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET
+        name = excluded.name, notes = excluded.notes, active = excluded.active, goal_label = excluded.goal_label,
+        deleted = 0, deleted_at = NULL, _dirty = 1`,
+    values: [dto.id, dto.name, dto.notes ?? null, dto.active ? 1 : 0, dto.goalLabel ?? null],
+  };
+}
+
+export function stretchPlanServerApplyTask(dto: Omit<StretchPlan, 'items'>): SqlTask {
+  return {
+    statement: `
+      INSERT INTO stretch_plan (id, name, notes, active, goal_label, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        name = excluded.name, notes = excluded.notes, active = excluded.active, goal_label = excluded.goal_label,
+        created_at = excluded.created_at, updated_at = excluded.updated_at,
+        deleted = excluded.deleted, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE stretch_plan._dirty = 0`,
+    values: [
+      dto.id,
+      dto.name,
+      dto.notes ?? null,
+      dto.active ? 1 : 0,
+      dto.goalLabel ?? null,
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function stretchPlanTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO stretch_plan (id, name, active, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '', 1, ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+export interface StretchPlanItemRow {
+  id: string;
+  plan_id: string;
+  stretch_exercise_id: string;
+  stretch_name: string;
+  stretch_category: string;
+  order_index: number;
+  hold_seconds: number;
+  per_side: number;
+  repetitions: number;
+  notes: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+export function stretchPlanItemRowToDto(row: StretchPlanItemRow): StretchPlanItem {
+  return {
+    id: row.id,
+    planId: row.plan_id,
+    stretchExerciseId: row.stretch_exercise_id,
+    stretchName: row.stretch_name,
+    stretchCategory: row.stretch_category as StretchPlanItem.StretchCategoryEnum,
+    orderIndex: row.order_index,
+    holdSeconds: row.hold_seconds,
+    perSide: row.per_side === 1,
+    repetitions: row.repetitions,
+    notes: row.notes,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+type StretchPlanItemWriteInput = Pick<
+  StretchPlanItem,
+  'id' | 'planId' | 'stretchExerciseId' | 'stretchName' | 'stretchCategory' | 'orderIndex' | 'holdSeconds' | 'perSide' | 'repetitions' | 'notes'
+>;
+
+export function stretchPlanItemLocalWriteTask(dto: StretchPlanItemWriteInput): SqlTask {
+  return {
+    statement: `
+      INSERT INTO stretch_plan_item (id, plan_id, stretch_exercise_id, stretch_name, stretch_category, order_index, hold_seconds, per_side, repetitions, notes, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET
+        stretch_exercise_id = excluded.stretch_exercise_id, stretch_name = excluded.stretch_name,
+        stretch_category = excluded.stretch_category, order_index = excluded.order_index, hold_seconds = excluded.hold_seconds,
+        per_side = excluded.per_side, repetitions = excluded.repetitions, notes = excluded.notes,
+        deleted = 0, deleted_at = NULL, _dirty = 1`,
+    values: [
+      dto.id,
+      dto.planId,
+      dto.stretchExerciseId,
+      dto.stretchName,
+      dto.stretchCategory,
+      dto.orderIndex,
+      dto.holdSeconds,
+      dto.perSide ? 1 : 0,
+      dto.repetitions,
+      dto.notes ?? null,
+    ],
+  };
+}
+
+/** Local-only removal — an item dropped from a plan during an edit (not a standalone outbox entry). */
+export function stretchPlanItemLocalRemoveTask(id: string): SqlTask {
+  return {
+    statement: `UPDATE stretch_plan_item SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?`,
+    values: [new Date().toISOString(), id],
+  };
+}
+
+export function stretchPlanItemServerApplyTask(dto: StretchPlanItem): SqlTask {
+  return {
+    statement: `
+      INSERT INTO stretch_plan_item (id, plan_id, stretch_exercise_id, stretch_name, stretch_category, order_index, hold_seconds, per_side, repetitions, notes, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        plan_id = excluded.plan_id, stretch_exercise_id = excluded.stretch_exercise_id, stretch_name = excluded.stretch_name,
+        stretch_category = excluded.stretch_category, order_index = excluded.order_index, hold_seconds = excluded.hold_seconds,
+        per_side = excluded.per_side, repetitions = excluded.repetitions, notes = excluded.notes,
+        created_at = excluded.created_at, updated_at = excluded.updated_at,
+        deleted = excluded.deleted, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE stretch_plan_item._dirty = 0`,
+    values: [
+      dto.id,
+      dto.planId,
+      dto.stretchExerciseId,
+      dto.stretchName,
+      dto.stretchCategory,
+      dto.orderIndex,
+      dto.holdSeconds,
+      dto.perSide ? 1 : 0,
+      dto.repetitions,
+      dto.notes ?? null,
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function stretchPlanItemTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO stretch_plan_item (id, plan_id, stretch_exercise_id, stretch_name, stretch_category, hold_seconds, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '', '', '', 'FULL_BODY', 1, ?, 1, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
     values: [id, updatedAt, deletedAt],
   };

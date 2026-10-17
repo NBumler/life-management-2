@@ -30,13 +30,15 @@ class WeeklyPlanService {
 	private final WeeklyPlanSlotRepository slotRepository;
 	private final WeeklyPlanMapper mapper;
 	private final WeeklyPlanSlotMapper slotMapper;
+	private final StretchPlanRepository stretchPlanRepository;
 
 	WeeklyPlanService(WeeklyPlanRepository repository, WeeklyPlanSlotRepository slotRepository, WeeklyPlanMapper mapper,
-			WeeklyPlanSlotMapper slotMapper) {
+			WeeklyPlanSlotMapper slotMapper, StretchPlanRepository stretchPlanRepository) {
 		this.repository = repository;
 		this.slotRepository = slotRepository;
 		this.mapper = mapper;
 		this.slotMapper = slotMapper;
+		this.stretchPlanRepository = stretchPlanRepository;
 	}
 
 	@Transactional(readOnly = true)
@@ -103,6 +105,7 @@ class WeeklyPlanService {
 	 * lists every row, live or tombstoned (WeeklyPlan.yaml).
 	 */
 	private WeeklyPlan saveTree(WeeklyPlanEntity entity, WeeklyPlan dto) {
+		UUID userId = entity.getUserId();
 		entity.setWeekStartDate(dto.getWeekStartDate());
 		repository.saveAndFlush(entity);
 
@@ -113,14 +116,16 @@ class WeeklyPlanService {
 				continue;
 			}
 			incomingSlotIds.add(slotDto.getId());
-			UUID planId = slotDto.getKind() == WeeklyPlanSlot.KindEnum.REST ? null : slotDto.getPlanId().orElse(null);
+			UUID planId = slotDto.getKind() == WeeklyPlanSlot.KindEnum.PLAN ? slotDto.getPlanId().orElse(null) : null;
 			if (slotDto.getKind() == WeeklyPlanSlot.KindEnum.PLAN && planId == null) {
 				throw new ValidationException("a PLAN slot requires planId", "planId");
 			}
+			UUID stretchPlanId = slotDto.getKind() == WeeklyPlanSlot.KindEnum.STRETCH ? requireStretchPlan(userId, slotDto) : null;
 			WeeklyPlanSlotEntity slotEntity = resolveSlot(entity.getId(), existingSlots, slotDto.getId());
 			slotEntity.setDayOfWeek(slotDto.getDayOfWeek().getValue());
 			slotEntity.setKind(slotDto.getKind().getValue());
 			slotEntity.setPlanId(planId);
+			slotEntity.setStretchPlanId(stretchPlanId);
 			slotRepository.save(slotEntity);
 		}
 		for (WeeklyPlanSlotEntity existing : existingSlots) {
@@ -132,6 +137,20 @@ class WeeklyPlanService {
 		slotRepository.flush();
 
 		return toDto(entity);
+	}
+
+	/**
+	 * backlog/168 — a STRETCH slot needs the caller's own stretching template (400 when missing, 404 when
+	 * unknown / someone else's). A soft-deleted own template is accepted, like a PLAN slot's planId.
+	 */
+	private UUID requireStretchPlan(UUID userId, WeeklyPlanSlot slotDto) {
+		UUID stretchPlanId = slotDto.getStretchPlanId().orElse(null);
+		if (stretchPlanId == null) {
+			throw new ValidationException("a STRETCH slot requires stretchPlanId", "stretchPlanId");
+		}
+		stretchPlanRepository.findByIdAndUserId(stretchPlanId, userId)
+				.orElseThrow(() -> new EntityNotFoundException("No such stretch plan"));
+		return stretchPlanId;
 	}
 
 	/** See {@link NestedChildResolver} — shared with MealService.resolveItem etc. */

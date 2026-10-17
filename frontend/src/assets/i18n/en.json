@@ -1235,7 +1235,9 @@
       "GROUP_ACTIVATE": "Activate group",
       "GROUP_DEACTIVATE": "Deactivate group",
       "GROUP_ONLY": "Only this group active",
-      "GROUP_CHANGED": "{{count}} templates changed"
+      "GROUP_CHANGED": "{{count}} templates changed",
+      "ADD_STRENGTH": "Strength template",
+      "ADD_STRETCH": "Stretching template"
     },
     "WEEKLY": {
       "WEEK_OF": "Week of:",
@@ -1266,7 +1268,9 @@
       "WORKOUT_DONE": "Workout: {{name}}",
       "OVERRIDE_HINT": "Set this day by hand — the rotation continues from here.",
       "OVERRIDE_AUTO": "Automatic (rotation)",
-      "OVERRIDE_REST": "Rest day"
+      "OVERRIDE_REST": "Rest day",
+      "OVERRIDE_STRETCH": "Stretching · {{name}}",
+      "FORECAST_STRETCH": "Stretching: {{name}}"
     },
     "SWIM": {
       "NEW": "New swim",
@@ -1626,6 +1630,24 @@
       "NO_REST_AHEAD": "With the planned climbs and manual day settings, no rest day is left in the next 7 days — consider keeping one day free.",
       "CLIMB_PLANNED_TODAY": "A climb is planned for today — at most a short core / prehab session is recommended.",
       "CLIMB_TOMORROW": "Climbing tomorrow — finger and heavy pulling work is not recommended today."
+    },
+    "STRETCH_PLAN": {
+      "NEW_TITLE": "New stretching template",
+      "EDIT_TITLE": "Edit stretching template",
+      "NAME_PLACEHOLDER": "e.g. Evening stretch",
+      "DELETE_CONFIRM_TITLE": "Delete stretching template",
+      "DELETE_CONFIRM_MESSAGE": "Delete this stretching template? Past stretching sessions are kept.",
+      "FIELD_HOLD": "Hold (s)",
+      "FIELD_REPETITIONS": "Repetitions",
+      "NOTES_PLACEHOLDER": "e.g. slowly, breathe out deeply",
+      "ADD_ITEM": "Add stretch",
+      "TOTAL": "Total ~{{minutes}} min",
+      "ROW_SUMMARY": "Stretching · {{count}} stretches · ~{{minutes}} min",
+      "PER_SIDE_SHORT": "per side"
+    },
+    "STRETCH_PICKER": {
+      "TITLE": "Pick stretches",
+      "EMPTY": "No stretches yet — add one in the Exercises catalog."
     }
   },
   "WIDGET": {

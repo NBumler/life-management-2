@@ -10,20 +10,24 @@
 
 
 /**
- * documentation/Subfeatures/Heti terv.md \"Kézi felülírás\" (backlog/144) — a one-day manual override of the rotation forecast on a WeeklyPlan: PLAN = this template on that day, REST = a forced rest day. A slot exists only where the day is overridden; back to \"Automatikus\" soft-deletes it. At most one live slot per (weeklyPlanId, dayOfWeek). Only ever saved nested inside a WeeklyPlan (documentation/Architektúra/Backend.md \"Nested aggregate PUT\"), but its own sync row.
+ * documentation/Subfeatures/Heti terv.md \"Kézi felülírás\" (backlog/144) — a one-day manual override of the rotation forecast on a WeeklyPlan: PLAN = this template on that day, REST = a forced rest day, STRETCH = a stretching template on that day (backlog/168 — a rest day for the rotation). A slot exists only where the day is overridden; back to \"Automatikus\" soft-deletes it. At most one live slot per (weeklyPlanId, dayOfWeek). Only ever saved nested inside a WeeklyPlan (documentation/Architektúra/Backend.md \"Nested aggregate PUT\"), but its own sync row.
  */
 export interface WeeklyPlanSlot { 
     id: string;
     weeklyPlanId: string;
     dayOfWeek: WeeklyPlanSlot.DayOfWeekEnum;
     /**
-     * PLAN = template override (planId required); REST = forced rest day (planId null).
+     * PLAN = template override (planId required); REST = forced rest day (planId null); STRETCH = stretching template (stretchPlanId required, planId null — backlog/168).
      */
     kind: WeeklyPlanSlot.KindEnum;
     /**
      * → WorkoutPlan.id for a PLAN override (400 VALIDATION when missing); always null for REST. A soft link — a plan soft-deleted later leaves the slot intact.
      */
     planId?: string | null;
+    /**
+     * backlog/168 — → StretchPlan.id for a STRETCH override (400 VALIDATION when missing, 404 when not the caller\'s); always null for PLAN / REST. A soft link — a stretching plan soft-deleted later leaves the slot intact (the forecast ignores it).
+     */
+    stretchPlanId?: string | null;
     deleted: boolean;
     readonly deletedAt?: string | null;
     readonly createdAt?: string;
@@ -42,7 +46,8 @@ export namespace WeeklyPlanSlot {
     export type DayOfWeekEnum = typeof DayOfWeekEnum[keyof typeof DayOfWeekEnum];
     export const KindEnum = {
         Plan: 'PLAN',
-        Rest: 'REST'
+        Rest: 'REST',
+        Stretch: 'STRETCH'
     } as const;
     export type KindEnum = typeof KindEnum[keyof typeof KindEnum];
 }

@@ -23,6 +23,8 @@ import { ShoppingListItem } from '../../api/model/shoppingListItem';
 import { StoredFood } from '../../api/model/storedFood';
 import { SwimLog } from '../../api/model/swimLog';
 import { StretchExercise } from '../../api/model/stretchExercise';
+import { StretchPlan } from '../../api/model/stretchPlan';
+import { StretchPlanItem } from '../../api/model/stretchPlanItem';
 import { VolleyballLog } from '../../api/model/volleyballLog';
 import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { RecurringExpense } from '../../api/model/recurringExpense';
@@ -283,6 +285,32 @@ export interface WorkoutPlanDraft {
 }
 
 /**
+ * documentation/Subfeatures/Heti terv.md "Nyújtó sablonok" (backlog/168) — the desired live tree for a
+ * StretchPlan save (plan → items). Ids are client-generated for a new row, reused for a kept one.
+ * `stretchName` / `stretchCategory` are a snapshot from the stretch picker.
+ */
+export interface StretchPlanItemSaveItem {
+  id: string;
+  stretchExerciseId: string;
+  stretchName: string;
+  stretchCategory: StretchPlanItem.StretchCategoryEnum;
+  orderIndex: number;
+  holdSeconds: number;
+  perSide: boolean;
+  repetitions: number;
+  notes: string | null;
+}
+
+export interface StretchPlanDraft {
+  id: string;
+  name: string;
+  notes: string | null;
+  active: boolean;
+  goalLabel: string | null;
+  items: StretchPlanItemSaveItem[];
+}
+
+/**
  * documentation/Subfeatures/Heti terv.md "Entitás — WeeklyPlan" — the desired live slot set for one
  * calendar week. A slot exists only where a day has a template assigned; a day cleared in the editor
  * simply drops out of `slots` and is soft-deleted. `weeklyPlan.id` is a deterministic UUID v5 of
@@ -291,9 +319,13 @@ export interface WorkoutPlanDraft {
 export interface WeeklyPlanSlotSaveItem {
   id: string;
   dayOfWeek: WeeklyPlanSlot.DayOfWeekEnum;
-  /** backlog/144: PLAN = template override (`planId` set), REST = forced rest day (`planId` null). */
+  /**
+   * backlog/144: PLAN = template override (`planId` set), REST = forced rest day (`planId` null);
+   * backlog/168: STRETCH = stretching template (`stretchPlanId` set, `planId` null).
+   */
   kind: WeeklyPlanSlot.KindEnum;
   planId: string | null;
+  stretchPlanId: string | null;
 }
 
 export interface WeeklyPlanDraft {
@@ -605,6 +637,12 @@ export interface StorageBackend {
   listStretchExercises(): Promise<StretchExercise[]>;
   upsertStretchExercise(exercise: StretchExercise): Promise<StretchExercise>;
   deleteStretchExercise(id: string): Promise<StretchExercise>;
+
+  /** documentation/Subfeatures/Heti terv.md "Nyújtó sablonok" (backlog/168): plan + items as one nested aggregate. */
+  listStretchPlans(): Promise<StretchPlan[]>;
+  getStretchPlan(id: string): Promise<StretchPlan>;
+  saveStretchPlan(draft: StretchPlanDraft): Promise<StretchPlan>;
+  deleteStretchPlan(id: string): Promise<StretchPlan>;
 
   /** documentation/Subfeatures/Edzésnapló.md: per-user workout log. Every row (incl. list entries) embeds its full live+tombstoned exercise/set tree. */
   listWorkoutSessions(): Promise<WorkoutSession[]>;

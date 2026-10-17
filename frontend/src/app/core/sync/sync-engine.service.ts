@@ -8,6 +8,7 @@ import { firstValueFrom, timeout } from 'rxjs';
 import { EventsService } from '../../api/api/events.service';
 import { ExercisesService } from '../../api/api/exercises.service';
 import { StretchExercisesService } from '../../api/api/stretchExercises.service';
+import { StretchPlansService } from '../../api/api/stretchPlans.service';
 import { FoodsService } from '../../api/api/foods.service';
 import { GearItemsService } from '../../api/api/gearItems.service';
 import { HealthService } from '../../api/api/health.service';
@@ -68,6 +69,8 @@ import { ShoppingListItem } from '../../api/model/shoppingListItem';
 import { StoredFood } from '../../api/model/storedFood';
 import { SwimLog } from '../../api/model/swimLog';
 import { StretchExercise } from '../../api/model/stretchExercise';
+import { StretchPlan } from '../../api/model/stretchPlan';
+import { StretchPlanItem } from '../../api/model/stretchPlanItem';
 import { VolleyballLog } from '../../api/model/volleyballLog';
 import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { DailyStepLog } from '../../api/model/dailyStepLog';
@@ -105,6 +108,10 @@ import {
   exerciseTombstoneTask,
   stretchExerciseServerApplyTask,
   stretchExerciseTombstoneTask,
+  stretchPlanItemServerApplyTask,
+  stretchPlanItemTombstoneTask,
+  stretchPlanServerApplyTask,
+  stretchPlanTombstoneTask,
   foodServerApplyTask,
   foodTombstoneTask,
   gearItemServerApplyTask,
@@ -229,6 +236,7 @@ export class SyncEngineService {
   private readonly lifePlansApi = inject(LifePlansService);
   private readonly exercisesApi = inject(ExercisesService);
   private readonly stretchExercisesApi = inject(StretchExercisesService);
+  private readonly stretchPlansApi = inject(StretchPlansService);
   private readonly householdRoomsApi = inject(HouseholdRoomsService);
   private readonly householdTasksApi = inject(HouseholdTasksService);
   private readonly eventsApi = inject(EventsService);
@@ -717,6 +725,16 @@ export class SyncEngineService {
       }
     }
 
+    const staleStretchPlans = await this.db.query<{ id: string }>('SELECT id FROM stretch_plan WHERE _needs_refetch = 1');
+    for (const row of staleStretchPlans) {
+      try {
+        const dto = await firstValueFrom(this.stretchPlansApi.getStretchPlan(row.id));
+        await this.db.executeTransaction(this.stretchPlanApplyTasks(dto));
+      } catch {
+        // same as above
+      }
+    }
+
     const staleWeeklyPlans = await this.db.query<{ id: string }>('SELECT id FROM weekly_plan WHERE _needs_refetch = 1');
     for (const row of staleWeeklyPlans) {
       try {
@@ -983,6 +1001,9 @@ export class SyncEngineService {
     if (item.entityType === 'WorkoutPlan') {
       return this.workoutPlanApplyTasks(body as WorkoutPlan);
     }
+    if (item.entityType === 'StretchPlan') {
+      return this.stretchPlanApplyTasks(body as StretchPlan);
+    }
     if (item.entityType === 'WeeklyPlan') {
       return this.weeklyPlanApplyTasks(body as WeeklyPlan);
     }
@@ -1102,6 +1123,11 @@ export class SyncEngineService {
       }
     }
     return tasks;
+  }
+
+  /** backlog/168 — same as workoutPlanApplyTasks: the response lists every item row (live or tombstoned), applied as authoritative. */
+  private stretchPlanApplyTasks(dto: StretchPlan): SqlTask[] {
+    return [stretchPlanServerApplyTask(dto), ...(dto.items as StretchPlanItem[]).map((item) => stretchPlanItemServerApplyTask(item))];
   }
 
   /** documentation/Architektúra/Backend.md "Nested aggregate PUT": the response lists every slot row (live or tombstoned — WeeklyPlan.yaml), applied as authoritative. */
@@ -1316,6 +1342,13 @@ export class SyncEngineService {
         workoutPlanTombstoneTask(item.targetEntityId, null, now),
         ...exerciseRows.map((row) => workoutPlanExerciseTombstoneTask(row.id, null, now)),
         ...setRows.map((row) => workoutPlanSetTombstoneTask(row.id, null, now)),
+      ]);
+    } else if (item.entityType === 'StretchPlan') {
+      // backlog/168: plan delete cascades to its own items locally too.
+      const itemRows = await this.db.query<{ id: string }>('SELECT id FROM stretch_plan_item WHERE plan_id = ?', [item.targetEntityId]);
+      await this.db.executeTransaction([
+        stretchPlanTombstoneTask(item.targetEntityId, null, now),
+        ...itemRows.map((row) => stretchPlanItemTombstoneTask(row.id, null, now)),
       ]);
     } else if (item.entityType === 'WeeklyPlan') {
       // documentation/Subfeatures/Heti terv.md: week delete cascades to its own slots locally too.
@@ -1771,6 +1804,24 @@ export class SyncEngineService {
         return [workoutPlanSetServerApplyTask(change.data as WorkoutPlanSet)];
       }
       return [workoutPlanSetTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
+    }
+    if (change.entityType === 'StretchPlan') {
+      if (!change.deleted) {
+        return [stretchPlanServerApplyTask(change.data as StretchPlan)];
+      }
+      // backlog/168: plan delete cascades to this device's own items too.
+      const itemRows = await this.db.query<{ id: string }>('SELECT id FROM stretch_plan_item WHERE plan_id = ?', [change.id]);
+      return [
+        stretchPlanTombstoneTask(change.id, null, change.updatedAt),
+        discardPendingWritesTask(change.id),
+        ...itemRows.map((row) => stretchPlanItemTombstoneTask(row.id, null, change.updatedAt)),
+      ];
+    }
+    if (change.entityType === 'StretchPlanItem') {
+      if (!change.deleted) {
+        return [stretchPlanItemServerApplyTask(change.data as StretchPlanItem)];
+      }
+      return [stretchPlanItemTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
     }
     if (change.entityType === 'WeeklyPlan') {
       if (!change.deleted) {
