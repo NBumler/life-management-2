@@ -38,7 +38,8 @@ FK a `workout_plan`-ra.
       `WorkoutPlan`-nál), `deleted`, audit. Nincs `inRotation`, mert a nyújtó sablon soha nem rotál.
 - [ ] Nested gyerek **`StretchPlanItem`**: `id`, `stretchExerciseId` → [[Gyakorlat]] `StretchExercise`,
       snapshot `stretchName` / `stretchCategory` (mint a `WorkoutPlanExercise`), `orderIndex`,
-      `holdSeconds` (kötelező, > 0; alapból 30), `perSide` (boolean; `true` → bal, majd jobb oldal),
+      `holdSeconds` (kötelező, > 0; felvételkor a gyakorlat `defaultHoldSeconds`-ából), `perSide`
+      (boolean; `true` → bal, majd jobb oldal; felvételkor a gyakorlat `defaultPerSide`-jából),
       `repetitions` (kötelező, ≥ 1; alapból 1), `notes` (opcionális, max. 200).
       Mentés: **nested aggregate PUT** (`NestedChildResolver`; kliens tükör a
       `sqlite-storage-backend.ts`-ben, egy tranzakció + egy outbox elem).

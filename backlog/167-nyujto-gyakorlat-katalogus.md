@@ -36,7 +36,10 @@ Ezért a nyújtás **saját adatmodellt** kap; az `Exercise` nem kap nullable me
 - [ ] Új, user-owned entitás: **`StretchExercise`** — `id` (kliens UUID), `name` (kötelező, egyedi a
       user élő nyújtó gyakorlatai között — [[Névegyediség]], `name_normalized` partial unique index),
       `category` (kötelező, közös `ExerciseCategory`), `description` (opcionális, max. 1000 karakter),
-      `equipment` (opcionális), `isFavorite` (default `false`), `deleted` / `deleted_at`, audit.
+      `equipment` (opcionális), `isFavorite` (default `false`), `defaultHoldSeconds` (kötelező
+      egész > 0, alapból 30), `defaultPerSide` (boolean, alapból `false`), `deleted` / `deleted_at`,
+      audit. A két `default*` mező csak előtöltés: a [[168-nyujto-sablonok]] sablon-tételébe
+      felvételkor másolódik, utólagos módosításuk a meglévő sablon-tételeket nem írja át.
       Backend: Flyway tábla `stretch_exercise`, OpenAPI CRUD + `GET /api/sync/changes` delta,
       `*SyncDataLoader`. Frontend: helyi SQLite séma (új `SCHEMA_Vn`), repository, outbox.
 - [ ] A névegyediség **típusonként külön** névtér: lehet „Hát” nevű erősítő és nyújtó gyakorlat is.
@@ -49,7 +52,8 @@ Ezért a nyújtás **saját adatmodellt** kap; az `Exercise` nem kap nullable me
       „Gyakorlat” helyett „Erősítő gyakorlat” / „Nyújtó gyakorlat” áll, ahol a típus számít.
 - [ ] **Új gyakorlat felület:** első mezőként szegmens: **Erősítés** | **Nyújtás** (alapból
       Erősítés). Nyújtásnál csak a nyújtó mezők látszanak: Név, Kategória, Leírás / megjegyzés,
-      Eszközigény, Kedvenc. Szerkesztésnél a típus **nem** váltható (két külön entitás); a szegmens
+      Eszközigény, Kedvenc, valamint **Alap tartás (mp)** és **Oldalanként** kapcsoló (segédszöveg:
+      „Sablonba felvételkor ezzel töltődik elő.”). Szerkesztésnél a típus **nem** váltható (két külön entitás); a szegmens
       ilyenkor csak megjelenik, nem állítható.
 - [ ] **Katalógus lista** egyben mutatja a két típust (név szerint rendezve). A soron a típus jelölése:
       erősítőnél a mai „kategória · kind”, nyújtónál „kategória · Nyújtás”. A kereső a nyújtó
@@ -82,9 +86,10 @@ Ezért a nyújtás **saját adatmodellt** kap; az `Exercise` nem kap nullable me
   egységesen működjön. (Felhasználói döntés.)
 - 2026-10-17 — A seedben lévő „Tricepsz nyújtás” valójában kábeles tricepsz-gyakorlat (`WEIGHTED_REPS`),
   nem nyújtás; erősítőként marad.
-- Javaslat (nem kötelező): a nyújtó gyakorlaton egy alapértelmezett „oldalanként” jelző és tartási idő,
-  hogy a [[168-nyujto-sablonok]] tétele előtöltődhessen. A felhasználói mezőlistában nem szerepelt;
-  a 168-ban a sablon-tétel úgyis hordozza.
+- 2026-10-17 — A nyújtó gyakorlat kap `defaultHoldSeconds` + `defaultPerSide` mezőt, hogy a
+  [[168-nyujto-sablonok]] tétele előtöltődjön. Az „oldalanként” jelleg a nyújtás sajátja (pl. combhajlító
+  nyújtás). A sablon-tétel saját értéket tárol (másolat, nem élő hivatkozás), így sablononként
+  felülírható. (Felhasználói döntés.)
 
 ## Lezáráskor (on-done)
 
