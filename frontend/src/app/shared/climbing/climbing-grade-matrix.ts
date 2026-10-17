@@ -252,3 +252,44 @@ export function bandModifierIndex(
   }
   return colorBandMidIndex(band.absoluteDifficultyIndexLower, band.absoluteDifficultyIndexUpper);
 }
+
+/** The rope scales the indoor-rope live quick-record grid offers (backlog/166). */
+export type RopeQuickScale = 'FRENCH' | 'UIAA' | 'YDS';
+export const ROPE_QUICK_SCALES: readonly RopeQuickScale[] = ['FRENCH', 'UIAA', 'YDS'];
+
+/** The bare French `3` / `4` / `5` are aliases of a lettered step (backlog/155) — no grid button of their own. */
+const BARE_FRENCH_ALIAS = /^[345]$/;
+
+/** The main grade a label belongs to (one grid row): French `6`, UIAA `VI`, YDS `5.x` (≤ 5.9) or `5.11`. */
+function quickRowKey(scale: RopeQuickScale, label: string): string {
+  if (scale === 'FRENCH') {
+    return label.charAt(0);
+  }
+  if (scale === 'UIAA') {
+    return label.replace(/[+-]$/, '');
+  }
+  return /^5\.\d$/.test(label) ? '5.x' : label.replace(/[a-d]$/, '');
+}
+
+/**
+ * backlog/166 — every matrix label of a rope scale, easiest first, split into one row per main grade
+ * (`6a 6a+ 6b 6b+ 6c 6c+` · `VI- VI VI+` · `5.10a … 5.10d`). Sorted by index (stable, so equal indices
+ * keep table order) because `Object.keys` lists integer-like keys first, not in table order.
+ */
+export function ropeQuickGradeRows(scale: RopeQuickScale): string[][] {
+  const table = CLIMBING_GRADE_MATRIX[scale];
+  const labels = Object.keys(table)
+    .filter((label) => !(scale === 'FRENCH' && BARE_FRENCH_ALIAS.test(label)))
+    .sort((a, b) => table[a] - table[b]);
+  const rows: string[][] = [];
+  let lastKey: string | null = null;
+  for (const label of labels) {
+    const key = quickRowKey(scale, label);
+    if (key !== lastKey) {
+      rows.push([]);
+      lastKey = key;
+    }
+    rows[rows.length - 1].push(label);
+  }
+  return rows;
+}

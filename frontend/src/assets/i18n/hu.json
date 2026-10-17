@@ -1582,6 +1582,13 @@
         "APPROVE": "Jóváhagyás és mentés",
         "QUICK_TITLE": "Gyors rögzítés",
         "QUICK_NEEDS_GYM": "Válassz termet (színsávokkal) a gyors rögzítéshez.",
+        "QUICK_NEEDS_ROPE_GYM": "Válassz termet a gyors rögzítéshez.",
+        "QUICK_SCALE": "Skála",
+        "QUICK_SCALES": {
+          "FRENCH": "Francia",
+          "UIAA": "UIAA",
+          "YDS": "YDS"
+        },
         "BAND_MODIFIER": "Sávon belül",
         "MODIFIER": {
           "MINUS": "−",

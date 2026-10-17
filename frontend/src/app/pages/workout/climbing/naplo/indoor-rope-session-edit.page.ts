@@ -1,6 +1,7 @@
 import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, ElementRef, Injector, OnDestroy, OnInit, WritableSignal, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import {
@@ -16,6 +17,8 @@ import {
   IonLabel,
   IonList,
   IonNote,
+  IonSegment,
+  IonSegmentButton,
   IonSelect,
   IonSelectOption,
   IonTextarea,
@@ -36,7 +39,8 @@ import { ProfileRepository } from '../../../../core/data/profile.repository';
 import { AscentAttemptSaveItem, ClimbingSessionDraft } from '../../../../core/storage/storage-backend';
 import { uuidV4 } from '../../../../core/sync/uuid';
 import { today } from '../../../../shared/local-date';
-import { parseGrade } from '../../../../shared/climbing/grade-scale';
+import { ROPE_QUICK_SCALES, RopeQuickScale, ropeQuickGradeRows } from '../../../../shared/climbing/climbing-grade-matrix';
+import { normalizeGradeInput, parseGrade } from '../../../../shared/climbing/grade-scale';
 import { GradeInputComponent } from '../../../../shared/grade-input/grade-input.component';
 import { HelpButtonComponent } from '../../../../shared/help-button/help-button.component';
 import { PartnerComboboxComponent } from '../../../../shared/partner-combobox/partner-combobox.component';
@@ -118,6 +122,8 @@ const DEFAULT_SAFETY_STYLE = AscentAttempt.SafetyStyleEnum.Lead;
     IonInput,
     IonTextarea,
     IonNote,
+    IonSegment,
+    IonSegmentButton,
     IonSelect,
     IonSelectOption,
     IonToggle,
@@ -149,6 +155,32 @@ const DEFAULT_SAFETY_STYLE = AscentAttempt.SafetyStyleEnum.Lead;
         --background: var(--ion-background-color-step-50, #f7f7f7);
         font-weight: 600;
       }
+      .quick-grid {
+        padding: 0 8px 8px;
+      }
+      .quick-grid ion-segment {
+        margin-bottom: 6px;
+      }
+      .quick-row {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 4px;
+        margin-bottom: 4px;
+      }
+      .quick-row ion-button {
+        margin: 0;
+        min-height: 2.5rem;
+        --padding-start: 2px;
+        --padding-end: 2px;
+        text-transform: none;
+        font-variant-numeric: tabular-nums;
+      }
+      .quick-count {
+        margin-inline-start: 3px;
+        font-size: 0.75em;
+        font-weight: 700;
+        opacity: 0.75;
+      }
     `,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -176,6 +208,7 @@ export class IndoorRopeSessionEditPage implements OnInit, OnDestroy {
 
   readonly ascentStyles = ASCENT_STYLES;
   readonly ratings = [1, 2, 3, 4, 5];
+  readonly quickScales = ROPE_QUICK_SCALES;
 
   readonly sessionId = signal<string | null>(null);
   readonly attempts = signal<AttemptRow[]>([]);
@@ -210,7 +243,7 @@ export class IndoorRopeSessionEditPage implements OnInit, OnDestroy {
     this.gymRepository.items().filter((gym) => !gym.deleted && gym.disciplines.includes('ROPE')),
   );
 
-  private readonly selectedGym = computed(() => this.ropeGyms().find((gym) => gym.id === this.gymIdValue()));
+  readonly selectedGym = computed(() => this.ropeGyms().find((gym) => gym.id === this.gymIdValue()));
 
   /** {TOPROPE, LEAD} narrowed to the gym's configured subset when the admin set one. */
   readonly safetyStyleOptions = computed<AscentAttempt.SafetyStyleEnum[]>(() => {
@@ -224,6 +257,34 @@ export class IndoorRopeSessionEditPage implements OnInit, OnDestroy {
   /** The gym wall height — the attempt-length default + the length input's placeholder. */
   readonly wallHeight = computed<number | null>(() => this.selectedGym()?.defaultWallHeightMeters ?? null);
   readonly wallHeightPlaceholder = computed(() => (this.wallHeight() != null ? String(this.wallHeight()) : ''));
+
+  /**
+   * backlog/166 — the live quick-record grid's scale + safety. Switchable any time; they only shape the
+   * next taps (recorded attempts keep their own grade / safety). Not persisted on their own: after an
+   * app kill `restoreQuickChoice()` derives them from the last recorded attempt.
+   */
+  readonly quickScale = signal<RopeQuickScale>('FRENCH');
+  private readonly quickSafetyChoice = signal<AscentAttempt.SafetyStyleEnum>(DEFAULT_SAFETY_STYLE);
+  /** The chosen safety, narrowed to what the gym allows (a one-style gym hides the switch). */
+  readonly quickSafety = computed<AscentAttempt.SafetyStyleEnum>(() => {
+    const options = this.safetyStyleOptions();
+    return options.includes(this.quickSafetyChoice()) ? this.quickSafetyChoice() : options[0];
+  });
+  readonly quickRows = computed(() => ropeQuickGradeRows(this.quickScale()));
+
+  /** backlog/166 — how many attempts each grade label got this session (the quick grid's counters). */
+  readonly gradeCounts = computed(() => {
+    this.attemptsRevision();
+    const counts = new Map<string, number>();
+    for (const row of this.attempts()) {
+      const raw = row.userRawInput();
+      if (raw?.trim()) {
+        const grade = normalizeGradeInput(raw, 'ROPE');
+        counts.set(grade, (counts.get(grade) ?? 0) + 1);
+      }
+    }
+    return counts;
+  });
 
   readonly indoorRoutes = computed<IndoorRoute[]>(() => {
     const gymId = this.gymIdValue();
@@ -289,6 +350,7 @@ export class IndoorRopeSessionEditPage implements OnInit, OnDestroy {
       }
       this.sessionId.set(session.id);
       this.applySession(session);
+      this.restoreQuickChoice();
       if (!session.gymId) {
         this.prefillLast();
       }
@@ -399,6 +461,51 @@ export class IndoorRopeSessionEditPage implements OnInit, OnDestroy {
     row.userRawInput.set(value);
     row.gradeAutoFilled.set(false);
     this.touchAttempts();
+  }
+
+  setQuickScale(scale: RopeQuickScale): void {
+    this.quickScale.set(scale);
+  }
+
+  setQuickSafety(style: AscentAttempt.SafetyStyleEnum): void {
+    this.quickSafetyChoice.set(style);
+  }
+
+  /**
+   * backlog/166 — one tap on the live grid = one successful attempt with that grade, the chosen safety
+   * and a `<gym> <n>` name (n = the session's attempt count after the tap, from 1). The length is left
+   * empty so `resolveLength()` falls back to the wall height. No gym → no-op (the grid is hidden).
+   */
+  quickRecord(grade: string): void {
+    const gym = this.selectedGym();
+    if (!gym) {
+      return;
+    }
+    const row = this.emptyRow();
+    row.userRawInput.set(grade);
+    row.routeName.set(`${gym.name} ${this.attempts().length + 1}`);
+    row.safetyStyle.set(this.quickSafety());
+    row.isSuccess.set(true);
+    this.attempts.update((rows) => [...rows, row]);
+    this.touchAttempts();
+    void Haptics.impact({ style: ImpactStyle.Light }).catch(() => undefined);
+    void this.live.autosave();
+  }
+
+  /** After a resume: the safety of the last attempt and the scale of the last parseable grade. */
+  private restoreQuickChoice(): void {
+    const rows = this.attempts();
+    const last = rows[rows.length - 1];
+    if (last) {
+      this.quickSafetyChoice.set(last.safetyStyle());
+    }
+    for (let i = rows.length - 1; i >= 0; i--) {
+      const scale = parseGrade(rows[i].userRawInput() ?? '', 'ROPE').scale;
+      if (scale !== null && (ROPE_QUICK_SCALES as readonly string[]).includes(scale)) {
+        this.quickScale.set(scale as RopeQuickScale);
+        return;
+      }
+    }
   }
 
   setSafetyStyle(row: AttemptRow, style: AscentAttempt.SafetyStyleEnum): void {

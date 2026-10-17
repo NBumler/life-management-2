@@ -1582,6 +1582,13 @@
         "APPROVE": "Approve and save",
         "QUICK_TITLE": "Quick record",
         "QUICK_NEEDS_GYM": "Pick a gym (with colour bands) to quick-record.",
+        "QUICK_NEEDS_ROPE_GYM": "Pick a gym to quick-record.",
+        "QUICK_SCALE": "Scale",
+        "QUICK_SCALES": {
+          "FRENCH": "French",
+          "UIAA": "UIAA",
+          "YDS": "YDS"
+        },
         "BAND_MODIFIER": "Within the band",
         "MODIFIER": {
           "MINUS": "−",

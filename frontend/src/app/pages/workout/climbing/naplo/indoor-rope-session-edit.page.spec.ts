@@ -8,6 +8,7 @@ import { AscentAttempt } from '../../../../api/model/ascentAttempt';
 import { ClimbingSession } from '../../../../api/model/climbingSession';
 import { Gym } from '../../../../api/model/gym';
 import { IndoorRoute } from '../../../../api/model/indoorRoute';
+import { ClimbingLiveSessionService } from '../../../../core/data/climbing-live-session.service';
 import { ClimbingSessionRepository } from '../../../../core/data/climbing-session.repository';
 import { GymRepository } from '../../../../core/data/gym.repository';
 import { IndoorRouteRepository } from '../../../../core/data/indoor-route.repository';
@@ -55,6 +56,7 @@ describe('IndoorRopeSessionEditPage', () => {
     idParam = 'new',
     gymList: Gym[] = [ropeGym(), boulderGym()],
     routes: IndoorRoute[] = [ropeRoute()],
+    data: Record<string, unknown> = {},
   ): Promise<void> {
     saveSpy = jasmine.createSpy('save').and.callFake(async (d: ClimbingSessionDraft) => ({
       ...d,
@@ -83,7 +85,7 @@ describe('IndoorRopeSessionEditPage', () => {
         { provide: GymRepository, useValue: { load: () => Promise.resolve(), items: signal<Gym[]>(gymList) } },
         { provide: IndoorRouteRepository, useValue: { load: () => Promise.resolve(), forGym: () => routes } },
         { provide: ProfileRepository, useValue: { load: () => Promise.resolve(), profile: signal({ currentWeightKg: 70 }) } },
-        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: idParam }) } } },
+        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: idParam }), data } } },
         { provide: AlertController, useValue: { create: () => Promise.resolve({ present: () => Promise.resolve() }) } },
       ],
     }).compileComponents();
@@ -92,8 +94,13 @@ describe('IndoorRopeSessionEditPage', () => {
 
     fixture = TestBed.createComponent(IndoorRopeSessionEditPage);
     component = fixture.componentInstance;
+    if (beforeInit) {
+      await beforeInit();
+    }
     await component.ngOnInit();
   }
+
+  let beforeInit: (() => Promise<unknown>) | null = null;
 
   it('starts as a fresh session for the "new" route param', async () => {
     await setup();
@@ -230,5 +237,117 @@ describe('IndoorRopeSessionEditPage', () => {
     fixture.detectChanges();
     expect(component.attempts().length).toBe(2);
     expect(host.querySelectorAll('.attempt-card').length).toBe(2);
+  });
+
+  describe('live quick-record grid (backlog/166)', () => {
+    let liveService: ClimbingLiveSessionService;
+    const host = (): HTMLElement => fixture.nativeElement as HTMLElement;
+
+    beforeEach(() => {
+      beforeInit = async () => {
+        liveService = TestBed.inject(ClimbingLiveSessionService);
+        await liveService.clear();
+        await liveService.start('indoor-rope', Date.now() - 30 * 60_000);
+      };
+    });
+
+    afterEach(async () => {
+      component?.ngOnDestroy();
+      beforeInit = null;
+      await liveService?.clear();
+    });
+
+    it('a tap logs a successful attempt: the grade, "<gym> <n>" from 1, the chosen safety, wall-height length', async () => {
+      await setup('new', [ropeGym()], [], { live: true });
+      component.form.patchValue({ gymId: 'g1' });
+      expect(component.quickSafety()).toBe(AscentAttempt.SafetyStyleEnum.Lead);
+
+      component.quickRecord('6a+');
+      component.setQuickSafety(AscentAttempt.SafetyStyleEnum.Toprope);
+      component.quickRecord('6b');
+
+      expect(
+        component.attempts().map((row) => [row.routeName(), row.userRawInput(), row.isSuccess(), row.safetyStyle(), row.ascentStyle()]),
+      ).toEqual([
+        ['Fal 1', '6a+', true, AscentAttempt.SafetyStyleEnum.Lead, null],
+        ['Fal 2', '6b', true, AscentAttempt.SafetyStyleEnum.Toprope, null],
+      ]);
+
+      await component.live.endSession();
+      await component.save();
+      const draft = saveSpy.calls.mostRecent().args[0];
+      expect(draft.attempts.map((a) => [a.absoluteDifficultyIndex, a.lengthInMeters, a.indoorRouteId])).toEqual([
+        [15, 15, null],
+        [16, 15, null],
+      ]);
+    });
+
+    it('switching the scale only changes the grid, recorded attempts keep their grade', async () => {
+      await setup('new', [ropeGym()], [], { live: true });
+      component.form.patchValue({ gymId: 'g1' });
+      component.quickRecord('6a');
+      component.setQuickScale('UIAA');
+      expect(component.quickRows()).toContain(['VII-', 'VII', 'VII+']);
+      component.quickRecord('VII');
+      component.quickRecord('VII');
+
+      expect(component.attempts().map((row) => row.userRawInput())).toEqual(['6a', 'VII', 'VII']);
+      expect(component.gradeCounts().get('VII')).toBe(2);
+      expect(component.gradeCounts().get('6a')).toBe(1);
+    });
+
+    it('the name number counts every attempt of the session, hand-added ones too', async () => {
+      await setup('new', [ropeGym()], [], { live: true });
+      component.form.patchValue({ gymId: 'g1' });
+      component.addAttempt();
+      component.quickRecord('5c');
+      expect(component.attempts()[1].routeName()).toBe('Fal 2');
+    });
+
+    it('without a gym the grid is hidden and a tap is a no-op', async () => {
+      await setup('new', [ropeGym()], [], { live: true });
+      component.form.patchValue({ gymId: '' });
+      component.quickRecord('6a');
+      expect(component.attempts().length).toBe(0);
+      fixture.detectChanges();
+      expect(host().querySelector('.quick-grade')).toBeNull();
+    });
+
+    it('renders the grid with counters on the live screen, the safety switch only for a two-style gym', async () => {
+      await setup('new', [ropeGym({ availableSafetyStyles: [Gym.AvailableSafetyStylesEnum.Toprope] })], [], { live: true });
+      component.form.patchValue({ gymId: 'g1' });
+      component.quickRecord('6c');
+      fixture.detectChanges();
+
+      expect(host().querySelector('[data-grade="6c"]')?.textContent).toContain('×1');
+      expect(host().querySelector('.quick-safety')).toBeNull();
+      expect(component.attempts()[0].safetyStyle()).toBe(AscentAttempt.SafetyStyleEnum.Toprope);
+    });
+
+    it('is not shown on the summary screen', async () => {
+      await setup('new', [ropeGym()], [], { live: true });
+      component.form.patchValue({ gymId: 'g1' });
+      await component.live.endSession();
+      fixture.detectChanges();
+      expect(host().querySelector('.quick-grid')).toBeNull();
+    });
+
+    it('after an app kill the scale and safety come back from the last recorded attempt', async () => {
+      await setup('new', [ropeGym()], [], { live: true });
+      component.form.patchValue({ gymId: 'g1' });
+      component.setQuickScale('YDS');
+      component.setQuickSafety(AscentAttempt.SafetyStyleEnum.Toprope);
+      component.quickRecord('5.10a');
+      await component.live.autosave();
+      component.ngOnDestroy();
+
+      TestBed.resetTestingModule();
+      beforeInit = null;
+      await setup('new', [ropeGym()], [], { live: true });
+
+      expect(component.attempts().map((row) => row.userRawInput())).toEqual(['5.10a']);
+      expect(component.quickScale()).toBe('YDS');
+      expect(component.quickSafety()).toBe(AscentAttempt.SafetyStyleEnum.Toprope);
+    });
   });
 });

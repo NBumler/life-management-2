@@ -2,11 +2,14 @@ import {
   BOULDER_SCALES,
   CLIMBING_GRADE_MATRIX,
   ClimbingScale,
+  ROPE_QUICK_SCALES,
   ROPE_SCALES,
   bandModifierIndex,
   colorBandMidIndex,
   gradeToIndex,
+  ropeQuickGradeRows,
 } from './climbing-grade-matrix';
+import { parseGrade } from './grade-scale';
 
 describe('climbing-grade-matrix', () => {
   const ALL_SCALES = [...ROPE_SCALES, ...BOULDER_SCALES] as ClimbingScale[];
@@ -164,6 +167,43 @@ describe('climbing-grade-matrix', () => {
       expect(bandModifierIndex(band, 'NEUTRAL')).toBe(16);
       expect(bandModifierIndex(band, 'PLUS')).toBe(18);
       expect(bandModifierIndex(band, null)).toBe(16);
+    });
+  });
+
+  describe('ropeQuickGradeRows (backlog/166)', () => {
+    it('lists French one row per main grade, easiest first, without the bare 3 / 4 / 5 aliases', () => {
+      const rows = ropeQuickGradeRows('FRENCH');
+      expect(rows[0]).toEqual(['3a', '3a+', '3b', '3b+', '3c', '3c+']);
+      expect(rows[1]).toEqual(['4a', '4a+', '4b', '4b+', '4c', '4c+']);
+      expect(rows[3]).toEqual(['6a', '6a+', '6b', '6b+', '6c', '6c+']);
+      expect(rows[rows.length - 1]).toEqual(['9a', '9a+', '9b', '9b+', '9c']);
+      expect(([] as string[]).concat(...rows)).not.toContain('3');
+      expect(([] as string[]).concat(...rows)).not.toContain('5');
+    });
+
+    it('groups UIAA by roman base and YDS by number grade (5.4–5.9 on one row)', () => {
+      const uiaa = ropeQuickGradeRows('UIAA');
+      expect(uiaa.slice(0, 3)).toEqual([['II'], ['III', 'III+'], ['IV-', 'IV', 'IV+']]);
+      expect(uiaa).toContain(['VI-', 'VI', 'VI+']);
+      const yds = ropeQuickGradeRows('YDS');
+      expect(yds[0]).toEqual(['5.4', '5.5', '5.6', '5.7', '5.8', '5.9']);
+      expect(yds[1]).toEqual(['5.10a', '5.10b', '5.10c', '5.10d']);
+      expect(yds.length).toBe(7);
+    });
+
+    it('every grid label is never easier than the one before and parses VALID to its matrix index', () => {
+      for (const scale of ROPE_QUICK_SCALES) {
+        const labels = ([] as string[]).concat(...ropeQuickGradeRows(scale));
+        for (let i = 1; i < labels.length; i++) {
+          expect(gradeToIndex(scale, labels[i])!).toBeGreaterThanOrEqual(gradeToIndex(scale, labels[i - 1])!);
+        }
+        for (const label of labels) {
+          const parsed = parseGrade(label, 'ROPE');
+          expect(parsed.status).withContext(label).toBe('VALID');
+          expect(parsed.scale).withContext(label).toBe(scale);
+          expect(parsed.absoluteDifficultyIndex).withContext(label).toBe(gradeToIndex(scale, label));
+        }
+      }
     });
   });
 });

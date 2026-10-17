@@ -108,6 +108,51 @@
       </ion-item>
     </ion-list>
 
+    @if (live.isLive && !live.summary()) {
+      <!-- backlog/166: live quick-record grid — pick a scale + safety, one tap = one successful ascent of that grade -->
+      <div class="quick-grid">
+        <h2>{{ 'WORKOUT.CLIMBING.LIVE.QUICK_TITLE' | translate }}</h2>
+        @if (!selectedGym()) {
+          <ion-note color="medium" class="field-error">{{ 'WORKOUT.CLIMBING.LIVE.QUICK_NEEDS_ROPE_GYM' | translate }}</ion-note>
+        } @else {
+          <ion-segment
+            class="quick-scale"
+            [value]="quickScale()"
+            (ionChange)="setQuickScale($any($event.detail.value))"
+            [attr.aria-label]="'WORKOUT.CLIMBING.LIVE.QUICK_SCALE' | translate"
+          >
+            @for (scale of quickScales; track scale) {
+              <ion-segment-button [value]="scale">{{ 'WORKOUT.CLIMBING.LIVE.QUICK_SCALES.' + scale | translate }}</ion-segment-button>
+            }
+          </ion-segment>
+          @if (safetyStyleOptions().length > 1) {
+            <ion-segment
+              class="quick-safety"
+              [value]="quickSafety()"
+              (ionChange)="setQuickSafety($any($event.detail.value))"
+              [attr.aria-label]="'WORKOUT.CLIMBING.SESSION.FIELD_SAFETY' | translate"
+            >
+              @for (style of safetyStyleOptions(); track style) {
+                <ion-segment-button [value]="style">{{ 'WORKOUT.CLIMBING.SAFETY.' + style | translate }}</ion-segment-button>
+              }
+            </ion-segment>
+          }
+          @for (gradeRow of quickRows(); track $index) {
+            <div class="quick-row">
+              @for (grade of gradeRow; track grade) {
+                <ion-button class="quick-grade" size="small" fill="outline" [attr.data-grade]="grade" (click)="quickRecord(grade)">
+                  {{ grade }}
+                  @if (gradeCounts().get(grade); as count) {
+                    <span class="quick-count">×{{ count }}</span>
+                  }
+                </ion-button>
+              }
+            </div>
+          }
+        }
+      </div>
+    }
+
     <div class="attempts-header">
       <h2>{{ 'WORKOUT.CLIMBING.SESSION.ATTEMPTS' | translate }}</h2>
       <ion-button size="small" fill="outline" (click)="addAttempt()">
