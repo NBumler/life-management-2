@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { IonIcon, IonLabel, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs } from '@ionic/angular/standalone';
+import { IonIcon, IonLabel, IonTabBar, IonTabButton, IonTabs } from '@ionic/angular/standalone';
 import { TranslatePipe } from '@ngx-translate/core';
 
 import { TAB_REGISTRY } from '../../core/config/tab-registry';
@@ -9,7 +9,7 @@ import { FeatureFlagsService } from '../../core/config/feature-flags.service';
 @Component({
   selector: 'app-tabs',
   templateUrl: 'tabs.page.html',
-  imports: [IonTabs, IonRouterOutlet, IonTabBar, IonTabButton, IonIcon, IonLabel, TranslatePipe],
+  imports: [IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TabsPage {
