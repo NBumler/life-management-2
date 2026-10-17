@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-10-02
-verifikalt_commit: 1497ba3
+verifikalva: 2026-10-17
+verifikalt_commit: 79665b0
 ---
 
 # Nehézségi szint skálája (konverziós mátrix)
@@ -15,7 +15,7 @@ verifikalt_commit: 1497ba3
 
 ### Jelenlegi működés
 
-Skálák → egységes belső numerikus index \(I_{\text{grade}}\) (`absoluteDifficultyIndex`) statisztikához és volumenhez. A mátrix **megvalósítva** `shared/climbing/climbing-grade-matrix.ts` **client-only TS const**-ként (`FRENCH` / `YDS` / `UIAA` / `FONT` / `V_SCALE`), nem külön `shared/fixtures/*.json` asset. A Font alsó cellák a lenti „Előállítási módszer" szerint racionalizálva (növekvő, deduplikált létra); a `6B=18 … 8B=40` önkonzisztens farok verbatim. Közös generált JSON asset + szerver-oldali betöltés tervezett: `backlog/024-climbing-grade-matrix-kozos-generalt-json-asset-backend-index-uj.md`.
+Skálák → egységes belső numerikus index \(I_{\text{grade}}\) (`absoluteDifficultyIndex`) statisztikához és volumenhez. A mátrix **megvalósítva** `shared/climbing/climbing-grade-matrix.ts` **client-only TS const**-ként (`FRENCH` / `YDS` / `UIAA` / `FONT` / `V_SCALE`), nem külön `shared/fixtures/*.json` asset. A Font alsó cellák a V-skála anchorjaihoz igazítva (`backlog/155`: `3`=5, `4`=8, `4C+`=10≈V0, `5`=12≈V1, `5C`=14≈V2, `6A`=16≈V3); a `6B=18 … 8B=40` önkonzisztens farok verbatim. A francia és a Font `3`–`5` fok opcionális al-betűs alakjai (`3a`…`5c+`, `3A`…`5C+`) is a mátrixban vannak — lásd lent „Alsó sáv (3–5)". Közös generált JSON asset + szerver-oldali betöltés tervezett: `backlog/024-climbing-grade-matrix-kozos-generalt-json-asset-backend-index-uj.md`.
 
 ### Funkcionális leírás
 
@@ -48,11 +48,38 @@ A skálák közti nehézség-egyeztetés eredendően szakértői-konszenzus kér
 > A V-skála legalsó fokozata a `VB` („V-Basic”, a `V0` alatt) — `I_grade = 8`, egy V-lépésköz (2) a `V0` alatt.
 >
 > A `10`–`20` sorok az eredeti, kézzel megerősített öt anchor (nem módosultak); a többi sor ezek köré/fölé bővíti a táblát, szigorúan növekvő indexekkel, ismétlődő fokozat-címke nélkül.
+>
+> A Font oszlop alsó cellái (`4`, `6A`, `5` a 6–14 sorokban) a forrás-konszenzus ellentmondásos értékei; a megvalósított Font-létra a V-skálához igazodik — lásd „Alsó sáv (3–5)".
+
+#### Alsó sáv (3–5) — opcionális al-betű (`backlog/155`)
+
+Francia és Font jelölésben `3`–`5` fokon az al-betű (`a`–`c` / `A`–`C`, opcionális `+`) **opcionális**, `6`-tól kötelező. A sávban több felismert fokozat van, mint szabad egész index, ezért itt **szomszédos fokozatok osztozhatnak egy indexen** (a tábla sorrendjében az index sosem csökken). `6a` / `6A` fölött és minden más skálán továbbra is minden fokozat egyedi indexet kap.
+
+| \(I_{	ext{grade}}\) | Francia | Font |
+|---|---|---|
+| 1 | 3a, 3a+ | — |
+| 2 | **3**, 3b | — |
+| 3 | 3b+, 3c | — |
+| 4 | 3c+ | 3A, 3A+ |
+| 5 | 4a, 4a+ | **3**, 3B, 3B+ |
+| 6 | **4**, 4b | 3C |
+| 7 | 4b+ | 3C+, 4A |
+| 8 | 4c, 4c+ | 4A+, **4**, 4B |
+| 9 | **5** | 4B+, 4C |
+| 10 | 5a, 5a+ | 4C+ |
+| 11 | 5b, 5b+ | 5A, 5A+ |
+| 12 | 5c | **5**, 5B |
+| 13 | 5c+ | 5B+ |
+| 14 | 6a | 5C |
+| 15 | 6a+ | 5C+ |
+| 16 | 6b | 6A |
+
+A csupasz francia `3`/`4`/`5` indexe nem változott; a Font csupasz `3`/`4`/`5` a korábbi `10`/`12`/`14`-ről `5`/`8`/`12`-re került. A már tárolt értékeket a `V53__climbing_grade_index_low_band.sql` egyszer újraszámolta (Font szín-sávok csupasz 3/4/5 határai és a belőlük snapshotolt boulder-kísérlet indexek, ha a snapshot még a sávból származott; index nélkül mentett francia al-betűs köteles kísérletek és hosszak pótlása).
 
 #### Előállítási módszer (a JSON-hoz)
 
 1. Válassz **egy** konzisztens, publikált skálaegyeztető forrást (pl. egy elismert terem / szövetségi grade-táblázat) a hiányzó alfokozatok (pl. `6a+`, `V2.5` közi lépések) kitöltéséhez — **ne** keverj több forrást egy skálapáron belül.
-2. Minden felismert alfokozat egy egyedi, **szigorúan növekvő** egész `I_grade`-et kap; a lépések **köztudottan nem egyenletesek** (a nehézség-érzet nem lineáris a fokozatokkal) — ez szándékos, nem hiba.
+2. Minden felismert alfokozat egy egyedi, **szigorúan növekvő** egész `I_grade`-et kap (kivétel: a francia / Font `3`–`5` sáv, ahol szomszédos fokozatok osztozhatnak — „Alsó sáv (3–5)"); a lépések **köztudottan nem egyenletesek** (a nehézség-érzet nem lineáris a fokozatokkal) — ez szándékos, nem hiba.
 3. A fenti anchor sorok értékei **kötöttek** (nem módosíthatók a JSON generálásakor); közéjük / köréjük a választott forrás szerint kell interpolálni.
 4. Jelenleg csak a kliens tölti be (a TS const-ból); szerver-oldali paritás-betöltés nincs — `backlog/024-climbing-grade-matrix-kozos-generalt-json-asset-backend-index-uj.md`.
 
@@ -100,7 +127,7 @@ Nincs outbox; pure mapping. Lásd [[Backend-offline first]].
 
 ### Backend
 
-Jelenleg **nincs** szerver-oldali mátrix-betöltés vagy mentéskori index-újraszámítás — a szerver az `absoluteDifficultyIndex`-et verbatim tárolja. Paritás tervezett: `backlog/024-climbing-grade-matrix-kozos-generalt-json-asset-backend-index-uj.md`.
+Jelenleg **nincs** szerver-oldali mátrix-betöltés vagy mentéskori index-újraszámítás — a szerver az `absoluteDifficultyIndex`-et verbatim tárolja. Mátrix-változáskor a tárolt értékeket egyszeri Flyway adat-migráció igazítja (első: `V53`, `backlog/155`); az érintett sorok `updated_at`-je a triggertől frissül, így delta-pullal jutnak az eszközökre. Paritás tervezett: `backlog/024-climbing-grade-matrix-kozos-generalt-json-asset-backend-index-uj.md`.
 
 ### Nyitott kérdések
 

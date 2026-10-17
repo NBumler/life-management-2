@@ -14,6 +14,12 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-17 — #155** Nehézségi szint: a francia és a Font skála `3`–`5` fokon opcionális al-betűt fogad
+  (`5A`, `4b`, `3C+` …; `6`-tól kötelező marad); a Font alsó sáv a V-skálához igazítva (`3`/`4`/`5` → 5/8/12,
+  `4C+`≈V0, `5C`≈V2), a sávban közös indexek megengedettek. `V53` egyszer újraszámolta a tárolt Font szín-sáv
+  határokat + a belőlük snapshotolt kísérlet-indexeket, és pótolta az index nélkül mentett francia al-betűs
+  köteles kísérleteket. Súgó frissítve (hu + en).
+  Érintett: [[Nehézségi szint skálája]], [[Nehézségi szint skálája (konverziós mátrix)]]; kód: `shared/climbing`, `V53`
 - **2026-10-17 — #154** Active Workout: a gyakorlat-kártyák a fejlécre tappolva összecsukhatók, az utolsó szett
   kipipálásakor automatikusan összecsukódnak (az állapot a piszkozattal megmarad); bal oldali színsáv: zöld = kész,
   piros = van nyitott szett, szürke = nincs szett, kész gyakorlaton ✓.

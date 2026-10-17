@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-10-02
-verifikalt_commit: 1497ba3
+verifikalva: 2026-10-17
+verifikalt_commit: 79665b0
 ---
 
 # Nehézségi szint skálája
@@ -23,13 +23,13 @@ Input: `discipline` = Boulder \| Köteles (a dashboard kontextusból — nem use
 
 #### Köteles skálák
 
-- **Francia (French):** szám + `a`/`b`/`c` + opcionális `+` (pl. `6a`, `6a+`, `6b`)
+- **Francia (French):** szám + `a`/`b`/`c` + opcionális `+` (pl. `6a`, `6a+`, `6b`); `3`–`5` fokon a betű opcionális (`4` és `4b` is érvényes, `backlog/155`), `6`-tól kötelező
 - **YDS:** `5.` + fok; `5.10` felett `a`–`d` (pl. `5.8`, `5.10a`)
 - **UIAA:** római + opcionális `+`/`−` (pl. `VI-`, `VII`, `VII+`)
 
 #### Boulder skálák
 
-- **Fontainebleau (Font):** mint francia, de betű **NAGY** (pl. `6A`, `6B+`); ugyanaz a jelölés nehezebb, mint a köteles francia
+- **Fontainebleau (Font):** mint francia, de betű **NAGY** (pl. `6A`, `6B+`); ugyanaz a jelölés nehezebb, mint a köteles francia. `3`–`5` fokon a betű opcionális (`5` és `5A` is érvényes, `backlog/155`), `6`-tól kötelező
 - **V-skála (Hueco):** `V` + szám (`V0`…`V17`), valamint a `V0` alatti `VB` („V-Basic”) — `VB`, `V0`…`V17`
 
 #### Regex (kontextus + string)
@@ -69,7 +69,7 @@ vonatkozik, hogy az út-pickerből előtöltött `userRawInput` ne ragadjon `UNK
 2. Állapotgép (**250 ms** debounce):
    - **Üres:** nincs postfix; INVALID
    - **Egyértelmű** (pontosan egy regex): záró badge = FRA / YDS / UIAA / V / FONT; VALID
-   - **Kétértelmű** (tiszta szám, pl. `4`/`6`): suggestion `ion-chip`-sor + inline hiba-note (`ERROR_AMBIGUOUS`); köteles `6` → VI és 6a; `4` → IV és 4. Fallback: `3`/`4`/`5` VALID Francia default (ezeken a fokokon francia/Font betű nélkül is érvényes grade — a `3` a mátrix `FRENCH '3'` / `FONT '3'` sora; `1`/`2` mátrixsor nélkül marad kétértelmű); **`6`-tól felfelé minden csupasz szám** (`6`, `7`, `8`, `9`, …) INVALID amíg nincs chip-választás — francia/Font jelölésben 6-tól kötelező a betű (`6a`/`6A` stb.)
+   - **Kétértelmű** (tiszta szám, pl. `4`/`6`): suggestion `ion-chip`-sor + inline hiba-note (`ERROR_AMBIGUOUS`); köteles `6` → VI és 6a; `4` → IV és 4. Fallback: `3`/`4`/`5` VALID Francia (köteles) / Font (boulder) default (ezeken a fokokon francia/Font betű nélkül is érvényes grade, de betűvel is — `3a`…`5c+` / `3A`…`5C+`, `backlog/155`; a csupasz `3` a mátrix `FRENCH '3'` / `FONT '3'` sora; `1`/`2` mátrixsor nélkül marad kétértelmű); **`6`-tól felfelé minden csupasz szám** (`6`, `7`, `8`, `9`, …) INVALID amíg nincs chip-választás — francia/Font jelölésben 6-tól kötelező a betű (`6a`/`6A` stb.)
    - **Ismeretlen:** `?` záró badge + `HelpInputComponent` súgó-ikon → `AlertController` modal példákkal + inline hiba-note (`ERROR_UNKNOWN`); INVALID. **Egy alesetnek** — puszta arab szám + betű/római szám nélküli `+`/`-` (pl. `4+`, `6-`, `backlog/116`) — dedikált, diszciplína-függő hiba-note jár a generikus `ERROR_UNKNOWN` helyett: `ERROR_MISSING_LETTER_BOULDER` (Font-nál betű kell, pl. `4A+`) / `ERROR_MISSING_LETTER_ROPE` (Francia betű, pl. `4a+`, vagy UIAA római szám, pl. `IV+`) — felismerés: `isBareNumberWithModifier` (`shared/climbing/grade-scale.ts`).
 3. **Mobil pre-parsing:** Boulder → NAGYBETŰ; Köteles → kisbetű (kivéve I,V,X UIAA karakterek); `trim()`
 
@@ -91,7 +91,7 @@ Megvalósítva:
 - **Shared komponens** — `shared/grade-input/` (`app-grade-input`), a közös `shared/help-input/` (`app-help-input`: `ion-input` + záró súgó-ikon gomb + opcionális badge + inline hiba-note) fölé építve, ugyanúgy, mint a [[Mennyiség mező]] `app-quantity-input`. Kettős API: `ControlValueAccessor` a reaktív-formos hívóknak (`formControlName`), és sima `[value]` / `(valueChange)` a signal-alapú napló-soroknak. `@Input() discipline` = `BOULDER` \| `ROPE` (a parent adja át a dashboard kontextusból).
   - Záró **badge**: `VALID` → `FRA` / `YDS` / `UIAA` / `FONT` / `V`; `UNKNOWN` → `?`.
   - **Chip-sor** kétértelműségre (`AMBIGUOUS`, ill. bare `4`/`5` az alternatívákkal): a `candidates` lista `ion-chip`-ként; koppintásra a mező a `candidate.label`-re áll és újraparse-ol.
-  - **Súgó modal** (`SHARED.GRADE_INPUT.HELP_*`, `AlertController`) a skálákkal + példákkal; az `UNKNOWN` / `AMBIGUOUS` állapot inline hibaüzenetet is ad (`SHARED.GRADE_INPUT.ERROR_*`). A „3, 4, 5 betű nélkül is érvényes; 6-tól kötelező a betű" mondat a **francia / Font** blokk példái után áll (nem az UIAA rész végén, ahová nem tartozik — `backlog/093`).
+  - **Súgó modal** (`SHARED.GRADE_INPUT.HELP_*`, `AlertController`) a skálákkal + példákkal; az `UNKNOWN` / `AMBIGUOUS` állapot inline hibaüzenetet is ad (`SHARED.GRADE_INPUT.ERROR_*`). A „3, 4, 5 esetén a betű opcionális (pl. `5` vagy `5A`); 6-tól kötelező" mondat a **francia / Font** blokk példái után áll (nem az UIAA rész végén, ahová nem tartozik — `backlog/093`).
   - **250 ms debounce** csak a vizuális deriváción (badge / chip / hiba / `parseChange`); a form-érték minden leütésre propagál, így a szülő `save()` gate szinkron `parseGrade`-je pontos marad.
 - **Hívási helyek**: `admin/gym-color-band-edit` (alsó/felső fokozat), `admin/indoor-route-edit` (ágazatfüggő), és mind a 4 kontextus-napló szerkesztő (`naplo/*-session-edit`, kísérletenkénti + outdoor köteles per-pitch grade).
 

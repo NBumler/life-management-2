@@ -1,14 +1,14 @@
 ---
 id: 155
 type: bug
-status: backlog
+status: done
 title: Font és francia skála — 3–5 fokozatnál opcionális betű (pl. 5A, 4b) elfogadása
 specs:
   - "[[Nehézségi szint skálája]]"
   - "[[Nehézségi szint skálája (konverziós mátrix)]]"
 flag:
 created: 2026-10-17
-closed:
+closed: 2026-10-17
 ---
 
 # 155 — Font és francia skála — 3–5 fokozatnál opcionális betű (pl. 5A, 4b) elfogadása
@@ -42,23 +42,23 @@ felhasználó kérésére a francia javítás is ebben a jegyben van.
 
 ## Elfogadási kritériumok
 
-- [ ] Font: `3A … 5C+` (A/B/C, opcionális `+`) `VALID`, `FONT` badge-dzsel, nem-null
+- [x] Font: `3A … 5C+` (A/B/C, opcionális `+`) `VALID`, `FONT` badge-dzsel, nem-null
       `absoluteDifficultyIndex`-szel; kisbetűs bevitel a boulder pre-parsing szerint nagybetűsödik.
-- [ ] Francia: `3a … 5c+` (a/b/c, opcionális `+`) `VALID`, `FRA` badge-dzsel, nem-null indexszel.
-- [ ] A csupasz `3` / `4` / `5` továbbra is `VALID` mindkét skálán; 6-tól a betű továbbra is kötelező
+- [x] Francia: `3a … 5c+` (a/b/c, opcionális `+`) `VALID`, `FRA` badge-dzsel, nem-null indexszel.
+- [x] A csupasz `3` / `4` / `5` továbbra is `VALID` mindkét skálán; 6-tól a betű továbbra is kötelező
       (csupasz `6` → `AMBIGUOUS`, `6` + betű nélkül nem menthető).
-- [ ] Monoton, **egész** index-leképezés (a szerveren `absolute_difficulty_index integer`), csak az
+- [x] Monoton, **egész** index-leképezés (a szerveren `absolute_difficulty_index integer`), csak az
       alsó sáv újraosztásával: Font `3 … 6A` lejjebb nyújtva (kb. `3` ≈ 4 … `6A` = 16, a V-skála
       `VB = 8` / `V0 = 10` anchorokhoz igazítva), francia `3 … 5a` a 2…10 sávban. A `6A` / `5a` és
       afölötti értékek **nem változnak**. A csupasz szám és a betűs változatai konzisztensen
       illeszkednek. A leképezés dokumentálva a konverziós mátrix specben.
-- [ ] A már tárolt csupasz Font / francia `3`/`4`/`5` kísérletek indexe egyszer újraszámolva a
+- [x] A már tárolt csupasz Font / francia `3`/`4`/`5` kísérletek indexe egyszer újraszámolva a
       megőrzött beírt fokozatból (`userRawInput` / `guidebookGrade`), helyben és a szerveren is
       konvergálva (a sorok újramentése a szokásos outbox-úton).
-- [ ] Tartomány és shorthand az új fokozatokkal is működik (`5A/B`, `5A/+`, `4a/b`, `4c/+`).
-- [ ] A súgó szövege (`SHARED.GRADE_INPUT.HELP_BOULDER` / `HELP_ROPE`, minden nyelven) kimondja, hogy
+- [x] Tartomány és shorthand az új fokozatokkal is működik (`5A/B`, `5A/+`, `4a/b`, `4c/+`).
+- [x] A súgó szövege (`SHARED.GRADE_INPUT.HELP_BOULDER` / `HELP_ROPE`, minden nyelven) kimondja, hogy
       3–5-nél a betű opcionális, 6-tól kötelező — példával (pl. `5` vagy `5A`).
-- [ ] Unit tesztek: `grade-scale.spec.ts` (VALID / AMBIGUOUS esetek, tartomány), 
+- [x] Unit tesztek: `grade-scale.spec.ts` (VALID / AMBIGUOUS esetek, tartomány), 
       `climbing-grade-matrix.spec.ts` (monotonitás, új kulcsok).
 
 ## Terv / döntési napló
@@ -83,8 +83,22 @@ felhasználó kérésére a francia javítás is ebben a jegyben van.
 - Kapcsolódó: `backlog/024` (közös generált mátrix-JSON asset + szerver-oldali index) — ha az előbb
   készül el, az új kulcsok oda kerülnek.
 
+**Megvalósítás (2026-10-17):**
+- Francia: a csupasz `3`/`4`/`5` indexe (2/6/9) változatlan, az al-betűs alakok az 1–13 sávba kerültek →
+  francia oldalon nem kellett újraszámolás, csak pótlás.
+- Font: `3`/`4`/`5` = 5/8/12 (korábban 10/12/14), `4C+` = 10 (V0), `5C` = 14 (V2), `6A` = 16 (V3).
+- `V53__climbing_grade_index_low_band.sql`: (1) Font szín-sávok csupasz 3/4/5 határai újraszámolva, és
+  a hozzájuk kötött kísérletek indexe is — csak ha a tárolt érték még a sávból számolt snapshot
+  (`bandModifierIndex`); (2) boulder beltéri út + gépelt boulder-kísérlet csupasz 3/4/5 értékkel;
+  (3) index nélkül mentett francia al-betűs köteles kísérletek és hosszak pótlása. A valós adatbázison
+  visszagörgetett próbafuttatással ellenőrizve: 19 szín-sáv, 43 boulder-kísérlet, 8 köteles kísérlet.
+- A mátrix-teszt a 3–5 sávban explicit sorrendlistával ellenőriz, mert az `Object.entries` az egész
+  számra hasonlító kulcsokat (`'3'`, `'4'`, `'5'`) előre rendezi.
+- Mellékmegfigyelés (nem scope): az UIAA `III-` (és `II+` / `II-`) sincs a mátrixban, egy outdoor
+  köteles kísérlet ezért index nélkül van mentve.
+
 ## Lezáráskor (on-done)
 
-- Frissített specek: [[Nehézségi szint skálája]] — 3–5 opcionális betű szabály, súgó; [[Nehézségi szint skálája (konverziós mátrix)]] — új alsó cellák + leképezés
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — #155 Font + francia 3–5 opcionális betű
-- Kód: `frontend/src/app/shared/climbing/{climbing-grade-matrix,grade-scale}.ts` (+ spec), i18n `SHARED.GRADE_INPUT.HELP_*`
+- Frissített specek: [[Nehézségi szint skálája]] — Rope/Boulder skálák + UI fallback + súgó: 3–5 opcionális betű; [[Nehézségi szint skálája (konverziós mátrix)]] — új „Alsó sáv (3–5)" tábla, Font alsó sáv V-skálához igazítva, Előállítási módszer kivétel, Backend: `V53`
+- `IMPLEMENTATION_STATUS.md` sor: 2026-10-17 — #155 Font + francia 3–5 opcionális betű
+- Kód: `frontend/src/app/shared/climbing/climbing-grade-matrix.ts` (+ spec), `grade-scale.spec.ts`, i18n `SHARED.GRADE_INPUT.HELP_*` (hu + en), `backend/.../db/migration/V53__climbing_grade_index_low_band.sql`
