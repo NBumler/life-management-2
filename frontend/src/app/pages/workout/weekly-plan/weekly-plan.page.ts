@@ -19,6 +19,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 import { CalendarEvent } from '../../../api/model/calendarEvent';
 import { WeeklyPlanSlot } from '../../../api/model/weeklyPlanSlot';
+import { StretchPlan } from '../../../api/model/stretchPlan';
 import { WorkoutPlan } from '../../../api/model/workoutPlan';
 import { CurrentDayService } from '../../../core/config/current-day.service';
 import { FeatureFlagsService } from '../../../core/config/feature-flags.service';
@@ -26,6 +27,7 @@ import { CalendarEventRepository } from '../../../core/data/calendar-event.repos
 import { projectEventOccurrences } from '../../../core/data/event-occurrence';
 import { ClimbingSessionRepository } from '../../../core/data/climbing-session.repository';
 import { StretchPlanRepository } from '../../../core/data/stretch-plan.repository';
+import { StretchSessionRepository } from '../../../core/data/stretch-session.repository';
 import { WorkoutPlanRepository } from '../../../core/data/workout-plan.repository';
 import { WorkoutSessionRepository } from '../../../core/data/workout-session.repository';
 import { WeeklyPlanRepository } from '../../../core/data/weekly-plan.repository';
@@ -57,6 +59,8 @@ interface DayCell {
   loggedWorkouts: (string | null)[];
   /** This week's own live override slot for the day, if any. */
   overrideSlot: WeeklyPlanSlot | null;
+  /** backlog/169 — live stretching sessions logged that day (a badge only; never a load day). */
+  stretches: number;
 }
 
 /**
@@ -141,6 +145,7 @@ interface DayCell {
 export class WeeklyPlanPage implements OnInit, ViewWillEnter {
   private readonly planRepository = inject(WorkoutPlanRepository);
   private readonly stretchPlanRepository = inject(StretchPlanRepository);
+  private readonly stretchSessionRepository = inject(StretchSessionRepository);
   private readonly featureFlags = inject(FeatureFlagsService);
   private readonly weeklyRepository = inject(WeeklyPlanRepository);
   private readonly sessionRepository = inject(WorkoutSessionRepository);
@@ -195,6 +200,7 @@ export class WeeklyPlanPage implements OnInit, ViewWillEnter {
     const forecast = this.weekForecast();
     const plans = this.planRepository.items();
     const sessions = this.sessionRepository.items();
+    const stretchSessions = this.stretchSessionRepository.items();
     const ownSlots = (this.weeklyRepository.byWeekStart(this.weekStart())?.slots ?? []).filter((slot) => !slot.deleted);
     return WEEK_DAYS.map((dayOfWeek, index) => {
       const date = load[index].date;
@@ -209,6 +215,7 @@ export class WeeklyPlanPage implements OnInit, ViewWillEnter {
           .filter((session) => !session.deleted && session.date === date)
           .map((session) => plans.find((plan) => plan.id === session.planId)?.name ?? null),
         overrideSlot: ownSlots.find((slot) => slot.dayOfWeek === dayOfWeek) ?? null,
+        stretches: stretchSessions.filter((session) => !session.deleted && session.date === date).length,
       };
     });
   });
@@ -217,6 +224,7 @@ export class WeeklyPlanPage implements OnInit, ViewWillEnter {
     await Promise.all([
       this.planRepository.load(),
       this.stretchPlanRepository.load(),
+      this.stretchSessionRepository.load(),
       this.weeklyRepository.load(),
       this.sessionRepository.load(),
       this.climbingRepository.load(),
@@ -243,6 +251,18 @@ export class WeeklyPlanPage implements OnInit, ViewWillEnter {
       return null;
     }
     return forecast.plan;
+  }
+
+  /** backlog/169 — today's stretching override (still to do): the row's "Nyújtás indítása" CTA. */
+  todayStartStretch(day: DayCell): StretchPlan | null {
+    const forecast = day.forecast;
+    if (day.date !== this.currentDay.day() || forecast === null || !forecast.stretchPlan) {
+      return null;
+    }
+    const doneToday = this.stretchSessionRepository
+      .items()
+      .some((session) => !session.deleted && session.date === day.date && session.stretchPlanId === forecast.stretchPlan?.id);
+    return doneToday ? null : forecast.stretchPlan;
   }
 
   /**

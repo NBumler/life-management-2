@@ -50,6 +50,7 @@ export class TodayWorkoutsWidgetComponent {
       swim: { count: s.swim.count, kcal: s.swim.kcal, countLabelKey: 'HOME.WORKOUTS.SESSION_COUNT' },
       bike: { count: s.bike.count, kcal: s.bike.kcal, countLabelKey: 'HOME.WORKOUTS.SESSION_COUNT' },
       volleyball: { count: s.volleyball.count, kcal: s.volleyball.kcal, countLabelKey: 'HOME.WORKOUTS.SESSION_COUNT' },
+      stretch: { count: s.stretch.count, kcal: s.stretch.kcal, countLabelKey: 'HOME.WORKOUTS.SESSION_COUNT' },
     };
     return this.rowDefs
       .map((def) => ({ key: def.key, labelKey: def.labelKey, icon: def.icon, ...tallyByKey[def.key] }))

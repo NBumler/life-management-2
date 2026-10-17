@@ -9,6 +9,9 @@ import {
   stretchPlanItemServerApplyTask,
   stretchPlanLocalWriteTask,
   stretchPlanServerApplyTask,
+  stretchSessionItemLocalWriteTask,
+  stretchSessionLocalWriteTask,
+  stretchSessionServerApplyTask,
   weeklyPlanSlotLocalWriteTask,
   weeklyPlanSlotRowToDto,
   stretchExerciseLocalWriteTask,
@@ -136,5 +139,43 @@ describe('stretch plan local-rows (backlog/168)', () => {
     expect(task.values).toEqual(['s', 'w', 'MONDAY', 'STRETCH', '', 'p']);
     const row = { id: 's', weekly_plan_id: 'w', day_of_week: 'MONDAY', kind: 'STRETCH', plan_id: '', stretch_plan_id: 'p', deleted: 0 } as WeeklyPlanSlotRow;
     expect(weeklyPlanSlotRowToDto(row)).toEqual(jasmine.objectContaining({ kind: 'STRETCH', planId: null, stretchPlanId: 'p' }));
+  });
+});
+
+/** backlog/169 — `stretch_session` / `stretch_session_item` (SCHEMA_V54). */
+describe('stretch session local-rows (backlog/169)', () => {
+  it('session and item writes bind every column in order', () => {
+    const session = stretchSessionLocalWriteTask({
+      id: 's',
+      date: '2026-10-17',
+      startTime: '19:00',
+      endTime: null,
+      durationMinutes: 12,
+      stretchPlanId: 'p',
+      workoutSessionId: 'w',
+      notes: null,
+    });
+    expect(placeholderCount(session)).toBe(session.values?.length ?? -1);
+    expect(session.values).toEqual(['s', '2026-10-17', '19:00', null, 12, 'p', 'w', null]);
+
+    const item = stretchSessionItemLocalWriteTask({
+      id: 'i',
+      sessionId: 's',
+      stretchExerciseId: null,
+      stretchName: 'Vádli',
+      stretchCategory: 'LEGS',
+      orderIndex: 0,
+      holdSeconds: 30,
+      perSide: false,
+      repetitions: 2,
+      completed: true,
+    });
+    expect(placeholderCount(item)).toBe(item.values?.length ?? -1);
+    expect(item.values).toEqual(['i', 's', null, 'Vádli', 'LEGS', 0, 30, 0, 2, 1]);
+  });
+
+  it('server-apply tasks bind every column', () => {
+    const session = stretchSessionServerApplyTask({ id: 's', date: '2026-10-17', durationMinutes: 5, deleted: false });
+    expect(placeholderCount(session)).toBe(session.values?.length ?? -1);
   });
 });

@@ -25,6 +25,8 @@ import { SwimLog } from '../../api/model/swimLog';
 import { StretchExercise } from '../../api/model/stretchExercise';
 import { StretchPlan } from '../../api/model/stretchPlan';
 import { StretchPlanItem } from '../../api/model/stretchPlanItem';
+import { StretchSession } from '../../api/model/stretchSession';
+import { StretchSessionItem } from '../../api/model/stretchSessionItem';
 import { VolleyballLog } from '../../api/model/volleyballLog';
 import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { RecurringExpense } from '../../api/model/recurringExpense';
@@ -308,6 +310,34 @@ export interface StretchPlanDraft {
   active: boolean;
   goalLabel: string | null;
   items: StretchPlanItemSaveItem[];
+}
+
+/**
+ * documentation/Subfeatures/Nyújtás.md (backlog/169) — the desired live tree for a StretchSession save.
+ * Item ids are client-generated for a new row, reused for a kept one; name / category are a snapshot.
+ */
+export interface StretchSessionItemSaveItem {
+  id: string;
+  stretchExerciseId: string | null;
+  stretchName: string;
+  stretchCategory: StretchSessionItem.StretchCategoryEnum;
+  orderIndex: number;
+  holdSeconds: number;
+  perSide: boolean;
+  repetitions: number;
+  completed: boolean;
+}
+
+export interface StretchSessionDraft {
+  id: string;
+  date: string;
+  startTime: string | null;
+  endTime: string | null;
+  durationMinutes: number;
+  stretchPlanId: string | null;
+  workoutSessionId: string | null;
+  notes: string | null;
+  items: StretchSessionItemSaveItem[];
 }
 
 /**
@@ -643,6 +673,12 @@ export interface StorageBackend {
   getStretchPlan(id: string): Promise<StretchPlan>;
   saveStretchPlan(draft: StretchPlanDraft): Promise<StretchPlan>;
   deleteStretchPlan(id: string): Promise<StretchPlan>;
+
+  /** documentation/Subfeatures/Nyújtás.md (backlog/169): logged stretching session + items as one nested aggregate. */
+  listStretchSessions(): Promise<StretchSession[]>;
+  getStretchSession(id: string): Promise<StretchSession>;
+  saveStretchSession(draft: StretchSessionDraft): Promise<StretchSession>;
+  deleteStretchSession(id: string): Promise<StretchSession>;
 
   /** documentation/Subfeatures/Edzésnapló.md: per-user workout log. Every row (incl. list entries) embeds its full live+tombstoned exercise/set tree. */
   listWorkoutSessions(): Promise<WorkoutSession[]>;

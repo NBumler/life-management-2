@@ -328,6 +328,17 @@ export const routes: Routes = [
             children: [
               { path: '', loadComponent: () => import('./pages/workout/log/workout-log-list.page').then((m) => m.WorkoutLogListPage) },
               { path: 'active', loadComponent: () => import('./pages/workout/log/active-workout.page').then((m) => m.ActiveWorkoutPage) },
+              {
+                // backlog/169 — stretching sessions (Nyújtás.md): the live guided view and the post-hoc editor.
+                path: 'stretch/active',
+                canActivate: [featureFlagGuard('edzes.nyujtas')],
+                loadComponent: () => import('./pages/workout/stretch/active-stretch.page').then((m) => m.ActiveStretchPage),
+              },
+              {
+                path: 'stretch/:id',
+                canActivate: [featureFlagGuard('edzes.nyujtas')],
+                loadComponent: () => import('./pages/workout/stretch/stretch-session-edit.page').then((m) => m.StretchSessionEditPage),
+              },
               { path: 'new', loadComponent: () => import('./pages/workout/log/workout-session-edit.page').then((m) => m.WorkoutSessionEditPage) },
               { path: ':id', loadComponent: () => import('./pages/workout/log/workout-session-edit.page').then((m) => m.WorkoutSessionEditPage) },
             ],

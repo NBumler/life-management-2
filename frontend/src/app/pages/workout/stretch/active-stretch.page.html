@@ -1,0 +1,103 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/workout/log"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ 'WORKOUT.STRETCH_SESSION.LIVE_TITLE' | translate }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button color="danger" (click)="discard()">{{ 'WORKOUT.STRETCH_SESSION.DISCARD' | translate }}</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  @if (summary()) {
+    <h2>{{ 'WORKOUT.STRETCH_SESSION.SUMMARY_TITLE' | translate }}</h2>
+    <ion-list>
+      <ion-item>
+        <ion-input
+          type="number"
+          inputmode="numeric"
+          min="1"
+          [max]="maxDuration"
+          [label]="'WORKOUT.STRETCH_SESSION.FIELD_DURATION' | translate"
+          label-placement="stacked"
+          [value]="durationMinutes()"
+          (ionInput)="setDuration($any($event.target).value)"
+          [color]="durationValid() ? undefined : 'danger'"
+        ></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-textarea
+          [label]="'WORKOUT.PLAN.FIELD_NOTES' | translate"
+          label-placement="stacked"
+          [autoGrow]="true"
+          [value]="notes()"
+          (ionInput)="notes.set($any($event.target).value ?? '')"
+        ></ion-textarea>
+      </ion-item>
+    </ion-list>
+    <div class="actions">
+      <ion-button expand="block" [disabled]="!durationValid()" (click)="save()">{{ 'COMMON.SAVE' | translate }}</ion-button>
+      <ion-button expand="block" fill="clear" (click)="closeSummary()">{{ 'WORKOUT.STRETCH_SESSION.BACK_TO_TIMER' | translate }}</ion-button>
+    </div>
+  } @else {
+    @if (items().length === 0) {
+      <p class="empty">{{ 'WORKOUT.STRETCH_SESSION.EMPTY_ADHOC' | translate }}</p>
+    } @else if (finishedAll()) {
+      <div class="stage">
+        <p class="phase-label">{{ 'WORKOUT.STRETCH_SESSION.ALL_DONE' | translate }}</p>
+      </div>
+    } @else if (currentItem(); as item) {
+      <div class="stage" [class.hold]="phase()?.kind === 'HOLD'">
+        <p class="progress">{{ (phase()?.itemIndex ?? 0) + 1 }} / {{ items().length }}</p>
+        <h1 class="name">{{ item.stretchName }}</h1>
+        @if (item.hint) {
+          <p class="hint">{{ item.hint }}</p>
+        }
+        <p class="phase-label">
+          {{ (phase()?.kind === 'HOLD' ? 'WORKOUT.STRETCH_SESSION.PHASE_HOLD' : 'WORKOUT.STRETCH_SESSION.PHASE_READY') | translate }}
+          @if (phase()?.side; as side) {
+            · {{ ('WORKOUT.STRETCH_SESSION.SIDE_' + side) | translate }}
+          }
+          @if (item.repetitions > 1) {
+            · {{ 'WORKOUT.STRETCH_SESSION.REP' | translate: { rep: phase()?.rep, total: item.repetitions } }}
+          }
+        </p>
+        <div class="countdown" data-countdown>{{ countdownLabel() }}</div>
+        @if (nextItem(); as next) {
+          <p class="next">{{ 'WORKOUT.STRETCH_SESSION.NEXT' | translate: { name: next.stretchName } }}</p>
+        }
+      </div>
+    }
+
+    <div class="controls">
+      @if (items().length > 0 && !finishedAll()) {
+        <div class="control-row">
+          <ion-button fill="outline" (click)="back()" [attr.aria-label]="'WORKOUT.STRETCH_SESSION.BACK' | translate">
+            <ion-icon slot="icon-only" name="play-back-outline" aria-hidden="true"></ion-icon>
+          </ion-button>
+          <ion-button class="main" (click)="togglePause()">
+            {{ (running() ? 'WORKOUT.STRETCH_SESSION.PAUSE' : 'WORKOUT.STRETCH_SESSION.RESUME') | translate }}
+          </ion-button>
+          <ion-button fill="outline" (click)="skip()" [attr.aria-label]="'WORKOUT.STRETCH_SESSION.SKIP' | translate">
+            <ion-icon slot="icon-only" name="play-skip-forward-outline" aria-hidden="true"></ion-icon>
+          </ion-button>
+        </div>
+      }
+      <ion-button expand="block" fill="clear" (click)="pickerOpen.set(true)">
+        <ion-icon slot="start" name="add-outline" aria-hidden="true"></ion-icon>
+        {{ 'WORKOUT.STRETCH_PLAN.ADD_ITEM' | translate }}
+      </ion-button>
+      <ion-button expand="block" color="success" [disabled]="items().length === 0" (click)="openSummary()">
+        {{ 'WORKOUT.STRETCH_SESSION.FINISH' | translate }}
+      </ion-button>
+    </div>
+  }
+</ion-content>
+
+<ion-modal [isOpen]="pickerOpen()" (didDismiss)="pickerOpen.set(false)">
+  <ng-template>
+    <app-stretch-picker (confirmed)="onPicked($event)" (cancelled)="pickerOpen.set(false)"></app-stretch-picker>
+  </ng-template>
+</ion-modal>

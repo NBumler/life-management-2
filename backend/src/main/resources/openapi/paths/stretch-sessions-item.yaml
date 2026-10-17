@@ -1,0 +1,70 @@
+parameters:
+  - name: id
+    in: path
+    required: true
+    schema:
+      type: string
+      format: uuid
+get:
+  operationId: getStretchSession
+  tags:
+    - stretch-sessions
+  summary: The full session tree. A soft-deleted session returns 200 with deleted=true (not 404).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/StretchSession.yaml'
+    '404':
+      description: No such session.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+put:
+  operationId: updateStretchSession
+  tags:
+    - stretch-sessions
+  summary: >-
+    Full tree replace (documentation/Architektúra/Backend.md "Nested aggregate PUT"): items not present
+    in the body are soft-deleted, last-write-wins on the whole aggregate.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/StretchSession.yaml'
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/StretchSession.yaml'
+    '409':
+      description: Entity already deleted.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+    '400':
+      description: An item is missing a required field.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+delete:
+  operationId: deleteStretchSession
+  tags:
+    - stretch-sessions
+  summary: >-
+    Soft delete, idempotent. Cascades to soft-deleting every item on this session.
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/StretchSession.yaml'

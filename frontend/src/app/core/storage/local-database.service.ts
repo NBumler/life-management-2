@@ -1435,7 +1435,54 @@ const SCHEMA_V53_STATEMENTS: string[] = [
   `ALTER TABLE weekly_plan_slot ADD COLUMN stretch_plan_id TEXT`,
 ];
 
-const SCHEMA_VERSION = 53;
+/**
+ * backlog/169 — documentation/Subfeatures/Nyújtás.md: logged stretching sessions + their stretches;
+ * on-device tükre a backend `V59__stretch_session.sql`-nek.
+ */
+const SCHEMA_V54_STATEMENTS: string[] = [
+  `CREATE TABLE IF NOT EXISTS stretch_session (
+    id TEXT PRIMARY KEY,
+    session_date TEXT NOT NULL,
+    start_time TEXT,
+    end_time TEXT,
+    duration_minutes INTEGER NOT NULL,
+    stretch_plan_id TEXT,
+    workout_session_id TEXT,
+    notes TEXT,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_stretch_session_session_date ON stretch_session (session_date DESC)`,
+  `CREATE TABLE IF NOT EXISTS stretch_session_item (
+    id TEXT PRIMARY KEY,
+    session_id TEXT NOT NULL,
+    stretch_exercise_id TEXT,
+    stretch_name TEXT NOT NULL,
+    stretch_category TEXT NOT NULL,
+    order_index INTEGER NOT NULL DEFAULT 0,
+    hold_seconds INTEGER NOT NULL,
+    per_side INTEGER NOT NULL DEFAULT 0,
+    repetitions INTEGER NOT NULL DEFAULT 1,
+    completed INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_stretch_session_item_session_id ON stretch_session_item (session_id)`,
+];
+
+const SCHEMA_VERSION = 54;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -1491,7 +1538,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 50, statements: SCHEMA_V50_STATEMENTS },
   { toVersion: 51, statements: SCHEMA_V51_STATEMENTS },
   { toVersion: 52, statements: SCHEMA_V52_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V53_STATEMENTS },
+  { toVersion: 53, statements: SCHEMA_V53_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V54_STATEMENTS },
 ];
 
 export interface SqlTask {

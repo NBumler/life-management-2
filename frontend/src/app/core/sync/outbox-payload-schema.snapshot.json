@@ -1,5 +1,5 @@
 {
-  "payloadSchemaVersion": 23,
+  "payloadSchemaVersion": 24,
   "entities": {
     "AycmCheckIn": "5050bb69ed3adf81c152c637b748050512395f739cc029e99bdc578cb539ed28",
     "AycmPartner": "c0471c6686aa5775df5f2bd120cad172e84ff8c9e1cbf40ba3400b6434188cbb",
@@ -34,6 +34,7 @@
     "StoredFood": "5a148cb7df76e65e2295b127beb65947aaf396cf970d33979e40e224a900d703",
     "StretchExercise": "36ede96c50cc48bd6ed5c86b7896cec0769e3ea8f0afd6c64a178091b3f2a3e6",
     "StretchPlan": "d96748f53a1246bbd3f23992781de3f42a8e0563d296a2012cee15c09d1bb5f3",
+    "StretchSession": "3879824d80368fc9b4b7b6e37656839ae5e443a6411a545ee36f286f94a2ab24",
     "SwimLog": "7f44c4954b4b163c37b6157c86fc5ebab5abb7894851ed1406dfbae625aa65b1",
     "UserProfile": "654ac39fdcea02f55a84a3030b0a33a0c612c7012f29106e0f98fb377d8ce88c",
     "VolleyballLog": "0593129ec6205dbf8c793b30f5d0a56a091b293362beaa04988446b16a319abf",

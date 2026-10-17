@@ -13,8 +13,17 @@
     <app-plan-quick-start />
   }
 
+  @if (stretchEnabled && hasStretchDraft()) {
+    <div class="cta-row">
+      <ion-button expand="block" color="warning" routerLink="stretch/active">{{ 'WORKOUT.LOG.RESUME_STRETCH' | translate }}</ion-button>
+    </div>
+  }
+
   <div class="cta-row">
     <ion-button expand="block" routerLink="active">{{ 'WORKOUT.LOG.NEW_SESSION' | translate }}</ion-button>
+    @if (stretchEnabled && !hasStretchDraft()) {
+      <ion-button expand="block" fill="outline" routerLink="stretch/active">{{ 'WORKOUT.LOG.NEW_STRETCH' | translate }}</ion-button>
+    }
     <ion-button expand="block" fill="clear" routerLink="new">{{ 'WORKOUT.LOG.LOG_PAST' | translate }}</ion-button>
   </div>
 
@@ -26,19 +35,35 @@
     </ion-list>
   } @else {
     <ion-list>
-      @for (card of cards(); track card.session.id) {
-        <ion-item button [routerLink]="[card.session.id]" detail="true">
-          <ion-label>
-            <h2>{{ card.session.title || (('WORKOUT.SESSION.TYPE.' + card.session.workoutType) | translate) }}</h2>
-            <p>{{ card.session.date }} · {{ card.exerciseCount }} {{ 'WORKOUT.LOG.EXERCISES_SHORT' | translate }}</p>
-          </ion-label>
-          <ion-note slot="end">
-            {{ card.durationMinutes }} {{ 'WORKOUT.SESSION.MINUTES_SHORT' | translate }}
-            @if (card.kcal > 0) {
-              · ~{{ card.kcal | number: '1.0-0' }} {{ 'WORKOUT.SESSION.KCAL_SHORT' | translate }}
-            }
-          </ion-note>
-        </ion-item>
+      @for (card of cards(); track trackCard(card)) {
+        @if (asStrength(card); as strength) {
+          <ion-item button [routerLink]="[strength.session.id]" detail="true" data-card-type="STRENGTH">
+            <ion-label>
+              <h2>{{ strength.session.title || (('WORKOUT.SESSION.TYPE.' + strength.session.workoutType) | translate) }}</h2>
+              <p>{{ strength.session.date }} · {{ strength.exerciseCount }} {{ 'WORKOUT.LOG.EXERCISES_SHORT' | translate }}</p>
+            </ion-label>
+            <ion-note slot="end">
+              {{ strength.durationMinutes }} {{ 'WORKOUT.SESSION.MINUTES_SHORT' | translate }}
+              @if (strength.kcal > 0) {
+                · ~{{ strength.kcal | number: '1.0-0' }} {{ 'WORKOUT.SESSION.KCAL_SHORT' | translate }}
+              }
+            </ion-note>
+          </ion-item>
+        }
+        @if (asStretch(card); as stretch) {
+          <ion-item button [routerLink]="['stretch', stretch.session.id]" detail="true" data-card-type="STRETCH">
+            <ion-label>
+              <h2>{{ 'WORKOUT.LOG.STRETCH_ROW' | translate: { name: stretch.planName || ('WORKOUT.LOG.STRETCH_ADHOC' | translate) } }}</h2>
+              <p>{{ stretch.session.date }} · {{ stretch.stretchCount }} {{ 'WORKOUT.LOG.STRETCHES_SHORT' | translate }}</p>
+            </ion-label>
+            <ion-note slot="end">
+              {{ stretch.durationMinutes }} {{ 'WORKOUT.SESSION.MINUTES_SHORT' | translate }}
+              @if (stretch.kcal > 0) {
+                · ~{{ stretch.kcal | number: '1.0-0' }} {{ 'WORKOUT.SESSION.KCAL_SHORT' | translate }}
+              }
+            </ion-note>
+          </ion-item>
+        }
       }
     </ion-list>
   }

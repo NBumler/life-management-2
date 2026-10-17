@@ -13,6 +13,7 @@ import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { ClimbingSession } from '../../api/model/climbingSession';
 import { DailyStepLog } from '../../api/model/dailyStepLog';
 import { SwimLog } from '../../api/model/swimLog';
+import { StretchSession } from '../../api/model/stretchSession';
 import { VolleyballLog } from '../../api/model/volleyballLog';
 import { WorkoutSession } from '../../api/model/workoutSession';
 import { bikeKcal } from '../../pages/workout/cycling/bike-metrics';
@@ -20,6 +21,7 @@ import { climbingSessionKcalInput } from '../../pages/workout/climbing/climbing-
 import { climbingKcal } from '../../pages/workout/climbing/climbing-metrics';
 import { sessionKcal } from '../../pages/workout/log/workout-metrics';
 import { swimKcal } from '../../pages/workout/swimming/swim-metrics';
+import { stretchKcal } from '../../pages/workout/stretch/stretch-metrics';
 import { volleyballKcal } from '../../pages/workout/volleyball/volleyball-metrics';
 
 /**
@@ -80,6 +82,20 @@ export function volleyballKcalForDay(
   return logs
     .filter((log) => !log.deleted && log.date === day)
     .reduce((sum, log) => sum + volleyballKcal(log, bodyWeightKg), 0);
+}
+
+/**
+ * documentation/Subfeatures/Nyújtás.md "Kalória" (backlog/169): same shape as {@link volleyballKcalForDay} —
+ * Σ `stretchKcal()` (one fixed net MET 1.3) over every live `StretchSession` whose `date` is `day`.
+ */
+export function stretchKcalForDay(
+  sessions: readonly StretchSession[],
+  day: string,
+  bodyWeightKg: number | null,
+): number {
+  return sessions
+    .filter((session) => !session.deleted && session.date === day)
+    .reduce((sum, session) => sum + stretchKcal(session, bodyWeightKg), 0);
 }
 
 /**

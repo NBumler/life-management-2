@@ -34,6 +34,7 @@ const ALL_ENTITY_TYPES = [
   'WorkoutSession',
   'WorkoutPlan',
   'StretchPlan',
+  'StretchSession',
   'WeeklyPlan',
   'SwimLog',
   'BikeRideLog',
@@ -325,6 +326,8 @@ const STEPS_BY_VERSION: Readonly<Record<number, VersionSteps>> = {
   // `STRETCH` kind — a pending week write from before this update has neither, which the server reads as
   // "no stretching template" (null), identical to the old behaviour.
   22: { default: identityStep },
+  // backlog/169: brand-new `StretchSession` entity — nothing pending can predate it.
+  23: { default: identityStep },
 };
 
 function buildMigrations(): ReadonlyMap<string, MigrationStep> {

@@ -13,6 +13,7 @@ import { CurrentDayService } from '../../../core/config/current-day.service';
 import { CalendarEventRepository } from '../../../core/data/calendar-event.repository';
 import { ClimbingSessionRepository } from '../../../core/data/climbing-session.repository';
 import { StretchPlanRepository } from '../../../core/data/stretch-plan.repository';
+import { StretchSessionRepository } from '../../../core/data/stretch-session.repository';
 import { WeeklyPlanRepository } from '../../../core/data/weekly-plan.repository';
 import { WorkoutPlanRepository } from '../../../core/data/workout-plan.repository';
 import { WorkoutSessionRepository } from '../../../core/data/workout-session.repository';
@@ -109,6 +110,7 @@ describe('WeeklyPlanPage — rotation forecast (backlog/144)', () => {
           useValue: { load: () => Promise.resolve(), reload: () => Promise.resolve(), items: sessions },
         },
         { provide: ClimbingSessionRepository, useValue: { load: () => Promise.resolve(), items: signal([]) } },
+        { provide: StretchSessionRepository, useValue: { load: () => Promise.resolve(), items: signal([]) } },
         {
           provide: StretchPlanRepository,
           useValue: { load: () => Promise.resolve(), items: stretchPlans, activePlans: () => stretchPlans().filter((p) => p.active && !p.deleted) },

@@ -9,6 +9,7 @@ import { EventsService } from '../../api/api/events.service';
 import { ExercisesService } from '../../api/api/exercises.service';
 import { StretchExercisesService } from '../../api/api/stretchExercises.service';
 import { StretchPlansService } from '../../api/api/stretchPlans.service';
+import { StretchSessionsService } from '../../api/api/stretchSessions.service';
 import { FoodsService } from '../../api/api/foods.service';
 import { GearItemsService } from '../../api/api/gearItems.service';
 import { HealthService } from '../../api/api/health.service';
@@ -71,6 +72,8 @@ import { SwimLog } from '../../api/model/swimLog';
 import { StretchExercise } from '../../api/model/stretchExercise';
 import { StretchPlan } from '../../api/model/stretchPlan';
 import { StretchPlanItem } from '../../api/model/stretchPlanItem';
+import { StretchSession } from '../../api/model/stretchSession';
+import { StretchSessionItem } from '../../api/model/stretchSessionItem';
 import { VolleyballLog } from '../../api/model/volleyballLog';
 import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { DailyStepLog } from '../../api/model/dailyStepLog';
@@ -112,6 +115,10 @@ import {
   stretchPlanItemTombstoneTask,
   stretchPlanServerApplyTask,
   stretchPlanTombstoneTask,
+  stretchSessionItemServerApplyTask,
+  stretchSessionItemTombstoneTask,
+  stretchSessionServerApplyTask,
+  stretchSessionTombstoneTask,
   foodServerApplyTask,
   foodTombstoneTask,
   gearItemServerApplyTask,
@@ -237,6 +244,7 @@ export class SyncEngineService {
   private readonly exercisesApi = inject(ExercisesService);
   private readonly stretchExercisesApi = inject(StretchExercisesService);
   private readonly stretchPlansApi = inject(StretchPlansService);
+  private readonly stretchSessionsApi = inject(StretchSessionsService);
   private readonly householdRoomsApi = inject(HouseholdRoomsService);
   private readonly householdTasksApi = inject(HouseholdTasksService);
   private readonly eventsApi = inject(EventsService);
@@ -735,6 +743,16 @@ export class SyncEngineService {
       }
     }
 
+    const staleStretchSessions = await this.db.query<{ id: string }>('SELECT id FROM stretch_session WHERE _needs_refetch = 1');
+    for (const row of staleStretchSessions) {
+      try {
+        const dto = await firstValueFrom(this.stretchSessionsApi.getStretchSession(row.id));
+        await this.db.executeTransaction(this.stretchSessionApplyTasks(dto));
+      } catch {
+        // same as above
+      }
+    }
+
     const staleWeeklyPlans = await this.db.query<{ id: string }>('SELECT id FROM weekly_plan WHERE _needs_refetch = 1');
     for (const row of staleWeeklyPlans) {
       try {
@@ -1004,6 +1022,9 @@ export class SyncEngineService {
     if (item.entityType === 'StretchPlan') {
       return this.stretchPlanApplyTasks(body as StretchPlan);
     }
+    if (item.entityType === 'StretchSession') {
+      return this.stretchSessionApplyTasks(body as StretchSession);
+    }
     if (item.entityType === 'WeeklyPlan') {
       return this.weeklyPlanApplyTasks(body as WeeklyPlan);
     }
@@ -1128,6 +1149,14 @@ export class SyncEngineService {
   /** backlog/168 — same as workoutPlanApplyTasks: the response lists every item row (live or tombstoned), applied as authoritative. */
   private stretchPlanApplyTasks(dto: StretchPlan): SqlTask[] {
     return [stretchPlanServerApplyTask(dto), ...(dto.items as StretchPlanItem[]).map((item) => stretchPlanItemServerApplyTask(item))];
+  }
+
+  /** backlog/169 — same as stretchPlanApplyTasks: every item row (live or tombstoned), applied as authoritative. */
+  private stretchSessionApplyTasks(dto: StretchSession): SqlTask[] {
+    return [
+      stretchSessionServerApplyTask(dto),
+      ...(dto.items as StretchSessionItem[]).map((item) => stretchSessionItemServerApplyTask(item)),
+    ];
   }
 
   /** documentation/Architektúra/Backend.md "Nested aggregate PUT": the response lists every slot row (live or tombstoned — WeeklyPlan.yaml), applied as authoritative. */
@@ -1342,6 +1371,13 @@ export class SyncEngineService {
         workoutPlanTombstoneTask(item.targetEntityId, null, now),
         ...exerciseRows.map((row) => workoutPlanExerciseTombstoneTask(row.id, null, now)),
         ...setRows.map((row) => workoutPlanSetTombstoneTask(row.id, null, now)),
+      ]);
+    } else if (item.entityType === 'StretchSession') {
+      // backlog/169: session delete cascades to its own items locally too.
+      const itemRows = await this.db.query<{ id: string }>('SELECT id FROM stretch_session_item WHERE session_id = ?', [item.targetEntityId]);
+      await this.db.executeTransaction([
+        stretchSessionTombstoneTask(item.targetEntityId, null, now),
+        ...itemRows.map((row) => stretchSessionItemTombstoneTask(row.id, null, now)),
       ]);
     } else if (item.entityType === 'StretchPlan') {
       // backlog/168: plan delete cascades to its own items locally too.
@@ -1804,6 +1840,24 @@ export class SyncEngineService {
         return [workoutPlanSetServerApplyTask(change.data as WorkoutPlanSet)];
       }
       return [workoutPlanSetTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
+    }
+    if (change.entityType === 'StretchSession') {
+      if (!change.deleted) {
+        return [stretchSessionServerApplyTask(change.data as StretchSession)];
+      }
+      // backlog/169: session delete cascades to this device's own items too.
+      const itemRows = await this.db.query<{ id: string }>('SELECT id FROM stretch_session_item WHERE session_id = ?', [change.id]);
+      return [
+        stretchSessionTombstoneTask(change.id, null, change.updatedAt),
+        discardPendingWritesTask(change.id),
+        ...itemRows.map((row) => stretchSessionItemTombstoneTask(row.id, null, change.updatedAt)),
+      ];
+    }
+    if (change.entityType === 'StretchSessionItem') {
+      if (!change.deleted) {
+        return [stretchSessionItemServerApplyTask(change.data as StretchSessionItem)];
+      }
+      return [stretchSessionItemTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
     }
     if (change.entityType === 'StretchPlan') {
       if (!change.deleted) {

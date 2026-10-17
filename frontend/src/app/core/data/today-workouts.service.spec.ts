@@ -6,6 +6,7 @@ import { ClimbingSession } from '../../api/model/climbingSession';
 import { DailyStepLog } from '../../api/model/dailyStepLog';
 import { SwimLog } from '../../api/model/swimLog';
 import { UserProfile } from '../../api/model/userProfile';
+import { StretchSession } from '../../api/model/stretchSession';
 import { VolleyballLog } from '../../api/model/volleyballLog';
 import { WorkoutSession } from '../../api/model/workoutSession';
 import { today } from '../../shared/local-date';
@@ -15,6 +16,7 @@ import { DailyStepLogRepository } from './daily-step-log.repository';
 import { ProfileRepository } from './profile.repository';
 import { SwimLogRepository } from './swim-log.repository';
 import { TodayWorkoutsService } from './today-workouts.service';
+import { StretchSessionRepository } from './stretch-session.repository';
 import { VolleyballLogRepository } from './volleyball-log.repository';
 import { WorkoutSessionRepository } from './workout-session.repository';
 
@@ -38,6 +40,7 @@ describe('TodayWorkoutsService', () => {
   let swims: ReturnType<typeof signal<SwimLog[]>>;
   let bikes: ReturnType<typeof signal<BikeRideLog[]>>;
   let volleyballs: ReturnType<typeof signal<VolleyballLog[]>>;
+  let stretches: ReturnType<typeof signal<StretchSession[]>>;
   const loads: jasmine.Spy[] = [];
 
   function configure(): TodayWorkoutsService {
@@ -48,6 +51,7 @@ describe('TodayWorkoutsService', () => {
     swims = signal<SwimLog[]>([]);
     bikes = signal<BikeRideLog[]>([]);
     volleyballs = signal<VolleyballLog[]>([]);
+    stretches = signal<StretchSession[]>([]);
     loads.length = 0;
 
     function repoProvider<T>(token: unknown, items: ReturnType<typeof signal<T[]>>) {
@@ -67,6 +71,7 @@ describe('TodayWorkoutsService', () => {
         repoProvider(SwimLogRepository, swims),
         repoProvider(BikeRideLogRepository, bikes),
         repoProvider(VolleyballLogRepository, volleyballs),
+        repoProvider(StretchSessionRepository, stretches),
       ],
     });
     return TestBed.inject(TodayWorkoutsService);
@@ -122,7 +127,7 @@ describe('TodayWorkoutsService', () => {
     const service = configure();
     await service.load();
 
-    expect(loads.length).toBe(7);
+    expect(loads.length).toBe(8);
     for (const load of loads) {
       expect(load).toHaveBeenCalledTimes(1);
     }

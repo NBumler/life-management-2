@@ -91,6 +91,10 @@ paths:
     $ref: 'openapi/paths/stretch-plans.yaml'
   /api/stretch-plans/{id}:
     $ref: 'openapi/paths/stretch-plans-item.yaml'
+  /api/stretch-sessions:
+    $ref: 'openapi/paths/stretch-sessions.yaml'
+  /api/stretch-sessions/{id}:
+    $ref: 'openapi/paths/stretch-sessions-item.yaml'
   /api/workout-sessions:
     $ref: 'openapi/paths/workout-sessions.yaml'
   /api/workout-sessions/{id}:

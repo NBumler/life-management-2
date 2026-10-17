@@ -21,6 +21,8 @@ import { SwimLog } from '../../api/model/swimLog';
 import { StretchExercise } from '../../api/model/stretchExercise';
 import { StretchPlan } from '../../api/model/stretchPlan';
 import { StretchPlanItem } from '../../api/model/stretchPlanItem';
+import { StretchSession } from '../../api/model/stretchSession';
+import { StretchSessionItem } from '../../api/model/stretchSessionItem';
 import { VolleyballLog } from '../../api/model/volleyballLog';
 import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { RecurringExpense } from '../../api/model/recurringExpense';
@@ -1549,6 +1551,232 @@ export function stretchPlanItemTombstoneTask(id: string, deletedAt: string | nul
     statement: `
       INSERT INTO stretch_plan_item (id, plan_id, stretch_exercise_id, stretch_name, stretch_category, hold_seconds, updated_at, deleted, deleted_at, _dirty, _local_only)
       VALUES (?, '', '', '', 'FULL_BODY', 1, ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+// --- Nyújtás: StretchSession → StretchSessionItem (backlog/169 — two-level nested aggregate) ---
+
+export interface StretchSessionRow {
+  id: string;
+  session_date: string;
+  start_time: string | null;
+  end_time: string | null;
+  duration_minutes: number;
+  stretch_plan_id: string | null;
+  workout_session_id: string | null;
+  notes: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+/** Omits `items` — a StretchSession row alone never carries them, see readStretchSession in SqliteStorageBackend. */
+export function stretchSessionRowToDto(row: StretchSessionRow): Omit<StretchSession, 'items'> {
+  return {
+    id: row.id,
+    date: row.session_date,
+    startTime: row.start_time,
+    endTime: row.end_time,
+    durationMinutes: row.duration_minutes,
+    stretchPlanId: row.stretch_plan_id,
+    workoutSessionId: row.workout_session_id,
+    notes: row.notes,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+type StretchSessionWriteInput = Pick<
+  StretchSession,
+  'id' | 'date' | 'startTime' | 'endTime' | 'durationMinutes' | 'stretchPlanId' | 'workoutSessionId' | 'notes'
+>;
+
+export function stretchSessionLocalWriteTask(dto: StretchSessionWriteInput): SqlTask {
+  return {
+    statement: `
+      INSERT INTO stretch_session (id, session_date, start_time, end_time, duration_minutes, stretch_plan_id, workout_session_id, notes, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET
+        session_date = excluded.session_date, start_time = excluded.start_time, end_time = excluded.end_time,
+        duration_minutes = excluded.duration_minutes, stretch_plan_id = excluded.stretch_plan_id,
+        workout_session_id = excluded.workout_session_id, notes = excluded.notes, _dirty = 1`,
+    values: [
+      dto.id,
+      dto.date,
+      dto.startTime ?? null,
+      dto.endTime ?? null,
+      dto.durationMinutes,
+      dto.stretchPlanId ?? null,
+      dto.workoutSessionId ?? null,
+      dto.notes ?? null,
+    ],
+  };
+}
+
+export function stretchSessionServerApplyTask(dto: Omit<StretchSession, 'items'>): SqlTask {
+  return {
+    statement: `
+      INSERT INTO stretch_session (id, session_date, start_time, end_time, duration_minutes, stretch_plan_id, workout_session_id, notes, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        session_date = excluded.session_date, start_time = excluded.start_time, end_time = excluded.end_time,
+        duration_minutes = excluded.duration_minutes, stretch_plan_id = excluded.stretch_plan_id,
+        workout_session_id = excluded.workout_session_id, notes = excluded.notes,
+        created_at = excluded.created_at, updated_at = excluded.updated_at,
+        deleted = excluded.deleted, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE stretch_session._dirty = 0`,
+    values: [
+      dto.id,
+      dto.date,
+      dto.startTime ?? null,
+      dto.endTime ?? null,
+      dto.durationMinutes,
+      dto.stretchPlanId ?? null,
+      dto.workoutSessionId ?? null,
+      dto.notes ?? null,
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function stretchSessionTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO stretch_session (id, session_date, duration_minutes, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '', 1, ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+export interface StretchSessionItemRow {
+  id: string;
+  session_id: string;
+  stretch_exercise_id: string | null;
+  stretch_name: string;
+  stretch_category: string;
+  order_index: number;
+  hold_seconds: number;
+  per_side: number;
+  repetitions: number;
+  completed: number;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+export function stretchSessionItemRowToDto(row: StretchSessionItemRow): StretchSessionItem {
+  return {
+    id: row.id,
+    sessionId: row.session_id,
+    stretchExerciseId: row.stretch_exercise_id,
+    stretchName: row.stretch_name,
+    stretchCategory: row.stretch_category as StretchSessionItem.StretchCategoryEnum,
+    orderIndex: row.order_index,
+    holdSeconds: row.hold_seconds,
+    perSide: row.per_side === 1,
+    repetitions: row.repetitions,
+    completed: row.completed === 1,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+type StretchSessionItemWriteInput = Pick<
+  StretchSessionItem,
+  'id' | 'sessionId' | 'stretchExerciseId' | 'stretchName' | 'stretchCategory' | 'orderIndex' | 'holdSeconds' | 'perSide' | 'repetitions' | 'completed'
+>;
+
+export function stretchSessionItemLocalWriteTask(dto: StretchSessionItemWriteInput): SqlTask {
+  return {
+    statement: `
+      INSERT INTO stretch_session_item (id, session_id, stretch_exercise_id, stretch_name, stretch_category, order_index, hold_seconds, per_side, repetitions, completed, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET
+        stretch_exercise_id = excluded.stretch_exercise_id, stretch_name = excluded.stretch_name,
+        stretch_category = excluded.stretch_category, order_index = excluded.order_index, hold_seconds = excluded.hold_seconds,
+        per_side = excluded.per_side, repetitions = excluded.repetitions, completed = excluded.completed,
+        deleted = 0, deleted_at = NULL, _dirty = 1`,
+    values: [
+      dto.id,
+      dto.sessionId,
+      dto.stretchExerciseId ?? null,
+      dto.stretchName,
+      dto.stretchCategory,
+      dto.orderIndex,
+      dto.holdSeconds,
+      dto.perSide ? 1 : 0,
+      dto.repetitions,
+      dto.completed ? 1 : 0,
+    ],
+  };
+}
+
+/** Local-only removal — an item dropped from a session during an edit (not a standalone outbox entry). */
+export function stretchSessionItemLocalRemoveTask(id: string): SqlTask {
+  return {
+    statement: `UPDATE stretch_session_item SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?`,
+    values: [new Date().toISOString(), id],
+  };
+}
+
+export function stretchSessionItemServerApplyTask(dto: StretchSessionItem): SqlTask {
+  return {
+    statement: `
+      INSERT INTO stretch_session_item (id, session_id, stretch_exercise_id, stretch_name, stretch_category, order_index, hold_seconds, per_side, repetitions, completed, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        session_id = excluded.session_id, stretch_exercise_id = excluded.stretch_exercise_id, stretch_name = excluded.stretch_name,
+        stretch_category = excluded.stretch_category, order_index = excluded.order_index, hold_seconds = excluded.hold_seconds,
+        per_side = excluded.per_side, repetitions = excluded.repetitions, completed = excluded.completed,
+        created_at = excluded.created_at, updated_at = excluded.updated_at,
+        deleted = excluded.deleted, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE stretch_session_item._dirty = 0`,
+    values: [
+      dto.id,
+      dto.sessionId,
+      dto.stretchExerciseId ?? null,
+      dto.stretchName,
+      dto.stretchCategory,
+      dto.orderIndex,
+      dto.holdSeconds,
+      dto.perSide ? 1 : 0,
+      dto.repetitions,
+      dto.completed ? 1 : 0,
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function stretchSessionItemTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO stretch_session_item (id, session_id, stretch_name, stretch_category, hold_seconds, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '', '', 'FULL_BODY', 1, ?, 1, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
     values: [id, updatedAt, deletedAt],
   };

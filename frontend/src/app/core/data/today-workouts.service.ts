@@ -6,6 +6,7 @@ import {
   climbingKcalForDay,
   stepKcalForDay,
   swimKcalForDay,
+  stretchKcalForDay,
   volleyballKcalForDay,
   workoutKcalForDay,
 } from './activity-kcal';
@@ -14,6 +15,7 @@ import { ClimbingSessionRepository } from './climbing-session.repository';
 import { DailyStepLogRepository } from './daily-step-log.repository';
 import { ProfileRepository } from './profile.repository';
 import { SwimLogRepository } from './swim-log.repository';
+import { StretchSessionRepository } from './stretch-session.repository';
 import { VolleyballLogRepository } from './volleyball-log.repository';
 import { WorkoutSessionRepository } from './workout-session.repository';
 
@@ -31,6 +33,8 @@ export interface TodayWorkoutsSummary {
   swim: TodayActivityTally;
   bike: TodayActivityTally;
   volleyball: TodayActivityTally;
+  /** backlog/169 — stretching sessions (never a load day, but they burn a little). */
+  stretch: TodayActivityTally;
   totalKcal: number;
 }
 
@@ -51,6 +55,7 @@ export class TodayWorkoutsService {
   private readonly swims = inject(SwimLogRepository);
   private readonly bikes = inject(BikeRideLogRepository);
   private readonly volleyballs = inject(VolleyballLogRepository);
+  private readonly stretches = inject(StretchSessionRepository);
 
   readonly summary = computed<TodayWorkoutsSummary>(() => {
     const day = today();
@@ -62,6 +67,7 @@ export class TodayWorkoutsService {
     const swimCount = this.swims.items().filter((s) => !s.deleted && s.date === day).length;
     const bikeCount = this.bikes.items().filter((s) => !s.deleted && s.date === day).length;
     const volleyballCount = this.volleyballs.items().filter((s) => !s.deleted && s.date === day).length;
+    const stretchCount = this.stretches.items().filter((s) => !s.deleted && s.date === day).length;
 
     const steps = { count: stepLog === undefined ? 0 : 1, stepCount: stepLog?.stepCount ?? 0, kcal: stepKcalForDay(this.steps.items(), day, weight) };
     const workout = { count: workoutCount, kcal: workoutKcalForDay(this.workouts.items(), day, weight) };
@@ -69,6 +75,7 @@ export class TodayWorkoutsService {
     const swim = { count: swimCount, kcal: swimKcalForDay(this.swims.items(), day, weight) };
     const bike = { count: bikeCount, kcal: bikeKcalForDay(this.bikes.items(), day, weight) };
     const volleyball = { count: volleyballCount, kcal: volleyballKcalForDay(this.volleyballs.items(), day, weight) };
+    const stretch = { count: stretchCount, kcal: stretchKcalForDay(this.stretches.items(), day, weight) };
 
     return {
       steps,
@@ -77,7 +84,8 @@ export class TodayWorkoutsService {
       swim,
       bike,
       volleyball,
-      totalKcal: steps.kcal + workout.kcal + climbing.kcal + swim.kcal + bike.kcal + volleyball.kcal,
+      stretch,
+      totalKcal: steps.kcal + workout.kcal + climbing.kcal + swim.kcal + bike.kcal + volleyball.kcal + stretch.kcal,
     };
   });
 
@@ -91,6 +99,7 @@ export class TodayWorkoutsService {
       this.swims.load(),
       this.bikes.load(),
       this.volleyballs.load(),
+      this.stretches.load(),
     ]);
   }
 }

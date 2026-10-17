@@ -16,6 +16,7 @@ import { WorkoutPlanRepository } from '../../../core/data/workout-plan.repositor
 import { WorkoutSessionRepository } from '../../../core/data/workout-session.repository';
 import { ExercisePickResult } from '../../../shared/exercise-picker/exercise-picker.component';
 import { ActiveWorkoutPage } from './active-workout.page';
+import { AlertTone } from '../../../shared/alert-tone';
 
 function pick(overrides: Partial<ExercisePickResult> = {}): ExercisePickResult {
   return {
@@ -235,7 +236,7 @@ describe('ActiveWorkoutPage', () => {
     await setup();
     // backlog/147: the expiry alarm would open a real WebAudio context (an audio-device init that can
     // stall the test browser's main thread) — the beep itself is not under test here.
-    spyOn(component as unknown as { beep: () => void }, 'beep');
+    spyOn(AlertTone.prototype, 'beep');
     await component.ngOnInit();
     component.onPicked([pick({ exerciseId: null })]);
     const row = component.exercises()[0];
@@ -466,7 +467,7 @@ describe('ActiveWorkoutPage', () => {
 
   it('ticking the last open set turns the card green and auto-collapses it; un-ticking does not reopen (backlog/154)', async () => {
     await setup();
-    spyOn(component as unknown as { beep: () => void }, 'beep');
+    spyOn(AlertTone.prototype, 'beep');
     await component.ngOnInit();
     component.onPicked([pick()]);
     const row = component.exercises()[0];

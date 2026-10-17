@@ -6,6 +6,7 @@ import { Preferences } from '@capacitor/preferences';
 import { TranslateService } from '@ngx-translate/core';
 
 import { BikeRideLogRepository } from '../data/bike-ride-log.repository';
+import { StretchSessionRepository } from '../data/stretch-session.repository';
 import { VolleyballLogRepository } from '../data/volleyball-log.repository';
 import { CalendarEventRepository } from '../data/calendar-event.repository';
 import { ClimbingSessionRepository } from '../data/climbing-session.repository';
@@ -119,6 +120,7 @@ describe('NotificationSchedulerService', () => {
         { provide: SwimLogRepository, useValue: repoStub() },
         { provide: BikeRideLogRepository, useValue: repoStub() },
         { provide: VolleyballLogRepository, useValue: repoStub() },
+        { provide: StretchSessionRepository, useValue: repoStub() },
         { provide: ClimbingSessionRepository, useValue: repoStub() },
       ],
     });

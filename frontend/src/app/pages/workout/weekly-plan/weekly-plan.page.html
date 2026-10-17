@@ -88,6 +88,9 @@
             @if (day.load.rest && day.past) {
               <ion-badge color="medium">{{ 'WORKOUT.WEEKLY.LOAD_REST' | translate }}</ion-badge>
             }
+            @if (day.stretches > 0) {
+              <ion-badge color="tertiary">{{ 'WORKOUT.WEEKLY.LOAD_STRETCH' | translate }}</ion-badge>
+            }
             @if (showsForecastChip(day) && day.forecast; as forecast) {
               <ion-button
                 class="forecast-chip"
@@ -111,6 +114,11 @@
           </div>
         </ion-label>
 
+        @if (todayStartStretch(day); as stretchPlan) {
+          <ion-button slot="end" size="small" routerLink="/tabs/workout/log/stretch/active" [queryParams]="{ stretchPlanId: stretchPlan.id }">
+            {{ 'WORKOUT.WEEKLY.START_STRETCH' | translate }}
+          </ion-button>
+        }
         @if (todayStartPlan(day); as plan) {
           <ion-button slot="end" size="small" routerLink="/tabs/workout/log/active" [queryParams]="{ planId: plan.id }">
             {{ 'WORKOUT.WEEKLY.START' | translate }}

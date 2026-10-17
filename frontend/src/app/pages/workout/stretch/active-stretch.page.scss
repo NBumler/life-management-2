@@ -1,0 +1,61 @@
+.stage {
+  text-align: center;
+  padding: 16px 0;
+}
+
+.progress,
+.next,
+.hint {
+  color: var(--ion-color-medium);
+  margin: 4px 0;
+}
+
+.name {
+  margin: 8px 0 4px;
+}
+
+.phase-label {
+  font-weight: 600;
+  margin: 12px 0 0;
+}
+
+.countdown {
+  font-size: 4.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  margin: 8px 0;
+  color: var(--ion-color-medium);
+}
+
+.stage.hold .countdown {
+  color: var(--ion-color-primary);
+}
+
+.empty {
+  color: var(--ion-color-medium);
+  text-align: center;
+  padding: 24px 0;
+}
+
+// Thumb-zone: the controls sit at the bottom of the screen.
+.controls {
+  position: sticky;
+  bottom: 0;
+  padding-top: 12px;
+  background: var(--ion-background-color);
+}
+
+.control-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.control-row .main {
+  flex: 1;
+}
+
+.actions {
+  margin-top: 16px;
+}

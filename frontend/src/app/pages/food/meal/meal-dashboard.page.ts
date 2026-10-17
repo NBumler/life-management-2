@@ -29,6 +29,7 @@ import {
   climbingKcalForDay,
   stepKcalForDay,
   swimKcalForDay,
+  stretchKcalForDay,
   volleyballKcalForDay,
   workoutKcalForDay,
 } from '../../../core/data/activity-kcal';
@@ -40,6 +41,7 @@ import { MealRepository } from '../../../core/data/meal.repository';
 import { ProfileRepository } from '../../../core/data/profile.repository';
 import { RecipeRepository } from '../../../core/data/recipe.repository';
 import { SwimLogRepository } from '../../../core/data/swim-log.repository';
+import { StretchSessionRepository } from '../../../core/data/stretch-session.repository';
 import { VolleyballLogRepository } from '../../../core/data/volleyball-log.repository';
 import { WorkoutSessionRepository } from '../../../core/data/workout-session.repository';
 import { today } from '../../../shared/local-date';
@@ -114,6 +116,7 @@ export class MealDashboardPage implements OnInit, ViewWillEnter {
   private readonly swimRepository = inject(SwimLogRepository);
   private readonly bikeRepository = inject(BikeRideLogRepository);
   private readonly volleyballRepository = inject(VolleyballLogRepository);
+  private readonly stretchRepository = inject(StretchSessionRepository);
   private readonly climbingRepository = inject(ClimbingSessionRepository);
   private readonly stepRepository = inject(DailyStepLogRepository);
   private readonly alertController = inject(AlertController);
@@ -136,7 +139,7 @@ export class MealDashboardPage implements OnInit, ViewWillEnter {
    * edzéskalóriák. The step term is `stepKcalForDay` ([[Lépésszám követés]]); the training half is
    * Σ `sessionKcal()` over the day's strength/HIIT sessions plus Σ `swimKcal()` over the day's swim
    * logs plus Σ `bikeKcal()` over the day's bike rides plus Σ `volleyballKcal()` over the day's
-   * volleyball sessions plus Σ `climbingKcal()` over the day's climbing sessions, at the current
+   * volleyball sessions plus Σ `stretchKcal()` over the day's stretching sessions plus Σ `climbingKcal()` over the day's climbing sessions, at the current
    * profile weight.
    */
   readonly workoutExtraKcal = computed(() => {
@@ -148,6 +151,7 @@ export class MealDashboardPage implements OnInit, ViewWillEnter {
       swimKcalForDay(this.swimRepository.items(), day, weight) +
       bikeKcalForDay(this.bikeRepository.items(), day, weight) +
       volleyballKcalForDay(this.volleyballRepository.items(), day, weight) +
+      stretchKcalForDay(this.stretchRepository.items(), day, weight) +
       climbingKcalForDay(this.climbingRepository.items(), day, weight)
     );
   });
@@ -189,6 +193,7 @@ export class MealDashboardPage implements OnInit, ViewWillEnter {
       this.swimRepository.load(),
       this.bikeRepository.load(),
       this.volleyballRepository.load(),
+      this.stretchRepository.load(),
       this.climbingRepository.load(),
       this.stepRepository.load(),
     ]);

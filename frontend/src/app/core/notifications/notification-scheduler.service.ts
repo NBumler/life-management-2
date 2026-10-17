@@ -10,6 +10,7 @@ import {
   climbingKcalForDay,
   stepKcalForDay,
   swimKcalForDay,
+  stretchKcalForDay,
   volleyballKcalForDay,
   workoutKcalForDay,
 } from '../data/activity-kcal';
@@ -24,6 +25,7 @@ import { ProfileRepository } from '../data/profile.repository';
 import { RecipeRepository } from '../data/recipe.repository';
 import { StoredFoodRepository } from '../data/stored-food.repository';
 import { SwimLogRepository } from '../data/swim-log.repository';
+import { StretchSessionRepository } from '../data/stretch-session.repository';
 import { VolleyballLogRepository } from '../data/volleyball-log.repository';
 import { WorkoutSessionRepository } from '../data/workout-session.repository';
 import { FeatureFlagsService } from '../config/feature-flags.service';
@@ -139,6 +141,7 @@ export class NotificationSchedulerService {
   private readonly swim = inject(SwimLogRepository);
   private readonly bike = inject(BikeRideLogRepository);
   private readonly volleyball = inject(VolleyballLogRepository);
+  private readonly stretch = inject(StretchSessionRepository);
   private readonly climbing = inject(ClimbingSessionRepository);
 
   readonly permission = signal<NotificationPermission>('unknown');
@@ -209,6 +212,7 @@ export class NotificationSchedulerService {
         this.swim.items();
         this.bike.items();
         this.volleyball.items();
+        this.stretch.items();
         this.climbing.items();
         const pulled = tick !== this.lastTick;
         this.lastTick = tick;
@@ -372,6 +376,7 @@ export class NotificationSchedulerService {
       this.swim.load(),
       this.bike.load(),
       this.volleyball.load(),
+      this.stretch.load(),
       this.climbing.load(),
     ]);
   }
@@ -689,6 +694,7 @@ export class NotificationSchedulerService {
         swimKcalForDay(this.swim.items(), date, weight) +
         bikeKcalForDay(this.bike.items(), date, weight) +
         volleyballKcalForDay(this.volleyball.items(), date, weight) +
+        stretchKcalForDay(this.stretch.items(), date, weight) +
         climbingKcalForDay(this.climbing.items(), date, weight);
 
       const tdee = computeTdee(

@@ -62,7 +62,8 @@
       "STEP_COUNT": "{{count}} lépés",
       "SESSION_COUNT": "{{count}} alkalom",
       "TOTAL": "Összesen",
-      "EMPTY": "Ma még nem volt edzés."
+      "EMPTY": "Ma még nem volt edzés.",
+      "STRETCH": "Nyújtás"
     }
   },
   "MENU": {
@@ -1013,8 +1014,14 @@
         "START": "Indítás",
         "PICK_PLAN": "Terv indítása…",
         "ALL_PLANS_HAVE_FINGERS": "Holnap mászás, de minden aktív sablonban van ujjgyakorlat — ma inkább könnyebben.",
-        "OVERRIDE_FINGERS_NEAR_CLIMB": "Ez a sablon ujjgyakorlatot tartalmaz — a holnapi mászás miatt nem javasolt."
-      }
+        "OVERRIDE_FINGERS_NEAR_CLIMB": "Ez a sablon ujjgyakorlatot tartalmaz — a holnapi mászás miatt nem javasolt.",
+        "START_STRETCH": "Nyújtás indítása"
+      },
+      "NEW_STRETCH": "Új nyújtás",
+      "RESUME_STRETCH": "Nyújtás folytatása",
+      "STRETCH_ROW": "Nyújtás · {{name}}",
+      "STRETCH_ADHOC": "Szabad",
+      "STRETCHES_SHORT": "nyújtás"
     },
     "ACTIVE": {
       "DISCARD": "Elvetés",
@@ -1270,7 +1277,9 @@
       "OVERRIDE_AUTO": "Automatikus (rotáció)",
       "OVERRIDE_REST": "Pihenőnap",
       "OVERRIDE_STRETCH": "Nyújtás · {{name}}",
-      "FORECAST_STRETCH": "Nyújtás: {{name}}"
+      "FORECAST_STRETCH": "Nyújtás: {{name}}",
+      "LOAD_STRETCH": "Nyújtás",
+      "START_STRETCH": "Nyújtás indítása"
     },
     "SWIM": {
       "NEW": "Új úszás",
@@ -1648,6 +1657,35 @@
     "STRETCH_PICKER": {
       "TITLE": "Nyújtás választása",
       "EMPTY": "Még nincs nyújtó gyakorlat — a Gyakorlatok katalógusban vehetsz fel újat."
+    },
+    "STRETCH_SESSION": {
+      "LIVE_TITLE": "Nyújtás",
+      "EDIT_TITLE": "Nyújtás szerkesztése",
+      "DISCARD": "Elvetés",
+      "DISCARD_TITLE": "Nyújtás elvetése",
+      "DISCARD_MESSAGE": "Elveted ezt a nyújtást? Semmi nem kerül a naplóba.",
+      "SUMMARY_TITLE": "Nyújtás befejezése",
+      "FIELD_DURATION": "Időtartam (perc)",
+      "FIELD_DATE": "Dátum",
+      "FIELD_START": "Kezdés",
+      "BACK_TO_TIMER": "Vissza az időzítőhöz",
+      "EMPTY_ADHOC": "Adj hozzá nyújtásokat a kezdéshez.",
+      "ALL_DONE": "Minden nyújtás kész — mentsd el a Befejezéssel.",
+      "PHASE_READY": "Készülj",
+      "PHASE_HOLD": "Tartás",
+      "SIDE_LEFT": "bal oldal",
+      "SIDE_RIGHT": "jobb oldal",
+      "REP": "{{rep}}. / {{total}}",
+      "NEXT": "Következő: {{name}}",
+      "PAUSE": "Szünet",
+      "RESUME": "Folytatás",
+      "SKIP": "Kihagyás",
+      "BACK": "Vissza",
+      "FINISH": "Befejezés",
+      "FROM_PLAN": "Sablon: {{name}}",
+      "ITEMS": "Nyújtások (kész)",
+      "DELETE_CONFIRM_TITLE": "Nyújtás törlése",
+      "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd ezt a nyújtást a naplóból?"
     }
   },
   "WIDGET": {

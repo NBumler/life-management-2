@@ -70,8 +70,10 @@ import { uuidV4 } from './uuid';
  * - v22 → v23 (backlog/168): brand-new `StretchPlan` entity; `WeeklyPlanSlot` (nested in `WeeklyPlan`)
  *   gained a nullable `stretchPlanId` and a `STRETCH` kind. A pending week write from before that app
  *   update has no such key (= no stretching template), so every type is identity.
+ * - v23 → v24 (backlog/169): brand-new `StretchSession` entity — no pending write of it can predate this
+ *   app update, so every type is identity.
  */
-export const OUTBOX_PAYLOAD_SCHEMA_VERSION = 23;
+export const OUTBOX_PAYLOAD_SCHEMA_VERSION = 24;
 
 /** documentation/Architektúra/Backend-offline first.md §6 "Tétel-újrapróbálkozási backoff" (jitter omitted — not load-bearing for correctness). */
 const RETRY_BACKOFF_MS = [2000, 8000, 30000, 120000, 600000];

@@ -19,6 +19,7 @@ import { StoredFood } from '../../api/model/storedFood';
 import { SwimLog } from '../../api/model/swimLog';
 import { StretchExercise } from '../../api/model/stretchExercise';
 import { StretchPlan } from '../../api/model/stretchPlan';
+import { StretchSession } from '../../api/model/stretchSession';
 import { VolleyballLog } from '../../api/model/volleyballLog';
 import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { RecurringExpense } from '../../api/model/recurringExpense';
@@ -67,6 +68,8 @@ import {
   StretchExerciseRow,
   StretchPlanItemRow,
   StretchPlanRow,
+  StretchSessionItemRow,
+  StretchSessionRow,
   VolleyballLogRow,
   BikeRideLogRow,
   RecurringExpenseRow,
@@ -92,6 +95,11 @@ import {
   stretchPlanItemRowToDto,
   stretchPlanLocalWriteTask,
   stretchPlanRowToDto,
+  stretchSessionItemLocalRemoveTask,
+  stretchSessionItemLocalWriteTask,
+  stretchSessionItemRowToDto,
+  stretchSessionLocalWriteTask,
+  stretchSessionRowToDto,
   exerciseRowToDto,
   foodLocalWriteTask,
   foodRowToDto,
@@ -233,6 +241,7 @@ import {
   WeeklyPlanDraft,
   WorkoutPlanDraft,
   StretchPlanDraft,
+  StretchSessionDraft,
   WorkoutSessionDraft,
   ClimbingSessionDraft,
   buildShoppingListCompleteRequestPayload,
@@ -509,6 +518,7 @@ export class SqliteStorageBackend implements StorageBackend {
       | 'workout_plan'
       | 'stretch_exercise'
       | 'stretch_plan'
+      | 'workout_session'
       | 'gym'
       | 'gym_color_band'
       | 'indoor_route'
@@ -2778,6 +2788,108 @@ export class SqliteStorageBackend implements StorageBackend {
     return assembleStretchPlan(planRows[0], itemRows);
   }
 
+  // --- Nyújtás: StretchSession (backlog/169 — 2-level nested aggregate) ------------------------------
+
+  async listStretchSessions(): Promise<StretchSession[]> {
+    const sessionRows = await this.db.query<StretchSessionRow>(
+      'SELECT * FROM stretch_session WHERE deleted = 0 ORDER BY session_date DESC, created_at DESC',
+    );
+    const itemRows = await this.db.query<StretchSessionItemRow>('SELECT * FROM stretch_session_item ORDER BY order_index');
+    return sessionRows.map((row) => assembleStretchSession(row, itemRows));
+  }
+
+  getStretchSession(id: string): Promise<StretchSession> {
+    return this.readStretchSession(id);
+  }
+
+  /** documentation/Architektúra/Backend.md "Nested aggregate PUT": session + items in one local transaction and one outbox entry. */
+  async saveStretchSession(draft: StretchSessionDraft): Promise<StretchSession> {
+    const userId = this.requireUserId();
+    const existingRows = await this.db.query('SELECT 1 FROM stretch_session WHERE id = ?', [draft.id]);
+    const isNew = existingRows.length === 0;
+    const existingItemRows = await this.db.query<StretchSessionItemRow>('SELECT * FROM stretch_session_item WHERE session_id = ?', [
+      draft.id,
+    ]);
+    const incomingIds = new Set(draft.items.map((item) => item.id));
+
+    const localTasks: SqlTask[] = [stretchSessionLocalWriteTask(draft)];
+    for (const item of draft.items) {
+      localTasks.push(stretchSessionItemLocalWriteTask({ ...item, sessionId: draft.id }));
+    }
+    for (const existing of existingItemRows) {
+      if (existing.deleted === 0 && !incomingIds.has(existing.id)) {
+        localTasks.push(stretchSessionItemLocalRemoveTask(existing.id));
+      }
+    }
+
+    // §10 "Függőségi láncok": the plan / strength session / stretches it points at may still be local-only.
+    const dependsOn = [
+      ...(await this.findLocalOnlyIds('stretch_plan', draft.stretchPlanId ? [draft.stretchPlanId] : [])),
+      ...(await this.findLocalOnlyIds('workout_session', draft.workoutSessionId ? [draft.workoutSessionId] : [])),
+      ...(await this.findLocalOnlyIds(
+        'stretch_exercise',
+        draft.items.map((item) => item.stretchExerciseId).filter((id): id is string => id !== null),
+      )),
+    ];
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: isNew ? 'POST' : 'PUT',
+      url: isNew ? '/api/stretch-sessions' : `/api/stretch-sessions/${draft.id}`,
+      payload: buildStretchSessionPayload(draft),
+      entityType: 'StretchSession',
+      targetEntityId: draft.id,
+      dependsOn,
+    });
+    await this.db.executeTransaction([...localTasks, ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    return this.readStretchSession(draft.id);
+  }
+
+  async deleteStretchSession(id: string): Promise<StretchSession> {
+    const userId = this.requireUserId();
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: 'DELETE',
+      url: `/api/stretch-sessions/${id}`,
+      payload: null,
+      entityType: 'StretchSession',
+      targetEntityId: id,
+    });
+    const liveItemRows = await this.db.query<{ id: string }>('SELECT id FROM stretch_session_item WHERE session_id = ? AND deleted = 0', [
+      id,
+    ]);
+    const tasks: SqlTask[] = [];
+    if (enqueue.hardRemoveLocalEntity) {
+      for (const row of liveItemRows) {
+        tasks.push({ statement: 'DELETE FROM stretch_session_item WHERE id = ?', values: [row.id] });
+      }
+      tasks.push({ statement: 'DELETE FROM stretch_session WHERE id = ?', values: [id] });
+    } else {
+      tasks.push({
+        statement: 'UPDATE stretch_session SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?',
+        values: [new Date().toISOString(), id],
+      });
+      for (const row of liveItemRows) {
+        tasks.push(stretchSessionItemLocalRemoveTask(row.id));
+      }
+    }
+    await this.db.executeTransaction([...tasks, ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    if (enqueue.hardRemoveLocalEntity) {
+      return { id, date: '', durationMinutes: 1, deleted: true, items: [] };
+    }
+    return this.readStretchSession(id);
+  }
+
+  private async readStretchSession(id: string): Promise<StretchSession> {
+    const sessionRows = await this.db.query<StretchSessionRow>('SELECT * FROM stretch_session WHERE id = ?', [id]);
+    const itemRows = await this.db.query<StretchSessionItemRow>(
+      'SELECT * FROM stretch_session_item WHERE session_id = ? ORDER BY order_index',
+      [id],
+    );
+    return assembleStretchSession(sessionRows[0], itemRows);
+  }
+
   async listWeeklyPlans(): Promise<WeeklyPlan[]> {
     const weekRows = await this.db.query<WeeklyPlanRow>('SELECT * FROM weekly_plan WHERE deleted = 0 ORDER BY week_start_date DESC');
     const slotRows = await this.db.query<WeeklyPlanSlotRow>('SELECT * FROM weekly_plan_slot');
@@ -3392,6 +3504,27 @@ function buildWeeklyPlanPayload(draft: WeeklyPlanDraft): WeeklyPlan {
       deleted: false,
     })),
   };
+}
+
+/** The full `StretchSession` wire body for the outbox — mirrors HttpStorageBackend.saveStretchSession. */
+function buildStretchSessionPayload(draft: StretchSessionDraft): StretchSession {
+  return {
+    id: draft.id,
+    date: draft.date,
+    startTime: draft.startTime,
+    endTime: draft.endTime,
+    durationMinutes: draft.durationMinutes,
+    stretchPlanId: draft.stretchPlanId,
+    workoutSessionId: draft.workoutSessionId,
+    notes: draft.notes,
+    deleted: false,
+    items: draft.items.map((item) => ({ ...item, sessionId: draft.id, deleted: false })),
+  };
+}
+
+function assembleStretchSession(sessionRow: StretchSessionRow, itemRows: StretchSessionItemRow[]): StretchSession {
+  const items = itemRows.filter((row) => row.session_id === sessionRow.id).map(stretchSessionItemRowToDto);
+  return { ...stretchSessionRowToDto(sessionRow), items };
 }
 
 /** The full `StretchPlan` wire body for the outbox — mirrors HttpStorageBackend.saveStretchPlan. */

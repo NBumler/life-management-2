@@ -4,8 +4,10 @@ import { ActionSheetController, IonButton } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 import { CurrentDayService } from '../../../core/config/current-day.service';
+import { FeatureFlagsService } from '../../../core/config/feature-flags.service';
 import { CalendarEventRepository } from '../../../core/data/calendar-event.repository';
 import { ClimbingSessionRepository } from '../../../core/data/climbing-session.repository';
+import { StretchPlanRepository } from '../../../core/data/stretch-plan.repository';
 import { WeeklyPlanRepository } from '../../../core/data/weekly-plan.repository';
 import { WorkoutPlanRepository } from '../../../core/data/workout-plan.repository';
 import { WorkoutSessionRepository } from '../../../core/data/workout-session.repository';
@@ -15,6 +17,8 @@ import { ForecastDay, forecastInputsFrom, nextForecastWorkout, trainingForecast 
 import { WEEK_DAYS, addLocalDays, mondayOf, weekDates } from '../weekly-plan/weekly-plan-adherence';
 
 const ACTIVE_ROUTE = '/tabs/workout/log/active';
+/** backlog/169 — the live stretching view. */
+const STRETCH_ROUTE = '/tabs/workout/log/stretch/active';
 /** How far ahead the "Következő" workout is looked for. */
 const NEXT_LOOKAHEAD_DAYS = 14;
 
@@ -61,7 +65,13 @@ const NEXT_LOOKAHEAD_DAYS = 14;
                 }
                 @case ('REST') {
                   <span class="qs-label">{{ 'WORKOUT.LOG.QUICK.TODAY' | translate }}</span>
-                  <strong>{{ 'WORKOUT.LOG.QUICK.REST_DAY' | translate }}</strong>
+                  <strong>
+                    @if (day.stretchPlan; as stretchPlan) {
+                      {{ 'WORKOUT.WEEKLY.FORECAST_STRETCH' | translate: { name: stretchPlan.name } }}
+                    } @else {
+                      {{ 'WORKOUT.LOG.QUICK.REST_DAY' | translate }}
+                    }
+                  </strong>
                   <span class="qs-sub">
                     @if (day.reason === 'OVERRIDE') {
                       {{ 'WORKOUT.LOG.QUICK.MANUAL' | translate }}
@@ -74,6 +84,11 @@ const NEXT_LOOKAHEAD_DAYS = 14;
                 }
               }
             </div>
+            @if (day.stretchPlan; as stretchPlan) {
+              <ion-button size="small" [routerLink]="stretchRoute" [queryParams]="{ stretchPlanId: stretchPlan.id }">
+                {{ 'WORKOUT.LOG.QUICK.START_STRETCH' | translate }}
+              </ion-button>
+            }
             @if (todayState() === 'SUGGESTED' && day.plan; as plan) {
               <ion-button size="small" [routerLink]="activeRoute" [queryParams]="{ planId: plan.id }">
                 {{ 'WORKOUT.LOG.QUICK.START' | translate }}
@@ -141,6 +156,8 @@ const NEXT_LOOKAHEAD_DAYS = 14;
 })
 export class PlanQuickStartComponent implements OnInit {
   private readonly planRepository = inject(WorkoutPlanRepository);
+  private readonly stretchPlanRepository = inject(StretchPlanRepository);
+  private readonly featureFlags = inject(FeatureFlagsService);
   private readonly weeklyRepository = inject(WeeklyPlanRepository);
   private readonly sessionRepository = inject(WorkoutSessionRepository);
   private readonly climbingRepository = inject(ClimbingSessionRepository);
@@ -151,6 +168,8 @@ export class PlanQuickStartComponent implements OnInit {
   private readonly router = inject(Router);
 
   readonly activeRoute = ACTIVE_ROUTE;
+  readonly stretchRoute = STRETCH_ROUTE;
+  private readonly stretchEnabled = this.featureFlags.isEnabled('edzes.nyujtas');
 
   readonly hasPlans = computed(() => this.planRepository.items().some((plan) => !plan.deleted && plan.active));
 
@@ -161,6 +180,7 @@ export class PlanQuickStartComponent implements OnInit {
       events: this.eventRepository.items(),
       weeklyPlans: this.weeklyRepository.items(),
       workoutPlans: this.planRepository.items(),
+      stretchPlans: this.stretchEnabled ? this.stretchPlanRepository.items() : [],
     }),
   );
 
@@ -228,8 +248,12 @@ export class PlanQuickStartComponent implements OnInit {
     return WEEK_DAYS[weekDates(mondayOf(date)).indexOf(date)];
   }
 
-  /** backlog/054 — every active template, `goalLabel` groups first (alphabetical), ungrouped last. */
+  /**
+   * backlog/054 — every active template, `goalLabel` groups first (alphabetical), ungrouped last.
+   * backlog/169 — then every active stretching template as "Nyújtás · <név>" (opens the live stretch view).
+   */
   async openPlanPicker(): Promise<void> {
+    const stretchPlans = this.stretchEnabled ? this.stretchPlanRepository.activePlans() : [];
     const plans = this.planRepository
       .activePlans()
       .map((plan) => ({ plan, group: planGroupKey(plan) }))
@@ -240,6 +264,10 @@ export class PlanQuickStartComponent implements OnInit {
         ...plans.map(({ plan, group }) => ({
           text: group === null ? plan.name : `${group} · ${plan.name}`,
           handler: () => void this.router.navigate([ACTIVE_ROUTE], { queryParams: { planId: plan.id } }),
+        })),
+        ...stretchPlans.map((plan) => ({
+          text: this.translate.instant('WORKOUT.WEEKLY.OVERRIDE_STRETCH', { name: plan.name }),
+          handler: () => void this.router.navigate([STRETCH_ROUTE], { queryParams: { stretchPlanId: plan.id } }),
         })),
         { text: this.translate.instant('COMMON.CANCEL'), role: 'cancel' },
       ],

@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-20
-verifikalt_commit: 1047919
+verifikalva: 2026-10-17
+verifikalt_commit: b0c6d57
 ---
 
 # Kezdőlap
@@ -36,7 +36,7 @@ gyorsgombok a leggyakoribb létrehozó flow-khoz + a mai étkezés állása.
 |---|---|---|
 | **Gyorsgombok** (`quick-actions`) | — (mindig) | Gombonként flag-elt gyors-belépők (`HOME_QUICK_ACTIONS`): **Új étkezés** → `/tabs/food/meal/new` (`tab.kaja`), **Új mászás** → `/tabs/workout/climbing` mászás-hub (`edzes.maszonaplo`). Ha egyik gomb sem engedélyezett, a widget nem renderel semmit. |
 | **Mai étkezés állása** (`today-nutrition`) | `tab.kaja` | A mai bevitt kalória + fehérje / szénhidrát / zsír a **mai célhoz** képest, a hátralévő mennyiséggel. Ugyanaz a szám, mint az [[Étkezés]] dashboardon: `computeDailyNutrition` a mai étkezésekre + `computeTdee` az aznapi aktivitás-kalóriával ([[Tápérték kalkulátor]]). Hiányos profilnál (nincs elég TDEE-bemenet) szám helyett link a [[Profile]]-ra. Ha egy mai tétel hivatkozott receptje/élelmiszere hiányzik, „hiányos" jelzés. |
-| **Mai edzések** (`today-workouts`, `backlog/112`) | — (soronként flag-elve) | A mai (lokális naptári nap) lépésszám, edzésnapló, mászás, úszás, bicikli és röplabda soronként, mindegyik saját extra-kalóriájával **és** egy összesített „Összesen" kcal sorral (`TodayWorkoutsService` — az `activity-kcal.ts` ugyanazon függvényei, mint a „Mai étkezés állása" widget `activityExtraKcal`-ja mögött, így a két szám sosem tér el). Soronként flag: lépés `menu.lepesszam`, edzésnapló `tab.edzes`, mászás `edzes.maszonaplo`, úszás `edzes.uszas`, bicikli `edzes.bicikli`, röplabda `edzes.roplabda` (`HOME_TODAY_WORKOUT_ROWS`, ugyanaz a minta, mint a `HOME_QUICK_ACTIONS`-nál). Egy sor csak akkor jelenik meg, ha aznapra van adata; ha egy engedélyezett sornak sincs mai adata, „Ma még nem volt edzés" üres állapot; ha egyik sor flagje sincs bekapcsolva, a widget nem renderel semmit. |
+| **Mai edzések** (`today-workouts`, `backlog/112`) | — (soronként flag-elve) | A mai (lokális naptári nap) lépésszám, edzésnapló, mászás, úszás, bicikli, röplabda és nyújtás ([[Nyújtás]], `backlog/169`) soronként, mindegyik saját extra-kalóriájával **és** egy összesített „Összesen" kcal sorral (`TodayWorkoutsService` — az `activity-kcal.ts` ugyanazon függvényei, mint a „Mai étkezés állása" widget `activityExtraKcal`-ja mögött, így a két szám sosem tér el). Soronként flag: lépés `menu.lepesszam`, edzésnapló `tab.edzes`, mászás `edzes.maszonaplo`, úszás `edzes.uszas`, bicikli `edzes.bicikli`, röplabda `edzes.roplabda`, nyújtás `edzes.nyujtas` (`HOME_TODAY_WORKOUT_ROWS`, ugyanaz a minta, mint a `HOME_QUICK_ACTIONS`-nál). Egy sor csak akkor jelenik meg, ha aznapra van adata; ha egy engedélyezett sornak sincs mai adata, „Ma még nem volt edzés" üres állapot; ha egyik sor flagje sincs bekapcsolva, a widget nem renderel semmit. |
 
 - **Gyors-belépő cél:** az „Új mászás" a 4 mászó-kontextus **hubjára** visz (a kontextust ott
   választja a user); nincs „utoljára használt kontextus" emlékezet az első körben.

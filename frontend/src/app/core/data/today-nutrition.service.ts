@@ -10,6 +10,7 @@ import {
   climbingKcalForDay,
   stepKcalForDay,
   swimKcalForDay,
+  stretchKcalForDay,
   volleyballKcalForDay,
   workoutKcalForDay,
 } from './activity-kcal';
@@ -21,6 +22,7 @@ import { MealRepository } from './meal.repository';
 import { ProfileRepository } from './profile.repository';
 import { RecipeRepository } from './recipe.repository';
 import { SwimLogRepository } from './swim-log.repository';
+import { StretchSessionRepository } from './stretch-session.repository';
 import { VolleyballLogRepository } from './volleyball-log.repository';
 import { WorkoutSessionRepository } from './workout-session.repository';
 
@@ -71,6 +73,7 @@ export class TodayNutritionService {
   private readonly swims = inject(SwimLogRepository);
   private readonly bikes = inject(BikeRideLogRepository);
   private readonly volleyballs = inject(VolleyballLogRepository);
+  private readonly stretches = inject(StretchSessionRepository);
   private readonly climbs = inject(ClimbingSessionRepository);
   private readonly steps = inject(DailyStepLogRepository);
 
@@ -90,6 +93,7 @@ export class TodayNutritionService {
       swimKcalForDay(this.swims.items(), day, weight) +
       bikeKcalForDay(this.bikes.items(), day, weight) +
       volleyballKcalForDay(this.volleyballs.items(), day, weight) +
+      stretchKcalForDay(this.stretches.items(), day, weight) +
       climbingKcalForDay(this.climbs.items(), day, weight)
     );
   });
@@ -121,6 +125,7 @@ export class TodayNutritionService {
       this.swims.load(),
       this.bikes.load(),
       this.volleyballs.load(),
+      this.stretches.load(),
       this.climbs.load(),
       this.steps.load(),
     ]);

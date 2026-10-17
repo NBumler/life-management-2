@@ -14,6 +14,7 @@ import { MealRepository } from '../../../core/data/meal.repository';
 import { ProfileRepository } from '../../../core/data/profile.repository';
 import { RecipeRepository } from '../../../core/data/recipe.repository';
 import { BikeRideLogRepository } from '../../../core/data/bike-ride-log.repository';
+import { StretchSessionRepository } from '../../../core/data/stretch-session.repository';
 import { VolleyballLogRepository } from '../../../core/data/volleyball-log.repository';
 import { ClimbingSessionRepository } from '../../../core/data/climbing-session.repository';
 import { DailyStepLogRepository } from '../../../core/data/daily-step-log.repository';
@@ -71,6 +72,7 @@ describe('MealDashboardPage', () => {
         { provide: SwimLogRepository, useValue: { load: () => Promise.resolve(), items: signal([]) } },
         { provide: BikeRideLogRepository, useValue: { load: () => Promise.resolve(), items: signal([]) } },
         { provide: VolleyballLogRepository, useValue: { load: () => Promise.resolve(), items: signal([]) } },
+        { provide: StretchSessionRepository, useValue: { load: () => Promise.resolve(), items: signal([]) } },
         { provide: ClimbingSessionRepository, useValue: { load: () => Promise.resolve(), items: signal([]) } },
         { provide: DailyStepLogRepository, useValue: { load: () => Promise.resolve(), items: signal([]) } },
         { provide: AlertController, useValue: alertController },

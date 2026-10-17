@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-10-17
-verifikalt_commit: c6a3b27
+verifikalt_commit: b0c6d57
 ---
 
 # Edzés
@@ -11,7 +11,7 @@ verifikalt_commit: c6a3b27
 |---|---|
 | **Státusz** | `Kész` |
 | **Szülő** | [[Life Management 2.0]] |
-| **Kapcsolódó** | [[Tápérték kalkulátor]], [[Gyakorlat]], [[Heti terv]], [[Edzésnapló]], [[Mászónapló]], [[Úszás napló]], [[Biciklizés napló]], [[Röplabda napló]], [[Lépésszám követés]], [[Profile]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Tápérték kalkulátor]], [[Gyakorlat]], [[Heti terv]], [[Edzésnapló]], [[Nyújtás]], [[Mászónapló]], [[Úszás napló]], [[Biciklizés napló]], [[Röplabda napló]], [[Lépésszám követés]], [[Profile]], [[Backend-offline first]] |
 
 ### Jelenlegi működés
 
@@ -27,6 +27,7 @@ Subfeature / kapcsolódó napló lista:
 - [[Úszás napló]]
 - [[Biciklizés napló]]
 - [[Röplabda napló]]
+- [[Nyújtás]] — vezetett, időzítős nyújtó session + napló (`backlog/169`); nem terhelő nap
 
 Erőedzés MET ([[Edzésnapló]]): `GENERAL_WEIGHTS` 5.0; `HIIT_CIRCUIT` 8.0 — kanonikus: [[Tápérték kalkulátor]].
 

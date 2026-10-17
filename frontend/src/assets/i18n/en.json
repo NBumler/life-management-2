@@ -62,7 +62,8 @@
       "STEP_COUNT": "{{count}} steps",
       "SESSION_COUNT": "{{count}} session(s)",
       "TOTAL": "Total",
-      "EMPTY": "No workouts logged yet today."
+      "EMPTY": "No workouts logged yet today.",
+      "STRETCH": "Stretching"
     }
   },
   "MENU": {
@@ -1013,8 +1014,14 @@
         "START": "Start",
         "PICK_PLAN": "Start a plan…",
         "ALL_PLANS_HAVE_FINGERS": "Climbing tomorrow, but every active template has finger work — take it easier today.",
-        "OVERRIDE_FINGERS_NEAR_CLIMB": "This template has finger work — not recommended with tomorrow's climb."
-      }
+        "OVERRIDE_FINGERS_NEAR_CLIMB": "This template has finger work — not recommended with tomorrow's climb.",
+        "START_STRETCH": "Start stretching"
+      },
+      "NEW_STRETCH": "New stretch",
+      "RESUME_STRETCH": "Resume stretching",
+      "STRETCH_ROW": "Stretching · {{name}}",
+      "STRETCH_ADHOC": "Free",
+      "STRETCHES_SHORT": "stretches"
     },
     "ACTIVE": {
       "DISCARD": "Discard",
@@ -1270,7 +1277,9 @@
       "OVERRIDE_AUTO": "Automatic (rotation)",
       "OVERRIDE_REST": "Rest day",
       "OVERRIDE_STRETCH": "Stretching · {{name}}",
-      "FORECAST_STRETCH": "Stretching: {{name}}"
+      "FORECAST_STRETCH": "Stretching: {{name}}",
+      "LOAD_STRETCH": "Stretching",
+      "START_STRETCH": "Start stretching"
     },
     "SWIM": {
       "NEW": "New swim",
@@ -1648,6 +1657,35 @@
     "STRETCH_PICKER": {
       "TITLE": "Pick stretches",
       "EMPTY": "No stretches yet — add one in the Exercises catalog."
+    },
+    "STRETCH_SESSION": {
+      "LIVE_TITLE": "Stretching",
+      "EDIT_TITLE": "Edit stretching",
+      "DISCARD": "Discard",
+      "DISCARD_TITLE": "Discard stretching",
+      "DISCARD_MESSAGE": "Discard this stretching session? Nothing is logged.",
+      "SUMMARY_TITLE": "Finish stretching",
+      "FIELD_DURATION": "Duration (min)",
+      "FIELD_DATE": "Date",
+      "FIELD_START": "Start",
+      "BACK_TO_TIMER": "Back to the timer",
+      "EMPTY_ADHOC": "Add stretches to begin.",
+      "ALL_DONE": "All stretches done — save with Finish.",
+      "PHASE_READY": "Get ready",
+      "PHASE_HOLD": "Hold",
+      "SIDE_LEFT": "left side",
+      "SIDE_RIGHT": "right side",
+      "REP": "{{rep}} / {{total}}",
+      "NEXT": "Next: {{name}}",
+      "PAUSE": "Pause",
+      "RESUME": "Resume",
+      "SKIP": "Skip",
+      "BACK": "Back",
+      "FINISH": "Finish",
+      "FROM_PLAN": "Template: {{name}}",
+      "ITEMS": "Stretches (done)",
+      "DELETE_CONFIRM_TITLE": "Delete stretching",
+      "DELETE_CONFIRM_MESSAGE": "Delete this stretching session from the log?"
     }
   },
   "WIDGET": {

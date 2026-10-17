@@ -14,6 +14,13 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-17 — #169** Nyújtó session: új `StretchSession` + `StretchSessionItem`; vezetett, falióra-alapú
+  időzítő (Készülj / Tartás fázisok, bal-jobb oldal, ismétlés, szünet / vissza / kihagyás), hang + rezgés,
+  ébren tartott képernyő, app-kill után szüneteltetve visszaálló piszkozat. Napló az Edzésnapló listában,
+  utólagos szerkesztő; nettó MET 1.3 az `activityExtraKcal`-ban; heti „Nyújtás” jelvény (nem terhelő nap),
+  indítás a „Terv indítása…”-ból, a heti nézetből és „Új nyújtás”-sal. `V59`, `SCHEMA_V54`, outbox v24. Új spec:
+  [[Nyújtás]]; érintett: [[Edzés]], [[Edzésnapló]], [[Heti terv]], [[Tápérték kalkulátor]], [[Kezdőlap]]; kód:
+  `workout` (backend), `pages/workout/stretch/`, `core/data/`, `shared/alert-tone.ts`, `shared/screen-wake-lock.ts`
 - **2026-10-17 — #168** Nyújtó sablonok: új `StretchPlan` + `StretchPlanItem` (tartás, oldalanként, ismétlés,
   megjegyzés; a tétel a gyakorlat alapértékeivel töltődik elő), aktív / inaktív kapcsoló, a `goalLabel` csoportok
   közösek az erősítő sablonokkal. A nyújtó sablon soha nem rotál; heti kézi felülírásként (`STRETCH` slot)

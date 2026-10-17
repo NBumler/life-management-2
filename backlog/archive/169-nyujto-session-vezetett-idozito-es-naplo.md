@@ -1,7 +1,7 @@
 ---
 id: 169
 type: feature
-status: ready
+status: done
 title: Nyújtó session — vezetett időzítős élő nézet, napló, MET-kalória
 specs:
   - "[[Edzésnapló]]"
@@ -9,7 +9,7 @@ specs:
   - "[[Tápérték kalkulátor]]"
 flag: edzes.nyujtas
 created: 2026-10-17
-closed:
+closed: 2026-10-17
 ---
 
 # 169 — Nyújtó session — vezetett időzítős élő nézet, napló, MET-kalória
@@ -30,38 +30,38 @@ pihenő-időzítővel; a draft helyi store-ban túléli az app-kill-t.
 
 ## Elfogadási kritériumok
 
-- [ ] Új, user-owned entitás **`StretchSession`**: `id`, `date`, `startTime` / `endTime`,
+- [x] Új, user-owned entitás **`StretchSession`**: `id`, `date`, `startTime` / `endTime`,
       `durationMinutes` (> 0; alapból a mért idő, kézzel felülírható), `stretchPlanId` (opcionális →
       `StretchPlan`; `null` = ad-hoc), `workoutSessionId` (opcionális → `WorkoutSession`; a
       [[170-eroesito-sablonhoz-csatolt-nyujtas]] tölti), `notes`, `deleted`, audit.
       Nested **`StretchSessionItem`**: `id`, `stretchExerciseId` (opcionális), snapshot `stretchName` /
       `stretchCategory`, `orderIndex`, `holdSeconds`, `perSide`, `repetitions`, `completed` (boolean).
       Nested aggregate PUT, sync delta, helyi séma, outbox.
-- [ ] **Élő, vezetett nézet:** a sablon tételei sorban. Tételenként visszaszámláló (`holdSeconds`).
+- [x] **Élő, vezetett nézet:** a sablon tételei sorban. Tételenként visszaszámláló (`holdSeconds`).
       `perSide`-nál „Bal” → „Jobb” fázis, `repetitions`-szer ismételve. Fázisok között rövid
       átállási visszaszámlálás (konstans, pl. 5 mp). Fázisváltáskor és a végén haptic + hang (a Rest
       Timer mintájára). Képernyő-ébrentartás a session alatt.
       Vezérlők (thumb-zone): Szünet / Folytatás, Kihagyás (a tétel `completed = false`), Vissza,
       Befejezés. A kijelzőn a gyakorlat neve, leírása, az oldal, a hátralévő idő, valamint a
       „következő: …” előnézet.
-- [ ] **Draft-tartósság:** az aktív nyújtó session állapota (aktuális tétel / fázis / hátralévő idő)
+- [x] **Draft-tartósság:** az aktív nyújtó session állapota (aktuális tétel / fázis / hátralévő idő)
       helyi store-ban, app-kill vagy háttér után helyreáll. Ilyenkor szüneteltetve indul, nem
       fut tovább „láthatatlanul”. Egyszerre legfeljebb egy aktív nyújtó draft lehet; az erősítő
       drafttól független.
-- [ ] **Indítási pontok:** az Edzésnapló „Terv indítása…” action sheetje a nyújtó sablonokat is
+- [x] **Indítási pontok:** az Edzésnapló „Terv indítása…” action sheetje a nyújtó sablonokat is
       felkínálja külön csoportban („Nyújtás · <név>”). A heti nézet mai sorában, `STRETCH`
       felülírásnál „Nyújtás indítása” gomb. Ad-hoc „Új nyújtás” (üres session + nyújtó picker).
-- [ ] **Napló:** az Edzésnapló lista időrendben összefésülve a nyújtó sessionöket is mutatja,
+- [x] **Napló:** az Edzésnapló lista időrendben összefésülve a nyújtó sessionöket is mutatja,
       megkülönböztető jelöléssel („Nyújtás · <sablon>”, időtartam, kcal). Szerkeszthető és törölhető
       (soft delete; nem szinkronizált draft → hard remove + outbox purge).
-- [ ] **Terhelés:** a nyújtó session **nem** terhelő nap. A `training-load.ts` `rest`-je változatlan
+- [x] **Terhelés:** a nyújtó session **nem** terhelő nap. A `training-load.ts` `rest`-je változatlan
       (csak mászás és erősítő edzés tör pihenőt). A heti nézet múltbeli soraiban „Nyújtás” jelvény
       jelenik meg, a „Pihenő” jelvény megmarad mellette.
-- [ ] **Kalória:** nettó MET **1.3** (bruttó 2.3 = Compendium, enyhe nyújtás, − 1 nyugalmi, a
+- [x] **Kalória:** nettó MET **1.3** (bruttó 2.3 = Compendium, enyhe nyújtás, − 1 nyugalmi, a
       röplabdánál bevezetett és a [[164-met-brutto-netto-dupla-szamolas]] irányába mutató nettó
       konvenció szerint): `kcal = 1.3 × m × durationMinutes / 60`. Beleszámít az aznapi
       `activityExtraKcal`-ba. A MET-tábla a [[Tápérték kalkulátor]]ban is szerepel.
-- [ ] Specek: [[Edzésnapló]] (új „Nyújtó session” szakasz vagy saját subfeature-spec, ha túl nagy),
+- [x] Specek: [[Edzésnapló]] (új „Nyújtó session” szakasz vagy saját subfeature-spec, ha túl nagy),
       [[Heti terv]] (jelvény, indítás), [[Tápérték kalkulátor]] (MET); `#### Backend-offline`.
 
 ## Terv / döntési napló
@@ -165,8 +165,21 @@ Várható verziók (commit előtt újraellenőrizni): Flyway `V59`, `SCHEMA_V54`
       [[Tápérték kalkulátor]] (MET);
     - gate, status, archiválás.
 
+- 2026-10-17 — Implementáláskor: a heti „Nyújtás” jelvény a heti nézet saját napcellájából számol (`DayCell.stretches`),
+  nem a `training-load.ts` `DayLoad`-jából — így a terhelés-szabály kódja (pihenőnap, figyelmeztetések) egyáltalán
+  nem változott, a „nyújtás nem terhelő nap” szabály szerkezetileg garantált.
+- 2026-10-17 — Implementáláskor: a sablonból indított élő nézetben is lehet nyújtást hozzáadni (nem csak ad-hoc
+  módban); a terv-gyorsindító előrejelzése is megkapja a nyújtó sablonokat, hogy a mai `STRETCH` felülírást ugyanúgy
+  lássa, mint a heti nézet.
+- 2026-10-17 — Implementáláskor: a Kezdőlap „Mai edzések” widgetje is kapott „Nyújtás” sort (`edzes.nyujtas` flaggel).
+
 ## Lezáráskor (on-done)
 
-- Frissített specek: [[Edzésnapló]] — …
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — #169 nyújtó session
-- Kód: `workout` (backend), `pages/workout/stretch/` (új), `training-load.ts`, local schema, outbox
+- Frissített specek: új [[Nyújtás]] subfeature-spec (session, élő nézet, piszkozat, napló, kcal, Backend-offline,
+  Backend); [[Edzés]] (subfeature lista), [[Edzésnapló]] (lista, „Terv indítása…”), [[Heti terv]] (mai indítás,
+  jelvény), [[Tápérték kalkulátor]] (MET 1.3), [[Kezdőlap]] (widget-sor).
+- `IMPLEMENTATION_STATUS.md` sor: 2026-10-17 — #169 nyújtó session
+- Kód: `hu.bumler.lm2.workout.StretchSession*`, `V59__stretch_session.sql`, `pages/workout/stretch/`,
+  `core/data/stretch-session.repository.ts`, `core/data/stretch-draft.service.ts`, `shared/alert-tone.ts`,
+  `shared/screen-wake-lock.ts`, `core/data/activity-kcal.ts` + fogyasztói, `pages/workout/log/` (lista,
+  gyorsindító), `weekly-plan/`, storage / sync / outbox

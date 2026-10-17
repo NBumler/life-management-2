@@ -1,8 +1,6 @@
 import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, WritableSignal, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { Capacitor } from '@capacitor/core';
-import { Haptics, NotificationType } from '@capacitor/haptics';
 import {
   ActionSheetController,
   AlertController,
@@ -46,6 +44,7 @@ import { WorkoutSessionRepository } from '../../../core/data/workout-session.rep
 import { uuidV4 } from '../../../core/sync/uuid';
 import { formatTargetRange, parseTargetRange, targetRangePrefill } from '../../../shared/target-range';
 import { WorkoutExerciseSaveItem, WorkoutSessionDraft } from '../../../core/storage/storage-backend';
+import { AlertTone } from '../../../shared/alert-tone';
 import { today } from '../../../shared/local-date';
 import { ExercisePickResult, ExercisePickerComponent } from '../../../shared/exercise-picker/exercise-picker.component';
 import {
@@ -183,8 +182,8 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
   private date = today();
   private planId: string | null = null;
   private tickHandle: ReturnType<typeof setInterval> | undefined;
-  /** One reused WebAudio context for the rest-timer beep — recreating it per expiry can exhaust the browser's hardware-context pool on a long session. */
-  private audioContext: AudioContext | null = null;
+  /** The rest-timer alarm (haptic + beep, one reused AudioContext — `shared/alert-tone.ts`). */
+  private readonly alertTone = new AlertTone();
 
   readonly workoutType = signal<WorkoutSession.WorkoutTypeEnum>(WorkoutSession.WorkoutTypeEnum.GeneralWeights);
   readonly title = signal<string | null>(null);
@@ -252,8 +251,7 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
     if (this.tickHandle !== undefined) {
       clearInterval(this.tickHandle);
     }
-    void this.audioContext?.close().catch(() => undefined);
-    this.audioContext = null;
+    this.alertTone.dispose();
   }
 
   private tick(): void {
@@ -540,34 +538,7 @@ export class ActiveWorkoutPage implements OnInit, OnDestroy {
   }
 
   private fireRestAlarm(): void {
-    if (Capacitor.isNativePlatform()) {
-      void Haptics.notification({ type: NotificationType.Success }).catch(() => undefined);
-    }
-    this.beep();
-  }
-
-  /** Short WebAudio tone — works in the browser and the native webview; silently no-ops if unavailable. */
-  private beep(): void {
-    try {
-      const Ctor = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-      if (Ctor === undefined) {
-        return;
-      }
-      if (this.audioContext === null || this.audioContext.state === 'closed') {
-        this.audioContext = new Ctor();
-      }
-      const ctx = this.audioContext;
-      void ctx.resume().catch(() => undefined);
-      const oscillator = ctx.createOscillator();
-      const gain = ctx.createGain();
-      oscillator.frequency.value = 880;
-      gain.gain.value = 0.1;
-      oscillator.connect(gain).connect(ctx.destination);
-      oscillator.start();
-      oscillator.stop(ctx.currentTime + 0.15);
-    } catch {
-      // no audio in this environment — the haptic (native) is enough
-    }
+    this.alertTone.fire();
   }
 
   // ---- PR badges -----------------------------------------------------------------------------

@@ -24,6 +24,7 @@ export type OutboxEntityType =
   | 'WorkoutSession'
   | 'WorkoutPlan'
   | 'StretchPlan'
+  | 'StretchSession'
   | 'WeeklyPlan'
   | 'SwimLog'
   | 'BikeRideLog'

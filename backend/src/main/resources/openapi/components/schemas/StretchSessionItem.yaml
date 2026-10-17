@@ -1,0 +1,74 @@
+type: object
+description: >-
+  documentation/Subfeatures/Nyújtás.md (backlog/169) — one stretch of a logged session. `stretchName` /
+  `stretchCategory` are a snapshot (category values match StretchExercise.yaml, kept inline);
+  `stretchExerciseId` is a soft link (null for a pure snapshot). `completed` = it was held to the end
+  (a skipped stretch is false). Only ever saved nested inside a StretchSession, but its own sync row.
+required:
+  - id
+  - sessionId
+  - stretchName
+  - stretchCategory
+  - orderIndex
+  - holdSeconds
+  - perSide
+  - repetitions
+  - completed
+  - deleted
+properties:
+  id:
+    type: string
+    format: uuid
+  sessionId:
+    type: string
+    format: uuid
+  stretchExerciseId:
+    type: string
+    format: uuid
+    nullable: true
+  stretchName:
+    type: string
+    minLength: 1
+  stretchCategory:
+    type: string
+    enum:
+      - CHEST
+      - BACK
+      - LEGS
+      - SHOULDERS
+      - BICEPS
+      - TRICEPS
+      - ABS
+      - LOWER_BACK
+      - OBLIQUES
+      - FOREARM_FINGERS
+      - FULL_BODY
+      - HIPS
+      - NECK
+  orderIndex:
+    type: integer
+  holdSeconds:
+    type: integer
+    minimum: 1
+  perSide:
+    type: boolean
+  repetitions:
+    type: integer
+    minimum: 1
+  completed:
+    type: boolean
+  deleted:
+    type: boolean
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

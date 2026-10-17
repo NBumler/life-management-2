@@ -19,6 +19,7 @@ import { StoredFoodsService } from '../../api/api/storedFoods.service';
 import { SwimLogsService } from '../../api/api/swimLogs.service';
 import { StretchExercisesService } from '../../api/api/stretchExercises.service';
 import { StretchPlansService } from '../../api/api/stretchPlans.service';
+import { StretchSessionsService } from '../../api/api/stretchSessions.service';
 import { VolleyballLogsService } from '../../api/api/volleyballLogs.service';
 import { BikeRideLogsService } from '../../api/api/bikeRideLogs.service';
 import { RecurringExpensesService } from '../../api/api/recurringExpenses.service';
@@ -58,6 +59,7 @@ import { StoredFood } from '../../api/model/storedFood';
 import { SwimLog } from '../../api/model/swimLog';
 import { StretchExercise } from '../../api/model/stretchExercise';
 import { StretchPlan } from '../../api/model/stretchPlan';
+import { StretchSession } from '../../api/model/stretchSession';
 import { VolleyballLog } from '../../api/model/volleyballLog';
 import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { RecurringExpense } from '../../api/model/recurringExpense';
@@ -98,6 +100,7 @@ import {
   WeeklyPlanDraft,
   WorkoutPlanDraft,
   StretchPlanDraft,
+  StretchSessionDraft,
   WorkoutSessionDraft,
   ClimbingSessionDraft,
   buildShoppingListCompleteRequestPayload,
@@ -117,6 +120,7 @@ export class HttpStorageBackend implements StorageBackend {
   private readonly exercisesApi = inject(ExercisesService);
   private readonly stretchExercisesApi = inject(StretchExercisesService);
   private readonly stretchPlansApi = inject(StretchPlansService);
+  private readonly stretchSessionsApi = inject(StretchSessionsService);
   private readonly householdRoomsApi = inject(HouseholdRoomsService);
   private readonly householdTasksApi = inject(HouseholdTasksService);
   private readonly eventsApi = inject(EventsService);
@@ -654,6 +658,35 @@ export class HttpStorageBackend implements StorageBackend {
 
   deleteStretchPlan(id: string): Promise<StretchPlan> {
     return firstValueFrom(this.stretchPlansApi.deleteStretchPlan(id));
+  }
+
+  listStretchSessions(): Promise<StretchSession[]> {
+    return firstValueFrom(this.stretchSessionsApi.listStretchSessions());
+  }
+
+  getStretchSession(id: string): Promise<StretchSession> {
+    return firstValueFrom(this.stretchSessionsApi.getStretchSession(id));
+  }
+
+  /** POST with an existing id is an idempotent upsert server-side, so this covers both create and update. */
+  saveStretchSession(draft: StretchSessionDraft): Promise<StretchSession> {
+    const dto: StretchSession = {
+      id: draft.id,
+      date: draft.date,
+      startTime: draft.startTime,
+      endTime: draft.endTime,
+      durationMinutes: draft.durationMinutes,
+      stretchPlanId: draft.stretchPlanId,
+      workoutSessionId: draft.workoutSessionId,
+      notes: draft.notes,
+      deleted: false,
+      items: draft.items.map((item) => ({ ...item, sessionId: draft.id, deleted: false })),
+    };
+    return firstValueFrom(this.stretchSessionsApi.createStretchSession(dto));
+  }
+
+  deleteStretchSession(id: string): Promise<StretchSession> {
+    return firstValueFrom(this.stretchSessionsApi.deleteStretchSession(id));
   }
 
   listWeeklyPlans(): Promise<WeeklyPlan[]> {

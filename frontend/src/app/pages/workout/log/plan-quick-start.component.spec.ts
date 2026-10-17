@@ -11,6 +11,7 @@ import { WorkoutSession } from '../../../api/model/workoutSession';
 import { CurrentDayService } from '../../../core/config/current-day.service';
 import { CalendarEventRepository } from '../../../core/data/calendar-event.repository';
 import { ClimbingSessionRepository } from '../../../core/data/climbing-session.repository';
+import { StretchPlanRepository } from '../../../core/data/stretch-plan.repository';
 import { WeeklyPlanRepository } from '../../../core/data/weekly-plan.repository';
 import { WorkoutPlanRepository } from '../../../core/data/workout-plan.repository';
 import { WorkoutSessionRepository } from '../../../core/data/workout-session.repository';
@@ -59,6 +60,7 @@ describe('PlanQuickStartComponent (backlog/144 forecast)', () => {
         { provide: ClimbingSessionRepository, useValue: store(climbs) },
         { provide: CalendarEventRepository, useValue: store(events) },
         { provide: WeeklyPlanRepository, useValue: store(weeks) },
+        { provide: StretchPlanRepository, useValue: { ...store(signal([])), activePlans: () => [] } },
       ],
     }).compileComponents();
     fixture = TestBed.createComponent(PlanQuickStartComponent);

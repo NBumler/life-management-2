@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-10-17
-verifikalt_commit: 5ab9766
+verifikalt_commit: b0c6d57
 ---
 
 # Edzésnapló
@@ -11,7 +11,7 @@ verifikalt_commit: 5ab9766
 |---|---|
 | **Státusz** | `Kész` |
 | **Szülő** | [[Edzés]] |
-| **Kapcsolódó** | [[Gyakorlat]], [[Heti terv]], [[Tápérték kalkulátor]], [[Profile]], [[Szinkronizációs központ]], [[Backend-offline first]] |
+| **Kapcsolódó** | [[Gyakorlat]], [[Heti terv]], [[Nyújtás]], [[Tápérték kalkulátor]], [[Profile]], [[Szinkronizációs központ]], [[Backend-offline first]] |
 
 ### Jelenlegi működés
 
@@ -151,7 +151,7 @@ PR típusok (badge a szett mellett): számított **1RM** megdöntés; **max súl
      - **„Mászónap”** — ma rögzített vagy tervezett mászás; „legfeljebb rövid törzs / prehab edzés javasolt”.
      - **„Pihenőnap”** — „N terhelő nap után” (a terhelő blokk elérte a limitet), „kézi beállítás”, vagy „nincs rotációban lévő aktív sablon” (minden aktív sablon rotáción kívüli, `backlog/165`).
   2. **„Következő”** — ha ma nincs indítható javaslat: a következő előrejelzett edzés sablonja, napja és dátuma (14 napon belül).
-  3. **„Terv indítása…”** — action sheet minden aktív sablonnal, a rotáción kívüliekkel is ([[Heti terv]] `inRotation`, `backlog/165`) (`goalLabel`-csoportok ábécérendben „Csoport · Név” formában, a címke nélküliek a végén); tapra indul — az előrejelzéstől függetlenül bármelyik sablon indítható.
+  3. **„Terv indítása…”** — action sheet minden aktív sablonnal, a rotáción kívüliekkel is ([[Heti terv]] `inRotation`, `backlog/165`) (`goalLabel`-csoportok ábécérendben „Csoport · Név” formában, a címke nélküliek a végén); tapra indul — az előrejelzéstől függetlenül bármelyik sablon indítható. Utánuk az aktív nyújtó sablonok „Nyújtás · <név>” formában ([[Nyújtás]], `backlog/169`) — ezek a nyújtó élő nézetet nyitják. Ha a mai nap nyújtó felülírás ([[Heti terv]] `STRETCH`), a mai sor „Nyújtás: <sablon>” és egy „Nyújtás indítása” gomb.
 
   A „ma” a `CurrentDayService` jelzése (`core/config/current-day.service.ts`): előtérbe kerüléskor és percenként újraolvasva, így a nyitva hagyott gyorsindító éjfélkor az új napra vált.
 
@@ -170,7 +170,7 @@ Tervezett (`backlog/055-edzesnaplo-statisztika-felulet-1rm-max-suly-gorbe-heti-v
 
 - Belépés: [[Edzés]] tab → Edzésnapló (dashboard / lista).
 - Flow: Dashboard → Új edzés / Mai javaslat / Terv indítása → Active Workout (vagy utólagos form) → gyakorlat modal → szettek → Befejezés → summary / dashboard frissülés.
-- **Lista:** időrend (újabb elöl); soron: dátum, cím vagy típus, időtartam, megjelenített kcal (utility). A lista tetején a [[Heti terv]] **terhelés-figyelmeztetései** (`backlog/138`: nincs pihenőnap / sok ujjterhelés / ma már másztál / sok mászás a héten) nem blokkoló sávként — az edzés indítása ettől függetlenül szabad.
+- **Lista:** időrend (újabb nap elöl); soron: dátum, cím vagy típus, időtartam, megjelenített kcal (utility). A nyújtó sessionök ([[Nyújtás]], `backlog/169`) ugyanebben a listában, „Nyújtás · <sablon>” sorral; a lista CTA-i között „Új nyújtás” (félbehagyott nyújtásnál „Nyújtás folytatása”). A lista tetején a [[Heti terv]] **terhelés-figyelmeztetései** (`backlog/138`: nincs pihenőnap / sok ujjterhelés / ma már másztál / sok mászás a héten) nem blokkoló sávként — az edzés indítása ettől függetlenül szabad.
 - **Gyakorlat picker:** `ion-searchbar` + `ExerciseCategory` chipek + Kedvencek; ad-hoc létrehozás. A `<ion-modal>`-ben megjelenő `app-exercise-picker` a modal **teljes magasságát** kitölti (`:host` a megosztott `ion-modal-host-fill` mixin — `shared/styles/_ion-modal-host.scss`, `backlog/117` — flex-oszlop, `position: absolute; inset: 0`), így a találati lista a teljes rendelkezésre álló teret használja, nem egy-két sorra zsugorodik. Ugyanezt a mintát használja az [[Étkezés]] tétel-szerkesztő modalja is.
 - **Szettek:** gyakorlatonként egy szett-táblázat; `+ Új szett`; előző szett másolása; numerikus billentyűzet autofókusz. Az Active Workout gyors-növelő gombjai (`+2.5 kg` / `+5 kg` súlyos, `+1 ism.` repses gyakorlatnál) **szettenként egy kompakt sorban, a szett mezői alatt** vannak, így a megnövelt érték mindig látszik; a szett törlés (✕) a sor jobb szélén. Az utólagos formban nincsenek gyors-növelő gombok (az értéket úgyis begépeli a felhasználó).
 - **Szett-táblázat elrendezése** (sablon-szerkesztő, utólagos form és Active Workout egyaránt, közös `shared/styles/_set-row.scss` mixin + `setGridColumns()` a `workout-fields.ts`-ben): gyakorlatonként **egyszer** egy oszlopfejléc (rövid mezőnév + mértékegység, pl. „Súly / kg”), alatta szettenként **egy sor** keretes, label nélküli inputokkal pontosan a saját oszlopuk alatt — a `kind` szerint 1–4 számoszlop, így ~360 px-en sem tördel. Az első oszlop a sorszám + a szett **jelvénye**: a szett-típus rövid betűje (M = Munka, B = Bemelegítő, D = Dropset, R = Rest-pause, K = Kifáradásig), egyoldali szettnél mellette ◀ (bal) / ▶ (jobb), és ha van RPE, alatta kicsiben a szám (pl. „M◀” / „8.5”). A jelvény tapja a **szett-beállítások popovert** nyitja (`set-options-popover.component.ts`, mindhárom szerkesztőben közös): teljes nevű típus (rádiógombok), Oldal (Mindkettő / Bal / Jobb szegmens), RPE (– / 6 … 10, 0,5-ös lépés; a sablon-szerkesztőben „Cél RPE”). Minden választás azonnal érvényesül; a popover érintésre a háttérben zárul. Szett-oszlop az oldalnak és az RPE-nek nincs (a ~360 px-es táblázat nem bírná).

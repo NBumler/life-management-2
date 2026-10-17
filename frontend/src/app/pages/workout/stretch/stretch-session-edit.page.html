@@ -1,0 +1,85 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/workout/log"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ 'WORKOUT.STRETCH_SESSION.EDIT_TITLE' | translate }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button [strong]="true" [disabled]="!valid()" (click)="save()">{{ 'COMMON.SAVE' | translate }}</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-list>
+    @if (planName(); as name) {
+      <ion-item lines="none">
+        <ion-note>{{ 'WORKOUT.STRETCH_SESSION.FROM_PLAN' | translate: { name: name } }}</ion-note>
+      </ion-item>
+    }
+    <ion-item>
+      <ion-input
+        type="date"
+        [label]="'WORKOUT.STRETCH_SESSION.FIELD_DATE' | translate"
+        label-placement="stacked"
+        [value]="date()"
+        (ionInput)="date.set($any($event.target).value ?? '')"
+      ></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-input
+        type="time"
+        [label]="'WORKOUT.STRETCH_SESSION.FIELD_START' | translate"
+        label-placement="stacked"
+        [value]="startTime()"
+        (ionInput)="startTime.set($any($event.target).value ?? '')"
+      ></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-input
+        type="number"
+        inputmode="numeric"
+        min="1"
+        [max]="maxDuration"
+        [label]="'WORKOUT.STRETCH_SESSION.FIELD_DURATION' | translate"
+        label-placement="stacked"
+        [value]="durationMinutes()"
+        (ionInput)="setDuration($any($event.target).value)"
+      ></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-textarea
+        [label]="'WORKOUT.PLAN.FIELD_NOTES' | translate"
+        label-placement="stacked"
+        [autoGrow]="true"
+        [value]="notes()"
+        (ionInput)="notes.set($any($event.target).value ?? '')"
+      ></ion-textarea>
+    </ion-item>
+  </ion-list>
+
+  @if (rows().length > 0) {
+    <ion-list>
+      <ion-list-header>
+        <ion-label>{{ 'WORKOUT.STRETCH_SESSION.ITEMS' | translate }}</ion-label>
+      </ion-list-header>
+      @for (row of rows(); track row.item.id) {
+        <ion-item>
+          <ion-toggle [checked]="row.completed()" (ionChange)="row.completed.set($any($event.target).checked)">
+            {{ row.item.stretchName }}
+            <ion-note>
+              · {{ row.item.holdSeconds }} mp
+              @if (row.item.perSide) {
+                · {{ 'WORKOUT.STRETCH_PLAN.PER_SIDE_SHORT' | translate }}
+              }
+            </ion-note>
+          </ion-toggle>
+        </ion-item>
+      }
+    </ion-list>
+  }
+
+  <div class="ion-padding">
+    <ion-button expand="block" fill="clear" color="danger" (click)="delete()">{{ 'COMMON.DELETE' | translate }}</ion-button>
+  </div>
+</ion-content>

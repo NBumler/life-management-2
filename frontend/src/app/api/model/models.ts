@@ -59,6 +59,8 @@ export * from './storedFood';
 export * from './stretchExercise';
 export * from './stretchPlan';
 export * from './stretchPlanItem';
+export * from './stretchSession';
+export * from './stretchSessionItem';
 export * from './swimLog';
 export * from './syncChangeItem';
 export * from './syncChangesResponse';
