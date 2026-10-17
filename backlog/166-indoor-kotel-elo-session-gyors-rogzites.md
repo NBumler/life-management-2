@@ -93,6 +93,66 @@ kísérletet.
 - **Fokozat-skála kanonikus alakja** — a gombok a mátrix kanonikus jelölését használják (pl. UIAA
   `VI-`), hogy a parser egyértelműen, `VALID`-ként ismerje fel.
 
+### Implementációs terv (2026-10-17)
+
+Tisztán frontend; backend / OpenAPI / Flyway / natív SQLite / outbox-séma érintetlen.
+
+1. **Fokozatlista helper** — `shared/climbing/climbing-grade-matrix.ts`:
+   `ropeQuickGradeRows(scale: 'FRENCH' | 'UIAA' | 'YDS'): string[][]` (pure, unit-tesztelt).
+   - Forrás: `CLIMBING_GRADE_MATRIX[scale]` kulcsai, **index szerint rendezve** (stabil, a matrix
+     sorrendjével azonos index esetén). Figyelem: a JS objektum az egész-szerű kulcsokat (`'3'`, `'4'`,
+     `'5'`) előre veszi, ezért nem lehet a beszúrási sorrendre hagyatkozni.
+   - A francia csupasz `3` / `4` / `5` alias (a `3b` / `4b` / `5a` mellett) kimarad, hogy ne legyen
+     duplikált gomb.
+   - Sorokra bontás fő fok szerint: Francia → vezető számjegy (`6a … 6c+`); UIAA → a római alap
+     (`VI- VI VI+`); YDS → `5.4 … 5.9` egy sor, utána `5.10a–d`, `5.11a–d`, ….
+   - Minden címke a parser szerint `VALID` és a mátrix szerinti indexre old fel — spec-teszt
+     mindhárom skála teljes listájára (`parseGrade(label, 'ROPE')`).
+2. **Rope oldal állapot** — `indoor-rope-session-edit.page.ts`:
+   - `quickScale = signal<'FRENCH' | 'UIAA' | 'YDS'>('FRENCH')`,
+     `quickSafety = signal<SafetyStyleEnum>(…)`: default `LEAD`, de ha a terem
+     `availableSafetyStyles` szűkít, a `safetyStyleOptions()` első eleme; a segment is csak ezeket
+     kínálja (egy opciónál a segment rejtett).
+   - `quickRows = computed(() => ropeQuickGradeRows(this.quickScale()))`.
+   - `gradeCounts = computed(...)` (az `attemptsRevision`-re is figyel, mint a boulder `bandCounts`):
+     `normalizeGradeInput(row.userRawInput(), 'ROPE')` → darab.
+   - `quickRecord(grade: string)`: terem nélkül no-op; `emptyRow()` +
+     `userRawInput = grade`, `routeName = \`${gym.name} ${attempts().length + 1}\``,
+     `isSuccess = true`, `safetyStyle = quickSafety()`; hozzáfűzés, `touchAttempts()`,
+     `Haptics.impact(Light)`, `live.autosave()` — a boulder `quickRecord` tükre.
+     `lengthInMeters` null marad → a meglévő `resolveLength()` a falmagasságot adja.
+3. **Skála / biztosítás helyreállítása app-kill után** — javaslat: **a draftból levezetni**, nem
+   új mezőt perzisztálni. `resume()` után: `quickSafety` = az utolsó kísérlet `safetyStyle`-ja,
+   `quickScale` = az utolsó `VALID` parse-ú kísérlet skálája (`parseGrade(...).scale`), ha nincs →
+   default. Így a `ClimbingLiveDraft` / `ClimbingLiveSessionService` / autosave-diff érintetlen.
+   Korlát: ha valaki átvált, de még nem koppint, és közben megölik az appot, a váltás elveszik —
+   ez elfogadhatónak tűnik (alternatíva: opcionális `quick?: { scale, safetyStyle }` mező a
+   `ClimbingLiveDraft`-ba + az autosave-diff kiterjesztése).
+4. **Template** — `indoor-rope-session-edit.page.html`, a kísérletek fejléce fölött,
+   `@if (live.isLive && !live.summary())` (mint bouldernél):
+   - cím `WORKOUT.CLIMBING.LIVE.QUICK_TITLE`;
+   - két `ion-segment` egymás alatt (vagy kis kijelzőn egy sorban, ha elfér): Francia / UIAA / YDS és
+     Toprope / Lead (meglévő `WORKOUT.CLIMBING.SAFETY.*` címkék);
+   - terem nélkül `ion-note` figyelmeztetés (új kulcs `QUICK_NEEDS_ROPE_GYM` — a meglévő
+     `QUICK_NEEDS_GYM` színsávot említ), a rács ilyenkor rejtett;
+   - rács: soronként flex-wrap kis `ion-button`-ok (`fill="outline"`, `size="small"`), gombon a
+     fokozat + > 0 esetén a darabszám badge; `data-grade` attribútum a tesztekhez.
+5. **Stílus** — a boulder `quick-grid` / `quick-count` stílusainak átvétele; a gombok egyenlő
+   minimális szélességűek, hogy oszlopba rendeződjenek (360 px-en egy francia sor = 6 gomb).
+6. **i18n** — `hu.json` / `en.json`: `LIVE.QUICK_SCALE` („Skála"), `LIVE.QUICK_SAFETY`
+   („Biztosítás"), `LIVE.QUICK_NEEDS_ROPE_GYM`, skálanevek (`FRENCH` / `UIAA` / `YDS` — ha még nincs
+   kulcsuk).
+7. **Tesztek** — `climbing-grade-matrix.spec.ts` (sorrend, alias-kihagyás, sorbontás, minden címke
+   VALID); `indoor-rope-session-edit.page.spec.ts`: koppintás → kísérlet (`Terem 1`, `Terem 2`,
+   fokozat, siker, biztosítás, hossz = falmagasság); skála- és biztosításváltás csak az újakat
+   érinti; terem nélküli no-op; darabszám; resume utáni levezetett skála / biztosítás; a rács csak
+   élő, nem-összegző módban látszik.
+8. **Kézi ellenőrzés** — böngészőben 360 px (Galaxy A55) élő köteles session: rács-elrendezés,
+   váltások, kártya-szerkesztés, összegző → mentés.
+9. **Lezárás** — zöld gate (`test:ci`, `lint`, `build`, `verify:outbox`), spec-frissítés
+   ([[Indoor köteles napló]] UI/UX, [[Mászónapló]] élő session bekezdés, [[Nehézségi szint skálája]]
+   megjegyzés a gyors-rács fokozatlistáról), `IMPLEMENTATION_STATUS.md` sor, jegy archiválás.
+
 ## Lezáráskor (on-done)
 
 - Frissített specek: [[…]] — melyik szakasz, egy sor mit változott
