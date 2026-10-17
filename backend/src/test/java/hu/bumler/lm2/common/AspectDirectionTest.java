@@ -8,8 +8,8 @@ import java.nio.file.Path;
 
 import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * backlog/068 — parity check for the compass-degree → aspect binning against
@@ -26,7 +26,7 @@ class AspectDirectionTest {
 
 		for (JsonNode row : root.get("toAspect")) {
 			double degrees = row.get("degrees").asDouble();
-			AspectDirection expected = AspectDirection.valueOf(row.get("aspect").asText());
+			AspectDirection expected = AspectDirection.valueOf(row.get("aspect").asString());
 			assertThat(AspectDirection.fromDegrees(degrees))
 					.as("%s° bins to %s", degrees, expected)
 					.isEqualTo(expected);
@@ -38,7 +38,7 @@ class AspectDirectionTest {
 		JsonNode root = new ObjectMapper().readTree(Files.readAllBytes(FIXTURE_PATH));
 
 		for (JsonNode row : root.get("centerDegrees")) {
-			AspectDirection direction = AspectDirection.valueOf(row.get("aspect").asText());
+			AspectDirection direction = AspectDirection.valueOf(row.get("aspect").asString());
 			assertThat(direction.centerDegrees()).isEqualTo(row.get("degrees").asDouble());
 		}
 	}

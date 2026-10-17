@@ -7,7 +7,7 @@ import java.security.MessageDigest;
 import org.springframework.http.MediaType;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 
 import hu.bumler.lm2.api.model.ApiError;
 import jakarta.servlet.FilterChain;

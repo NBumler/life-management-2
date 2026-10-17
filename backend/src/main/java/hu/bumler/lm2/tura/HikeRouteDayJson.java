@@ -2,9 +2,9 @@ package hu.bumler.lm2.tura;
 
 import java.util.List;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 import hu.bumler.lm2.api.model.HikeRouteDay;
 
@@ -27,7 +27,7 @@ final class HikeRouteDayJson {
 		try {
 			return objectMapper.readValue(json, new TypeReference<List<HikeRouteDay>>() {
 			});
-		} catch (JsonProcessingException e) {
+		} catch (JacksonException e) {
 			throw new IllegalStateException("Corrupt hike route days JSON", e);
 		}
 	}
@@ -39,7 +39,7 @@ final class HikeRouteDayJson {
 		}
 		try {
 			return objectMapper.writeValueAsString(days);
-		} catch (JsonProcessingException e) {
+		} catch (JacksonException e) {
 			throw new IllegalStateException("Could not serialize hike route days", e);
 		}
 	}

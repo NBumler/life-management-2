@@ -14,7 +14,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 
 import hu.bumler.lm2.TestcontainersConfiguration;
 import hu.bumler.lm2.api.model.AdminCreateUserRequest;
@@ -131,7 +131,7 @@ class HouseholdRoomIntegrationTest {
 				.perform(get("/api/sync/changes").header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
 				.andExpect(status().isOk()).andReturn();
 		String cursorBeforeDelete = objectMapper.readTree(pullBeforeDelete.getResponse().getContentAsString())
-				.get("nextCursor").asText();
+				.get("nextCursor").asString();
 
 		mockMvc.perform(delete("/api/household-rooms/" + roomId).header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
 				.andExpect(status().isOk());
@@ -150,7 +150,7 @@ class HouseholdRoomIntegrationTest {
 		String bodyAfterDelete = pullAfterDelete.getResponse().getContentAsString();
 		assertThat(bodyAfterDelete).contains(taskId.toString()).contains("\"entityType\":\"HouseholdTask\"");
 		assertThat(objectMapper.readTree(bodyAfterDelete).get("changes")).anySatisfy(change -> {
-			assertThat(change.get("id").asText()).isEqualTo(taskId.toString());
+			assertThat(change.get("id").asString()).isEqualTo(taskId.toString());
 			assertThat(change.get("deleted").asBoolean()).isTrue();
 		});
 	}

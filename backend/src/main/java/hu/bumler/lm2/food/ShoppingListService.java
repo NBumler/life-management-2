@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 
 import hu.bumler.lm2.api.model.ShoppingList;
 import hu.bumler.lm2.api.model.ShoppingListCompleteFoodEntry;

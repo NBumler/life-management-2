@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 
 import hu.bumler.lm2.api.model.CuratedRoute;
 import hu.bumler.lm2.api.model.CuratedRouteActivityType;

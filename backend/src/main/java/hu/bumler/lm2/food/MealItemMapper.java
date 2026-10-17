@@ -5,9 +5,9 @@ import java.util.List;
 
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 import hu.bumler.lm2.api.model.MealItem;
 import hu.bumler.lm2.api.model.MealItemIngredientOverride;
@@ -49,7 +49,7 @@ class MealItemMapper {
 		try {
 			return objectMapper.readValue(json, new TypeReference<List<MealItemIngredientOverride>>() {
 			});
-		} catch (JsonProcessingException e) {
+		} catch (JacksonException e) {
 			throw new IllegalStateException("Corrupt meal item ingredient overrides JSON", e);
 		}
 	}
@@ -61,7 +61,7 @@ class MealItemMapper {
 		}
 		try {
 			return objectMapper.writeValueAsString(overrides);
-		} catch (JsonProcessingException e) {
+		} catch (JacksonException e) {
 			throw new IllegalStateException("Could not serialize meal item ingredient overrides", e);
 		}
 	}

@@ -10,8 +10,8 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * documentation/Architektúra/Mennyiség mező.md: the conversion table is a single common table run
@@ -78,7 +78,7 @@ class QuantityConverterTest {
 
 	private static Map<String, BigDecimal> toMap(JsonNode node) {
 		Map<String, BigDecimal> result = new java.util.HashMap<>();
-		node.fields().forEachRemaining(entry -> result.put(entry.getKey(), new BigDecimal(entry.getValue().asText())));
+		node.properties().forEach(entry -> result.put(entry.getKey(), new BigDecimal(entry.getValue().asString())));
 		return result;
 	}
 }

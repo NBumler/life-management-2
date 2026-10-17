@@ -14,7 +14,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 
 import hu.bumler.lm2.TestcontainersConfiguration;
 import hu.bumler.lm2.api.model.AdminCreateUserRequest;
@@ -230,7 +230,7 @@ class PackingSessionIntegrationTest {
 		MvcResult firstPull = mockMvc
 				.perform(get("/api/sync/changes").header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
 				.andExpect(status().isOk()).andReturn();
-		String cursor = objectMapper.readTree(firstPull.getResponse().getContentAsString()).get("nextCursor").asText();
+		String cursor = objectMapper.readTree(firstPull.getResponse().getContentAsString()).get("nextCursor").asString();
 
 		mockMvc.perform(delete("/api/gear-items/" + gearId).header(HttpHeaders.AUTHORIZATION, "Bearer " + token)).andExpect(status().isOk());
 

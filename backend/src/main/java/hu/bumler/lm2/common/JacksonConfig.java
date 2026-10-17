@@ -1,48 +1,38 @@
 package hu.bumler.lm2.common;
 
-import java.util.List;
-
-import org.openapitools.jackson.nullable.JsonNullableModule;
+import org.openapitools.jackson.nullable.JsonNullableJackson3Module;
+import org.springframework.boot.jackson.autoconfigure.JsonMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import tools.jackson.databind.DeserializationFeature;
 
 /**
  * The generated OpenAPI models (JsonNullable<T> etc. — org.openapitools:jackson-databind-nullable)
- * are Jackson 2 (com.fasterxml.jackson.*). Spring Boot 4 defaults to a Jackson 3
- * (tools.jackson.*) ObjectMapper/HttpMessageConverter that can't see them — this is the
- * generator-vs-framework compatibility risk documentation/Architektúra/Backend.md flags as an open
- * question. Registering a Jackson 2 converter ahead of Boot's default keeps spec-first codegen
- * working without falling back to hand-written API interfaces.
+ * are generated for Jackson 3 (`useJackson3` in build.gradle.kts), so they go through Spring Boot
+ * 4's own auto-configured Jackson 3 JsonMapper / HttpMessageConverter — this class only adds what
+ * the generated models and the offline contract need on top of Boot's defaults (Boot registers any
+ * JacksonModule bean on that mapper). ISO-8601 dates (not timestamps) are already Boot's and
+ * Jackson 3's default.
  */
 @Configuration
-class JacksonConfig implements WebMvcConfigurer {
+class JacksonConfig {
 
 	@Bean
-	ObjectMapper generatedModelObjectMapper() {
-		return new ObjectMapper()
-				.registerModule(new JavaTimeModule())
-				.registerModule(new JsonNullableModule())
-				.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-				// backlog/080: an offline-first API must accept request bodies built by an older app
-				// version. When a spec change removes or renames a field (e.g. #77 folded
-				// AscentAttempt.failurePoint into notes), a still-pending outbox payload on a phone
-				// that has not app-updated yet carries the old field. Ignoring it here — rather than
-				// 500-ing on FAIL_ON_UNKNOWN_PROPERTIES — lets that write drain instead of bricking.
-				// jakarta @Valid still rejects a genuinely missing REQUIRED field, so a real typo in a
-				// required key is still caught; only extra/stale keys are silently dropped.
-				.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+	JsonNullableJackson3Module jsonNullableModule() {
+		return new JsonNullableJackson3Module();
 	}
 
-	@Override
-	public void extendMessageConverters(List<HttpMessageConverter<?>> converters) {
-		converters.add(0, new MappingJackson2HttpMessageConverter(generatedModelObjectMapper()));
+	@Bean
+	JsonMapperBuilderCustomizer offlineTolerantDeserialization() {
+		// backlog/080: an offline-first API must accept request bodies built by an older app
+		// version. When a spec change removes or renames a field (e.g. #77 folded
+		// AscentAttempt.failurePoint into notes), a still-pending outbox payload on a phone
+		// that has not app-updated yet carries the old field. Ignoring it here — rather than
+		// 500-ing on FAIL_ON_UNKNOWN_PROPERTIES — lets that write drain instead of bricking.
+		// jakarta @Valid still rejects a genuinely missing REQUIRED field, so a real typo in a
+		// required key is still caught; only extra/stale keys are silently dropped. (Jackson 3
+		// already defaults this off; pinned explicitly because the contract depends on it.)
+		return builder -> builder.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 	}
 }
