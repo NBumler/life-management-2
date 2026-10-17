@@ -1333,7 +1333,7 @@ const SCHEMA_V48_STATEMENTS: string[] = [`ALTER TABLE calendar_event ADD COLUMN 
 const SCHEMA_V49_STATEMENTS: string[] = [`ALTER TABLE weekly_plan_slot ADD COLUMN kind TEXT NOT NULL DEFAULT 'PLAN'`];
 
 /**
- * backlog/157 — documentation/Features/Röplabda napló.md: flat volleyball-session log under the Edzés tab
+ * backlog/163 — documentation/Features/Röplabda napló.md: flat volleyball-session log under the Edzés tab
  * (one row = one session); on-device tükre a backend `V55__volleyball_log.sql`-nek.
  */
 const SCHEMA_V50_STATEMENTS: string[] = [

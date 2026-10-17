@@ -17,7 +17,7 @@ describe('volleyball-metrics', () => {
       expect(volleyballKcal({ durationMinutes: 90 }, 75)).toBeCloseTo(225, 6);
     });
 
-    // backlog/157 "soha ne becsüljön felül": the self-rating must never raise the estimate.
+    // backlog/163 "soha ne becsüljön felül": the self-rating must never raise the estimate.
     it('gives the same kcal for every intensity and for none', () => {
       const none = volleyballKcal(log({ intensity: null }), 75);
       for (const intensity of Object.values(VolleyballLog.IntensityEnum)) {

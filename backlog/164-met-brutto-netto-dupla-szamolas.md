@@ -1,5 +1,5 @@
 ---
-id: 158
+id: 164
 type: change-request
 status: backlog
 title: MET naplók — bruttó MET a PAL 1.2 mellett (nyugalmi égetés dupla számolása?)
@@ -14,11 +14,11 @@ created: 2026-10-17
 closed:
 ---
 
-# 158 — MET naplók — bruttó MET a PAL 1.2 mellett (nyugalmi égetés dupla számolása?)
+# 164 — MET naplók — bruttó MET a PAL 1.2 mellett (nyugalmi égetés dupla számolása?)
 
 ## Motiváció / probléma
 
-A [[157-roplabda-naplo]] kutatása közben derült ki. A [[Tápérték kalkulátor]] a napi alapot
+A [[163-roplabda-naplo]] kutatása közben derült ki. A [[Tápérték kalkulátor]] a napi alapot
 `maintenanceKcal = BMR × 1.2` szerint számolja, erre jön rá az `activityExtraKcal`. Az edzésnaplók
 viszont **bruttó** MET-tel számolnak (`MET × m × óra`), ami a nyugalmi 1 MET-et is tartalmazza.
 Edzésóránként így kb. `1 × m` kcal (75 kg-nál ~75 kcal/óra) valószínűleg kétszer számolódik.
@@ -26,7 +26,7 @@ Edzésóránként így kb. `1 × m` kcal (75 kg-nál ~75 kcal/óra) valószínű
 ## Jelenlegi működés
 
 [[Tápérték kalkulátor]] „Edzéskalória — univerzális MET”: `kcal = MET × m × durationMinutes / 60`,
-bruttó MET-ekkel (úszás, bicikli, erőedzés, mászás). A röplabda (157) már nettó MET-tel számol.
+bruttó MET-ekkel (úszás, bicikli, erőedzés, mászás). A röplabda (163) már nettó MET-tel számol.
 
 ## Elfogadási kritériumok
 

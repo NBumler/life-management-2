@@ -14,7 +14,7 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
-- **2026-10-17 — #157** Röplabda napló: új Edzés-szegmens (`edzes.roplabda`), lapos `VolleyballLog` (pályán töltött
+- **2026-10-17 — #163** Röplabda napló: új Edzés-szegmens (`edzes.roplabda`), lapos `VolleyballLog` (pályán töltött
   idő 1–240 perc, opcionális intenzitás / szettszám / megjegyzés csak statisztika). Kalória szándékosan alulbecslő:
   egyetlen fix nettó MET 2.0 (Compendium legalacsonyabb röplabda-érték − nyugalmi 1), intenzitástól független.
   `V55`, helyi `SCHEMA_V50`, outbox payload v20; Kezdőlap „Mai edzések” sor.

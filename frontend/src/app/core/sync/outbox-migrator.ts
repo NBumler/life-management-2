@@ -300,7 +300,7 @@ const STEPS_BY_VERSION: Readonly<Record<number, VersionSteps>> = {
   17: { default: identityStep, overrides: { WeeklyPlan: addWeeklyPlanSlotKindDefault } },
   // backlog/156: `GymColorBand.variant` removed — a pending band write drops the key.
   18: { default: identityStep, overrides: { GymColorBand: stripGymColorBandVariant } },
-  // backlog/157: brand-new `VolleyballLog` entity — nothing to transform.
+  // backlog/163: brand-new `VolleyballLog` entity — nothing to transform.
   19: { default: identityStep },
 };
 

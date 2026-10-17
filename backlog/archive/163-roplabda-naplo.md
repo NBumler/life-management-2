@@ -1,5 +1,5 @@
 ---
-id: 157
+id: 163
 type: feature
 status: done
 title: Röplabda napló — nagyon óvatos (alulbecslő) MET kalória
@@ -14,7 +14,7 @@ created: 2026-10-17
 closed: 2026-10-17
 ---
 
-# 157 — Röplabda napló — nagyon óvatos (alulbecslő) MET kalória
+# 163 — Röplabda napló — nagyon óvatos (alulbecslő) MET kalória
 
 ## Motiváció / probléma
 
@@ -58,6 +58,8 @@ Nincs röplabda az appban. Rokon minta: [[Úszás napló]], [[Biciklizés napló
 
 ## Terv / döntési napló
 
+- **Átszámozás:** eredetileg #157 volt, ütközött a párhuzamosan felvett #157–#162 jegyekkel → #163. A már
+  lefuttatott `V55__volleyball_log.sql` fejléc-kommentje `backlog/157`-et említ — Flyway checksum miatt nem javítható.
 - **Egy fix MET, nincs intenzitásfüggés:** egy rossz önértékelés („kemény” egy könnyű meccsre)
   ~1,5× felülbecslést adna — ez sérti a „soha ne becsüljön felül” elvárást.
 - **Nettó MET (bruttó − 1):** a nyugalmi égetést már fedezi a `maintenanceKcal = BMR × 1.2`.
@@ -66,14 +68,14 @@ Nincs röplabda az appban. Rokon minta: [[Úszás napló]], [[Biciklizés napló
 - **Csak pályán töltött idő:** a kispad / várakozás nem számít.
 - **240 perces plafon:** egy elgépelés ne fújhassa fel a keretet.
 - Strandröplabda nincs (8.0 MET mellett túl nagy a tévedési kockázat).
-- A meglévő MET naplók bruttó vs. nettó kérdése külön jegy: [[158-met-brutto-netto-dupla-szamolas]].
+- A meglévő MET naplók bruttó vs. nettó kérdése külön jegy: [[164-met-brutto-netto-dupla-szamolas]].
 
 ## Lezáráskor (on-done)
 
 - Frissített specek: új [[Röplabda napló]] (entitás, kanonikus kcal, `#### Tudatos korlát` a kutatással);
   [[Tápérték kalkulátor]] — Röplabda MET sor; [[Edzés]] — szegmens + gyerek lista + `V55`; [[Kezdőlap]] — „Mai
   edzések” röplabda sor; [[Frontend]] — route + `edzes.roplabda` flag
-- `IMPLEMENTATION_STATUS.md` sor: 2026-10-17 — #157 Röplabda napló
+- `IMPLEMENTATION_STATUS.md` sor: 2026-10-17 — #163 Röplabda napló
 - Kód: `f5e98c3` — `hu.bumler.lm2.workout.VolleyballLog*`, `V55__volleyball_log.sql`, `VolleyballLog.yaml`;
   `pages/workout/volleyball`, `volleyball-log.repository`, `activity-kcal`, `local-rows`, `local-database` (V50),
   `sync-engine`, outbox (v20 + snapshot), `today-workouts`/`today-nutrition`/`notification-scheduler`/`meal-dashboard`, i18n

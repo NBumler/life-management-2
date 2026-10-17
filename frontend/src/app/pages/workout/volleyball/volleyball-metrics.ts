@@ -3,7 +3,7 @@
  * `core/data/activity-kcal.ts` sums `volleyballKcal` over a day for the Étkezés dashboard's
  * `activityExtraKcal`.
  *
- * backlog/157 "soha ne becsüljön felül": unlike swim / bike there is NO intensity → MET table. One
+ * backlog/163 "soha ne becsüljön felül": unlike swim / bike there is NO intensity → MET table. One
  * fixed NET MET (gross − the 1 MET resting burn already covered by `maintenanceKcal = BMR × 1.2`):
  * 2.0 net = 3.0 gross = the 2024 Compendium's lowest volleyball value (non-competitive). Measured match
  * values (≈4.5–5.5 gross) and "competitive, gym" (6.0) all sit above it, so a self-rating mistake can't

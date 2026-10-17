@@ -55,7 +55,7 @@ CRUD: lista (`deleted = false`), létrehozás, szerkesztés, törlés (soft dele
 
 #### Tudatos korlát
 
-**A kalória szándékosan alulbecsül, és nem pontos.** Kutatási háttér (backlog/157):
+**A kalória szándékosan alulbecsül, és nem pontos.** Kutatási háttér (backlog/163):
 
 - 2024 Adult Compendium of Physical Activities: nem versenyszerű röplabda 3.0, versenyszerű (terem) 6.0, strand 8.0 MET — 2–2,7× szórás.
 - Time-motion vizsgálatok: a labda az idő csak ~17–29%-ában van játékban, labdamenet ~6–8 s. A valós égetést a labdamenetek száma/hossza (≈ az ellenfél szintje) dönti el, amit az időtartam nem mutat.
