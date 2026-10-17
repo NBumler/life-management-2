@@ -16,6 +16,11 @@
  * metabolic rate for all 24 h). Charging the gross MET would double-count ~1 MET over the whole
  * session; the rest zone in particular (gross 2.0 → net 1.0) is the part that used to look
  * surprisingly large.
+ *
+ * The rest zone is only elevated while the body is still recovering (backlog/171): each boulder go /
+ * rope pitch opens a recovery window, and rest time beyond those windows decays to `REST_IDLE`. A
+ * sparse session (one go an hour) is therefore charged near the idle level, a dense one (barely off
+ * the wall) at the full rest MET — see {@link restFrequencyFactor}.
  */
 import { ClimbingDiscipline } from '../../../shared/climbing/grade-scale';
 import { netMet } from '../../../shared/net-met';
@@ -42,6 +47,9 @@ export const CLIMBING_MET = {
   /** Boulder rest: walking between problems, spotting, brushing, unlogged warm-up goes and the
    *  2–4 min of elevated cardiorespiratory recovery after each effort (backlog/130). */
   REST_BOULDER: 3.0,
+  /** Rest beyond every recovery window: standing / sitting / chatting in the gym or at the crag
+   *  (Compendium: standing quietly 1.3, standing and talking ~1.8) — backlog/171. */
+  REST_IDLE: 1.5,
   /** Applied to a following climber's *both* active seconds and active MET (Mászónapló.md — the
    *  deliberate double 0.8, ≈0.64× the leader). */
   SECOND_CLIMBER_FACTOR: 0.8,
@@ -59,6 +67,16 @@ export const BOULDER_RELATIVE_BAND = 8;
 
 /** Reference level used when the climber has no successful boulder in the look-back window (V5). */
 export const DEFAULT_BOULDER_REFERENCE_INDEX = 20;
+
+/**
+ * Mászónapló.md "Pihenő gyakorisága" (backlog/171) — minutes of elevated rest each logged effort buys:
+ * cardiorespiratory values return to baseline ~4 min after a competition boulder (elite climbers; a
+ * hobby climber recovers slower and walks to the next problem), and a rope pitch covers the climber's
+ * own recovery plus belaying a partner's equal pitch. Both equal the duration fallback per row, so a
+ * fallback-duration session is never thinned.
+ */
+export const BOULDER_RECOVERY_MINUTES_PER_GO = 5;
+export const ROPE_RECOVERY_MINUTES_PER_PITCH = 15;
 
 /** Mászónapló.md "Aktív idő" — rope active seconds per climbed metre, by safety style. */
 export const ROPE_ACTIVE_SECONDS_PER_METER: Record<ClimbingSafetyStyle, number> = {
@@ -217,9 +235,36 @@ function attemptEnergy(
   return { activeMinutes, activeKcal };
 }
 
+/** Rope efforts that each open a recovery window: a multi-pitch attempt counts its pitches. */
+function ropePitchCount(attempt: ClimbingAttemptInput): number {
+  return attempt.pitches && attempt.pitches.length > 0 ? attempt.pitches.length : 1;
+}
+
+/**
+ * Mászónapló.md "Pihenő gyakorisága" (backlog/171): the share of the rest zone still spent recovering —
+ * `min(1, efforts × window / restMinutes)`, i.e. `window / averageGap`. 1 when there is no rest.
+ */
+export function restFrequencyFactor(input: ClimbingKcalInput, restMinutes: number): number {
+  if (restMinutes <= 0) {
+    return 1;
+  }
+  const recoveryMinutes =
+    input.discipline === 'BOULDER'
+      ? input.attempts.reduce((sum, attempt) => sum + boulderGoCount(attempt), 0) * BOULDER_RECOVERY_MINUTES_PER_GO
+      : input.attempts.reduce((sum, attempt) => sum + ropePitchCount(attempt), 0) * ROPE_RECOVERY_MINUTES_PER_PITCH;
+  return Math.min(1, recoveryMinutes / restMinutes);
+}
+
+/** Gross rest MET of a session: `REST_IDLE` blended up to the discipline's rest MET by the recovery share. */
+export function restMet(input: ClimbingKcalInput, restMinutes: number): number {
+  const elevated = input.discipline === 'BOULDER' ? CLIMBING_MET.REST_BOULDER : CLIMBING_MET.REST;
+  return CLIMBING_MET.REST_IDLE + (elevated - CLIMBING_MET.REST_IDLE) * restFrequencyFactor(input, restMinutes);
+}
+
 /**
  * Mászónapló.md canonical climbing kcal: Σ per-attempt active energy + a single rest term at
- * net MET (rope `2.0 − 1.0`, boulder `3.0 − 1.0`) over `max(0, sessionDuration − Σ activeMinutes)`. Body weight `m` is the
+ * net {@link restMet} (rope up to `2.0 − 1.0`, boulder up to `3.0 − 1.0`, down to `1.5 − 1.0` for a
+ * sparse session) over `max(0, sessionDuration − Σ activeMinutes)`. Body weight `m` is the
  * CURRENT profile weight, never frozen. Returns 0 when weight is missing / non-positive.
  */
 export function climbingKcal(input: ClimbingKcalInput, bodyWeightKg: number | null): number {
@@ -238,8 +283,7 @@ export function climbingKcal(input: ClimbingKcalInput, bodyWeightKg: number | nu
   }
 
   const restMinutes = Math.max(0, resolveSessionDurationMinutes(input) - totalActiveMinutes);
-  const restMet = input.discipline === 'BOULDER' ? CLIMBING_MET.REST_BOULDER : CLIMBING_MET.REST;
-  const restKcal = netMet(restMet) * bodyWeightKg * (restMinutes / 60);
+  const restKcal = netMet(restMet(input, restMinutes)) * bodyWeightKg * (restMinutes / 60);
   return activeKcal + restKcal;
 }
 

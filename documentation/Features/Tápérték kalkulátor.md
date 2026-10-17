@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-10-17
-verifikalt_commit: fc2ba63
+verifikalt_commit: ffeb0c3
 ---
 
 # Tápérték kalkulátor
@@ -80,7 +80,7 @@ MET táblák (bruttó; részletek a napló specekben is):
 
 **Röplabda** ([[Röplabda napló]]): **egyetlen fix nettó MET 2.0** (bruttó 3.0 − nyugalmi 1; a Compendium legalacsonyabb röplabda-értéke), csak a pályán töltött idő, plafon 240 perc; az opcionális `intensity` **nem** módosítja — szándékosan alulbecslő (`#### Tudatos korlát` a specben).
 
-**Mászás** ([[Mászónapló]]): **aktív/passzív MET modell**, zónánként szintén nettó MET-tel (nem teljes session-idő × egy MET). Aktív bázis: boulder **5.8 → 9.5** a mászó 90 napos referenciaszintjéhez mért nehézség szerint (ismeretlen grade: 8.8), kötél **7.0** (másodmászó: ×0.8); rest: kötél **2.0**, boulder **3.0**; `pumpRating` az aktív MET-et módosítja; TRAD: testsúly +6 kg az aktív ágon. Aktív idő: boulder 45 s × `attemptCount`; kötél m × (25/45/60 s) safety szerint. Részletek és fallback: [[Mászónapló]].
+**Mászás** ([[Mászónapló]]): **aktív/passzív MET modell**, zónánként szintén nettó MET-tel (nem teljes session-idő × egy MET). Aktív bázis: boulder **5.8 → 9.5** a mászó 90 napos referenciaszintjéhez mért nehézség szerint (ismeretlen grade: 8.8), kötél **7.0** (másodmászó: ×0.8); rest: kötél **2.0**, boulder **3.0**, ritka mászásnál a regenerációs ablakokon túl **1.5**-re ritkulva (`backlog/171`); `pumpRating` az aktív MET-et módosítja; TRAD: testsúly +6 kg az aktív ágon. Aktív idő: boulder 45 s × `attemptCount`; kötél m × (25/45/60 s) safety szerint. Részletek és fallback: [[Mászónapló]].
 
 **Erőedzés** ([[Edzésnapló]]): `GENERAL_WEIGHTS` 5.0; `HIIT_CIRCUIT` 8.0.
 

@@ -9,6 +9,8 @@ import {
   pumpMultiplier,
   resolveBoulderReferenceIndex,
   resolveSessionDurationMinutes,
+  restFrequencyFactor,
+  restMet,
 } from './climbing-metrics';
 import { RESTING_MET } from '../../../shared/net-met';
 
@@ -19,6 +21,9 @@ const BOULDER_REST_NET = CLIMBING_MET.REST_BOULDER - RESTING_MET;
 const EASY_NET = CLIMBING_MET.ACTIVE_BOULDER_EASY - RESTING_MET;
 const LIMIT_NET = CLIMBING_MET.ACTIVE_BOULDER_LIMIT - RESTING_MET;
 const GO_MIN = BOULDER_SECONDS_PER_GO / 60;
+const IDLE_NET = CLIMBING_MET.REST_IDLE - RESTING_MET;
+/** Net rest MET for a recovery share `f` (backlog/171): idle blended up to the discipline's rest MET. */
+const restNet = (elevatedNet: number, f: number): number => IDLE_NET + (elevatedNet - IDLE_NET) * f;
 
 describe('climbing-metrics', () => {
   describe('pumpMultiplier', () => {
@@ -122,7 +127,8 @@ describe('climbing-metrics', () => {
         ],
       };
       const active = EASY_NET * 70 * (GO_MIN / 60) + LIMIT_NET * 70 * ((3 * GO_MIN) / 60);
-      const rest = BOULDER_REST_NET * 70 * ((60 - 4 * GO_MIN) / 60);
+      const restMin = 60 - 4 * GO_MIN;
+      const rest = restNet(BOULDER_REST_NET, (4 * 5) / restMin) * 70 * (restMin / 60);
       expect(climbingKcal(input, 70)).toBeCloseTo(active + rest, 6);
     });
 
@@ -138,12 +144,12 @@ describe('climbing-metrics', () => {
       expect(climbingKcal(session(24, 4), 70)).toBeGreaterThan(climbingKcal(session(24, 1), 70));
     });
 
-    it('a longer boulder session burns noticeably more (2 net MET: ~76 kcal per extra 30 min at 76 kg)', () => {
+    it('a longer, still-dense boulder session burns noticeably more (2 net MET: ~76 kcal per extra 30 min at 76 kg)', () => {
       const base: ClimbingKcalInput = {
         discipline: 'BOULDER',
         totalSessionDurationMinutes: 60,
         pumpRating: null,
-        attempts: [{ isSuccess: true, absoluteDifficultyIndex: 20 }],
+        attempts: [{ isSuccess: true, absoluteDifficultyIndex: 20, attemptCount: 20 }], // 100 min of recovery windows
       };
       const delta = climbingKcal({ ...base, totalSessionDurationMinutes: 90 }, 76) - climbingKcal(base, 76);
       expect(delta).toBeCloseTo(76, 6);
@@ -191,7 +197,7 @@ describe('climbing-metrics', () => {
       expect(projectingKcal).toBeLessThan(450);
     });
 
-    it('a mostly-rest crag session is charged only ~1 net MET for the idle time', () => {
+    it('a mostly-rest crag session charges only one pitch window at net 1.0, the remaining idle time at net 0.5', () => {
       const input: ClimbingKcalInput = {
         discipline: 'ROPE',
         totalSessionDurationMinutes: 120, // 2 h at the crag…
@@ -199,7 +205,7 @@ describe('climbing-metrics', () => {
         attempts: [{ isSuccess: true, absoluteDifficultyIndex: 14, safetyStyle: 'LEAD', lengthInMeters: 20 }], // …15 min of it climbing
       };
       const activeMin = (20 * 45) / 60;
-      const rest = REST_NET * 70 * ((120 - activeMin) / 60); // net 1.0, not gross 2.0
+      const rest = (REST_NET * 15 + IDLE_NET * (120 - activeMin - 15)) * (70 / 60);
       const active = ROPE_LEAD_NET * 70 * (activeMin / 60);
       expect(climbingKcal(input, 70)).toBeCloseTo(active + rest, 6);
     });
@@ -213,7 +219,8 @@ describe('climbing-metrics', () => {
       };
       const activeMin = (20 * 45) / 60; // 15
       const active = ROPE_LEAD_NET * 70 * (activeMin / 60);
-      const rest = REST_NET * 70 * ((120 - activeMin) / 60);
+      const restMin = 120 - activeMin;
+      const rest = restNet(REST_NET, 15 / restMin) * 70 * (restMin / 60);
       expect(climbingKcal(input, 70)).toBeCloseTo(active + rest, 6);
     });
 
@@ -226,7 +233,7 @@ describe('climbing-metrics', () => {
       };
       const activeMin = (10 * 60) / 60; // 10
       const active = ROPE_LEAD_NET * (70 + 6) * (activeMin / 60);
-      const rest = REST_NET * 70 * ((60 - activeMin) / 60);
+      const rest = restNet(REST_NET, 15 / (60 - activeMin)) * 70 * ((60 - activeMin) / 60);
       expect(climbingKcal(input, 70)).toBeCloseTo(active + rest, 6);
     });
 
@@ -252,7 +259,8 @@ describe('climbing-metrics', () => {
       const active =
         ROPE_LEAD_NET * 70 * (leadMin / 60) +
         (CLIMBING_MET.ACTIVE_ROPE_LEAD * 0.8 - RESTING_MET) * 70 * (secondMin / 60);
-      const rest = REST_NET * 70 * ((100 - leadMin - secondMin) / 60);
+      const restMin = 100 - leadMin - secondMin;
+      const rest = restNet(REST_NET, (2 * 15) / restMin) * 70 * (restMin / 60); // each pitch opens a window
       expect(climbingKcal(input, 70)).toBeCloseTo(active + rest, 6);
     });
 
@@ -269,7 +277,7 @@ describe('climbing-metrics', () => {
       // fallback = 2 × 5 = 10 min; 2 goes; no history → default reference V5 (index 20)
       const active =
         (boulderActiveMet(14, 20) - RESTING_MET) * 70 * (GO_MIN / 60) + (boulderActiveMet(16, 20) - RESTING_MET) * 70 * (GO_MIN / 60);
-      const rest = BOULDER_REST_NET * 70 * ((10 - 2 * GO_MIN) / 60);
+      const rest = BOULDER_REST_NET * 70 * ((10 - 2 * GO_MIN) / 60); // fallback ≤ 2 recovery windows → full rest MET
       expect(climbingKcal(input, 70)).toBeCloseTo(active + rest, 6);
     });
 
@@ -282,6 +290,56 @@ describe('climbing-metrics', () => {
       };
       const active = 5 * ((boulderActiveMet(14, 20) - RESTING_MET) * 70 * (GO_MIN / 60));
       expect(climbingKcal(input, 70)).toBeCloseTo(active, 6);
+    });
+  });
+
+  describe('rest frequency (backlog/171)', () => {
+    const boulder = (minutes: number, goes: number): ClimbingKcalInput => ({
+      discipline: 'BOULDER',
+      totalSessionDurationMinutes: minutes,
+      pumpRating: null,
+      referenceDifficultyIndex: 24,
+      attempts: Array.from({ length: goes }, () => ({ isSuccess: false, absoluteDifficultyIndex: 24 })),
+    });
+
+    it('keeps the full rest MET when the goes are dense, and is 1 with no rest at all', () => {
+      expect(restFrequencyFactor(boulder(90, 30), 90 - 30 * GO_MIN)).toBe(1);
+      expect(restMet(boulder(90, 30), 90 - 30 * GO_MIN)).toBe(CLIMBING_MET.REST_BOULDER);
+      expect(restFrequencyFactor(boulder(90, 30), 0)).toBe(1);
+    });
+
+    it('is window / average gap: one go per 10 min → 0.5', () => {
+      expect(restFrequencyFactor(boulder(60, 6), 60)).toBeCloseTo(0.5, 6);
+      expect(restMet(boulder(60, 6), 60)).toBeCloseTo((CLIMBING_MET.REST_IDLE + CLIMBING_MET.REST_BOULDER) / 2, 6);
+    });
+
+    it('counts boulder goes (attemptCount) and rope pitches as efforts', () => {
+      const goes: ClimbingKcalInput = {
+        ...boulder(60, 0),
+        attempts: [{ isSuccess: false, absoluteDifficultyIndex: 24, attemptCount: 3 }],
+      };
+      expect(restFrequencyFactor(goes, 60)).toBeCloseTo(15 / 60, 6);
+      const multiPitch: ClimbingKcalInput = {
+        discipline: 'ROPE',
+        totalSessionDurationMinutes: 240,
+        pumpRating: null,
+        attempts: [
+          { isSuccess: true, absoluteDifficultyIndex: 16, pitches: [1, 2, 3].map(() => ({ isLead: true, lengthInMeters: 25 })) },
+          { isSuccess: true, absoluteDifficultyIndex: 16, lengthInMeters: 20 },
+        ],
+      };
+      expect(restFrequencyFactor(multiPitch, 120)).toBeCloseTo((4 * 15) / 120, 6);
+    });
+
+    it('a 4 h session with one boulder an hour drops from ~580 to ~200 kcal (70 kg) — the user report', () => {
+      const input = boulder(240, 4);
+      const restMin = 240 - 4 * GO_MIN;
+      const active = 4 * LIMIT_NET * 70 * (GO_MIN / 60);
+      const rest = (BOULDER_REST_NET * 20 + IDLE_NET * (restMin - 20)) * (70 / 60);
+      const kcal = climbingKcal(input, 70);
+      expect(kcal).toBeCloseTo(active + rest, 6);
+      expect(kcal).toBeGreaterThan(190);
+      expect(kcal).toBeLessThan(210);
     });
   });
 

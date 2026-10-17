@@ -14,6 +14,11 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-17 — #171** Mászás pihenőkalória gyakoriság szerint: minden go (boulder, 5 perc) / pitch (kötél,
+  15 perc) regenerációs ablakot nyit, az ablakokon túli pihenő 1.5 MET-re ritkul
+  (`MET_rest = 1.5 + (REST − 1.5) × min(1, ablakok / pihenőperc)`). Sűrű session változatlan; 4 óra, 4 boulder
+  70 kg-nál ~583 → ~203 kcal. — érintett: [[Mászónapló]], [[Tápérték kalkulátor]]; kód:
+  `pages/workout/climbing/climbing-metrics.ts`
 - **2026-10-17 — #015** Hiányzó i18n kulcs: központi `DevMissingTranslationHandler` (a kulcsot mutatja, dev
   buildben kulcsonként egy `console.warn`), és új `npm run verify:i18n` zöld-kapu lépés (hu/en kulcs- és
   placeholder-paritás + a kódban szó szerint használt kulcsok léteznek). — érintett: [[Nyelv választás]],

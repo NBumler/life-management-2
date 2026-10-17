@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-10-17
-verifikalt_commit: 9259108
+verifikalt_commit: ffeb0c3
 ---
 
 # Mászónapló
@@ -122,6 +122,17 @@ elvetve: telefonon, a szikla alatt egy projektútra 6 sort felvenni kezelhetetle
 | Aktív kötél másod | \(7.0 \times 0.8\) |
 | Rest — kötél (biztosítás / üresjárat a földön) | **2.0** |
 | Rest — boulder (járkálás a problémák közt, spottolás, kefélés, nem naplózott bemelegítő mászások, a próbák utáni 2–4 perces emelkedett regeneráció) | **3.0** |
+| Rest — tétlen (a regenerációs ablakokon túli állás / ülés / beszélgetés a teremben vagy a szikla alatt; Compendium: nyugodt állás 1.3, állva beszélgetés ~1.8) | **1.5** |
+
+**Pihenő gyakorisága (`backlog/171`).** A rest zóna csak addig emelt, amíg a szervezet regenerálódik. Szimulált boulderversenyen (5 perc pihenő a problémák közt) a kardiorespiratorikus értékek ~4 percen belül visszaálltak az alapszintre ([PubMed 32813982](https://pubmed.ncbi.nlm.nih.gov/32813982/)), és az EPOC gyors komponense is ~2–5 perc. Ezért minden naplózott erőfeszítés egy **regenerációs ablakot** nyit:
+
+- boulder: **5 perc / go** (a `Σ attemptCount`; hobbi mászónál lassabb a visszaállás, és ide tartozik az átsétálás a következő problémához),
+- kötél: **15 perc / pitch** (single-pitch kísérlet = 1, multi-pitch = a pitchek száma; a saját regeneráció + egy partner ugyanolyan pitchének biztosítása).
+
+\(f = \min\big(1,\ \text{erőfeszítések} \times \text{ablak} / t_{\text{restMin}}\big)\) — azaz ablak / átlagos szünet; \(t_{\text{restMin}} = 0\) → \(f = 1\).  
+\(\text{MET}_{\text{rest}} = 1.5 + (\text{MET}_{\text{rest,emelt}} - 1.5) \times f\), ahol az emelt érték kötélnél 2.0, bouldernél 3.0.
+
+Sűrű sessionben (pl. egy tipikus 90 perces, 30 go-s boulderezés) \(f = 1\), a rest zóna változatlan. Óránként egy boulder mellett \(f \approx 0.08\), a pihenő majdnem tétlen szinten számol. A két ablak megegyezik a soronkénti duration fallbackkal (5 / 15 perc), így egy hossz nélkül mentett session pihenője sosem ritkul. Kód: `restFrequencyFactor` / `restMet` (`climbing-metrics.ts`).
 
 **Relatív nehézség (boulder, `backlog/130`).** A mászás energiaköltsége a nehézséggel nő (Mermier et al. 1997: egyre nehezebb falon szignifikánsan nő a VO₂ és az energialeadás; a Compendium is 5.8 → 7.3-ra lép a nehézséggel), de a meghatározó a **mászó saját szintjéhez mért** nehézség: egy V7 a saját határon közel maximális terhelés (versenyboulderben ~10 MET-es csúcs, a VO₂max ~75%-a), egy V12-es mászónak bemelegítés. Ezért:
 
@@ -154,9 +165,11 @@ Testsúly \(m\): [[Profile]] aktuális kg — **nem** fagyasztódik. TRAD: \(m_{
 
 \[\text{kcal} = \max(0,\; \text{MET}_{\text{active}} \times \text{pump} - 1) \times m_{\text{eff}} \times \frac{t_{\text{activeMin}}}{60} + (\text{MET}_{\text{rest}} - 1) \times m \times \frac{t_{\text{restMin}}}{60}\]
 
-(\(\text{MET}_{\text{active}}\) bouldernél kísérletenként más — az aktív tag kísérletenkénti összeg; \(\text{MET}_{\text{rest}}\) kötélnél 2.0, bouldernél 3.0.)
+(\(\text{MET}_{\text{active}}\) bouldernél kísérletenként más — az aktív tag kísérletenkénti összeg; \(\text{MET}_{\text{rest}}\) a „Pihenő gyakorisága” szerint 1.5 és a kötélnél 2.0, bouldernél 3.0 felső érték között.)
 
-**Példa (boulder, 76 kg, pump 3, 81 perc, \(I_{\text{ref}}\) = V7):** 4 V7-sor × 4 próba + 5 V5-sor × 1 próba → aktív 12 perc nettó 8.5 MET-en (~129 kcal) + 3.75 perc nettó ~6.65 MET-en (~32 kcal) + 65.25 perc pihenő nettó 2.0 MET-en (~165 kcal) ≈ **325 kcal** (~4 kcal/perc). A `backlog/130` előtti modell (fix 60 s / sor, 8.0 MET minden kísérletre, bruttó 2.0 pihenő) ugyanerre 171 kcal-t adott.
+**Példa (boulder, 76 kg, pump 3, 81 perc, \(I_{\text{ref}}\) = V7):** 4 V7-sor × 4 próba + 5 V5-sor × 1 próba → aktív 12 perc nettó 8.5 MET-en (~129 kcal) + 3.75 perc nettó ~6.65 MET-en (~32 kcal) + 65.25 perc pihenő nettó 2.0 MET-en (~165 kcal) ≈ **325 kcal** (~4 kcal/perc). A `backlog/130` előtti modell (fix 60 s / sor, 8.0 MET minden kísérletre, bruttó 2.0 pihenő) ugyanerre 171 kcal-t adott. (21 go × 5 perc ≥ 65.25 perc pihenő → \(f = 1\), a `backlog/171` nem változtat rajta.)
+
+**Példa ritka mászásra (boulder, 70 kg, 240 perc, 4 go a határon):** aktív 3 perc nettó 8.5 MET-en (~30 kcal) + 20 perc regeneráció nettó 2.0-n (~47 kcal) + 217 perc tétlen pihenő nettó 0.5-ön (~127 kcal) ≈ **203 kcal**. A `backlog/171` előtt ugyanez ~583 kcal volt (237 perc nettó 2.0-n).
 
 - A session **nem tárol** SSOT `calculatedCalories` mezőt (mint [[Úszás napló]] / [[Edzésnapló]]); a [[Tápérték kalkulátor]] utility számol.
 - UI élő előnézet ugyanazzal a pure TS képlettel; szerver opcionális paritás.
@@ -212,6 +225,13 @@ tárol kcal-t. Ezért egy régi session kcal-ja utólag elmozdulhat, ha a 90 nap
 sessionök változnak (törlés, grade-javítás, egy másik eszközről később beszinkronizált session). A
 napi `activityExtraKcal` visszamenőleg is így számol. Ez vállalt: a modell egyszerű és
 determinisztikus marad, és a mozgás a session saját adatainak változásához képest kicsi.
+
+#### Tudatos korlát — a pihenő ritkítása a naplózott go-kon múlik
+
+A regenerációs ablakok a **naplózott** erőfeszítésekből jönnek (`backlog/171`). A nem naplózott
+bemelegítő mászások vagy egy partner tempója nem látszik: ha egy hosszú sessionben csak a projekt
+próbáit rögzíted, a pihenő tétlen szintre ritkul, és a kcal alulbecsült lesz. A kötél 15 perces
+ablaka egy szimmetrikus partnert feltételez. Ez vállalt: pontos képhez minden go-t naplózni kell.
 
 #### Tudatos korlát — egy ascent-style / sikeres kísérlet
 
