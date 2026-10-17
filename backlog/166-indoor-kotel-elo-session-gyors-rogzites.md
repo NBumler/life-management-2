@@ -56,8 +56,8 @@ kísérletet.
 - [ ] Egy fokozat koppintása = egy új kísérlet, rövid haptikával:
   - `userRawInput` = a koppintott fokozat (a meglévő grade-mező / parser tölti ki az indexet, ahogy
     kézi bevitelnél),
-  - `routeName` = `<terem neve> <n>`, ahol `n` 0-tól induló, a sessionben folyamatosan növekvő sorszám
-    (pl. `Mászóház 0`, `Mászóház 1`, …),
+  - `routeName` = `<terem neve> <n>`, ahol `n` 1-től induló sorszám = a session kísérleteinek száma a
+    koppintás után (pl. `Mászóház 1`, `Mászóház 2`, …),
   - `isSuccess` = `true`, `ascentStyle` üres (mint bouldernél),
   - `safetyStyle` = a választott biztosítás,
   - `lengthInMeters` = a meglévő default (terem falmagasság), `indoorRouteId` = `null`.
@@ -82,13 +82,14 @@ kísérletet.
 - **Nincs `IndoorRoute` kötés** — a gyors-rögzítés szándékosan ad-hoc nevű kísérletet hoz létre; az
   admin útlista továbbra is a teljes kártyán választható. Emiatt a [[Mászónapló]] `ascentStyle`
   korábbi-megmászás figyelmeztetés itt nem releváns (nincs útazonosító).
-- **Név-index** — javasolt: `n` = a sessionben addig gyors-rögzítéssel létrehozott kísérletek száma
-  (törlés után nem számozunk újra, a név csak előtöltés). Implementáláskor eldöntendő, hogy az összes
-  sessionbeli kísérletből vagy csak a gyors-rögzítésekből számoljunk.
+- **Név-sorszám** (döntés, 2026-10-17) — **1-től** indul. Hogy miből számol, a user szerint mindegy;
+  a legegyszerűbbet választjuk: `n` = a session kísérleteinek száma a koppintás után (kézi kísérletek
+  is beleszámítanak; törlés után nem számozunk újra — a név csak előtöltés, ütközés nem gond).
 - **Alapértékek** — skála: Francia, biztosítás: Lead (a köteles form meglévő defaultja). Lehetséges
   finomítás később: az utoljára használt skála / biztosítás megjegyzése sessionök között.
-- **Fokozat-tartomány** — első körben a mátrix teljes köteles listája az adott skálán; ha túl hosszú,
-  később szűkíthető (pl. a user szintje körüli sávra, vagy a szélső sorok összecsukására).
+- **Fokozat-tartomány** (döntés, 2026-10-17) — első körben a mátrix **teljes** köteles listája az
+  adott skálán; ha túl hosszú, később szűkíthető (pl. a user szintje körüli sávra, vagy a szélső sorok
+  összecsukására) — az külön jegy.
 - **Fokozat-skála kanonikus alakja** — a gombok a mátrix kanonikus jelölését használják (pl. UIAA
   `VI-`), hogy a parser egyértelműen, `VALID`-ként ismerje fel.
 
