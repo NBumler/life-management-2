@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-10-01
-verifikalt_commit: 9e3b005
+verifikalva: 2026-10-17
+verifikalt_commit: 9259108
 ---
 
 # Mászónapló
@@ -35,7 +35,7 @@ Kontextus váltás **aktív session közben tilos** — lezárás / mentés, maj
 #### Élő session (`backlog/122`)
 
 - **Indítás:** mind a 4 kontextus-lista tetején „Session indítása" gomb (az utólagos „Új session" megmarad). Egyszerre **legfeljebb 1** élő session: ha egy másik kontextusban fut, a gomb tiltott és jelzi, melyikben. A hub és a kontextus-listák feltűnő **„Folyamatban: <kontextus> <eltelt idő>"** sávot mutatnak (`app-climbing-live-banner`), ami az élő felületre visz.
-- **Élő felület** = ugyanaz a kontextus-napló szerkesztő a `<kontextus>/live` útvonalon: fent stopper + „Session vége" / „Elvetés" sáv (`app-climbing-live-bar`), alatta a teljes form és a kísérletkártyák (mind szerkeszthető / törölhető — félrenyomás javítása). Beltéri bouldernél gyors-rögzítő rács ([[Indoor boulder napló]]).
+- **Élő felület** = ugyanaz a kontextus-napló szerkesztő a `<kontextus>/live` útvonalon: fent stopper + „Session vége" / „Elvetés" sáv (`app-climbing-live-bar`), alatta a teljes form és a kísérletkártyák (mind szerkeszthető / törölhető — félrenyomás javítása). Beltéri bouldernél színsáv-alapú, beltéri kötélnél skála- és biztosítás-választós, fokozat-alapú gyors-rögzítő rács ([[Indoor boulder napló]], [[Indoor köteles napló]] — `backlog/166`).
 - **Perzisztálás:** a draft (`ClimbingLiveDraft`: kontextus, kezdés, esetleges befejezés, a form teljes pillanatképe) `@capacitor/preferences`-ben él (weben localStorage) — másodpercenként, az oldal elrejtésekor és minden gyors-koppintás után mentve (`ClimbingLiveController` + `ClimbingLiveSessionService`), így app-kill / újraindítás után a hub-sávról vagy az értesítésről visszanavigálva helyreáll. A draft **soha nem kerül outboxba**.
 - **Session vége → összegző:** ugyanazon az oldalon összegző mód: szerkeszthető **kezdés** és **befejezés** (alapértéke a gomb megnyomásának ideje; a befejezés nem lehet a kezdés előtt), az időtartam ebből számolódik, a session minden mezője és minden kísérlete szerkeszthető; „Vissza az élő sessionhöz" visszavált. **„Jóváhagyás és mentés"** → a meglévő nested mentés (helyi tár + outbox) `startedAt` / `endedAt`-tal és `totalSessionDurationMinutes = kerekített (vége − kezdés)` perccel, majd a draft és az értesítés törlődik. **„Elvetés"** megerősítéssel: a draft törlődik, semmi nem mentődik.
 - **Tartós értesítés** (natív): indításkor el nem húzható (Android `ongoing`) értesítés a kontextussal és a kezdés idejével; koppintásra az élő felület nyílik ([[Értesítések]]). Web buildben nincs értesítés, de az élő session ugyanúgy működik; engedély hiányában is.

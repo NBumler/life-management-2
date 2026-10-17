@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-10-17
-verifikalt_commit: 79665b0
+verifikalt_commit: 9259108
 ---
 
 # Nehézségi szint skálája
@@ -76,6 +76,8 @@ vonatkozik, hogy az út-pickerből előtöltött `userRawInput` ne ragadjon `UNK
 ### Megjegyzések
 
 Gördülő `ion-select` kiegészítő: [[Nehézségi szint skálája (konverziós mátrix)]] / kontextus-specifikus listák (pl. szín-sáv).
+
+Az [[Indoor köteles napló]] élő gyors-rögzítő rácsa (`backlog/166`) a köteles skálák fokozatlistáját a mátrixból veszi (`ropeQuickGradeRows`, `shared/climbing/climbing-grade-matrix.ts`): index szerint rendezve, fő fokonként soronként, a francia csupasz `3` / `4` / `5` alias nélkül; minden címke a parser szerint `VALID`.
 
 ### Nyitott kérdések
 

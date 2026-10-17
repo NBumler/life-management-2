@@ -1,7 +1,7 @@
 ---
 id: 166
 type: feature
-status: backlog
+status: done
 title: Indoor köteles élő session — gyors-rögzítő felület fokozatskála-választóval
 specs:
   - "[[Indoor köteles napló]]"
@@ -9,7 +9,7 @@ specs:
   - "[[Nehézségi szint skálája]]"
 flag:
 created: 2026-10-17
-closed:
+closed: 2026-10-17
 ---
 
 # 166 — Indoor köteles élő session — gyors-rögzítő felület fokozatskála-választóval
@@ -43,17 +43,17 @@ kísérletet.
 
 ## Elfogadási kritériumok
 
-- [ ] Az [[Indoor köteles napló]] **élő** módjában (csak ott, ahogy bouldernél) megjelenik egy
+- [x] Az [[Indoor köteles napló]] **élő** módjában (csak ott, ahogy bouldernél) megjelenik egy
       gyors-rögzítő blokk a kísérletkártyák fölött.
-- [ ] **Skálaválasztó** rádió-segment: Francia / UIAA / YDS. Sessionön belül bármikor átváltható; a
+- [x] **Skálaválasztó** rádió-segment: Francia / UIAA / YDS. Sessionön belül bármikor átváltható; a
       váltás csak a következő koppintásokat érinti, a már rögzített kísérletek fokozata változatlan
       (egy sessionben vegyesen lehet UIAA és francia fokozatú út).
-- [ ] **Biztosítás** rádió-segment: Toprope / Lead. Sessionön belül bármikor átváltható, csak a
+- [x] **Biztosítás** rádió-segment: Toprope / Lead. Sessionön belül bármikor átváltható, csak a
       következő koppintásokat érinti.
-- [ ] A kiválasztott skála fokozatai kompakt, áttekinthető rácsban (pl. egy sor = egy fő fok:
+- [x] A kiválasztott skála fokozatai kompakt, áttekinthető rácsban (pl. egy sor = egy fő fok:
       `6a 6a+ 6b 6b+ 6c 6c+`, ill. `VI- VI VI+`), növekvő nehézség szerint; minden fokozat-gombon a
       sessionbeli darabszám (mint a boulder sávoknál), ha > 0.
-- [ ] Egy fokozat koppintása = egy új kísérlet, rövid haptikával:
+- [x] Egy fokozat koppintása = egy új kísérlet, rövid haptikával:
   - `userRawInput` = a koppintott fokozat (a meglévő grade-mező / parser tölti ki az indexet, ahogy
     kézi bevitelnél),
   - `routeName` = `<terem neve> <n>`, ahol `n` 1-től induló sorszám = a session kísérleteinek száma a
@@ -61,17 +61,17 @@ kísérletet.
   - `isSuccess` = `true`, `ascentStyle` üres (mint bouldernél),
   - `safetyStyle` = a választott biztosítás,
   - `lengthInMeters` = a meglévő default (terem falmagasság), `indoorRouteId` = `null`.
-- [ ] Terem nélkül figyelmeztetés (mint bouldernél `QUICK_NEEDS_GYM`); a rögzítés tiltott, amíg nincs
+- [x] Terem nélkül figyelmeztetés (mint bouldernél `QUICK_NEEDS_GYM`); a rögzítés tiltott, amíg nincs
       terem.
-- [ ] A gyorsan rögzített kísérletek alatta a megszokott kártyaként teljesen szerkeszthetők (pl.
+- [x] A gyorsan rögzített kísérletek alatta a megszokott kártyaként teljesen szerkeszthetők (pl.
       sikertelenre állítás, név / fokozat / biztosítás javítása, törlés).
-- [ ] A skála- és biztosítás-választás az élő draft része (`ClimbingLiveDraft` form-pillanatkép), így
+- [x] A skála- és biztosítás-választás az élő draft része (`ClimbingLiveDraft` form-pillanatkép), így
       app-kill / újraindítás után helyreáll; minden gyors-koppintás után autosave, mint bouldernél.
-- [ ] Nincs új szinkronizált mező / backend / outbox-séma változás (minden a meglévő kísérlet-mezőkre
+- [x] Nincs új szinkronizált mező / backend / outbox-séma változás (minden a meglévő kísérlet-mezőkre
       képeződik le); `verify:outbox` zöld.
-- [ ] Tesztek: koppintás → helyes kísérlet (név-index, fokozat, biztosítás, siker); skála- és
+- [x] Tesztek: koppintás → helyes kísérlet (név-index, fokozat, biztosítás, siker); skála- és
       biztosításváltás csak az új kísérleteket érinti; terem nélküli tiltás; draft-helyreállítás.
-- [ ] Spec frissítés: [[Indoor köteles napló]] `### UI/UX elvárások` + [[Mászónapló]] élő session
+- [x] Spec frissítés: [[Indoor köteles napló]] `### UI/UX elvárások` + [[Mászónapló]] élő session
       bekezdés („Beltéri bouldernél gyors-rögzítő rács" → kötélre is).
 
 ## Terv / döntési napló
@@ -155,6 +155,6 @@ Tisztán frontend; backend / OpenAPI / Flyway / natív SQLite / outbox-séma ér
 
 ## Lezáráskor (on-done)
 
-- Frissített specek: [[…]] — melyik szakasz, egy sor mit változott
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — <mit>
-- Kód: <fő package-ek / fájlok>
+- Frissített specek: [[Indoor köteles napló]] — `### UI/UX elvárások`: élő gyors-rögzítő rács (skála + biztosítás, fokozatrács, koppintás → kísérlet); [[Mászónapló]] — élő felület bekezdés: kötélre is van gyors-rács; [[Nehézségi szint skálája]] — `### Megjegyzések`: a rács fokozatlistájának forrása
+- `IMPLEMENTATION_STATUS.md` sor: 2026-10-17 — #166 indoor köteles élő session gyors-rögzítés
+- Kód: `pages/workout/climbing/naplo/indoor-rope-session-edit.page.*`, `shared/climbing/climbing-grade-matrix.ts` (`ropeQuickGradeRows`), i18n `WORKOUT.CLIMBING.LIVE.QUICK_*`

@@ -14,6 +14,12 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-17 — #166** Indoor köteles élő session gyors-rögzítés: élő módban skála- (Francia / UIAA / YDS) és
+  biztosítás-segment (Toprope / Lead) + a skála teljes fokozatrácsa; egy koppintás = sikeres kísérlet `<terem> <n>`
+  névvel (1-től), a választott biztosítással, falmagasság-hosszal. A választás resume-kor az utolsó kísérletből áll
+  vissza. Csak frontend, nincs séma-/outbox-változás. Érintett: [[Indoor köteles napló]], [[Mászónapló]],
+  [[Nehézségi szint skálája]]; kód: `pages/workout/climbing/naplo/indoor-rope-session-edit.page.*`,
+  `shared/climbing/climbing-grade-matrix.ts`
 - **2026-10-17 — #165** Sablon „Rotációban” kapcsoló: új `WorkoutPlan.inRotation` (alapból `true`), az `active`-tól
   független. Rotáción kívüli aktív sablont a rotációs előrejelzés kihagy, de a pickerek (heti kézi beállítás, „Terv
   indítása…”) felkínálják; a belőle rögzített edzés terhelő nap, az A/B sorrendet nem tolja el. `V56`, helyi
