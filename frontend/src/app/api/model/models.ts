@@ -56,6 +56,7 @@ export * from './shoppingListCompleteRequest';
 export * from './shoppingListCompleteResponse';
 export * from './shoppingListItem';
 export * from './storedFood';
+export * from './stretchExercise';
 export * from './swimLog';
 export * from './syncChangeItem';
 export * from './syncChangesResponse';

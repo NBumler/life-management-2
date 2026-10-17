@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: 39829a9
+verifikalva: 2026-10-17
+verifikalt_commit: c6a3b27
 ---
 
 # Edzés
@@ -21,7 +21,7 @@ Edzés tab (lásd [[Frontend]]): erőnléti / termi edzés (gyakorlatok, heti te
 
 Subfeature / kapcsolódó napló lista:
 
-- [[Gyakorlat]] — törzsadat (`Kész`); `ExerciseCategory` + `ExerciseKind`
+- [[Gyakorlat]] — törzsadat (`Kész`); erősítő (`Exercise`: `ExerciseCategory` + `ExerciseKind`) és nyújtó (`StretchExercise`) gyakorlatok egy katalógusban
 - [[Edzésnapló]] — elvégzett sessionök + élő követés (`Kész`); Heti terv nélkül is önálló
 - [[Heti terv]] — `WorkoutPlan` sablonok + heti kiosztás (`Kész`); `planId` = sablon ID
 - [[Úszás napló]]
@@ -36,7 +36,7 @@ Fejlesztési sorrend: Gyakorlat → Edzésnapló → Heti terv.
 
 - Alsó tab: **Edzés** (`/tabs/workout`) — app-shell SSOT: [[Frontend]].
 - A tab gyökerén **felső szegmens**: Edzésnapló | Heti terv | Mászás | Úszás | Bicikli | Röplabda. Alapértelmezett szegmens: [[Edzésnapló]]. A [[Gyakorlat]] törzsadat a fejlécből nyílik (fogaskerék), ahogy a [[Mászónapló]] is a fejlécben tartja az admint.
-- Flag: a `tab.edzes` fedi az Edzésnaplót és a Gyakorlatot; a [[Heti terv]], [[Mászónapló]], [[Úszás napló]], [[Biciklizés napló]], [[Röplabda napló]] saját flaget kap ([[Frontend]] registry). Ki → az adott szegmens rejtve.
+- Flag: a `tab.edzes` fedi az Edzésnaplót és a Gyakorlatot; az `edzes.nyujtas` a nyújtó gyakorlatokat ([[Gyakorlat]]); a [[Heti terv]], [[Mászónapló]], [[Úszás napló]], [[Biciklizés napló]], [[Röplabda napló]] saját flaget kap ([[Frontend]] registry). Ki → az adott szegmens rejtve.
 - Részletek a gyerek specekben.
 
 ### Megjegyzések

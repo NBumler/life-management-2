@@ -22,6 +22,7 @@ import { ShoppingListCompleteRequest } from '../../api/model/shoppingListComplet
 import { ShoppingListItem } from '../../api/model/shoppingListItem';
 import { StoredFood } from '../../api/model/storedFood';
 import { SwimLog } from '../../api/model/swimLog';
+import { StretchExercise } from '../../api/model/stretchExercise';
 import { VolleyballLog } from '../../api/model/volleyballLog';
 import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { RecurringExpense } from '../../api/model/recurringExpense';
@@ -599,6 +600,11 @@ export interface StorageBackend {
    * catalog is non-empty. Each backend resolves the current user id itself.
    */
   seedExercises(): Promise<void>;
+
+  /** documentation/Subfeatures/Gyakorlat.md "Entitás — StretchExercise" (backlog/167): user-owned stretching catalog, flat CRUD. */
+  listStretchExercises(): Promise<StretchExercise[]>;
+  upsertStretchExercise(exercise: StretchExercise): Promise<StretchExercise>;
+  deleteStretchExercise(id: string): Promise<StretchExercise>;
 
   /** documentation/Subfeatures/Edzésnapló.md: per-user workout log. Every row (incl. list entries) embeds its full live+tombstoned exercise/set tree. */
   listWorkoutSessions(): Promise<WorkoutSession[]>;

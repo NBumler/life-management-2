@@ -64,8 +64,11 @@ import { uuidV4 } from './uuid';
  * - v20 → v21 (backlog/165): `WorkoutPlan` gained a required `inRotation`. A pending template write from
  *   before that app update was in the rotation, so `addWorkoutPlanInRotationDefault` stamps
  *   `inRotation: true`; every other type is identity.
+ * - v21 → v22 (backlog/167): brand-new `StretchExercise` entity, and the shared exercise category enum
+ *   gained `HIPS` / `NECK` (`Exercise`, `WorkoutSession` / `WorkoutPlan` snapshots). A widening never
+ *   invalidates an older payload, so every type is identity.
  */
-export const OUTBOX_PAYLOAD_SCHEMA_VERSION = 21;
+export const OUTBOX_PAYLOAD_SCHEMA_VERSION = 22;
 
 /** documentation/Architektúra/Backend-offline first.md §6 "Tétel-újrapróbálkozási backoff" (jitter omitted — not load-bearing for correctness). */
 const RETRY_BACKOFF_MS = [2000, 8000, 30000, 120000, 600000];

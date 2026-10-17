@@ -19,10 +19,23 @@
         <ion-icon [name]="favoritesOnly() ? 'star' : 'star-outline'" aria-hidden="true"></ion-icon>
         <ion-label>{{ 'WORKOUT.EXERCISES.FAVORITES_FILTER' | translate }}</ion-label>
       </ion-chip>
+      @if (stretchEnabled) {
+        @for (type of types; track type) {
+          <ion-chip
+            [attr.data-type]="type"
+            [outline]="!typeFilter().has(type)"
+            [color]="typeFilter().has(type) ? 'tertiary' : undefined"
+            (click)="toggleType(type)"
+          >
+            <ion-label>{{ typeLabelKeys[type] | translate }}</ion-label>
+          </ion-chip>
+        }
+      }
       @for (category of categories; track category) {
         <ion-chip
-          [outline]="categoryFilter() !== category"
-          [color]="categoryFilter() === category ? 'primary' : undefined"
+          [attr.data-category]="category"
+          [outline]="!categoryFilter().has(category)"
+          [color]="categoryFilter().has(category) ? 'primary' : undefined"
           (click)="toggleCategory(category)"
         >
           <ion-label>{{ categoryLabelKeys[category] | translate }}</ion-label>
@@ -49,30 +62,35 @@
       </ion-item>
     }
 
-    @for (exercise of filtered(); track exercise.id) {
-      <ion-item button [routerLink]="[exercise.id]">
+    @for (entry of filtered(); track trackEntry(entry)) {
+      <ion-item button [routerLink]="rowLink(entry)" [attr.data-entry-type]="entry.type">
         <ion-button
           slot="start"
           fill="clear"
           [attr.aria-label]="'WORKOUT.EXERCISES.TOGGLE_FAVORITE' | translate"
-          (click)="toggleFavorite(exercise, $event)"
+          (click)="toggleFavorite(entry, $event)"
         >
           <ion-icon
             slot="icon-only"
-            [name]="exercise.isFavorite ? 'star' : 'star-outline'"
-            [color]="exercise.isFavorite ? 'warning' : 'medium'"
+            [name]="entry.item.isFavorite ? 'star' : 'star-outline'"
+            [color]="entry.item.isFavorite ? 'warning' : 'medium'"
           ></ion-icon>
         </ion-button>
         <ion-label>
-          <h3>{{ exercise.name }}</h3>
+          <h3>{{ entry.item.name }}</h3>
           <p>
-            {{ categoryLabelKeys[exercise.category] | translate }} · {{ kindLabelKeys[exercise.kind] | translate }}
-            @if (exercise.equipment) {
-              · {{ exercise.equipment }}
+            {{ categoryLabelKeys[entry.item.category] | translate }} ·
+            @if (asStrength(entry); as strength) {
+              {{ kindLabelKey(strength) | translate }}
+            } @else {
+              {{ 'WORKOUT.EXERCISES.STRETCH_ROW_TYPE' | translate }}
+            }
+            @if (entry.item.equipment) {
+              · {{ entry.item.equipment }}
             }
           </p>
-          @if (exercise.description) {
-            <p class="exercise-desc">{{ exercise.description }}</p>
+          @if (entry.item.description) {
+            <p class="exercise-desc">{{ entry.item.description }}</p>
           }
         </ion-label>
       </ion-item>

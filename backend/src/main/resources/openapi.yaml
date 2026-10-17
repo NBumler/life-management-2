@@ -83,6 +83,10 @@ paths:
     $ref: 'openapi/paths/exercises.yaml'
   /api/exercises/{id}:
     $ref: 'openapi/paths/exercises-item.yaml'
+  /api/stretch-exercises:
+    $ref: 'openapi/paths/stretch-exercises.yaml'
+  /api/stretch-exercises/{id}:
+    $ref: 'openapi/paths/stretch-exercises-item.yaml'
   /api/workout-sessions:
     $ref: 'openapi/paths/workout-sessions.yaml'
   /api/workout-sessions/{id}:

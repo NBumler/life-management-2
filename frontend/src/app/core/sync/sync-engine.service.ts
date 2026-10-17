@@ -7,6 +7,7 @@ import { firstValueFrom, timeout } from 'rxjs';
 
 import { EventsService } from '../../api/api/events.service';
 import { ExercisesService } from '../../api/api/exercises.service';
+import { StretchExercisesService } from '../../api/api/stretchExercises.service';
 import { FoodsService } from '../../api/api/foods.service';
 import { GearItemsService } from '../../api/api/gearItems.service';
 import { HealthService } from '../../api/api/health.service';
@@ -66,6 +67,7 @@ import { ShoppingListCompleteResponse } from '../../api/model/shoppingListComple
 import { ShoppingListItem } from '../../api/model/shoppingListItem';
 import { StoredFood } from '../../api/model/storedFood';
 import { SwimLog } from '../../api/model/swimLog';
+import { StretchExercise } from '../../api/model/stretchExercise';
 import { VolleyballLog } from '../../api/model/volleyballLog';
 import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { DailyStepLog } from '../../api/model/dailyStepLog';
@@ -101,6 +103,8 @@ import {
   calendarEventTombstoneTask,
   exerciseServerApplyTask,
   exerciseTombstoneTask,
+  stretchExerciseServerApplyTask,
+  stretchExerciseTombstoneTask,
   foodServerApplyTask,
   foodTombstoneTask,
   gearItemServerApplyTask,
@@ -224,6 +228,7 @@ export class SyncEngineService {
   private readonly packingSessionItemsApi = inject(PackingSessionItemsService);
   private readonly lifePlansApi = inject(LifePlansService);
   private readonly exercisesApi = inject(ExercisesService);
+  private readonly stretchExercisesApi = inject(StretchExercisesService);
   private readonly householdRoomsApi = inject(HouseholdRoomsService);
   private readonly householdTasksApi = inject(HouseholdTasksService);
   private readonly eventsApi = inject(EventsService);
@@ -592,6 +597,16 @@ export class SyncEngineService {
       }
     }
 
+    const staleStretchExercises = await this.db.query<{ id: string }>('SELECT id FROM stretch_exercise WHERE _needs_refetch = 1');
+    for (const row of staleStretchExercises) {
+      try {
+        const dto = await firstValueFrom(this.stretchExercisesApi.getStretchExercise(row.id));
+        await this.db.executeTransaction([stretchExerciseServerApplyTask(dto)]);
+      } catch {
+        // same as above
+      }
+    }
+
     const staleRooms = await this.db.query<{ id: string }>('SELECT id FROM household_room WHERE _needs_refetch = 1');
     for (const row of staleRooms) {
       try {
@@ -932,6 +947,9 @@ export class SyncEngineService {
     if (item.entityType === 'Exercise') {
       return [exerciseServerApplyTask(body as Exercise)];
     }
+    if (item.entityType === 'StretchExercise') {
+      return [stretchExerciseServerApplyTask(body as StretchExercise)];
+    }
     if (item.entityType === 'HouseholdRoom') {
       return [householdRoomServerApplyTask(body as HouseholdRoom)];
     }
@@ -1203,6 +1221,8 @@ export class SyncEngineService {
       await this.db.executeTransaction([boulderProblemTombstoneTask(item.targetEntityId, null, now)]);
     } else if (item.entityType === 'Exercise') {
       await this.db.executeTransaction([exerciseTombstoneTask(item.targetEntityId, null, now)]);
+    } else if (item.entityType === 'StretchExercise') {
+      await this.db.executeTransaction([stretchExerciseTombstoneTask(item.targetEntityId, null, now)]);
     } else if (item.entityType === 'HouseholdRoom') {
       // documentation/Subfeatures/Háztartási feladatok.md: room delete cascades to its own tasks locally too.
       const taskRows = await this.db.query<{ id: string }>('SELECT id FROM household_task WHERE room_id = ?', [item.targetEntityId]);
@@ -1563,6 +1583,12 @@ export class SyncEngineService {
         return [exerciseServerApplyTask(change.data as Exercise)];
       }
       return [exerciseTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
+    }
+    if (change.entityType === 'StretchExercise') {
+      if (!change.deleted) {
+        return [stretchExerciseServerApplyTask(change.data as StretchExercise)];
+      }
+      return [stretchExerciseTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
     }
     if (change.entityType === 'HouseholdRoom') {
       if (!change.deleted) {

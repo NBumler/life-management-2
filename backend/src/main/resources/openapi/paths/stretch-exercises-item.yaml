@@ -1,0 +1,63 @@
+parameters:
+  - name: id
+    in: path
+    required: true
+    schema:
+      type: string
+      format: uuid
+get:
+  operationId: getStretchExercise
+  tags:
+    - stretch-exercises
+  summary: A single stretching exercise. Own deleted row returns 200 with deleted=true (not 404).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/StretchExercise.yaml'
+    '404':
+      description: No such stretching exercise (or it belongs to another user).
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+put:
+  operationId: updateStretchExercise
+  tags:
+    - stretch-exercises
+  summary: Full update (last-write-wins).
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/StretchExercise.yaml'
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/StretchExercise.yaml'
+    '409':
+      description: Entity already deleted, or another live stretching exercise already has this name.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'
+delete:
+  operationId: deleteStretchExercise
+  tags:
+    - stretch-exercises
+  summary: >-
+    Soft delete, idempotent. Stretch-plan item snapshots are untouched
+    (documentation/Subfeatures/Gyakorlat.md).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/StretchExercise.yaml'

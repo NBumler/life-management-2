@@ -1362,7 +1362,35 @@ const SCHEMA_V50_STATEMENTS: string[] = [
  */
 const SCHEMA_V51_STATEMENTS: string[] = [`ALTER TABLE workout_plan ADD COLUMN in_rotation INTEGER NOT NULL DEFAULT 1`];
 
-const SCHEMA_VERSION = 51;
+/**
+ * backlog/167 — documentation/Subfeatures/Gyakorlat.md "Entitás — StretchExercise": a nyújtó gyakorlatok
+ * saját katalógusa; on-device tükre a backend `V57__stretch_exercise.sql`-nek. A helyi
+ * `exercise_catalog` / snapshot oszlopokon nincs category CHECK, így a `HIPS` / `NECK` bővítéshez nem
+ * kell helyi lépés. `name_normalized` itt sincs tárolva (a repository memóriában normalizál).
+ */
+const SCHEMA_V52_STATEMENTS: string[] = [
+  `CREATE TABLE IF NOT EXISTS stretch_exercise (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    category TEXT NOT NULL,
+    description TEXT,
+    equipment TEXT,
+    is_favorite INTEGER NOT NULL DEFAULT 0,
+    default_hold_seconds INTEGER NOT NULL DEFAULT 30,
+    default_per_side INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_stretch_exercise_live_name ON stretch_exercise (name COLLATE NOCASE) WHERE deleted = 0`,
+];
+
+const SCHEMA_VERSION = 52;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -1416,7 +1444,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 48, statements: SCHEMA_V48_STATEMENTS },
   { toVersion: 49, statements: SCHEMA_V49_STATEMENTS },
   { toVersion: 50, statements: SCHEMA_V50_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V51_STATEMENTS },
+  { toVersion: 51, statements: SCHEMA_V51_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V52_STATEMENTS },
 ];
 
 export interface SqlTask {

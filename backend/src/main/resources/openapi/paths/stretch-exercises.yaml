@@ -1,0 +1,36 @@
+get:
+  operationId: listStretchExercises
+  tags:
+    - stretch-exercises
+  summary: The caller's stretching-exercise catalog, live rows only (deleted = false).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/StretchExerciseList.yaml'
+post:
+  operationId: createStretchExercise
+  tags:
+    - stretch-exercises
+  summary: Create a stretching exercise — idempotent upsert on the client-supplied id.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/StretchExercise.yaml'
+  responses:
+    '200':
+      description: Created or, on retry with the same id, the existing row.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/StretchExercise.yaml'
+    '409':
+      description: Another live stretching exercise already has this name (documentation/Architektúra/Névegyediség.md).
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'

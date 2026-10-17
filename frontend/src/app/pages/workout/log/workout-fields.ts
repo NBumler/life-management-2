@@ -33,6 +33,8 @@ export const PLAN_TO_ENTRY_CATEGORY: Record<WorkoutPlanExercise.ExerciseCategory
   [WorkoutPlanExercise.ExerciseCategoryEnum.Obliques]: WorkoutExerciseEntry.ExerciseCategoryEnum.Obliques,
   [WorkoutPlanExercise.ExerciseCategoryEnum.ForearmFingers]: WorkoutExerciseEntry.ExerciseCategoryEnum.ForearmFingers,
   [WorkoutPlanExercise.ExerciseCategoryEnum.FullBody]: WorkoutExerciseEntry.ExerciseCategoryEnum.FullBody,
+  [WorkoutPlanExercise.ExerciseCategoryEnum.Hips]: WorkoutExerciseEntry.ExerciseCategoryEnum.Hips,
+  [WorkoutPlanExercise.ExerciseCategoryEnum.Neck]: WorkoutExerciseEntry.ExerciseCategoryEnum.Neck,
 };
 
 export const PLAN_TO_ENTRY_KIND: Record<WorkoutPlanExercise.ExerciseKindEnum, WorkoutExerciseEntry.ExerciseKindEnum> = {

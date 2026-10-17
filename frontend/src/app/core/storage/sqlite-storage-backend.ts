@@ -17,6 +17,7 @@ import { Recipe } from '../../api/model/recipe';
 import { ShoppingList } from '../../api/model/shoppingList';
 import { StoredFood } from '../../api/model/storedFood';
 import { SwimLog } from '../../api/model/swimLog';
+import { StretchExercise } from '../../api/model/stretchExercise';
 import { VolleyballLog } from '../../api/model/volleyballLog';
 import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { RecurringExpense } from '../../api/model/recurringExpense';
@@ -62,6 +63,7 @@ import {
   ShoppingListRow,
   StoredFoodRow,
   SwimLogRow,
+  StretchExerciseRow,
   VolleyballLogRow,
   BikeRideLogRow,
   RecurringExpenseRow,
@@ -80,6 +82,8 @@ import {
   calendarEventLocalWriteTask,
   calendarEventRowToDto,
   exerciseLocalWriteTask,
+  stretchExerciseLocalWriteTask,
+  stretchExerciseRowToDto,
   exerciseRowToDto,
   foodLocalWriteTask,
   foodRowToDto,
@@ -1645,6 +1649,65 @@ export class SqliteStorageBackend implements StorageBackend {
        ON CONFLICT(seed_key) DO UPDATE SET seed_version = excluded.seed_version, applied_at = excluded.applied_at`,
       [EXERCISE_SEED_KEY, EXERCISE_SEED_VERSION, new Date().toISOString()],
     );
+  }
+
+  async listStretchExercises(): Promise<StretchExercise[]> {
+    const rows = await this.db.query<StretchExerciseRow>('SELECT * FROM stretch_exercise WHERE deleted = 0 ORDER BY name COLLATE NOCASE');
+    return rows.map(stretchExerciseRowToDto);
+  }
+
+  async upsertStretchExercise(exercise: StretchExercise): Promise<StretchExercise> {
+    const userId = this.requireUserId();
+    const existing = await this.db.query('SELECT 1 FROM stretch_exercise WHERE id = ?', [exercise.id]);
+    const isNew = existing.length === 0;
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: isNew ? 'POST' : 'PUT',
+      url: isNew ? '/api/stretch-exercises' : `/api/stretch-exercises/${exercise.id}`,
+      payload: exercise,
+      entityType: 'StretchExercise',
+      targetEntityId: exercise.id,
+    });
+    await this.db.executeTransaction([stretchExerciseLocalWriteTask(exercise), ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    return this.readStretchExercise(exercise.id);
+  }
+
+  async deleteStretchExercise(id: string): Promise<StretchExercise> {
+    const userId = this.requireUserId();
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: 'DELETE',
+      url: `/api/stretch-exercises/${id}`,
+      payload: null,
+      entityType: 'StretchExercise',
+      targetEntityId: id,
+    });
+    const entityTask: SqlTask = enqueue.hardRemoveLocalEntity
+      ? { statement: 'DELETE FROM stretch_exercise WHERE id = ?', values: [id] }
+      : {
+          statement: 'UPDATE stretch_exercise SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?',
+          values: [new Date().toISOString(), id],
+        };
+    await this.db.executeTransaction([entityTask, ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    if (enqueue.hardRemoveLocalEntity) {
+      return {
+        id,
+        name: '',
+        category: StretchExercise.CategoryEnum.FullBody,
+        isFavorite: false,
+        defaultHoldSeconds: 30,
+        defaultPerSide: false,
+        deleted: true,
+      };
+    }
+    return this.readStretchExercise(id);
+  }
+
+  private async readStretchExercise(id: string): Promise<StretchExercise> {
+    const rows = await this.db.query<StretchExerciseRow>('SELECT * FROM stretch_exercise WHERE id = ?', [id]);
+    return stretchExerciseRowToDto(rows[0]);
   }
 
   private async readExercise(id: string): Promise<Exercise> {

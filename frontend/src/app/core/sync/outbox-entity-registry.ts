@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 
 import { CalendarEvent } from '../../api/model/calendarEvent';
 import { Exercise } from '../../api/model/exercise';
+import { StretchExercise } from '../../api/model/stretchExercise';
 import { Food } from '../../api/model/food';
 import { GearItem } from '../../api/model/gearItem';
 import { HouseholdRoom } from '../../api/model/householdRoom';
@@ -30,6 +31,7 @@ import { UserProfile } from '../../api/model/userProfile';
 import { WeightHistoryEntry } from '../../api/model/weightHistoryEntry';
 import { normalizeName } from '../../shared/name-normalization';
 import { ExerciseRepository } from '../data/exercise.repository';
+import { StretchExerciseRepository } from '../data/stretch-exercise.repository';
 import { GearItemRepository } from '../data/gear-item.repository';
 import { GymRepository } from '../data/gym.repository';
 import { AycmPartnerRepository } from '../data/aycm-partner.repository';
@@ -61,11 +63,14 @@ import {
   SectorRow,
   RouteRow,
   BoulderProblemRow,
+  StretchExerciseRow,
   WeightHistoryRow,
   calendarEventLocalWriteTask,
   calendarEventRowToDto,
   exerciseLocalWriteTask,
   exerciseRowToDto,
+  stretchExerciseLocalWriteTask,
+  stretchExerciseRowToDto,
   foodLocalWriteTask,
   foodRowToDto,
   gearItemLocalWriteTask,
@@ -247,6 +252,7 @@ async function shoppingListCurrentPayload(ctx: OutboxEntityFixContext): Promise<
 export class OutboxEntityRegistryService {
   private readonly gearItems = inject(GearItemRepository);
   private readonly exercises = inject(ExerciseRepository);
+  private readonly stretchExercises = inject(StretchExerciseRepository);
   private readonly gyms = inject(GymRepository);
   private readonly aycmPartners = inject(AycmPartnerRepository);
   private readonly householdRooms = inject(HouseholdRoomRepository);
@@ -317,6 +323,22 @@ export class OutboxEntityRegistryService {
           }
           const normalized = normalizeName(value);
           return this.exercises.items().find((item) => item.id !== excludeId && normalizeName(item.name) === normalized)?.id ?? null;
+        },
+      },
+    },
+    StretchExercise: {
+      table: 'stretch_exercise',
+      currentPayload: rowLookup<StretchExerciseRow, unknown>('stretch_exercise', stretchExerciseRowToDto),
+      buildFixWriteTask: (payload) => stretchExerciseLocalWriteTask(payload as unknown as StretchExercise),
+      // backlog/167: its own namespace — a strength exercise of the same name is not a conflict.
+      nameUniqueness: {
+        field: 'name',
+        findConflict: async (value, excludeId) => {
+          if (!this.stretchExercises.loaded()) {
+            await this.stretchExercises.load();
+          }
+          const normalized = normalizeName(value);
+          return this.stretchExercises.items().find((item) => item.id !== excludeId && normalizeName(item.name) === normalized)?.id ?? null;
         },
       },
     },

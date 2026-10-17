@@ -32,6 +32,8 @@ properties:
       - OBLIQUES
       - FOREARM_FINGERS
       - FULL_BODY
+      - HIPS
+      - NECK
   kind:
     type: string
     enum:

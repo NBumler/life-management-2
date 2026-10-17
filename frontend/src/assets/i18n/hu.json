@@ -1163,7 +1163,9 @@
         "LOWER_BACK": "Mélyhát",
         "OBLIQUES": "Oldalsó törzs",
         "FOREARM_FINGERS": "Alkar, ujjak",
-        "FULL_BODY": "Egész test"
+        "FULL_BODY": "Egész test",
+        "HIPS": "Csípő, farizom",
+        "NECK": "Nyak"
       },
       "KIND": {
         "WEIGHTED_REPS": "Súlyos ismétlés",
@@ -1178,6 +1180,23 @@
         "ISOMETRIC_TIME": "A szetten: tartás ideje (mp) (+ opcionális súly).",
         "HANGBOARD_PINCH": "A szetten: léc mérete (mm) + tartás ideje (mp) (+ opcionális súly).",
         "CARDIO_TIME_DIST": "A szetten: idő (mp) + táv (m)."
+      },
+      "TYPE_STRENGTH": "Erősítés",
+      "TYPE_STRETCH": "Nyújtás",
+      "TYPE_FIELD": "Gyakorlat típusa",
+      "STRETCH_ROW_TYPE": "Nyújtás",
+      "STRETCH": {
+        "NEW_TITLE": "Új nyújtó gyakorlat",
+        "EDIT_TITLE": "Nyújtó gyakorlat szerkesztése",
+        "NAME_PLACEHOLDER": "pl. Combhajlító nyújtás",
+        "NAME_CONFLICT": "Már van „{{name}}” nevű nyújtó gyakorlat az élő katalógusban.",
+        "DELETE_CONFIRM_TITLE": "Nyújtó gyakorlat törlése",
+        "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd a(z) „{{name}}” nyújtó gyakorlatot? A meglévő nyújtó sablonok tételei érintetlenek maradnak.",
+        "FIELD_DEFAULT_HOLD": "Alap tartás (mp)",
+        "FIELD_DEFAULT_PER_SIDE": "Oldalanként (bal, majd jobb)",
+        "DEFAULTS_HINT": "Sablonba felvételkor ezzel töltődik elő.",
+        "EQUIPMENT_PLACEHOLDER": "pl. Szőnyeg, heveder",
+        "DESCRIPTION_PLACEHOLDER": "pl. testhelyzet, mire figyelj, hol kell éreznie"
       }
     },
     "PLAN": {

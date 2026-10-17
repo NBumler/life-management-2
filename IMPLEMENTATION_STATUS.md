@@ -14,6 +14,12 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-17 — #167** Nyújtó gyakorlatok: új, user-owned `StretchExercise` entitás (név, kategória, leírás,
+  eszközigény, kedvenc + alap tartás / oldalanként előtöltés), külön tábla — a meglévő gyakorlatok adatmódosítás
+  nélkül erősítők. Közös `ExerciseCategory` + `HIPS` / `NECK`. A Gyakorlat katalógus egy listában mutatja a két
+  típust, többes típus- és kategória-chipekkel (csoporton belül VAGY, csoportok között ÉS); új gyakorlatnál
+  Erősítés | Nyújtás szegmens. Flag `edzes.nyujtas`. `V57`, helyi `SCHEMA_V52`, outbox payload v22. Érintett:
+  [[Gyakorlat]], [[Edzés]], [[Frontend]]; kód: `workout` (backend), `pages/workout/exercises/`, `core/data/`, `core/sync/`
 - **2026-10-17 — #166** Indoor köteles élő session gyors-rögzítés: élő módban skála- (Francia / UIAA / YDS) és
   biztosítás-segment (Toprope / Lead) + a skála teljes fokozatrácsa; egy koppintás = sikeres kísérlet `<terem> <n>`
   névvel (1-től), a választott biztosítással, falmagasság-hosszal. A választás resume-kor az utolsó kísérletből áll

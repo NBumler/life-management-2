@@ -13,6 +13,18 @@
 </ion-header>
 
 <ion-content>
+  @if (showTypeSegment()) {
+    <div class="ion-padding-horizontal ion-padding-top">
+      <ion-segment value="STRENGTH" [attr.aria-label]="'WORKOUT.EXERCISES.TYPE_FIELD' | translate" (ionChange)="onTypeChange($any($event.detail.value))">
+        <ion-segment-button value="STRENGTH">
+          <ion-label>{{ 'WORKOUT.EXERCISES.TYPE_STRENGTH' | translate }}</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="STRETCH">
+          <ion-label>{{ 'WORKOUT.EXERCISES.TYPE_STRETCH' | translate }}</ion-label>
+        </ion-segment-button>
+      </ion-segment>
+    </div>
+  }
   <form [formGroup]="form" (ngSubmit)="save()">
     <ion-list>
       <ion-item>

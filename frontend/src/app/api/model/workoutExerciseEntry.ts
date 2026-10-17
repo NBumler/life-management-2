@@ -49,7 +49,9 @@ export namespace WorkoutExerciseEntry {
         LowerBack: 'LOWER_BACK',
         Obliques: 'OBLIQUES',
         ForearmFingers: 'FOREARM_FINGERS',
-        FullBody: 'FULL_BODY'
+        FullBody: 'FULL_BODY',
+        Hips: 'HIPS',
+        Neck: 'NECK'
     } as const;
     export type ExerciseCategoryEnum = typeof ExerciseCategoryEnum[keyof typeof ExerciseCategoryEnum];
     export const ExerciseKindEnum = {

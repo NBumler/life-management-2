@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-10-17
-verifikalt_commit: 2adf800
+verifikalt_commit: c6a3b27
 ---
 
 # Frontend
@@ -211,6 +211,7 @@ Az `offlineCapable` **nem** feature flag, hanem platform-képesség (natív = `t
 | `edzes.uszas` | Úszás szegmens | [[Úszás napló]] |
 | `edzes.bicikli` | Bicikli szegmens | [[Biciklizés napló]] |
 | `edzes.roplabda` | Röplabda szegmens | [[Röplabda napló]] |
+| `edzes.nyujtas` | Nyújtó gyakorlatok a Gyakorlat katalógusban (típus-chipek, nyújtó szerkesztő) | [[Gyakorlat]] |
 | `tab.feladatok` | Feladatok tab + Háztartási csempe | [[Tennivalók]] |
 | `feladatok.eletTervek` | Élet tervek csempe | [[Élet tervek]] |
 | `feladatok.naptar` | Naptár csempe | [[Naptár]] |
@@ -223,7 +224,7 @@ Az `offlineCapable` **nem** feature flag, hanem platform-képesség (natív = `t
 | `menu.aycm` | Menü → AYCM + három gyerek | [[AYCM tracker]] |
 | `menu.gearcheck` | Menü → GearCheck + három gyerek | [[GearCheck]] |
 
-Ami nincs a táblában, annak nincs flagje: a [[Élelmiszerek]], [[Élelmiszer tárolás]], [[Étkezés]], [[Edzésnapló]], [[Gyakorlat]], [[Háztartási feladatok]] a szülő tab flagjén osztozik (a katalógus és a napló a tab értelme; külön kapcsolóval csak üres tab maradna).
+Ami nincs a táblában, annak nincs flagje: a [[Élelmiszerek]], [[Élelmiszer tárolás]], [[Étkezés]], [[Edzésnapló]], [[Gyakorlat]] (az erősítő rész; a nyújtó gyakorlatokat az `edzes.nyujtas` fedi), [[Háztartási feladatok]] a szülő tab flagjén osztozik (a katalógus és a napló a tab értelme; külön kapcsolóval csak üres tab maradna).
 
 ##### Függőségek
 

@@ -17,6 +17,7 @@ import { RecipesService } from '../../api/api/recipes.service';
 import { ShoppingListsService } from '../../api/api/shoppingLists.service';
 import { StoredFoodsService } from '../../api/api/storedFoods.service';
 import { SwimLogsService } from '../../api/api/swimLogs.service';
+import { StretchExercisesService } from '../../api/api/stretchExercises.service';
 import { VolleyballLogsService } from '../../api/api/volleyballLogs.service';
 import { BikeRideLogsService } from '../../api/api/bikeRideLogs.service';
 import { RecurringExpensesService } from '../../api/api/recurringExpenses.service';
@@ -54,6 +55,7 @@ import { Recipe } from '../../api/model/recipe';
 import { ShoppingList } from '../../api/model/shoppingList';
 import { StoredFood } from '../../api/model/storedFood';
 import { SwimLog } from '../../api/model/swimLog';
+import { StretchExercise } from '../../api/model/stretchExercise';
 import { VolleyballLog } from '../../api/model/volleyballLog';
 import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { RecurringExpense } from '../../api/model/recurringExpense';
@@ -110,6 +112,7 @@ export class HttpStorageBackend implements StorageBackend {
   private readonly packingSessionItemsApi = inject(PackingSessionItemsService);
   private readonly lifePlansApi = inject(LifePlansService);
   private readonly exercisesApi = inject(ExercisesService);
+  private readonly stretchExercisesApi = inject(StretchExercisesService);
   private readonly householdRoomsApi = inject(HouseholdRoomsService);
   private readonly householdTasksApi = inject(HouseholdTasksService);
   private readonly eventsApi = inject(EventsService);
@@ -288,6 +291,19 @@ export class HttpStorageBackend implements StorageBackend {
 
   deleteExercise(id: string): Promise<Exercise> {
     return firstValueFrom(this.exercisesApi.deleteExercise(id));
+  }
+
+  listStretchExercises(): Promise<StretchExercise[]> {
+    return firstValueFrom(this.stretchExercisesApi.listStretchExercises());
+  }
+
+  /** POST is an idempotent upsert on the client id (documentation/Architektúra/Backend.md "Upsert"). */
+  upsertStretchExercise(exercise: StretchExercise): Promise<StretchExercise> {
+    return firstValueFrom(this.stretchExercisesApi.createStretchExercise(exercise));
+  }
+
+  deleteStretchExercise(id: string): Promise<StretchExercise> {
+    return firstValueFrom(this.stretchExercisesApi.deleteStretchExercise(id));
   }
 
   /**

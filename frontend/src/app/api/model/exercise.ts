@@ -41,7 +41,9 @@ export namespace Exercise {
         LowerBack: 'LOWER_BACK',
         Obliques: 'OBLIQUES',
         ForearmFingers: 'FOREARM_FINGERS',
-        FullBody: 'FULL_BODY'
+        FullBody: 'FULL_BODY',
+        Hips: 'HIPS',
+        Neck: 'NECK'
     } as const;
     export type CategoryEnum = typeof CategoryEnum[keyof typeof CategoryEnum];
     export const KindEnum = {

@@ -15,6 +15,7 @@ export type FeatureFlagKey =
   | 'edzes.uszas'
   | 'edzes.bicikli'
   | 'edzes.roplabda'
+  | 'edzes.nyujtas'
   | 'tab.feladatok'
   | 'feladatok.eletTervek'
   | 'feladatok.naptar'
@@ -39,6 +40,7 @@ const FEATURE_FLAG_DEPENDENCIES: ReadonlyMap<FeatureFlagKey, FeatureFlagKey> = n
   ['edzes.uszas', 'tab.edzes'],
   ['edzes.bicikli', 'tab.edzes'],
   ['edzes.roplabda', 'tab.edzes'],
+  ['edzes.nyujtas', 'tab.edzes'],
   ['feladatok.eletTervek', 'tab.feladatok'],
   ['feladatok.naptar', 'tab.feladatok'],
   ['feladatok.esemenyek', 'tab.feladatok'],
@@ -57,6 +59,7 @@ const FEATURE_FLAG_KEYS: readonly FeatureFlagKey[] = [
   'edzes.uszas',
   'edzes.bicikli',
   'edzes.roplabda',
+  'edzes.nyujtas',
   'tab.feladatok',
   'feladatok.eletTervek',
   'feladatok.naptar',

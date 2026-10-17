@@ -1,7 +1,7 @@
 ---
 id: 167
 type: feature
-status: ready
+status: done
 title: Nyújtó gyakorlatok — külön adatmodell, típusválasztás és többes chip-szűrő a katalógusban
 specs:
   - "[[Gyakorlat]]"
@@ -9,7 +9,7 @@ specs:
   - "[[Frontend]]"
 flag: edzes.nyujtas
 created: 2026-10-17
-closed:
+closed: 2026-10-17
 ---
 
 # 167 — Nyújtó gyakorlatok — külön adatmodell, típusválasztás és többes chip-szűrő a katalógusban
@@ -33,7 +33,7 @@ Ezért a nyújtás **saját adatmodellt** kap; az `Exercise` nem kap nullable me
 
 ## Elfogadási kritériumok
 
-- [ ] Új, user-owned entitás: **`StretchExercise`** — `id` (kliens UUID), `name` (kötelező, egyedi a
+- [x] Új, user-owned entitás: **`StretchExercise`** — `id` (kliens UUID), `name` (kötelező, egyedi a
       user élő nyújtó gyakorlatai között — [[Névegyediség]], `name_normalized` partial unique index),
       `category` (kötelező, közös `ExerciseCategory`), `description` (opcionális, max. 1000 karakter),
       `equipment` (opcionális), `isFavorite` (default `false`), `defaultHoldSeconds` (kötelező
@@ -42,36 +42,35 @@ Ezért a nyújtás **saját adatmodellt** kap; az `Exercise` nem kap nullable me
       felvételkor másolódik, utólagos módosításuk a meglévő sablon-tételeket nem írja át.
       Backend: Flyway tábla `stretch_exercise`, OpenAPI CRUD + `GET /api/sync/changes` delta,
       `*SyncDataLoader`. Frontend: helyi SQLite séma (új `SCHEMA_Vn`), repository, outbox.
-- [ ] A névegyediség **típusonként külön** névtér: lehet „Hát” nevű erősítő és nyújtó gyakorlat is.
-- [ ] **`ExerciseCategory` bővítés** két új értékkel: `HIPS` (Csípő / farizom) és `NECK` (Nyak). Mindkét
+- [x] A névegyediség **típusonként külön** névtér: lehet „Hát” nevű erősítő és nyújtó gyakorlat is.
+- [x] **`ExerciseCategory` bővítés** két új értékkel: `HIPS` (Csípő / farizom) és `NECK` (Nyak). Mindkét
       típus használhatja. Backend CHECK constraint-ek (`exercise_catalog`, `workout_exercise_entry`,
       `workout_plan_exercise` snapshot, új `stretch_exercise`), OpenAPI enum, i18n címkék.
       Meglévő sorokat nem módosít (bővítés, nem felbontás).
-- [ ] **Meglévő gyakorlatok = erősítő:** a meglévő `exercise_catalog` sorok adatmigráció nélkül
+- [x] **Meglévő gyakorlatok = erősítő:** a meglévő `exercise_catalog` sorok adatmigráció nélkül
       erősítőként jelennek meg (a tábla maga az erősítő katalógus). A UI-szövegekben az eddigi
       „Gyakorlat” helyett „Erősítő gyakorlat” / „Nyújtó gyakorlat” áll, ahol a típus számít.
-- [ ] **Új gyakorlat felület:** első mezőként szegmens: **Erősítés** | **Nyújtás** (alapból
+- [x] **Új gyakorlat felület:** első mezőként szegmens: **Erősítés** | **Nyújtás** (alapból
       Erősítés). Nyújtásnál csak a nyújtó mezők látszanak: Név, Kategória, Leírás / megjegyzés,
       Eszközigény, Kedvenc, valamint **Alap tartás (mp)** és **Oldalanként** kapcsoló (segédszöveg:
       „Sablonba felvételkor ezzel töltődik elő.”). Szerkesztésnél a típus **nem** váltható (két külön entitás); a szegmens
       ilyenkor csak megjelenik, nem állítható.
-- [ ] **Katalógus lista** egyben mutatja a két típust (név szerint rendezve). A soron a típus jelölése:
+- [x] **Katalógus lista** egyben mutatja a két típust (név szerint rendezve). A soron a típus jelölése:
       erősítőnél a mai „kategória · kind”, nyújtónál „kategória · Nyújtás”. A kereső a nyújtó
       gyakorlatoknál is a névre, eszközigényre és leírásra illeszt.
-- [ ] **Többes chip-szűrő:** új chip-csoport **Erősítés** / **Nyújtás**. A kategória-chipek
+- [x] **Többes chip-szűrő:** új chip-csoport **Erősítés** / **Nyújtás**. A kategória-chipek
       **többszörösen** kiválaszthatók.
       Szabály: csoporton belül **VAGY**, a csoportok (típus, kategória, Kedvencek) között **ÉS**.
       Példák: „Hát + Nyújtás” = hát kategóriás nyújtások; „Hát + Mell” = hát vagy mell, mindkét
       típusból; semmi kijelölve = minden. A szűrési logika tiszta, unit-tesztelt függvény.
-- [ ] A meglévő erősítő pickerek (Edzésnapló, sablon-szerkesztő) továbbra is **csak erősítő**
+- [x] A meglévő erősítő pickerek (Edzésnapló, sablon-szerkesztő) továbbra is **csak erősítő**
       gyakorlatot kínálnak. A nyújtó picker a [[168-nyujto-sablonok]] része.
-- [ ] Törlés: soft delete megerősítéssel; soha nem szinkronizált draft → helyi hard remove + outbox
+- [x] Törlés: soft delete megerősítéssel; soha nem szinkronizált draft → helyi hard remove + outbox
       purge (mint az `Exercise`).
-- [ ] Feature flag **`edzes.nyujtas`** (`features.json`, alapból `true`). Kikapcsolva rejtve marad: a
+- [x] Feature flag **`edzes.nyujtas`** (`features.json`, alapból `true`). Kikapcsolva rejtve marad: a
       típus-szegmens, a Nyújtás chip és a nyújtó sorok; a route-ok guardoltak.
-- [ ] Seed: nincs kötelező nyújtó seed. Opcionálisan néhány alap nyújtás (determinisztikus v5 UUID:
-      `StretchExercise:<userId>:<normalizedName>`) — implementáláskor dönthető.
-- [ ] Specek: [[Gyakorlat]] (új „Nyújtó gyakorlat” entitás + szűrő), [[Edzés]], [[Frontend]]
+- [x] Seed: nincs nyújtó seed (implementáláskor eldöntve — lásd döntési napló).
+- [x] Specek: [[Gyakorlat]] (új „Nyújtó gyakorlat” entitás + szűrő), [[Edzés]], [[Frontend]]
       flag registry; `#### Backend-offline` frissítve. `verify:outbox` snapshot + payload verzió, ha
       kell.
 
@@ -175,8 +174,18 @@ Flyway `V57`, helyi `SCHEMA_V52`, outbox payload `v22`.
     - [[Edzés]] és [[Frontend]] flag registry;
     - `IMPLEMENTATION_STATUS.md`, archiválás.
 
+- 2026-10-17 — Implementáláskor: **nincs nyújtó seed** — a nyújtások köre nagyon személyes, egy üres katalógus
+  + gyors létrehozás egyszerűbb, mint törölgetni a nem kellő seed-sorokat.
+- 2026-10-17 — Implementáláskor: a típusváltó szegmens két külön oldal között vált (`replaceUrl`, animáció
+  nélkül), nem egy oldalon belül cserél űrlapot — így mindkét szerkesztő az eddigi egyszerű, egy-entitásos
+  mintán marad.
+
 ## Lezáráskor (on-done)
 
-- Frissített specek: [[Gyakorlat]] — …
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — #167 nyújtó gyakorlatok
-- Kód: `workout` (backend), `pages/workout/exercises/`, local schema, outbox
+- Frissített specek: [[Gyakorlat]] — két típus, `HIPS` / `NECK`, új „Entitás — `StretchExercise`”, többes
+  chip-szűrő, típus-szegmens, Backend-offline (`SCHEMA_V52`, outbox v22), Backend (`V57`); [[Edzés]] — subfeature
+  lista, flag; [[Frontend]] — `edzes.nyujtas` a flag registryben.
+- `IMPLEMENTATION_STATUS.md` sor: 2026-10-17 — #167 nyújtó gyakorlatok
+- Kód: `hu.bumler.lm2.workout.StretchExercise*`, `V57__stretch_exercise.sql`, `core/data/stretch-exercise.repository.ts`,
+  `core/data/local-rows.ts`, storage backendek, sync engine, outbox registry / migrator,
+  `pages/workout/exercises/` (`catalog-filter.ts`, lista, `stretch-exercise-edit.page.*`)

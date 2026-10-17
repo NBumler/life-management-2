@@ -1073,7 +1073,9 @@
         "LOWER_BACK": "Lower back",
         "OBLIQUES": "Obliques",
         "FOREARM_FINGERS": "Forearm, fingers",
-        "FULL_BODY": "Full body"
+        "FULL_BODY": "Full body",
+        "HIPS": "Hips, glutes",
+        "NECK": "Neck"
       },
       "KIND": {
         "WEIGHTED_REPS": "Weighted reps",
@@ -1088,6 +1090,23 @@
         "ISOMETRIC_TIME": "Per set: hold time (s) (+ optional weight).",
         "HANGBOARD_PINCH": "Per set: edge size (mm) + hold time (s) (+ optional weight).",
         "CARDIO_TIME_DIST": "Per set: time (s) + distance (m)."
+      },
+      "TYPE_STRENGTH": "Strength",
+      "TYPE_STRETCH": "Stretching",
+      "TYPE_FIELD": "Exercise type",
+      "STRETCH_ROW_TYPE": "Stretching",
+      "STRETCH": {
+        "NEW_TITLE": "New stretch",
+        "EDIT_TITLE": "Edit stretch",
+        "NAME_PLACEHOLDER": "e.g. Hamstring stretch",
+        "NAME_CONFLICT": "A stretch named “{{name}}” already exists in the live catalog.",
+        "DELETE_CONFIRM_TITLE": "Delete stretch",
+        "DELETE_CONFIRM_MESSAGE": "Delete the stretch “{{name}}”? Existing stretching-template items are kept.",
+        "FIELD_DEFAULT_HOLD": "Default hold (s)",
+        "FIELD_DEFAULT_PER_SIDE": "Per side (left, then right)",
+        "DEFAULTS_HINT": "Prefills the item when added to a template.",
+        "EQUIPMENT_PLACEHOLDER": "e.g. Mat, strap",
+        "DESCRIPTION_PLACEHOLDER": "e.g. position, cues, where you should feel it"
       }
     },
     "SESSION": {

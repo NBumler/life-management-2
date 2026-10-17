@@ -612,6 +612,12 @@ export const routes: Routes = [
             children: [
               { path: '', loadComponent: () => import('./pages/workout/exercises/exercise-list.page').then((m) => m.ExerciseListPage) },
               { path: 'new', loadComponent: () => import('./pages/workout/exercises/exercise-edit.page').then((m) => m.ExerciseEditPage) },
+              {
+                // backlog/167 — stretching exercises (Gyakorlat.md "Entitás — StretchExercise").
+                path: 'stretch/:id',
+                canActivate: [featureFlagGuard('edzes.nyujtas')],
+                loadComponent: () => import('./pages/workout/exercises/stretch-exercise-edit.page').then((m) => m.StretchExerciseEditPage),
+              },
               { path: ':id', loadComponent: () => import('./pages/workout/exercises/exercise-edit.page').then((m) => m.ExerciseEditPage) },
             ],
           },

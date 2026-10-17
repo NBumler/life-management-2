@@ -1,0 +1,66 @@
+type: object
+description: >-
+  documentation/Subfeatures/Gyakorlat.md "Entitás — StretchExercise" (backlog/167) — user-owned
+  stretching exercise catalog entry, a separate table from the strength `Exercise` catalog. `category`
+  uses the same values as Exercise.yaml's category (kept inline, as there). `defaultHoldSeconds` /
+  `defaultPerSide` only prefill a stretch-plan item when it is added; the item keeps its own copy.
+required:
+  - id
+  - name
+  - category
+  - isFavorite
+  - defaultHoldSeconds
+  - defaultPerSide
+  - deleted
+properties:
+  id:
+    type: string
+    format: uuid
+  name:
+    type: string
+    minLength: 1
+  category:
+    type: string
+    enum:
+      - CHEST
+      - BACK
+      - LEGS
+      - SHOULDERS
+      - BICEPS
+      - TRICEPS
+      - ABS
+      - LOWER_BACK
+      - OBLIQUES
+      - FOREARM_FINGERS
+      - FULL_BODY
+      - HIPS
+      - NECK
+  description:
+    type: string
+    maxLength: 1000
+    nullable: true
+  equipment:
+    type: string
+    nullable: true
+  isFavorite:
+    type: boolean
+  defaultHoldSeconds:
+    type: integer
+    minimum: 1
+  defaultPerSide:
+    type: boolean
+  deleted:
+    type: boolean
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

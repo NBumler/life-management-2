@@ -1,5 +1,11 @@
 import { Exercise } from '../../../api/model/exercise';
 
+/**
+ * backlog/167 — the strength `Exercise` and the `StretchExercise` share one category value set (the
+ * generated enums are the same string-literal union), so the chips, labels and filters use this alias.
+ */
+export type ExerciseCategory = Exercise.CategoryEnum;
+
 /** i18n key per ExerciseCategory — used by the catalog list chips, the picker, and statistics. */
 export const EXERCISE_CATEGORY_LABEL_KEYS: Record<Exercise.CategoryEnum, string> = {
   [Exercise.CategoryEnum.Chest]: 'WORKOUT.EXERCISES.CATEGORY.CHEST',
@@ -13,6 +19,8 @@ export const EXERCISE_CATEGORY_LABEL_KEYS: Record<Exercise.CategoryEnum, string>
   [Exercise.CategoryEnum.Obliques]: 'WORKOUT.EXERCISES.CATEGORY.OBLIQUES',
   [Exercise.CategoryEnum.ForearmFingers]: 'WORKOUT.EXERCISES.CATEGORY.FOREARM_FINGERS',
   [Exercise.CategoryEnum.FullBody]: 'WORKOUT.EXERCISES.CATEGORY.FULL_BODY',
+  [Exercise.CategoryEnum.Hips]: 'WORKOUT.EXERCISES.CATEGORY.HIPS',
+  [Exercise.CategoryEnum.Neck]: 'WORKOUT.EXERCISES.CATEGORY.NECK',
 };
 
 /** i18n key per ExerciseKind. */

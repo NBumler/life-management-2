@@ -45,6 +45,8 @@ properties:
       - OBLIQUES
       - FOREARM_FINGERS
       - FULL_BODY
+      - HIPS
+      - NECK
   exerciseKind:
     type: string
     enum:

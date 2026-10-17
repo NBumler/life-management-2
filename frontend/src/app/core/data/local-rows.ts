@@ -18,6 +18,7 @@ import { ShoppingList } from '../../api/model/shoppingList';
 import { ShoppingListItem } from '../../api/model/shoppingListItem';
 import { StoredFood } from '../../api/model/storedFood';
 import { SwimLog } from '../../api/model/swimLog';
+import { StretchExercise } from '../../api/model/stretchExercise';
 import { VolleyballLog } from '../../api/model/volleyballLog';
 import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { RecurringExpense } from '../../api/model/recurringExpense';
@@ -370,6 +371,107 @@ export function exerciseTombstoneTask(id: string, deletedAt: string | null, upda
     statement: `
       INSERT INTO exercise_catalog (id, name, category, kind, updated_at, deleted, deleted_at, _dirty, _local_only)
       VALUES (?, '', 'FULL_BODY', 'WEIGHTED_REPS', ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+// --- Gyakorlat: StretchExercise (backlog/167 — flat, user-owned, mirrors the exercise catalog) ---
+
+export interface StretchExerciseRow {
+  id: string;
+  name: string;
+  category: string;
+  description: string | null;
+  equipment: string | null;
+  is_favorite: number;
+  default_hold_seconds: number;
+  default_per_side: number;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+export function stretchExerciseRowToDto(row: StretchExerciseRow): StretchExercise {
+  return {
+    id: row.id,
+    name: row.name,
+    category: row.category as StretchExercise.CategoryEnum,
+    description: row.description,
+    equipment: row.equipment,
+    isFavorite: row.is_favorite === 1,
+    defaultHoldSeconds: row.default_hold_seconds,
+    defaultPerSide: row.default_per_side === 1,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+/** Matches `exerciseLocalWriteTask`: a local edit never resurrects a tombstoned row. */
+export function stretchExerciseLocalWriteTask(dto: StretchExercise): SqlTask {
+  return {
+    statement: `
+      INSERT INTO stretch_exercise (id, name, category, description, equipment, is_favorite, default_hold_seconds, default_per_side, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET
+        name = excluded.name, category = excluded.category, description = excluded.description,
+        equipment = excluded.equipment, is_favorite = excluded.is_favorite,
+        default_hold_seconds = excluded.default_hold_seconds, default_per_side = excluded.default_per_side, _dirty = 1`,
+    values: [
+      dto.id,
+      dto.name,
+      dto.category,
+      dto.description ?? null,
+      dto.equipment ?? null,
+      dto.isFavorite ? 1 : 0,
+      dto.defaultHoldSeconds,
+      dto.defaultPerSide ? 1 : 0,
+    ],
+  };
+}
+
+export function stretchExerciseServerApplyTask(dto: StretchExercise): SqlTask {
+  return {
+    statement: `
+      INSERT INTO stretch_exercise (id, name, category, description, equipment, is_favorite, default_hold_seconds, default_per_side, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        name = excluded.name, category = excluded.category, description = excluded.description,
+        equipment = excluded.equipment, is_favorite = excluded.is_favorite,
+        default_hold_seconds = excluded.default_hold_seconds, default_per_side = excluded.default_per_side,
+        created_at = excluded.created_at, updated_at = excluded.updated_at,
+        deleted = excluded.deleted, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE stretch_exercise._dirty = 0`,
+    values: [
+      dto.id,
+      dto.name,
+      dto.category,
+      dto.description ?? null,
+      dto.equipment ?? null,
+      dto.isFavorite ? 1 : 0,
+      dto.defaultHoldSeconds,
+      dto.defaultPerSide ? 1 : 0,
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function stretchExerciseTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO stretch_exercise (id, name, category, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '', 'FULL_BODY', ?, 1, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
     values: [id, updatedAt, deletedAt],
   };

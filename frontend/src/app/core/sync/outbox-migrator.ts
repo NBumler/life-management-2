@@ -30,6 +30,7 @@ const ALL_ENTITY_TYPES = [
   'PackingSessionItem',
   'LifePlan',
   'Exercise',
+  'StretchExercise',
   'WorkoutSession',
   'WorkoutPlan',
   'WeeklyPlan',
@@ -316,6 +317,9 @@ const STEPS_BY_VERSION: Readonly<Record<number, VersionSteps>> = {
   // backlog/165: `WorkoutPlan.inRotation` added as a new required field — a pending template write from
   // before this update was in the rotation, so it gets `inRotation: true`.
   20: { default: identityStep, overrides: { WorkoutPlan: addWorkoutPlanInRotationDefault } },
+  // backlog/167: brand-new `StretchExercise` entity + `HIPS` / `NECK` category values (an enum widening
+  // never invalidates an older payload) — nothing to rewrite.
+  21: { default: identityStep },
 };
 
 function buildMigrations(): ReadonlyMap<string, MigrationStep> {

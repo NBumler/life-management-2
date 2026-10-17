@@ -11,7 +11,10 @@ import {
   IonInput,
   IonItem,
   IonList,
+  IonLabel,
   IonNote,
+  IonSegment,
+  IonSegmentButton,
   IonSelect,
   IonSelectOption,
   IonTextarea,
@@ -23,7 +26,9 @@ import {
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 import { Exercise } from '../../../api/model/exercise';
+import { FeatureFlagsService } from '../../../core/config/feature-flags.service';
 import { ExerciseNameConflictError, ExerciseRepository } from '../../../core/data/exercise.repository';
+import { ExerciseType } from './catalog-filter';
 import {
   EXERCISE_CATEGORIES,
   EXERCISE_CATEGORY_LABEL_KEYS,
@@ -35,7 +40,9 @@ import {
 /**
  * documentation/Subfeatures/Gyakorlat.md "Create / edit": name, category, kind, optional
  * defaultRestTimeSeconds, equipment, favourite toggle. Route param `id` is an existing uuid or the
- * literal `new`. Mirrors LifePlanEditPage's route/title/delete pattern.
+ * literal `new`. Mirrors LifePlanEditPage's route/title/delete pattern. On create (and with
+ * `edzes.nyujtas`) an Erősítés | Nyújtás segment heads the form; Nyújtás swaps to
+ * StretchExerciseEditPage (backlog/167) — the segment is the first field, so nothing typed is lost.
  */
 @Component({
   selector: 'app-exercise-edit',
@@ -52,7 +59,10 @@ import {
     IonList,
     IonItem,
     IonInput,
+    IonLabel,
     IonNote,
+    IonSegment,
+    IonSegmentButton,
     IonSelect,
     IonSelectOption,
     IonTextarea,
@@ -70,6 +80,9 @@ export class ExerciseEditPage implements OnInit {
   private readonly repository = inject(ExerciseRepository);
   private readonly alertController = inject(AlertController);
   private readonly translate = inject(TranslateService);
+  private readonly featureFlags = inject(FeatureFlagsService);
+
+  readonly showTypeSegment = computed(() => this.exerciseId() === null && this.featureFlags.isEnabled('edzes.nyujtas'));
 
   readonly categories = EXERCISE_CATEGORIES;
   readonly kinds = EXERCISE_KINDS;
@@ -94,6 +107,13 @@ export class ExerciseEditPage implements OnInit {
 
   onKindChange(kind: Exercise.KindEnum): void {
     this.kindValue.set(kind);
+  }
+
+  /** backlog/167 — the type can't change after create (two separate entities), only on `new`. */
+  async onTypeChange(type: ExerciseType): Promise<void> {
+    if (type === 'STRETCH') {
+      await this.navController.navigateForward('/tabs/workout/exercises/stretch/new', { replaceUrl: true, animated: false });
+    }
   }
 
   async ngOnInit(): Promise<void> {
