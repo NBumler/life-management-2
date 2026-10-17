@@ -44,7 +44,7 @@ export const HOME_QUICK_ACTIONS: readonly QuickActionDef[] = [
  * as `HOME_QUICK_ACTIONS`; a row whose flag is off is dropped, and the widget hides itself entirely
  * when none remain. `TodayWorkoutsService.summary` supplies the per-row count/kcal by `key`.
  */
-export type TodayWorkoutRowKey = 'steps' | 'workout' | 'climbing' | 'swim' | 'bike';
+export type TodayWorkoutRowKey = 'steps' | 'workout' | 'climbing' | 'swim' | 'bike' | 'volleyball';
 
 export interface TodayWorkoutRowDef {
   key: TodayWorkoutRowKey;
@@ -59,4 +59,5 @@ export const HOME_TODAY_WORKOUT_ROWS: readonly TodayWorkoutRowDef[] = [
   { key: 'climbing', flag: 'edzes.maszonaplo', labelKey: 'HOME.WORKOUTS.CLIMBING', icon: 'trail-sign-outline' },
   { key: 'swim', flag: 'edzes.uszas', labelKey: 'HOME.WORKOUTS.SWIM', icon: 'water-outline' },
   { key: 'bike', flag: 'edzes.bicikli', labelKey: 'HOME.WORKOUTS.BIKE', icon: 'bicycle-outline' },
+  { key: 'volleyball', flag: 'edzes.roplabda', labelKey: 'HOME.WORKOUTS.VOLLEYBALL', icon: 'basketball-outline' },
 ];

@@ -6,6 +6,7 @@ import { ClimbingSession } from '../../api/model/climbingSession';
 import { DailyStepLog } from '../../api/model/dailyStepLog';
 import { SwimLog } from '../../api/model/swimLog';
 import { UserProfile } from '../../api/model/userProfile';
+import { VolleyballLog } from '../../api/model/volleyballLog';
 import { WorkoutSession } from '../../api/model/workoutSession';
 import { today } from '../../shared/local-date';
 import { BikeRideLogRepository } from './bike-ride-log.repository';
@@ -14,6 +15,7 @@ import { DailyStepLogRepository } from './daily-step-log.repository';
 import { ProfileRepository } from './profile.repository';
 import { SwimLogRepository } from './swim-log.repository';
 import { TodayWorkoutsService } from './today-workouts.service';
+import { VolleyballLogRepository } from './volleyball-log.repository';
 import { WorkoutSessionRepository } from './workout-session.repository';
 
 // documentation/Features/Kezdőlap.md — the "Mai edzések" widget data source (backlog/112).
@@ -35,6 +37,7 @@ describe('TodayWorkoutsService', () => {
   let climbs: ReturnType<typeof signal<ClimbingSession[]>>;
   let swims: ReturnType<typeof signal<SwimLog[]>>;
   let bikes: ReturnType<typeof signal<BikeRideLog[]>>;
+  let volleyballs: ReturnType<typeof signal<VolleyballLog[]>>;
   const loads: jasmine.Spy[] = [];
 
   function configure(): TodayWorkoutsService {
@@ -44,6 +47,7 @@ describe('TodayWorkoutsService', () => {
     climbs = signal<ClimbingSession[]>([]);
     swims = signal<SwimLog[]>([]);
     bikes = signal<BikeRideLog[]>([]);
+    volleyballs = signal<VolleyballLog[]>([]);
     loads.length = 0;
 
     function repoProvider<T>(token: unknown, items: ReturnType<typeof signal<T[]>>) {
@@ -62,6 +66,7 @@ describe('TodayWorkoutsService', () => {
         repoProvider(ClimbingSessionRepository, climbs),
         repoProvider(SwimLogRepository, swims),
         repoProvider(BikeRideLogRepository, bikes),
+        repoProvider(VolleyballLogRepository, volleyballs),
       ],
     });
     return TestBed.inject(TodayWorkoutsService);
@@ -76,6 +81,7 @@ describe('TodayWorkoutsService', () => {
     expect(s.climbing).toEqual({ count: 0, kcal: 0 });
     expect(s.swim).toEqual({ count: 0, kcal: 0 });
     expect(s.bike).toEqual({ count: 0, kcal: 0 });
+    expect(s.volleyball).toEqual({ count: 0, kcal: 0 });
     expect(s.totalKcal).toBe(0);
   });
 
@@ -94,6 +100,7 @@ describe('TodayWorkoutsService', () => {
     ]);
     swims.set([{ id: 'sw1', date: day, durationMinutes: 30, intensity: 'CRAWL_FREESTYLE', deleted: false } as SwimLog]);
     bikes.set([{ id: 'b1', date: day, durationMinutes: 40, intensity: 'ROAD_LEISURE', deleted: false } as BikeRideLog]);
+    volleyballs.set([{ id: 'v1', date: day, durationMinutes: 90, deleted: false }]);
 
     const s = service.summary();
     expect(s.steps.stepCount).toBe(8000);
@@ -103,8 +110,10 @@ describe('TodayWorkoutsService', () => {
     expect(s.climbing.count).toBe(1);
     expect(s.swim.count).toBe(1);
     expect(s.bike.count).toBe(1);
+    expect(s.volleyball.count).toBe(1);
+    expect(s.volleyball.kcal).toBeCloseTo(2.0 * 80 * 1.5, 6);
     expect(s.totalKcal).toBeCloseTo(
-      s.steps.kcal + s.workout.kcal + s.climbing.kcal + s.swim.kcal + s.bike.kcal,
+      s.steps.kcal + s.workout.kcal + s.climbing.kcal + s.swim.kcal + s.bike.kcal + s.volleyball.kcal,
       6,
     );
   });
@@ -113,7 +122,7 @@ describe('TodayWorkoutsService', () => {
     const service = configure();
     await service.load();
 
-    expect(loads.length).toBe(6);
+    expect(loads.length).toBe(7);
     for (const load of loads) {
       expect(load).toHaveBeenCalledTimes(1);
     }

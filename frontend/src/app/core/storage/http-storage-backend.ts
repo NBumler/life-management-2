@@ -17,6 +17,7 @@ import { RecipesService } from '../../api/api/recipes.service';
 import { ShoppingListsService } from '../../api/api/shoppingLists.service';
 import { StoredFoodsService } from '../../api/api/storedFoods.service';
 import { SwimLogsService } from '../../api/api/swimLogs.service';
+import { VolleyballLogsService } from '../../api/api/volleyballLogs.service';
 import { BikeRideLogsService } from '../../api/api/bikeRideLogs.service';
 import { RecurringExpensesService } from '../../api/api/recurringExpenses.service';
 import { AycmPartnersService } from '../../api/api/aycmPartners.service';
@@ -53,6 +54,7 @@ import { Recipe } from '../../api/model/recipe';
 import { ShoppingList } from '../../api/model/shoppingList';
 import { StoredFood } from '../../api/model/storedFood';
 import { SwimLog } from '../../api/model/swimLog';
+import { VolleyballLog } from '../../api/model/volleyballLog';
 import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { RecurringExpense } from '../../api/model/recurringExpense';
 import { AycmPartner } from '../../api/model/aycmPartner';
@@ -120,6 +122,7 @@ export class HttpStorageBackend implements StorageBackend {
   private readonly workoutPlansApi = inject(WorkoutPlansService);
   private readonly weeklyPlansApi = inject(WeeklyPlansService);
   private readonly swimLogsApi = inject(SwimLogsService);
+  private readonly volleyballLogsApi = inject(VolleyballLogsService);
   private readonly bikeRideLogsApi = inject(BikeRideLogsService);
   private readonly recurringExpensesApi = inject(RecurringExpensesService);
   private readonly aycmPartnersApi = inject(AycmPartnersService);
@@ -647,6 +650,19 @@ export class HttpStorageBackend implements StorageBackend {
 
   deleteSwimLog(id: string): Promise<SwimLog> {
     return firstValueFrom(this.swimLogsApi.deleteSwimLog(id));
+  }
+
+  listVolleyballLogs(): Promise<VolleyballLog[]> {
+    return firstValueFrom(this.volleyballLogsApi.listVolleyballLogs());
+  }
+
+  /** POST with an existing id is an idempotent upsert server-side, so this covers both create and update. */
+  upsertVolleyballLog(log: VolleyballLog): Promise<VolleyballLog> {
+    return firstValueFrom(this.volleyballLogsApi.createVolleyballLog(log));
+  }
+
+  deleteVolleyballLog(id: string): Promise<VolleyballLog> {
+    return firstValueFrom(this.volleyballLogsApi.deleteVolleyballLog(id));
   }
 
   listBikeRideLogs(): Promise<BikeRideLog[]> {

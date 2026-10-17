@@ -18,6 +18,7 @@ import { ShoppingList } from '../../api/model/shoppingList';
 import { ShoppingListItem } from '../../api/model/shoppingListItem';
 import { StoredFood } from '../../api/model/storedFood';
 import { SwimLog } from '../../api/model/swimLog';
+import { VolleyballLog } from '../../api/model/volleyballLog';
 import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { RecurringExpense } from '../../api/model/recurringExpense';
 import { AycmPartner } from '../../api/model/aycmPartner';
@@ -1703,6 +1704,88 @@ export function swimLogTombstoneTask(id: string, deletedAt: string | null, updat
     statement: `
       INSERT INTO swim_log (id, swim_date, duration_minutes, intensity, updated_at, deleted, deleted_at, _dirty, _local_only)
       VALUES (?, '1970-01-01', 1, 'CASUAL', ?, 1, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
+    values: [id, updatedAt, deletedAt],
+  };
+}
+
+/** documentation/Features/Röplabda napló.md — flat, mirrors swim_log; the optional fields are statistics only. */
+export interface VolleyballLogRow {
+  id: string;
+  volleyball_date: string;
+  duration_minutes: number;
+  intensity: string | null;
+  sets_played: number | null;
+  notes: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted: number;
+  deleted_at: string | null;
+  _dirty: number;
+  _local_only: number;
+  _sync_error: number;
+  _needs_refetch: number;
+}
+
+export function volleyballLogRowToDto(row: VolleyballLogRow): VolleyballLog {
+  return {
+    id: row.id,
+    date: row.volleyball_date,
+    durationMinutes: row.duration_minutes,
+    intensity: row.intensity as VolleyballLog.IntensityEnum | null,
+    setsPlayed: row.sets_played,
+    notes: row.notes,
+    deleted: row.deleted === 1,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+export function volleyballLogLocalWriteTask(dto: VolleyballLog): SqlTask {
+  return {
+    statement: `
+      INSERT INTO volleyball_log (id, volleyball_date, duration_minutes, intensity, sets_played, notes, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, 1, 1)
+      ON CONFLICT(id) DO UPDATE SET
+        volleyball_date = excluded.volleyball_date, duration_minutes = excluded.duration_minutes,
+        intensity = excluded.intensity, sets_played = excluded.sets_played, notes = excluded.notes, _dirty = 1`,
+    values: [dto.id, dto.date, dto.durationMinutes, dto.intensity ?? null, dto.setsPlayed ?? null, dto.notes ?? null],
+  };
+}
+
+export function volleyballLogServerApplyTask(dto: VolleyballLog): SqlTask {
+  return {
+    statement: `
+      INSERT INTO volleyball_log (id, volleyball_date, duration_minutes, intensity, sets_played, notes, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        volleyball_date = excluded.volleyball_date, duration_minutes = excluded.duration_minutes,
+        intensity = excluded.intensity, sets_played = excluded.sets_played, notes = excluded.notes,
+        created_at = excluded.created_at, updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at,
+        _dirty = 0, _local_only = 0, _needs_refetch = 0
+      WHERE volleyball_log._dirty = 0`,
+    values: [
+      dto.id,
+      dto.date,
+      dto.durationMinutes,
+      dto.intensity ?? null,
+      dto.setsPlayed ?? null,
+      dto.notes ?? null,
+      dto.createdAt ?? null,
+      dto.updatedAt ?? null,
+      dto.deleted ? 1 : 0,
+      dto.deletedAt ?? null,
+    ],
+  };
+}
+
+/** §8 "A tombstone győz": applies unconditionally, even over a `_dirty` row — no resurrect. */
+export function volleyballLogTombstoneTask(id: string, deletedAt: string | null, updatedAt: string): SqlTask {
+  return {
+    statement: `
+      INSERT INTO volleyball_log (id, volleyball_date, duration_minutes, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, '1970-01-01', 1, ?, 1, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, deleted = 1, deleted_at = excluded.deleted_at, _dirty = 0, _local_only = 0`,
     values: [id, updatedAt, deletedAt],
   };

@@ -22,6 +22,7 @@ import { RecipesService } from '../../api/api/recipes.service';
 import { ShoppingListsService } from '../../api/api/shoppingLists.service';
 import { StoredFoodsService } from '../../api/api/storedFoods.service';
 import { SwimLogsService } from '../../api/api/swimLogs.service';
+import { VolleyballLogsService } from '../../api/api/volleyballLogs.service';
 import { BikeRideLogsService } from '../../api/api/bikeRideLogs.service';
 import { DailyStepLogsService } from '../../api/api/dailyStepLogs.service';
 import { HikeRoutesService } from '../../api/api/hikeRoutes.service';
@@ -65,6 +66,7 @@ import { ShoppingListCompleteResponse } from '../../api/model/shoppingListComple
 import { ShoppingListItem } from '../../api/model/shoppingListItem';
 import { StoredFood } from '../../api/model/storedFood';
 import { SwimLog } from '../../api/model/swimLog';
+import { VolleyballLog } from '../../api/model/volleyballLog';
 import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { DailyStepLog } from '../../api/model/dailyStepLog';
 import { HikeRoute } from '../../api/model/hikeRoute';
@@ -135,6 +137,8 @@ import {
   storedFoodTombstoneTask,
   swimLogServerApplyTask,
   swimLogTombstoneTask,
+  volleyballLogServerApplyTask,
+  volleyballLogTombstoneTask,
   bikeRideLogServerApplyTask,
   bikeRideLogTombstoneTask,
   dailyStepLogServerApplyTask,
@@ -232,6 +236,7 @@ export class SyncEngineService {
   private readonly workoutPlansApi = inject(WorkoutPlansService);
   private readonly weeklyPlansApi = inject(WeeklyPlansService);
   private readonly swimLogsApi = inject(SwimLogsService);
+  private readonly volleyballLogsApi = inject(VolleyballLogsService);
   private readonly bikeRideLogsApi = inject(BikeRideLogsService);
   private readonly dailyStepLogsApi = inject(DailyStepLogsService);
   private readonly hikeRoutesApi = inject(HikeRoutesService);
@@ -420,6 +425,18 @@ export class SyncEngineService {
       try {
         const dto = await firstValueFrom(this.swimLogsApi.getSwimLog(row.id));
         await this.db.executeTransaction([swimLogServerApplyTask(dto)]);
+      } catch {
+        // same as above
+      }
+    }
+
+    const staleVolleyballLogs = await this.db.query<{ id: string }>(
+      'SELECT id FROM volleyball_log WHERE _needs_refetch = 1',
+    );
+    for (const row of staleVolleyballLogs) {
+      try {
+        const dto = await firstValueFrom(this.volleyballLogsApi.getVolleyballLog(row.id));
+        await this.db.executeTransaction([volleyballLogServerApplyTask(dto)]);
       } catch {
         // same as above
       }
@@ -867,6 +884,9 @@ export class SyncEngineService {
     if (item.entityType === 'BikeRideLog') {
       return [bikeRideLogServerApplyTask(body as BikeRideLog)];
     }
+    if (item.entityType === 'VolleyballLog') {
+      return [volleyballLogServerApplyTask(body as VolleyballLog)];
+    }
     if (item.entityType === 'DailyStepLog') {
       return [dailyStepLogServerApplyTask(body as DailyStepLog)];
     }
@@ -1138,6 +1158,8 @@ export class SyncEngineService {
       await this.db.executeTransaction([swimLogTombstoneTask(item.targetEntityId, null, now)]);
     } else if (item.entityType === 'BikeRideLog') {
       await this.db.executeTransaction([bikeRideLogTombstoneTask(item.targetEntityId, null, now)]);
+    } else if (item.entityType === 'VolleyballLog') {
+      await this.db.executeTransaction([volleyballLogTombstoneTask(item.targetEntityId, null, now)]);
     } else if (item.entityType === 'DailyStepLog') {
       await this.db.executeTransaction([dailyStepLogTombstoneTask(item.targetEntityId, null, now)]);
     } else if (item.entityType === 'HikeRoute') {
@@ -1445,6 +1467,12 @@ export class SyncEngineService {
         return [bikeRideLogServerApplyTask(change.data as BikeRideLog)];
       }
       return [bikeRideLogTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
+    }
+    if (change.entityType === 'VolleyballLog') {
+      if (!change.deleted) {
+        return [volleyballLogServerApplyTask(change.data as VolleyballLog)];
+      }
+      return [volleyballLogTombstoneTask(change.id, null, change.updatedAt), discardPendingWritesTask(change.id)];
     }
     if (change.entityType === 'DailyStepLog') {
       if (!change.deleted) {

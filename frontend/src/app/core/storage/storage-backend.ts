@@ -22,6 +22,7 @@ import { ShoppingListCompleteRequest } from '../../api/model/shoppingListComplet
 import { ShoppingListItem } from '../../api/model/shoppingListItem';
 import { StoredFood } from '../../api/model/storedFood';
 import { SwimLog } from '../../api/model/swimLog';
+import { VolleyballLog } from '../../api/model/volleyballLog';
 import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { RecurringExpense } from '../../api/model/recurringExpense';
 import { AycmPartner } from '../../api/model/aycmPartner';
@@ -638,6 +639,11 @@ export interface StorageBackend {
   listBikeRideLogs(): Promise<BikeRideLog[]>;
   upsertBikeRideLog(log: BikeRideLog): Promise<BikeRideLog>;
   deleteBikeRideLog(id: string): Promise<BikeRideLog>;
+
+  /** documentation/Features/Röplabda napló.md: per-user volleyball logs — flat CRUD, no nested rows. */
+  listVolleyballLogs(): Promise<VolleyballLog[]>;
+  upsertVolleyballLog(log: VolleyballLog): Promise<VolleyballLog>;
+  deleteVolleyballLog(id: string): Promise<VolleyballLog>;
 
   /** documentation/Subfeatures/Rendszeres kiadások.md: per-user recurring expenses — flat CRUD, no nested rows. */
   listRecurringExpenses(): Promise<RecurringExpense[]>;

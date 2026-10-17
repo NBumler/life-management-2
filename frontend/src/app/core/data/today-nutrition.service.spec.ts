@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 
 import { UserProfile } from '../../api/model/userProfile';
 import { BikeRideLogRepository } from './bike-ride-log.repository';
+import { VolleyballLogRepository } from './volleyball-log.repository';
 import { ClimbingSessionRepository } from './climbing-session.repository';
 import { DailyStepLogRepository } from './daily-step-log.repository';
 import { FoodRepository } from './food.repository';
@@ -21,6 +22,7 @@ const ITEM_REPOS = [
   WorkoutSessionRepository,
   SwimLogRepository,
   BikeRideLogRepository,
+  VolleyballLogRepository,
   ClimbingSessionRepository,
   DailyStepLogRepository,
 ];
@@ -84,7 +86,7 @@ describe('TodayNutritionService', () => {
     const service = configure();
     await service.load();
 
-    expect(loads.length).toBe(9);
+    expect(loads.length).toBe(10);
     for (const load of loads) {
       expect(load).toHaveBeenCalledTimes(1);
     }

@@ -10,6 +10,7 @@ import { LifePlan } from '../../api/model/lifePlan';
 import { PackingSessionItem } from '../../api/model/packingSessionItem';
 import { StoredFood } from '../../api/model/storedFood';
 import { SwimLog } from '../../api/model/swimLog';
+import { VolleyballLog } from '../../api/model/volleyballLog';
 import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { RecurringExpense } from '../../api/model/recurringExpense';
 import { AycmPartner } from '../../api/model/aycmPartner';
@@ -46,6 +47,7 @@ import {
   ProfileRow,
   StoredFoodRow,
   SwimLogRow,
+  VolleyballLogRow,
   BikeRideLogRow,
   RecurringExpenseRow,
   AycmPartnerRow,
@@ -84,6 +86,8 @@ import {
   storedFoodRowToDto,
   swimLogLocalWriteTask,
   swimLogRowToDto,
+  volleyballLogLocalWriteTask,
+  volleyballLogRowToDto,
   bikeRideLogLocalWriteTask,
   bikeRideLogRowToDto,
   recurringExpenseLocalWriteTask,
@@ -403,6 +407,13 @@ export class OutboxEntityRegistryService {
       currentPayload: rowLookup<SwimLogRow, unknown>('swim_log', swimLogRowToDto),
       buildFixWriteTask: (payload) => swimLogLocalWriteTask(payload as unknown as SwimLog),
       // documentation/Features/Úszás napló.md: a swim log has no name — nothing to uniqueness-check.
+      nameUniqueness: null,
+    },
+    VolleyballLog: {
+      table: 'volleyball_log',
+      currentPayload: rowLookup<VolleyballLogRow, unknown>('volleyball_log', volleyballLogRowToDto),
+      buildFixWriteTask: (payload) => volleyballLogLocalWriteTask(payload as unknown as VolleyballLog),
+      // documentation/Features/Röplabda napló.md: a volleyball log has no name — nothing to uniqueness-check.
       nameUniqueness: null,
     },
     BikeRideLog: {

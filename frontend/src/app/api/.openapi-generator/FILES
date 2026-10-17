@@ -79,6 +79,8 @@ api/sync.service.ts
 api/sync.serviceInterface.ts
 api/tura.service.ts
 api/tura.serviceInterface.ts
+api/volleyballLogs.service.ts
+api/volleyballLogs.serviceInterface.ts
 api/weeklyPlans.service.ts
 api/weeklyPlans.serviceInterface.ts
 api/workoutPlans.service.ts
@@ -156,6 +158,7 @@ model/trailSegmentImportItem.ts
 model/trailSegmentImportRequest.ts
 model/trailSegmentImportResponse.ts
 model/userProfile.ts
+model/volleyballLog.ts
 model/weeklyPlan.ts
 model/weeklyPlanSlot.ts
 model/weightHistoryEntry.ts

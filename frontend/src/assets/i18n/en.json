@@ -58,6 +58,7 @@
       "CLIMBING": "Climbing",
       "SWIM": "Swimming",
       "BIKE": "Cycling",
+      "VOLLEYBALL": "Volleyball",
       "STEP_COUNT": "{{count}} steps",
       "SESSION_COUNT": "{{count}} session(s)",
       "TOTAL": "Total",
@@ -987,7 +988,8 @@
       "WEEKLY_PLAN": "Weekly plan",
       "CLIMBING": "Climbing",
       "SWIMMING": "Swimming",
-      "CYCLING": "Cycling"
+      "CYCLING": "Cycling",
+      "VOLLEYBALL": "Volleyball"
     },
     "LOG": {
       "EMPTY": "No workouts logged yet.",
@@ -1269,6 +1271,31 @@
         "BUTTERFLY": "Butterfly",
         "VIGOROUS": "Vigorous",
         "MIXED": "Mixed"
+      }
+    },
+    "VOLLEYBALL": {
+      "NEW": "New volleyball",
+      "EMPTY": "No volleyball entries yet.",
+      "NEW_TITLE": "New volleyball",
+      "EDIT_TITLE": "Edit volleyball",
+      "FIELD_DATE": "Date",
+      "FIELD_DURATION": "Time on court (min)",
+      "FIELD_DURATION_HINT": "Only time on court counts — not time on the bench or waiting.",
+      "DURATION_ERROR": "Enter between 1 and {{max}} minutes.",
+      "FIELD_INTENSITY": "Intensity (optional)",
+      "INTENSITY_NONE": "Not set",
+      "INTENSITY_HINT": "Statistics only — does not affect the calories.",
+      "FIELD_SETS": "Sets played (optional)",
+      "FIELD_NOTES": "Notes",
+      "SETS_SHORT": "sets",
+      "KCAL_CONSERVATIVE_HINT": "Conservative estimate — a hard match may burn more.",
+      "NO_BODY_WEIGHT": "Set your body weight in the profile to estimate calories.",
+      "DELETE_CONFIRM_TITLE": "Delete volleyball",
+      "DELETE_CONFIRM_MESSAGE": "Delete this entry?",
+      "INTENSITY": {
+        "LIGHT": "Light",
+        "MODERATE": "Moderate",
+        "HARD": "Hard"
       }
     },
     "BIKE": {

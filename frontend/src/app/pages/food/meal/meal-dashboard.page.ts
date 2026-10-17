@@ -24,7 +24,14 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 import { Meal } from '../../../api/model/meal';
 import { UserProfile } from '../../../api/model/userProfile';
-import { bikeKcalForDay, climbingKcalForDay, stepKcalForDay, swimKcalForDay, workoutKcalForDay } from '../../../core/data/activity-kcal';
+import {
+  bikeKcalForDay,
+  climbingKcalForDay,
+  stepKcalForDay,
+  swimKcalForDay,
+  volleyballKcalForDay,
+  workoutKcalForDay,
+} from '../../../core/data/activity-kcal';
 import { BikeRideLogRepository } from '../../../core/data/bike-ride-log.repository';
 import { ClimbingSessionRepository } from '../../../core/data/climbing-session.repository';
 import { DailyStepLogRepository } from '../../../core/data/daily-step-log.repository';
@@ -33,6 +40,7 @@ import { MealRepository } from '../../../core/data/meal.repository';
 import { ProfileRepository } from '../../../core/data/profile.repository';
 import { RecipeRepository } from '../../../core/data/recipe.repository';
 import { SwimLogRepository } from '../../../core/data/swim-log.repository';
+import { VolleyballLogRepository } from '../../../core/data/volleyball-log.repository';
 import { WorkoutSessionRepository } from '../../../core/data/workout-session.repository';
 import { today } from '../../../shared/local-date';
 import { TdeeCalculation, TdeeProfileInput, computeTdee } from '../../../shared/tdee-calculator';
@@ -105,6 +113,7 @@ export class MealDashboardPage implements OnInit, ViewWillEnter {
   private readonly workoutRepository = inject(WorkoutSessionRepository);
   private readonly swimRepository = inject(SwimLogRepository);
   private readonly bikeRepository = inject(BikeRideLogRepository);
+  private readonly volleyballRepository = inject(VolleyballLogRepository);
   private readonly climbingRepository = inject(ClimbingSessionRepository);
   private readonly stepRepository = inject(DailyStepLogRepository);
   private readonly alertController = inject(AlertController);
@@ -126,8 +135,9 @@ export class MealDashboardPage implements OnInit, ViewWillEnter {
    * documentation/Features/Tápérték kalkulátor.md: `activityExtraKcal` = lépéskalória + Σ
    * edzéskalóriák. The step term is `stepKcalForDay` ([[Lépésszám követés]]); the training half is
    * Σ `sessionKcal()` over the day's strength/HIIT sessions plus Σ `swimKcal()` over the day's swim
-   * logs plus Σ `bikeKcal()` over the day's bike rides plus Σ `climbingKcal()` over the day's
-   * climbing sessions, at the current profile weight.
+   * logs plus Σ `bikeKcal()` over the day's bike rides plus Σ `volleyballKcal()` over the day's
+   * volleyball sessions plus Σ `climbingKcal()` over the day's climbing sessions, at the current
+   * profile weight.
    */
   readonly workoutExtraKcal = computed(() => {
     const day = this.selectedDate();
@@ -137,6 +147,7 @@ export class MealDashboardPage implements OnInit, ViewWillEnter {
       workoutKcalForDay(this.workoutRepository.items(), day, weight) +
       swimKcalForDay(this.swimRepository.items(), day, weight) +
       bikeKcalForDay(this.bikeRepository.items(), day, weight) +
+      volleyballKcalForDay(this.volleyballRepository.items(), day, weight) +
       climbingKcalForDay(this.climbingRepository.items(), day, weight)
     );
   });
@@ -177,6 +188,7 @@ export class MealDashboardPage implements OnInit, ViewWillEnter {
       this.workoutRepository.load(),
       this.swimRepository.load(),
       this.bikeRepository.load(),
+      this.volleyballRepository.load(),
       this.climbingRepository.load(),
       this.stepRepository.load(),
     ]);

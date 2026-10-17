@@ -17,6 +17,7 @@ import { Recipe } from '../../api/model/recipe';
 import { ShoppingList } from '../../api/model/shoppingList';
 import { StoredFood } from '../../api/model/storedFood';
 import { SwimLog } from '../../api/model/swimLog';
+import { VolleyballLog } from '../../api/model/volleyballLog';
 import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { RecurringExpense } from '../../api/model/recurringExpense';
 import { AycmPartner } from '../../api/model/aycmPartner';
@@ -61,6 +62,7 @@ import {
   ShoppingListRow,
   StoredFoodRow,
   SwimLogRow,
+  VolleyballLogRow,
   BikeRideLogRow,
   RecurringExpenseRow,
   AycmPartnerRow,
@@ -123,6 +125,8 @@ import {
   storedFoodRowToDto,
   swimLogLocalWriteTask,
   swimLogRowToDto,
+  volleyballLogLocalWriteTask,
+  volleyballLogRowToDto,
   bikeRideLogLocalWriteTask,
   bikeRideLogRowToDto,
   recurringExpenseLocalWriteTask,
@@ -794,6 +798,59 @@ export class SqliteStorageBackend implements StorageBackend {
   private async readSwimLog(id: string): Promise<SwimLog> {
     const rows = await this.db.query<SwimLogRow>('SELECT * FROM swim_log WHERE id = ?', [id]);
     return swimLogRowToDto(rows[0]);
+  }
+
+  async listVolleyballLogs(): Promise<VolleyballLog[]> {
+    const rows = await this.db.query<VolleyballLogRow>(
+      'SELECT * FROM volleyball_log WHERE deleted = 0 ORDER BY volleyball_date DESC, created_at DESC',
+    );
+    return rows.map(volleyballLogRowToDto);
+  }
+
+  async upsertVolleyballLog(log: VolleyballLog): Promise<VolleyballLog> {
+    const userId = this.requireUserId();
+    const existing = await this.db.query('SELECT 1 FROM volleyball_log WHERE id = ?', [log.id]);
+    const isNew = existing.length === 0;
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: isNew ? 'POST' : 'PUT',
+      url: isNew ? '/api/volleyball-logs' : `/api/volleyball-logs/${log.id}`,
+      payload: log,
+      entityType: 'VolleyballLog',
+      targetEntityId: log.id,
+    });
+    await this.db.executeTransaction([volleyballLogLocalWriteTask(log), ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    return this.readVolleyballLog(log.id);
+  }
+
+  async deleteVolleyballLog(id: string): Promise<VolleyballLog> {
+    const userId = this.requireUserId();
+    const enqueue = await this.offlineQueue.buildEnqueueTasks({
+      userId,
+      method: 'DELETE',
+      url: `/api/volleyball-logs/${id}`,
+      payload: null,
+      entityType: 'VolleyballLog',
+      targetEntityId: id,
+    });
+    const entityTask: SqlTask = enqueue.hardRemoveLocalEntity
+      ? { statement: 'DELETE FROM volleyball_log WHERE id = ?', values: [id] }
+      : {
+          statement: 'UPDATE volleyball_log SET deleted = 1, deleted_at = ?, _dirty = 1 WHERE id = ?',
+          values: [new Date().toISOString(), id],
+        };
+    await this.db.executeTransaction([entityTask, ...enqueue.outboxTasks]);
+    await this.offlineQueue.refreshCounts(userId);
+    if (enqueue.hardRemoveLocalEntity) {
+      return { id, date: '1970-01-01', durationMinutes: 1, deleted: true };
+    }
+    return this.readVolleyballLog(id);
+  }
+
+  private async readVolleyballLog(id: string): Promise<VolleyballLog> {
+    const rows = await this.db.query<VolleyballLogRow>('SELECT * FROM volleyball_log WHERE id = ?', [id]);
+    return volleyballLogRowToDto(rows[0]);
   }
 
   async listBikeRideLogs(): Promise<BikeRideLog[]> {

@@ -2,8 +2,8 @@
  * documentation/Features/Tápérték kalkulátor.md "Edzéskalória — univerzális MET":
  * `activityExtraKcal` = lépéskalória + Σ edzéskalóriák az napra. This module produces both halves for
  * a single client-local calendar day: the Σ of `sessionKcal()` / `swimKcal()` / `bikeKcal()` /
- * `climbingKcal()` over the day's workout logs ({@link workoutKcalForDay} etc.), and the step-calorie
- * term ({@link stepKcalForDay}, [[Lépésszám követés]]).
+ * `volleyballKcal()` / `climbingKcal()` over the day's workout logs ({@link workoutKcalForDay} etc.),
+ * and the step-calorie term ({@link stepKcalForDay}, [[Lépésszám követés]]).
  *
  * Pure TS, no Angular — the same "kliens gördíti tovább" shape as `pages/food/storage/shelf-life.ts`
  * consumed from `meal.repository.ts`. Every term uses the CURRENT body weight, never a value frozen
@@ -13,12 +13,14 @@ import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { ClimbingSession } from '../../api/model/climbingSession';
 import { DailyStepLog } from '../../api/model/dailyStepLog';
 import { SwimLog } from '../../api/model/swimLog';
+import { VolleyballLog } from '../../api/model/volleyballLog';
 import { WorkoutSession } from '../../api/model/workoutSession';
 import { bikeKcal } from '../../pages/workout/cycling/bike-metrics';
 import { climbingSessionKcalInput } from '../../pages/workout/climbing/climbing-attempt-input';
 import { climbingKcal } from '../../pages/workout/climbing/climbing-metrics';
 import { sessionKcal } from '../../pages/workout/log/workout-metrics';
 import { swimKcal } from '../../pages/workout/swimming/swim-metrics';
+import { volleyballKcal } from '../../pages/workout/volleyball/volleyball-metrics';
 
 /**
  * Σ MET-kcal over every live `WorkoutSession` whose `date` is `day` (a `YYYY-MM-DD` client-local
@@ -63,6 +65,21 @@ export function bikeKcalForDay(
   return logs
     .filter((log) => !log.deleted && log.date === day)
     .reduce((sum, log) => sum + bikeKcal(log, bodyWeightKg), 0);
+}
+
+/**
+ * documentation/Features/Röplabda napló.md: same shape as {@link bikeKcalForDay} — Σ `volleyballKcal()`
+ * over every live `VolleyballLog` whose `date` is `day` (one fixed, conservative net MET; the log's
+ * optional `intensity` never enters it).
+ */
+export function volleyballKcalForDay(
+  logs: readonly VolleyballLog[],
+  day: string,
+  bodyWeightKg: number | null,
+): number {
+  return logs
+    .filter((log) => !log.deleted && log.date === day)
+    .reduce((sum, log) => sum + volleyballKcal(log, bodyWeightKg), 0);
 }
 
 /**

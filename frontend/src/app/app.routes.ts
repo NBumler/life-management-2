@@ -595,6 +595,17 @@ export const routes: Routes = [
             ],
           },
           {
+            // documentation/Features/Röplabda napló.md: the "Röplabda" segment — flat volleyball-session
+            // CRUD (list / create / edit). Mirrors the swim slice's shape.
+            path: 'volleyball',
+            canActivate: [featureFlagGuard('edzes.roplabda')],
+            children: [
+              { path: '', loadComponent: () => import('./pages/workout/volleyball/volleyball-log-list.page').then((m) => m.VolleyballLogListPage) },
+              { path: 'new', loadComponent: () => import('./pages/workout/volleyball/volleyball-log-edit.page').then((m) => m.VolleyballLogEditPage) },
+              { path: ':id', loadComponent: () => import('./pages/workout/volleyball/volleyball-log-edit.page').then((m) => m.VolleyballLogEditPage) },
+            ],
+          },
+          {
             // documentation/Features/Edzés.md: Gyakorlat törzsadat opens from the workout header
             // (fogaskerék), not a segment. Gated by tab.edzes along with the rest of the tab.
             path: 'exercises',

@@ -4,7 +4,7 @@ import { FeatureFlagKey } from '../../core/config/feature-flags.service';
 
 /**
  * documentation/Features/Edzés.md "UI/UX elvárások" — the Edzés tab's root is a top segment:
- * Edzésnapló | Heti terv | Mászás | Úszás | Bicikli (Gyakorlat opens from the header gear icon, not
+ * Edzésnapló | Heti terv | Mászás | Úszás | Bicikli | Röplabda (Gyakorlat opens from the header gear icon, not
  * a segment). documentation/Architektúra/Frontend.md route map fixes the routes below.
  *
  * Unlike the food tab's five fixed sections, every segment here except the log is feature-flagged
@@ -12,7 +12,7 @@ import { FeatureFlagKey } from '../../core/config/feature-flags.service';
  * disabled-looking button (Frontend.md "Tab registry"). `flag: null` = covered by `tab.edzes` itself
  * (the log and Gyakorlat share the parent tab's flag; a separate switch would just leave an empty tab).
  */
-export type WorkoutSection = 'log' | 'weekly-plan' | 'climbing' | 'swimming' | 'cycling';
+export type WorkoutSection = 'log' | 'weekly-plan' | 'climbing' | 'swimming' | 'cycling' | 'volleyball';
 
 export interface WorkoutSectionDef {
   readonly section: WorkoutSection;
@@ -27,6 +27,7 @@ export const WORKOUT_SECTIONS: readonly WorkoutSectionDef[] = [
   { section: 'climbing', flag: 'edzes.maszonaplo', route: '/tabs/workout/climbing', labelKey: 'WORKOUT.SEGMENTS.CLIMBING' },
   { section: 'swimming', flag: 'edzes.uszas', route: '/tabs/workout/swimming', labelKey: 'WORKOUT.SEGMENTS.SWIMMING' },
   { section: 'cycling', flag: 'edzes.bicikli', route: '/tabs/workout/cycling', labelKey: 'WORKOUT.SEGMENTS.CYCLING' },
+  { section: 'volleyball', flag: 'edzes.roplabda', route: '/tabs/workout/volleyball', labelKey: 'WORKOUT.SEGMENTS.VOLLEYBALL' },
 ];
 
 const WORKOUT_SECTION_ROUTES: Record<WorkoutSection, string> = WORKOUT_SECTIONS.reduce(

@@ -1,0 +1,58 @@
+type: object
+description: >-
+  documentation/Features/Röplabda napló.md — one logged (indoor) volleyball session. No start/end
+  time, only a calendar date + the manual on-court durationMinutes. No kcal / body-weight field: the
+  aznapi activityExtraKcal contribution is a pure client calculation with ONE fixed, deliberately
+  conservative net MET (documentation/Features/Tápérték kalkulátor.md). intensity / setsPlayed /
+  notes are log/statistics only — never part of the kcal formula.
+required:
+  - id
+  - date
+  - durationMinutes
+  - deleted
+properties:
+  id:
+    type: string
+    format: uuid
+  date:
+    type: string
+    format: date
+    description: Calendar date in the client's TZ — the aznapi activityExtraKcal bucket. No time-of-day.
+  durationMinutes:
+    type: integer
+    minimum: 1
+    maximum: 240
+    description: >-
+      Whole on-court minutes (bench / waiting excluded), 1–240. The only kcal input; the cap keeps a
+      typo from inflating the daily allowance.
+  intensity:
+    type: string
+    nullable: true
+    enum:
+      - LIGHT
+      - MODERATE
+      - HARD
+    description: Optional self-rated intensity — statistics only, does NOT change the kcal.
+  setsPlayed:
+    type: integer
+    minimum: 1
+    nullable: true
+    description: Optional number of sets played — statistics only.
+  notes:
+    type: string
+    nullable: true
+  deleted:
+    type: boolean
+  deletedAt:
+    type: string
+    format: date-time
+    nullable: true
+    readOnly: true
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true

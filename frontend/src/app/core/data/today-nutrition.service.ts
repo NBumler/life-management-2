@@ -5,7 +5,14 @@ import { computeDailyNutrition } from '../../pages/food/meal/daily-nutrition';
 import { today } from '../../shared/local-date';
 import { TdeeProfileInput, computeTdee } from '../../shared/tdee-calculator';
 import { calendarDayInZone, deviceTimeZoneId } from '../../shared/timezone';
-import { bikeKcalForDay, climbingKcalForDay, stepKcalForDay, swimKcalForDay, workoutKcalForDay } from './activity-kcal';
+import {
+  bikeKcalForDay,
+  climbingKcalForDay,
+  stepKcalForDay,
+  swimKcalForDay,
+  volleyballKcalForDay,
+  workoutKcalForDay,
+} from './activity-kcal';
 import { BikeRideLogRepository } from './bike-ride-log.repository';
 import { ClimbingSessionRepository } from './climbing-session.repository';
 import { DailyStepLogRepository } from './daily-step-log.repository';
@@ -14,6 +21,7 @@ import { MealRepository } from './meal.repository';
 import { ProfileRepository } from './profile.repository';
 import { RecipeRepository } from './recipe.repository';
 import { SwimLogRepository } from './swim-log.repository';
+import { VolleyballLogRepository } from './volleyball-log.repository';
 import { WorkoutSessionRepository } from './workout-session.repository';
 
 /** One nutrient's today-so-far intake against today's goal. */
@@ -62,6 +70,7 @@ export class TodayNutritionService {
   private readonly workouts = inject(WorkoutSessionRepository);
   private readonly swims = inject(SwimLogRepository);
   private readonly bikes = inject(BikeRideLogRepository);
+  private readonly volleyballs = inject(VolleyballLogRepository);
   private readonly climbs = inject(ClimbingSessionRepository);
   private readonly steps = inject(DailyStepLogRepository);
 
@@ -80,6 +89,7 @@ export class TodayNutritionService {
       workoutKcalForDay(this.workouts.items(), day, weight) +
       swimKcalForDay(this.swims.items(), day, weight) +
       bikeKcalForDay(this.bikes.items(), day, weight) +
+      volleyballKcalForDay(this.volleyballs.items(), day, weight) +
       climbingKcalForDay(this.climbs.items(), day, weight)
     );
   });
@@ -110,6 +120,7 @@ export class TodayNutritionService {
       this.workouts.load(),
       this.swims.load(),
       this.bikes.load(),
+      this.volleyballs.load(),
       this.climbs.load(),
       this.steps.load(),
     ]);

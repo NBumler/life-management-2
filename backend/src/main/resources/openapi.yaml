@@ -103,6 +103,10 @@ paths:
     $ref: 'openapi/paths/bike-ride-logs.yaml'
   /api/bike-ride-logs/{id}:
     $ref: 'openapi/paths/bike-ride-logs-item.yaml'
+  /api/volleyball-logs:
+    $ref: 'openapi/paths/volleyball-logs.yaml'
+  /api/volleyball-logs/{id}:
+    $ref: 'openapi/paths/volleyball-logs-item.yaml'
   /api/climbing/gyms:
     $ref: 'openapi/paths/climbing-gyms.yaml'
   /api/climbing/gyms/{id}:
@@ -316,6 +320,10 @@ components:
       $ref: 'openapi/components/schemas/BikeRideLog.yaml'
     BikeRideLogList:
       $ref: 'openapi/components/schemas/BikeRideLogList.yaml'
+    VolleyballLog:
+      $ref: 'openapi/components/schemas/VolleyballLog.yaml'
+    VolleyballLogList:
+      $ref: 'openapi/components/schemas/VolleyballLogList.yaml'
     Gym:
       $ref: 'openapi/components/schemas/Gym.yaml'
     GymList:

@@ -64,6 +64,7 @@ export * from './trailSegmentImportItem';
 export * from './trailSegmentImportRequest';
 export * from './trailSegmentImportResponse';
 export * from './userProfile';
+export * from './volleyballLog';
 export * from './weeklyPlan';
 export * from './weeklyPlanSlot';
 export * from './weightHistoryEntry';

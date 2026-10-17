@@ -1,0 +1,38 @@
+get:
+  operationId: listVolleyballLogs
+  tags:
+    - volleyball-logs
+  summary: The caller's volleyball logs, live rows only (deleted = false).
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/VolleyballLogList.yaml'
+post:
+  operationId: createVolleyballLog
+  tags:
+    - volleyball-logs
+  summary: Create a volleyball log — idempotent upsert on the client-supplied id.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/VolleyballLog.yaml'
+  responses:
+    '200':
+      description: Created or, on retry with the same id, the existing row.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/VolleyballLog.yaml'
+    '400':
+      description: >-
+        durationMinutes out of range (1–240) — the cap keeps a typo from inflating the daily kcal
+        allowance (documentation/Features/Röplabda napló.md).
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'

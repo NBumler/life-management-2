@@ -15,6 +15,7 @@ function summaryWith(overrides: Partial<TodayWorkoutsSummary> = {}): TodayWorkou
     climbing: ZERO,
     swim: ZERO,
     bike: ZERO,
+    volleyball: ZERO,
     totalKcal: 0,
     ...overrides,
   };

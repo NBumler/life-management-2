@@ -17,7 +17,7 @@ function summaryStub(): TodayNutritionSummary {
 
 function workoutsSummaryStub(): TodayWorkoutsSummary {
   const a = { count: 0, kcal: 0 };
-  return { steps: { ...a, stepCount: 0 }, workout: a, climbing: a, swim: a, bike: a, totalKcal: 0 };
+  return { steps: { ...a, stepCount: 0 }, workout: a, climbing: a, swim: a, bike: a, volleyball: a, totalKcal: 0 };
 }
 
 describe('HomePage', () => {

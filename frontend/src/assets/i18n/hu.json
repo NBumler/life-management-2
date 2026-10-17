@@ -58,6 +58,7 @@
       "CLIMBING": "Mászás",
       "SWIM": "Úszás",
       "BIKE": "Bicikli",
+      "VOLLEYBALL": "Röplabda",
       "STEP_COUNT": "{{count}} lépés",
       "SESSION_COUNT": "{{count}} alkalom",
       "TOTAL": "Összesen",
@@ -987,7 +988,8 @@
       "WEEKLY_PLAN": "Heti terv",
       "CLIMBING": "Mászás",
       "SWIMMING": "Úszás",
-      "CYCLING": "Bicikli"
+      "CYCLING": "Bicikli",
+      "VOLLEYBALL": "Röplabda"
     },
     "LOG": {
       "EMPTY": "Még nincs edzés naplózva.",
@@ -1269,6 +1271,31 @@
         "BUTTERFLY": "Pillangó",
         "VIGOROUS": "Intenzív",
         "MIXED": "Vegyes"
+      }
+    },
+    "VOLLEYBALL": {
+      "NEW": "Új röplabda",
+      "EMPTY": "Még nincs röplabda-bejegyzés.",
+      "NEW_TITLE": "Új röplabda",
+      "EDIT_TITLE": "Röplabda szerkesztése",
+      "FIELD_DATE": "Dátum",
+      "FIELD_DURATION": "Pályán töltött idő (perc)",
+      "FIELD_DURATION_HINT": "Csak a pályán töltött idő számít — a kispadon / várakozással töltött idő nem.",
+      "DURATION_ERROR": "1 és {{max}} perc között add meg.",
+      "FIELD_INTENSITY": "Intenzitás (opcionális)",
+      "INTENSITY_NONE": "Nincs megadva",
+      "INTENSITY_HINT": "Csak statisztika — a kalóriát nem befolyásolja.",
+      "FIELD_SETS": "Lejátszott szettek (opcionális)",
+      "FIELD_NOTES": "Megjegyzés",
+      "SETS_SHORT": "szett",
+      "KCAL_CONSERVATIVE_HINT": "Óvatos becslés — kemény meccsen a valós érték magasabb lehet.",
+      "NO_BODY_WEIGHT": "Adj meg testsúlyt a profilban a kalóriabecsléshez.",
+      "DELETE_CONFIRM_TITLE": "Röplabda törlése",
+      "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd ezt a bejegyzést?",
+      "INTENSITY": {
+        "LIGHT": "Könnyű",
+        "MODERATE": "Közepes",
+        "HARD": "Kemény"
       }
     },
     "BIKE": {

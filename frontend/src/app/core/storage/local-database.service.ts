@@ -1332,7 +1332,31 @@ const SCHEMA_V48_STATEMENTS: string[] = [`ALTER TABLE calendar_event ADD COLUMN 
  */
 const SCHEMA_V49_STATEMENTS: string[] = [`ALTER TABLE weekly_plan_slot ADD COLUMN kind TEXT NOT NULL DEFAULT 'PLAN'`];
 
-const SCHEMA_VERSION = 49;
+/**
+ * backlog/157 — documentation/Features/Röplabda napló.md: flat volleyball-session log under the Edzés tab
+ * (one row = one session); on-device tükre a backend `V55__volleyball_log.sql`-nek.
+ */
+const SCHEMA_V50_STATEMENTS: string[] = [
+  `CREATE TABLE IF NOT EXISTS volleyball_log (
+    id TEXT PRIMARY KEY,
+    volleyball_date TEXT NOT NULL,
+    duration_minutes INTEGER NOT NULL,
+    intensity TEXT,
+    sets_played INTEGER,
+    notes TEXT,
+    created_at TEXT,
+    updated_at TEXT,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
+    _dirty INTEGER NOT NULL DEFAULT 0,
+    _local_only INTEGER NOT NULL DEFAULT 0,
+    _sync_error INTEGER NOT NULL DEFAULT 0,
+    _needs_refetch INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_volleyball_log_volleyball_date ON volleyball_log (volleyball_date DESC)`,
+];
+
+const SCHEMA_VERSION = 50;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -1384,7 +1408,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 46, statements: SCHEMA_V46_STATEMENTS },
   { toVersion: 47, statements: SCHEMA_V47_STATEMENTS },
   { toVersion: 48, statements: SCHEMA_V48_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V49_STATEMENTS },
+  { toVersion: 49, statements: SCHEMA_V49_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V50_STATEMENTS },
 ];
 
 export interface SqlTask {

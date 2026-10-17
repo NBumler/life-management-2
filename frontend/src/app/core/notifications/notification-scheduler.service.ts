@@ -5,7 +5,14 @@ import { Capacitor } from '@capacitor/core';
 import { Preferences } from '@capacitor/preferences';
 import { TranslateService } from '@ngx-translate/core';
 
-import { bikeKcalForDay, climbingKcalForDay, stepKcalForDay, swimKcalForDay, workoutKcalForDay } from '../data/activity-kcal';
+import {
+  bikeKcalForDay,
+  climbingKcalForDay,
+  stepKcalForDay,
+  swimKcalForDay,
+  volleyballKcalForDay,
+  workoutKcalForDay,
+} from '../data/activity-kcal';
 import { BikeRideLogRepository } from '../data/bike-ride-log.repository';
 import { CalendarEventRepository } from '../data/calendar-event.repository';
 import { ClimbingSessionRepository } from '../data/climbing-session.repository';
@@ -17,6 +24,7 @@ import { ProfileRepository } from '../data/profile.repository';
 import { RecipeRepository } from '../data/recipe.repository';
 import { StoredFoodRepository } from '../data/stored-food.repository';
 import { SwimLogRepository } from '../data/swim-log.repository';
+import { VolleyballLogRepository } from '../data/volleyball-log.repository';
 import { WorkoutSessionRepository } from '../data/workout-session.repository';
 import { FeatureFlagsService } from '../config/feature-flags.service';
 import { LanguageService } from '../config/language.service';
@@ -130,6 +138,7 @@ export class NotificationSchedulerService {
   private readonly workout = inject(WorkoutSessionRepository);
   private readonly swim = inject(SwimLogRepository);
   private readonly bike = inject(BikeRideLogRepository);
+  private readonly volleyball = inject(VolleyballLogRepository);
   private readonly climbing = inject(ClimbingSessionRepository);
 
   readonly permission = signal<NotificationPermission>('unknown');
@@ -199,6 +208,7 @@ export class NotificationSchedulerService {
         this.workout.items();
         this.swim.items();
         this.bike.items();
+        this.volleyball.items();
         this.climbing.items();
         const pulled = tick !== this.lastTick;
         this.lastTick = tick;
@@ -361,6 +371,7 @@ export class NotificationSchedulerService {
       this.workout.load(),
       this.swim.load(),
       this.bike.load(),
+      this.volleyball.load(),
       this.climbing.load(),
     ]);
   }
@@ -677,6 +688,7 @@ export class NotificationSchedulerService {
         workoutKcalForDay(this.workout.items(), date, weight) +
         swimKcalForDay(this.swim.items(), date, weight) +
         bikeKcalForDay(this.bike.items(), date, weight) +
+        volleyballKcalForDay(this.volleyball.items(), date, weight) +
         climbingKcalForDay(this.climbing.items(), date, weight);
 
       const tdee = computeTdee(

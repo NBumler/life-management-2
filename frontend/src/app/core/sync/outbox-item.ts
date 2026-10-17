@@ -25,6 +25,7 @@ export type OutboxEntityType =
   | 'WeeklyPlan'
   | 'SwimLog'
   | 'BikeRideLog'
+  | 'VolleyballLog'
   | 'RecurringExpense'
   | 'AycmPartner'
   | 'AycmPriceRule'
