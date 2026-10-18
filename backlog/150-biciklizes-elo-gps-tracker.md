@@ -402,6 +402,18 @@ kulcs = ugyanaz a jelentés, mint korábban), `verify:outbox -- --write` lefutta
 **Ez még nem tartalmazza** a `bike-live-session.service.ts`-t, az élő képernyőt/bannert/
 értesítést, sem az összegző űrlapot — ezek a 2. fázis következő szelete.
 
+**2. fázis, 2. szelet (2026-10-19) — `core/data/bike-live-session.service.ts`:** az élő menet
+állapotgépe (start / szünet / folytatás / befejezés / elvetés / újraindítás), Preferences-draft
+(`lm2_bike_live_draft`) + `TrackBufferService` (`bike`). A szünet új **szegmenst** nyit (a draft
+`segmentStarts`-a), így a szünet alatti elmozdulás nem táv, a szünet ideje nem `durationMinutes`.
+`summary()` adja az összegző űrlap előtöltését: táv = szegmensenkénti track-hossz, szintemelkedés =
+szegmensenként `ELEVATION_SAMPLE_SPACING_METERS` (50 m) távolságú DEM-mintavétel +
+`computeRouteMetrics` zajküszöb; nem számolható érték `null` (§14). **Értesítés-döntés:** felvétel
+közben a GPS-plugin saját foreground-service értesítése a „folyamatban" értesítés (két értesítés
+helyett egy); szünet alatt — amikor a plugin le van állítva — saját `ongoing` helyi értesítés
+(`BIKE_LIVE_PAUSED_NOTIFICATION_ID = 424_243`), koppintásra `/tabs/workout/cycling/live`. Hátra van:
+élő képernyő + route, banner, összegző űrlap (a meglévő szerkesztő előtöltése), lista-belépő.
+
 ### Méret-jóváhagyás
 
 **Mért / becsült méretek (2026-10-06):**

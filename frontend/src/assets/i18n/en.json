@@ -1369,6 +1369,12 @@
       "NO_BODY_WEIGHT": "Set a body weight in your profile for the kcal estimate.",
       "DELETE_CONFIRM_TITLE": "Delete bike ride",
       "DELETE_CONFIRM_MESSAGE": "Delete this bike ride log?",
+      "LIVE": {
+        "NOTIFICATION_TITLE": "Bike ride in progress",
+        "NOTIFICATION_BODY": "Recording your route with GPS",
+        "PAUSED_NOTIFICATION_TITLE": "Bike ride paused",
+        "PAUSED_NOTIFICATION_BODY": "Started at {{time}} — tap to resume"
+      },
       "INTENSITY": {
         "CITY": "City",
         "STATIONARY": "Stationary",
