@@ -74,8 +74,11 @@ import { uuidV4 } from './uuid';
  *   app update, so every type is identity.
  * - v24 → v25 (backlog/170): `WorkoutPlan` gained a nullable `stretchPlanId`. A pending template write from
  *   before that app update has no such key (= nothing attached), so every type is identity.
+ * - v25 → v26 (backlog/150): `BikeRideLog` gained `trackingMode` / `startedAt`. A pending ride write from
+ *   before that app update has neither, which the server reads as "a manual entry" (MANUAL, no startedAt),
+ *   identical to the old behaviour.
  */
-export const OUTBOX_PAYLOAD_SCHEMA_VERSION = 25;
+export const OUTBOX_PAYLOAD_SCHEMA_VERSION = 26;
 
 /** documentation/Architektúra/Backend-offline first.md §6 "Tétel-újrapróbálkozási backoff" (jitter omitted — not load-bearing for correctness). */
 const RETRY_BACKOFF_MS = [2000, 8000, 30000, 120000, 600000];

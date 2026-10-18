@@ -1488,7 +1488,17 @@ const SCHEMA_V54_STATEMENTS: string[] = [
  */
 const SCHEMA_V55_STATEMENTS: string[] = [`ALTER TABLE workout_plan ADD COLUMN stretch_plan_id TEXT`];
 
-const SCHEMA_VERSION = 55;
+/**
+ * backlog/150 — bike live GPS tracker: `bike_ride_log` now records `tracking_mode`
+ * (MANUAL/LIVE/ESTIMATED) and, for a LIVE/ESTIMATED session, `started_at`; on-device tükre a
+ * backend `V61__bike_ride_log_tracking_mode.sql`-nek.
+ */
+const SCHEMA_V56_STATEMENTS: string[] = [
+  `ALTER TABLE bike_ride_log ADD COLUMN tracking_mode TEXT NOT NULL DEFAULT 'MANUAL'`,
+  `ALTER TABLE bike_ride_log ADD COLUMN started_at TEXT`,
+];
+
+const SCHEMA_VERSION = 56;
 
 /** Registered with the plugin (`addUpgradeStatement`) before every `createConnection`. */
 const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
@@ -1546,7 +1556,8 @@ const SCHEMA_UPGRADES: capSQLiteVersionUpgrade[] = [
   { toVersion: 52, statements: SCHEMA_V52_STATEMENTS },
   { toVersion: 53, statements: SCHEMA_V53_STATEMENTS },
   { toVersion: 54, statements: SCHEMA_V54_STATEMENTS },
-  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V55_STATEMENTS },
+  { toVersion: 55, statements: SCHEMA_V55_STATEMENTS },
+  { toVersion: SCHEMA_VERSION, statements: SCHEMA_V56_STATEMENTS },
 ];
 
 export interface SqlTask {

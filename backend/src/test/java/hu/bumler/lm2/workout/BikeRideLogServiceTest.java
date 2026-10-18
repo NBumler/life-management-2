@@ -78,6 +78,37 @@ class BikeRideLogServiceTest {
 	}
 
 	@Test
+	void create_defaultsTrackingModeToManual_whenOmitted() {
+		UUID userId = UUID.randomUUID();
+		UUID id = UUID.randomUUID();
+		when(repository.findById(id)).thenReturn(Optional.empty());
+		when(repository.saveAndFlush(any())).thenAnswer(inv -> inv.getArgument(0));
+
+		BikeRideLog saved = service.create(userId, dto(id, BikeRideLog.IntensityEnum.CITY));
+
+		assertThat(saved.getTrackingMode().orElse(null)).isEqualTo(BikeRideLog.TrackingModeEnum.MANUAL);
+		assertThat(saved.getStartedAt().orElse(null)).isNull();
+	}
+
+	@Test
+	void create_persistsLiveTrackingModeAndStartedAt() {
+		UUID userId = UUID.randomUUID();
+		UUID id = UUID.randomUUID();
+		when(repository.findById(id)).thenReturn(Optional.empty());
+		when(repository.saveAndFlush(any())).thenAnswer(inv -> inv.getArgument(0));
+		java.time.OffsetDateTime startedAt = java.time.OffsetDateTime.parse("2026-08-29T07:15:00Z");
+
+		BikeRideLog input = dto(id, BikeRideLog.IntensityEnum.ROAD_VIGOROUS);
+		input.trackingMode(BikeRideLog.TrackingModeEnum.LIVE);
+		input.startedAt(startedAt);
+
+		BikeRideLog saved = service.create(userId, input);
+
+		assertThat(saved.getTrackingMode().orElse(null)).isEqualTo(BikeRideLog.TrackingModeEnum.LIVE);
+		assertThat(saved.getStartedAt().orElse(null)).isEqualTo(startedAt);
+	}
+
+	@Test
 	void create_rejectsForeignLog_whenIdBelongsToAnotherUser() {
 		UUID owner = UUID.randomUUID();
 		UUID attacker = UUID.randomUUID();

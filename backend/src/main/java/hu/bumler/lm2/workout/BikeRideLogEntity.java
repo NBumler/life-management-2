@@ -44,6 +44,12 @@ public class BikeRideLogEntity {
 	@Column(name = "elevation_gain_meters")
 	private Integer elevationGainMeters;
 
+	@Column(name = "tracking_mode", nullable = false)
+	private String trackingMode = "MANUAL";
+
+	@Column(name = "started_at")
+	private OffsetDateTime startedAt;
+
 	@Generated(event = EventType.INSERT)
 	@Column(name = "created_at", insertable = false, updatable = false)
 	private OffsetDateTime createdAt;
@@ -112,6 +118,22 @@ public class BikeRideLogEntity {
 
 	public void setElevationGainMeters(Integer elevationGainMeters) {
 		this.elevationGainMeters = elevationGainMeters;
+	}
+
+	public String getTrackingMode() {
+		return trackingMode;
+	}
+
+	public void setTrackingMode(String trackingMode) {
+		this.trackingMode = trackingMode;
+	}
+
+	public OffsetDateTime getStartedAt() {
+		return startedAt;
+	}
+
+	public void setStartedAt(OffsetDateTime startedAt) {
+		this.startedAt = startedAt;
 	}
 
 	public OffsetDateTime getCreatedAt() {

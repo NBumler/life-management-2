@@ -45,6 +45,24 @@ properties:
     minimum: 0
     nullable: true
     description: Optional; log / statistics only. Never in the kcal formula.
+  trackingMode:
+    type: string
+    enum:
+      - MANUAL
+      - LIVE
+      - ESTIMATED
+    nullable: true
+    description: >-
+      backlog/150 — how this ride was recorded. Missing/null means a pre-#150 manual entry
+      (treated as MANUAL). LIVE = continuous GPS track; ESTIMATED = degraded straight-line
+      estimate (backlog/150 D fázis). ECO mode was decided out of scope (backlog/153, deferred).
+  startedAt:
+    type: string
+    format: date-time
+    nullable: true
+    description: >-
+      backlog/150 — wall-clock start of a LIVE/ESTIMATED session. Null for a MANUAL entry, which
+      only ever carries `date` + `durationMinutes`.
   deleted:
     type: boolean
   deletedAt:

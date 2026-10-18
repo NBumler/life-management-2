@@ -76,6 +76,31 @@ class BikeRideLogIntegrationTest {
 	}
 
 	@Test
+	void create_defaultsTrackingModeToManual_whenOmitted() throws Exception {
+		String token = registerAndLogin("bike-mode-default");
+		UUID id = UUID.randomUUID();
+
+		createBikeRideLog(token, log(id, BikeRideLog.IntensityEnum.CITY))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.trackingMode").value("MANUAL"))
+				.andExpect(jsonPath("$.startedAt").doesNotExist());
+	}
+
+	@Test
+	void create_roundTripsLiveTrackingModeAndStartedAt() throws Exception {
+		String token = registerAndLogin("bike-mode-live");
+		UUID id = UUID.randomUUID();
+		BikeRideLog body = log(id, BikeRideLog.IntensityEnum.ROAD_LEISURE);
+		body.trackingMode(BikeRideLog.TrackingModeEnum.LIVE);
+		body.startedAt(java.time.OffsetDateTime.parse("2026-08-29T07:15:00Z"));
+
+		createBikeRideLog(token, body)
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.trackingMode").value("LIVE"))
+				.andExpect(jsonPath("$.startedAt").value("2026-08-29T07:15:00Z"));
+	}
+
+	@Test
 	void update_returnsEntityDeleted_afterTheLogWasDeleted() throws Exception {
 		String token = registerAndLogin("bike-entity-deleted");
 		UUID id = UUID.randomUUID();

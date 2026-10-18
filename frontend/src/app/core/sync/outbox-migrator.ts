@@ -330,6 +330,9 @@ const STEPS_BY_VERSION: Readonly<Record<number, VersionSteps>> = {
   23: { default: identityStep },
   // backlog/170: `WorkoutPlan` gained an optional `stretchPlanId` — absent = no attached stretch (null).
   24: { default: identityStep },
+  // backlog/150: `BikeRideLog` gained `trackingMode` / `startedAt` as new nullable fields — a missing key
+  // already means "a manual entry" (MANUAL, no startedAt) server-side, so no payload transform is needed.
+  25: { default: identityStep },
 };
 
 function buildMigrations(): ReadonlyMap<string, MigrationStep> {

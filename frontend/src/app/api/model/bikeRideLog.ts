@@ -34,6 +34,14 @@ export interface BikeRideLog {
      * Optional; log / statistics only. Never in the kcal formula.
      */
     elevationGainMeters?: number | null;
+    /**
+     * backlog/150 — how this ride was recorded. Missing/null means a pre-#150 manual entry (treated as MANUAL). LIVE = continuous GPS track; ESTIMATED = degraded straight-line estimate (backlog/150 D fázis). ECO mode was decided out of scope (backlog/153, deferred).
+     */
+    trackingMode?: BikeRideLog.TrackingModeEnum | null;
+    /**
+     * backlog/150 — wall-clock start of a LIVE/ESTIMATED session. Null for a MANUAL entry, which only ever carries `date` + `durationMinutes`.
+     */
+    startedAt?: string | null;
     deleted: boolean;
     readonly deletedAt?: string | null;
     readonly createdAt?: string;
@@ -48,6 +56,12 @@ export namespace BikeRideLog {
         RoadVigorous: 'ROAD_VIGOROUS'
     } as const;
     export type IntensityEnum = typeof IntensityEnum[keyof typeof IntensityEnum];
+    export const TrackingModeEnum = {
+        Manual: 'MANUAL',
+        Live: 'LIVE',
+        Estimated: 'ESTIMATED'
+    } as const;
+    export type TrackingModeEnum = typeof TrackingModeEnum[keyof typeof TrackingModeEnum];
 }
 
 

@@ -2359,6 +2359,8 @@ export interface BikeRideLogRow {
   intensity: string;
   distance_km: number | null;
   elevation_gain_meters: number | null;
+  tracking_mode: string;
+  started_at: string | null;
   created_at: string | null;
   updated_at: string | null;
   deleted: number;
@@ -2377,6 +2379,8 @@ export function bikeRideLogRowToDto(row: BikeRideLogRow): BikeRideLog {
     intensity: row.intensity as BikeRideLog.IntensityEnum,
     distanceKm: row.distance_km,
     elevationGainMeters: row.elevation_gain_meters,
+    trackingMode: row.tracking_mode as BikeRideLog.TrackingModeEnum,
+    startedAt: row.started_at,
     deleted: row.deleted === 1,
     deletedAt: row.deleted_at,
     createdAt: row.created_at ?? undefined,
@@ -2387,11 +2391,12 @@ export function bikeRideLogRowToDto(row: BikeRideLogRow): BikeRideLog {
 export function bikeRideLogLocalWriteTask(dto: BikeRideLog): SqlTask {
   return {
     statement: `
-      INSERT INTO bike_ride_log (id, ride_date, duration_minutes, intensity, distance_km, elevation_gain_meters, _dirty, _local_only)
-      VALUES (?, ?, ?, ?, ?, ?, 1, 1)
+      INSERT INTO bike_ride_log (id, ride_date, duration_minutes, intensity, distance_km, elevation_gain_meters, tracking_mode, started_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
       ON CONFLICT(id) DO UPDATE SET
         ride_date = excluded.ride_date, duration_minutes = excluded.duration_minutes, intensity = excluded.intensity,
-        distance_km = excluded.distance_km, elevation_gain_meters = excluded.elevation_gain_meters, _dirty = 1`,
+        distance_km = excluded.distance_km, elevation_gain_meters = excluded.elevation_gain_meters,
+        tracking_mode = excluded.tracking_mode, started_at = excluded.started_at, _dirty = 1`,
     values: [
       dto.id,
       dto.date,
@@ -2399,6 +2404,8 @@ export function bikeRideLogLocalWriteTask(dto: BikeRideLog): SqlTask {
       dto.intensity,
       dto.distanceKm ?? null,
       dto.elevationGainMeters ?? null,
+      dto.trackingMode ?? 'MANUAL',
+      dto.startedAt ?? null,
     ],
   };
 }
@@ -2406,11 +2413,12 @@ export function bikeRideLogLocalWriteTask(dto: BikeRideLog): SqlTask {
 export function bikeRideLogServerApplyTask(dto: BikeRideLog): SqlTask {
   return {
     statement: `
-      INSERT INTO bike_ride_log (id, ride_date, duration_minutes, intensity, distance_km, elevation_gain_meters, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+      INSERT INTO bike_ride_log (id, ride_date, duration_minutes, intensity, distance_km, elevation_gain_meters, tracking_mode, started_at, created_at, updated_at, deleted, deleted_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
       ON CONFLICT(id) DO UPDATE SET
         ride_date = excluded.ride_date, duration_minutes = excluded.duration_minutes, intensity = excluded.intensity,
         distance_km = excluded.distance_km, elevation_gain_meters = excluded.elevation_gain_meters,
+        tracking_mode = excluded.tracking_mode, started_at = excluded.started_at,
         created_at = excluded.created_at, updated_at = excluded.updated_at, deleted = excluded.deleted, deleted_at = excluded.deleted_at,
         _dirty = 0, _local_only = 0, _needs_refetch = 0
       WHERE bike_ride_log._dirty = 0`,
@@ -2421,6 +2429,8 @@ export function bikeRideLogServerApplyTask(dto: BikeRideLog): SqlTask {
       dto.intensity,
       dto.distanceKm ?? null,
       dto.elevationGainMeters ?? null,
+      dto.trackingMode ?? 'MANUAL',
+      dto.startedAt ?? null,
       dto.createdAt ?? null,
       dto.updatedAt ?? null,
       dto.deleted ? 1 : 0,

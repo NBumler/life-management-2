@@ -387,6 +387,21 @@ mód marad kimaradva** — a Cap-go plugin sem ad készen motion-aware akku-spó
 heurisztika extra munka lenne, a felhasználó ezt most nem kéri. 2 mód marad: Pontos, Becsült — a
 153-as ECO-jegy továbbra is `deferred`.
 
+**2. fázis, 1. szelet (2026-10-18) — `BikeRideLog` séma-bővítés:** a §"Adatmodell-változások"
+`trackingMode`/`startedAt` párja megvan, **ECO nélkül** (enum csak `MANUAL`\|`LIVE`\|`ESTIMATED`,
+a fenti ECO-döntéssel összhangban). Backend: `V61__bike_ride_log_tracking_mode.sql`
+(`tracking_mode` NOT NULL DEFAULT `MANUAL` + CHECK, `started_at` nullable), `BikeRideLog.yaml`
+mindkét mezővel (nullable, nem kötelező — hiányzó kulcs = `MANUAL`/nincs), entitás + mapper +
+service (`applyFields` default `MANUAL`-ra, ha a kliens nem küldi). Frontend: SQLite
+`SCHEMA_V56` (`ALTER TABLE bike_ride_log ADD COLUMN tracking_mode ... DEFAULT 'MANUAL'` +
+`started_at`), `local-rows.ts` három task-függvénye (a tombstone-nak nem kellett módosulnia — az
+oszlop-default elég), `BikeRideLogRepository.save()` alapértéke `MANUAL`.
+`OUTBOX_PAYLOAD_SCHEMA_VERSION` 25→26, `outbox-migrator.ts` 25-ös lépés `identityStep`-pel (hiányzó
+kulcs = ugyanaz a jelentés, mint korábban), `verify:outbox -- --write` lefuttatva. Zöld:
+`./gradlew build` (backend, +4 új teszt), lint + 2112/2112 teszt + build + `verify:i18n` (frontend).
+**Ez még nem tartalmazza** a `bike-live-session.service.ts`-t, az élő képernyőt/bannert/
+értesítést, sem az összegző űrlapot — ezek a 2. fázis következő szelete.
+
 ### Méret-jóváhagyás
 
 **Mért / becsült méretek (2026-10-06):**

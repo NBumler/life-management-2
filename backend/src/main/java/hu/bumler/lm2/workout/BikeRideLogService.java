@@ -79,6 +79,8 @@ class BikeRideLogService {
 		entity.setIntensity(dto.getIntensity().getValue());
 		entity.setDistanceKm(dto.getDistanceKm().orElse(null));
 		entity.setElevationGainMeters(dto.getElevationGainMeters().orElse(null));
+		entity.setTrackingMode(dto.getTrackingMode().orElse(BikeRideLog.TrackingModeEnum.MANUAL).getValue());
+		entity.setStartedAt(dto.getStartedAt().orElse(null));
 	}
 
 	private static BikeRideLogEntity requireOwner(BikeRideLogEntity entity, UUID userId) {

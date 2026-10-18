@@ -12,6 +12,8 @@ class BikeRideLogMapper {
 				BikeRideLog.IntensityEnum.fromValue(entity.getIntensity()), entity.isDeleted());
 		dto.distanceKm(entity.getDistanceKm());
 		dto.elevationGainMeters(entity.getElevationGainMeters());
+		dto.trackingMode(BikeRideLog.TrackingModeEnum.fromValue(entity.getTrackingMode()));
+		dto.startedAt(entity.getStartedAt());
 		dto.deletedAt(entity.getDeletedAt());
 		dto.createdAt(entity.getCreatedAt());
 		dto.updatedAt(entity.getUpdatedAt());

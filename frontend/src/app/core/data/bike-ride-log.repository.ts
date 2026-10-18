@@ -13,6 +13,9 @@ export interface BikeRideLogSaveInput {
   intensity: BikeRideLog.IntensityEnum;
   distanceKm: number | null;
   elevationGainMeters: number | null;
+  /** backlog/150 — defaults to MANUAL (a manual, non-GPS entry) when omitted. */
+  trackingMode?: BikeRideLog.TrackingModeEnum;
+  startedAt?: string | null;
 }
 
 /** documentation/Architektúra/Frontend.md `core/data/`: typed, signal-based facade over StorageBackend. */
@@ -38,6 +41,8 @@ export class BikeRideLogRepository {
       intensity: input.intensity,
       distanceKm: input.distanceKm,
       elevationGainMeters: input.elevationGainMeters,
+      trackingMode: input.trackingMode ?? BikeRideLog.TrackingModeEnum.Manual,
+      startedAt: input.startedAt ?? null,
       deleted: false,
     };
     const saved = await this.storage.upsertBikeRideLog(draft);
