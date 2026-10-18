@@ -35,7 +35,17 @@ describe('mapOpenFoodFactsProduct', () => {
       nutriments: { carbohydrates_100g: 57.5, sugars_100g: 56.3 },
     });
 
-    expect(mapped.carbsComplexG).toBeCloseTo(1.2);
+    expect(mapped.carbsComplexG).toBe(1.2);
+  });
+
+  it('backlog/174: rounds derived fields to 3 decimals (no float subtraction artefacts)', () => {
+    // 5999033898461: carbs 7, sugars 4.4 -> 7 - 4.4 = 2.5999999999999996 unrounded.
+    const mapped = mapOpenFoodFactsProduct({
+      nutriments: { carbohydrates_100g: 7, sugars_100g: 4.4, fat_100g: 1.1, 'saturated-fat_100g': 0.2 },
+    });
+
+    expect(mapped.carbsComplexG).toBe(2.6);
+    expect(mapped.fatUnsaturatedG).toBe(0.9);
   });
 
   it('parses a clean quantity string into amount + unit', () => {

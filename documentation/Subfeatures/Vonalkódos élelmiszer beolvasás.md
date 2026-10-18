@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: a409f5b
+verifikalva: 2026-10-18
+verifikalt_commit: 05f680b
 ---
 
 # Vonalkódos élelmiszer beolvasás
@@ -26,6 +26,7 @@ Open Food Facts alapján vonalkóddal előtöltött új [[Élelmiszerek]] tétel
 3. Sikeres beolvasás után: Open Food Facts API  
    `https://world.openfoodfacts.org/api/v2/product/{barcode}.json`
 4. **Találat:** navigáció az [[Élelmiszer manuális bevitele]] formra; vonalkód + mappelhető mezők (név, márka, tápanyagok, stb.) előtöltve. Üres / új form → nincs felülírás-dialógus.
+   - Az OFF-ban nem szereplő két mezőt számoljuk: **telítetlen zsír** = zsír − telített − transz (a transz 0, ha hiányzik), **összetett szénhidrát** = szénhidrát − cukrok; mindkettő **3 tizedesre** kerekítve (lebegőpontos kivonási maradék nélkül, pl. 7 − 4,4 = 2,6), alsó korlát 0.
 5. **Nincs találat:** üres form, vonalkód mező kitöltve; sárga toast: *"A termék nem található az online adatbázisban. Kérjük, töltsd ki manuálisan."*
 
 #### Kézi EAN javítás + újra-sync

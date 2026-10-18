@@ -14,6 +14,10 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-18 — #174** OFF vonalkód-import lebegőpontos kivonási hiba: a számított összetett szénhidrát és
+  telítetlen zsír 3 tizedesre kerekítve (`7 − 4.4` → `2.6`, nem `2.5999…`); közös `shared/round.ts` `round3`
+  (a só → nátrium / klorid számítás is ezt használja). — érintett: [[Vonalkódos élelmiszer beolvasás]]; kód:
+  `pages/food/catalog/open-food-facts.ts`, `salt-sodium-chloride.ts`, `shared/round.ts`.
 - **2026-10-18 — #173** Izomcsoport- és sűrűségfüggő erőedzés-kalória: a szettes `GENERAL_WEIGHTS` session
   terhelési idő (ismétlés × 3 s / tartásidő, izomtömeg-osztály MET-jén, RPE-szorzóval) + pihenő (szettenként
   2,5 perces regenerációs ablak, azon túl tétlen 1.5); szett nélkül fix 4.0, HIIT változatlan 8.0. — érintett:

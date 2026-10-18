@@ -1,3 +1,5 @@
+import { round3 } from '../../../shared/round';
+
 /**
  * documentation/Subfeatures/Élelmiszer manuális bevitele.md "Só → nátrium / klorid": EU rule of
  * thumb (salt = sodium × 2.5) plus a NaCl assumption for the chloride remainder. Rounded to 3
@@ -9,8 +11,4 @@ export function sodiumFromSalt(saltG: number): number {
 
 export function chlorideFromSaltAndSodium(saltG: number, sodiumG: number): number {
   return round3(saltG - sodiumG);
-}
-
-function round3(value: number): number {
-  return Math.round(value * 1000) / 1000;
 }

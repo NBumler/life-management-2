@@ -1,5 +1,6 @@
 import { Food } from '../../../api/model/food';
 import { QuantityParseError, parseQuantityInput } from '../../../shared/quantity';
+import { round3 } from '../../../shared/round';
 
 /**
  * documentation/Subfeatures/Vonalkódos élelmiszer beolvasás.md + Élelmiszer manuális bevitele.md
@@ -106,7 +107,8 @@ export function mapOpenFoodFactsProduct(product: OpenFoodFactsProduct): OpenFood
   }
   if (fatG !== undefined && fatSaturatedG !== undefined) {
     // OFF has no direct "unsaturated fat" figure; derive it (transG defaults to 0 when OFF omits it).
-    mapped.fatUnsaturatedG = Math.max(0, fatG - fatSaturatedG - (fatTransG ?? 0));
+    // round3: backlog/174 — raw float subtraction leaks e.g. 0.9000000000000001 into the form.
+    mapped.fatUnsaturatedG = Math.max(0, round3(fatG - fatSaturatedG - (fatTransG ?? 0)));
   }
 
   const carbsG = n.carbohydrates_100g;
@@ -122,7 +124,7 @@ export function mapOpenFoodFactsProduct(product: OpenFoodFactsProduct): OpenFood
   }
   if (carbsG !== undefined && carbsSugarsG !== undefined) {
     // documentation/Subfeatures/Élelmiszer manuális bevitele.md field order: "complex" is carbs minus sugars.
-    mapped.carbsComplexG = Math.max(0, carbsG - carbsSugarsG);
+    mapped.carbsComplexG = Math.max(0, round3(carbsG - carbsSugarsG));
   }
   if (n.proteins_100g !== undefined) {
     mapped.proteinG = n.proteins_100g;

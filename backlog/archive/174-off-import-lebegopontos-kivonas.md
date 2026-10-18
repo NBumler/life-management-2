@@ -1,14 +1,14 @@
 ---
 id: 174
 type: bug
-status: backlog
+status: done
 title: OFF vonalkód-import — a számított mezők lebegőpontos kivonási hibát mutatnak (2.599999…)
 specs:
   - "[[Vonalkódos élelmiszer beolvasás]]"
   - "[[Élelmiszer manuális bevitele]]"
 flag:
 created: 2026-10-18
-closed:
+closed: 2026-10-18
 ---
 
 # 174 — OFF vonalkód-import — a számított mezők lebegőpontos kivonási hibát mutatnak (2.599999…)
@@ -36,21 +36,27 @@ Reprodukció: vonalkód `5999033898461`
 
 ## Elfogadási kritériumok
 
-- [ ] Az `5999033898461` importja után az összetett szénhidrát `2,6` (nem `2.5999…`).
-- [ ] A telítetlen zsír számítása ugyanígy kerekített (pl. `fat=1.1, sat=0.2` → `0.9`, nem `0.9000000000000001`).
-- [ ] A kerekítés pontossága a forrásértékek tizedesjegyeihez / a form mezők pontosságához igazodik
-      (döntés a terv szakaszban), és nem kerekít el értelmes jegyet.
-- [ ] Unit teszt az `open-food-facts` mapperre a fenti esetekkel.
-- [ ] Ellenőrizve, hogy más származtatott tápérték-számítás (pl. kézi bevitel, recept/étkezés-összesítő)
+- [x] Az `5999033898461` importja után az összetett szénhidrát `2,6` (nem `2.5999…`).
+- [x] A telítetlen zsír számítása ugyanígy kerekített (pl. `fat=1.1, sat=0.2` → `0.9`, nem `0.9000000000000001`).
+- [x] A származtatott mezők **3 tizedesjegyre** kerekítenek (user-döntés, 2026-10-18) — ugyanaz a
+      pontosság, mint a só → nátrium / klorid számításé.
+- [x] Unit teszt az `open-food-facts` mapperre a fenti esetekkel.
+- [x] Ellenőrizve, hogy más származtatott tápérték-számítás (pl. kézi bevitel, recept/étkezés-összesítő)
       nem mutat-e hasonló nyers float-megjelenítést; ha igen, ugyanazzal a helperrel javítva vagy külön jegyben rögzítve.
 
 ## Terv / döntési napló
 
-_Javaslat: közös kerekítő helper (pl. `shared/` alatt) a származtatott értékekre, fix tizedesjegyre
-(valószínűleg 1–2) — vagy a különbség tizedesjegyei = a két operandus tizedesjegyeinek maximuma._
+- 2026-10-18 — Döntés (user): **3 tizedesjegy**, fix. A `salt-sodium-chloride.ts` privát `round3`
+  helperje kiemelve `shared/round.ts`-be, és az OFF-mapper mindkét kivonása ezt használja
+  (`Math.max(0, round3(...))`).
+- Többi származtatott érték átnézve: a kézi bevitelnél csak a nátrium / klorid számított (már
+  `round3`); az étkezés- / recept-összesítők `DecimalPipe`-pal formáznak megjelenítéskor, nyers
+  float nem jut a UI-ra — nincs további teendő.
 
 ## Lezáráskor (on-done)
 
-- Frissített specek: [[Vonalkódos élelmiszer beolvasás]] — származtatott mezők kerekítése
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — #174 OFF-import float-kerekítés
-- Kód: `frontend/src/app/pages/food/catalog/open-food-facts.ts`
+- Frissített specek: [[Vonalkódos élelmiszer beolvasás]] — Funkcionális leírás 4. pont: a számított
+  telítetlen zsír / összetett szénhidrát képlete és 3 tizedes kerekítése
+- `IMPLEMENTATION_STATUS.md` sor: 2026-10-18 — #174 OFF-import származtatott mezők 3 tizedesre kerekítve
+- Kód: `frontend/src/app/shared/round.ts` (+spec), `pages/food/catalog/open-food-facts.ts` (+spec),
+  `pages/food/catalog/salt-sodium-chloride.ts`
