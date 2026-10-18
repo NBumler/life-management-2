@@ -53,6 +53,8 @@ export const BIKE_LIVE_PAUSED_NOTIFICATION_ID = 424_243;
 const CHANNEL_ID = 'lm2-default';
 
 export const BIKE_LIVE_ROUTE = '/tabs/workout/cycling/live';
+/** The editable summary after "Befejezés" — the bike-ride form pre-filled from `summary()`. */
+export const BIKE_LIVE_SUMMARY_ROUTE = '/tabs/workout/cycling/live/summary';
 
 export function activeElapsedMs(draft: BikeLiveDraft, nowMs: number): number {
   const endMs = draft.endedAtMs ?? draft.pausedAtMs ?? nowMs;

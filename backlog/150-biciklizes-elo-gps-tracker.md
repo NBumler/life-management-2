@@ -414,6 +414,21 @@ helyett egy); szünet alatt — amikor a plugin le van állítva — saját `ong
 (`BIKE_LIVE_PAUSED_NOTIFICATION_ID = 424_243`), koppintásra `/tabs/workout/cycling/live`. Hátra van:
 élő képernyő + route, banner, összegző űrlap (a meglévő szerkesztő előtöltése), lista-belépő.
 
+**2. fázis, 3. szelet (2026-10-19) — UI:** `pages/workout/cycling/bike-live.page.ts`
+(`cycling/live`: aktív idő, eddigi táv, gyenge jel jelzése, Szünet / Folytatás / Befejezés /
+Elvetés megerősítéssel); `bike-live-banner.component.ts` a biciklis listán és az Edzés tab
+nyitóoldalán (`workout-log-list`) — felvétel / szünet / befejezve állapot, táv, aktív idő; koppintásra
+élő képernyő, befejezett menetnél az összegzés. Összegzés = a meglévő `bike-ride-log-edit.page`
+`cycling/live/summary` route-on (`data.liveSummary`): `summary()`-ből előtöltve, mentés a menet
+`rideId`-jával + `trackingMode: LIVE` + `startedAt` a `BikeRideLogRepository`-n át, utána `clear()`;
+Elvetés megerősítéssel. Egy elmentett élő menet szerkesztése megtartja a `trackingMode`/`startedAt`-ot.
+Lista-belépő: „Élő edzés indítása” csak `Capacitor.isNativePlatform()` mellett, futó menet közben
+rejtve; engedély-megtagadásnál magyarázó alert, a kézi napló marad. **Mód-választó + megjegyzett
+alapértelmezés még nincs** — jelenleg egyetlen mód (Pontos) van; a választó a 3. fázissal (Becsült)
+együtt kerül be, a súgó-ikonokkal a 4. fázisban. Az `intensity`-t az összegző nem állítja: a meglévő
+átlagsebesség-hint javasol, a user választ. Eszközön (háttér-GPS, zárolt képernyő, értesítés-tap)
+még nincs kézzel ellenőrizve.
+
 ### Méret-jóváhagyás
 
 **Mért / becsült méretek (2026-10-06):**

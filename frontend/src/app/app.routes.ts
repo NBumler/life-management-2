@@ -608,6 +608,13 @@ export const routes: Routes = [
             children: [
               { path: '', loadComponent: () => import('./pages/workout/cycling/bike-ride-log-list.page').then((m) => m.BikeRideLogListPage) },
               { path: 'new', loadComponent: () => import('./pages/workout/cycling/bike-ride-log-edit.page').then((m) => m.BikeRideLogEditPage) },
+              // backlog/150 — the live GPS ride and its editable summary (the same form, pre-filled).
+              { path: 'live', loadComponent: () => import('./pages/workout/cycling/bike-live.page').then((m) => m.BikeLivePage) },
+              {
+                path: 'live/summary',
+                data: { liveSummary: true },
+                loadComponent: () => import('./pages/workout/cycling/bike-ride-log-edit.page').then((m) => m.BikeRideLogEditPage),
+              },
               { path: ':id', loadComponent: () => import('./pages/workout/cycling/bike-ride-log-edit.page').then((m) => m.BikeRideLogEditPage) },
             ],
           },

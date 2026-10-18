@@ -16,6 +16,7 @@ import { WorkoutDraftService } from '../../../core/data/workout-draft.service';
 import { WorkoutPlanRepository } from '../../../core/data/workout-plan.repository';
 import { CurrentDayService } from '../../../core/config/current-day.service';
 import { WorkoutSessionRepository } from '../../../core/data/workout-session.repository';
+import { BikeLiveBannerComponent } from '../cycling/bike-live-banner.component';
 import { LoadWarningsBannerComponent } from '../load-warnings-banner.component';
 import { WorkoutSegmentHeaderComponent } from '../workout-segment-header.component';
 import { pendingLinkedStretches } from '../stretch/linked-stretch';
@@ -67,6 +68,7 @@ type LogCard = SessionCard | StretchCard;
     IonIcon,
     WorkoutSegmentHeaderComponent,
     LoadWarningsBannerComponent,
+    BikeLiveBannerComponent,
     PlanQuickStartComponent,
     TranslatePipe,
   ],

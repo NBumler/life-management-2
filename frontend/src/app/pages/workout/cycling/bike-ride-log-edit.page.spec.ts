@@ -5,6 +5,7 @@ import { AlertController, NavController } from '@ionic/angular/standalone';
 import { provideTranslateService } from '@ngx-translate/core';
 
 import { BikeRideLog } from '../../../api/model/bikeRideLog';
+import { BikeLiveDraft, BikeLiveSessionService, BikeLiveSummary } from '../../../core/data/bike-live-session.service';
 import { BikeRideLogRepository, BikeRideLogSaveInput } from '../../../core/data/bike-ride-log.repository';
 import { ProfileRepository } from '../../../core/data/profile.repository';
 import { BikeRideLogEditPage } from './bike-ride-log-edit.page';
@@ -13,8 +14,32 @@ describe('BikeRideLogEditPage', () => {
   let fixture: ComponentFixture<BikeRideLogEditPage>;
   let component: BikeRideLogEditPage;
   let saveSpy: jasmine.Spy<(input: BikeRideLogSaveInput) => Promise<BikeRideLog>>;
+  let live: jasmine.SpyObj<BikeLiveSessionService>;
+  let navigateBack: jasmine.Spy;
 
-  async function setup(idParam = 'new'): Promise<void> {
+  const finishedDraft: BikeLiveDraft = {
+    rideId: 'ride-1',
+    startedAtMs: 0,
+    pausedAtMs: null,
+    pausedTotalMs: 0,
+    segmentStarts: [0],
+    endedAtMs: 1_800_000,
+  };
+  const summary: BikeLiveSummary = {
+    id: 'ride-1',
+    date: '2026-10-18',
+    startedAt: '2026-10-18T05:15:00.000Z',
+    durationMinutes: 30,
+    distanceKm: 9.42,
+    elevationGainMeters: null,
+    trackingMode: BikeRideLog.TrackingModeEnum.Live,
+  };
+
+  async function setup(idParam = 'new', options: { liveSummary?: boolean; items?: BikeRideLog[] } = {}): Promise<void> {
+    live = jasmine.createSpyObj('BikeLiveSessionService', ['refresh', 'summary', 'clear']);
+    live.refresh.and.resolveTo(finishedDraft);
+    live.summary.and.resolveTo(summary);
+    live.clear.and.resolveTo();
     saveSpy = jasmine
       .createSpy('save')
       .and.resolveTo({ id: 'b1', date: '2026-08-29', durationMinutes: 60, intensity: BikeRideLog.IntensityEnum.City, deleted: false });
@@ -26,15 +51,22 @@ describe('BikeRideLogEditPage', () => {
         provideTranslateService(),
         {
           provide: BikeRideLogRepository,
-          useValue: { load: () => Promise.resolve(), loaded: signal(true), items: signal<BikeRideLog[]>([]), save: saveSpy, remove: () => Promise.resolve() },
+          useValue: {
+            load: () => Promise.resolve(),
+            loaded: signal(true),
+            items: signal<BikeRideLog[]>(options.items ?? []),
+            save: saveSpy,
+            remove: () => Promise.resolve(),
+          },
         },
         { provide: ProfileRepository, useValue: { load: () => Promise.resolve(), profile: signal({ currentWeightKg: 80 }) } },
-        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: idParam }) } } },
+        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: idParam }), data: { liveSummary: options.liveSummary === true } } } },
+        { provide: BikeLiveSessionService, useValue: live },
         { provide: AlertController, useValue: { create: () => Promise.resolve({ present: () => Promise.resolve() }) } },
       ],
     }).compileComponents();
 
-    spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
+    navigateBack = spyOn(TestBed.inject(NavController), 'navigateBack').and.resolveTo(true);
 
     fixture = TestBed.createComponent(BikeRideLogEditPage);
     component = fixture.componentInstance;
@@ -80,5 +112,57 @@ describe('BikeRideLogEditPage', () => {
     component.form.patchValue({ durationMinutes: null });
     await component.save();
     expect(saveSpy).not.toHaveBeenCalled();
+  });
+
+  describe('live summary (backlog/150)', () => {
+    it('pre-fills the form from the finished ride; a non-computable value stays empty', async () => {
+      await setup('new', { liveSummary: true });
+      expect(component.form.getRawValue()).toEqual(
+        jasmine.objectContaining({ date: '2026-10-18', durationMinutes: 30, distanceKm: 9.42, elevationGainMeters: null }),
+      );
+      expect(component.summaryLoading()).toBeFalse();
+    });
+
+    it('save() stores the ride under its live id with LIVE + startedAt, then clears the draft', async () => {
+      await setup('new', { liveSummary: true });
+      component.form.patchValue({ distanceKm: 10 });
+      await component.save();
+      expect(saveSpy).toHaveBeenCalledWith(
+        jasmine.objectContaining({
+          id: 'ride-1',
+          distanceKm: 10,
+          trackingMode: BikeRideLog.TrackingModeEnum.Live,
+          startedAt: '2026-10-18T05:15:00.000Z',
+        }),
+      );
+      expect(saveSpy).toHaveBeenCalledBefore(live.clear);
+    });
+
+    it('leaves when there is no finished ride to summarise', async () => {
+      await setup('new', { liveSummary: true });
+      live.refresh.and.resolveTo({ ...finishedDraft, endedAtMs: null });
+      navigateBack.calls.reset();
+      await component.ngOnInit();
+      expect(navigateBack).toHaveBeenCalledWith('/tabs/workout/cycling');
+    });
+
+    it('editing a saved live ride keeps its trackingMode / startedAt', async () => {
+      const existing: BikeRideLog = {
+        id: 'ride-1',
+        date: '2026-10-18',
+        durationMinutes: 30,
+        intensity: BikeRideLog.IntensityEnum.City,
+        distanceKm: 9.42,
+        trackingMode: BikeRideLog.TrackingModeEnum.Live,
+        startedAt: '2026-10-18T05:15:00.000Z',
+        deleted: false,
+      };
+      await setup('ride-1', { items: [existing] });
+      await component.save();
+      expect(saveSpy).toHaveBeenCalledWith(
+        jasmine.objectContaining({ id: 'ride-1', trackingMode: BikeRideLog.TrackingModeEnum.Live, startedAt: '2026-10-18T05:15:00.000Z' }),
+      );
+      expect(live.clear).not.toHaveBeenCalled();
+    });
   });
 });

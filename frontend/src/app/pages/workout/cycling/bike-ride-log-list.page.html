@@ -3,8 +3,16 @@
 </ion-header>
 
 <ion-content>
+  <app-bike-live-banner />
+
   <div class="cta-row">
-    <ion-button expand="block" routerLink="new">{{ 'WORKOUT.BIKE.NEW' | translate }}</ion-button>
+    @if (offlineCapable && !hasLiveRide()) {
+      <ion-button expand="block" class="bike-live-start" [disabled]="starting()" (click)="startLive()">
+        {{ 'WORKOUT.BIKE.LIVE.START' | translate }}
+      </ion-button>
+      <ion-note class="bike-live-start__hint">{{ 'WORKOUT.BIKE.LIVE.START_HINT' | translate }}</ion-note>
+    }
+    <ion-button expand="block" [fill]="offlineCapable ? 'outline' : 'solid'" routerLink="new">{{ 'WORKOUT.BIKE.NEW' | translate }}</ion-button>
   </div>
 
   @if (isEmpty()) {

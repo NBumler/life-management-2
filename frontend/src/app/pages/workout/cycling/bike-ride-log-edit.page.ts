@@ -23,6 +23,7 @@ import {
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 import { BikeRideLog } from '../../../api/model/bikeRideLog';
+import { BikeLiveSessionService } from '../../../core/data/bike-live-session.service';
 import { BikeRideLogRepository, BikeRideLogSaveInput } from '../../../core/data/bike-ride-log.repository';
 import { ProfileRepository } from '../../../core/data/profile.repository';
 import { today } from '../../../shared/local-date';
@@ -34,6 +35,11 @@ import { BIKE_INTENSITIES, avgSpeedKmH, bikeKcal, suggestedIntensity } from './b
  * (no pairing rule, unlike the swim pool fields). When distance + duration are both present the UI
  * shows the avg-speed and a soft MET-category suggestion that never overrides the user's pick. Live
  * kcal preview from the canonical MET formula at the current profile weight.
+ *
+ * backlog/150 — on `cycling/live/summary` (route data `liveSummary`) the same form is the live ride's
+ * editable summary: pre-filled from `BikeLiveSessionService.summary()`, saved under the ride's id with
+ * `trackingMode` / `startedAt` through the same repository, then the live draft is cleared; "Elvetés"
+ * (confirmed) drops it instead. Editing a saved ride keeps its `trackingMode` / `startedAt`.
  */
 @Component({
   selector: 'app-bike-ride-log-edit',
@@ -68,9 +74,16 @@ export class BikeRideLogEditPage implements OnInit {
   private readonly profileRepository = inject(ProfileRepository);
   private readonly alertController = inject(AlertController);
   private readonly translate = inject(TranslateService);
+  private readonly live = inject(BikeLiveSessionService);
 
   readonly intensities = BIKE_INTENSITIES;
   readonly logId = signal<string | null>(null);
+  readonly liveSummary = this.route.snapshot.data?.['liveSummary'] === true;
+  /** True while the live summary's distance / elevation are being computed. */
+  readonly summaryLoading = signal(false);
+  private liveRideId: string | null = null;
+  private trackingMode: BikeRideLog.TrackingModeEnum | undefined;
+  private startedAt: string | null = null;
 
   readonly form = this.fb.nonNullable.group({
     date: this.fb.nonNullable.control(today(), [Validators.required]),
@@ -112,6 +125,11 @@ export class BikeRideLogEditPage implements OnInit {
       await this.repository.load();
     }
 
+    if (this.liveSummary) {
+      await this.loadLiveSummary();
+      return;
+    }
+
     const idParam = this.route.snapshot.paramMap.get('id');
     if (idParam !== null && idParam !== 'new') {
       const existing = this.repository.items().find((log) => log.id === idParam && !log.deleted);
@@ -120,6 +138,8 @@ export class BikeRideLogEditPage implements OnInit {
         return;
       }
       this.logId.set(idParam);
+      this.trackingMode = existing.trackingMode ?? undefined;
+      this.startedAt = existing.startedAt ?? null;
       this.form.reset({
         date: existing.date,
         durationMinutes: existing.durationMinutes,
@@ -137,14 +157,67 @@ export class BikeRideLogEditPage implements OnInit {
     }
     const value = this.form.getRawValue();
     const input: BikeRideLogSaveInput = {
-      id: this.logId() ?? undefined,
+      id: this.logId() ?? this.liveRideId ?? undefined,
       date: value.date,
       durationMinutes: value.durationMinutes ?? 0,
       intensity: value.intensity,
       distanceKm: value.distanceKm ?? null,
       elevationGainMeters: value.elevationGainMeters ?? null,
+      trackingMode: this.trackingMode,
+      startedAt: this.startedAt,
     };
     await this.repository.save(input);
+    if (this.liveSummary) {
+      await this.live.clear();
+    }
+    await this.navController.navigateBack('/tabs/workout/cycling');
+  }
+
+  async discardLive(): Promise<void> {
+    const alert = await this.alertController.create({
+      header: this.translate.instant('WORKOUT.BIKE.LIVE.DISCARD_CONFIRM_TITLE'),
+      message: this.translate.instant('WORKOUT.BIKE.LIVE.DISCARD_CONFIRM_MESSAGE'),
+      buttons: [
+        { text: this.translate.instant('COMMON.CANCEL'), role: 'cancel' },
+        {
+          text: this.translate.instant('WORKOUT.BIKE.LIVE.DISCARD'),
+          role: 'destructive',
+          handler: () => void this.discardLiveAndNavigateBack(),
+        },
+      ],
+    });
+    await alert.present();
+  }
+
+  private async loadLiveSummary(): Promise<void> {
+    const draft = await this.live.refresh();
+    if (draft === null || draft.endedAtMs === null) {
+      await this.navController.navigateBack('/tabs/workout/cycling');
+      return;
+    }
+    this.summaryLoading.set(true);
+    try {
+      const summary = await this.live.summary();
+      if (summary === null) {
+        return;
+      }
+      this.liveRideId = summary.id;
+      this.trackingMode = summary.trackingMode;
+      this.startedAt = summary.startedAt;
+      this.form.reset({
+        date: summary.date,
+        durationMinutes: summary.durationMinutes,
+        intensity: BikeRideLog.IntensityEnum.City,
+        distanceKm: summary.distanceKm,
+        elevationGainMeters: summary.elevationGainMeters,
+      });
+    } finally {
+      this.summaryLoading.set(false);
+    }
+  }
+
+  private async discardLiveAndNavigateBack(): Promise<void> {
+    await this.live.clear();
     await this.navController.navigateBack('/tabs/workout/cycling');
   }
 
