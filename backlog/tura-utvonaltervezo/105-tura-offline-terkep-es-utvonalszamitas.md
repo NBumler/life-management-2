@@ -1,7 +1,7 @@
 ---
 id: 105
 type: feature
-status: blocked
+status: in-progress
 title: Túra — offline térkép-letöltés és offline útvonalszámítás
 specs: []
 flag: menu.tura
@@ -11,11 +11,12 @@ closed:
 
 # 105 — Túra — offline térkép-letöltés és offline útvonalszámítás
 
-> **Részben kész, blokkolva (2026-10-06):** a régiónkénti letöltés és a cache-olt térkép kész; az
-> útvonalszámítás csak **korábban letöltött** régión belül működik. Ha a telefon soha nem
-> töltötte le a területet, nincs turistaút-adat és nincs offline útvonal — a letöltés a backendről
-> kéri a szakaszokat. A teljes offline (build asset) változat a [[151-tura-backend-offline-first-szabalysertesek]]
-> turistaút-gráf pontján, a #150 méret-jóváhagyására vár.
+> **Részben kész (2026-10-18):** a régiónkénti letöltés és a cache-olt térkép kész. Az
+> **útvonalszámítás** mostantól **soha nem letöltött régióban is** ad útvonalat — a
+> [[151-tura-backend-offline-first-szabalysertesek]] turistaút-gráf build assetje és a
+> `core/geo/routing.service` `HIKE` profilja a `RouteSuggestionRepository` végső tartaléka. Nyitva
+> maradt: a turistaút-**réteg** (a térképen látható jelzés-vonalak) soha nem letöltött eszközön még
+> nem jelenik meg build assetből — csak a letöltött/backendről kapott adat rajzolódik ki (lásd 151).
 
 ## Motiváció / probléma
 
@@ -35,9 +36,14 @@ delta-sync) más entitásokra épül, térképi csempe-/vektoradat offline táro
 - [x] Az offline térkép-tárolás módja explicit rákötve a [[Backend-offline first]] kontraktra:
       melyik connectivity-state-ben mi működik (`ONLINE`, `BACKEND_OFFLINE`, `FULL_OFFLINE`) — ld.
       "### Megvalósítás" alább.
-- [ ] Turistaút-adat és útvonalszámítás letöltés nélkül is: friss telepítés, soha nem letöltött
-      régió, repülőgép mód — a turistaút-gráf build asset (ld. [[151-tura-backend-offline-first-szabalysertesek]]).
-      **Blokkolva a #150 méret-jóváhagyásán.**
+- [x] **Útvonalszámítás** letöltés nélkül is: friss telepítés, soha nem letöltött régió, repülőgép
+      mód — a turistaút-gráf build assetből megy, a `RouteSuggestionRepository` tartalékaként
+      (ld. [[151-tura-backend-offline-first-szabalysertesek]] "Megvalósítás — 2. kör").
+- [ ] **Turistaút-adat (réteg) megjelenítése** letöltés nélkül is: a térképen rajzolt
+      turistajelzés-vonalak soha nem letöltött eszközön még nem jelennek meg (csak a
+      `TrailSegmentRepository` backend/letöltött-régió adata rajzolódik ki) — lásd 151, nyitva
+      hagyva, mert az alaptérkép-csempe maga is csak letöltve offline, így önmagában alacsony
+      prioritású.
 
 ## Terv / döntési napló
 
@@ -115,9 +121,11 @@ delta-sync) más entitásokra épül, térképi csempe-/vektoradat offline táro
 - **Tudatos korlátok**: (1) csak az OSM alaptérkép tölthető le, a többi réteg online-only marad;
   (2) egy "régió" a letöltéskori térkép-viewport bbox-a, nincs közigazgatási/szabadon rajzolt
   terület-választás; (3) a letöltés best-effort — egy-egy sikertelen csempe-letöltés csendben
-  kimarad, nem hiúsítja meg a teljes régiót; (4) **a turistaút-szakaszokat a letöltés a backendről
-  kéri** — ez a régió-letöltéshez szükséges online kapcsolat, és a 151-es jegy szerint a
-  "soha nem letöltött" eszköz számára szabálysértés, amíg a gráf nem build asset.
+  kimarad, nem hiúsítja meg a teljes régiót; (4) **a régió-letöltés maga a turistaút-szakaszokat
+  (és a csempéket) továbbra is a backendről kéri** — ehhez online kapcsolat kell, de ez már nem
+  szabálysértés: egy soha nem letöltött eszköz az **útvonaltervezéshez** a 151-es build assetet
+  kapja (2026-10-18), csak a **réteg-megjelenítés** (a kirajzolt jelzés-vonalak) marad a
+  letöltéshez/backendhez kötve — lásd 151 nyitott pontja.
 
 ## Lezáráskor (on-done)
 

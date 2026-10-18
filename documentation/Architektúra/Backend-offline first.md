@@ -416,7 +416,7 @@ Elv: a külső integrációk **soha nincsenek** a saját backenden proxyzva ([[B
 | Külső hívás | `ONLINE` | `BACKEND_OFFLINE` | `FULL_OFFLINE` |
 |---|---|---|---|
 | Open Food Facts (`world.openfoodfacts.org/api/v2/product/{barcode}.json`) | megy | **megy** | nem — a vonalkód elmenthető, a sync gomb később lefuttatja ([[Vonalkódos élelmiszer beolvasás]]) |
-| Open-Meteo elevation (`api.open-meteo.com/v1/elevation`) — Túra útvonal-metrikák magassága | megy | **megy** | nem — a táv (eszközön számolva) látszik, a szintemelkedés / -csökkenés, az időbecslés és a magassági profil `~` (`backlog/151`; offline DEM: `backlog/150`) |
+| Open-Meteo elevation (`api.open-meteo.com/v1/elevation`) — Túra útvonal-metrikák magassága, csak a build-asset DEM lefedettségén (HU) kívüli pontokra | megy | **megy** | nem azokra a pontokra, amik kívül esnek a build-asset DEM-en (§15) — ott a táv megy, a magasság-függő mezők `~`. A DEM-lefedett (HU) pontokra a magasság **FULL_OFFLINE-ban is megy** (`backlog/150`/`151`, `core/geo/elevation.service.ts`). |
 | Vonalkód kamera (`@capacitor-mlkit/barcode-scanning`) | megy | megy | **megy** (eszközön belüli) |
 | Android Health Connect / Samsung Health | megy | megy | **megy** (eszközön belüli API — [[Lépésszám átszinkronizálása a Samsung Health-ből]]) |
 | Google Calendar OAuth / API | megy | megy | vár ([[Google Calendar szinkronizálása]]) |
@@ -437,6 +437,14 @@ Elv: a külső integrációk **soha nincsenek** a saját backenden proxyzva ([[B
 #### 15. Seed és statikus asset
 
 - **Build asset** (Full-offline is elérhető): nehézségi konverziós mátrix JSON, `Exercise` seed fájl, i18n (`hu.json` / `en.json`), enumok, feature flag konfiguráció.
+- **Geo build asset** (`backlog/150`/`151`, `frontend/src/assets/geo/`, git-ignored, az APK-ba épül,
+  előállítás: `scripts/build-geo-assets.mjs`): Magyarország-bbox DEM-rács (domborzat, Copernicus
+  GLO-90), bicikli- és turistaút-úthálózat csempénként. Ettől lesz FULL_OFFLINE-ban is elérhető
+  első indulástól (nem csak letöltött régión belül) a túra-magasság (`core/geo/elevation.service.ts`),
+  a turistaút-útvonaltervezés (`core/geo/routing.service.ts`, `HIKE` profil — a
+  `RouteSuggestionRepository` végső tartaléka a helyi viewport-adat és a backend után) és a
+  bicikli-útvonaltervezés (`BIKE` profil). Mért méret: DEM 57,7 MB, bicikli 40,1 MB, turistaút
+  10,6 MB (nyersen); a felhasználó jóváhagyta az APK-növekményt (`backlog/150` "Méret-jóváhagyás").
 - Az `Exercise` seed sorai **user-owned másolatok determinisztikus v5 ID-vel** (§9) → többeszközös első indulás nem duplikálja a katalógust és nem ütközik a `name` egyediségbe.
 - A seed create-ek **normál outbox tételek** (offline első indulásnál is működik).
 - A seed nem fut újra minden induláskor: a latch natívon a `seed_state` tábla (`seed_key = 'exercise'`; ha a tárolt `seed_version` eléri az `EXERCISE_SEED_VERSION`-t → no-op, akkor is, ha a user közben minden gyakorlatot törölt), weben a per-user `localStorage` kulcs, ami ugyanazt a `seed_version`-t tárolja. Mindkét oldalon a „katalógus már nem üres" check is rövidre zárja a másik eszközről beszinkronizált katalógust, a determinisztikus v5 ID pedig idempotenssé tesz minden maradék ismételt írást.

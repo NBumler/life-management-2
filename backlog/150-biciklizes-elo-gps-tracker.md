@@ -349,6 +349,11 @@ mérése, A* futásidő és memória valódi telefonon (cél: < 2 s egy 50 km-es
 A [[151-tura-backend-offline-first-szabalysertesek]] az 1. fázis után indulhat (a túra-metrikák és
 -routing átállása ugyanerre a rétegre), a 106-os track-felvétel a 2. fázis után.
 
+**2026-10-18:** a 151 DEM-magassága és turistaút-gráf build assetje elkészült (a turistaút-adat a
+már importált `trail_segment` táblából jön, nem a PBF-ből — az OSM reláció-feldolgozás nem volt
+kész a PBF-olvasóban). Ez lezárja a 151/105 routing-oldali részét; a turistaút-réteg
+megjelenítése build assetből (soha nem letöltött eszközön) nyitva maradt, lásd 151.
+
 ### Plugin döntés
 
 **Spike-eredmény (2026-10-06, részleges — eszköz-mérés még hátravan):**

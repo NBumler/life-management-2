@@ -43,14 +43,14 @@ túrázási funkció).
 |---|---|---|
 | `backlog/archive/103-tura-alapveto-utvonaltervezes-es-terkep.md` | Alaptérkép, turistajelzés-réteg, manuális/automatikus útvonaltervezés, katalógus, szűrés | `done` |
 | `backlog/archive/104-tura-adatforras-integracio.md` | Magyar (majd több országos) turistaút-adatforrás (OSM), ország-kód particionálás | `done` |
-| [[backlog/tura-utvonaltervezo/105-tura-offline-terkep-es-utvonalszamitas]] | Offline térkép-letöltés régiónként (kész), offline útvonalszámítás csak letöltött régión belül (a teljes offline a 151/150 build-asset ponton) | `blocked` |
+| [[backlog/tura-utvonaltervezo/105-tura-offline-terkep-es-utvonalszamitas]] | Offline térkép-letöltés régiónként (kész), offline útvonaltervezés letöltés nélkül is (kész, build asset), turistaút-réteg megjelenítése build assetből (nyitva) | `in-progress` |
 | [[backlog/tura-utvonaltervezo/106-tura-gps-navigacio-elo-helymegosztas]] | Élő GPS-navigáció, track-felvétel, turn-by-turn, letérés-figyelmeztetés, SOS | `ready` |
 | `backlog/archive/107-tura-domborzat-3d-terkepretegek.md` | Domborzat/lejtő-réteg, alternatív térképrétegek (3D nézet kizárva) | `done` |
 | [[backlog/tura-utvonaltervezo/108-tura-poi-adatbazis-ketura-belyegzok]] | POI-adatbázis, keresés, gyűjtemények (fotók és Kéktúra-bélyegzők kizárva) | `ready` |
 | [[backlog/tura-utvonaltervezo/109-tura-idojaras-integracio]] | Időjárás-előrejelzés + riasztás (térkép-overlay kizárva) | `ready` |
 | `backlog/archive/110-tura-kozossegi-funkciok.md` | Közösségi funkciók — **dropped**, marad egyszemélyes app | `dropped` |
 | [[backlog/tura-utvonaltervezo/111-tura-eszkozok]] | Iránytű, magasságmérő, dőlésszögmérő, QR-olvasó (csúcskereső kizárva) | `ready` |
-| [[backlog/tura-utvonaltervezo/151-tura-backend-offline-first-szabalysertesek]] | Backend-offline first javítás: metrika és routing eszközre (kész), DEM + turistaút-gráf build assetként (a #150 méret-jóváhagyására vár) | `blocked` |
+| [[backlog/tura-utvonaltervezo/151-tura-backend-offline-first-szabalysertesek]] | Backend-offline first javítás: metrika, routing és DEM-magasság eszközön, turistaút-gráf build assetként (kész); turistaút-réteg build assetből (nyitva) | `in-progress` |
 
 > Kapcsolódó, a mappán kívüli jegy: [[150-biciklizes-elo-gps-tracker]] — a bicikli élő tracker
 > közös, eszközön futó geo-alapréteget (GPS-követés, build-asset DEM, profilos routing) épít, amit a 106 is használ.

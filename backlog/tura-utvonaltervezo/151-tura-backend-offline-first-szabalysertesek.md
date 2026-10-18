@@ -1,7 +1,7 @@
 ---
 id: 151
 type: bug
-status: blocked
+status: in-progress
 title: Túra — Backend-offline first szabálysértések (backend-függő metrika és routing)
 specs:
   - "[[Backend-offline first]]"
@@ -13,10 +13,12 @@ closed:
 
 # 151 — Túra — Backend-offline first szabálysértések (backend-függő metrika és routing)
 
-> **Blokkolva (2026-10-02):** az 1. pont online / backend-offline része és a 2. pont helyi-elsőbbsége
-> kész (`8acd87a`). A maradék — a FULL_OFFLINE magasság (DEM) és a turistaút-gráf build assetként —
-> a [[150-biciklizes-elo-gps-tracker]] geo asset-csomagjára és annak **méret-jóváhagyására** vár
-> (#150 0. fázis).
+> **Jelentős rész kész (2026-10-18):** a FULL_OFFLINE magasság és a turistaút-alapú **automatikus
+> útvonaltervezés** build assetből megy (lásd "Megvalósítás — 2. kör" lent) — ez volt a két
+> konkrét szabálysértés. **Nyitva maradt egy pont**, amit a motivációs szöveg is külön nevez meg:
+> a turistaút-**réteg megjelenítése** a térképen build assetből (soha nem letöltött eszközön) —
+> ez még a `TrailSegmentRepository`-n (backend/letöltött régió) megy, nem a build assetről. Lásd
+> az elfogadási kritériumok közt külön kiemelve.
 
 ## Motiváció / probléma
 
@@ -61,14 +63,26 @@ szolgáltatótól jönnek (nem a backendről), és megjelenítést, nem számít
       profil a kliensen (`core/geo/route-metrics.ts`, a Naismith- és zajküszöb-konstansokkal együtt),
       a kézi és az automatikus útvonalra és a napi szakaszokra is. A táv **mindig** (FULL_OFFLINE-ban
       is) megjelenik.
-- [ ] **Magasság FULL_OFFLINE-ban:** a magasság-forrás a build-asset DEM (#150 1. fázis) —
-      repülőgép módban, soha nem elért backenddel is. _Addig: közvetlen Open-Meteo hívás a kliensből
-      (`core/geo/open-meteo-elevation.service.ts`, §13); internet nélkül a magasság-függő mezők
-      `~`._ — **blokkolva a #150 méret-jóváhagyásán.**
-- [ ] **Turistaút-gráf build assetként** (**blokkolva a #150 méret-jóváhagyásán**): a magyar turistaút-hálózat a geo asset-csomag része
-      (#150 `build-geo-assets.mjs`, a `scripts/import-hiking-trails.mjs` forrásából) → a réteg
-      megjelenítése és az automatikus útvonaltervezés első indítástól offline működik, a közös
-      `core/geo/routing.service` HIKE profiljával.
+- [x] **Magasság FULL_OFFLINE-ban:** a magasság-forrás a build-asset DEM (#150 1. fázis) —
+      repülőgép módban, soha nem elért backenddel is megy, a DEM-lefedettségen (HU) belül
+      (`core/geo/elevation.service.ts`: DEM elsőként, Open-Meteo csak a lefedettségen kívüli
+      pontokra, ha van net). A lefedettségen kívüli, net nélküli pontokon a magasság-függő mezők `~`.
+- [x] **Turistaút-gráf build assetként, automatikus útvonaltervezéshez:** a magyar
+      turistaút-hálózat a geo asset-csomag része (#150 `build-geo-assets.mjs` — a már importált
+      `trail_segment` táblából, nem újra a PBF-ből, mert az OSM `route=hiking` reláció-feldolgozás
+      a bicikli-gráfnál használt PBF-olvasóban nem volt kész; a forrás ugyanaz, mint a
+      `scripts/import-hiking-trails.mjs`-é). A `RouteSuggestionRepository` harmadik (mindig
+      elérhető) tartalékaként a `core/geo/routing.service` `HIKE` profilja ad útvonalat, ha a
+      betöltött viewport-adat és a backend sem tud — ettől soha nem letöltött, internetet soha nem
+      elért eszközön is van automatikus útvonaltervezés (lásd
+      [[105-tura-offline-terkep-es-utvonalszamitas]]).
+- [ ] **Turistaút-réteg megjelenítése build assetből** (soha nem letöltött eszközön): a térképen
+      látható turistajelzés-vonalak (a `TrailSegmentRepository`-n, azaz backend-hívás vagy letöltött
+      régió manifestje) változatlanul csak backenddel/letöltéssel jelennek meg — a build asset
+      csak a routinghoz kötve van be, a réteg-megjelenítéshez nem. Alacsonyabb prioritás: az
+      alaptérkép-csempék maguk is csak letöltéssel offline-ok (105 "Tudatos korlát" (1)), így egy
+      soha nem letöltött eszközön a réteg önmagában, térkép-alap nélkül amúgy is korlátozott
+      hasznú. Újranyitandó, ha ez zavaró.
 - [x] Az útvonaltervezés elsődlegesen eszközön fut (helyi A* először; a backend `route-suggestion`
       csak gyorsító tartalék, ha a betöltött adatban nincs összeköttetés). A backend
       `route-metrics` végpontja megszűnt; a `RouteMetricsService` + `OpenMeteoElevationClient`
@@ -126,6 +140,38 @@ szolgáltatótól jönnek (nem a backendről), és megjelenítést, nem számít
   megváltoztatná (`verify:outbox` → verzió-emelés + no-op migrátor-lépés), ezért a következő
   érdemi `HikeRoute`-séma-változással együtt javítandó.
 - Zöld: backend `test`, frontend `test:ci` (1926), `lint`, `build`, `verify:outbox`.
+
+### Megvalósítás — 2. kör (2026-10-18)
+
+A #150 geo asset-csomag méret-jóváhagyása után (DEM + bicikli-gráf, lásd #150) a maradék két pont:
+
+- `core/geo/elevation.service.ts`: pontonként a build-asset DEM-ből (`GeoAssetService.elevationAt`),
+  csak a lefedettségen (HU) kívüli pontokra esik vissza az Open-Meteo-ra (ha van net). A
+  `RouteMetricsRepository` ezt használja a közvetlen `OpenMeteoElevationService`-hívás helyett.
+- Turistaút-gráf build asset: a bicikli-gráfnál használt PBF-olvasó nem dolgoz fel relációkat
+  (`route=hiking`), ezért a turistaút-adat forrása a már importált `trail_segment` tábla (közvetlen
+  Postgres-kapcsolat a build-scriptből, `.env`-ből olvasott kapcsolati adatokkal — lásd
+  [[150-biciklizes-elo-gps-tracker]] "Geo-csomag másik gépen"). Mért méret: 230 611 szakasz →
+  198 103 szakasz-darab 336 csempében, 10,6 MB nyersen (~6,1 MB deflate).
+- A bicikli-csempe-formátum és -kód általánosítva mindkét profilra: `bike-tile-codec.ts` →
+  `way-tile-codec.ts` (`BikeWay` → `WayFeature`, `decodeBikeTile` → `decodeWayTile`), új
+  `hike-routing-profile.ts` (egységes súly, nincs úttípus-kedvezmény — megegyezik a mai
+  `offline-route-graph.ts` viselkedésével), `GeoAssetService.hikeWaysIntersecting`,
+  `RoutingService` `HIKE` profillal (2000 m-es illesztési küszöb, mint az eddigi
+  `offline-route-graph.ts`-ben; profilonkénti külön gráf-cache).
+- `RouteSuggestionRepository.suggest()`: harmadik szint — ha a betöltött viewport-adaton **és** a
+  backenden sem talál utat (hálózati hiba *vagy* a backend "nincs összeköttetés" válasza), a
+  build-asset `HIKE` routing a végső tartalék, csak `countryCode === 'HU'`-ra.
+- `geo-math.ts`: közös `withExactEndpoints` (a snap-elt útvonal elejét/végét a pontos kért pontra
+  cseréli) — ezt eddig csak az `offline-route-graph.ts` tartalmazta duplikálva, most mindkét hívó
+  (`offline-route-graph.ts`, `route-suggestion.repository.ts`) ezt használja.
+- Valódi adaton mérve (asztali gép): 12–50 km-es turistaút-útvonalak 46–490 ms alatt — gyorsabb,
+  mint a bicikli routing, mert kisebb a csomag (10,6 MB vs. 40,1 MB).
+- **Nyitva maradt** (lásd az elfogadási kritériumok közt): a turistaút-réteg (a térképen látható
+  turistajelzés-vonalak) megjelenítése build assetből, soha nem letöltött eszközön — ez külön
+  munka (a `tura.page.ts` map-réteg kódja, nem a routing), alacsonyabb prioritással, mert az
+  alaptérkép-csempe maga is csak letöltve offline.
+- Zöld: frontend `test:ci` (2098), `lint`, `build`, `verify:outbox`, `verify:i18n`.
 
 ## Lezáráskor (on-done)
 
