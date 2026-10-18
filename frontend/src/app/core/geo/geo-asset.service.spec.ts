@@ -22,6 +22,7 @@ const MANIFEST: GeoManifest = {
 		},
 	],
 	bike: [{ file: 'bike/a.bin', bbox: [19.0, 47.0, 19.25, 47.25], ways: 0, points: 0, bytes: 12 }],
+	hike: [{ file: 'hike/a.bin', bbox: [19.0, 47.0, 19.25, 47.25], ways: 0, points: 0, bytes: 12 }],
 };
 
 describe('GeoAssetService', () => {
@@ -53,6 +54,7 @@ describe('GeoAssetService', () => {
 		expect(await service.covers(19.5, 47.5)).toBeFalse();
 		expect(await service.elevationAt(19.5, 47.5)).toBeNull();
 		expect(await service.bikeWaysIntersecting([19, 47, 20, 48])).toEqual({ tileFiles: [], ways: [] });
+		expect(await service.hikeWaysIntersecting([19, 47, 20, 48])).toEqual({ tileFiles: [], ways: [] });
 	});
 
 	it('answers coverage from the manifest bbox', async () => {
@@ -91,5 +93,16 @@ describe('GeoAssetService', () => {
 		req.flush(new Uint8Array([0x4c, 0x4d, 0x42, 0x4b, 1, 0, 0, 0, 0, 0, 0, 0]).buffer);
 
 		expect(await pending).toEqual({ tileFiles: ['bike/a.bin'], ways: [] });
+	});
+
+	it('hikeWaysIntersecting(): loads from the hike/ tile, independently of the bike cache', async () => {
+		await loadManifest(MANIFEST);
+
+		const pending = service.hikeWaysIntersecting([19.1, 47.1, 19.2, 47.2]);
+		await new Promise((resolve) => setTimeout(resolve));
+		const req = http.expectOne('assets/geo/hike/a.bin');
+		req.flush(new Uint8Array([0x4c, 0x4d, 0x42, 0x4b, 1, 0, 0, 0, 0, 0, 0, 0]).buffer);
+
+		expect(await pending).toEqual({ tileFiles: ['hike/a.bin'], ways: [] });
 	});
 });

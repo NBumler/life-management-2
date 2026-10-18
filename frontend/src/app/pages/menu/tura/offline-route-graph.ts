@@ -1,6 +1,6 @@
 import { RouteSuggestion } from '../../../api/model/routeSuggestion';
 import { TrailSegment } from '../../../api/model/trailSegment';
-import { haversineMeters } from '../../../core/geo/geo-math';
+import { polylineLengthMeters, withExactEndpoints } from '../../../core/geo/geo-math';
 import { RouteGraph } from '../../../core/geo/route-graph';
 
 /**
@@ -42,23 +42,11 @@ export function suggestRouteOffline(segments: readonly TrailSegment[], start: re
 		return notFound();
 	}
 
-	const coordinates: number[][] = [[start[0], start[1]]];
-	for (const node of pathNodes) {
-		const point = graph.coordinateOf(node);
-		const last = coordinates[coordinates.length - 1];
-		if (haversineMeters(last[0], last[1], point[0], point[1]) > 0.1) {
-			coordinates.push([point[0], point[1]]);
-		}
-	}
-	const last = coordinates[coordinates.length - 1];
-	if (haversineMeters(last[0], last[1], end[0], end[1]) > 0.1) {
-		coordinates.push([end[0], end[1]]);
-	}
+	const coordinates = withExactEndpoints(
+		pathNodes.map((node) => graph.coordinateOf(node)),
+		start,
+		end,
+	);
 
-	let distanceMeters = 0;
-	for (let i = 1; i < coordinates.length; i++) {
-		distanceMeters += haversineMeters(coordinates[i - 1][0], coordinates[i - 1][1], coordinates[i][0], coordinates[i][1]);
-	}
-
-	return { found: true, coordinates, distanceMeters };
+	return { found: true, coordinates, distanceMeters: polylineLengthMeters(coordinates) };
 }

@@ -1,14 +1,14 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { BikeWay, decodeBikeTile } from './bike-tile-codec';
 import { DemGrid, sampleElevation } from './dem';
+import { WayFeature, decodeWayTile } from './way-tile-codec';
 
 /**
- * backlog/150 — a build-asset geo-csomag (DEM + bicikli-úthálózat) lusta betöltése és lefedettség-
- * ellenőrzése (Backend-offline first §15). A csomag az APK-ba épül (`frontend/src/assets/geo/`,
- * `scripts/build-geo-assets.mjs`), ezért futás közben nincs hálózati hívás. Ha a csomag hiányzik,
- * minden lekérdezés `null`-t vagy üres listát ad, soha nem 0-t (§14).
+ * backlog/150 + backlog/151 — a build-asset geo-csomag (DEM + bicikli- és turistaút-hálózat) lusta
+ * betöltése és lefedettség-ellenőrzése (Backend-offline first §15). A csomag az APK-ba épül
+ * (`frontend/src/assets/geo/`, `scripts/build-geo-assets.mjs`), ezért futás közben nincs hálózati
+ * hívás. Ha a csomag hiányzik, minden lekérdezés `null`-t vagy üres listát ad, soha nem 0-t (§14).
  */
 
 export type BboxTuple = [minLon: number, minLat: number, maxLon: number, maxLat: number];
@@ -25,7 +25,8 @@ export interface GeoManifestDemTile {
 	bytes: number;
 }
 
-export interface GeoManifestBikeTile {
+/** Közös csempe-alak a bicikli- és a turistaút-hálózatnak is — csak a mappa (`bike/` / `hike/`) különbözik. */
+export interface GeoManifestWayTile {
 	file: string;
 	bbox: BboxTuple;
 	ways: number;
@@ -39,19 +40,21 @@ export interface GeoManifest {
 	bbox: BboxTuple;
 	attribution: string[];
 	dem: GeoManifestDemTile[];
-	bike: GeoManifestBikeTile[];
+	bike: GeoManifestWayTile[];
+	hike: GeoManifestWayTile[];
 }
 
 const BASE_URL = 'assets/geo/';
 const MANIFEST_URL = `${BASE_URL}manifest.json`;
-const MAX_CACHED_BIKE_TILES = 32;
+/** A fájlnevek a `bike/` / `hike/` mappa miatt eleve nem ütköznek, ezért egy közös cache elég. */
+const MAX_CACHED_WAY_TILES = 32;
 
 @Injectable({ providedIn: 'root' })
 export class GeoAssetService {
 	private readonly http = inject(HttpClient);
 	private manifestPromise: Promise<GeoManifest | null> | null = null;
 	private readonly demCache = new Map<string, Promise<DemGrid>>();
-	private readonly bikeCache = new Map<string, Promise<BikeWay[]>>();
+	private readonly wayCache = new Map<string, Promise<WayFeature[]>>();
 
 	/** A csomag fejléce; ha nincs csomag az eszközön, `null`. */
 	manifest(): Promise<GeoManifest | null> {
@@ -98,20 +101,30 @@ export class GeoAssetService {
 	 * `tileFiles`-szel együtt — a `RoutingService` ebből képez gráf-gyorsítótár kulcsot, hogy ugyanazt
 	 * a térséget ne építse fel újra minden lekérdezésnél.
 	 */
-	async bikeWaysIntersecting(bbox: BboxTuple): Promise<{ tileFiles: string[]; ways: BikeWay[] }> {
+	async bikeWaysIntersecting(bbox: BboxTuple): Promise<{ tileFiles: string[]; ways: WayFeature[] }> {
 		const manifest = await this.manifest();
-		if (!manifest) {
-			return { tileFiles: [], ways: [] };
-		}
-		const tiles = manifest.bike.filter((tile) => bboxesIntersect(tile.bbox, bbox));
-		const perTile = await Promise.all(tiles.map((tile) => this.loadBike(tile)));
-		const ways: BikeWay[] = [];
+		return manifest ? this.waysIntersecting(manifest.bike, bbox) : { tileFiles: [], ways: [] };
+	}
+
+	/** Ugyanaz, mint a `bikeWaysIntersecting`, csak a turistaút-hálózat csempéire (#151). */
+	async hikeWaysIntersecting(bbox: BboxTuple): Promise<{ tileFiles: string[]; ways: WayFeature[] }> {
+		const manifest = await this.manifest();
+		return manifest ? this.waysIntersecting(manifest.hike, bbox) : { tileFiles: [], ways: [] };
+	}
+
+	private async waysIntersecting(
+		tiles: readonly GeoManifestWayTile[],
+		bbox: BboxTuple,
+	): Promise<{ tileFiles: string[]; ways: WayFeature[] }> {
+		const matching = tiles.filter((tile) => bboxesIntersect(tile.bbox, bbox));
+		const perTile = await Promise.all(matching.map((tile) => this.loadWayTile(tile)));
+		const ways: WayFeature[] = [];
 		for (const list of perTile) {
 			for (const way of list) {
 				ways.push(way);
 			}
 		}
-		return { tileFiles: tiles.map((tile) => tile.file), ways };
+		return { tileFiles: matching.map((tile) => tile.file), ways };
 	}
 
 	private loadDem(tile: GeoManifestDemTile): Promise<DemGrid> {
@@ -132,12 +145,12 @@ export class GeoAssetService {
 		return cached;
 	}
 
-	private loadBike(tile: GeoManifestBikeTile): Promise<BikeWay[]> {
-		let cached = this.bikeCache.get(tile.file);
+	private loadWayTile(tile: GeoManifestWayTile): Promise<WayFeature[]> {
+		let cached = this.wayCache.get(tile.file);
 		if (!cached) {
-			cached = this.fetchBinary(tile.file).then(decodeBikeTile);
-			this.bikeCache.set(tile.file, cached);
-			this.evictOldestBikeTiles();
+			cached = this.fetchBinary(tile.file).then(decodeWayTile);
+			this.wayCache.set(tile.file, cached);
+			this.evictOldestWayTiles();
 		}
 		return cached;
 	}
@@ -146,18 +159,18 @@ export class GeoAssetService {
 	private fetchBinary(file: string): Promise<ArrayBuffer> {
 		return firstValueFrom(this.http.get(BASE_URL + file, { responseType: 'arraybuffer' })).catch((error: unknown) => {
 			this.demCache.delete(file);
-			this.bikeCache.delete(file);
+			this.wayCache.delete(file);
 			throw error;
 		});
 	}
 
-	private evictOldestBikeTiles(): void {
-		while (this.bikeCache.size > MAX_CACHED_BIKE_TILES) {
-			const oldest = this.bikeCache.keys().next().value;
+	private evictOldestWayTiles(): void {
+		while (this.wayCache.size > MAX_CACHED_WAY_TILES) {
+			const oldest = this.wayCache.keys().next().value;
 			if (oldest === undefined) {
 				return;
 			}
-			this.bikeCache.delete(oldest);
+			this.wayCache.delete(oldest);
 		}
 	}
 }

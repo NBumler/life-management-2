@@ -1,5 +1,14 @@
-import { BIKE_COST_CLASS, BikeWay } from './bike-tile-codec';
 import { RouteGraph } from './route-graph';
+import { WayFeature } from './way-tile-codec';
+
+/** Költségosztály az úttípusból (a build-script írja a csempébe, lásd `scripts/build-geo-assets.mjs`). */
+export const BIKE_COST_CLASS = {
+	CYCLEWAY: 0,
+	OFFROAD: 1,
+	QUIET_ROAD: 2,
+	ROAD: 3,
+	MAIN_ROAD: 4,
+} as const;
 
 /**
  * backlog/150 — bicikli routing-profil: a költségosztályhoz tartozó szorzó. 1 = légvonal-hossz;
@@ -18,7 +27,7 @@ export const BIKE_COST_FACTORS: Readonly<Record<number, number>> = {
  * Gráf építése a dekódolt bicikli-utakból. Azonos koordinátájú csomópontok (pl. átfedő csempék
  * szélén) összeolvadnak, mert a `RouteGraph` a koordinátából képez kulcsot.
  */
-export function buildBikeGraph(ways: readonly BikeWay[]): RouteGraph {
+export function buildBikeGraph(ways: readonly WayFeature[]): RouteGraph {
 	const graph = new RouteGraph(Math.min(...Object.values(BIKE_COST_FACTORS)));
 	for (const way of ways) {
 		const factor = BIKE_COST_FACTORS[way.costClass] ?? BIKE_COST_FACTORS[BIKE_COST_CLASS.MAIN_ROAD];

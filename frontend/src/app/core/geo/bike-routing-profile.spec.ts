@@ -1,5 +1,5 @@
-import { BIKE_COST_CLASS, BikeWay } from './bike-tile-codec';
-import { buildBikeGraph } from './bike-routing-profile';
+import { BIKE_COST_CLASS, buildBikeGraph } from './bike-routing-profile';
+import { WayFeature } from './way-tile-codec';
 
 describe('buildBikeGraph', () => {
 	const start: [number, number] = [19.0, 47.0];
@@ -7,7 +7,7 @@ describe('buildBikeGraph', () => {
 	const detourVia: [number, number] = [19.005, 47.005];
 
 	it('prefers a dedicated cycleway detour over a shorter main road', () => {
-		const ways: BikeWay[] = [
+		const ways: WayFeature[] = [
 			{ costClass: BIKE_COST_CLASS.MAIN_ROAD, coordinates: [start, goal] },
 			{ costClass: BIKE_COST_CLASS.CYCLEWAY, coordinates: [start, detourVia, goal] },
 		];

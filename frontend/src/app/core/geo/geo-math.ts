@@ -43,6 +43,27 @@ export function pointAtDistance(coordinates: readonly (readonly number[])[], tar
 }
 
 /**
+ * backlog/151 — egy illesztett (snap-elt) útvonal eleje/vége a gráf legközelebbi éle, nem a kért
+ * `start`/`end` pont — ez a legfeljebb `maxSnapDistanceMeters` (eddig 2 km) eltérést a pontos
+ * kért pontra cseréli, hogy a térképen a tervezett vonal a kattintott ponttól induljon/érjen véget,
+ * nem egy tőle néhány száz métert illesztett ponttól. Duplikátum végpontot nem told be (<0,1 m).
+ */
+export function withExactEndpoints(coordinates: readonly (readonly number[])[], start: readonly number[], end: readonly number[]): number[][] {
+  const result: number[][] = [[start[0], start[1]]];
+  for (const point of coordinates) {
+    const last = result[result.length - 1];
+    if (haversineMeters(last[0], last[1], point[0], point[1]) > 0.1) {
+      result.push([point[0], point[1]]);
+    }
+  }
+  const last = result[result.length - 1];
+  if (haversineMeters(last[0], last[1], end[0], end[1]) > 0.1) {
+    result.push([end[0], end[1]]);
+  }
+  return result;
+}
+
+/**
  * `count` points spread evenly by distance along the polyline, as `[lon, lat, distanceFromStartMeters]`
  * — independent of the raw vertex count, so a long two-point line gets as dense a sampling as a
  * many-vertex auto-route. A zero-length line repeats its first point.

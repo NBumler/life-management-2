@@ -1,4 +1,4 @@
-import { BIKE_COST_CLASS, decodeBikeTile } from './bike-tile-codec';
+import { decodeWayTile } from './way-tile-codec';
 
 /** A `scripts/build-geo-assets.mjs` kódolásának tükre, a dekódoló formátum-szerződésének teszteléséhez. */
 function encode(ways: { cls: number; points: number[][] }[]): ArrayBuffer {
@@ -39,27 +39,27 @@ function encode(ways: { cls: number; points: number[][] }[]): ArrayBuffer {
 	return new Uint8Array(bytes).buffer;
 }
 
-describe('decodeBikeTile', () => {
+describe('decodeWayTile', () => {
 	it('decodes delta-encoded ways with their cost class', () => {
 		const buffer = encode([
-			{ cls: BIKE_COST_CLASS.CYCLEWAY, points: [[19.0, 47.5], [19.001, 47.5005], [19.0015, 47.501]] },
-			{ cls: BIKE_COST_CLASS.MAIN_ROAD, points: [[20.1, 46.9], [20.1002, 46.9]] },
+			{ cls: 0, points: [[19.0, 47.5], [19.001, 47.5005], [19.0015, 47.501]] },
+			{ cls: 4, points: [[20.1, 46.9], [20.1002, 46.9]] },
 		]);
 
-		const ways = decodeBikeTile(buffer);
+		const ways = decodeWayTile(buffer);
 
 		expect(ways.length).toBe(2);
-		expect(ways[0].costClass).toBe(BIKE_COST_CLASS.CYCLEWAY);
+		expect(ways[0].costClass).toBe(0);
 		expect(ways[0].coordinates[1][0]).toBeCloseTo(19.001, 6);
 		expect(ways[0].coordinates[2][1]).toBeCloseTo(47.501, 6);
-		expect(ways[1].costClass).toBe(BIKE_COST_CLASS.MAIN_ROAD);
+		expect(ways[1].costClass).toBe(4);
 		expect(ways[1].coordinates[1][0]).toBeCloseTo(20.1002, 6);
 	});
 
 	it('restores absolute coordinates after an escape (jump larger than int16 delta)', () => {
-		const buffer = encode([{ cls: BIKE_COST_CLASS.ROAD, points: [[17.0, 47.0], [17.5, 47.0], [17.5005, 47.0003]] }]);
+		const buffer = encode([{ cls: 3, points: [[17.0, 47.0], [17.5, 47.0], [17.5005, 47.0003]] }]);
 
-		const [way] = decodeBikeTile(buffer);
+		const [way] = decodeWayTile(buffer);
 
 		expect(way.coordinates[1][0]).toBeCloseTo(17.5, 6);
 		expect(way.coordinates[2][0]).toBeCloseTo(17.5005, 6);
@@ -70,7 +70,7 @@ describe('decodeBikeTile', () => {
 		const buffer = encode([]);
 		new Uint8Array(buffer)[0] = 0x58;
 
-		expect(() => decodeBikeTile(buffer)).toThrowError(/fejléc/);
+		expect(() => decodeWayTile(buffer)).toThrowError(/fejléc/);
 	});
 
 	it('rejects trailing bytes instead of silently ignoring them', () => {
@@ -78,6 +78,6 @@ describe('decodeBikeTile', () => {
 		const padded = new Uint8Array(buffer.byteLength + 3);
 		padded.set(new Uint8Array(buffer));
 
-		expect(() => decodeBikeTile(padded.buffer)).toThrowError(/maradt/);
+		expect(() => decodeWayTile(padded.buffer)).toThrowError(/maradt/);
 	});
 });

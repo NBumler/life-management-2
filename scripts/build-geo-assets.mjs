@@ -1,24 +1,30 @@
 #!/usr/bin/env node
-// backlog/150 1. fázis — build-asset (Backend-offline first §15): az eszközön offline futó DEM-rács és
-// bicikli-úthálózat előállítása. Az eredmény a `frontend/src/assets/geo/` alá kerül (git-ignored), és a
-// `cap sync` révén az APK-ba épül. Ritkán, kézzel futtatandó (OSM- vagy DEM-frissítéskor).
+// backlog/150 1. fázis + backlog/151 — build-asset (Backend-offline first §15): az eszközön offline
+// futó DEM-rács, bicikli- és turistaút-úthálózat előállítása. Az eredmény a
+// `frontend/src/assets/geo/` alá kerül (git-ignored), és a `cap sync` révén az APK-ba épül. Ritkán,
+// kézzel futtatandó (OSM-, DEM- vagy turistaút-adat frissítésekor).
 //
-//   node scripts/build-geo-assets.mjs [--force] [--skip-dem] [--skip-bike] [--pbf <fájl>]
+//   node scripts/build-geo-assets.mjs [--force] [--skip-dem] [--skip-bike] [--skip-hike] [--pbf <fájl>]
 //
 // Források:
 //  - DEM: Copernicus DEM GLO-90 (3″, ~90 m), a copernicus-dem-90m AWS-bucketből, 1°×1° GeoTIFF-ek.
 //    Attribúció: © DLR e.V. / Airbus Defence and Space — a manifest tartalmazza.
 //  - Bicikli-úthálózat: OSM Magyarország extract (Geofabrik `hungary-latest.osm.pbf`), beolvasva a
 //    PBF-ből (nincs hálózati hívás és nincs lekérdezési korlát). ODbL — a manifest tartalmazza.
+//  - Turistaút-hálózat: a már importált `trail_segment` tábla (scripts/import-hiking-trails.mjs
+//    töltötte fel) — **kell egy futó Postgres a `docker-compose.yml`-ből, a HU-adattal betöltve**;
+//    ez nem futásidejű backend-függés (a §13 a kliens futását érinti, nem a build-et), csak a
+//    build-gépen kell elérhető legyen. A `.env`-ből olvassa a kapcsolati adatokat.
 //
-// Bináris formátumok (little-endian), a dekódolók: frontend/src/app/core/geo/*-codec.ts
+// Bináris formátumok (little-endian), a dekódoló: frontend/src/app/core/geo/way-tile-codec.ts
 //  - DEM csempe (.bin): `Int16` értékek sorfolytonosan, észak → dél, nyugat → kelet. A noData = -32768.
 //    A rács geometriáját a manifest adja (origin, lépés, méret).
-//  - Bicikli csempe (.bin): "LMBK" fejléc, u32 verzió (1), u32 úthossz-szám. Úthosszonként:
-//    u8 költségosztály, u16 pontszám, i32 lon, i32 lat (1e-6 fok); majd (pontszám − 1) lépés, ahol a
-//    lépés két i16 eltérés (lon, lat), vagy ha valamelyik nem fér i16-ba: -32768 + két i32 abszolút érték.
+//  - Útvonal-csempe (.bin, bicikli **és** turistaút is): "LMBK" fejléc, u32 verzió (1), u32
+//    úthossz-szám. Úthosszonként: u8 költségosztály (biciklinél úttípus, turistaútnál mindig 0),
+//    u16 pontszám, i32 lon, i32 lat (1e-6 fok); majd (pontszám − 1) lépés, ahol a lépés két i16
+//    eltérés (lon, lat), vagy ha valamelyik nem fér i16-ba: -32768 + két i32 abszolút érték.
 
-import { mkdirSync, writeFileSync, readFileSync, existsSync, rmSync, copyFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync, readFileSync, existsSync, rmSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -35,19 +41,20 @@ const args = process.argv.slice(2);
 const FORCE = args.includes('--force');
 const SKIP_DEM = args.includes('--skip-dem');
 const SKIP_BIKE = args.includes('--skip-bike');
+const SKIP_HIKE = args.includes('--skip-hike');
 const PBF_ARG = args.indexOf('--pbf') >= 0 ? args[args.indexOf('--pbf') + 1] : null;
 const PBF_PATH = PBF_ARG ?? join(CACHE, 'hungary-latest.osm.pbf');
 const PBF_URL = 'https://download.geofabrik.de/europe/hungary-latest.osm.pbf';
 
 // HU-lefedettség: a turistaút-import határaival egyező bbox (scripts/import-hiking-trails.mjs).
 const BBOX = { minLat: 45.7, minLon: 16.0, maxLat: 48.6, maxLon: 22.9 };
-const BIKE_TILE_DEG = 0.25;
+const TILE_DEG = 0.25; // közös csempe-méret a bicikli- és a turistaút-hálózatnak is
 const COPERNICUS_BASE = 'https://copernicus-dem-90m.s3.eu-central-1.amazonaws.com';
 
 const NO_DATA = -32768;
-const BIKE_MAGIC = 'LMBK';
-const BIKE_VERSION = 1;
-const COORD_SCALE = 1_000_000; // 1e-6 fok egységek a bicikli-csempében
+const WAY_MAGIC = 'LMBK';
+const WAY_VERSION = 1;
+const COORD_SCALE = 1_000_000; // 1e-6 fok egységek az útvonal-csempében
 const MAX_WAY_POINTS = 65_535;
 
 // Költségosztályok (a szorzókat a TS oldal `bike-routing-profile` táblája adja, nem a binárisban).
@@ -437,41 +444,25 @@ function* pbfBlocks(buffer) {
 	}
 }
 
-// --- Bicikli-úthálózat ----------------------------------------------------------------------------
+// --- Közös csempe-rács (bicikli és turistaút) ------------------------------------------------------
 
-function bikeTileGrid() {
+function countryTileGrid() {
 	const tiles = [];
-	for (let lat = BBOX.minLat; lat < BBOX.maxLat - 1e-9; lat += BIKE_TILE_DEG) {
-		for (let lon = BBOX.minLon; lon < BBOX.maxLon - 1e-9; lon += BIKE_TILE_DEG) {
+	for (let lat = BBOX.minLat; lat < BBOX.maxLat - 1e-9; lat += TILE_DEG) {
+		for (let lon = BBOX.minLon; lon < BBOX.maxLon - 1e-9; lon += TILE_DEG) {
 			tiles.push({
 				minLat: round6(lat),
 				minLon: round6(lon),
-				maxLat: round6(Math.min(lat + BIKE_TILE_DEG, BBOX.maxLat)),
-				maxLon: round6(Math.min(lon + BIKE_TILE_DEG, BBOX.maxLon)),
+				maxLat: round6(Math.min(lat + TILE_DEG, BBOX.maxLat)),
+				maxLon: round6(Math.min(lon + TILE_DEG, BBOX.maxLon)),
 			});
 		}
 	}
 	return tiles;
 }
 
-/** Az OSM-úthoz költségosztályt rendel; `null`, ha nem biciklivel járható. */
-function bikeClassOf(tags) {
-	const highway = tags.highway;
-	if (!highway || tags.access === 'private' || tags.bicycle === 'no') {
-		return null;
-	}
-	if (BIKE_EXPLICIT_HIGHWAYS.has(highway)) {
-		return BIKE_TAG_OK.has(tags.bicycle) ? CLASS.OFFROAD : null;
-	}
-	return HIGHWAY_CLASS[highway] ?? null;
-}
-
-function fitsInt16(delta) {
-	return delta >= -32767 && delta <= 32767;
-}
-
-/** A csempe bináris kódolása (lásd a fájl fejlécét). `pts` lapos [lonU, latU, …] Int32Array. */
-function encodeBikeTile(ways) {
+/** A csempe bináris kódolása (lásd a fájl fejlécét). `pts` lapos [lonU, latU, …] Int32Array. Közös a bicikli és a turistaút csempéknek. */
+function encodeWayTile(ways) {
 	let size = 12;
 	for (const way of ways) {
 		size += 11;
@@ -484,9 +475,9 @@ function encodeBikeTile(ways) {
 	}
 	const buffer = Buffer.alloc(size);
 	let o = 0;
-	buffer.write(BIKE_MAGIC, o, 'ascii');
+	buffer.write(WAY_MAGIC, o, 'ascii');
 	o += 4;
-	buffer.writeUInt32LE(BIKE_VERSION, o);
+	buffer.writeUInt32LE(WAY_VERSION, o);
 	o += 4;
 	buffer.writeUInt32LE(ways.length, o);
 	o += 4;
@@ -515,7 +506,7 @@ function encodeBikeTile(ways) {
 	return buffer;
 }
 
-/** A hosszú utakat átfedő darabokra vágja (a csempe-fejléc u16 pontszámot ad). */
+/** A hosszú utakat átfedő darabokra vágja (a csempe-fejléc u16 pontszámot ad). Közös a bicikli és a turistaút csempéknek. */
 function splitWay(cls, pts) {
 	const n = pts.length / 2;
 	if (n <= MAX_WAY_POINTS) {
@@ -527,6 +518,33 @@ function splitWay(cls, pts) {
 		pieces.push({ cls, pts: pts.subarray(2 * start, 2 * end) });
 	}
 	return pieces;
+}
+
+/** Igaz, ha a `pts` egész (1e-6 fok) koordinátájú poligon bboxa metszi a csempe bboxát. */
+function wayTouchesTile(minLon, minLat, maxLon, maxLat, tile) {
+	const tileMinLon = Math.round(tile.minLon * COORD_SCALE);
+	const tileMaxLon = Math.round(tile.maxLon * COORD_SCALE);
+	const tileMinLat = Math.round(tile.minLat * COORD_SCALE);
+	const tileMaxLat = Math.round(tile.maxLat * COORD_SCALE);
+	return !(maxLon < tileMinLon || minLon > tileMaxLon || maxLat < tileMinLat || minLat > tileMaxLat);
+}
+
+// --- Bicikli-úthálózat ----------------------------------------------------------------------------
+
+/** Az OSM-úthoz költségosztályt rendel; `null`, ha nem biciklivel járható. */
+function bikeClassOf(tags) {
+	const highway = tags.highway;
+	if (!highway || tags.access === 'private' || tags.bicycle === 'no') {
+		return null;
+	}
+	if (BIKE_EXPLICIT_HIGHWAYS.has(highway)) {
+		return BIKE_TAG_OK.has(tags.bicycle) ? CLASS.OFFROAD : null;
+	}
+	return HIGHWAY_CLASS[highway] ?? null;
+}
+
+function fitsInt16(delta) {
+	return delta >= -32767 && delta <= 32767;
 }
 
 async function ensurePbf() {
@@ -546,7 +564,7 @@ async function ensurePbf() {
 async function buildBike() {
 	const bikeDir = join(OUT, 'bike');
 	ensureDir(bikeDir);
-	const tiles = bikeTileGrid();
+	const tiles = countryTileGrid();
 	const pbf = readFileSync(await ensurePbf());
 	log(`OSM PBF beolvasva (${pbf.length} B), első menet: bicikli-utak`);
 
@@ -631,11 +649,7 @@ async function buildBike() {
 		}
 		const pieces = splitWay(way.cls, pts);
 		tiles.forEach((tile, index) => {
-			const tileMinLon = Math.round(tile.minLon * COORD_SCALE);
-			const tileMaxLon = Math.round(tile.maxLon * COORD_SCALE);
-			const tileMinLat = Math.round(tile.minLat * COORD_SCALE);
-			const tileMaxLat = Math.round(tile.maxLat * COORD_SCALE);
-			if (maxLon < tileMinLon || minLon > tileMaxLon || maxLat < tileMinLat || minLat > tileMaxLat) {
+			if (!wayTouchesTile(minLon, minLat, maxLon, maxLat, tile)) {
 				return;
 			}
 			for (const piece of pieces) {
@@ -651,7 +665,7 @@ async function buildBike() {
 	for (const [index, tile] of tiles.entries()) {
 		const name = `bike_${tile.minLat}_${tile.minLon}`.replace(/\./g, 'p');
 		const file = `bike/${name}.bin`;
-		const buffer = encodeBikeTile(tileWays[index]);
+		const buffer = encodeWayTile(tileWays[index]);
 		writeFileSync(join(OUT, file), buffer);
 		const points = tileWays[index].reduce((sum, w) => sum + w.pts.length / 2, 0);
 		entries.push({
@@ -666,6 +680,94 @@ async function buildBike() {
 	return entries;
 }
 
+// --- Turistaút-hálózat (backlog/151) ---------------------------------------------------------------
+
+/** `.env` KEY=VALUE olvasása kis kézi parserrel (nincs rá dependency máshol a repóban sem). */
+function readEnvFile(path) {
+	const env = {};
+	for (const line of readFileSync(path, 'utf8').split(/\r?\n/)) {
+		const match = line.match(/^([A-Z_]+)=(.*)$/);
+		if (match) {
+			env[match[1]] = match[2].replace(/\r$/, '');
+		}
+	}
+	return env;
+}
+
+/**
+ * A turistaút-hálózat forrása **nem a PBF**, hanem a már importált `trail_segment` tábla
+ * (scripts/import-hiking-trails.mjs töltötte fel Overpass-ból — lásd backlog/tura-utvonaltervezo/
+ * 104-...). A build-gépen futó Postgresből olvassa közvetlenül (a `docker-compose.yml` + `.env`
+ * kapcsolati adataival), nincs HTTP/JWT-kör. A routinghoz nincs szükség úttípus-osztályra: minden
+ * szakasz egységes súlyú (lásd `core/geo/hike-routing-profile.ts`), ezért a költségosztály mindig 0.
+ */
+async function buildHike() {
+	const { Client } = requireFromFrontend('pg');
+	const hikeDir = join(OUT, 'hike');
+	ensureDir(hikeDir);
+	const tiles = countryTileGrid();
+
+	const env = readEnvFile(join(ROOT, '.env'));
+	const client = new Client({
+		host: 'localhost',
+		port: 5432,
+		user: env.POSTGRES_USER,
+		password: env.POSTGRES_PASSWORD,
+		database: env.POSTGRES_DB,
+	});
+	await client.connect();
+	let rows;
+	try {
+		const result = await client.query(
+			"SELECT coordinates, min_lon, min_lat, max_lon, max_lat FROM trail_segment WHERE country_code = 'HU'",
+		);
+		rows = result.rows;
+	} finally {
+		await client.end();
+	}
+	log(`${rows.length} turistaút-szakasz a Postgresből`);
+
+	const tileWays = tiles.map(() => []);
+	for (const row of rows) {
+		const flat = row.coordinates;
+		const pts = new Int32Array(flat.length);
+		for (let i = 0; i < flat.length; i++) {
+			pts[i] = Math.round(flat[i] * COORD_SCALE);
+		}
+		const pieces = splitWay(0, pts);
+		const minLon = Math.round(row.min_lon * COORD_SCALE);
+		const minLat = Math.round(row.min_lat * COORD_SCALE);
+		const maxLon = Math.round(row.max_lon * COORD_SCALE);
+		const maxLat = Math.round(row.max_lat * COORD_SCALE);
+		tiles.forEach((tile, index) => {
+			if (!wayTouchesTile(minLon, minLat, maxLon, maxLat, tile)) {
+				return;
+			}
+			for (const piece of pieces) {
+				tileWays[index].push(piece);
+			}
+		});
+	}
+
+	const entries = [];
+	for (const [index, tile] of tiles.entries()) {
+		const name = `hike_${tile.minLat}_${tile.minLon}`.replace(/\./g, 'p');
+		const file = `hike/${name}.bin`;
+		const buffer = encodeWayTile(tileWays[index]);
+		writeFileSync(join(OUT, file), buffer);
+		const points = tileWays[index].reduce((sum, w) => sum + w.pts.length / 2, 0);
+		entries.push({
+			file,
+			bbox: [tile.minLon, tile.minLat, tile.maxLon, tile.maxLat],
+			ways: tileWays[index].length,
+			points,
+			bytes: buffer.length,
+		});
+	}
+	log(`turistaút csempék: ${entries.length}, ${entries.reduce((s, e) => s + e.ways, 0)} szakasz-darab, ${entries.reduce((s, e) => s + e.bytes, 0)} B`);
+	return entries;
+}
+
 // --- Főprogram -------------------------------------------------------------------------------------
 
 /** Ha a manifest és minden benne felsorolt csempe-fájl megvan, a build már kész (újraépítés: --force). */
@@ -675,13 +777,16 @@ function existingPackageIsComplete() {
 		return false;
 	}
 	const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
-	return [...manifest.dem, ...manifest.bike].every((entry) => existsSync(join(OUT, entry.file)));
+	return [...manifest.dem, ...manifest.bike, ...(manifest.hike ?? [])].every((entry) => existsSync(join(OUT, entry.file)));
 }
 
 async function main() {
+	// A "már kész, nincs dolog" rövidzár csak akkor él, ha a hívó nem jelzett explicit --skip-*
+	// kapcsolót — az egy konkrét rész (újra)építését kéri, azt nem szabad megelőznie a rövidzárnak.
+	const anySkip = SKIP_DEM || SKIP_BIKE || SKIP_HIKE;
 	if (FORCE) {
 		rmSync(OUT, { recursive: true, force: true });
-	} else if (existingPackageIsComplete()) {
+	} else if (!anySkip && existingPackageIsComplete()) {
 		log(`a csomag már kész (${join(OUT, 'manifest.json')}); újraépítéshez: --force`);
 		return;
 	}
@@ -689,9 +794,10 @@ async function main() {
 
 	const previous = existsSync(join(OUT, 'manifest.json'))
 		? JSON.parse(readFileSync(join(OUT, 'manifest.json'), 'utf8'))
-		: { dem: [], bike: [] };
+		: { dem: [], bike: [], hike: [] };
 	const dem = SKIP_DEM ? previous.dem : await buildDem();
 	const bike = SKIP_BIKE ? previous.bike : await buildBike();
+	const hike = SKIP_HIKE ? previous.hike ?? [] : await buildHike();
 
 	const manifest = {
 		version: 1,
@@ -699,16 +805,19 @@ async function main() {
 		bbox: [BBOX.minLon, BBOX.minLat, BBOX.maxLon, BBOX.maxLat],
 		attribution: [
 			'DEM: Copernicus DEM GLO-90 © DLR e.V. and Airbus Defence and Space (Copernicus Space Component)',
-			'Úthálózat: © OpenStreetMap contributors (ODbL), Geofabrik hungary-latest extract',
+			'Bicikli-úthálózat: © OpenStreetMap contributors (ODbL), Geofabrik hungary-latest extract',
+			'Turistaút-hálózat: © OpenStreetMap contributors (ODbL), Overpass API (scripts/import-hiking-trails.mjs import)',
 		],
 		dem,
 		bike,
+		hike,
 	};
 	writeFileSync(join(OUT, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
 
 	const demBytes = dem.reduce((sum, e) => sum + e.bytes, 0);
 	const bikeBytes = bike.reduce((sum, e) => sum + e.bytes, 0);
-	log(`kész: DEM ${dem.length} csempe, ${demBytes} B; bicikli ${bike.length} csempe, ${bikeBytes} B`);
+	const hikeBytes = hike.reduce((sum, e) => sum + e.bytes, 0);
+	log(`kész: DEM ${dem.length} csempe, ${demBytes} B; bicikli ${bike.length} csempe, ${bikeBytes} B; turistaút ${hike.length} csempe, ${hikeBytes} B`);
 }
 
 main().catch((error) => {

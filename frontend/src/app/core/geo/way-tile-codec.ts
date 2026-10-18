@@ -1,19 +1,14 @@
 /**
- * backlog/150 — a bicikli-úthálózat csempéjének (build asset, `scripts/build-geo-assets.mjs`) dekódolója.
- * A formátum leírása a script fejlécében van; ezt a fájlt az kódolja, tehát a kettőt együtt kell
- * tartani. Little-endian, a koordináták 1e-6 fokos egész számok.
+ * backlog/150 + backlog/151 — útvonal-csempe (build asset, `scripts/build-geo-assets.mjs`) dekódolója.
+ * Közös formátum a bicikli- és a turistaút-hálózatnak is (`core/geo/bike-routing-profile.ts` és
+ * `hike-routing-profile.ts`): az osztálybájt jelentése profil-függő (bicikliben úttípus-költség,
+ * turistaútban egységesen 0, mert a hegyi út nem preferáltabb egy másiknál). A formátum leírása a
+ * build-script fejlécében van; ezt a fájlt az kódolja, tehát a kettőt együtt kell tartani.
+ * Little-endian, a koordináták 1e-6 fokos egész számok.
  */
 
-/** Költségosztály a build-ben rögzített úttípusból (a szorzókat a bike-routing-profile adja). */
-export const BIKE_COST_CLASS = {
-	CYCLEWAY: 0,
-	OFFROAD: 1,
-	QUIET_ROAD: 2,
-	ROAD: 3,
-	MAIN_ROAD: 4,
-} as const;
-
-export interface BikeWay {
+export interface WayFeature {
+	/** Profil-függő osztály (bicikliben úttípus-költség, turistaútban mindig 0). */
 	costClass: number;
 	/** `[lon, lat]` pairs, GeoJSON order. */
 	coordinates: number[][];
@@ -24,18 +19,18 @@ const VERSION = 1;
 const COORD_SCALE = 1_000_000;
 const ESCAPE = -32768;
 
-export function decodeBikeTile(buffer: ArrayBuffer): BikeWay[] {
+export function decodeWayTile(buffer: ArrayBuffer): WayFeature[] {
 	const view = new DataView(buffer);
 	const magic = String.fromCharCode(view.getUint8(0), view.getUint8(1), view.getUint8(2), view.getUint8(3));
 	if (magic !== MAGIC) {
-		throw new Error(`Bicikli csempe: ismeretlen fejléc (${magic})`);
+		throw new Error(`Útvonal-csempe: ismeretlen fejléc (${magic})`);
 	}
 	const version = view.getUint32(4, true);
 	if (version !== VERSION) {
-		throw new Error(`Bicikli csempe: nem támogatott verzió (${version})`);
+		throw new Error(`Útvonal-csempe: nem támogatott verzió (${version})`);
 	}
 	const wayCount = view.getUint32(8, true);
-	const ways: BikeWay[] = [];
+	const ways: WayFeature[] = [];
 	let o = 12;
 	for (let w = 0; w < wayCount; w++) {
 		const costClass = view.getUint8(o);
@@ -60,7 +55,7 @@ export function decodeBikeTile(buffer: ArrayBuffer): BikeWay[] {
 		ways.push({ costClass, coordinates });
 	}
 	if (o !== buffer.byteLength) {
-		throw new Error(`Bicikli csempe: ${buffer.byteLength - o} bájt maradt a dekódolás után`);
+		throw new Error(`Útvonal-csempe: ${buffer.byteLength - o} bájt maradt a dekódolás után`);
 	}
 	return ways;
 }
