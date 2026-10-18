@@ -14,6 +14,10 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-19 — #175** Android emulátoros tesztkörnyezet: `scripts/android-emulator.ps1` létrehozza
+  (avdmanager nélkül) és elindítja a `LM2_Phone` AVD-t (Android 15, 360 dp), `install-android.ps1 -Emulator`
+  arra telepít `http://10.0.2.2:8080/api`-val; `-Emulator` nélkül az emulátor-serialok kiszűrve. —
+  érintett: [[Fejlesztői környezet]]; kód: `scripts/`.
 - **2026-10-18 — #174** OFF vonalkód-import lebegőpontos kivonási hiba: a számított összetett szénhidrát és
   telítetlen zsír 3 tizedesre kerekítve (`7 − 4.4` → `2.6`, nem `2.5999…`); közös `shared/round.ts` `round3`
   (a só → nátrium / klorid számítás is ezt használja). — érintett: [[Vonalkódos élelmiszer beolvasás]]; kód:

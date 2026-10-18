@@ -11,6 +11,15 @@
 .PARAMETER Usb
     Use `adb reverse` instead of a LAN IP; apiBaseUrl becomes http://localhost:8080/api.
 
+.PARAMETER Emulator
+    Install onto the local Android emulator instead of a phone: starts the AVD via
+    scripts/android-emulator.ps1 (booting in parallel with the build) and points apiBaseUrl at
+    http://10.0.2.2:8080/api - the emulator's alias for this machine's loopback, so no LAN IP or
+    firewall rule is needed. Mutually exclusive with -Usb and -Deliver.
+
+.PARAMETER Avd
+    AVD to use with -Emulator. Default: LM2_Phone (created on first use).
+
 .PARAMETER Deliver
     Skip the adb install; instead upload app-debug.apk to the 'dev-apk' GitHub prerelease
     (created on first use, asset overwritten on every run) and print its download URL.
@@ -21,13 +30,18 @@
 param(
     [string]$ApiHost,
     [switch]$Usb,
-    [switch]$Deliver
+    [switch]$Deliver,
+    [switch]$Emulator,
+    [string]$Avd = "LM2_Phone"
 )
 
 $ErrorActionPreference = "Stop"
 
 if ($Deliver -and $Usb) {
     throw "-Deliver es -Usb egyutt nem ertelmezheto: a -Deliver nem telepit csatlakoztatott eszkozre, csak feltolti az APK-t GitHub Release-re."
+}
+if ($Emulator -and ($Usb -or $Deliver)) {
+    throw "-Emulator nem kombinalhato a -Usb / -Deliver kapcsolokkal."
 }
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
@@ -37,33 +51,13 @@ $androidDir = Join-Path $frontendDir "android"
 $backendPort = 8080
 
 # 0. Android SDK feloldása (adb ehhez kell) — ne kelljen kézzel ANDROID_HOME-ot beállítani előtte.
-# local.properties (amit gradlew is használ) a legmegbízhatóbb forrás, utána env var, utána az
-# Android Studio alapértelmezett telepítési helye.
-$localPropsPath = Join-Path $androidDir "local.properties"
-$sdkDir = $null
-if (Test-Path $localPropsPath) {
-    $sdkLine = Get-Content $localPropsPath | Where-Object { $_ -match "^sdk\.dir=" } | Select-Object -First 1
-    if ($sdkLine) {
-        $sdkDir = ($sdkLine -split "=", 2)[1].Trim() -replace "\\:", ":" -replace "/", "\"
-    }
-}
-if (-not $sdkDir -and $env:ANDROID_HOME) {
-    $sdkDir = $env:ANDROID_HOME
-}
-if (-not $sdkDir) {
-    $defaultSdk = Join-Path $env:LOCALAPPDATA "Android\Sdk"
-    if (Test-Path $defaultSdk) {
-        $sdkDir = $defaultSdk
-    }
-}
-if ($sdkDir -and (Test-Path $sdkDir)) {
-    $env:ANDROID_HOME = $sdkDir
-    $platformTools = Join-Path $sdkDir "platform-tools"
-    if ($env:Path -notlike "*$platformTools*") {
-        $env:Path = "$platformTools;$env:Path"
-    }
-} else {
-    throw "Nem talalhato Android SDK (nezd meg: frontend/android/local.properties 'sdk.dir', vagy allitsd be az ANDROID_HOME-ot)."
+. (Join-Path $PSScriptRoot "android-sdk.ps1")
+Resolve-AndroidSdk -RepoRoot $repoRoot | Out-Null
+
+# Emulator modban a boot (~30-60 s) a build alatt, parhuzamosan fut; a telepites elott varjuk ki.
+$emulatorScript = Join-Path $PSScriptRoot "android-emulator.ps1"
+if ($Emulator) {
+    & $emulatorScript -Avd $Avd -NoWait
 }
 
 # npm/node feloldasa, ha a PATH-on nincs (pl. nvs-szel telepitve, de nincs `nvs link`-elve az
@@ -90,6 +84,9 @@ if ($Usb) {
     $resolvedHost = "localhost"
 } elseif ($ApiHost) {
     $resolvedHost = $ApiHost
+} elseif ($Emulator) {
+    # 10.0.2.2 = a fejlesztoi gep 127.0.0.1-e az emulator NAT-jabol nezve.
+    $resolvedHost = "10.0.2.2"
 } else {
     $route = Get-NetRoute -DestinationPrefix "0.0.0.0/0" -ErrorAction SilentlyContinue |
         Sort-Object -Property RouteMetric |
@@ -236,22 +233,33 @@ if ($Deliver) {
     return
 }
 
-$deviceLines = adb devices | Select-String -Pattern "\tdevice$"
-if (-not $deviceLines) {
-    throw "Nincs csatlakoztatott/eszkozon engedelyezett Android eszkoz (ellenorizd: adb devices)."
+if ($Emulator) {
+    # Kivarja a (build alatt mar elinditott) emulator bootjat; az utolso kimeneti sor a serial.
+    $targetSerial = & $emulatorScript -Avd $Avd | Select-Object -Last 1
+} else {
+    $deviceLines = adb devices | Select-String -Pattern "\tdevice$"
+    if (-not $deviceLines) {
+        throw "Nincs csatlakoztatott/eszkozon engedelyezett Android eszkoz (ellenorizd: adb devices)."
+    }
+    $serials = @($deviceLines | ForEach-Object { ($_.Line -split "\s+")[0] })
+    # Az emulatorokat (emulator-NNNN) is kiszurjuk: -Emulator nelkul mindig a fizikai eszkoz a cel, igy
+    # egy hatterben futo emulator nem akasztja meg a telefonra telepitest.
+    $physicalSerials = @($serials | Where-Object { $_ -notmatch "^emulator-\d+$" })
+    if ($physicalSerials.Count -eq 0) {
+        throw "Csak emulator csatlakozik ($($serials -join ', ')). Emulatorra telepiteshez: -Emulator"
+    }
+    # A vezetek nelkuli hibakereses mDNS-sel gyakran letrehoz egy plusz, "..._adb-tls-connect._tcp"
+    # vegu bejegyzest ugyanahhoz a fizikai eszkozhoz az explicit ip:port mellett — ezt kiszurjuk,
+    # kulonben "more than one device/emulator" hibaval elszall az adb install.
+    # @(...): egyetlen talalat eseten PowerShell scalar stringge csomagolna ki a listat, es a kesobbi
+    # [0] indexeles akkor a string ELSO KARAKTERET adna vissza, nem a teljes szerialt.
+    $targetSerials = @($physicalSerials | Where-Object { $_ -notmatch "\._tcp$" })
+    if ($targetSerials.Count -eq 0) { $targetSerials = $physicalSerials }
+    if ($targetSerials.Count -gt 1) {
+        throw "Tobb csatlakoztatott eszkoz van ($($targetSerials -join ', ')). Csatlakoztass csak egyet."
+    }
+    $targetSerial = $targetSerials[0]
 }
-$serials = @($deviceLines | ForEach-Object { ($_.Line -split "\s+")[0] })
-# A vezetek nelkuli hibakereses mDNS-sel gyakran letrehoz egy plusz, "..._adb-tls-connect._tcp"
-# vegu bejegyzest ugyanahhoz a fizikai eszkozhoz az explicit ip:port mellett — ezt kiszurjuk,
-# kulonben "more than one device/emulator" hibaval elszall az adb install.
-# @(...): egyetlen talalat eseten PowerShell scalar stringge csomagolna ki a listat, es a kesobbi
-# [0] indexeles akkor a string ELSO KARAKTERET adna vissza, nem a teljes szerialt.
-$targetSerials = @($serials | Where-Object { $_ -notmatch "\._tcp$" })
-if ($targetSerials.Count -eq 0) { $targetSerials = $serials }
-if ($targetSerials.Count -gt 1) {
-    throw "Tobb csatlakoztatott eszkoz van ($($targetSerials -join ', ')). Csatlakoztass csak egyet."
-}
-$targetSerial = $targetSerials[0]
 Write-Host "Cel eszkoz: $targetSerial"
 
 if ($Usb) {
@@ -267,7 +275,9 @@ if ($LASTEXITCODE -ne 0) { throw "adb install sikertelen (exit code $LASTEXITCOD
 Write-Host ""
 Write-Host "Telepitve. apiBaseUrl: $apiBaseUrl"
 try {
-    $health = Invoke-WebRequest -Uri "http://${resolvedHost}:${backendPort}/api/health" -TimeoutSec 3 -UseBasicParsing
+    # Az emulator 10.0.2.2-je errol a geprol nezve localhost.
+    $probeHost = if ($Emulator -and -not $ApiHost) { "localhost" } else { $resolvedHost }
+    $health = Invoke-WebRequest -Uri "http://${probeHost}:${backendPort}/api/health" -TimeoutSec 3 -UseBasicParsing
     Write-Host "GET /api/health -> $($health.StatusCode)"
 } catch {
     Write-Warning "GET /api/health nem valaszolt errol a gepről ($apiBaseUrl). Ellenorizd, hogy fut-e a backend, es (Wi-Fi mod eseten) a tuzfalszabalyt: New-NetFirewallRule -DisplayName 'lm2-backend' -Direction Inbound -Protocol TCP -LocalPort $backendPort -Profile Private -Action Allow"

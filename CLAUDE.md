@@ -92,6 +92,19 @@ overwritten each run) and prints its public download URL — for testing from a 
 LAN (e.g. a remote-controlled session); offline-first features only, the backend won't be
 reachable. Needs the `gh` CLI authenticated once (`gh auth login`); mutually exclusive with `-Usb`.
 
+Android emulator on this machine (no phone needed; backlog/175):
+```
+scripts/install-android.ps1 -Emulator [-Avd <name>]     # boot LM2_Phone in parallel with the build, install there
+scripts/android-emulator.ps1 [-Headless] [-ColdBoot]     # just start it; waits for boot, prints the serial
+```
+`LM2_Phone` (Android 15, 1080×2340 @ 480 dpi = 360 dp wide) is created by the script on first use
+— no `avdmanager` needed. `apiBaseUrl` becomes `http://10.0.2.2:8080/api` (the emulator's alias for
+the host loopback; no firewall rule). Without `-Emulator` the script ignores `emulator-NNNN` serials,
+so a running emulator never blocks a phone install. Drive it from an agent session with
+`adb -s emulator-5554 exec-out screencap -p > x.png` (view the PNG) + `adb shell input tap/text`;
+`adb shell input text` drops characters if fired too fast — pause ~1 s after focusing a field.
+Like a phone install, the script rewrites the tracked `app-config.json` — revert it before committing.
+
 Required env vars (`.env`, git-ignored; `.env.example` is the tracked template): `POSTGRES_USER`,
 `POSTGRES_PASSWORD`, `POSTGRES_DB`, `LM2_JWT_SECRET`, `LM2_ADMIN_API_KEY`. Backend local secrets also
 go in git-ignored `backend/src/main/resources/application-local.yml` — never in `application.yaml` or

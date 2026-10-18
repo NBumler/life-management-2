@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-10-17
-verifikalt_commit: 2540786
+verifikalva: 2026-10-19
+verifikalt_commit: 6fc30ef
 ---
 
 # Fejlesztői környezet
@@ -27,7 +27,7 @@ _Nincs UI/UX érintettség._
 
 ### Megjegyzések
 
-Architektúra jegyzet: a tartalom az `## Architektúra` alatt van. Ez a fájl a **monorepo elrendezés, a fejlesztői futtatás és a saját (házi) hálózaton történő Android telepítés SSOT-ja**. A repóban lévő `claude-hobby-starter-kit` konvencióira épül (`backend/` + `frontend/`, Gradle, `npm run gen:api`, dev proxy).
+Architektúra jegyzet: a tartalom az `## Architektúra` alatt van. Ez a fájl a **monorepo elrendezés, a fejlesztői futtatás, a saját (házi) hálózaton történő Android telepítés és a gépen futó Android emulátor SSOT-ja**. A repóban lévő `claude-hobby-starter-kit` konvencióira épül (`backend/` + `frontend/`, Gradle, `npm run gen:api`, dev proxy).
 
 Prod üzemeltetés / hosting: nyitott — [[Backend]].
 
@@ -46,7 +46,7 @@ backend/               # Spring Boot (Gradle) — [[Backend]]
 frontend/              # Ionic Angular (Capacitor) — [[Frontend]]
 documentation/         # Obsidian vault: a specifikáció SSOT-ja
 shared/fixtures/       # kliens + szerver közös teszt fixture-ök (névnormalizálás)
-scripts/               # fejlesztői szkriptek (Android telepítés)
+scripts/               # fejlesztői szkriptek (Android telepítés, emulátor)
 docker-compose.yml     # dev Postgres
 .env.example           # a szükséges env változók listája (a .env git-ignorált)
 ```
@@ -123,6 +123,52 @@ Kapcsolódási módok:
 | **USB kábel** | `adb reverse tcp:8080 tcp:8080`, `apiBaseUrl` = `http://localhost:8080/api` — nincs IP- és tűzfal-kérdés, viszont csak kábellel él |
 | **Wireless debugging** (Android 11+) | a telefon fejlesztői menüjéből `adb pair <telefon-ip>:<pair-port>`, majd `adb connect <telefon-ip>:5555`; utána ugyanaz, mint Wi-Fin |
 
+#### Android emulátor a fejlesztői gépen
+
+Telefon nélküli, „rendes Android” út: a projekt saját emulátora, amire ugyanaz a debug APK megy fel, és
+ami a gépen futó backendet látja. Wi-Fi, párosítás és tűzfalszabály nem kell.
+
+```
+scripts/install-android.ps1 -Emulator          # build + (ha kell) emulátor indítás + telepítés
+scripts/android-emulator.ps1                   # csak az emulátor indítása, megvárja a bootot
+scripts/android-emulator.ps1 -Headless         # ablak nélkül (agent-munkamenet, képernyőkép adb-vel)
+```
+
+- **AVD:** `LM2_Phone` — Android 15 (API 35), `google_apis_playstore` x86_64 image, 1080×2340 @ 480 dpi
+  (= **360 dp** széles nézet, a fejlesztői telefonhoz igazítva), 3 GB RAM, GPS-szel. Az
+  `android-emulator.ps1` első futáskor **maga hozza létre** (`%USERPROFILE%\.android\avd\LM2_Phone.ini` +
+  `LM2_Phone.avd\config.ini`) a legújabb telepített x86_64 system image-ből — `avdmanager` /
+  `cmdline-tools` nem kell hozzá. Másik, már létező AVD: `-Avd <név>` (mindkét szkriptben).
+  Újralétrehozás: az AVD törlése az Android Studio Device Managerben, majd a szkript újra.
+- **Előfeltétel:** Android Studio SDK-ból az *Android Emulator* és legalább egy x86_64 system image
+  (SDK Manager), valamint hardveres gyorsítás — ezen a gépen WHPX (Hyper-V), ellenőrzés:
+  `emulator-check.exe accel` (az SDK `emulator\` mappájában).
+- **Indítás:** a szkript leválasztott folyamatként indítja az emulátort (a shell bezárása után is fut,
+  log: `%TEMP%\lm2-emulator-LM2_Phone.log`), majd `sys.boot_completed`-ig vár (alapból max. 300 s,
+  `-TimeoutSec`), végül felébreszti a képernyőt és elengedi a zárképernyőt. Ha az AVD már fut, csak
+  visszaadja a serialját (`emulator-5554`). A quick-boot snapshot miatt a második indítás pár mp;
+  `-ColdBoot` ezt kihagyja. Leállítás: az emulátor ablakának bezárása, vagy `adb -s emulator-5554 emu kill`.
+- **`-Emulator` telepítés:** az emulátort a build **előtt** indítja (`-NoWait`), így a boot a builddel
+  párhuzamosan fut; az `apiBaseUrl` = **`http://10.0.2.2:8080/api`** — a `10.0.2.2` az emulátor
+  NAT-jából a fejlesztői gép `127.0.0.1`-e. A `-ApiHost` felülírja; a `-Usb` / `-Deliver` kapcsolóval nem
+  kombinálható. A `GET /api/health` próba a gépről `localhost`-ra megy.
+- **Telefon + emulátor egyszerre:** `-Emulator` nélkül a szkript az `emulator-NNNN` serialokat kiszűri,
+  tehát mindig a fizikai eszközre telepít; ha csak emulátor csatlakozik, `-Emulator`-t kér.
+- Az app az emulátorban ugyanaz a debug build, mint a telefonon (cleartext + `androidScheme: 'http'`,
+  CORS: `http://localhost` origin) — semmi emulátor-specifikus kód vagy config nincs.
+
+Hasznos `adb` parancsok az emulátorhoz (`adb -s emulator-5554 …`, ha a telefon is csatlakozik):
+
+| Mit | Parancs |
+|---|---|
+| Képernyőkép | `adb exec-out screencap -p > screen.png` |
+| App indítása | `adb shell monkey -p hu.bumler.lm2 -c android.intent.category.LAUNCHER 1` |
+| Repülőgép mód be / ki | `adb shell cmd connectivity airplane-mode enable` / `disable` |
+| GPS pozíció | `adb emu geo fix <hosszúság> <szélesség>` (pl. `19.0402 47.4979`); útvonal-lejátszás: emulátor ablak → *Extended controls → Location → Routes* (GPX/KML import) |
+| WebView debug | Chrome: `chrome://inspect` → a `hu.bumler.lm2` WebView (debug build) |
+| App log | `adb logcat -s Capacitor:* Capacitor/Console:*` |
+| Adatok törlése (első indítás újra) | `adb shell pm clear hu.bumler.lm2` |
+
 Két Android-oldali beállítás, amit a projektnek **egyszer** el kell végeznie, különben a fenti út csendben nem működik:
 
 - **Cleartext HTTP:** az Android 9+ tiltja a titkosítatlan forgalmat, tehát egy `http://192.168.x.y:8080` hívás alapból elhasal. Kell egy `network_security_config.xml`, amely a fejlesztői hosztokra engedi a cleartextet, és **kizárólag a `debug` varianthoz** van kötve — a release build maradjon HTTPS-only.
@@ -136,8 +182,8 @@ A fejlesztői környezet nem futásidejű feature, de az offline állapotok **k�
 
 | Állapot | Hogyan állítható elő |
 |---|---|
-| `BACKEND_OFFLINE` | A backend leállítása (`docker compose stop` / `bootRun` megszakítása), miközben a telefonon van internet — a külső API-k (Open Food Facts) továbbra is működnek |
-| `FULL_OFFLINE` | Repülőgép mód a telefonon |
+| `BACKEND_OFFLINE` | A backend leállítása (`docker compose stop` / `bootRun` megszakítása), miközben a telefonon / emulátoron van internet — a külső API-k (Open Food Facts) továbbra is működnek |
+| `FULL_OFFLINE` | Repülőgép mód a telefonon; emulátoron `adb shell cmd connectivity airplane-mode enable` |
 | Cold start offline | Repülőgép mód **majd** app indítás — a lista olvasható és a mentés sikeres kell legyen |
 | `410 CURSOR_TOO_OLD` | A `sync_meta.tombstone_horizon` előre állítása a dev DB-ben |
 
