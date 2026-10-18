@@ -428,7 +428,7 @@ Elv: a külső integrációk **soha nincsenek** a saját backenden proxyzva ([[B
 
 #### 14. Számítás, `~` és bizonytalanság
 
-- **Minden felhasználónak megjelenő számítás kliensoldali pure TS utility**, tehát offline is teljes értékű: BMR / TDEE / makró és MET-ek ([[Tápérték kalkulátor]]), lépéskalória ([[Lépésszám követés]]), nettó bér ([[Nettó fizetés kalkulátor]]), havi ekvivalens és `addPeriod` ([[Rendszeres kiadások]]), `nextDue` és naptár-vetítés ([[Háztartási feladatok]], [[Események]], [[Naptár]]), nehézségi index ([[Nehézségi szint skálája (konverziós mátrix)]]), tápanyag- és ár-összegzés ([[Recept]], [[Étkezés]]), AYCM megéri-e ([[AYCM tracker]]), kereső-rangsor ([[Szöveges keresés]]), mennyiség-parser ([[Mennyiség mező]]).
+- **Minden felhasználónak megjelenő számítás kliensoldali pure TS utility**, tehát offline is teljes értékű: BMR / TDEE / makró és MET-ek ([[Tápérték kalkulátor]]), lépéskalória ([[Lépésszám követés]]), nettó bér ([[Nettó fizetés kalkulátor]]), havi ekvivalens és `addPeriod` ([[Rendszeres kiadások]]), `nextDue` és naptár-vetítés ([[Háztartási feladatok]], [[Események]], [[Naptár]]), nehézségi index ([[Nehézségi szint skálája (konverziós mátrix)]]), tápanyag- és ár-összegzés ([[Recept]], [[Étkezés]]), AYCM megéri-e ([[AYCM tracker]]), kereső-rangsor ([[Szöveges keresés]]), mennyiség-parser ([[Mennyiség mező]]), élő biciklizés táv / szintemelkedés / útvonal-becslés ([[Biciklizés napló]], `core/geo/`).
 - **A `~` / homokóra jelentése:** a szám **nem számolható, mert hiányzik egy bemenet** — pl. üres `grossMonthlySalaryHuf` ([[Pénzügyek]]), hiányos [[Profile]], `passCostComputable = false` ([[AYCM tracker]]). **Nem** jelent offline becslést, és **soha nem** a hálózati állapot miatt jelenik meg.
 - A hálózati állapotot **kizárólag** a globális offline indikátor és a [[Szinkronizációs központ]] jelzi (§16).
 - Nem számolható érték **soha nem menthető 0-ként** a helyi store-ba vagy a szerverre; a `~` megjelenítési állapot, nem adat.
@@ -443,7 +443,9 @@ Elv: a külső integrációk **soha nincsenek** a saját backenden proxyzva ([[B
   első indulástól (nem csak letöltött régión belül) a túra-magasság (`core/geo/elevation.service.ts`),
   a turistaút-útvonaltervezés (`core/geo/routing.service.ts`, `HIKE` profil — a
   `RouteSuggestionRepository` végső tartaléka a helyi viewport-adat és a backend után) és a
-  bicikli-útvonaltervezés (`BIKE` profil). Mért méret: DEM 57,7 MB, bicikli 40,1 MB, turistaút
+  bicikli-útvonaltervezés (`BIKE` profil), és ezekből a [[Biciklizés napló]] élő edzésének távja és
+  szintemelkedése (Pontos: DEM a track mentén; Becsült: `BIKE` útvonal + DEM a kezdő- és a végpont
+  között, `core/data/bike-live-session.service.ts`). Mért méret: DEM 57,7 MB, bicikli 40,1 MB, turistaút
   10,6 MB (nyersen); a felhasználó jóváhagyta az APK-növekményt (`backlog/150` "Méret-jóváhagyás").
 - Az `Exercise` seed sorai **user-owned másolatok determinisztikus v5 ID-vel** (§9) → többeszközös első indulás nem duplikálja a katalógust és nem ütközik a `name` egyediségbe.
 - A seed create-ek **normál outbox tételek** (offline első indulásnál is működik).

@@ -445,8 +445,17 @@ figyelmeztetés, a becsült táv előtöltve marad (felülírható / törölhet�
 (`bike-live-start.component.ts`, soronként egy mondat a pontosság ↔ akkumulátor
 kompromisszumról), a választás eszköz-lokálisan megjegyezve (`lm2_bike_live_default_mode`); élő
 képernyő Becsült módban táv helyett a kezdőpont állapota, befejezéskor „Végpont rögzítése…”; banner
-Becsült módban táv nélkül. Hátra van (4. fázis): súgó-ikonok (`app-help-button`) a mód-választóhoz
-és az új mezőkhöz, spec ([[Biciklizés napló]]) + [[Backend-offline first]] §15, eszközös teszt.
+Becsült módban táv nélkül.
+
+**4. fázis (2026-10-19) — súgó + spec:** `app-help-button` mindkét módhoz a mód-választóban és a menet
+saját módjához az összegzőn (`MODE_LIVE_HELP_*`, `MODE_ESTIMATED_HELP_*`, hu + en; a Becsült súgó a
+körtúra / kitérő korlátot is leírja és Pontos módot ajánl körtúrához). A szövegek a `tracking-config`
+értékeit idézik (`textParams` — új bemenet a `HelpButtonComponent`-en, `bikeLiveHelpParams()`). A
+`trackingMode` / `startedAt` az űrlapon nem látszik (az összegző hordozza, szerkesztéskor megmarad),
+ezért külön súgó nem kell hozzájuk. [[Biciklizés napló]] átírva (élő edzés, módok, új mezők, Tudatos
+korlát, `#### Backend-offline`), [[Backend-offline first]] §14/§15 kiegészítve. **Hátra van:** eszközös
+teszt (`scripts/install-android.ps1`): háttér-GPS zárolt képernyővel, értesítés-tap, végponti fixek,
+repülőgép mód — utána a jegy lezárható.
 
 ### Méret-jóváhagyás
 

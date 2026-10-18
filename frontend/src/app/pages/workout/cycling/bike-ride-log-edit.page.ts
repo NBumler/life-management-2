@@ -1,5 +1,5 @@
 import { DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, LOCALE_ID, OnInit, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -27,8 +27,10 @@ import { BikeLiveSessionService } from '../../../core/data/bike-live-session.ser
 import { BikeRideLogRepository, BikeRideLogSaveInput } from '../../../core/data/bike-ride-log.repository';
 import { ProfileRepository } from '../../../core/data/profile.repository';
 import { MIN_PLAUSIBLE_ESTIMATED_SPEED_KMH, ROAD_CIRCUITY_FACTOR } from '../../../core/geo/tracking-config';
+import { HelpButtonComponent } from '../../../shared/help-button/help-button.component';
 import { today } from '../../../shared/local-date';
 import { BIKE_INTENSITIES, avgSpeedKmH, bikeKcal, suggestedIntensity } from './bike-metrics';
+import { bikeLiveHelpParams } from './bike-live-start.component';
 
 /**
  * documentation/Features/Biciklizés napló.md — the create/edit form (route param `id` is an existing
@@ -64,6 +66,7 @@ import { BIKE_INTENSITIES, avgSpeedKmH, bikeKcal, suggestedIntensity } from './b
     IonSelect,
     IonSelectOption,
     TranslatePipe,
+    HelpButtonComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -89,6 +92,8 @@ export class BikeRideLogEditPage implements OnInit {
   readonly liveImplausible = signal(false);
   readonly circuityFactor = ROAD_CIRCUITY_FACTOR;
   readonly minPlausibleSpeedKmh = MIN_PLAUSIBLE_ESTIMATED_SPEED_KMH;
+  /** The summary's help explains the ride's own mode (`liveEstimate` is set only for a Becsült ride). */
+  readonly helpParams = bikeLiveHelpParams(inject(LOCALE_ID));
   private liveRideId: string | null = null;
   private trackingMode: BikeRideLog.TrackingModeEnum | undefined;
   private startedAt: string | null = null;

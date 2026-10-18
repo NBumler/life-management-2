@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AlertController } from '@ionic/angular/standalone';
-import { provideTranslateService } from '@ngx-translate/core';
+import { TranslateService, provideTranslateService } from '@ngx-translate/core';
 
 import { HelpButtonComponent } from './help-button.component';
 
@@ -36,5 +36,18 @@ describe('HelpButtonComponent', () => {
     expect(arg.header).toBe('WORKOUT.CLIMBING.ASCENT_STYLE.HELP_TITLE');
     expect(arg.message).toBe('WORKOUT.CLIMBING.ASCENT_STYLE.HELP_TEXT');
     expect(present).toHaveBeenCalled();
+  });
+
+  it('showHelp() passes textParams to the body translation', async () => {
+    const alertController = TestBed.inject(AlertController);
+    const translate = TestBed.inject(TranslateService);
+    spyOn(alertController, 'create').and.resolveTo({ present: jasmine.createSpy('present') } as never);
+    const instant = spyOn(translate, 'instant').and.callThrough();
+
+    fixture.componentInstance.textKey = 'WORKOUT.BIKE.LIVE.MODE_ESTIMATED_HELP_TEXT';
+    fixture.componentInstance.textParams = { seconds: 20 };
+    await fixture.componentInstance.showHelp();
+
+    expect(instant).toHaveBeenCalledWith('WORKOUT.BIKE.LIVE.MODE_ESTIMATED_HELP_TEXT', { seconds: 20 });
   });
 });

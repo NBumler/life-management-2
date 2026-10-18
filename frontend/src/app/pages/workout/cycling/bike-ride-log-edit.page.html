@@ -20,6 +20,15 @@
           <ion-note class="live-summary__hint">
             {{ (summaryLoading() ? 'WORKOUT.BIKE.LIVE.SUMMARY_LOADING' : 'WORKOUT.BIKE.LIVE.SUMMARY_HINT') | translate }}
           </ion-note>
+          @if (!summaryLoading()) {
+            <app-help-button
+              slot="end"
+              class="live-summary__help"
+              [titleKey]="liveEstimate() !== null ? 'WORKOUT.BIKE.LIVE.MODE_ESTIMATED_HELP_TITLE' : 'WORKOUT.BIKE.LIVE.MODE_LIVE_HELP_TITLE'"
+              [textKey]="liveEstimate() !== null ? 'WORKOUT.BIKE.LIVE.MODE_ESTIMATED_HELP_TEXT' : 'WORKOUT.BIKE.LIVE.MODE_LIVE_HELP_TEXT'"
+              [textParams]="helpParams"
+            ></app-help-button>
+          }
         </ion-item>
         @if (liveEstimate() === 'ROUTED') {
           <ion-item lines="none">

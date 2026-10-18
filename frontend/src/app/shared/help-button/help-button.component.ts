@@ -26,6 +26,8 @@ export class HelpButtonComponent {
   @Input() titleKey = '';
   /** i18n key for the alert body. */
   @Input() textKey = '';
+  /** Interpolation params for the body (e.g. tunable constants the text quotes). */
+  @Input() textParams: Record<string, unknown> | undefined;
 
   private readonly alertController = inject(AlertController);
   private readonly translate = inject(TranslateService);
@@ -33,7 +35,7 @@ export class HelpButtonComponent {
   async showHelp(): Promise<void> {
     const alert = await this.alertController.create({
       header: this.translate.instant(this.titleKey),
-      message: this.translate.instant(this.textKey),
+      message: this.translate.instant(this.textKey, this.textParams),
       buttons: [this.translate.instant('COMMON.CLOSE')],
     });
     await alert.present();

@@ -5,6 +5,8 @@ import { AlertController, NavController } from '@ionic/angular/standalone';
 import { provideTranslateService } from '@ngx-translate/core';
 
 import { BIKE_LIVE_ROUTE, BikeLiveSessionService } from '../../../core/data/bike-live-session.service';
+import { HelpButtonComponent } from '../../../shared/help-button/help-button.component';
+import { By } from '@angular/platform-browser';
 import { BIKE_LIVE_DEFAULT_MODE_KEY, BikeLiveStartComponent } from './bike-live-start.component';
 
 describe('BikeLiveStartComponent (backlog/150)', () => {
@@ -68,5 +70,16 @@ describe('BikeLiveStartComponent (backlog/150)', () => {
     await component.start();
     expect(alertCreate).toHaveBeenCalled();
     expect(navigateForward).not.toHaveBeenCalled();
+  });
+
+  it('each mode has a help icon; the texts quote the tracking-config values', async () => {
+    await setup();
+    fixture.detectChanges();
+    const helps = fixture.debugElement.queryAll(By.directive(HelpButtonComponent)).map((el) => el.componentInstance as HelpButtonComponent);
+    expect(helps.map((help) => help.textKey)).toEqual([
+      'WORKOUT.BIKE.LIVE.MODE_LIVE_HELP_TEXT',
+      'WORKOUT.BIKE.LIVE.MODE_ESTIMATED_HELP_TEXT',
+    ]);
+    expect(helps[1].textParams).toEqual({ accuracy: 30, seconds: 20, speed: 2, factor: '1.3' });
   });
 });
