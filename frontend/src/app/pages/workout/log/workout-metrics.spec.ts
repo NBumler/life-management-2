@@ -9,8 +9,11 @@ import {
   formatSetSummary,
   ghostForExercise,
   lastPerformance,
+  muscleClass,
   progressionSuggestion,
+  rpeFactor,
   sessionKcal,
+  setLoadSeconds,
 } from './workout-metrics';
 
 function set(overrides: Partial<WorkoutSetEntry> = {}): WorkoutSetEntry {
@@ -86,9 +89,9 @@ describe('workout-metrics', () => {
   });
 
   describe('sessionKcal', () => {
-    it('applies net MET (GENERAL_WEIGHTS 5 − 1, backlog/164) × weight × minutes/60', () => {
-      const s = session({ durationMinutes: 60 });
-      expect(sessionKcal(s, 80)).toBeCloseTo((5 - 1) * 80 * 1);
+    it('applies the flat net MET (GENERAL_WEIGHTS 4 − 1, backlog/164 + 173) to a session without sets', () => {
+      const s = session({ durationMinutes: 60, exercises: [] });
+      expect(sessionKcal(s, 80)).toBeCloseTo((4 - 1) * 80 * 1);
     });
 
     it('applies net MET (HIIT_CIRCUIT 8 − 1)', () => {
@@ -102,6 +105,110 @@ describe('workout-metrics', () => {
 
     it('is 0 when the effective duration is 0 (no sets, no times)', () => {
       expect(sessionKcal(session({ exercises: [] }), 80)).toBe(0);
+    });
+  });
+
+  describe('set-based kcal (backlog/173)', () => {
+    const Category = WorkoutExerciseEntry.ExerciseCategoryEnum;
+    const Kind = WorkoutExerciseEntry.ExerciseKindEnum;
+
+    function sets(count: number, overrides: Partial<WorkoutSetEntry> = {}): WorkoutSetEntry[] {
+      return Array.from({ length: count }, (_, i) => set({ orderIndex: i, ...overrides }));
+    }
+
+    function oneExercise(
+      durationMinutes: number | null,
+      category: WorkoutExerciseEntry.ExerciseCategoryEnum,
+      exerciseSets: WorkoutSetEntry[],
+      kind: WorkoutExerciseEntry.ExerciseKindEnum = Kind.WeightedReps,
+    ): WorkoutSession {
+      return session({
+        durationMinutes,
+        exercises: [exercise({ exerciseCategory: category, exerciseKind: kind, sets: exerciseSets })],
+      });
+    }
+
+    /** kcal → the gross MET the whole session averaged (net + resting 1). */
+    function grossEquivalent(kcal: number, weightKg: number, minutes: number): number {
+      return kcal / weightKg / (minutes / 60) + 1;
+    }
+
+    it('classifies muscle groups; hangboard is always small, cardio by kind', () => {
+      expect(muscleClass(exercise({ exerciseCategory: Category.Legs }))).toBe('LARGE');
+      expect(muscleClass(exercise({ exerciseCategory: Category.Chest }))).toBe('MEDIUM');
+      expect(muscleClass(exercise({ exerciseCategory: Category.Biceps }))).toBe('SMALL');
+      expect(muscleClass(exercise({ exerciseCategory: Category.Back, exerciseKind: Kind.HangboardPinch }))).toBe('SMALL');
+      expect(muscleClass(exercise({ exerciseCategory: Category.FullBody, exerciseKind: Kind.CardioTimeDist }))).toBe('CARDIO');
+    });
+
+    it('derives time under load from hold time (× reps), reps × 3 s, or a default', () => {
+      const e = exercise();
+      expect(setLoadSeconds(e, set({ reps: 10 }))).toBe(30);
+      expect(setLoadSeconds(e, set({ reps: null, holdTimeSeconds: 20 }))).toBe(20);
+      expect(setLoadSeconds(e, set({ reps: 6, holdTimeSeconds: 7 }))).toBe(42);
+      expect(setLoadSeconds(e, set({ reps: null }))).toBe(30);
+      expect(setLoadSeconds(exercise({ exerciseKind: Kind.HangboardPinch }), set({ reps: null }))).toBe(10);
+    });
+
+    it('scales the in-set MET by RPE (6 → 0.9, 10 → 1.1), never for a warm-up set', () => {
+      expect(rpeFactor(set({ rpe: null }))).toBe(1);
+      expect(rpeFactor(set({ rpe: 6 }))).toBeCloseTo(0.9);
+      expect(rpeFactor(set({ rpe: 10 }))).toBeCloseTo(1.1);
+      expect(rpeFactor(set({ rpe: 10, setType: WorkoutSetEntry.SetTypeEnum.Warmup }))).toBe(1);
+    });
+
+    it('typical compound session lands in the Compendium 3.5–6 MET band (60 min, 18 leg sets × 10)', () => {
+      // load 9 min × net 7 + rest 51 min × idle net 0.5 + 18 windows × 2.5 min × (3.0 − 1.5) = 156 net MET-min.
+      const kcal = sessionKcal(oneExercise(60, Category.Legs, sets(18, { reps: 10 })), 70);
+      expect(kcal).toBeCloseTo((156 * 70) / 60);
+      const gross = grossEquivalent(kcal, 70, 60);
+      expect(gross).toBeGreaterThanOrEqual(3.5);
+      expect(gross).toBeLessThanOrEqual(6);
+    });
+
+    it('small-muscle isolation burns clearly less than the same compound volume', () => {
+      // 9 × net 4 + 51 × 0.5 + 45 × (2.5 − 1.5) = 106.5 net MET-min.
+      const arms = sessionKcal(oneExercise(60, Category.Biceps, sets(18, { reps: 10 })), 70);
+      expect(arms).toBeCloseTo((106.5 * 70) / 60);
+      expect(arms).toBeLessThan(sessionKcal(oneExercise(60, Category.Legs, sets(18, { reps: 10 })), 70));
+    });
+
+    it('a 45-minute hangboard session is far below the old flat 5.0 MET', () => {
+      const hang = sets(10, { reps: null, weightKg: 0, holdTimeSeconds: 10 });
+      const kcal = sessionKcal(oneExercise(45, Category.ForearmFingers, hang, Kind.HangboardPinch), 70);
+      // 100 s × net 4 + 43.33 min × 0.5 + 25 min × 1.0.
+      expect(kcal).toBeCloseTo(((100 / 60) * 4 + (45 - 100 / 60) * 0.5 + 25) * (70 / 60));
+      expect(kcal).toBeLessThan(0.4 * (5 - 1) * 70 * 0.75);
+    });
+
+    it('a dense session burns more than a long, sparse one', () => {
+      const dense = sessionKcal(oneExercise(45, Category.Legs, sets(25, { reps: 10 })), 70);
+      const sparse = sessionKcal(oneExercise(90, Category.Legs, sets(12, { reps: 10 })), 70);
+      expect(dense).toBeGreaterThan(sparse);
+      // Sparse: 6 × 7 + 84 × 0.5 + 12 × 2.5 × 1.5 = 129 net MET-min (old flat model: 420 kcal).
+      expect(sparse).toBeCloseTo((129 * 70) / 60);
+    });
+
+    it('a fallback-duration session keeps its full recovery windows (3 min per set)', () => {
+      // 1 chest set × 8 reps, no times → 3 min: 0.4 × net 5 + 2.6 × 0.5 + 2.5 × 1.0 = 5.8 net MET-min.
+      expect(sessionKcal(oneExercise(null, Category.Chest, sets(1)), 70)).toBeCloseTo((5.8 * 70) / 60);
+    });
+
+    it('RPE 10 working sets burn more than unrated ones', () => {
+      const rated = sessionKcal(oneExercise(60, Category.Legs, sets(18, { reps: 10, rpe: 10 })), 70);
+      const unrated = sessionKcal(oneExercise(60, Category.Legs, sets(18, { reps: 10 })), 70);
+      expect(rated).toBeGreaterThan(unrated);
+    });
+
+    it('never charges more time under load than the session lasted', () => {
+      const row = sets(1, { reps: null, holdTimeSeconds: 600 });
+      // 1 min under load at cardio net 6, no rest left.
+      expect(sessionKcal(oneExercise(1, Category.FullBody, row, Kind.CardioTimeDist), 70)).toBeCloseTo((6 * 70) / 60);
+    });
+
+    it('HIIT_CIRCUIT stays flat 8.0 even with sets', () => {
+      const s = session({ workoutType: WorkoutSession.WorkoutTypeEnum.HiitCircuit, durationMinutes: 30 });
+      expect(sessionKcal(s, 70)).toBeCloseTo((8 - 1) * 70 * 0.5);
     });
   });
 

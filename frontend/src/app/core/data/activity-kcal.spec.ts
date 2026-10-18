@@ -25,13 +25,13 @@ function session(overrides: Partial<WorkoutSession> = {}): WorkoutSession {
 }
 
 describe('workoutKcalForDay', () => {
-  // GENERAL_WEIGHTS net MET (5.0 − 1, backlog/164) × 80 kg × 60/60 min = 320 kcal.
+  // GENERAL_WEIGHTS without sets: net MET (4.0 − 1, backlog/164 + 173) × 80 kg × 60/60 min = 240 kcal.
   it('sums sessionKcal over live sessions whose date matches the day', () => {
     const sessions = [
       session({ id: 'a', date: '2026-08-28', durationMinutes: 60 }),
       session({ id: 'b', date: '2026-08-28', durationMinutes: 30 }),
     ];
-    expect(workoutKcalForDay(sessions, '2026-08-28', 80)).toBe(320 + 160);
+    expect(workoutKcalForDay(sessions, '2026-08-28', 80)).toBe(240 + 120);
   });
 
   it('ignores sessions on other days', () => {

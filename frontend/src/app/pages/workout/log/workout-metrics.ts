@@ -5,6 +5,12 @@
  *
  * The MET constants are the canonical ones from documentation/Features/Tápérték kalkulátor.md; the
  * activity-kcal producer that feeds the Étkezés dashboard (A4) will import `sessionKcal` from here.
+ *
+ * backlog/173: a GENERAL_WEIGHTS session with sets is charged as time under load (reps × 3 s or the
+ * hold time, at a muscle-group MET, RPE-scaled) plus rest. Every set opens a 2.5-minute recovery
+ * window at an elevated rest MET; rest beyond the windows drops to the idle 1.5 (same shape as the
+ * climbing rest model, backlog/171). The window equals the fallback 3 min/set minus a typical 30 s
+ * set, so a fallback-duration session is never thinned.
  */
 import { WorkoutExerciseEntry } from '../../../api/model/workoutExerciseEntry';
 import { WorkoutSession } from '../../../api/model/workoutSession';
@@ -12,10 +18,57 @@ import { WorkoutSetEntry } from '../../../api/model/workoutSetEntry';
 import { normalizeName } from '../../../shared/name-normalization';
 import { netMet } from '../../../shared/net-met';
 
-/** documentation/Features/Tápérték kalkulátor.md "Erőedzés": **gross** MET per workoutType (charged net, backlog/164). */
+/**
+ * documentation/Features/Tápérték kalkulátor.md "Erőedzés": **gross** flat MET per workoutType (charged
+ * net, backlog/164). GENERAL_WEIGHTS only uses it for a session without sets (backlog/173).
+ */
 export const WORKOUT_MET: Record<WorkoutSession.WorkoutTypeEnum, number> = {
-  [WorkoutSession.WorkoutTypeEnum.GeneralWeights]: 5.0,
+  [WorkoutSession.WorkoutTypeEnum.GeneralWeights]: 4.0,
   [WorkoutSession.WorkoutTypeEnum.HiitCircuit]: 8.0,
+};
+
+/** backlog/173 — muscle-mass class of an exercise; drives the in-set and the recovery MET. */
+export type MuscleClass = 'LARGE' | 'MEDIUM' | 'SMALL' | 'CARDIO';
+
+/** backlog/173 — gross MET under load / in the recovery window, per muscle class. */
+export const SET_MET: Record<MuscleClass, { active: number; recovery: number }> = {
+  LARGE: { active: 8.0, recovery: 3.0 },
+  MEDIUM: { active: 6.0, recovery: 2.5 },
+  SMALL: { active: 5.0, recovery: 2.5 },
+  CARDIO: { active: 7.0, recovery: 3.0 },
+};
+
+/** backlog/173 — gross MET of rest beyond every recovery window (standing / chatting in the gym). */
+export const IDLE_MET = 1.5;
+
+/** backlog/173 — recovery window opened by each set. */
+export const RECOVERY_MINUTES_PER_SET = 2.5;
+
+/** backlog/173 — time under load per repetition (≈ 1 s concentric + 2 s eccentric). */
+export const REP_SECONDS = 3;
+
+/** backlog/173 — time under load of a set without reps / hold time (≈ 10 reps; a hangboard hang ≈ 10 s). */
+const DEFAULT_SET_SECONDS = 30;
+const DEFAULT_HANG_SECONDS = 10;
+
+/** backlog/173 — RPE scales the in-set MET by ±5 % per point around RPE 8 (6 → 0.9, 10 → 1.1). */
+const RPE_NEUTRAL = 8;
+const RPE_STEP = 0.05;
+
+const CATEGORY_CLASS: Record<WorkoutExerciseEntry.ExerciseCategoryEnum, MuscleClass> = {
+  LEGS: 'LARGE',
+  BACK: 'LARGE',
+  FULL_BODY: 'LARGE',
+  HIPS: 'LARGE',
+  CHEST: 'MEDIUM',
+  SHOULDERS: 'MEDIUM',
+  LOWER_BACK: 'MEDIUM',
+  BICEPS: 'SMALL',
+  TRICEPS: 'SMALL',
+  ABS: 'SMALL',
+  OBLIQUES: 'SMALL',
+  NECK: 'SMALL',
+  FOREARM_FINGERS: 'SMALL',
 };
 
 /** documentation/Subfeatures/Edzésnapló.md "Hiányzó időtartam fallback": szettek száma × 3 perc. */
@@ -70,10 +123,76 @@ export function effectiveDurationMinutes(session: WorkoutSession): number {
   return totalSetCount(session) * SET_ESTIMATE_MINUTES;
 }
 
+/** backlog/173 — the muscle class of an exercise: cardio / hangboard by kind, otherwise by category. */
+export function muscleClass(exercise: WorkoutExerciseEntry): MuscleClass {
+  if (exercise.exerciseKind === WorkoutExerciseEntry.ExerciseKindEnum.CardioTimeDist) {
+    return 'CARDIO';
+  }
+  if (exercise.exerciseKind === WorkoutExerciseEntry.ExerciseKindEnum.HangboardPinch) {
+    return 'SMALL';
+  }
+  return CATEGORY_CLASS[exercise.exerciseCategory] ?? 'MEDIUM';
+}
+
+/** backlog/173 — seconds under load: hold time (× reps for repeaters), else reps × 3 s, else a default. */
+export function setLoadSeconds(exercise: WorkoutExerciseEntry, set: WorkoutSetEntry): number {
+  const reps = set.reps != null && set.reps > 0 ? set.reps : null;
+  if (set.holdTimeSeconds != null && set.holdTimeSeconds > 0) {
+    return set.holdTimeSeconds * (reps ?? 1);
+  }
+  if (reps !== null) {
+    return reps * REP_SECONDS;
+  }
+  return exercise.exerciseKind === WorkoutExerciseEntry.ExerciseKindEnum.HangboardPinch
+    ? DEFAULT_HANG_SECONDS
+    : DEFAULT_SET_SECONDS;
+}
+
+/** backlog/173 — RPE multiplier on the in-set MET; 1 without RPE and for warm-up sets. */
+export function rpeFactor(set: WorkoutSetEntry): number {
+  if (set.rpe == null || set.setType === WorkoutSetEntry.SetTypeEnum.Warmup) {
+    return 1;
+  }
+  return 1 + (set.rpe - RPE_NEUTRAL) * RPE_STEP;
+}
+
 /**
- * documentation/Features/Tápérték kalkulátor.md canonical: kcal = (MET(workoutType) − 1) × m ×
- * durationMinutes / 60 — net MET (`shared/net-met.ts`, backlog/164). `m` is the CURRENT profile weight, never frozen into the session. Returns 0
- * when weight is missing/non-positive or the effective duration is 0.
+ * backlog/173 — net MET-minutes of a GENERAL_WEIGHTS session with sets: Σ load minutes × net in-set
+ * MET, plus rest = duration − Σ load at the idle level, plus each set's recovery window
+ * (recovery − idle). When the windows exceed the rest they are scaled down proportionally.
+ */
+function setBasedNetMetMinutes(session: WorkoutSession, minutes: number): number {
+  const sets = liveExercises(session).reduce<{ set: WorkoutSetEntry; cls: MuscleClass; loadMinutes: number }[]>(
+    (acc, exercise) =>
+      acc.concat(
+        liveSets(exercise).map((set) => ({ set, cls: muscleClass(exercise), loadMinutes: setLoadSeconds(exercise, set) / 60 })),
+      ),
+    [],
+  );
+  const rawLoadMinutes = sets.reduce((sum, { loadMinutes }) => sum + loadMinutes, 0);
+  // Never charge more time under load than the session lasted.
+  const loadScale = rawLoadMinutes > minutes ? minutes / rawLoadMinutes : 1;
+  const active = sets.reduce(
+    (sum, { set, cls, loadMinutes }) => sum + loadMinutes * loadScale * netMet(SET_MET[cls].active * rpeFactor(set)),
+    0,
+  );
+  const restMinutes = minutes - rawLoadMinutes * loadScale;
+  if (restMinutes <= 0) {
+    return active;
+  }
+  const windowScale = Math.min(1, restMinutes / (sets.length * RECOVERY_MINUTES_PER_SET));
+  const recoveryExtra = sets.reduce(
+    (sum, { cls }) => sum + RECOVERY_MINUTES_PER_SET * windowScale * (SET_MET[cls].recovery - IDLE_MET),
+    0,
+  );
+  return active + restMinutes * netMet(IDLE_MET) + recoveryExtra;
+}
+
+/**
+ * documentation/Features/Tápérték kalkulátor.md canonical, net MET (`shared/net-met.ts`,
+ * backlog/164). GENERAL_WEIGHTS with sets: the set-based model (backlog/173); otherwise
+ * (MET(workoutType) − 1) × m × durationMinutes / 60. `m` is the CURRENT profile weight, never frozen
+ * into the session. Returns 0 when weight is missing/non-positive or the effective duration is 0.
  */
 export function sessionKcal(session: WorkoutSession, bodyWeightKg: number | null): number {
   if (bodyWeightKg == null || bodyWeightKg <= 0) {
@@ -82,6 +201,9 @@ export function sessionKcal(session: WorkoutSession, bodyWeightKg: number | null
   const minutes = effectiveDurationMinutes(session);
   if (minutes <= 0) {
     return 0;
+  }
+  if (session.workoutType === WorkoutSession.WorkoutTypeEnum.GeneralWeights && totalSetCount(session) > 0) {
+    return (setBasedNetMetMinutes(session, minutes) * bodyWeightKg) / 60;
   }
   return netMet(WORKOUT_MET[session.workoutType]) * bodyWeightKg * (minutes / 60);
 }

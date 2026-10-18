@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-10-17
-verifikalt_commit: fc2ba63
+verifikalva: 2026-10-18
+verifikalt_commit: 88d246b
 ---
 
 # Edzésnapló
@@ -105,13 +105,13 @@ Egy master gyakorlat **többször** szerepelhet egy sessionben (külön entry-k,
 | `HANGBOARD_PINCH` | `edgeSizeMm`, `holdTimeSeconds`, opcionális `weightKg` |
 | `CARDIO_TIME_DIST` | `holdTimeSeconds`, `distanceMeters` |
 
-`distanceMeters` / `edgeSizeMm` / szett-szintű idő **nem** része a session MET-kalóriának (az a `durationMinutes` × MET).
+`distanceMeters` / `edgeSizeMm` **nem** része a kalóriának; a `reps` / `holdTimeSeconds` / `rpe` és a gyakorlat `exerciseCategory` / `exerciseKind`-ja igen (`backlog/173`, lásd „Kalória”).
 
 #### Volumen és PR
 
 \[\text{Volume}_{\text{exercise}} = \sum (\text{reps} \times \text{weightKg})\]
 
-csak `WORKING`, `DROPSET`, `FAILURE` szettekre. **`WARMUP` és `REST_PAUSE` kizárva** a volumemből és a PR-detektálásból. Warmup beleszámít a session időtartamába / kalóriába (a session `durationMinutes` révén).
+csak `WORKING`, `DROPSET`, `FAILURE` szettekre. **`WARMUP` és `REST_PAUSE` kizárva** a volumemből és a PR-detektálásból. Warmup beleszámít a session időtartamába és kalóriájába (terhelési időként és regenerációs ablakként; RPE-szorzót nem kap).
 
 **1RM becslés (Epley)** — csak UI / PR, nem tárolt kötelező mező:
 
@@ -123,18 +123,42 @@ PR típusok (badge a szett mellett): számított **1RM** megdöntés; **max súl
 
 #### Kalória (kanonikus — [[Tápérték kalkulátor]])
 
-\[\text{kcal} = (\text{MET}(\text{workoutType}) - 1) \times m \times \frac{\text{durationMinutes}}{60}\]
+Minden MET **bruttó**, és **nettóként** (`MET − 1`, `shared/net-met.ts`, `backlog/164`) számolódik; \(T\) = `durationMinutes` (lásd lent), \(m\) = testsúly.
+
+**`HIIT_CIRCUIT`**, valamint **szett nélküli `GENERAL_WEIGHTS`** session — fix MET a teljes időre:
+
+\[\text{kcal} = (\text{MET}(\text{workoutType}) - 1) \times m \times \frac{T}{60}\]
 
 | `workoutType` | MET (bruttó) |
 |---|---|
-| `GENERAL_WEIGHTS` | 5.0 |
-| `HIIT_CIRCUIT` | 8.0 |
+| `GENERAL_WEIGHTS` (szett nélkül) | 4.0 |
+| `HIIT_CIRCUIT` | 8.0 (definíció szerint sűrű — a rövid pihenők benne vannak) |
 
-- \(m\): aktuális testsúly kg a [[Profile]]-ból — **nem** fagyasztódik a sessionbe.
+**Szettes `GENERAL_WEIGHTS` session** (`backlog/173`, `workout-metrics.ts`: `sessionKcal`) — terhelési idő + pihenő, a [[Mászónapló]] pihenő-modelljével (`backlog/171`) azonos szerkezetben:
+
+1. **Terhelési idő / szett** (`setLoadSeconds`): `holdTimeSeconds` (× `reps`, ha az is van — repeaterek), különben `reps × 3 s` (≈ 1 s koncentrikus + 2 s excentrikus), különben 30 s (hangboardon 10 s). Σ terhelés legfeljebb \(T\).
+2. **Szett alatti MET** a gyakorlat izomtömeg-osztálya szerint (`muscleClass`), szorozva az **RPE-szorzóval** (`rpeFactor`): \(1 + (\text{RPE} - 8) \times 0.05\) (RPE 6 → 0.9, 10 → 1.1); RPE nélkül és `WARMUP` szettnél 1.
+3. **Pihenő** \(= T - \Sigma\text{terhelés}\). Minden szett egy **2,5 perces regenerációs ablakot** nyit a saját osztálya emelt MET-jén; az ablakokon túli pihenő **tétlen 1.5 MET** (állás / beszélgetés a teremben). Ha az ablakok összege a pihenőnél nagyobb, arányosan rövidülnek.
+
+| Osztály | `exerciseCategory` / `exerciseKind` | Szett alatt | Regenerációs ablak |
+|---|---|---|---|
+| Nagy | `LEGS`, `BACK`, `FULL_BODY`, `HIPS` | 8.0 | 3.0 |
+| Közepes | `CHEST`, `SHOULDERS`, `LOWER_BACK` | 6.0 | 2.5 |
+| Kicsi | `BICEPS`, `TRICEPS`, `ABS`, `OBLIQUES`, `NECK`, `FOREARM_FINGERS`; **minden `HANGBOARD_PINCH`** | 5.0 | 2.5 |
+| Kardió | `CARDIO_TIME_DIST` | 7.0 | 3.0 |
+| Tétlen (ablakon túl) | — | — | 1.5 |
+
+\[\text{kcal} = \frac{m}{60}\Big[\sum_{\text{szett}} t_{\text{terh}} \cdot (\text{MET}_{\text{szett}} \cdot \text{RPE-szorzó} - 1) + t_{\text{pihenő}} \cdot 0.5 + \sum_{\text{szett}} 2.5 \cdot s \cdot (\text{MET}_{\text{ablak}} - 1.5)\Big],\quad s = \min\Big(1, \frac{t_{\text{pihenő}}}{2.5 \cdot \text{szettszám}}\Big)\]
+
+**Források / indoklás:** az O₂-fogyasztás az aktív izomtömeggel és a mechanikai munkával skálázódik (az erőedzés-EE legerősebb prediktora a testtömeg és a megmozgatott volumen — Lytle et al., MSSE 2019); rövidebb pihenő → magasabb percenkénti EE (Ratamess et al. 2007), a pulzus / VO₂ egy szett után ~2–3 perc alatt visszaáll. A tiszta VO₂-mérés alulbecsüli a szett anaerob részét (C. Scott), ezért bőkezű a szett alatti MET; a session-átlag így a Compendium (Ainsworth 2011 / Herrmann 2024) 3.5 („multiple exercises, 8–15 reps”) – 6.0 („vigorous”) sávjába esik (plauzibilitási teszt). Az RPE itt RIR-alapú (Zourdos 2016), a kudarchoz közelséget méri — ezért csak kis szorzó. Az EPOC (Schuenke 2002; LaForgia 2006) a session-EE ~5–15%-a, nem modellezett.
+
+**Példák (70 kg):** 60 perc, 18 × 10 ismétléses lábszett: 9 perc × nettó 7 + 51 perc × 0.5 + 45 perc × 1.5 = 156 nettó MET-perc → **≈ 182 kcal** (≈ 3.6 bruttó MET-átlag; a régi fix 5.0-val 280). Ugyanez bicepszre ≈ 124 kcal; 45 perc hangboard (10 × 10 s függés) ≈ 62 kcal (régen 210); 90 perc / 12 szett beszélgetős ≈ 151 kcal (régen 420) — kevesebb, mint egy 45 perces / 25 szettes sűrű session (≈ 178 kcal).
+
+- \(m\): aktuális testsúly kg a [[Profile]]-ból — **nem** fagyasztódik a sessionbe; a kcal élőben számolódik, így a modellváltás a múltbeli napokra is érvényes.
 - A session **nem tárol** `activityExtraKcal` / testsúly mezőt.
-- **Nettó MET** (`backlog/164`): a táblázat **bruttó** (Compendium-)értékeiből a nyugalmi 1 MET levonódik (`(MET − 1)`, `shared/net-met.ts`), mert azt a `maintenanceKcal = BMR × 1.2` már fedezi — így edzésóránként ~`1 × m` kcal nem számolódik kétszer. Lásd [[Tápérték kalkulátor]].
-- MET a **teljes** `durationMinutes`-re vonatkozik (HIIT-nél a rövid pihenők benne vannak).
-- **Hiányzó időtartam fallback:** ha nincs megadható / számítható `durationMinutes`, becslés: \(\text{szettek száma} \times 3\) perc (kcal / előnézet); a mentett `durationMinutes` felülírható kézzel.
+- **Nettó MET** (`backlog/164`): a bruttó (Compendium-)értékekből a nyugalmi 1 MET levonódik, mert azt a `maintenanceKcal = BMR × 1.2` már fedezi — így edzésóránként ~`1 × m` kcal nem számolódik kétszer. Lásd [[Tápérték kalkulátor]].
+- **Hiányzó időtartam fallback:** ha nincs megadható / számítható `durationMinutes`, becslés: \(\text{szettek száma} \times 3\) perc (kcal / előnézet); a mentett `durationMinutes` felülírható kézzel. A 2,5 perces ablak + egy tipikus szett ≈ 3 perc, így fallback-időnél a pihenő nem ritkul.
+- Az élő (`active-workout`) és az utólagos form előnézete, valamint a lista ugyanazt a `sessionKcal`-t hívja; minden élő (nem törölt) szett számít, a pipától függetlenül.
 
 #### Élő vs utólagos mód
 
@@ -186,12 +210,18 @@ Tervezett (`backlog/055-edzesnaplo-statisztika-felulet-1rm-max-suly-gorbe-heti-v
 - **Thumb-zone:** szett-pipa és „Edzés befejezése” a képernyő alsó harmadában.
 - **HIIT:** körök (`roundsCount`); kör másolás gombokkal.
 - **Törlés:** megerősítő dialógus.
-- Élő kcal előnézet (Profile `m` + MET + `durationMinutes` / becslés).
+- Élő kcal előnézet (Profile `m` + szettek / MET + `durationMinutes` / becslés).
 
 ### Megjegyzések
 
 - Nincs edzés közbeni %-os 1RM mátrix és nincs komplex per-szett szuperszett UI — a csoportosítás egyetlen `supersetGroup` egész.
-- A szett-modell tartalmazza az `edgeSizeMm` + `holdTimeSeconds` (hangboard) és a `distanceMeters` (kardió) mezőket — ezek nem részei a session MET-kalóriájának.
+- A szett-modell tartalmazza az `edgeSizeMm` + `holdTimeSeconds` (hangboard) és a `distanceMeters` (kardió) mezőket — az `edgeSizeMm` és a `distanceMeters` nem része a kalóriának, a `holdTimeSeconds` terhelési időként igen (`backlog/173`).
+
+#### Tudatos korlát — becsült kalória, naplózott szettekből
+
+- Az erőedzés-kalória becslés (~±30%): a szett alatti MET-re kevés a mért adat, a konstansok a Compendium session-sávjához vannak kalibrálva. A súly / volumen (`weightKg`) szándékosan nem tényező — a mozgatási táv (ROM) gyakorlatonként ismeretlen, és a testsúlyos / rásegített (negatív kg) szettek torzítanának.
+- Csak a naplózott szett nyit regenerációs ablakot: egy hosszú sessionben a nem rögzített bemelegítés / gyakorlat kiesik, a pihenője tétlen szinten számolódik.
+- Az izomtömeg-osztály a gyakorlat `exerciseCategory` snapshotjából jön; egy kategória nélküli / rosszul kategorizált gyakorlat a kategóriája szerinti osztályt kapja.
 - Seed gyakorlatok: [[Gyakorlat]].
 - Naplózható entitások törlése: egységes **soft delete** ([[Backend-offline first]]); nested mentés: egy session = egy payload.
 

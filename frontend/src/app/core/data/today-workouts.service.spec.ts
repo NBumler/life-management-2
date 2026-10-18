@@ -97,8 +97,8 @@ describe('TodayWorkoutsService', () => {
 
     steps.set([{ id: 's1', date: day, stepCount: 8000, deleted: false }]);
     workouts.set([
-      { id: 'w1', date: day, workoutType: 'GENERAL_WEIGHTS', durationMinutes: 45, deleted: false } as WorkoutSession,
-      { id: 'w2', date: '2000-01-01', workoutType: 'GENERAL_WEIGHTS', durationMinutes: 45, deleted: false } as WorkoutSession,
+      { id: 'w1', date: day, workoutType: 'GENERAL_WEIGHTS', durationMinutes: 45, exercises: [], deleted: false } as WorkoutSession,
+      { id: 'w2', date: '2000-01-01', workoutType: 'GENERAL_WEIGHTS', durationMinutes: 45, exercises: [], deleted: false } as WorkoutSession,
     ]);
     climbs.set([
       { id: 'c1', date: day, locationType: 'INDOOR', discipline: 'BOULDER', totalSessionDurationMinutes: 60, attempts: [], deleted: false } as ClimbingSession,

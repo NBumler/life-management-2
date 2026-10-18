@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-10-17
-verifikalt_commit: ffeb0c3
+verifikalva: 2026-10-18
+verifikalt_commit: 88d246b
 ---
 
 # Tápérték kalkulátor
@@ -82,7 +82,7 @@ MET táblák (bruttó; részletek a napló specekben is):
 
 **Mászás** ([[Mászónapló]]): **aktív/passzív MET modell**, zónánként szintén nettó MET-tel (nem teljes session-idő × egy MET). Aktív bázis: boulder **5.8 → 9.5** a mászó 90 napos referenciaszintjéhez mért nehézség szerint (ismeretlen grade: 8.8), kötél **7.0** (másodmászó: ×0.8); rest: kötél **2.0**, boulder **3.0**, ritka mászásnál a regenerációs ablakokon túl **1.5**-re ritkulva (`backlog/171`); `pumpRating` az aktív MET-et módosítja; TRAD: testsúly +6 kg az aktív ágon. Aktív idő: boulder 45 s × `attemptCount`; kötél m × (25/45/60 s) safety szerint. Részletek és fallback: [[Mászónapló]].
 
-**Erőedzés** ([[Edzésnapló]]): `GENERAL_WEIGHTS` 5.0; `HIIT_CIRCUIT` 8.0.
+**Erőedzés** ([[Edzésnapló]], `backlog/173`): `HIIT_CIRCUIT` fix 8.0; szett nélküli `GENERAL_WEIGHTS` fix 4.0. Szettes `GENERAL_WEIGHTS`: terhelési idő (`reps × 3 s` / tartásidő) az izomtömeg-osztály MET-jén (nagy 8.0 / közepes 6.0 / kicsi és hangboard 5.0 / kardió 7.0, RPE-szorzóval ±5% / pont 8 körül) + pihenő: szettenként 2,5 perces regenerációs ablak (3.0 / 2.5), azon túl tétlen 1.5 — részletek és források az [[Edzésnapló]] „Kalória” szakaszában.
 
 **Nyújtás** ([[Nyújtás]], `backlog/169`): **egyetlen fix nettó MET 1.3** (bruttó 2.3 = enyhe nyújtás − nyugalmi 1, a röplabdával azonos konvenció), a session `durationMinutes`-ére, plafon 240 perc.
 

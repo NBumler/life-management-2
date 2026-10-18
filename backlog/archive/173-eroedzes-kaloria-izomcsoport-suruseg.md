@@ -1,14 +1,14 @@
 ---
 id: 173
 type: change-request
-status: ready
+status: done
 title: Erőedzés-kalória — izomcsoport-, terhelési idő- és sűrűségfüggő MET
 specs:
   - "[[Edzésnapló]]"
   - "[[Tápérték kalkulátor]]"
 flag:
 created: 2026-10-18
-closed:
+closed: 2026-10-18
 ---
 
 # 173 — Erőedzés-kalória — izomcsoport-, terhelési idő- és sűrűségfüggő MET
@@ -50,7 +50,7 @@ ismétlésszám, súly nem része a kalóriának.
 
 ## Elfogadási kritériumok
 
-- [ ] `GENERAL_WEIGHTS` session kcal = Σ szett-terhelés + pihenő, a `#171` szerkezetével analóg módon
+- [x] `GENERAL_WEIGHTS` session kcal = Σ szett-terhelés + pihenő, a `#171` szerkezetével analóg módon
       (minden érték bruttó MET, `netMet()`-tel számolva):
   - **terhelési idő / szett** = `reps × 3 s` (vagy `holdTimeSeconds`, ha van; ha egyik sincs, egy
         kind-szerinti alapérték);
@@ -61,19 +61,19 @@ ismétlésszám, súly nem része a kalóriának.
         (RPE 6 → ~0.9 … RPE 10 → ~1.1); RPE nélkül 1.0;
   - **pihenő** = időtartam − Σ terhelési idő; szettenként ~2–3 perces regenerációs ablak emelt MET-en
         (~2.5–3), azon túl tétlen szint (1.5) — a `#171` `f = min(1, szett × ablak / pihenőPerc)` képletével.
-- [ ] A végleges konstansokat úgy kalibrálni, hogy egy tipikus session (60 perc, ~18 összetett szett)
+- [x] A végleges konstansokat úgy kalibrálni, hogy egy tipikus session (60 perc, ~18 összetett szett)
       a Compendium 3.5–6 MET sávjába essen — ez plauzibilitási teszt (mint a `#130`-é).
-- [ ] Bemelegítő (`WARMUP`) szett beleszámít (dolgozik az izom), de a szett alatti MET-je nem kap
+- [x] Bemelegítő (`WARMUP`) szett beleszámít (dolgozik az izom), de a szett alatti MET-je nem kap
       RPE-szorzót.
-- [ ] A szett-adatok nélküli session (csak kézi időtartam) egy fix, csökkentett alap-MET-et kap
+- [x] A szett-adatok nélküli session (csak kézi időtartam) egy fix, csökkentett alap-MET-et kap
       (javaslat: 4.0 az 5.0 helyett).
-- [ ] `HIIT_CIRCUIT` változatlan, 8.0 fix (definíció szerint sűrű).
-- [ ] A `szettek × 3 perc` fallback-időtartamú session kcal-ja ne essen a régi érték töredékére (a
+- [x] `HIIT_CIRCUIT` változatlan, 8.0 fix (definíció szerint sűrű).
+- [x] A `szettek × 3 perc` fallback-időtartamú session kcal-ja ne essen a régi érték töredékére (a
       fallback-időn belül az ablakok fedjék le a pihenőt — mint a `#171`-nél).
-- [ ] Az élő és utólagos kcal-előnézet ugyanazt a függvényt használja; a lista-kcal is.
-- [ ] Unit tesztek: izomcsoport-osztályok, RPE-módosító, sűrű vs ritka session, hangboard-session,
+- [x] Az élő és utólagos kcal-előnézet ugyanazt a függvényt használja; a lista-kcal is.
+- [x] Unit tesztek: izomcsoport-osztályok, RPE-módosító, sűrű vs ritka session, hangboard-session,
       szett nélküli session, fallback-időtartam, plauzibilitási sáv.
-- [ ] [[Edzésnapló]] „Kalória (kanonikus)” és [[Tápérték kalkulátor]] „Erőedzés” átírva a forrásokkal
+- [x] [[Edzésnapló]] „Kalória (kanonikus)” és [[Tápérték kalkulátor]] „Erőedzés” átírva a forrásokkal
       és egy kidolgozott példával; `#### Tudatos korlát`: a nem naplózott szettek nem nyitnak ablakot.
 
 ## Terv / döntési napló
@@ -89,8 +89,25 @@ ismétlésszám, súly nem része a kalóriának.
   `#130`, `#164`, `#171`).
 - Backend, OpenAPI, séma, outbox, i18n várhatóan nem érintett (tiszta kliensoldali számítás).
 
+- **Implementációs döntések (2026-10-18):**
+  - Konstansok: szett alatt nagy 8.0 / közepes 6.0 / kicsi 5.0 / kardió 7.0; ablak 3.0 (nagy, kardió) /
+    2.5 (közepes, kicsi); tétlen 1.5; ablak 2,5 perc / szett; 3 s / ismétlés; alapérték 30 s (hangboard 10 s).
+  - A kicsi osztály szett alatti MET-je 5.0 lett (nem 4–5 közé), hogy a hangboard-session ne essen ~2 bruttó
+    MET alá. A regenerációs MET osztályonként eltér (nagy izomcsoport után tovább emelt a pulzus).
+  - `HANGBOARD_PINCH` kind mindig kicsi osztály, `CARDIO_TIME_DIST` kind saját kardió osztály (Compendium
+    evezőgép, közepes 7.0) — a kind felülírja a kategóriát.
+  - Repeater: `holdTimeSeconds × reps`, ha mindkettő meg van adva.
+  - Ha az ablakok összege a pihenőnél nagyobb, arányosan rövidülnek (osztályonkénti súlyozás megmarad).
+  - Σ terhelés legfeljebb a session ideje (pl. egy 20 perces evezés-szett egy 10 perces sessionben).
+  - Minden élő szett számít, a pipától (`isCompleted`) függetlenül — az utólagos form nem pipál.
+  - Az OpenAPI `WorkoutSession.workoutType` leírása („GENERAL_WEIGHTS 5.0”) szándékosan nem frissült: a
+    `verify:outbox` a leírást is hasheli, egy komment-szöveg miatt nem érdemes outbox-sémát bumpolni.
+    Következő valódi `WorkoutSession` sémaváltozáskor javítandó.
+  - Tényleges hatás (70 kg): 60 perc / 18 lábszett ≈ 182 kcal (3.6 MET); bicepsz ≈ 124; 45 perc hangboard
+    ≈ 62; 90 perc / 12 szett ≈ 151; 45 perc / 25 szett ≈ 178.
+
 ## Lezáráskor (on-done)
 
 - Frissített specek: [[Edzésnapló]] — Kalória (kanonikus); [[Tápérték kalkulátor]] — Erőedzés
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — #173 izomcsoport- és sűrűségfüggő erőedzés-kalória
-- Kód: `frontend/src/app/pages/workout/log/workout-metrics.ts` (+ spec)
+- `IMPLEMENTATION_STATUS.md` sor: 2026-10-18 — #173 izomcsoport- és sűrűségfüggő erőedzés-kalória
+- Kód: `frontend/src/app/pages/workout/log/workout-metrics.ts` (+ spec), `core/data/activity-kcal.spec.ts`, `core/data/today-workouts.service.spec.ts` (fixture)

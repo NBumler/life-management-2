@@ -14,6 +14,10 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-18 — #173** Izomcsoport- és sűrűségfüggő erőedzés-kalória: a szettes `GENERAL_WEIGHTS` session
+  terhelési idő (ismétlés × 3 s / tartásidő, izomtömeg-osztály MET-jén, RPE-szorzóval) + pihenő (szettenként
+  2,5 perces regenerációs ablak, azon túl tétlen 1.5); szett nélkül fix 4.0, HIIT változatlan 8.0. — érintett:
+  [[Edzésnapló]], [[Tápérték kalkulátor]]; kód: `pages/workout/log/workout-metrics.ts`.
 - **2026-10-18 — #172** Étkezés-szerkesztő összesítő: a lábléc a Mentés fölött élőben mutatja az étkezés
   összes kcal / ár / fehérje / szénhidrát / zsír értékét (tételek effektív összege, „becsült" jelzéssel). — érintett:
   [[Étkezés]]; kód: `pages/food/meal/meal-edit.page.*`, `meal-item-summary.ts`, i18n.

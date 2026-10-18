@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-10-17
-verifikalt_commit: b0c6d57
+verifikalva: 2026-10-18
+verifikalt_commit: 88d246b
 ---
 
 # Edzés
@@ -29,7 +29,7 @@ Subfeature / kapcsolódó napló lista:
 - [[Röplabda napló]]
 - [[Nyújtás]] — vezetett, időzítős nyújtó session + napló (`backlog/169`); nem terhelő nap
 
-Erőedzés MET ([[Edzésnapló]]): `GENERAL_WEIGHTS` 5.0; `HIIT_CIRCUIT` 8.0 — kanonikus: [[Tápérték kalkulátor]].
+Erőedzés-kalória ([[Edzésnapló]], `backlog/173`): `HIIT_CIRCUIT` fix 8.0 MET; `GENERAL_WEIGHTS` szettenként (izomcsoport, terhelési idő, RPE, regenerációs ablak), szett nélkül fix 4.0 — kanonikus: [[Tápérték kalkulátor]].
 
 Fejlesztési sorrend: Gyakorlat → Edzésnapló → Heti terv.
 
