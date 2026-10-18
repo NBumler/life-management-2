@@ -112,4 +112,34 @@ describe('LocationTrackingService (backlog/150)', () => {
     expect(options.distanceFilter).toBe(5);
     expect(options.requestPermissions).toBe(true);
   });
+
+  describe('acquireFix() — Becsült mode endpoint', () => {
+    const settle = () => new Promise((resolve) => setTimeout(resolve));
+
+    it('resolves early on a good fix and stops the plugin', async () => {
+      const pending = service.acquireFix('Cím', 'Üzenet', 10_000);
+      await settle();
+      capturedCallback!(fixLocation({ accuracy: 50, latitude: 47.1 }));
+      capturedCallback!(fixLocation({ accuracy: 8, latitude: 47.2 }));
+      const fix = await pending;
+      expect(fix?.lat).toBe(47.2);
+      expect(gateway.stop).toHaveBeenCalled();
+      expect(service.tracking()).toBeFalse();
+    });
+
+    it('on timeout returns the most accurate fix seen, even a poor one', async () => {
+      const pending = service.acquireFix('Cím', 'Üzenet', 30);
+      await settle();
+      capturedCallback!(fixLocation({ accuracy: 120, latitude: 47.1 }));
+      capturedCallback!(fixLocation({ accuracy: 60, latitude: 47.3 }));
+      capturedCallback!(fixLocation({ accuracy: 90, latitude: 47.4 }));
+      expect((await pending)?.lat).toBe(47.3);
+    });
+
+    it('null when nothing arrives or the plugin cannot start', async () => {
+      expect(await service.acquireFix('Cím', 'Üzenet', 10)).toBeNull();
+      gateway.start.and.rejectWith(new Error('no permission'));
+      expect(await service.acquireFix('Cím', 'Üzenet', 10)).toBeNull();
+    });
+  });
 });

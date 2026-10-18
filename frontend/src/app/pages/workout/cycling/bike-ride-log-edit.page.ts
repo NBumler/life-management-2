@@ -26,6 +26,7 @@ import { BikeRideLog } from '../../../api/model/bikeRideLog';
 import { BikeLiveSessionService } from '../../../core/data/bike-live-session.service';
 import { BikeRideLogRepository, BikeRideLogSaveInput } from '../../../core/data/bike-ride-log.repository';
 import { ProfileRepository } from '../../../core/data/profile.repository';
+import { MIN_PLAUSIBLE_ESTIMATED_SPEED_KMH, ROAD_CIRCUITY_FACTOR } from '../../../core/geo/tracking-config';
 import { today } from '../../../shared/local-date';
 import { BIKE_INTENSITIES, avgSpeedKmH, bikeKcal, suggestedIntensity } from './bike-metrics';
 
@@ -39,7 +40,9 @@ import { BIKE_INTENSITIES, avgSpeedKmH, bikeKcal, suggestedIntensity } from './b
  * backlog/150 — on `cycling/live/summary` (route data `liveSummary`) the same form is the live ride's
  * editable summary: pre-filled from `BikeLiveSessionService.summary()`, saved under the ride's id with
  * `trackingMode` / `startedAt` through the same repository, then the live draft is cleared; "Elvetés"
- * (confirmed) drops it instead. Editing a saved ride keeps its `trackingMode` / `startedAt`.
+ * (confirmed) drops it instead. A Becsült estimate is marked ("durva becslés" for the straight-line
+ * fallback), and an implausibly slow one asks for the distance — it stays pre-filled, overridable or
+ * clearable. Editing a saved ride keeps its `trackingMode` / `startedAt`.
  */
 @Component({
   selector: 'app-bike-ride-log-edit',
@@ -81,6 +84,11 @@ export class BikeRideLogEditPage implements OnInit {
   readonly liveSummary = this.route.snapshot.data?.['liveSummary'] === true;
   /** True while the live summary's distance / elevation are being computed. */
   readonly summaryLoading = signal(false);
+  /** Becsült summary: how the distance was estimated (`ROUGH` = "durva becslés", `NONE` = no endpoint fix) and whether it failed the plausibility check. */
+  readonly liveEstimate = signal<'ROUTED' | 'ROUGH' | 'NONE' | null>(null);
+  readonly liveImplausible = signal(false);
+  readonly circuityFactor = ROAD_CIRCUITY_FACTOR;
+  readonly minPlausibleSpeedKmh = MIN_PLAUSIBLE_ESTIMATED_SPEED_KMH;
   private liveRideId: string | null = null;
   private trackingMode: BikeRideLog.TrackingModeEnum | undefined;
   private startedAt: string | null = null;
@@ -204,6 +212,8 @@ export class BikeRideLogEditPage implements OnInit {
       this.liveRideId = summary.id;
       this.trackingMode = summary.trackingMode;
       this.startedAt = summary.startedAt;
+      this.liveEstimate.set(summary.trackingMode === BikeRideLog.TrackingModeEnum.Estimated ? (summary.estimate ?? 'NONE') : null);
+      this.liveImplausible.set(summary.implausible);
       this.form.reset({
         date: summary.date,
         durationMinutes: summary.durationMinutes,

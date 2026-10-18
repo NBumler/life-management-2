@@ -12,7 +12,7 @@ import { formatElapsed } from '../climbing/naplo/climbing-live-controller';
 /**
  * backlog/150 — the "Biciklizés folyamatban" strip on the bike list and the Edzés tab's landing page
  * while a live ride exists (also after an app restart — it reads the persisted draft): state, distance
- * and active time; a tap opens the live screen, or the summary once the ride is finished. Native only
+ * (Pontos) and active time; a tap opens the live screen, or the summary once the ride is finished. Native only
  * (`offlineCapable`) and only with `edzes.bicikli` on.
  */
 @Component({
@@ -23,7 +23,11 @@ import { formatElapsed } from '../climbing/naplo/climbing-live-controller';
         <ion-icon slot="start" name="bicycle-outline" [color]="d.endedAtMs === null && d.pausedAtMs === null ? 'danger' : 'medium'" aria-hidden="true"></ion-icon>
         <ion-label>
           <h2>{{ stateKey() | translate }}</h2>
-          <p>{{ live.distanceMeters() / 1000 | number: '1.2-2' }} {{ 'WORKOUT.BIKE.KM_SHORT' | translate }}</p>
+          @if (d.mode === 'ESTIMATED') {
+            <p>{{ 'WORKOUT.BIKE.LIVE.MODE_ESTIMATED' | translate }}</p>
+          } @else {
+            <p>{{ live.distanceMeters() / 1000 | number: '1.2-2' }} {{ 'WORKOUT.BIKE.KM_SHORT' | translate }}</p>
+          }
         </ion-label>
         <ion-note slot="end" class="live-banner__elapsed">{{ elapsed() }}</ion-note>
       </ion-item>

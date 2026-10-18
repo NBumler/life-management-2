@@ -14,6 +14,7 @@ describe('BikeLivePage (backlog/150)', () => {
   let live: {
     draft: WritableSignal<BikeLiveDraft | null>;
     paused: Signal<boolean>;
+    mode: Signal<string | null>;
     distanceMeters: WritableSignal<number>;
     weakSignal: WritableSignal<boolean>;
     refresh: jasmine.Spy;
@@ -38,6 +39,7 @@ describe('BikeLivePage (backlog/150)', () => {
     live = {
       draft,
       paused: computed(() => draft()?.pausedAtMs != null),
+      mode: computed(() => (draft() ? (draft()!.mode ?? 'LIVE') : null)),
       distanceMeters: signal(12_345),
       weakSignal: signal(false),
       refresh: jasmine.createSpy('refresh').and.callFake(() => Promise.resolve(draft())),
@@ -125,5 +127,12 @@ describe('BikeLivePage (backlog/150)', () => {
     await new Promise((resolve) => setTimeout(resolve));
     expect(live.clear).toHaveBeenCalled();
     expect(navigateBack).toHaveBeenCalledWith('/tabs/workout/cycling');
+  });
+
+  it('Becsült: no distance, the start-point state instead', async () => {
+    await setup({ ...running, mode: 'ESTIMATED', startFix: { status: 'fixed', lat: 47.5, lon: 19.05, accuracyMeters: 5 } });
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.querySelector('.bike-live__distance')).toBeNull();
+    expect(el.querySelector('.bike-live__start-fix')?.textContent).toContain('WORKOUT.BIKE.LIVE.START_FIX_FIXED');
   });
 });

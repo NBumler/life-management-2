@@ -21,6 +21,24 @@
             {{ (summaryLoading() ? 'WORKOUT.BIKE.LIVE.SUMMARY_LOADING' : 'WORKOUT.BIKE.LIVE.SUMMARY_HINT') | translate }}
           </ion-note>
         </ion-item>
+        @if (liveEstimate() === 'ROUTED') {
+          <ion-item lines="none">
+            <ion-note class="live-summary__estimate">{{ 'WORKOUT.BIKE.LIVE.ESTIMATE_ROUTED' | translate }}</ion-note>
+          </ion-item>
+        } @else if (liveEstimate() === 'ROUGH') {
+          <ion-item lines="none">
+            <ion-note class="live-summary__estimate" color="warning">{{ 'WORKOUT.BIKE.LIVE.ESTIMATE_ROUGH' | translate: { factor: (circuityFactor | number: '1.1-1') } }}</ion-note>
+          </ion-item>
+        } @else if (liveEstimate() === 'NONE') {
+          <ion-item lines="none">
+            <ion-note class="live-summary__estimate" color="warning">{{ 'WORKOUT.BIKE.LIVE.ESTIMATE_NONE' | translate }}</ion-note>
+          </ion-item>
+        }
+        @if (liveImplausible()) {
+          <ion-item lines="none">
+            <ion-note class="live-summary__implausible" color="danger">{{ 'WORKOUT.BIKE.LIVE.ESTIMATE_IMPLAUSIBLE' | translate: { speed: minPlausibleSpeedKmh } }}</ion-note>
+          </ion-item>
+        }
       </ion-list>
     }
 

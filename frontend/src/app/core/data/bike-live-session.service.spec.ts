@@ -5,8 +5,10 @@ import { provideTranslateService } from '@ngx-translate/core';
 
 import { ElevationService } from '../geo/elevation.service';
 import { LocationTrackingGateway } from '../geo/location-tracking.gateway';
+import { LocationTrackingService } from '../geo/location-tracking.service';
+import { RoutingService } from '../geo/routing.service';
 import { LocalNotificationsGateway } from '../notifications/local-notifications.gateway';
-import { BikeLiveSessionService, activeElapsedMs, trackSegments } from './bike-live-session.service';
+import { BikeLiveSessionService, activeElapsedMs, isImplausibleEstimate, trackSegments } from './bike-live-session.service';
 
 type FixCallback = (location?: Location, error?: CallbackError) => void;
 
@@ -31,6 +33,7 @@ describe('BikeLiveSessionService (backlog/150)', () => {
   let service: BikeLiveSessionService;
   let gps: jasmine.SpyObj<LocationTrackingGateway>;
   let elevation: jasmine.SpyObj<ElevationService>;
+  let routing: jasmine.SpyObj<RoutingService>;
   let callback: FixCallback | null;
 
   function configure(): void {
@@ -48,6 +51,8 @@ describe('BikeLiveSessionService (backlog/150)', () => {
     elevation = jasmine.createSpyObj('ElevationService', ['fetchElevations']);
     // every segment climbs 20 m between its first and last sample
     elevation.fetchElevations.and.callFake((samples) => Promise.resolve(samples.map((_, i) => (i === samples.length - 1 ? 120 : 100))));
+    routing = jasmine.createSpyObj('RoutingService', ['route']);
+    routing.route.and.resolveTo(null);
     const notifications = jasmine.createSpyObj('LocalNotificationsGateway', ['checkPermissions', 'schedule', 'cancelIds']);
 
     TestBed.configureTestingModule({
@@ -55,6 +60,7 @@ describe('BikeLiveSessionService (backlog/150)', () => {
         provideTranslateService(),
         { provide: LocationTrackingGateway, useValue: gps },
         { provide: ElevationService, useValue: elevation },
+        { provide: RoutingService, useValue: routing },
         { provide: LocalNotificationsGateway, useValue: notifications },
       ],
     });
@@ -78,23 +84,23 @@ describe('BikeLiveSessionService (backlog/150)', () => {
   it('start(): a denied location permission starts nothing', async () => {
     gps.requestPermissions.and.resolveTo({ location: 'denied' });
 
-    expect((await service.start(0)).status).toBe('permission-denied');
+    expect((await service.start('LIVE', 0)).status).toBe('permission-denied');
     expect(service.draft()).toBeNull();
     expect(gps.start).not.toHaveBeenCalled();
   });
 
   it('start(): creates the draft and starts the GPS; a second start() returns the running ride', async () => {
-    const first = await service.start(1_000);
+    const first = await service.start('LIVE', 1_000);
     expect(first.status).toBe('started');
     expect(gps.start).toHaveBeenCalledTimes(1);
 
-    const second = await service.start(5_000);
+    const second = await service.start('LIVE', 5_000);
     expect(second.status === 'started' && first.status === 'started' && second.draft.rideId === first.draft.rideId).toBeTrue();
     expect(gps.start).toHaveBeenCalledTimes(1);
   });
 
   it('accumulates the live distance from accepted fixes', async () => {
-    await service.start(0);
+    await service.start('LIVE', 0);
     await deliver(0, 0);
     await deliver(1, 30_000);
     await deliver(2, 60_000);
@@ -103,7 +109,7 @@ describe('BikeLiveSessionService (backlog/150)', () => {
   });
 
   it('pause → resume: no collection while paused, the gap is not distance, the pause is not duration', async () => {
-    await service.start(0);
+    await service.start('LIVE', 0);
     await deliver(0, 0);
     await deliver(1, 30_000);
 
@@ -123,7 +129,7 @@ describe('BikeLiveSessionService (backlog/150)', () => {
   });
 
   it('finish() while paused folds the running pause into the paused total', async () => {
-    await service.start(0);
+    await service.start('LIVE', 0);
     await service.pause(60_000);
     await service.finish(180_000);
 
@@ -134,7 +140,7 @@ describe('BikeLiveSessionService (backlog/150)', () => {
   });
 
   it('summary(): pre-fills the form from the recorded track (distance, DEM gain per segment, LIVE)', async () => {
-    await service.start(new Date(2026, 9, 18, 7, 15).getTime());
+    await service.start('LIVE', new Date(2026, 9, 18, 7, 15).getTime());
     const t0 = service.draft()!.startedAtMs;
     await deliver(0, t0);
     await deliver(1, t0 + 30_000);
@@ -154,7 +160,7 @@ describe('BikeLiveSessionService (backlog/150)', () => {
   });
 
   it('summary(): without a usable track the distance / elevation are not computable (null, never 0)', async () => {
-    await service.start(0);
+    await service.start('LIVE', 0);
     await deliver(0, 0); // a single fix is not a line
     await service.finish(30_000);
 
@@ -166,7 +172,7 @@ describe('BikeLiveSessionService (backlog/150)', () => {
 
   it('summary(): no elevation source → elevation null, distance still computed', async () => {
     elevation.fetchElevations.and.rejectWith(new Error('offline, outside the DEM'));
-    await service.start(0);
+    await service.start('LIVE', 0);
     await deliver(0, 0);
     await deliver(1, 30_000);
     await service.finish(60_000);
@@ -177,7 +183,7 @@ describe('BikeLiveSessionService (backlog/150)', () => {
   });
 
   it('survives an app restart: the draft and the flushed track come back, the GPS feed resumes', async () => {
-    await service.start(0);
+    await service.start('LIVE', 0);
     await deliver(0, 0);
     await deliver(1, 30_000);
     await service.pause(60_000);
@@ -193,7 +199,7 @@ describe('BikeLiveSessionService (backlog/150)', () => {
   });
 
   it('clear(): stops the GPS and drops the draft and the raw points', async () => {
-    await service.start(0);
+    await service.start('LIVE', 0);
     await deliver(0, 0);
     await deliver(1, 30_000);
 
@@ -217,5 +223,126 @@ describe('BikeLiveSessionService (backlog/150)', () => {
         [19, 4],
       ],
     ]);
+  });
+
+  describe('Becsült (ESTIMATED) mode', () => {
+    const START = { lat: 47.5, lon: 19.05 };
+    const END = { lat: 47.59, lon: 19.05 }; // ~10 km north
+
+    /** acquireFix() itself is covered in location-tracking.service.spec; here it answers on cue. */
+    let acquireFix: jasmine.Spy<LocationTrackingService['acquireFix']>;
+
+    beforeEach(() => {
+      acquireFix = spyOn(TestBed.inject(LocationTrackingService), 'acquireFix');
+    });
+
+    /** Answers the next acquireFix() with one good fix at `point`, or with nothing (`null`). */
+    function nextEndpoint(point: { lat: number; lon: number } | null): void {
+      acquireFix.and.resolveTo(point === null ? null : { lat: point.lat, lon: point.lon, timeMs: 0, accuracyMeters: 5 });
+    }
+
+    /** acquireFix() that only an abort ends (or nothing, after a restart). */
+    function neverAnswers(): void {
+      acquireFix.and.callFake(
+        (_title, _body, _timeout, abort) => new Promise((resolve) => abort?.addEventListener('abort', () => resolve(null))),
+      );
+    }
+
+    async function ride(durationMs: number, end: { lat: number; lon: number } | null = END): Promise<void> {
+      nextEndpoint(START);
+      await service.start('ESTIMATED', 0);
+      await service.startFixSettled();
+      nextEndpoint(end);
+      await service.finish(durationMs);
+    }
+
+    it('takes a start fix in the background and runs no continuous GPS while riding', async () => {
+      nextEndpoint(START);
+      const result = await service.start('ESTIMATED', 0);
+      expect(result.status).toBe('started');
+      expect(service.mode()).toBe('ESTIMATED');
+      await service.startFixSettled();
+
+      expect(service.draft()!.startFix).toEqual(jasmine.objectContaining({ status: 'fixed', lat: START.lat, lon: START.lon }));
+      await service.pause(60_000);
+      await service.resume(120_000);
+      expect(acquireFix).toHaveBeenCalledTimes(1);
+      expect(gps.start).not.toHaveBeenCalled();
+    });
+
+    it('summary(): the bike route between the endpoints → distance + DEM gain along it', async () => {
+      routing.route.and.resolveTo([
+        [19.05, 47.5],
+        [19.06, 47.545],
+        [19.05, 47.59],
+      ]);
+      await ride(40 * 60_000);
+
+      const summary = (await service.summary())!;
+      expect(routing.route).toHaveBeenCalledWith('BIKE', [START.lon, START.lat], [END.lon, END.lat]);
+      expect(summary.trackingMode).toBe('ESTIMATED');
+      expect(summary.estimate).toBe('ROUTED');
+      expect(summary.distanceKm).toBeGreaterThan(10);
+      expect(summary.elevationGainMeters).toBe(20);
+      expect(summary.implausible).toBeFalse();
+    });
+
+    it('summary(): no route on the device network → rough straight line × circuity', async () => {
+      await ride(40 * 60_000);
+
+      const summary = (await service.summary())!;
+      expect(summary.estimate).toBe('ROUGH');
+      expect(summary.distanceKm).toBeCloseTo(10.01 * 1.3, 0);
+    });
+
+    it('summary(): a routing failure (no geo package) also falls back to the rough estimate', async () => {
+      routing.route.and.rejectWith(new Error('no geo package'));
+      await ride(40 * 60_000);
+      expect((await service.summary())!.estimate).toBe('ROUGH');
+    });
+
+    it('summary(): a loop ride (start ≈ end) is flagged implausible', async () => {
+      await ride(2 * 60 * 60_000, { lat: START.lat + 0.0005, lon: START.lon });
+      const summary = (await service.summary())!;
+      expect(summary.distanceKm).not.toBeNull();
+      expect(summary.implausible).toBeTrue();
+    });
+
+    it('summary(): a missing end fix leaves distance / elevation empty (never 0)', async () => {
+      await ride(40 * 60_000, null);
+      const summary = (await service.summary())!;
+      expect(service.draft()!.endFix).toEqual({ status: 'failed' });
+      expect(summary.distanceKm).toBeNull();
+      expect(summary.elevationGainMeters).toBeNull();
+      expect(summary.estimate).toBeNull();
+      expect(summary.implausible).toBeFalse();
+    });
+
+    it('after a restart, a start fix that was being acquired counts as failed', async () => {
+      neverAnswers();
+      await service.start('ESTIMATED', 0);
+      const abandoned = service;
+
+      TestBed.resetTestingModule();
+      configure();
+      const restored = (await service.refresh())!;
+      expect(restored.startFix).toEqual({ status: 'failed' });
+      expect(gps.start).not.toHaveBeenCalled();
+      await abandoned.clear(); // ends the old instance's pending wait
+    });
+
+    it('clear() aborts an in-flight endpoint acquisition', async () => {
+      neverAnswers();
+      await service.start('ESTIMATED', 0);
+      await service.clear(); // would hang here without the abort
+      expect(acquireFix.calls.mostRecent().args[3]?.aborted).toBeTrue();
+      expect(service.draft()).toBeNull();
+    });
+  });
+
+  it('isImplausibleEstimate(): under the speed threshold only', () => {
+    expect(isImplausibleEstimate(1, 60)).toBeTrue();
+    expect(isImplausibleEstimate(10, 60)).toBeFalse();
+    expect(isImplausibleEstimate(null, 60)).toBeFalse();
   });
 });

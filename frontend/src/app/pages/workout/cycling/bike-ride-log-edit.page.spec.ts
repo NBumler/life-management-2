@@ -33,12 +33,14 @@ describe('BikeRideLogEditPage', () => {
     distanceKm: 9.42,
     elevationGainMeters: null,
     trackingMode: BikeRideLog.TrackingModeEnum.Live,
+    estimate: null,
+    implausible: false,
   };
 
-  async function setup(idParam = 'new', options: { liveSummary?: boolean; items?: BikeRideLog[] } = {}): Promise<void> {
+  async function setup(idParam = 'new', options: { liveSummary?: boolean; items?: BikeRideLog[]; summary?: BikeLiveSummary } = {}): Promise<void> {
     live = jasmine.createSpyObj('BikeLiveSessionService', ['refresh', 'summary', 'clear']);
     live.refresh.and.resolveTo(finishedDraft);
-    live.summary.and.resolveTo(summary);
+    live.summary.and.resolveTo(options.summary ?? summary);
     live.clear.and.resolveTo();
     saveSpy = jasmine
       .createSpy('save')
@@ -163,6 +165,26 @@ describe('BikeRideLogEditPage', () => {
         jasmine.objectContaining({ id: 'ride-1', trackingMode: BikeRideLog.TrackingModeEnum.Live, startedAt: '2026-10-18T05:15:00.000Z' }),
       );
       expect(live.clear).not.toHaveBeenCalled();
+    });
+
+    it('Becsült: a rough estimate is marked, an implausible one asks for the distance', async () => {
+      await setup('new', {
+        liveSummary: true,
+        summary: { ...summary, trackingMode: BikeRideLog.TrackingModeEnum.Estimated, estimate: 'ROUGH', implausible: true },
+      });
+      fixture.detectChanges();
+      const el: HTMLElement = fixture.nativeElement;
+      expect(el.querySelector('.live-summary__estimate')?.textContent).toContain('WORKOUT.BIKE.LIVE.ESTIMATE_ROUGH');
+      expect(el.querySelector('.live-summary__implausible')).not.toBeNull();
+      expect(component.form.getRawValue().distanceKm).toBe(9.42); // still pre-filled, overridable
+    });
+
+    it('Becsült without an endpoint fix: the "enter it manually" note', async () => {
+      await setup('new', {
+        liveSummary: true,
+        summary: { ...summary, trackingMode: BikeRideLog.TrackingModeEnum.Estimated, distanceKm: null, estimate: null },
+      });
+      expect(component.liveEstimate()).toBe('NONE');
     });
   });
 });

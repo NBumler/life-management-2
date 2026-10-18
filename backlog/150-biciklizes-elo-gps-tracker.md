@@ -429,6 +429,25 @@ együtt kerül be, a súgó-ikonokkal a 4. fázisban. Az `intensity`-t az össze
 átlagsebesség-hint javasol, a user választ. Eszközön (háttér-GPS, zárolt képernyő, értesítés-tap)
 még nincs kézzel ellenőrizve.
 
+**3. fázis (2026-10-19) — Becsült mód:** `LocationTrackingService.acquireFix()` — egyszeri végponti
+fix ugyanazzal a pluginnal: `ENDPOINT_FIX_GOOD_ACCURACY_METERS` (20 m) pontosságnál korán kész,
+`ENDPOINT_FIX_TIMEOUT_SECONDS` (20 s) után a legjobb látott fix (bármilyen pontosság), semmi → `null`;
+`AbortSignal`-lal megszakítható (Elvetés). `BikeLiveSessionService`: `start(mode)`, a draft `mode` +
+`startFix` / `endFix` (`pending` / `fixed` / `failed`; régi draft `mode` nélkül = `LIVE`). Becsült
+menetben nincs folyamatos GPS: a kezdő fix a háttérben készül (az időmérés a koppintástól fut), a
+záró fix a „Befejezés”-ben (megvárja a még futó kezdő fixet — ugyanaz a plugin). Újraindításkor a
+félbemaradt fix `failed`. Saját tartós értesítés végig (Pontosnál csak szünetben). `summary()`:
+`routing.route('BIKE', …)` a két fix között → táv + DEM-szint az útvonalon (`estimate: 'ROUTED'`);
+nincs út / nincs geo-csomag → légvonal × `ROAD_CIRCUITY_FACTOR` (1,3), DEM a légvonalon
+(`'ROUGH'`, „durva becslés”); hiányzó fix → táv/szint `null` (§14). Hihetőség:
+`isImplausibleEstimate()` (< `MIN_PLAUSIBLE_ESTIMATED_SPEED_KMH` = 2 km/h) → az összegzőn
+figyelmeztetés, a becsült táv előtöltve marad (felülírható / törölhető). UI: mód-választó
+(`bike-live-start.component.ts`, soronként egy mondat a pontosság ↔ akkumulátor
+kompromisszumról), a választás eszköz-lokálisan megjegyezve (`lm2_bike_live_default_mode`); élő
+képernyő Becsült módban táv helyett a kezdőpont állapota, befejezéskor „Végpont rögzítése…”; banner
+Becsült módban táv nélkül. Hátra van (4. fázis): súgó-ikonok (`app-help-button`) a mód-választóhoz
+és az új mezőkhöz, spec ([[Biciklizés napló]]) + [[Backend-offline first]] §15, eszközös teszt.
+
 ### Méret-jóváhagyás
 
 **Mért / becsült méretek (2026-10-06):**

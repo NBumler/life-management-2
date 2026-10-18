@@ -17,14 +17,17 @@ import {
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
+import { BikeRideLog } from '../../../api/model/bikeRideLog';
 import { BIKE_LIVE_SUMMARY_ROUTE, BikeLiveSessionService, activeElapsedMs } from '../../../core/data/bike-live-session.service';
+import { ENDPOINT_FIX_TIMEOUT_SECONDS } from '../../../core/geo/tracking-config';
 import { formatElapsed } from '../climbing/naplo/climbing-live-controller';
 
 const LIST_ROUTE = '/tabs/workout/cycling';
 
 /**
  * backlog/150 — the live (Pontos) ride screen on `cycling/live`: the active time (pauses excluded),
- * the distance recorded so far, a weak-signal hint, and Szünet / Folytatás / Befejezés / Elvetés.
+ * the distance recorded so far (Becsült: whether the start point is fixed — there is no GPS while
+ * riding), a weak-signal hint, and Szünet / Folytatás / Befejezés / Elvetés.
  * "Befejezés" opens the editable summary (`cycling/live/summary`); a ride that is already finished
  * (e.g. reopened from the banner) goes straight there.
  */
@@ -51,14 +54,24 @@ const LIST_ROUTE = '/tabs/workout/cycling';
           <ion-note>{{ 'WORKOUT.BIKE.LIVE.ELAPSED' | translate }}</ion-note>
           <div class="bike-live__value bike-live__elapsed">{{ elapsed() }}</div>
         </div>
-        <div class="bike-live__metric">
-          <ion-note>{{ 'WORKOUT.BIKE.LIVE.DISTANCE' | translate }}</ion-note>
-          <div class="bike-live__value bike-live__distance">
-            {{ live.distanceMeters() / 1000 | number: '1.2-2' }} {{ 'WORKOUT.BIKE.KM_SHORT' | translate }}
+        @if (estimated()) {
+          <ion-note class="bike-live__start-fix" [color]="startFixKey() === 'WORKOUT.BIKE.LIVE.START_FIX_FAILED' ? 'warning' : undefined">
+            {{ startFixKey() | translate }}
+          </ion-note>
+        } @else {
+          <div class="bike-live__metric">
+            <ion-note>{{ 'WORKOUT.BIKE.LIVE.DISTANCE' | translate }}</ion-note>
+            <div class="bike-live__value bike-live__distance">
+              {{ live.distanceMeters() / 1000 | number: '1.2-2' }} {{ 'WORKOUT.BIKE.KM_SHORT' | translate }}
+            </div>
           </div>
-        </div>
+        }
 
-        @if (live.weakSignal() && !live.paused()) {
+        @if (finishing() && estimated()) {
+          <ion-note class="bike-live__end-fix">{{ 'WORKOUT.BIKE.LIVE.END_FIX_PENDING' | translate: { seconds: endFixTimeoutSeconds } }}</ion-note>
+        }
+
+        @if (!estimated() && live.weakSignal() && !live.paused()) {
           <ion-note color="warning" class="bike-live__weak">
             <ion-icon name="alert-circle" aria-hidden="true"></ion-icon>
             {{ 'WORKOUT.BIKE.LIVE.WEAK_SIGNAL' | translate }}
@@ -111,6 +124,11 @@ const LIST_ROUTE = '/tabs/workout/cycling';
         font-weight: 600;
         font-variant-numeric: tabular-nums;
       }
+      .bike-live__start-fix,
+      .bike-live__end-fix {
+        display: block;
+        margin-bottom: 16px;
+      }
       .bike-live__weak {
         display: flex;
         align-items: center;
@@ -147,6 +165,20 @@ export class BikeLivePage implements ViewWillEnter, ViewWillLeave, OnDestroy {
   private readonly translate = inject(TranslateService);
 
   readonly busy = signal(false);
+  readonly endFixTimeoutSeconds = ENDPOINT_FIX_TIMEOUT_SECONDS;
+  /** "Befejezés" in progress — in Becsült mode this includes waiting for the end fix. */
+  readonly finishing = signal(false);
+  readonly estimated = computed(() => this.live.mode() === BikeRideLog.TrackingModeEnum.Estimated);
+  readonly startFixKey = computed(() => {
+    switch (this.live.draft()?.startFix?.status) {
+      case 'fixed':
+        return 'WORKOUT.BIKE.LIVE.START_FIX_FIXED';
+      case 'failed':
+        return 'WORKOUT.BIKE.LIVE.START_FIX_FAILED';
+      default:
+        return 'WORKOUT.BIKE.LIVE.START_FIX_PENDING';
+    }
+  });
   private readonly nowMs = signal(Date.now());
   private timer: ReturnType<typeof setInterval> | null = null;
 
@@ -182,7 +214,12 @@ export class BikeLivePage implements ViewWillEnter, ViewWillLeave, OnDestroy {
   }
 
   async finish(): Promise<void> {
-    await this.run(() => this.live.finish());
+    this.finishing.set(true);
+    try {
+      await this.run(() => this.live.finish());
+    } finally {
+      this.finishing.set(false);
+    }
     await this.navController.navigateForward(BIKE_LIVE_SUMMARY_ROUTE, { replaceUrl: true });
   }
 
