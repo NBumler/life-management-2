@@ -371,6 +371,22 @@ akkumulátor-megtakarítás ezért kicsi. Ha az ECO-t az akkumulátor miatt akar
 licenc vagy saját plugin kellene. **Döntés (2026-10-06, felhasználó): ECO kimarad, 2 mód (Pontos,
 Becsült).** Az ECO külön, `deferred` jegyben tartva: [[153-biciklizes-eco-energiatakarekos-mod]].
 
+**Plugin-választás frissítve (2026-10-18):** a `@capacitor-community/background-geolocation`
+azóta igazoltan **elhagyott** (~2 éve nincs release, a karbantartók nem válaszolnak GitHubon) —
+nem indokolt rá építeni a C-fázist. Újra megnézett jelöltek:
+
+| Jelölt | Licenc | Állapot (2026-10-18) | Ítélet |
+|---|---|---|---|
+| `@capgo/background-geolocation` (Cap-go) | MIT, ingyenes | aktívan karbantartott, kifejezetten Transistorsoft-alternatívaként pozícionálva, Android 14+ foreground service helyesen implementálva, `distanceFilter`/`stale` finomhangolás | **választott** |
+| Capawesome Background Geolocation | fizetős ("Insiders" előfizetés: $29/hó vagy $599 egyszeri) | aktívan karbantartott, jó Android 14+ implementáció | elutasítva — az ingyenes Cap-go alternatíva mellett nem indokolt a költség |
+| `@transistorsoft/capacitor-background-geolocation` | fizetős ($399–999 egyszeri, app-identifier-enkénti, 2026 márciusától release buildhez kötelező) | ipari standard, motion-aware ECO | elutasítva — aránytalan költség egy szóló, nem-kommerciális projekthez |
+
+**Megerősített döntés (2026-10-18, felhasználó):** plugin = `@capgo/background-geolocation`; **ECO
+mód marad kimaradva** — a Cap-go plugin sem ad készen motion-aware akku-spórolást (csak
+`distanceFilter`/`stale`, GPS-hardver ilyenkor is folyamatosan fut), saját gyorsulásmérő-alapú
+heurisztika extra munka lenne, a felhasználó ezt most nem kéri. 2 mód marad: Pontos, Becsült — a
+153-as ECO-jegy továbbra is `deferred`.
+
 ### Méret-jóváhagyás
 
 **Mért / becsült méretek (2026-10-06):**
