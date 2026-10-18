@@ -1,7 +1,7 @@
 import { Food } from '../../../api/model/food';
 import { Recipe } from '../../../api/model/recipe';
 import { MealItemSaveItem } from '../../../core/storage/storage-backend';
-import { computeMealItemEffective } from './meal-item-summary';
+import { computeMealItemEffective, sumMealItemEffective } from './meal-item-summary';
 
 function food(overrides: Partial<Food> = {}): Food {
   return { id: 'food-1', name: 'Tej', deleted: false, energyKcal: 60, proteinG: 3, carbsG: 5, fatG: 3, priceHuf: 500, netAmount: 1000, netUnit: 'ml', ...overrides };
@@ -70,5 +70,19 @@ describe('computeMealItemEffective', () => {
     expect(result.proteinG).toBe(0);
     expect(result.priceHuf).toBe(0);
     expect(result.incomplete).toBeFalse();
+  });
+});
+
+describe('sumMealItemEffective (backlog/172)', () => {
+  it('sums every field and ORs the incomplete flag', () => {
+    const result = sumMealItemEffective([
+      { priceHuf: 100, energyKcal: 200, proteinG: 10, carbsG: 20, fatG: 5, incomplete: false },
+      { priceHuf: 50, energyKcal: 120, proteinG: 4, carbsG: 6, fatG: 2, incomplete: true },
+    ]);
+    expect(result).toEqual({ priceHuf: 150, energyKcal: 320, proteinG: 14, carbsG: 26, fatG: 7, incomplete: true });
+  });
+
+  it('an empty meal sums to zero, complete', () => {
+    expect(sumMealItemEffective([])).toEqual({ priceHuf: 0, energyKcal: 0, proteinG: 0, carbsG: 0, fatG: 0, incomplete: false });
   });
 });

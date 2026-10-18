@@ -61,3 +61,18 @@ export function computeMealItemEffective(item: MealItemSaveItem, recipes: readon
     incomplete: false,
   };
 }
+
+/** backlog/172 — the whole meal's effective totals: a plain sum of each item's `MealItemEffective`. */
+export function sumMealItemEffective(effectives: readonly MealItemEffective[]): MealItemEffective {
+  return effectives.reduce(
+    (total, effective) => ({
+      priceHuf: total.priceHuf + effective.priceHuf,
+      energyKcal: total.energyKcal + effective.energyKcal,
+      proteinG: total.proteinG + effective.proteinG,
+      carbsG: total.carbsG + effective.carbsG,
+      fatG: total.fatG + effective.fatG,
+      incomplete: total.incomplete || effective.incomplete,
+    }),
+    { ...ZERO },
+  );
+}

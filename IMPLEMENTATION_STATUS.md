@@ -14,6 +14,9 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-18 — #172** Étkezés-szerkesztő összesítő: a lábléc a Mentés fölött élőben mutatja az étkezés
+  összes kcal / ár / fehérje / szénhidrát / zsír értékét (tételek effektív összege, „becsült" jelzéssel). — érintett:
+  [[Étkezés]]; kód: `pages/food/meal/meal-edit.page.*`, `meal-item-summary.ts`, i18n.
 - **2026-10-17 — #171** Mászás pihenőkalória gyakoriság szerint: minden go (boulder, 5 perc) / pitch (kötél,
   15 perc) regenerációs ablakot nyit, az ablakokon túli pihenő 1.5 MET-re ritkul
   (`MET_rest = 1.5 + (REST − 1.5) × min(1, ablakok / pihenőperc)`). Sűrű session változatlan; 4 óra, 4 boulder

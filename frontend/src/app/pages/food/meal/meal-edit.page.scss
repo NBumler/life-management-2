@@ -11,3 +11,26 @@
 .meal-item-summary__diverted {
   color: var(--ion-color-warning-shade);
 }
+
+// backlog/172 — live whole-meal totals above the Save button
+.meal-totals {
+  padding: 8px 16px 0;
+
+  p {
+    margin: 0;
+  }
+}
+
+.meal-totals__main {
+  font-weight: 600;
+}
+
+.meal-totals__macros {
+  color: var(--ion-color-medium);
+  font-size: 0.9em;
+}
+
+.meal-totals__warn {
+  color: var(--ion-color-warning-shade);
+  font-size: 0.85em;
+}

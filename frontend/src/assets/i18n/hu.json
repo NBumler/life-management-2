@@ -917,6 +917,8 @@
       "CUSTOM_FAT_LABEL": "Zsír (g)",
       "CUSTOM_PRICE_LABEL": "Ár (Ft)",
       "EFFECTIVE_SUMMARY": "{{kcal}} kcal, {{price}} Ft",
+      "TOTALS_MAIN": "Összesen: {{kcal}} kcal · {{price}} Ft",
+      "TOTALS_MACROS": "Fehérje {{protein}} g · Szénhidrát {{carbs}} g · Zsír {{fat}} g",
       "DASHBOARD": {
         "CALORIES_LABEL": "Kalória",
         "PROTEIN_LABEL": "Fehérje",

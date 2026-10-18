@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-24
-verifikalt_commit: f866e86
+verifikalva: 2026-10-18
+verifikalt_commit: ce8a462
 ---
 
 # Étkezés
@@ -108,6 +108,7 @@ ID + mennyiség/szorzó; tápanyag az aktuális katalógusból. Katalógus-téte
 - Fejléc: **Étkezés rögzítése**.
 - Űrlap: időpont, megjegyzés, tételek; mentés footer; iOS `16px`.
 - Tétellista: kompakt, csak-olvasható összegző sorok (cím + „mennyiség · adagszorzó · effektív kcal/ár"). A sorra koppintva teljes képernyős tétel-szerkesztő modal nyílik; átrendezés fel/le nyíllal (natív, egymás alatt) vagy fogantyúval (web), törlés a soron. Hiányos tétel a mentés blokkolásakor jelölést kap.
+- Étkezés-összesítő (`backlog/172`): ha van legalább egy tétel, a lábléc a Mentés gomb fölött élőben mutatja az egész étkezés effektív értékeit — „Összesen: X kcal · Y Ft" és fehérje / szénhidrát / zsír grammban. A tételek `computeMealItemEffective` értékeinek összege (`meal-item-summary.ts` `sumMealItemEffective`), így a tétel-szerkesztő modal változtatásait, hozzáadást és törlést azonnal követi; hiányzó katalógusadatnál ugyanaz a „becsült" jelzés látszik, mint a dashboardon. Kitöltetlen FOOD mennyiség 0-nak számít.
 - Tétel-szerkesztő modal: soronként egy mező (a mennyiség mező teljes szélességű), `servings` lépegetővel (± 0,5, kézzel is írható), élő effektív kcal/ár előnézet. „Kész" gomb csak érvényes soron aktív; háttérre koppintva a sor „hiányos" marad. Picker-megerősítés / egyéni tétel hozzáadása után a modal automatikusan felnyílik az első kitöltésre váró új tételre (FOOD → mennyiség, CUSTOM → név + kalória; RECIPE nem, mert `servings` = 1 alapból). RECIPE tételnél a modalban kinyitható „Hozzávalók" rész az étkezés-szintű mennyiség-felülíráshoz ([[Recept forrású étkezés]], `backlog/121`); az eltérített tétel a listán „Eltér a recepttől" jelzést kap. A tétel-szerkesztő (`meal-item-editor.component`) egy `<ion-modal>` egyetlen slotolt komponense — a `:host` a modal teljes magasságát kitölti (`shared/styles/_ion-modal-host.scss` `ion-modal-host-fill` mixin, ugyanaz a minta, mint az [[Edzésnapló]] gyakorlat-picker modaljánál — `backlog/117`), különben a mennyiség/adagszorzó mezők alig fértek ki.
 
 ### Megjegyzések

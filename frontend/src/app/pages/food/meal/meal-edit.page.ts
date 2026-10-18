@@ -1,3 +1,4 @@
+import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -51,7 +52,7 @@ import {
   snapshotRow,
   toSaveItem,
 } from './meal-item-row';
-import { computeMealItemEffective } from './meal-item-summary';
+import { computeMealItemEffective, sumMealItemEffective } from './meal-item-summary';
 import { effectiveRecipeIngredients, isDivertedFromRecipe } from './recipe-overrides';
 
 /**
@@ -86,6 +87,7 @@ import { effectiveRecipeIngredients, isDivertedFromRecipe } from './recipe-overr
     IonCheckbox,
     IonSearchbar,
     IonModal,
+    DecimalPipe,
     TranslatePipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -141,6 +143,14 @@ export class MealEditPage implements OnInit, OnDestroy {
       .filter((food) => matchesSearch(query, food.name) || matchesSearch(query, food.brand ?? ''))
       .sort((a, b) => compareRank(query, a.name, b.name) || a.name.localeCompare(b.name));
   });
+
+  /**
+   * backlog/172 — the whole meal's live totals for the footer summary. Reads every row's signal fields
+   * via `toSaveItem`, so edits in the item modal re-sum without a manual refresh.
+   */
+  readonly mealTotals = computed(() =>
+    sumMealItemEffective(this.items().map((row, index) => this.effectiveOf(row, index))),
+  );
 
   async ngOnInit(): Promise<void> {
     await Promise.all([this.repository.load(), this.recipeRepository.load(), this.foodRepository.load()]);

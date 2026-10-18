@@ -115,6 +115,27 @@
 
 <ion-footer>
   <ion-toolbar>
+    @if (items().length > 0) {
+      <div class="meal-totals">
+        <p class="meal-totals__main">
+          {{ 'FOOD.MEAL.TOTALS_MAIN' | translate: { kcal: mealTotals().energyKcal | number: '1.0-0', price: mealTotals().priceHuf | number: '1.0-0' } }}
+        </p>
+        <p class="meal-totals__macros">
+          {{
+            'FOOD.MEAL.TOTALS_MACROS'
+              | translate
+                : {
+                    protein: mealTotals().proteinG | number: '1.0-0',
+                    carbs: mealTotals().carbsG | number: '1.0-0',
+                    fat: mealTotals().fatG | number: '1.0-0',
+                  }
+          }}
+        </p>
+        @if (mealTotals().incomplete) {
+          <p class="meal-totals__warn">{{ 'FOOD.MEAL.DASHBOARD.SUMMARY_INCOMPLETE' | translate }}</p>
+        }
+      </div>
+    }
     <ion-button expand="block" type="submit" form="meal-form" class="ion-margin">{{ 'COMMON.SAVE' | translate }}</ion-button>
   </ion-toolbar>
 </ion-footer>

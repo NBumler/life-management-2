@@ -244,6 +244,29 @@ describe('MealEditPage', () => {
     });
   });
 
+  it('mealTotals (backlog/172): sums the effective values of every row, live with servings edits', async () => {
+    await createFixture('new');
+    await fixture.componentInstance.ngOnInit();
+    const page = fixture.componentInstance;
+    page.addCustomRow();
+    const custom = page.items()[0];
+    if (custom.type !== 'CUSTOM') {
+      fail('expected a CUSTOM row');
+      return;
+    }
+    custom.displayName.set('Alma');
+    custom.caloriesKcal.set(100);
+    custom.proteinG.set(1);
+    custom.priceHuf.set(50);
+    page.commitEditor();
+
+    expect(page.mealTotals()).toEqual(jasmine.objectContaining({ energyKcal: 100, proteinG: 1, carbsG: 0, fatG: 0, priceHuf: 50, incomplete: false }));
+
+    custom.servings.set(2);
+    expect(page.mealTotals().energyKcal).toBe(200);
+    expect(page.mealTotals().priceHuf).toBe(100);
+  });
+
   it('addCustomRow(): appends a blank CUSTOM row and opens the editor on it', async () => {
     await createFixture('new');
     await fixture.componentInstance.ngOnInit();
