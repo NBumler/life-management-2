@@ -3,6 +3,7 @@ package hu.bumler.lm2.common;
 import java.util.Map;
 
 import hu.bumler.lm2.api.model.ApiError;
+import hu.bumler.lm2.common.exception.BboxTooLargeException;
 import hu.bumler.lm2.common.exception.CursorTooOldException;
 import hu.bumler.lm2.common.exception.ElevationUnavailableException;
 import hu.bumler.lm2.common.exception.EntityDeletedException;
@@ -151,6 +152,13 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(UnauthorizedException.class)
 	ResponseEntity<ApiError> handleUnauthorized(UnauthorizedException ex) {
 		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiError("UNAUTHORIZED", ex.getMessage()));
+	}
+
+	// backlog/180: a turistaút-szakaszok bbox-lekérdezése ország-méretű területre nem fut le — ez a
+	// kliens kérésének tartós tulajdonsága, nem szerverhiba.
+	@ExceptionHandler(BboxTooLargeException.class)
+	ResponseEntity<ApiError> handleBboxTooLarge(BboxTooLargeException ex) {
+		return ResponseEntity.badRequest().body(new ApiError("BBOX_TOO_LARGE", ex.getMessage()));
 	}
 
 	@ExceptionHandler(ValidationException.class)

@@ -449,6 +449,7 @@
     "DELETE_ROUTE_CONFIRM_MESSAGE": "Delete the route \"{{name}}\"?",
     "AUTO_PICK_START": "Pick the start point on the map.",
     "AUTO_PICK_END": "Pick the end point on the map.",
+    "AUTO_ROUTING": "Planning the route…",
     "ROUTE_NOT_FOUND_TITLE": "No route found",
     "ROUTE_NOT_FOUND_MESSAGE": "No connection found between the two points on the marked trail network.",
     "DAYS": {

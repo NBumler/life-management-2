@@ -449,6 +449,7 @@
     "DELETE_ROUTE_CONFIRM_MESSAGE": "Biztosan törlöd a(z) „{{name}}” útvonalat?",
     "AUTO_PICK_START": "Válaszd ki a kezdőpontot a térképen.",
     "AUTO_PICK_END": "Válaszd ki a végpontot a térképen.",
+    "AUTO_ROUTING": "Útvonal tervezése…",
     "ROUTE_NOT_FOUND_TITLE": "Nincs útvonal",
     "ROUTE_NOT_FOUND_MESSAGE": "Nem található összeköttetés a két pont közt a jelzett turistaút-hálózaton.",
     "DAYS": {

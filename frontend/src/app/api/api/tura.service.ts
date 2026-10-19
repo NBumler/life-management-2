@@ -17,6 +17,8 @@ import { Observable }                                        from 'rxjs';
 import { OpenApiHttpParams, QueryParamStyle } from '../query.params';
 
 // @ts-ignore
+import { ApiError } from '../model/apiError';
+// @ts-ignore
 import { RouteSuggestion } from '../model/routeSuggestion';
 // @ts-ignore
 import { TrailSegment } from '../model/trailSegment';

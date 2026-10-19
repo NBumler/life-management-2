@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import hu.bumler.lm2.api.model.TrailSegment;
 import hu.bumler.lm2.api.model.TrailSegmentImportItem;
+import hu.bumler.lm2.common.exception.BboxTooLargeException;
 import hu.bumler.lm2.common.exception.ValidationException;
 import jakarta.persistence.EntityManager;
 
@@ -27,6 +28,15 @@ class TrailSegmentService {
 	 */
 	private static final int IMPORT_FLUSH_BATCH_SIZE = 500;
 
+	/**
+	 * backlog/180 — a {@code GET /api/tura/trail-segments} legnagyobb elfogadott bbox-területe
+	 * (fok²). A kliens csak a 12-es zoom felett kér (telefonon ~0,02, 1920 px széles asztali
+	 * ablakban ~0,16 fok²); Budapest környékén ~1,4 MB adat esik 0,02 fok²-re, ezért ország-nézet
+	 * (Magyarország ~21 fok², 230 000+ szakasz) itt elutasítva. A {@link RouteSuggestionService} a
+	 * repository-t közvetlenül hívja, rá ez a korlát nem vonatkozik.
+	 */
+	static final double MAX_BBOX_AREA_SQUARE_DEGREES = 0.5;
+
 	private final TrailSegmentRepository repository;
 	private final TrailSegmentMapper mapper;
 	private final EntityManager entityManager;
@@ -39,6 +49,10 @@ class TrailSegmentService {
 
 	@Transactional(readOnly = true)
 	List<TrailSegment> findInBbox(String countryCode, double minLon, double minLat, double maxLon, double maxLat) {
+		double area = Math.max(0, maxLon - minLon) * Math.max(0, maxLat - minLat);
+		if (area > MAX_BBOX_AREA_SQUARE_DEGREES) {
+			throw new BboxTooLargeException("Bbox area " + area + " deg² exceeds " + MAX_BBOX_AREA_SQUARE_DEGREES);
+		}
 		return repository.findInBbox(countryCode, minLon, minLat, maxLon, maxLat).stream().map(mapper::toDto).toList();
 	}
 

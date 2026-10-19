@@ -102,6 +102,35 @@ class TrailSegmentIntegrationTest {
 		assertThat(body).contains("ZOLD_SAV").doesNotContain("SARGA_SAV");
 	}
 
+	// backlog/180
+	@Test
+	void bboxQuery_rejectsACountrySizedBbox_withBboxTooLarge() throws Exception {
+		String token = registerAndLogin("tura-bbox-too-large");
+		MvcResult result = mockMvc
+				.perform(get("/api/tura/trail-segments").header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+						.param("country", "HU")
+						.param("minLon", "16.0").param("minLat", "45.7").param("maxLon", "23.0").param("maxLat", "48.6"))
+				.andExpect(status().isBadRequest()).andReturn();
+
+		assertThat(result.getResponse().getContentAsString()).contains("BBOX_TOO_LARGE");
+	}
+
+	@Test
+	void bboxQuery_acceptsABboxJustUnderTheAreaLimit() throws Exception {
+		String countryCode = "H4";
+		TrailSegmentImportItem item = new TrailSegmentImportItem("PIROS_SAV",
+				List.of(List.of(BigDecimal.valueOf(19.0), BigDecimal.valueOf(47.0)), List.of(BigDecimal.valueOf(19.1), BigDecimal.valueOf(47.1))));
+		importSegments(countryCode, List.of(item)).andExpect(status().isOk());
+
+		String token = registerAndLogin("tura-bbox-at-limit");
+		double side = Math.sqrt(TrailSegmentService.MAX_BBOX_AREA_SQUARE_DEGREES) * 0.999; // a lebegőpontos kerekítés ne lökje a korlát fölé
+		mockMvc.perform(get("/api/tura/trail-segments").header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+				.param("country", countryCode)
+				.param("minLon", "18.5").param("minLat", "46.5")
+				.param("maxLon", String.valueOf(18.5 + side)).param("maxLat", String.valueOf(46.5 + side)))
+				.andExpect(status().isOk());
+	}
+
 	@Test
 	void import_requiresTheAdminApiKey_notABearerToken() throws Exception {
 		String token = registerAndLogin("tura-no-admin-key");

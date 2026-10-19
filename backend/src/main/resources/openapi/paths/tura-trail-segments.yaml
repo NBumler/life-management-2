@@ -39,3 +39,11 @@ get:
         application/json:
           schema:
             $ref: '../components/schemas/TrailSegmentList.yaml'
+    '400':
+      description: >-
+        `BBOX_TOO_LARGE` — a bbox területe meghaladja a szerver korlátját (backlog/180: ország-nézetben
+        egy kérés több tízezer szakaszt adna vissza). A kliens ilyenkor nem rajzol szakaszt.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ApiError.yaml'

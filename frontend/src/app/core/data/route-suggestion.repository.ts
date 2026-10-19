@@ -16,6 +16,11 @@ import { TrailSegmentRepository } from './trail-segment.repository';
  */
 export const BACKEND_ROUTE_SUGGESTION_TIMEOUT_MS = 8_000;
 
+/** A következő képkocka kirajzolása után old fel (`requestAnimationFrame` a paint előtt fut, a `setTimeout` utána). */
+function afterNextPaint(): Promise<void> {
+	return new Promise((resolve) => requestAnimationFrame(() => setTimeout(resolve)));
+}
+
 /** Ezekben az állapotokban a backend-hívás biztosan nem sikerül, ezért el sem indul. */
 const BACKEND_UNREACHABLE_STATES: readonly ConnectionState[] = ['BACKEND_OFFLINE', 'FULL_OFFLINE'];
 
@@ -54,6 +59,8 @@ export class RouteSuggestionRepository {
 	async suggest(countryCode: string, start: readonly number[], end: readonly number[]): Promise<RouteSuggestion> {
 		this.loading.set(true);
 		try {
+			// backlog/182 — a helyi A* szinkron fut a fő szálon; előbb ki kell rajzolódnia a töltésjelzőnek.
+			await afterNextPaint();
 			const local = suggestRouteOffline(this.trailSegments.segments(), start, end);
 			if (local.found) {
 				return local;

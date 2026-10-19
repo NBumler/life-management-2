@@ -1,5 +1,6 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
-import { Observable, of, throwError } from 'rxjs';
+import { Observable, Subject, of, throwError } from 'rxjs';
 
 import { TuraService } from '../../api/api/tura.service';
 import { TrailSegment } from '../../api/model/trailSegment';
@@ -63,12 +64,57 @@ describe('TrailSegmentRepository', () => {
 
 	it('loadBbox(): merges results across calls, deduping by id', async () => {
 		turaService.listTrailSegmentsInBbox.and.returnValue(of([segment({ id: 'a' })]));
-		await repository.loadBbox('HU', [0, 0, 1, 1]);
+		await repository.loadBbox('HU', [19.0, 47.0, 19.2, 47.2]);
 
 		turaService.listTrailSegmentsInBbox.and.returnValue(of([segment({ id: 'a' }), segment({ id: 'b' })]));
-		await repository.loadBbox('HU', [1, 1, 2, 2]);
+		await repository.loadBbox('HU', [19.05, 47.05, 19.25, 47.25]);
 
 		expect(repository.segments().map((s) => s.id).sort()).toEqual(['a', 'b']);
+	});
+
+	// backlog/180
+	it('loadBbox(): evicts cached segments outside the new bbox plus its retain margin', async () => {
+		turaService.listTrailSegmentsInBbox.and.returnValue(of([segment({ id: 'old' })]));
+		await repository.loadBbox('HU', [19.0, 47.0, 19.2, 47.2]);
+
+		const far = segment({ id: 'far', coordinates: [[21.0, 47.0], [21.1, 47.1]] });
+		turaService.listTrailSegmentsInBbox.and.returnValue(of([far]));
+		await repository.loadBbox('HU', [21.0, 47.0, 21.2, 47.2]);
+
+		expect(repository.segments().map((s) => s.id)).toEqual(['far']);
+	});
+
+	it('loadBbox(): keeps cached segments within the retain margin of the new bbox', async () => {
+		turaService.listTrailSegmentsInBbox.and.returnValue(of([segment({ id: 'near' })]));
+		await repository.loadBbox('HU', [19.0, 47.0, 19.2, 47.2]);
+
+		// a 0,2° széles új bbox margója 0,1° — a 19,0–19,1-es szakasz még belelóg
+		turaService.listTrailSegmentsInBbox.and.returnValue(of([]));
+		await repository.loadBbox('HU', [19.18, 47.0, 19.38, 47.2]);
+
+		expect(repository.segments().map((s) => s.id)).toEqual(['near']);
+	});
+
+	it('loadBbox(): drops a response that arrives after a newer call started', async () => {
+		const slow = new Subject<TrailSegment[]>();
+		turaService.listTrailSegmentsInBbox.and.returnValues(slow, of([segment({ id: 'new' })]));
+
+		const first = repository.loadBbox('HU', [19.0, 47.0, 19.2, 47.2]);
+		await repository.loadBbox('HU', [19.0, 47.0, 19.2, 47.2]);
+		slow.next([segment({ id: 'stale' })]);
+		slow.complete();
+		await first;
+
+		expect(repository.segments().map((s) => s.id)).toEqual(['new']);
+	});
+
+	it('loadBbox(): a 400 (bbox too large) shows nothing and skips the offline cache', async () => {
+		turaService.listTrailSegmentsInBbox.and.returnValue(throwError(() => new HttpErrorResponse({ status: 400 })));
+
+		await repository.loadBbox('HU', [16.0, 45.0, 23.0, 49.0]);
+
+		expect(offlineRegions.getCachedSegmentsInBbox).not.toHaveBeenCalled();
+		expect(repository.segments()).toEqual([]);
 	});
 
 	it('loadBbox(): falls back to the offline region cache when the network call fails', async () => {

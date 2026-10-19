@@ -1,5 +1,5 @@
 import { TrailSegment } from '../../api/model/trailSegment';
-import { suggestRouteOffline } from './segment-route-graph';
+import { MIN_ROUTE_GRAPH_MARGIN_METERS, ROUTE_GRAPH_MARGIN_FACTOR, routeGraphBbox, suggestRouteOffline, trailSegmentBbox } from './segment-route-graph';
 
 function segment(coordinates: number[][]): TrailSegment {
 	return { id: 's', countryCode: 'HU', symbol: 'PIROS_SAV', coordinates };
@@ -64,5 +64,35 @@ describe('suggestRouteOffline', () => {
 		);
 
 		expect(result.found).toBeFalse();
+	});
+
+	// backlog/181
+	it('leaves segments far from both points out of the graph', () => {
+		// A → 55 km észak → kelet → vissza B-be: a középső szakasz egészen kívül esik a környezeten,
+		// ezért a lánc megszakad, pedig a teljes halmazban A és B össze van kötve.
+		const detour = [
+			segment([[19.0, 47.0], [19.0, 47.5]]),
+			segment([[19.0, 47.5], [19.01, 47.5]]),
+			segment([[19.01, 47.5], [19.01, 47.0]]),
+		];
+		expect(suggestRouteOffline(detour, [19.0, 47.0], [19.01, 47.0]).found).toBeFalse();
+
+		const near = segment([[19.0, 47.0], [19.01, 47.0]]);
+		expect(suggestRouteOffline([...detour, near], [19.0, 47.0], [19.01, 47.0]).found).toBeTrue();
+	});
+
+	it('routeGraphBbox: at least MIN_ROUTE_GRAPH_MARGIN_METERS around close points, proportional for distant ones', () => {
+		const close = routeGraphBbox([19.0, 47.0], [19.0, 47.001]);
+		expect(close[1]).toBeCloseTo(47.0 - MIN_ROUTE_GRAPH_MARGIN_METERS / 111_195, 3);
+
+		const distant = routeGraphBbox([19.0, 47.0], [19.0, 47.5]);
+		const directMeters = 0.5 * 111_195;
+		expect(distant[3]).toBeCloseTo(47.5 + (directMeters * ROUTE_GRAPH_MARGIN_FACTOR) / 111_195, 3);
+	});
+
+	it('trailSegmentBbox: caches per segment object', () => {
+		const s = segment([[19.2, 47.1], [19.0, 47.3]]);
+		expect(trailSegmentBbox(s)).toEqual([19.0, 47.1, 19.2, 47.3]);
+		expect(trailSegmentBbox(s)).toBe(trailSegmentBbox(s));
 	});
 });

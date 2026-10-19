@@ -52,6 +52,7 @@ import { draftRouteToFeatureCollection, draftWaypointsToFeatureCollection, hikeR
 import { OFFLINE_TILE_PROTOCOL, registerOfflineTileProtocol } from './offline-map-protocol';
 import { OFFLINE_TILE_MAX_COUNT, OfflineRegion } from '../../../core/data/offline-region.model';
 import { OfflineRegionRepository } from '../../../core/data/offline-region.repository';
+import { AutoRouteHintComponent } from './auto-route-hint.component';
 import { trailSegmentSymbolColor } from './trail-segment-symbol-color';
 import { trailSegmentsToFeatureCollection } from './trail-segments-geojson';
 
@@ -150,6 +151,13 @@ const BASE_STYLE: maplibregl.StyleSpecification = {
 // magyar adat).
 const HUNGARY_CENTER: [number, number] = [19.5, 47.1];
 const HUNGARY_ZOOM = 7;
+/**
+ * backlog/180 — ez alatt a zoomszint alatt a turistaút-szakaszok sem töltődnek be, sem nem
+ * rajzolódnak ki: ország-nézetben egy bbox több tízezer szakasz (20 MB, 27 s mérve), és a vonalak
+ * amúgy is olvashatatlanul összefolynak. Emulátoron, a legsűrűbb Budapest–Pilis környéken mérve
+ * (360 dp széles kép): 11-es zoomon 2–4 MB / 2–5 s kérésenként, 12-esen 0,6–1,4 MB / 0,8–1,5 s.
+ */
+const MIN_TRAIL_SEGMENT_ZOOM = 12;
 const COUNTRY_CODE = 'HU';
 
 /**
@@ -182,6 +190,7 @@ const COUNTRY_CODE = 'HU';
 		IonSpinner,
 		IonToggle,
 		TranslatePipe,
+		AutoRouteHintComponent,
 	],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -303,6 +312,7 @@ export class TuraPage implements AfterViewInit, OnDestroy {
 				id: TRAIL_SEGMENTS_LAYER_ID,
 				type: 'line',
 				source: TRAIL_SEGMENTS_SOURCE_ID,
+				minzoom: MIN_TRAIL_SEGMENT_ZOOM,
 				paint: { 'line-color': ['get', 'color'], 'line-width': 3 },
 			});
 
@@ -752,6 +762,9 @@ export class TuraPage implements AfterViewInit, OnDestroy {
 	}
 
 	private async loadCurrentViewport(map: maplibregl.Map): Promise<void> {
+		if (map.getZoom() < MIN_TRAIL_SEGMENT_ZOOM) {
+			return;
+		}
 		const bounds = map.getBounds();
 		const bbox: Bbox = [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()];
 		await this.trailSegments.loadBbox(COUNTRY_CODE, bbox);

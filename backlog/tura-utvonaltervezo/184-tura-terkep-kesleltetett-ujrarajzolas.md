@@ -35,6 +35,10 @@ draft-pontok, auto-start és előnézet forrásait; kifejezett `triggerRepaint` 
 ## Terv / döntési napló
 
 - Előfeltétel: valódi eszközös teszt.
+- 2026-10-19 — újramérés a #180/#181 után (emulátor, repülőgép mód): az automatikus útvonal
+  vonala ~2–3 s-on belül, érintés nélkül kirajzolódott. A metrika-sáv megjelenésekor a térkép
+  egy képkockára üres volt (a vászon átméreteződik) — valószínűleg a
+  [[192-tura-terkep-megnyitaskor-alulmeretezett]] rokona. A valódi telefonos kritérium nyitott.
 
 ## Lezáráskor (on-done)
 

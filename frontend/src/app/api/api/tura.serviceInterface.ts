@@ -11,6 +11,7 @@ import { HttpHeaders }                                       from '@angular/comm
 
 import { Observable }                                        from 'rxjs';
 
+import { ApiError } from '../model/models';
 import { RouteSuggestion } from '../model/models';
 import { TrailSegment } from '../model/models';
 import { TrailSegmentImportRequest } from '../model/models';

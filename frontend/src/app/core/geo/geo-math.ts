@@ -80,3 +80,43 @@ export function resampleEvenly(coordinates: readonly (readonly number[])[], coun
   }
   return samples;
 }
+
+/** Bounding box in `[minLon, minLat, maxLon, maxLat]` order (GeoJSON `bbox` order). */
+export type LonLatBbox = readonly [number, number, number, number];
+
+const METERS_PER_DEGREE_LAT = (Math.PI * EARTH_RADIUS_METERS) / 180;
+
+/** The smallest bbox containing every `[lon, lat]` point. */
+export function bboxOf(coordinates: readonly (readonly number[])[]): LonLatBbox {
+  let minLon = Infinity;
+  let minLat = Infinity;
+  let maxLon = -Infinity;
+  let maxLat = -Infinity;
+  for (const [lon, lat] of coordinates) {
+    minLon = Math.min(minLon, lon);
+    minLat = Math.min(minLat, lat);
+    maxLon = Math.max(maxLon, lon);
+    maxLat = Math.max(maxLat, lat);
+  }
+  return [minLon, minLat, maxLon, maxLat];
+}
+
+/** Edge-touching boxes count as intersecting. */
+export function bboxesIntersect(a: LonLatBbox, b: LonLatBbox): boolean {
+  return a[0] <= b[2] && a[2] >= b[0] && a[1] <= b[3] && a[3] >= b[1];
+}
+
+/** `bbox` grown by `meters` on every side (the longitude margin is scaled at the box's centre latitude). */
+export function expandBboxMeters(bbox: LonLatBbox, meters: number): LonLatBbox {
+  const dLat = meters / METERS_PER_DEGREE_LAT;
+  const centreLat = (bbox[1] + bbox[3]) / 2;
+  const dLon = meters / (METERS_PER_DEGREE_LAT * Math.max(0.01, Math.cos((centreLat * Math.PI) / 180)));
+  return [bbox[0] - dLon, bbox[1] - dLat, bbox[2] + dLon, bbox[3] + dLat];
+}
+
+/** `bbox` grown by `fraction` of its own width / height on every side. */
+export function expandBboxFraction(bbox: LonLatBbox, fraction: number): LonLatBbox {
+  const dLon = (bbox[2] - bbox[0]) * fraction;
+  const dLat = (bbox[3] - bbox[1]) * fraction;
+  return [bbox[0] - dLon, bbox[1] - dLat, bbox[2] + dLon, bbox[3] + dLat];
+}

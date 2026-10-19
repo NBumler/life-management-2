@@ -1,4 +1,14 @@
-import { haversineMeters, pointAtDistance, polylineLengthMeters, resampleEvenly, withExactEndpoints } from './geo-math';
+import {
+  bboxOf,
+  bboxesIntersect,
+  expandBboxFraction,
+  expandBboxMeters,
+  haversineMeters,
+  pointAtDistance,
+  polylineLengthMeters,
+  resampleEvenly,
+  withExactEndpoints,
+} from './geo-math';
 
 describe('geo-math', () => {
   it('haversineMeters: ~1112 m for 0.01° of latitude in Hungary', () => {
@@ -82,5 +92,27 @@ describe('geo-math', () => {
       [19.0, 47.0, 0],
       [19.0, 47.0, 0],
     ]);
+  });
+  it('bboxOf: min / max of every point', () => {
+    expect(bboxOf([[19.1, 47.2], [19.0, 47.3], [19.2, 47.1]])).toEqual([19.0, 47.1, 19.2, 47.3]);
+  });
+
+  it('bboxesIntersect: overlapping and edge-touching boxes intersect, separate ones do not', () => {
+    expect(bboxesIntersect([0, 0, 1, 1], [0.5, 0.5, 2, 2])).toBeTrue();
+    expect(bboxesIntersect([0, 0, 1, 1], [1, 0, 2, 1])).toBeTrue();
+    expect(bboxesIntersect([0, 0, 1, 1], [1.1, 0, 2, 1])).toBeFalse();
+    expect(bboxesIntersect([0, 0, 1, 1], [0, 1.1, 1, 2])).toBeFalse();
+  });
+
+  it('expandBboxMeters: ~1112 m is 0.01° of latitude, and more degrees of longitude at 47° N', () => {
+    const [minLon, minLat, maxLon, maxLat] = expandBboxMeters([19.0, 47.0, 19.0, 47.0], 1112);
+    expect(maxLat - 47.0).toBeCloseTo(0.01, 4);
+    expect(47.0 - minLat).toBeCloseTo(0.01, 4);
+    expect(maxLon - 19.0).toBeCloseTo(0.01 / Math.cos((47 * Math.PI) / 180), 4);
+    expect(19.0 - minLon).toBeCloseTo(maxLon - 19.0, 10);
+  });
+
+  it('expandBboxFraction: grows by the given share of the width and height', () => {
+    expect(expandBboxFraction([0, 0, 2, 1], 0.5)).toEqual([-1, -0.5, 3, 1.5]);
   });
 });

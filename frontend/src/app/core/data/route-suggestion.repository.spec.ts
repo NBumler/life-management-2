@@ -65,6 +65,22 @@ describe('RouteSuggestionRepository', () => {
 		expect(repository.loading()).toBeFalse();
 	});
 
+	it('suggest(): lets a frame render before the synchronous on-device search starts (backlog/182)', async () => {
+		let segmentsReadWhileLoadingPainted = false;
+		const painted = new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+		let framePassed = false;
+		void painted.then(() => (framePassed = true));
+		trailSegments.segments = () => {
+			segmentsReadWhileLoadingPainted = framePassed;
+			return [];
+		};
+		turaService.suggestRoute.and.returnValue(of({ found: false, coordinates: [], distanceMeters: 0 }));
+
+		await repository.suggest('HU', [19.0, 47.0], [19.1, 47.1]);
+
+		expect(segmentsReadWhileLoadingPainted).toBeTrue();
+	});
+
 	it('suggest(): finds the route on-device first, without calling the backend or the package (backlog/151)', async () => {
 		trailSegments.segments = () => [
 			{
@@ -155,6 +171,12 @@ describe('RouteSuggestionRepository', () => {
 		let result: RouteSuggestion | undefined;
 
 		void repository.suggest('HU', [19.0, 47.0], [19.05, 47.0]).then((r) => (result = r));
+		// backlog/182 — a töltésjelző kirajzolására várás (egy animációs képkocka + egy makrotaszk)
+		tick(16);
+		tick(0);
+		flushMicrotasks();
+		expect(turaService.suggestRoute).toHaveBeenCalled();
+
 		tick(BACKEND_ROUTE_SUGGESTION_TIMEOUT_MS - 1);
 		flushMicrotasks();
 		expect(result).toBeUndefined();

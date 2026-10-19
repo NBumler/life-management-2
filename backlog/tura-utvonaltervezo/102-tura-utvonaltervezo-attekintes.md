@@ -51,9 +51,9 @@ túrázási funkció).
 | `backlog/archive/110-tura-kozossegi-funkciok.md` | Közösségi funkciók — **dropped**, marad egyszemélyes app | `dropped` |
 | [[backlog/tura-utvonaltervezo/111-tura-eszkozok]] | Iránytű, magasságmérő, dőlésszögmérő, QR-olvasó (csúcskereső kizárva) | `ready` |
 | [[backlog/tura-utvonaltervezo/151-tura-backend-offline-first-szabalysertesek]] | Backend-offline first javítás: metrika, routing és DEM-magasság eszközön, turistaút-gráf build assetként (kész); turistaút-réteg build assetből (nyitva) | `in-progress` |
-| [[backlog/tura-utvonaltervezo/180-tura-turistaut-szakaszok-korlatlan-betoltese]] | A turistaút-szakaszok korlátlanul töltődnek be (20 MB / 27 s, soha nem ürül) | `backlog` |
-| [[backlog/tura-utvonaltervezo/181-tura-automatikus-tervezes-teljes-szakaszhalmaz-graf]] | Az automatikus tervezés minden kérésnél a teljes betöltött szakaszhalmazból épít gráfot | `backlog` |
-| [[backlog/tura-utvonaltervezo/182-tura-automatikus-tervezes-toltesjelzo]] | Nincs töltésjelző az automatikus útvonaltervezés alatt | `backlog` |
+| `backlog/archive/180-tura-turistaut-szakaszok-korlatlan-betoltese.md` | A turistaút-szakaszok korlátlanul töltődnek be (20 MB / 27 s, soha nem ürül) | `done` |
+| `backlog/archive/181-tura-automatikus-tervezes-teljes-szakaszhalmaz-graf.md` | Az automatikus tervezés minden kérésnél a teljes betöltött szakaszhalmazból épít gráfot | `done` |
+| `backlog/archive/182-tura-automatikus-tervezes-toltesjelzo.md` | Nincs töltésjelző az automatikus útvonaltervezés alatt | `done` |
 | [[backlog/tura-utvonaltervezo/183-tura-terkep-fejlec-ala-nyulik]] | A térkép a fejléc alá nyúlik: rejtett zoomgombok, eltolt „ráigazítás” | `backlog` |
 | [[backlog/tura-utvonaltervezo/184-tura-terkep-kesleltetett-ujrarajzolas]] | A térkép késve (vagy csak érintésre) rajzolja ki az új útvonalat | `backlog` |
 | [[backlog/tura-utvonaltervezo/185-tura-idotartam-magyarul-beegetve]] | Az időtartam magyar egységekkel be van égetve („1 ó 31 p” angol felületen is) | `backlog` |

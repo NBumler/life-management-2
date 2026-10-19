@@ -14,6 +14,13 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-19 — #180–#182** Túra-teljesítmény az emulátoros teszt után: a turistaút-szakaszok csak a
+  12-es zoom felett töltődnek be (oldalmegnyitáskor 20 MB / 27 s helyett nincs kérés, 12-es zoomon
+  0,6–1,4 MB / 0,8–1,5 s), a `TrailSegmentRepository` cache-e a látható terület + margó szakaszaira
+  korlátos, a backend 0,5 fok² feletti bbox-ra `400 BBOX_TOO_LARGE`-et ad. Az automatikus tervezés helyi
+  gráfja csak a két pont környezetéből épül (offline 29–40 s helyett < 1 s). Tervezés közben töltésjelző
+  (`AutoRouteHintComponent`), ami a szinkron számítás előtt ki is rajzolódik.
+
 - **2026-10-19 — #178** A `core/` és a `shared/` már nem importál a `pages/`-ből: 21 pure TS / repository modul
   költözött (`shared/{workout,climbing,food,finance}/`, `core/data/offline-region.*` + `offline-tile-store`), a
   függőségi irányt a [[Frontend]] „Rétegzés” mondja ki, ESLint `no-restricted-imports` őr a `npm run lint`-ben.

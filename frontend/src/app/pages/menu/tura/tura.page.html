@@ -47,9 +47,9 @@
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
-  @if (mode() === 'auto' && draft().length === 0) {
+  @if (routeSuggestion.loading() || (mode() === 'auto' && draft().length === 0)) {
     <ion-toolbar>
-      <ion-title size="small">{{ (autoStart() === null ? 'TURA.AUTO_PICK_START' : 'TURA.AUTO_PICK_END') | translate }}</ion-title>
+      <app-auto-route-hint [routing]="routeSuggestion.loading()" [pickingEnd]="autoStart() !== null"></app-auto-route-hint>
     </ion-toolbar>
   }
   @if (draft().length >= 2) {
