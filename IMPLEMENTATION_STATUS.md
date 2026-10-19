@@ -14,6 +14,10 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-19 — #177** A túra viewport-gráfja a `core/geo`-ban: `pages/menu/tura/offline-route-graph.ts` →
+  `core/geo/segment-route-graph.ts` (a `core/data/route-suggestion.repository` már nem importál a `pages/`-ből),
+  az illesztési küszöb a `RoutingService` `HIKE` profiljáé. Viselkedés változatlan. — kód: `core/geo/`,
+  `core/data/route-suggestion.repository.ts`.
 - **2026-10-19 — #176** Közös, távolság alapú DEM-mintavétel: a túra útvonal-metrika és a bicikli élő edzés
   ugyanazzal az `elevationSamples()`-szel (50 m-enként, max. 2000 minta) számol szintemelkedést — ugyanarra a
   vonalra ugyanaz az érték; a túra-profil legfeljebb 50 pontra ritkítva. — érintett: [[Biciklizés napló]];

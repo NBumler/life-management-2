@@ -1,5 +1,5 @@
-import { TrailSegment } from '../../../api/model/trailSegment';
-import { suggestRouteOffline } from './offline-route-graph';
+import { TrailSegment } from '../../api/model/trailSegment';
+import { suggestRouteOffline } from './segment-route-graph';
 
 function segment(coordinates: number[][]): TrailSegment {
 	return { id: 's', countryCode: 'HU', symbol: 'PIROS_SAV', coordinates };

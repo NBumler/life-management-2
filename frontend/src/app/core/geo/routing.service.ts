@@ -15,8 +15,11 @@ import { WayFeature } from './way-tile-codec';
 
 export type RouteProfile = 'BIKE' | 'HIKE';
 
-/** Profilonkénti illesztési küszöb: a bicikli-hálózat sűrűbb, a turistaút ritkább (a korábbi `offline-route-graph.ts` 2000 m-es értékét örökli). */
-const MAX_SNAP_DISTANCE_METERS: Readonly<Record<RouteProfile, number>> = {
+/**
+ * Profilonkénti illesztési küszöb: a bicikli-hálózat sűrűbb, a turistaút ritkább. A `HIKE` értéket a
+ * viewport-szakaszokon kereső `segment-route-graph.ts` is ezt használja (backlog/177).
+ */
+export const MAX_SNAP_DISTANCE_METERS: Readonly<Record<RouteProfile, number>> = {
 	BIKE: 500,
 	HIKE: 2_000,
 };

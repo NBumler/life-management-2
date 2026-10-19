@@ -3,7 +3,7 @@ import { WayFeature } from './way-tile-codec';
 
 /**
  * backlog/151 — turistaút routing-profil. A szakaszok közt nincs preferencia (az offline A* eddig is
- * egységes súllyal futott, lásd a korábbi `pages/menu/tura/offline-route-graph.ts`-t); a csempe
+ * egységes súllyal futott, lásd a `segment-route-graph.ts`-t, ami korábban `pages/menu/tura/offline-route-graph.ts` volt); a csempe
  * osztálybájtja ezért mindig `TRAIL`, csak a formátum egyezése miatt van jelen (lásd `way-tile-codec`).
  */
 export const HIKE_COST_CLASS = { TRAIL: 0 } as const;

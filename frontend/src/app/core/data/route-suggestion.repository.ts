@@ -4,7 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { RouteSuggestion } from '../../api/model/routeSuggestion';
 import { TuraService } from '../../api/api/tura.service';
 import { polylineLengthMeters, withExactEndpoints } from '../geo/geo-math';
-import { suggestRouteOffline } from '../../pages/menu/tura/offline-route-graph';
+import { suggestRouteOffline } from '../geo/segment-route-graph';
 import { RoutingService } from '../geo/routing.service';
 import { TrailSegmentRepository } from './trail-segment.repository';
 
@@ -15,7 +15,7 @@ import { TrailSegmentRepository } from './trail-segment.repository';
  *
  * backlog/151 — **eszköz-elsőbbség** (Backend-offline first §14), három szintben:
  * 1. A már betöltött (viewportból vagy letöltött offline régióból származó)
- *    `TrailSegmentRepository.segments()` adaton futó helyi A* (`offline-route-graph.ts`) — ez a
+ *    `TrailSegmentRepository.segments()` adaton futó helyi A* (`core/geo/segment-route-graph.ts`) — ez a
  *    legfrissebb adat, ha van.
  * 2. Ha ez nem talál utat, a backend `suggestRoute` — a két pont köré táguló bbox-ban, a
  *    viewporton túl is keres, de internet kell hozzá.
