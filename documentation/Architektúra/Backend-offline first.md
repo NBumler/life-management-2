@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-10-17
-verifikalt_commit: 2adf800
+verifikalva: 2026-10-19
+verifikalt_commit: 9343011
 ---
 
 # Backend-offline first
@@ -469,6 +469,8 @@ Elv: a külső integrációk **soha nincsenek** a saját backenden proxyzva ([[B
 | `BACKEND_OFFLINE` / `FULL_OFFLINE` | Offline ikon (a kettő megkülönböztethető). |
 | N tétel várakozik | Szürke óra + darabszám badge. |
 | N tétel hibás | **Piros** figyelmeztetés + darabszám. |
+
+- Az állapotjelző ikonjának jelentése szövegesen is elérhető: lefordított `aria-label` / `title`, hosszú nyomásra toast ([[Szinkronizációs központ]] — UI/UX elvárások).
 
 - **Minden mentés offline is sikeres visszajelzést ad** — a helyi tranzakció maga a siker. Tilos hamis „a mentés nem sikerült” hibaüzenet.
 - **Sor-szintű jelzés a listákban:** `_dirty` sor mellett halvány óra ikon; `_sync_error` sor pirosan jelölve, tap-re a [[Szinkronizációs központ]]ba visz.

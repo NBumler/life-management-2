@@ -415,6 +415,16 @@
     "STATE_BACKEND_OFFLINE": "Server unreachable",
     "STATE_FULL_OFFLINE": "No internet connection",
     "STATE_UNKNOWN": "Checking connection…",
+    "BUTTON": {
+      "SYNCING": "Syncing",
+      "ERRORS": "Changes that failed to sync: {{count}}",
+      "PENDING": "Changes waiting to sync: {{count}}",
+      "ONLINE": "All changes synced",
+      "BACKEND_OFFLINE": "Offline — the server is unreachable",
+      "FULL_OFFLINE": "Offline — no internet connection",
+      "UNKNOWN": "Checking connection…",
+      "OPEN_HINT": "Tap to open the sync center"
+    },
     "PENDING_COUNT": "{{count}} pending",
     "ERROR_COUNT": "{{count}} failed",
     "SYNC_NOW": "Sync now",
@@ -443,6 +453,8 @@
     "UNDO": "Undo",
     "CLEAR": "Clear",
     "CLEARED": "Route cleared",
+    "SAVED": "Saved to My routes",
+    "SAVED_OPEN": "Open",
     "MY_ROUTES": "My routes",
     "ROUTE_NAME_PLACEHOLDER": "Route name",
     "NO_ROUTES": "No saved routes yet.",
@@ -491,7 +503,7 @@
       "OFFLINE": "Recommended routes can’t be loaded — the server is unreachable."
     },
     "PREVIEW": {
-      "ADOPT": "Use as my route",
+      "ADOPT": "Edit as my route",
       "CLOSE": "Close preview"
     },
     "LAYERS": {

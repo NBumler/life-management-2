@@ -1,4 +1,16 @@
-<ion-button fill="clear" (click)="open()" [disabled]="!nativeCapable">
+@let text = label().key | translate: label().params;
+<ion-button
+  fill="clear"
+  [disabled]="!nativeCapable"
+  [attr.aria-label]="nativeCapable ? text + '. ' + ('SYNC.BUTTON.OPEN_HINT' | translate) : text"
+  [title]="text"
+  (click)="open()"
+  (pointerdown)="pressStart()"
+  (pointerup)="pressEnd()"
+  (pointerleave)="pressEnd()"
+  (pointercancel)="pressEnd()"
+  (contextmenu)="$event.preventDefault()"
+>
   @if (draining()) {
     <ion-spinner name="crescent" slot="icon-only" aria-hidden="true"></ion-spinner>
   } @else if (errorCount() > 0) {

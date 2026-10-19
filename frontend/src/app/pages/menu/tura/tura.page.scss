@@ -53,14 +53,14 @@
   width: 100%;
 }
 
-// backlog/189 — az előnézet-sáv: a túra neve egy sorban, levágva, hogy az átvétel / bezárás gomb mellett
-// a hosszú név se tegye többsorossá (és ne tolja le a térképet).
+// backlog/189, backlog/207 — az előnézet-sáv: a túra neve legfeljebb két sorban, levágva; két 14 px-es sor
+// még elfér a sáv alapmagasságában, így a hosszú név sem tolja le a térképet.
 .curated-preview-name {
-  display: block;
   padding-left: 16px;
   font-size: 14px;
   font-weight: 600;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
 }

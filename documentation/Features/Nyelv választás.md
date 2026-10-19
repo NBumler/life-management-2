@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-10-19
-verifikalt_commit: 9fbb504
+verifikalt_commit: 9343011
 ---
 
 # Nyelv választás
@@ -59,7 +59,7 @@ Az OS-nél ütemezett lokális értesítések szövege az ütemezés pillanatáb
 
 - Hiányzó kulcs esetén a fallback nyelv a **`hu`** (`provideTranslateService({ fallbackLang: 'hu' })`); ha ott sincs, a kulcs jelenik meg (nem üres szöveg).
 - Ilyenkor a központi `MissingTranslationHandler` (`DevMissingTranslationHandler`, `backlog/015`) fut: a kulcsot adja vissza (a fenti viselkedés), és **dev buildben** kulcsonként egyszer `console.warn`-t ír (`[i18n] Missing translation key: <kulcs>`). Production buildben néma.
-- **A `hu.json` és az `en.json` kulcshalmaza azonos**, és ezt az `npm run verify:i18n` ellenőrzés (a zöld kapu része — [[Fejlesztői környezet]]) kényszeríti: piros, ha egy kulcs csak az egyik nyelvben van, ha egy érték nem szöveg (vagy szöveg-tömb, pl. hónapnevek), ha ugyanannak a kulcsnak a két nyelvben eltér a `{{param}}` placeholder-készlete (tömbnél a hossza), vagy ha a kódban **szó szerint** használt kulcs (`'A.B.C' | translate`, `instant('A.B.C')`) egyik fájlban sincs. A dinamikusan összerakott kulcsokat (`'SYNC.STATE_' + state`) a statikus ellenőrzés nem látja — azokat a dev-figyelmeztetés fogja meg.
+- **A `hu.json` és az `en.json` kulcshalmaza azonos**, és ezt az `npm run verify:i18n` ellenőrzés (a zöld kapu része — [[Fejlesztői környezet]]) kényszeríti: piros, ha egy kulcs csak az egyik nyelvben van, ha egy érték nem szöveg (vagy szöveg-tömb, pl. hónapnevek), ha ugyanannak a kulcsnak a két nyelvben eltér a `{{param}}` placeholder-készlete (tömbnél a hossza), vagy ha a kódban **szó szerint** használt kulcs (`'A.B.C' | translate`, `instant('A.B.C')`) egyik fájlban sincs. **Figyelmeztet** (nem piros), ha egy kulcs értéke a két nyelvben azonos — ez jellemzően lefordítatlan szöveg (pl. a korábbi „Profile” a magyar menüben). A szándékosan azonos értékek (márkanév: „GearCheck”, „AYCM”, „Health Connect”; mértékegység; mászó / edzés szakkifejezés: „Boulder”, „Redpoint”, „Rest-pause”) a szkript `IDENTICAL_ALLOWED` listájában vannak; a betűt nem tartalmazó értékek (`~`, `#`, csak `{{param}}`) eleve kimaradnak. A dinamikusan összerakott kulcsokat (`'SYNC.STATE_' + state`) a statikus ellenőrzés nem látja — azokat a dev-figyelmeztetés fogja meg.
 
 ### UI/UX elvárások
 

@@ -56,8 +56,8 @@
     <ion-toolbar class="curated-preview-bar">
       <span class="curated-preview-name">{{ preview.name }}</span>
       <ion-buttons slot="end">
+        <!-- backlog/207 — a beszédesebb, hosszabb felirat ikon nélkül fér el 360 dp-n a név mellett. -->
         <ion-button (click)="adoptPreview()">
-          <ion-icon slot="start" name="create-outline" aria-hidden="true"></ion-icon>
           {{ 'TURA.PREVIEW.ADOPT' | translate }}
         </ion-button>
         <ion-button (click)="closePreview()">

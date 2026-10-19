@@ -14,6 +14,11 @@
 // caught at runtime instead by the dev-only MissingTranslationHandler (core/config/
 // dev-missing-translation.handler.ts). A literal that equals an *object* path (a prefix of real
 // keys) is also accepted. The generated `src/app/api/` client and specs are not scanned.
+//
+// backlog/224 — warns (does not fail) when a key has the same value in every language: usually a
+// string left untranslated. Values with no letters outside `{{params}}` (`~`, `#`, `{{size}}`) are
+// skipped; intentional matches (brand names, units, climbing / training jargon, words that are the
+// same in both languages) go in IDENTICAL_ALLOWED.
 
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
@@ -24,6 +29,51 @@ const FRONTEND = resolve(HERE, '..');
 const I18N_DIR = join(FRONTEND, 'src/assets/i18n');
 const APP_DIR = join(FRONTEND, 'src/app');
 const LANGS = ['hu', 'en'];
+
+const IDENTICAL_ALLOWED = new Set([
+  'APP.NAME',
+  'WIDGET.APP_TITLE',
+  'COMMON.OK',
+  'MENU.GEARCHECK',
+  'GEAR.TITLE',
+  'MENU.AYCM',
+  'AYCM.DASHBOARD.TITLE',
+  'AYCM.CHECK_IN.TITLE',
+  'STEPS.HC_TITLE',
+  'FINANCE.EXPENSES.CATEGORY.SPORT',
+  'FINANCE.DASHBOARD.AMOUNT',
+  'FINANCE.EXPENSES.AMOUNT_WITH_FREQUENCY',
+  'FINANCE.NET_PAY.AMOUNT',
+  'AYCM.DASHBOARD.AMOUNT',
+  'AYCM.CHECK_IN.PREVIEW_MATCH',
+  'AYCM.STATS.AMOUNT',
+  'AYCM.STATS.CHART_MONTH_SUMMARY',
+  'PROFILE.WEIGHT_HISTORY_ITEM_VALUE',
+  'FOOD.MEAL.EFFECTIVE_SUMMARY',
+  'WORKOUT.ACTIVE.PR_1RM',
+  'WORKOUT.SESSION.KCAL_SHORT',
+  'WORKOUT.SESSION.SET_TYPE.REST_PAUSE',
+  'WORKOUT.SESSION.SET_TYPE_SHORT.DROPSET',
+  'WORKOUT.SESSION.SET_TYPE_SHORT.REST_PAUSE',
+  'WORKOUT.SESSION.UNIT.WEIGHT',
+  'WORKOUT.SESSION.UNIT.EDGE',
+  'WORKOUT.SESSION.UNIT.DISTANCE',
+  'WORKOUT.SWIM.METERS_SHORT',
+  'WORKOUT.BIKE.KM_SHORT',
+  'WORKOUT.BIKE.KMH_SHORT',
+  'WORKOUT.BIKE.METERS_SHORT',
+  'WORKOUT.CLIMBING.CONTEXT.INDOOR_BOULDER',
+  'WORKOUT.CLIMBING.CONTEXT.OUTDOOR_BOULDER',
+  'WORKOUT.CLIMBING.DISCIPLINE.BOULDER',
+  'WORKOUT.CLIMBING.SESSION.FIELD_PUMP',
+  'WORKOUT.CLIMBING.ASCENT_STYLE.FLASH',
+  'WORKOUT.CLIMBING.ASCENT_STYLE.REDPOINT',
+  'WORKOUT.CLIMBING.ASCENT_STYLE.ONSIGHT',
+  'WORKOUT.CLIMBING.PROTECTION_TYPE.TRAD',
+  'WORKOUT.CLIMBING.PROTECTION_TYPE.CLEAN',
+  'WORKOUT.CLIMBING.LIVE.QUICK_SCALES.UIAA',
+  'WORKOUT.CLIMBING.LIVE.QUICK_SCALES.YDS',
+]);
 
 const LITERAL_KEY = /(['"`])((?:[A-Z][A-Z0-9_]*\.)+[A-Z][A-Z0-9_]*)\1(\s*\+)?/g;
 const PLACEHOLDER = /\{\{\s*(\w+)\s*\}\}/g;
@@ -108,6 +158,21 @@ for (const file of sourceFiles(APP_DIR)) {
     const line = text.slice(0, match.index).split('\n').length;
     problems.push(`${relative(FRONTEND, file).split(sep).join('/')}:${line} uses "${key}", which is in no translation file`);
   }
+}
+
+// backlog/224 — identical values across languages (warning only).
+const warnings = [];
+for (const [key, value] of tables[base]) {
+  if (IDENTICAL_ALLOWED.has(key) || others.some((other) => JSON.stringify(tables[other].get(key)) !== JSON.stringify(value))) {
+    continue;
+  }
+  const items = Array.isArray(value) ? value : [value];
+  if (items.some((item) => /\p{L}/u.test(item.replace(PLACEHOLDER, '')))) {
+    warnings.push(`"${key}" is the same in ${LANGS.join(' and ')}: ${JSON.stringify(value)}`);
+  }
+}
+if (warnings.length > 0) {
+  console.warn(`[verify:i18n] ${warnings.length} warning(s) — untranslated? (allow intentional ones in IDENTICAL_ALLOWED):\n  - ${warnings.join('\n  - ')}`);
 }
 
 if (problems.length > 0) {

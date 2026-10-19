@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-02
-verifikalt_commit: 9a41447
+verifikalva: 2026-10-19
+verifikalt_commit: 9343011
 ---
 
 # Szinkronizációs központ
@@ -54,6 +54,7 @@ Melyik művelet melyik státusznál érhető el:
 
 * **Útvonal:** `/tabs/menu/sync` (nincs Dashboard tab — az app-shell SSOT-ja: [[Frontend]])
 * **Megnyitás:** A minden tab fejlécében megjelenő offline/szinkronizációs státuszjelzőre kattintva ([[Frontend]] — globális chrome), a Menü listából, illetve egy hibásan jelölt listaelemre tapolva.
+* **A státuszjelző jelentése** (`shared/sync-status-button/`): az ikon mellé lefordított `aria-label` és `title` tartozik, ami az aktuális állapotot mondja ki (pl. „Minden változás szinkronizálva”, „3 változás vár szinkronizálásra”, „Offline — nincs internetkapcsolat”), natívan kiegészítve a „Koppints a szinkronizációs központ megnyitásához” tippel. **Hosszú nyomásra** (500 ms) ugyanez a felirat rövid toastban jelenik meg a képernyő tetején, és ilyenkor a gomb nem navigál. A szöveg az ikonnal azonos sorrendben választódik: szinkronizálás fut → hibás tételek → várakozó tételek → kapcsolat-állapot (`SYNC.BUTTON.*`).
 * **Fejléc:** aktuális kapcsolat-állapot (`ONLINE` / `BACKEND_OFFLINE` / `FULL_OFFLINE`), várakozó és hibás tételek száma, utolsó sikeres szinkronizálás ideje.
 * **Időrendi lista:** a sorban lévő összes kérést mutatja `sequence` szerint, státusz-jelöléssel:
 

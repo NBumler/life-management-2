@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-10-01
-verifikalt_commit: 4dbe414
+verifikalva: 2026-10-19
+verifikalt_commit: 9343011
 ---
 
 # Profile
@@ -74,7 +74,7 @@ A [[Tápérték kalkulátor]] **csak** `currentWeightKg`-t használ; a history k
 
 ### UI/UX elvárások
 
-- Belépés: **Menü** → Profile (lásd [[Frontend]]).
+- Belépés: **Menü** → „Profil” (angol felületen „Profile”; a menüsor és az oldalcím is lefordított — `MENU.PROFILE`, `PROFILE.TITLE`), lásd [[Frontend]].
 - Egy űrlap: fenti mezők; **Mentés** gomb (nincs élő TDEE előnézet ezen a képernyőn).
 - `goal = MAINTENANCE` → `kgPerWeek` rejtve.
 - Mentés után rövid siker-feedback; store frissül → más képernyők TDEE-je újraszámol (ha számolható).

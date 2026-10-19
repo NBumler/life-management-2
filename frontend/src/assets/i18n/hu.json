@@ -70,7 +70,7 @@
   },
   "MENU": {
     "TITLE": "Menü",
-    "PROFILE": "Profile",
+    "PROFILE": "Profil",
     "THEME": "Téma",
     "LANGUAGE": "Nyelv",
     "SYNC": "Szinkronizációs központ",
@@ -381,7 +381,7 @@
     "SYSTEM": "Rendszer"
   },
   "PROFILE": {
-    "TITLE": "Profile",
+    "TITLE": "Profil",
     "BIRTH_DATE": "Születési dátum",
     "SEX": "Nem",
     "SEX_MALE": "Férfi",
@@ -411,10 +411,20 @@
   },
   "SYNC": {
     "TITLE": "Szinkronizációs központ",
-    "STATE_ONLINE": "Online",
+    "STATE_ONLINE": "Kapcsolódva",
     "STATE_BACKEND_OFFLINE": "A szerver nem elérhető",
     "STATE_FULL_OFFLINE": "Nincs internetkapcsolat",
     "STATE_UNKNOWN": "Kapcsolat ellenőrzése…",
+    "BUTTON": {
+      "SYNCING": "Szinkronizálás folyamatban",
+      "ERRORS": "{{count}} változás szinkronizálása nem sikerült",
+      "PENDING": "{{count}} változás vár szinkronizálásra",
+      "ONLINE": "Minden változás szinkronizálva",
+      "BACKEND_OFFLINE": "Offline — a szerver nem elérhető",
+      "FULL_OFFLINE": "Offline — nincs internetkapcsolat",
+      "UNKNOWN": "Kapcsolat ellenőrzése…",
+      "OPEN_HINT": "Koppints a szinkronizációs központ megnyitásához"
+    },
     "PENDING_COUNT": "{{count}} várakozó",
     "ERROR_COUNT": "{{count}} hibás",
     "SYNC_NOW": "Szinkronizálás most",
@@ -443,6 +453,8 @@
     "UNDO": "Visszavonás",
     "CLEAR": "Törlés",
     "CLEARED": "Útvonal törölve",
+    "SAVED": "Mentve az Útvonalaim közé",
+    "SAVED_OPEN": "Megnyitás",
     "MY_ROUTES": "Útvonalaim",
     "ROUTE_NAME_PLACEHOLDER": "Útvonal neve",
     "NO_ROUTES": "Még nincs mentett útvonal.",
@@ -491,7 +503,7 @@
       "OFFLINE": "Az ajánlott túrák nem tölthetők be — nincs kapcsolat a szerverrel."
     },
     "PREVIEW": {
-      "ADOPT": "Átvétel",
+      "ADOPT": "Szerkesztés sajátként",
       "CLOSE": "Előnézet bezárása"
     },
     "LAYERS": {
@@ -823,7 +835,7 @@
       "PLACEHOLDER": "Illessz be tab-szeparált (TSV) sorokat, pl. táblázatból másolva.",
       "SECTION_NEW": "Új",
       "SECTION_DUPLICATE": "Duplikátum",
-      "SECTION_INVALID": "Invalid",
+      "SECTION_INVALID": "Érvénytelen",
       "LINE_LABEL": "{{line}}. sor",
       "MISSING_NAME": "Hiányzó termék név.",
       "INVALID_NUMBER": "Egy számmező nem olvasható.",

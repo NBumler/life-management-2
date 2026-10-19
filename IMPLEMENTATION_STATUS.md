@@ -14,6 +14,10 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-19 — #207, #211, #220, #224, #225** Túra: az előnézet gombja „Szerkesztés sajátként”; mentés után
+  „Mentve az Útvonalaim közé — Megnyitás” toast; a táv / magasság / MB az aktív nyelv szerint formázva („2,9 km”).
+  Magyar felületen „Profil”, és a `verify:i18n` figyelmeztet az azonos hu / en értékekre (engedélylistával). A fejléc
+  szinkron-gombja állapotfüggő, lefordított `aria-label` / `title`-t kap, hosszú nyomásra toastban mondja ki az állapotot.
 - **2026-10-19 — #208, #213, #214** Túra: a kuka visszavonható lépés („Útvonal törölve — Visszavonás” toast,
   a vonallal együtt a nevet és a napváltókat is visszaadja); a mentetlen piszkozat és a térkép utolsó nézete
   (középpont, zoom, alaptérkép, domborzat) eszközön megmarad (`Preferences`), így elnavigálás után is ott folytatható.

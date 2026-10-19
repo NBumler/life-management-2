@@ -49,6 +49,7 @@ import { HikeRouteRepository } from '../../../core/data/hike-route.repository';
 import { RouteMetricsRepository } from '../../../core/data/route-metrics.repository';
 import { RouteSuggestionRepository } from '../../../core/data/route-suggestion.repository';
 import { StoredTuraMapView, TuraLocalStateService } from '../../../core/data/tura-local-state.service';
+import { LanguageService } from '../../../core/config/language.service';
 import { RouteMetricsResult } from '../../../core/geo/route-metrics';
 import { elevationProfilePolylinePoints } from './elevation-profile-svg';
 import { draftRouteToFeatureCollection, draftWaypointsToFeatureCollection, hikeRoutesToFeatureCollection } from './hike-routes-geojson';
@@ -56,7 +57,7 @@ import { OFFLINE_TILE_PROTOCOL, registerOfflineTileProtocol } from './offline-ma
 import { OFFLINE_TILE_MAX_COUNT, OfflineRegion } from '../../../core/data/offline-region.model';
 import { OfflineRegionRepository } from '../../../core/data/offline-region.repository';
 import { AutoRouteHintComponent } from './auto-route-hint.component';
-import { daySummaryText, durationText } from './hike-text';
+import { daySummaryText, distanceText, durationText, elevationText, megabytesText } from './hike-text';
 import { DayBreak, RouteDraftEditor, interiorWaypointIndexes, routeDraftFromPath, waypointCoordinates, withManualPoint } from './route-draft';
 import { trailSegmentSymbolColor } from './trail-segment-symbol-color';
 import { trailSegmentsToFeatureCollection } from './trail-segments-geojson';
@@ -70,8 +71,8 @@ const DISTANCE_BUCKET_LONG_MIN = 20000;
 const METRICS_DEBOUNCE_MS = 500;
 /** backlog/213 — a név gépelése ne írjon minden betűnél a Preferences-be. */
 const DRAFT_PERSIST_DEBOUNCE_MS = 500;
-/** backlog/208 — meddig látszik a kuka utáni „Visszavonás” toast. */
-const CLEARED_TOAST_DURATION_MS = 5000;
+/** backlog/208, backlog/211 — meddig látszik a kuka / mentés utáni akciós toast. */
+const ACTION_TOAST_DURATION_MS = 5000;
 const PROFILE_CHART_WIDTH = 300;
 const PROFILE_CHART_HEIGHT = 60;
 
@@ -214,6 +215,7 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	private readonly toastController = inject(ToastController);
 	private readonly translate = inject(TranslateService);
 	private readonly localState = inject(TuraLocalStateService);
+	private readonly language = inject(LanguageService);
 	private readonly mapContainer = viewChild.required<ElementRef<HTMLDivElement>>('mapContainer');
 
 	private map?: maplibregl.Map;
@@ -280,7 +282,7 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	private readonly draftRestored = signal(false);
 	private draftPersistHandle?: ReturnType<typeof setTimeout>;
 	private pendingDraftPersist: (() => void) | null = null;
-	private clearedToast?: HTMLIonToastElement;
+	private actionToast?: HTMLIonToastElement;
 	private destroyed = false;
 
 	constructor() {
@@ -488,7 +490,7 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 		// backlog/213 — az utolsó, még debounce-ban álló változás se vesszen el az elnavigáláskor.
 		clearTimeout(this.draftPersistHandle);
 		this.pendingDraftPersist?.();
-		void this.clearedToast?.dismiss();
+		void this.actionToast?.dismiss();
 		this.resizeObserver?.disconnect();
 		this.map?.remove();
 	}
@@ -523,7 +525,7 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 			// backlog/208 — a kuka visszavonása: a vonallal együtt a név és a napváltók is visszajönnek.
 			this.routeName.set(cleared.name);
 			this.dayBreaks.set([...cleared.dayBreaks]);
-			void this.clearedToast?.dismiss();
+			void this.actionToast?.dismiss();
 		} else if (this.draft().length === 0) {
 			// Mindent visszavont: a név se maradjon ott egy már nem létező (pl. átvett) útvonalról.
 			this.routeName.set('');
@@ -539,28 +541,24 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 		this.draftEditor.clear({ name: this.routeName(), dayBreaks: this.dayBreaks() });
 		this.routeName.set('');
 		this.dayBreaks.set([]);
-		void this.showClearedToast();
+		void this.showActionToast('TURA.CLEARED', 'TURA.UNDO', () => {
+			if (this.draftEditor.lastStepIsClear()) {
+				this.undoLastStep();
+			}
+		});
 	}
 
-	private async showClearedToast(): Promise<void> {
-		await this.clearedToast?.dismiss();
+	/** Rövid visszajelzés egy akciógombbal; egyszerre csak egy látszik (backlog/208, backlog/211). */
+	private async showActionToast(messageKey: string, actionKey: string, action: () => void): Promise<void> {
+		await this.actionToast?.dismiss();
 		const toast = await this.toastController.create({
-			message: this.translate.instant('TURA.CLEARED'),
-			duration: CLEARED_TOAST_DURATION_MS,
+			message: this.translate.instant(messageKey),
+			duration: ACTION_TOAST_DURATION_MS,
 			// A fülsáv fölött, hogy a toast eltűnése után egy késve érkező koppintás ne egy fülre essen.
 			positionAnchor: document.querySelector<HTMLElement>('ion-tab-bar') ?? undefined,
-			buttons: [
-				{
-					text: this.translate.instant('TURA.UNDO'),
-					handler: () => {
-						if (this.draftEditor.lastStepIsClear()) {
-							this.undoLastStep();
-						}
-					},
-				},
-			],
+			buttons: [{ text: this.translate.instant(actionKey), handler: action }],
 		});
-		this.clearedToast = toast;
+		this.actionToast = toast;
 		if (this.destroyed) {
 			return;
 		}
@@ -753,7 +751,7 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	}
 
 	protected formatOfflineSize(bytes: number): string {
-		return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+		return megabytesText(bytes, this.language.activeLanguage());
 	}
 
 	/**
@@ -841,7 +839,7 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 			return;
 		}
 		const { metrics, days } = await this.metricsForSave();
-		await this.hikeRoutes.save({
+		const saved = await this.hikeRoutes.save({
 			name,
 			coordinates: this.draft(),
 			distanceMeters: metrics?.distanceMeters,
@@ -855,6 +853,8 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 		this.routeName.set('');
 		this.dayBreaks.set([]);
 		this.mode.set('none');
+		// backlog/211 — a mentés látható visszajelzése; a „Megnyitás” a térképen az útvonalra ugrik.
+		void this.showActionToast('TURA.SAVED', 'TURA.SAVED_OPEN', () => this.flyToRoute(saved));
 	}
 
 	/**
@@ -901,17 +901,11 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 
 	/** backlog/151 — `null` = nem számolható (pl. internet nélkül nincs magassági adat) → `~`, soha nem `0` (Backend-offline first §14). */
 	protected formatDistance(meters: number | null | undefined): string {
-		if (meters == null) {
-			return '~';
-		}
-		return `${(meters / 1000).toFixed(1)} km`;
+		return distanceText(meters, this.language.activeLanguage());
 	}
 
 	protected formatElevation(meters: number | null | undefined): string {
-		if (meters == null) {
-			return '~';
-		}
-		return `${Math.round(meters)} m`;
+		return elevationText(meters, this.language.activeLanguage());
 	}
 
 	protected toggleRoutesPanel(): void {

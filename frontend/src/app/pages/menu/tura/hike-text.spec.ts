@@ -3,7 +3,7 @@ import { TranslateService, provideTranslateService } from '@ngx-translate/core';
 
 import en from '../../../../assets/i18n/en.json';
 import hu from '../../../../assets/i18n/hu.json';
-import { TranslatedText, daySummaryText, durationText } from './hike-text';
+import { TranslatedText, daySummaryText, distanceText, durationText, elevationText, megabytesText } from './hike-text';
 
 describe('hike-text', () => {
 	let translate: TranslateService;
@@ -50,6 +50,27 @@ describe('hike-text', () => {
 		it('Hungarian has one form', () => {
 			expect(render('hu', daySummaryText(1))).toBe('1 nap');
 			expect(render('hu', daySummaryText(3))).toBe('3 nap');
+		});
+	});
+
+	describe('number formatting (backlog/220)', () => {
+		it('decimal comma in Hungarian, decimal point in English', () => {
+			expect(distanceText(2940, 'hu')).toBe('2,9 km');
+			expect(distanceText(2940, 'en')).toBe('2.9 km');
+			expect(distanceText(12000, 'hu')).toBe('12,0 km');
+			expect(megabytesText(3.25 * 1024 * 1024, 'hu')).toBe('3,3 MB');
+			expect(megabytesText(3.25 * 1024 * 1024, 'en')).toBe('3.3 MB');
+		});
+
+		it('elevation is a whole number with the language grouping', () => {
+			expect(elevationText(412.6, 'hu')).toBe('413 m');
+			expect(elevationText(1234, 'en')).toBe('1,234 m');
+			expect(elevationText(12345, 'hu')).toBe('12 345 m');
+		});
+
+		it('a value that cannot be computed is ~, never 0', () => {
+			expect(distanceText(null, 'hu')).toBe('~');
+			expect(elevationText(undefined, 'en')).toBe('~');
 		});
 	});
 });
