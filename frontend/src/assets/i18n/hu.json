@@ -460,7 +460,13 @@
       "OVERNIGHT_PLACEHOLDER": "Éjszakázó pont neve (opcionális)",
       "REMOVE_BREAK": "Töréspont törlése",
       "ADD_BREAK": "Töréspont hozzáadása",
-      "SUMMARY": "{{count}} nap"
+      "SUMMARY_ONE": "{{count}} nap",
+      "SUMMARY_MANY": "{{count}} nap"
+    },
+    "DURATION": {
+      "HOURS_MINUTES": "{{hours}} ó {{minutes}} p",
+      "MINUTES": "{{minutes}} p",
+      "UNKNOWN": "~"
     },
     "CATALOG": {
       "BUTTON": "Katalógus",

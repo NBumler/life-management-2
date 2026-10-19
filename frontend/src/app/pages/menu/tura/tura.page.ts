@@ -54,6 +54,7 @@ import { OFFLINE_TILE_PROTOCOL, registerOfflineTileProtocol } from './offline-ma
 import { OFFLINE_TILE_MAX_COUNT, OfflineRegion } from '../../../core/data/offline-region.model';
 import { OfflineRegionRepository } from '../../../core/data/offline-region.repository';
 import { AutoRouteHintComponent } from './auto-route-hint.component';
+import { daySummaryText, durationText } from './hike-text';
 import { trailSegmentSymbolColor } from './trail-segment-symbol-color';
 import { trailSegmentsToFeatureCollection } from './trail-segments-geojson';
 
@@ -207,6 +208,9 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	private readonly mapContainer = viewChild.required<ElementRef<HTMLDivElement>>('mapContainer');
 
 	private map?: maplibregl.Map;
+
+	protected readonly durationText = durationText;
+	protected readonly daySummaryText = daySummaryText;
 	private resizeObserver?: ResizeObserver;
 
 	protected readonly mode = signal<Mode>('none');
@@ -716,16 +720,6 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 			return '~';
 		}
 		return `${(meters / 1000).toFixed(1)} km`;
-	}
-
-	protected formatDuration(minutes: number | null | undefined): string {
-		if (minutes == null) {
-			return '~';
-		}
-		const totalMinutes = Math.round(minutes);
-		const hours = Math.floor(totalMinutes / 60);
-		const mins = totalMinutes % 60;
-		return hours > 0 ? `${hours} ó ${mins} p` : `${mins} p`;
 	}
 
 	protected formatElevation(meters: number | null | undefined): string {

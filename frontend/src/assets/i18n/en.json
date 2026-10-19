@@ -460,7 +460,13 @@
       "OVERNIGHT_PLACEHOLDER": "Overnight point name (optional)",
       "REMOVE_BREAK": "Remove day break",
       "ADD_BREAK": "Add day break",
-      "SUMMARY": "{{count}} days"
+      "SUMMARY_ONE": "{{count}} day",
+      "SUMMARY_MANY": "{{count}} days"
+    },
+    "DURATION": {
+      "HOURS_MINUTES": "{{hours}} h {{minutes}} min",
+      "MINUTES": "{{minutes}} min",
+      "UNKNOWN": "~"
     },
     "CATALOG": {
       "BUTTON": "Catalog",

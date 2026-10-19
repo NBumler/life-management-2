@@ -14,6 +14,9 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-19 — #185, #186** Túra-i18n: a becsült időtartam egységei fordítási kulcsból jönnek
+  („1 h 31 min” / „1 ó 31 p”), a napok száma angolul egyes számot is kezel („1 day”) a `_ONE` / `_MANY`
+  mintával; a [[Nyelv választás]] spec leírja a mintát.
 - **2026-10-19 — #183, #187, #192** Túra-elrendezés: a térkép nem nyúlik a fejléc alá (nem-`fullscreen`
   `ion-content`), így a +/− gombok látszanak és az előnézet `fitBounds`-a a látható részre igazít;
   megnyitáskor `ionViewDidEnter`-kori `resize()`; az útvonalnév-mező, a napok panel és a metrika-sáv

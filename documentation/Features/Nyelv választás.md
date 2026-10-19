@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-10-17
-verifikalt_commit: 2540786
+verifikalva: 2026-10-19
+verifikalt_commit: 9fbb504
 ---
 
 # Nyelv választás
@@ -39,6 +39,7 @@ Minden felhasználónak megjelenő szöveg, tehát az űrlapokon és listákon t
 - **Értesítés-szövegek** ([[Értesítések]]).
 - **Hibaüzenetek**, a szerver `code`-ja alapján — lásd alább.
 - Üres állapotok, megerősítő párbeszédek, `~` melletti magyarázó szövegek.
+- **Mértékegység-rövidítések** szövegben összerakott értékeknél (pl. a túra becsült időtartama: `TURA.DURATION.HOURS_MINUTES` — „1 ó 31 p” / „1 h 31 min”), nem a kódba égetve.
 
 #### Formázás
 
@@ -71,7 +72,7 @@ Az OS-nél ütemezett lokális értesítések szövege az ütemezés pillanatáb
 
 Nincs harmadik nyelv; a hozzáadás költsége egy új fordítófájl + locale regisztráció.
 
-Nincs ICU plural: ahol darabszám van, a kulcs paraméterezett (`{{count}}`), és a szöveg úgy fogalmazódik, hogy egyes és többes számban is helyes legyen — magyarban ez természetes, angolban a megfogalmazás dolga.
+Nincs ICU plural: ahol darabszám van, a kulcs paraméterezett (`{{count}}`), és a szöveg lehetőleg úgy fogalmazódik, hogy egyes és többes számban is helyes legyen. Ha ez angolul nem megy, két kulcs van, `_ONE` és `_MANY` utótaggal, és a kód választ közülük `count === 1` alapján (pl. `NOTIFICATIONS.HOUSEHOLD_TASK_DUE.BODY_ONE` / `BODY_MANY`, `TURA.DAYS.SUMMARY_ONE` / `SUMMARY_MANY` — „1 day” / „2 days”). Magyarul a két kulcs szövege jellemzően azonos („N nap”), de mindkettő létezik, mert a kulcshalmaz a két nyelvben azonos.
 
 A `LanguageService`-nek van unit tesztje (`language.service.spec.ts`); a `ThemeService` unit teszt + az admin-jelszócsere token-revoke teszt hiányzik — tervezett: `backlog/020-hianyzo-teszt-lefedettseg-themeservice-unit-teszt-admin-jelszocs.md`.
 

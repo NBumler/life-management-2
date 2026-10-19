@@ -56,8 +56,8 @@ túrázási funkció).
 | `backlog/archive/182-tura-automatikus-tervezes-toltesjelzo.md` | Nincs töltésjelző az automatikus útvonaltervezés alatt | `done` |
 | `backlog/archive/183-tura-terkep-fejlec-ala-nyulik.md` | A térkép a fejléc alá nyúlik: rejtett zoomgombok, eltolt „ráigazítás” | `done` |
 | [[backlog/tura-utvonaltervezo/184-tura-terkep-kesleltetett-ujrarajzolas]] | A térkép késve (vagy csak érintésre) rajzolja ki az új útvonalat | `backlog` |
-| [[backlog/tura-utvonaltervezo/185-tura-idotartam-magyarul-beegetve]] | Az időtartam magyar egységekkel be van égetve („1 ó 31 p” angol felületen is) | `backlog` |
-| [[backlog/tura-utvonaltervezo/186-tura-napok-szama-egyes-szam]] | „1 days”: a napok száma nem kezeli az egyes számot | `backlog` |
+| `backlog/archive/185-tura-idotartam-magyarul-beegetve.md` | Az időtartam magyar egységekkel be van égetve („1 ó 31 p” angol felületen is) | `done` |
+| `backlog/archive/186-tura-napok-szama-egyes-szam.md` | „1 days”: a napok száma nem kezeli az egyes számot | `done` |
 | `backlog/archive/187-tura-utvonalnev-es-napok-panel-margo.md` | Az útvonalnév-mező és a napok panel összegző szövege a bal szélhez tapad | `done` |
 | [[backlog/tura-utvonaltervezo/188-tura-napi-szintemelkedes-osszege-elter]] | A napi szakaszok szintemelkedésének összege eltér a teljes útvonalétól | `backlog` |
 | [[backlog/tura-utvonaltervezo/189-tura-katalogus-elonezet-eltuntetese]] | Az ajánlott túra előnézeti vonala nem tüntethető el | `backlog` |

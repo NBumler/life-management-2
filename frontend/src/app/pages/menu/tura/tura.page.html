@@ -89,7 +89,8 @@
       <div class="route-metrics-content">
         <div class="route-metrics-stats">
           <span>{{ formatDistance(m.distanceMeters) }}</span>
-          <span>{{ formatDuration(m.estimatedDurationMinutes) }}</span>
+          @let duration = durationText(m.estimatedDurationMinutes);
+          <span>{{ duration.key | translate: duration.params }}</span>
           <span>↑{{ formatElevation(m.elevationGainMeters) }}</span>
           <span>↓{{ formatElevation(m.elevationLossMeters) }}</span>
         </div>
@@ -226,7 +227,8 @@
             <ion-label>
               {{ route.name }}
               @if (route.days && route.days.length > 1) {
-                <p>{{ 'TURA.DAYS.SUMMARY' | translate: { count: route.days.length } }}</p>
+                @let days = daySummaryText(route.days.length);
+                <p>{{ days.key | translate: days.params }}</p>
               }
             </ion-label>
             <ion-buttons slot="end">
@@ -283,7 +285,8 @@
         <ion-icon slot="start" name="add-outline" aria-hidden="true"></ion-icon>
         {{ 'TURA.DAYS.ADD_BREAK' | translate }}
       </ion-button>
-      <p class="days-summary ion-padding-horizontal">{{ 'TURA.DAYS.SUMMARY' | translate: { count: dayCount() } }}</p>
+      @let days = daySummaryText(dayCount());
+      <p class="days-summary ion-padding-horizontal">{{ days.key | translate: days.params }}</p>
     </ion-content>
   </ng-template>
 </ion-modal>
@@ -346,6 +349,7 @@
         }
         @for (route of curatedRoutes.routes(); track route.id) {
           <ion-item button (click)="previewCuratedRoute(route)">
+            @let duration = durationText(route.estimatedDurationMinutes);
             <ion-label>
               {{ route.name }}
               <p>
@@ -353,12 +357,13 @@
                 {{ ('TURA.CATALOG.ACTIVITY_' + route.activityType) | translate }}
               </p>
               <p>
-                {{ formatDistance(route.distanceMeters) }} · {{ formatDuration(route.estimatedDurationMinutes) }} · ↑{{
+                {{ formatDistance(route.distanceMeters) }} · {{ duration.key | translate: duration.params }} · ↑{{
                   formatElevation(route.elevationGainMeters)
                 }}
               </p>
               @if (route.days && route.days.length > 1) {
-                <p>{{ 'TURA.DAYS.SUMMARY' | translate: { count: route.days.length } }}</p>
+                @let days = daySummaryText(route.days.length);
+                <p>{{ days.key | translate: days.params }}</p>
               }
             </ion-label>
           </ion-item>
