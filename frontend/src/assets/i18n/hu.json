@@ -513,8 +513,39 @@
       "BASEMAP_OSM": "Utcatérkép (OSM)",
       "BASEMAP_TOPO": "Topográfiai",
       "BASEMAP_SATELLITE": "Szatellit",
-      "HILLSHADE": "Domborzat-árnyékolás"
+      "HILLSHADE": "Domborzat-árnyékolás",
+      "MY_ROUTES": "Saját útvonalak",
+      "UNMARKED_TRAILS": "Jelzés nélküli utak"
     },
+    "LEGEND": {
+      "TITLE": "Jelmagyarázat",
+      "OPEN": "Jelmagyarázat megnyitása",
+      "MARKINGS": "Turistajelzések",
+      "MARKING": {
+        "PIROS": "Piros jelzés",
+        "KEK": "Kék jelzés",
+        "ZOLD": "Zöld jelzés",
+        "SARGA": "Sárga jelzés",
+        "LILA": "Lila jelzés (pl. Mária út)",
+        "NARANCS": "Narancs jelzés",
+        "FEKETE": "Fekete jelzés",
+        "BARNA": "Barna jelzés",
+        "FEHER": "Fehér jelzés"
+      },
+      "SHAPES_NOTE": "A vonal a jelzés színét mutatja; az alakja (sáv, kereszt, pont, háromszög, kör, rom, barlang, kilátó…) nem látszik rajta.",
+      "LINES": "Vonalak",
+      "UNMARKED": "Jelzés nélküli turistaút",
+      "MY_ROUTE": "Saját útvonal",
+      "DRAFT": "Rajzolás alatt álló útvonal",
+      "PREVIEW": "Ajánlott túra előnézete",
+      "DIRECTION": "Haladási irány",
+      "POINTS": "Pontok",
+      "START": "Indulás",
+      "END": "Cél",
+      "DAY_BREAK": "Napváltó (az 1. nap vége)",
+      "WAYPOINT": "Kijelölt pont"
+    },
+    "ZOOM_HINT": "Közelíts rá a turistautak megjelenítéséhez",
     "OFFLINE": {
       "BUTTON": "Offline területek",
       "MODAL_TITLE": "Offline területek",

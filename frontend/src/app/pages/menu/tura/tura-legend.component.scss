@@ -1,0 +1,58 @@
+.legend-section {
+  font-weight: 600;
+}
+
+.legend-row {
+  --min-height: 36px;
+}
+
+.legend-note {
+  font-size: 13px;
+}
+
+// Vonalminta: a térképi vonal színe a kontúrjával, ugyanakkora vastagsággal.
+.line-swatch {
+  width: 40px;
+  height: calc(var(--swatch-width) + 4px);
+  margin-inline-end: 16px;
+  border-radius: 999px;
+  background: var(--swatch-color);
+  box-shadow: 0 0 0 1.5px var(--swatch-casing);
+}
+
+.line-swatch.dashed {
+  background: repeating-linear-gradient(90deg, var(--swatch-color) 0 10px, var(--swatch-casing) 10px 16px);
+}
+
+// A fehér előnézet és a fehér jelzés mintája a világos lapon is látsszon.
+.line-swatch,
+.arrow-swatch {
+  outline: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.arrow-swatch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 14px;
+  margin-inline-end: 16px;
+  border-radius: 999px;
+
+  img {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+.point-swatch {
+  display: inline-flex;
+  justify-content: center;
+  width: 40px;
+  margin-inline-end: 16px;
+
+  img {
+    width: 24px;
+    height: 24px;
+  }
+}

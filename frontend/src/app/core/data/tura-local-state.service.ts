@@ -13,12 +13,18 @@ export interface StoredTuraDraft {
   dayBreaks: { waypointIndex: number; overnightName: string }[];
 }
 
-/** backlog/214 — where the Túra map was left: centre [lon, lat], zoom, base map and hillshade toggle. */
+/**
+ * backlog/214 — where the Túra map was left: centre [lon, lat], zoom, base map and hillshade toggle.
+ * backlog/199, backlog/202 — plus the "Jelzés nélküli utak" / "Saját útvonalak" layer toggles; absent in
+ * views stored before them, which then read as "on".
+ */
 export interface StoredTuraMapView {
   center: [number, number];
   zoom: number;
   basemap: string;
   hillshade: boolean;
+  myRoutes?: boolean;
+  unmarkedTrails?: boolean;
 }
 
 const DRAFT_KEY = 'lm2_tura_draft';
@@ -90,6 +96,12 @@ function isStoredMapView(value: unknown): value is StoredTuraMapView {
     typeof view.zoom === 'number' &&
     Number.isFinite(view.zoom) &&
     typeof view.basemap === 'string' &&
-    typeof view.hillshade === 'boolean'
+    typeof view.hillshade === 'boolean' &&
+    isOptionalBoolean(view.myRoutes) &&
+    isOptionalBoolean(view.unmarkedTrails)
   );
+}
+
+function isOptionalBoolean(value: unknown): boolean {
+  return value === undefined || typeof value === 'boolean';
 }

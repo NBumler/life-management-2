@@ -1,0 +1,59 @@
+<ion-list>
+  <ion-list-header>
+    <ion-label>{{ 'TURA.LEGEND.TITLE' | translate }}</ion-label>
+  </ion-list-header>
+
+  <ion-item lines="none">
+    <ion-label class="legend-section">{{ 'TURA.LEGEND.MARKINGS' | translate }}</ion-label>
+  </ion-item>
+  @for (entry of markings; track entry.labelKey) {
+    <ion-item lines="none" class="legend-row">
+      <span
+        slot="start"
+        class="line-swatch"
+        aria-hidden="true"
+        [style.--swatch-color]="entry.color"
+        [style.--swatch-casing]="entry.casing"
+        [style.--swatch-width.px]="entry.width"
+      ></span>
+      <ion-label>{{ entry.labelKey | translate }}</ion-label>
+    </ion-item>
+  }
+  <ion-item lines="none">
+    <ion-note class="legend-note">{{ 'TURA.LEGEND.SHAPES_NOTE' | translate }}</ion-note>
+  </ion-item>
+
+  <ion-item lines="none">
+    <ion-label class="legend-section">{{ 'TURA.LEGEND.LINES' | translate }}</ion-label>
+  </ion-item>
+  @for (entry of lines; track entry.labelKey) {
+    <ion-item lines="none" class="legend-row">
+      <span
+        slot="start"
+        class="line-swatch"
+        [class.dashed]="entry.dashed"
+        aria-hidden="true"
+        [style.--swatch-color]="entry.color"
+        [style.--swatch-casing]="entry.casing"
+        [style.--swatch-width.px]="entry.width"
+      ></span>
+      <ion-label>{{ entry.labelKey | translate }}</ion-label>
+    </ion-item>
+  }
+  <ion-item lines="none" class="legend-row">
+    <span slot="start" class="arrow-swatch" aria-hidden="true" [style.background]="routeColor">
+      <img [src]="arrowSrc" alt="" />
+    </span>
+    <ion-label>{{ 'TURA.LEGEND.DIRECTION' | translate }}</ion-label>
+  </ion-item>
+
+  <ion-item lines="none">
+    <ion-label class="legend-section">{{ 'TURA.LEGEND.POINTS' | translate }}</ion-label>
+  </ion-item>
+  @for (point of points; track point.labelKey) {
+    <ion-item lines="none" class="legend-row">
+      <span slot="start" class="point-swatch" aria-hidden="true"><img [src]="point.src" alt="" /></span>
+      <ion-label>{{ point.labelKey | translate }}</ion-label>
+    </ion-item>
+  }
+</ion-list>

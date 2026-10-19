@@ -67,14 +67,14 @@ túrázási funkció).
 | `backlog/archive/193-tura-ajanlott-turak-katalogus-tartalomforras.md` | Az ajánlott túrák katalógusának nincs tartalomforrása | `done` |
 | [[backlog/tura-utvonaltervezo/195-tura-ajanlott-turak-teljes-feltoltese]] | Az ajánlott túrák katalógusának teljes feltöltése (447 túra) | `ready` |
 | [[backlog/tura-utvonaltervezo/194-tura-hikeroute-openapi-leiras-elavult-route-metrics]] | A HikeRoute / HikeRouteDay OpenAPI-leírás a megszűnt route-metrics végpontra hivatkozik | `backlog` |
-| [[backlog/tura-utvonaltervezo/196-tura-terkep-jelmagyarazat]] | A térképen nincs jelmagyarázat a vonalak és pontok színeihez | `backlog` |
-| [[backlog/tura-utvonaltervezo/197-tura-sajat-utvonal-szine-utkozik-jelzesszinnel]] | A saját útvonal (kék) és a piszkozat (narancs) színe összetéveszthető a turistajelzésekkel | `backlog` |
-| [[backlog/tura-utvonaltervezo/198-tura-ismert-jelzestipusok-szurken]] | A legtöbb ismert turistajelzés-típus (pont, kereszt, M, …) szürkén jelenik meg | `backlog` |
-| [[backlog/tura-utvonaltervezo/199-tura-egyeb-jelzesu-szakaszok-uraljak-a-terkepet]] | Az „egyéb” jelzésű szakaszok vastag szürke vonala uralja a térképet | `backlog` |
-| [[backlog/tura-utvonaltervezo/200-tura-turistautak-12-es-zoom-alatt-rejtettek]] | 12-es közelítés alatt egyetlen turistaút sem látszik, és ezt semmi nem jelzi | `backlog` |
+| `backlog/archive/196-tura-terkep-jelmagyarazat.md` | A térképen nincs jelmagyarázat a vonalak és pontok színeihez | `done` |
+| `backlog/archive/197-tura-sajat-utvonal-szine-utkozik-jelzesszinnel.md` | A saját útvonal (kék) és a piszkozat (narancs) színe összetéveszthető a turistajelzésekkel | `done` |
+| `backlog/archive/198-tura-ismert-jelzestipusok-szurken.md` | A legtöbb ismert turistajelzés-típus (pont, kereszt, M, …) szürkén jelenik meg | `done` |
+| `backlog/archive/199-tura-egyeb-jelzesu-szakaszok-uraljak-a-terkepet.md` | Az „egyéb” jelzésű szakaszok vastag szürke vonala uralja a térképet | `done` |
+| `backlog/archive/200-tura-turistautak-12-es-zoom-alatt-rejtettek.md` | 12-es közelítés alatt egyetlen turistaút sem látszik, és ezt semmi nem jelzi | `done` |
 | [[backlog/tura-utvonaltervezo/201-tura-vonalra-koppintva-nincs-informacio]] | Egy vonalra koppintva nem derül ki, melyik turistaút vagy útvonal az | `backlog` |
-| [[backlog/tura-utvonaltervezo/202-tura-mentett-utvonalak-mindig-latszanak]] | A mentett útvonalak mindig látszanak, név nélkül, és nem rejthetők el | `backlog` |
-| [[backlog/tura-utvonaltervezo/203-tura-kezdo-veg-es-napvalto-pont-egyforma]] | A kezdő-, a vég- és a napváltó pont egyforma, az útvonal iránya nem látszik | `backlog` |
+| `backlog/archive/202-tura-mentett-utvonalak-mindig-latszanak.md` | A mentett útvonalak mindig látszanak, név nélkül, és nem rejthetők el | `done` |
+| `backlog/archive/203-tura-kezdo-veg-es-napvalto-pont-egyforma.md` | A kezdő-, a vég- és a napváltó pont egyforma, az útvonal iránya nem látszik | `done` |
 | [[backlog/tura-utvonaltervezo/204-tura-fejlec-tul-magas-gombsorok-kilognak]] | A fejléc 3–5 sor magas, a gombsorok magyarul kilógnak a képernyőről | `backlog` |
 | [[backlog/tura-utvonaltervezo/205-tura-felirat-nelkuli-ikongombok]] | A visszavonás, kuka, rétegek és offline gombnak nincs felirata | `backlog` |
 | [[backlog/tura-utvonaltervezo/206-tura-rajzolas-es-automatikus-mod-erthetosege]] | A Rajzolás és az Automatikus mód közti különbség és az aktív mód nem érthető | `backlog` |

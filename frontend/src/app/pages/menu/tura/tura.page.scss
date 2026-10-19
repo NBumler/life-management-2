@@ -3,6 +3,31 @@
   inset: 0;
 }
 
+// backlog/200 — lebegő, nem blokkoló jelzés a térkép alján (az attribúció fölött); csak a saját
+// tartalma fogja a koppintást, a térkép körülötte továbbra is mozgatható.
+.zoom-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 40px;
+  width: fit-content;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  max-width: calc(100% - 32px);
+  padding: 4px 4px 4px 14px;
+  border-radius: 999px;
+  background: rgba(33, 33, 33, 0.85);
+  color: #ffffff;
+  font-size: 13px;
+
+  ion-button {
+    --color: #ffffff;
+    margin: 0;
+  }
+}
+
 // Kis (telefon-szélességű) képernyőn a fejléc gomb-sorai nem férnek el egy sorban, és az
 // ion-toolbar alapból se nem tördel, se nem scroll-ozható — az "end" slotba eső gombok
 // (Rétegek/Katalógus/Útvonalaim) korábban láthatatlanul kilógtak a képernyőről, minden

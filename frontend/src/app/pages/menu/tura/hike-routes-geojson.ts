@@ -1,4 +1,6 @@
 import { HikeRoute } from '../../../api/model/hikeRoute';
+import { HikeRouteDay } from '../../../api/model/hikeRouteDay';
+import { ICON_END, ICON_START, ICON_WAYPOINT, dayIconName, labelIconName } from './map-icons';
 
 /**
  * backlog/tura-utvonaltervezo/103-... 2.1 fázis. Pure conversions, kept separate from TuraPage so
@@ -11,7 +13,8 @@ export function hikeRoutesToFeatureCollection(routes: readonly HikeRoute[]): Geo
 			type: 'Feature',
 			id: route.id,
 			geometry: { type: 'LineString', coordinates: route.coordinates },
-			properties: { name: route.name },
+			// backlog/202 — a név a vonal mentén, canvasra rajzolt képként (map-icons.ts).
+			properties: { name: route.name, label: labelIconName(route.name) },
 		})),
 	};
 }
@@ -37,4 +40,53 @@ export function draftWaypointsToFeatureCollection(coordinates: readonly number[]
 			properties: {},
 		})),
 	};
+}
+
+/**
+ * backlog/203 — egy útvonal pont-jelölői: zöld indulás, sakktáblás cél, a napváltóknál hold + a nap
+ * sorszáma, a többi kijelölt pontnál kis kör. `sortKey`: a fontosabb jelölő kerül felülre.
+ */
+export function routeMarkersToFeatureCollection(
+	coordinates: readonly number[][],
+	{ dayEndIndexes = [], waypointIndexes = [] }: { dayEndIndexes?: readonly number[]; waypointIndexes?: readonly number[] } = {},
+): GeoJSON.FeatureCollection<GeoJSON.Point> {
+	return { type: 'FeatureCollection', features: routeMarkerFeatures(coordinates, dayEndIndexes, waypointIndexes) };
+}
+
+/** Az összes mentett útvonal indulás / cél / napváltó jelölője egy rétegben. */
+export function hikeRouteMarkersToFeatureCollection(routes: readonly HikeRoute[]): GeoJSON.FeatureCollection<GeoJSON.Point> {
+	return {
+		type: 'FeatureCollection',
+		features: ([] as GeoJSON.Feature<GeoJSON.Point>[]).concat(...routes.map((route) => routeMarkerFeatures(route.coordinates, dayBreakIndexes(route.days), []))),
+	};
+}
+
+/** A napváltók: minden nap vége, kivéve az utolsót (az a cél). */
+export function dayBreakIndexes(days: readonly Pick<HikeRouteDay, 'endWaypointIndex'>[] | null | undefined): number[] {
+	return (days ?? []).slice(0, -1).map((day) => day.endWaypointIndex);
+}
+
+function routeMarkerFeatures(coordinates: readonly number[][], dayEndIndexes: readonly number[], waypointIndexes: readonly number[]): GeoJSON.Feature<GeoJSON.Point>[] {
+	if (coordinates.length === 0) {
+		return [];
+	}
+	const last = coordinates.length - 1;
+	const icons = new Map<number, { icon: string; sortKey: number }>();
+	for (const index of waypointIndexes) {
+		if (index > 0 && index < last) {
+			icons.set(index, { icon: ICON_WAYPOINT, sortKey: 0 });
+		}
+	}
+	dayEndIndexes.forEach((index, i) => {
+		if (index > 0 && index < last) {
+			icons.set(index, { icon: dayIconName(i + 1), sortKey: 1 });
+		}
+	});
+	if (last > 0) {
+		icons.set(last, { icon: ICON_END, sortKey: 2 });
+	}
+	icons.set(0, { icon: ICON_START, sortKey: 3 });
+	return [...icons.entries()]
+		.sort(([a], [b]) => a - b)
+		.map(([index, properties]) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [...coordinates[index]] }, properties }));
 }

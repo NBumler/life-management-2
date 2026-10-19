@@ -16,17 +16,12 @@ function segment(overrides: Partial<TrailSegment> = {}): TrailSegment {
 
 describe('trailSegmentsToFeatureCollection', () => {
 	it('returns an empty FeatureCollection for an empty segment list', () => {
-		const result = trailSegmentsToFeatureCollection([], () => '#000');
-
-		expect(result).toEqual({ type: 'FeatureCollection', features: [] });
+		expect(trailSegmentsToFeatureCollection([])).toEqual({ type: 'FeatureCollection', features: [] });
 	});
 
-	it('maps each segment to a LineString feature carrying its symbol and resolved color', () => {
-		const colorFor = jasmine.createSpy('colorFor').and.returnValue('#d32f2f');
+	it('maps each segment to a LineString feature carrying its symbol and style', () => {
+		const result = trailSegmentsToFeatureCollection([segment()]);
 
-		const result = trailSegmentsToFeatureCollection([segment()], colorFor);
-
-		expect(colorFor).toHaveBeenCalledWith('PIROS_SAV');
 		expect(result.features).toEqual([
 			{
 				type: 'Feature',
@@ -38,8 +33,14 @@ describe('trailSegmentsToFeatureCollection', () => {
 						[19.1, 47.1],
 					],
 				},
-				properties: { symbol: 'PIROS_SAV', color: '#d32f2f' },
+				properties: { symbol: 'PIROS_SAV', color: '#d32f2f', casing: '#ffffff', marked: true },
 			},
 		]);
+	});
+
+	it('an EGYEB segment is unmarked (backlog/199)', () => {
+		const [feature] = trailSegmentsToFeatureCollection([segment({ symbol: 'EGYEB' })]).features;
+
+		expect(feature.properties).toEqual(jasmine.objectContaining({ color: '#757575', marked: false }));
 	});
 });

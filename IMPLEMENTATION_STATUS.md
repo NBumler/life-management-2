@@ -14,6 +14,11 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-20 — #196, #197, #198, #199, #200, #202, #203** Túra térkép vizuális nyelve: a turistautak a jelzés
+  színében (szín-előtagból, fehér kontúrral), a jelzés nélküli utak halványan és kikapcsolhatóan; az import felismeri a
+  barlang / rom / kilátó / betűjeles jelzéseket (Pilis-minta: `EGYEB` 90 → 30 reláció). Saját útvonal magenta fehér
+  kontúrral, piszkozat szaggatottan, előnézet fehér-fekete; indulás / cél / napváltó jelölők, irány-nyilak, útvonalnév
+  a vonal mentén (canvas-képek, glyph nélkül). „Saját útvonalak” kapcsoló, „Közelíts rá” felirat, jelmagyarázat.
 - **2026-10-19 — #207, #211, #220, #224, #225** Túra: az előnézet gombja „Szerkesztés sajátként”; mentés után
   „Mentve az Útvonalaim közé — Megnyitás” toast; a táv / magasság / MB az aktív nyelv szerint formázva („2,9 km”).
   Magyar felületen „Profil”, és a `verify:i18n` figyelmeztet az azonos hu / en értékekre (engedélylistával). A fejléc

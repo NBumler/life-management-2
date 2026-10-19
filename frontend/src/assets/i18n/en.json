@@ -513,8 +513,39 @@
       "BASEMAP_OSM": "Street map (OSM)",
       "BASEMAP_TOPO": "Topographic",
       "BASEMAP_SATELLITE": "Satellite",
-      "HILLSHADE": "Terrain shading"
+      "HILLSHADE": "Terrain shading",
+      "MY_ROUTES": "My routes",
+      "UNMARKED_TRAILS": "Unmarked trails"
     },
+    "LEGEND": {
+      "TITLE": "Legend",
+      "OPEN": "Open the legend",
+      "MARKINGS": "Trail markings",
+      "MARKING": {
+        "PIROS": "Red marking",
+        "KEK": "Blue marking",
+        "ZOLD": "Green marking",
+        "SARGA": "Yellow marking",
+        "LILA": "Purple marking (e.g. Mary’s Way)",
+        "NARANCS": "Orange marking",
+        "FEKETE": "Black marking",
+        "BARNA": "Brown marking",
+        "FEHER": "White marking"
+      },
+      "SHAPES_NOTE": "The line shows the marking’s colour; its shape (stripe, cross, dot, triangle, circle, ruin, cave, lookout…) is not shown.",
+      "LINES": "Lines",
+      "UNMARKED": "Unmarked hiking trail",
+      "MY_ROUTE": "My route",
+      "DRAFT": "Route being drawn",
+      "PREVIEW": "Recommended route preview",
+      "DIRECTION": "Direction of travel",
+      "POINTS": "Points",
+      "START": "Start",
+      "END": "Finish",
+      "DAY_BREAK": "Day break (end of day 1)",
+      "WAYPOINT": "Picked point"
+    },
+    "ZOOM_HINT": "Zoom in to see the hiking trails",
     "OFFLINE": {
       "BUTTON": "Offline areas",
       "MODAL_TITLE": "Offline areas",

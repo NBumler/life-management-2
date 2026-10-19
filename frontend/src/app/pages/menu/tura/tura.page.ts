@@ -52,14 +52,29 @@ import { StoredTuraMapView, TuraLocalStateService } from '../../../core/data/tur
 import { LanguageService } from '../../../core/config/language.service';
 import { RouteMetricsResult } from '../../../core/geo/route-metrics';
 import { elevationProfilePolylinePoints } from './elevation-profile-svg';
-import { draftRouteToFeatureCollection, draftWaypointsToFeatureCollection, hikeRoutesToFeatureCollection } from './hike-routes-geojson';
+import {
+	dayBreakIndexes,
+	draftRouteToFeatureCollection,
+	hikeRouteMarkersToFeatureCollection,
+	hikeRoutesToFeatureCollection,
+	routeMarkersToFeatureCollection,
+} from './hike-routes-geojson';
+import {
+	ICON_ARROW_DARK,
+	ICON_ARROW_LIGHT,
+	PREVIEW_CASING_COLOR,
+	PREVIEW_COLOR,
+	ROUTE_CASING_COLOR,
+	ROUTE_COLOR,
+	registerTuraMapIcons,
+} from './map-icons';
 import { OFFLINE_TILE_PROTOCOL, registerOfflineTileProtocol } from './offline-map-protocol';
 import { OFFLINE_TILE_MAX_COUNT, OfflineRegion } from '../../../core/data/offline-region.model';
 import { OfflineRegionRepository } from '../../../core/data/offline-region.repository';
 import { AutoRouteHintComponent } from './auto-route-hint.component';
+import { TuraLegendComponent } from './tura-legend.component';
 import { daySummaryText, distanceText, durationText, elevationText, megabytesText } from './hike-text';
-import { DayBreak, RouteDraftEditor, interiorWaypointIndexes, routeDraftFromPath, waypointCoordinates, withManualPoint } from './route-draft';
-import { trailSegmentSymbolColor } from './trail-segment-symbol-color';
+import { DayBreak, RouteDraftEditor, interiorWaypointIndexes, routeDraftFromPath, withManualPoint } from './route-draft';
 import { trailSegmentsToFeatureCollection } from './trail-segments-geojson';
 
 /** backlog/tura-utvonaltervezo/103-... 2.5 fázis — a katalógus-szűrő táv-tengelye előre definiált sávokként (nem szabad numerikus range-inputként). */
@@ -78,16 +93,36 @@ const PROFILE_CHART_HEIGHT = 60;
 
 const TRAIL_SEGMENTS_SOURCE_ID = 'trail-segments';
 const TRAIL_SEGMENTS_LAYER_ID = 'trail-segments-layer';
+const TRAIL_SEGMENTS_CASING_LAYER_ID = 'trail-segments-casing-layer';
+const TRAIL_SEGMENTS_UNMARKED_LAYER_ID = 'trail-segments-unmarked-layer';
 const HIKE_ROUTES_SOURCE_ID = 'hike-routes';
 const HIKE_ROUTES_LAYER_ID = 'hike-routes-layer';
+const HIKE_ROUTES_CASING_LAYER_ID = 'hike-routes-casing-layer';
+const HIKE_ROUTES_ARROWS_LAYER_ID = 'hike-routes-arrows-layer';
+const HIKE_ROUTES_LABEL_LAYER_ID = 'hike-routes-label-layer';
+const HIKE_ROUTE_MARKERS_SOURCE_ID = 'hike-route-markers';
+const HIKE_ROUTE_MARKERS_LAYER_ID = 'hike-route-markers-layer';
 const HIKE_ROUTE_DRAFT_SOURCE_ID = 'hike-route-draft';
 const HIKE_ROUTE_DRAFT_LAYER_ID = 'hike-route-draft-layer';
+const HIKE_ROUTE_DRAFT_CASING_LAYER_ID = 'hike-route-draft-casing-layer';
+const HIKE_ROUTE_DRAFT_ARROWS_LAYER_ID = 'hike-route-draft-arrows-layer';
 const HIKE_ROUTE_DRAFT_POINTS_SOURCE_ID = 'hike-route-draft-points';
 const HIKE_ROUTE_DRAFT_POINTS_LAYER_ID = 'hike-route-draft-points-layer';
 const AUTO_ROUTE_START_SOURCE_ID = 'hike-route-auto-start';
 const AUTO_ROUTE_START_LAYER_ID = 'hike-route-auto-start-layer';
 const CURATED_ROUTE_PREVIEW_SOURCE_ID = 'curated-route-preview';
 const CURATED_ROUTE_PREVIEW_LAYER_ID = 'curated-route-preview-layer';
+const CURATED_ROUTE_PREVIEW_CASING_LAYER_ID = 'curated-route-preview-casing-layer';
+const CURATED_ROUTE_PREVIEW_ARROWS_LAYER_ID = 'curated-route-preview-arrows-layer';
+const CURATED_ROUTE_PREVIEW_MARKERS_SOURCE_ID = 'curated-route-preview-markers';
+const CURATED_ROUTE_PREVIEW_MARKERS_LAYER_ID = 'curated-route-preview-markers-layer';
+/** backlog/202 — a „Saját útvonalak” kapcsoló ezeket a rétegeket rejti el / mutatja. */
+const MY_ROUTES_LAYER_IDS = [HIKE_ROUTES_CASING_LAYER_ID, HIKE_ROUTES_LAYER_ID, HIKE_ROUTES_ARROWS_LAYER_ID, HIKE_ROUTES_LABEL_LAYER_ID, HIKE_ROUTE_MARKERS_LAYER_ID];
+/** backlog/202 — a mentett útvonalak neve ettől a zoomtól látszik a vonal mentén. */
+const ROUTE_LABEL_MIN_ZOOM = 13;
+/** backlog/203 — irány-nyilak távolsága a vonalon (px). */
+const ARROW_SPACING_PX = 80;
+const LINE_LAYOUT: maplibregl.LineLayerSpecification['layout'] = { 'line-join': 'round', 'line-cap': 'round' };
 
 /** backlog/tura-utvonaltervezo/103-... 2.2 fázis — a rajzolás-térkép aktuális interakciós módja. */
 type Mode = 'none' | 'manual' | 'auto';
@@ -201,6 +236,7 @@ const COUNTRY_CODE = 'HU';
 		IonToggle,
 		TranslatePipe,
 		AutoRouteHintComponent,
+		TuraLegendComponent,
 	],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -262,8 +298,17 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	});
 	/** backlog/tura-utvonaltervezo/107-... 3. fázis — alaptérkép-váltó + domborzat-árnyékolás panel. */
 	protected readonly showLayersPanel = signal(false);
+	/** backlog/196 */
+	protected readonly showLegend = signal(false);
 	protected readonly activeBasemap = signal<Basemap>('osm');
 	protected readonly showHillshade = signal(false);
+	/** backlog/202 — a mentett útvonalak rétege kikapcsolható; a választás a térkép-nézettel együtt megmarad. */
+	protected readonly showMyRoutes = signal(true);
+	/** backlog/199 — a jelzés nélküli (`EGYEB`) utak halvány rétege kikapcsolható. */
+	protected readonly showUnmarkedTrails = signal(true);
+	/** backlog/200 — a 12-es zoom alatt a turistautak nem töltődnek be; ezt egy lebegő jelzés mondja meg. */
+	protected readonly mapZoom = signal(HUNGARY_ZOOM);
+	protected readonly trailsNeedZoom = computed(() => this.mapZoom() < MIN_TRAIL_SEGMENT_ZOOM);
 	/** backlog/tura-utvonaltervezo/105-... 4. fázis — offline terület-letöltés panel; web buildben (nincs Filesystem-hozzáférés) a gomb el sem érhető. */
 	protected readonly offlineCapable = Capacitor.isNativePlatform();
 	protected readonly showOfflinePanel = signal(false);
@@ -289,29 +334,33 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 		effect(() => {
 			const segments = this.trailSegments.segments();
 			const source = this.map?.getSource(TRAIL_SEGMENTS_SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
-			source?.setData(trailSegmentsToFeatureCollection(segments, trailSegmentSymbolColor));
+			source?.setData(trailSegmentsToFeatureCollection(segments));
 		});
 		effect(() => {
 			const routes = this.hikeRoutes.items();
 			const source = this.map?.getSource(HIKE_ROUTES_SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
 			source?.setData(hikeRoutesToFeatureCollection(routes));
+			const markers = this.map?.getSource(HIKE_ROUTE_MARKERS_SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
+			markers?.setData(hikeRouteMarkersToFeatureCollection(routes));
 		});
 		effect(() => {
 			const draft = this.draftEditor.draft();
 			const lineSource = this.map?.getSource(HIKE_ROUTE_DRAFT_SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
 			lineSource?.setData(draftRouteToFeatureCollection(draft.coordinates));
 			const pointsSource = this.map?.getSource(HIKE_ROUTE_DRAFT_POINTS_SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
-			pointsSource?.setData(draftWaypointsToFeatureCollection(waypointCoordinates(draft)));
+			pointsSource?.setData(this.draftMarkers());
 		});
 		effect(() => {
 			const start = this.autoStart();
 			const source = this.map?.getSource(AUTO_ROUTE_START_SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
-			source?.setData(draftWaypointsToFeatureCollection(start ? [start] : []));
+			source?.setData(routeMarkersToFeatureCollection(start ? [start] : []));
 		});
 		effect(() => {
 			const preview = this.previewedCuratedRoute();
 			const source = this.map?.getSource(CURATED_ROUTE_PREVIEW_SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
 			source?.setData(draftRouteToFeatureCollection(preview?.coordinates ?? []));
+			const markers = this.map?.getSource(CURATED_ROUTE_PREVIEW_MARKERS_SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
+			markers?.setData(routeMarkersToFeatureCollection(preview?.coordinates ?? [], { dayEndIndexes: dayBreakIndexes(preview?.days) }));
 		});
 		effect(() => {
 			// backlog/tura-utvonaltervezo/103-... 2.4 fázis — ha a draft változik (undo/clear), a most
@@ -381,6 +430,8 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 				this.activeBasemap.set(view.basemap as Basemap);
 			}
 			this.showHillshade.set(view.hillshade);
+			this.showMyRoutes.set(view.myRoutes ?? true);
+			this.showUnmarkedTrails.set(view.unmarkedTrails ?? true);
 		}
 
 		const map = new maplibregl.Map({
@@ -391,57 +442,16 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 		});
 		map.addControl(new maplibregl.NavigationControl(), 'top-right');
 
+		this.mapZoom.set(map.getZoom());
+		map.on('zoomend', () => this.mapZoom.set(map.getZoom()));
+
 		map.on('load', () => {
-			this.applyBasemap(map);
-			map.addSource(TRAIL_SEGMENTS_SOURCE_ID, { type: 'geojson', data: trailSegmentsToFeatureCollection([], trailSegmentSymbolColor) });
-			map.addLayer({
-				id: TRAIL_SEGMENTS_LAYER_ID,
-				type: 'line',
-				source: TRAIL_SEGMENTS_SOURCE_ID,
-				minzoom: MIN_TRAIL_SEGMENT_ZOOM,
-				paint: { 'line-color': ['get', 'color'], 'line-width': 3 },
-			});
-
-			map.addSource(HIKE_ROUTES_SOURCE_ID, { type: 'geojson', data: hikeRoutesToFeatureCollection(this.hikeRoutes.items()) });
-			map.addLayer({
-				id: HIKE_ROUTES_LAYER_ID,
-				type: 'line',
-				source: HIKE_ROUTES_SOURCE_ID,
-				paint: { 'line-color': '#1a73e8', 'line-width': 4 },
-			});
-
-			map.addSource(HIKE_ROUTE_DRAFT_SOURCE_ID, { type: 'geojson', data: draftRouteToFeatureCollection(this.draft()) });
-			map.addLayer({
-				id: HIKE_ROUTE_DRAFT_LAYER_ID,
-				type: 'line',
-				source: HIKE_ROUTE_DRAFT_SOURCE_ID,
-				paint: { 'line-color': '#ff6f00', 'line-width': 3, 'line-dasharray': [2, 1] },
-			});
-			map.addSource(HIKE_ROUTE_DRAFT_POINTS_SOURCE_ID, { type: 'geojson', data: draftWaypointsToFeatureCollection(waypointCoordinates(this.draftEditor.draft())) });
-			map.addLayer({
-				id: HIKE_ROUTE_DRAFT_POINTS_LAYER_ID,
-				type: 'circle',
-				source: HIKE_ROUTE_DRAFT_POINTS_SOURCE_ID,
-				paint: { 'circle-color': '#ff6f00', 'circle-radius': 5, 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 1.5 },
-			});
-
-			map.addSource(AUTO_ROUTE_START_SOURCE_ID, { type: 'geojson', data: draftWaypointsToFeatureCollection([]) });
-			map.addLayer({
-				id: AUTO_ROUTE_START_LAYER_ID,
-				type: 'circle',
-				source: AUTO_ROUTE_START_SOURCE_ID,
-				paint: { 'circle-color': '#8e24aa', 'circle-radius': 6, 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 1.5 },
-			});
-
-			map.addSource(CURATED_ROUTE_PREVIEW_SOURCE_ID, { type: 'geojson', data: draftRouteToFeatureCollection([]) });
-			map.addLayer({
-				id: CURATED_ROUTE_PREVIEW_LAYER_ID,
-				type: 'line',
-				source: CURATED_ROUTE_PREVIEW_SOURCE_ID,
-				// Ciánkék — a terepszínű (zöld) OSM alaptérképen jól elkülönül a többi réteg
-				// (útvonalaim: kék, rajz-piszkozat: narancs, auto-mód kezdőpont: lila) színétől is.
-				paint: { 'line-color': '#00bcd4', 'line-width': 5 },
-			});
+			registerTuraMapIcons(map);
+			this.addTrailSegmentLayers(map);
+			this.addHikeRouteLayers(map);
+			this.addPreviewLayers(map);
+			this.addDraftLayers(map);
+			this.applyLayerVisibility(map);
 
 			void this.loadCurrentViewport(map);
 		});
@@ -714,7 +724,7 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	protected setBasemap(basemap: Basemap): void {
 		this.activeBasemap.set(basemap);
 		if (this.map) {
-			this.applyBasemap(this.map);
+			this.applyLayerVisibility(this.map);
 		}
 		this.persistMapView();
 	}
@@ -722,18 +732,172 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	protected toggleHillshade(visible: boolean): void {
 		this.showHillshade.set(visible);
 		if (this.map) {
-			this.applyBasemap(this.map);
+			this.applyLayerVisibility(this.map);
 		}
 		this.persistMapView();
 	}
 
-	/** A kiválasztott alaptérkép és a domborzat-árnyékolás láthatósága a style rétegein. */
-	private applyBasemap(map: maplibregl.Map): void {
+	/** backlog/202 */
+	protected toggleMyRoutes(visible: boolean): void {
+		this.showMyRoutes.set(visible);
+		if (this.map) {
+			this.applyLayerVisibility(this.map);
+		}
+		this.persistMapView();
+	}
+
+	/** backlog/199 */
+	protected toggleUnmarkedTrails(visible: boolean): void {
+		this.showUnmarkedTrails.set(visible);
+		if (this.map) {
+			this.applyLayerVisibility(this.map);
+		}
+		this.persistMapView();
+	}
+
+	/** A kiválasztott alaptérkép, a domborzat-árnyékolás és a kapcsolható rétegek láthatósága. */
+	private applyLayerVisibility(map: maplibregl.Map): void {
+		const visibility = (visible: boolean) => (visible ? 'visible' : 'none');
 		const basemap = this.activeBasemap();
 		for (const [id, layerId] of Object.entries(BASEMAP_LAYER_IDS)) {
-			map.setLayoutProperty(layerId, 'visibility', id === basemap ? 'visible' : 'none');
+			map.setLayoutProperty(layerId, 'visibility', visibility(id === basemap));
 		}
-		map.setLayoutProperty(HILLSHADE_LAYER_ID, 'visibility', this.showHillshade() ? 'visible' : 'none');
+		map.setLayoutProperty(HILLSHADE_LAYER_ID, 'visibility', visibility(this.showHillshade()));
+		for (const layerId of MY_ROUTES_LAYER_IDS) {
+			map.setLayoutProperty(layerId, 'visibility', visibility(this.showMyRoutes()));
+		}
+		map.setLayoutProperty(TRAIL_SEGMENTS_UNMARKED_LAYER_ID, 'visibility', visibility(this.showUnmarkedTrails()));
+	}
+
+	/**
+	 * backlog/198, backlog/199 — a jelzett utak a jelzés színében, fehér kontúrral (a szatellitképen is
+	 * látszanak); a jelzés nélküli utak alattuk, vékony, halvány szürke vonalként. A raszteres alaptérkép
+	 * feliratai alá nem kerülhetnek (a felirat a csempe része), ezért a jelzés nélküli réteg félig átlátszó.
+	 */
+	private addTrailSegmentLayers(map: maplibregl.Map): void {
+		map.addSource(TRAIL_SEGMENTS_SOURCE_ID, { type: 'geojson', data: trailSegmentsToFeatureCollection([]) });
+		map.addLayer({
+			id: TRAIL_SEGMENTS_UNMARKED_LAYER_ID,
+			type: 'line',
+			source: TRAIL_SEGMENTS_SOURCE_ID,
+			minzoom: MIN_TRAIL_SEGMENT_ZOOM,
+			filter: ['!', ['get', 'marked']],
+			layout: LINE_LAYOUT,
+			paint: { 'line-color': ['get', 'color'], 'line-width': 1.5, 'line-opacity': 0.6 },
+		});
+		map.addLayer({
+			id: TRAIL_SEGMENTS_CASING_LAYER_ID,
+			type: 'line',
+			source: TRAIL_SEGMENTS_SOURCE_ID,
+			minzoom: MIN_TRAIL_SEGMENT_ZOOM,
+			filter: ['get', 'marked'],
+			layout: LINE_LAYOUT,
+			paint: { 'line-color': ['get', 'casing'], 'line-width': 5, 'line-opacity': 0.8 },
+		});
+		map.addLayer({
+			id: TRAIL_SEGMENTS_LAYER_ID,
+			type: 'line',
+			source: TRAIL_SEGMENTS_SOURCE_ID,
+			minzoom: MIN_TRAIL_SEGMENT_ZOOM,
+			filter: ['get', 'marked'],
+			layout: LINE_LAYOUT,
+			paint: { 'line-color': ['get', 'color'], 'line-width': 3 },
+		});
+	}
+
+	/**
+	 * backlog/197, backlog/202, backlog/203 — a saját útvonal magenta, fehér kontúrral (egyik MTSZ
+	 * jelzésszínnel sem téveszthető össze), irány-nyilakkal, indulás / cél / napváltó jelölővel, és
+	 * közelről a nevével.
+	 */
+	private addHikeRouteLayers(map: maplibregl.Map): void {
+		map.addSource(HIKE_ROUTES_SOURCE_ID, { type: 'geojson', data: hikeRoutesToFeatureCollection(this.hikeRoutes.items()) });
+		map.addLayer({
+			id: HIKE_ROUTES_CASING_LAYER_ID,
+			type: 'line',
+			source: HIKE_ROUTES_SOURCE_ID,
+			layout: LINE_LAYOUT,
+			paint: { 'line-color': ROUTE_CASING_COLOR, 'line-width': 8 },
+		});
+		map.addLayer({
+			id: HIKE_ROUTES_LAYER_ID,
+			type: 'line',
+			source: HIKE_ROUTES_SOURCE_ID,
+			layout: LINE_LAYOUT,
+			paint: { 'line-color': ROUTE_COLOR, 'line-width': 5 },
+		});
+		map.addLayer(arrowLayer(HIKE_ROUTES_ARROWS_LAYER_ID, HIKE_ROUTES_SOURCE_ID, ICON_ARROW_LIGHT));
+		map.addLayer({
+			id: HIKE_ROUTES_LABEL_LAYER_ID,
+			type: 'symbol',
+			source: HIKE_ROUTES_SOURCE_ID,
+			minzoom: ROUTE_LABEL_MIN_ZOOM,
+			layout: {
+				'symbol-placement': 'line',
+				'symbol-spacing': 300,
+				'icon-image': ['get', 'label'],
+				'icon-rotation-alignment': 'map',
+				'icon-keep-upright': true,
+				'icon-offset': [0, -12],
+			},
+		});
+		map.addSource(HIKE_ROUTE_MARKERS_SOURCE_ID, { type: 'geojson', data: hikeRouteMarkersToFeatureCollection(this.hikeRoutes.items()) });
+		map.addLayer(markerLayer(HIKE_ROUTE_MARKERS_LAYER_ID, HIKE_ROUTE_MARKERS_SOURCE_ID));
+	}
+
+	/** backlog/197 — a katalógus-előnézet fekete kontúros fehér vonal: sem jelzés-, sem saját útvonal-színű. */
+	private addPreviewLayers(map: maplibregl.Map): void {
+		map.addSource(CURATED_ROUTE_PREVIEW_SOURCE_ID, { type: 'geojson', data: draftRouteToFeatureCollection([]) });
+		map.addLayer({
+			id: CURATED_ROUTE_PREVIEW_CASING_LAYER_ID,
+			type: 'line',
+			source: CURATED_ROUTE_PREVIEW_SOURCE_ID,
+			layout: LINE_LAYOUT,
+			paint: { 'line-color': PREVIEW_CASING_COLOR, 'line-width': 8 },
+		});
+		map.addLayer({
+			id: CURATED_ROUTE_PREVIEW_LAYER_ID,
+			type: 'line',
+			source: CURATED_ROUTE_PREVIEW_SOURCE_ID,
+			layout: LINE_LAYOUT,
+			paint: { 'line-color': PREVIEW_COLOR, 'line-width': 4 },
+		});
+		map.addLayer(arrowLayer(CURATED_ROUTE_PREVIEW_ARROWS_LAYER_ID, CURATED_ROUTE_PREVIEW_SOURCE_ID, ICON_ARROW_DARK));
+		map.addSource(CURATED_ROUTE_PREVIEW_MARKERS_SOURCE_ID, { type: 'geojson', data: routeMarkersToFeatureCollection([]) });
+		map.addLayer(markerLayer(CURATED_ROUTE_PREVIEW_MARKERS_LAYER_ID, CURATED_ROUTE_PREVIEW_MARKERS_SOURCE_ID));
+	}
+
+	/** backlog/197 — a piszkozat a saját útvonal színe, szaggatottan; a pontjai a backlog/203 jelölői. */
+	private addDraftLayers(map: maplibregl.Map): void {
+		map.addSource(HIKE_ROUTE_DRAFT_SOURCE_ID, { type: 'geojson', data: draftRouteToFeatureCollection(this.draft()) });
+		map.addLayer({
+			id: HIKE_ROUTE_DRAFT_CASING_LAYER_ID,
+			type: 'line',
+			source: HIKE_ROUTE_DRAFT_SOURCE_ID,
+			layout: LINE_LAYOUT,
+			paint: { 'line-color': ROUTE_CASING_COLOR, 'line-width': 7 },
+		});
+		map.addLayer({
+			id: HIKE_ROUTE_DRAFT_LAYER_ID,
+			type: 'line',
+			source: HIKE_ROUTE_DRAFT_SOURCE_ID,
+			layout: { 'line-join': 'round' },
+			paint: { 'line-color': ROUTE_COLOR, 'line-width': 4, 'line-dasharray': [2, 1.5] },
+		});
+		map.addLayer(arrowLayer(HIKE_ROUTE_DRAFT_ARROWS_LAYER_ID, HIKE_ROUTE_DRAFT_SOURCE_ID, ICON_ARROW_LIGHT));
+		map.addSource(HIKE_ROUTE_DRAFT_POINTS_SOURCE_ID, { type: 'geojson', data: this.draftMarkers() });
+		map.addLayer(markerLayer(HIKE_ROUTE_DRAFT_POINTS_LAYER_ID, HIKE_ROUTE_DRAFT_POINTS_SOURCE_ID));
+		map.addSource(AUTO_ROUTE_START_SOURCE_ID, { type: 'geojson', data: routeMarkersToFeatureCollection([]) });
+		map.addLayer(markerLayer(AUTO_ROUTE_START_LAYER_ID, AUTO_ROUTE_START_SOURCE_ID));
+	}
+
+	/** backlog/203 — a piszkozat jelölői: indulás, cél, napváltók és a többi kijelölt pont. */
+	private draftMarkers(): GeoJSON.FeatureCollection<GeoJSON.Point> {
+		const draft = this.draftEditor.draft();
+		return routeMarkersToFeatureCollection(draft.coordinates, {
+			dayEndIndexes: this.dayBreaks().map((day) => day.waypointIndex),
+			waypointIndexes: draft.waypointIndexes,
+		});
 	}
 
 	/** backlog/214 — a nézet minden mozdulat végén és alaptérkép-váltáskor eszközön megmarad. */
@@ -742,7 +906,14 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 			return;
 		}
 		const center = this.map.getCenter();
-		const view: StoredTuraMapView = { center: [center.lng, center.lat], zoom: this.map.getZoom(), basemap: this.activeBasemap(), hillshade: this.showHillshade() };
+		const view: StoredTuraMapView = {
+			center: [center.lng, center.lat],
+			zoom: this.map.getZoom(),
+			basemap: this.activeBasemap(),
+			hillshade: this.showHillshade(),
+			myRoutes: this.showMyRoutes(),
+			unmarkedTrails: this.showUnmarkedTrails(),
+		};
 		void this.localState.writeMapView(view);
 	}
 
@@ -948,4 +1119,36 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 		const bbox: Bbox = [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()];
 		await this.trailSegments.loadBbox(COUNTRY_CODE, bbox);
 	}
+}
+
+/** backlog/203 — irány-nyilak a vonal mentén (a nyíl-kép a vonal irányába fordul). */
+function arrowLayer(id: string, source: string, icon: string): maplibregl.SymbolLayerSpecification {
+	return {
+		id,
+		type: 'symbol',
+		source,
+		layout: {
+			'symbol-placement': 'line',
+			'symbol-spacing': ARROW_SPACING_PX,
+			'icon-image': icon,
+			'icon-rotation-alignment': 'map',
+			'icon-allow-overlap': true,
+			'icon-ignore-placement': true,
+		},
+	};
+}
+
+/** backlog/203 — pont-jelölők: a feature `icon` / `sortKey` tulajdonságából. */
+function markerLayer(id: string, source: string): maplibregl.SymbolLayerSpecification {
+	return {
+		id,
+		type: 'symbol',
+		source,
+		layout: {
+			'icon-image': ['get', 'icon'],
+			'icon-allow-overlap': true,
+			'icon-ignore-placement': true,
+			'symbol-sort-key': ['get', 'sortKey'],
+		},
+	};
 }

@@ -58,26 +58,56 @@ const SHAPE_WORDS = {
 	dot: 'PONT',
 };
 
+// backlog/198, backlog/199 — a magyar helyi jelzések alakzat-tokenjei (osmc:symbol 3. mezője a szín
+// után, pl. `green_arch`): Ω barlang, L rom, ♟ kilátó, ✞ templom, ♜ emlékmű, ⌂ menedékház. Pontos
+// egyezés, mert az `L` / `T` betű részszóként sok más tokenben is előfordul.
+const LOCAL_SHAPE_TOKENS = {
+	arch: 'OMEGA',
+	L: 'ROM',
+	turned_T: 'KILATO',
+	chapel: 'TEMPLOM',
+	memorial: 'EMLEKMU',
+	house: 'HAZ',
+};
+
 function stripAccents(text) {
 	return text.normalize('NFD').replace(/[̀-ͯ]/g, '');
 }
 
+// osmc:symbol = `útszín:háttér:előtér[:szöveg:szövegszín]`. A jelzés színe az előtér-token szín-
+// előtagja (`red_bar` → piros); az útszín (1. mező) gyakran csak általános `black`, ezért az csak
+// tartalék. A kód `<SZÍN>_<ALAKZAT>` — a frontend a vonal színét csak a szín-előtagból veszi
+// (trail-segment-symbol-color.ts), az alakzat a jelmagyarázatban / kártyán számít. Sorrend:
+// ismert alakzat → a `symbol:hu` tag (pl. `LILA_M`) → a szöveg-mező betűjele (T tanösvény, P Pálos
+// út, …) → `<SZÍN>_JEL`; így egy színnel jelzett út sosem esik a szürke `EGYEB`-be.
 function symbolFromTags(tags) {
 	const osmcSymbol = tags['osmc:symbol'];
+	const hu = tags['symbol:hu'];
+	const huSymbol = hu ? stripAccents(hu.toUpperCase()).replace(/[^A-Z0-9]+/g, '_').replace(/^_+|_+$/g, '') : '';
 	if (osmcSymbol) {
 		const parts = osmcSymbol.split(':');
-		const color = COLOR_WORDS[parts[0]];
 		const shapeToken = parts[2] ?? '';
-		const shapeWord = Object.keys(SHAPE_WORDS).find((word) => shapeToken.includes(word));
-		if (color && shapeWord) {
-			return `${color}_${SHAPE_WORDS[shapeWord]}`;
+		// A fehér előtér (pl. az osztrák `red:red:white_bar` piros-fehér-piros) a vonalon nem a jelzés
+		// színe — ilyenkor az útszín, majd a háttér színe dönt; fehér csak a teljesen fehér jelzés.
+		const colors = [shapeToken, parts[0], parts[1] ?? ''].map((token) => COLOR_WORDS[token.split('_')[0]]).filter(Boolean);
+		const color = colors.find((candidate) => candidate !== 'FEHER') ?? colors[0];
+		if (color) {
+			const localShape = LOCAL_SHAPE_TOKENS[shapeToken.replace(/^[a-z]+_/, '')];
+			const shapeWord = Object.keys(SHAPE_WORDS).find((word) => shapeToken.includes(word));
+			if (localShape) {
+				return `${color}_${localShape}`;
+			}
+			if (shapeWord) {
+				return `${color}_${SHAPE_WORDS[shapeWord]}`;
+			}
+			if (huSymbol) {
+				return huSymbol;
+			}
+			const text = stripAccents((parts[3] ?? '').toUpperCase()).replace(/[^A-Z0-9]+/g, '');
+			return `${color}_${text || 'JEL'}`;
 		}
 	}
-	const hu = tags['symbol:hu'];
-	if (hu) {
-		return stripAccents(hu.toUpperCase()).replace(/[^A-Z0-9]+/g, '_').replace(/^_+|_+$/g, '');
-	}
-	return 'EGYEB';
+	return huSymbol || 'EGYEB';
 }
 
 async function fetchOverpass(query, { attempts = 5, timeoutMs = 90_000 } = {}) {

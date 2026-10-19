@@ -56,4 +56,15 @@ describe('TuraLocalStateService', () => {
     await Preferences.set({ key: 'lm2_tura_map_view', value: JSON.stringify({ center: [18.9], zoom: 'x' }) });
     expect(await service.readMapView()).toBeNull();
   });
+
+  it('the layer toggles round-trip; a view stored before them still reads (backlog/199, backlog/202)', async () => {
+    await service.writeMapView({ ...view, myRoutes: false, unmarkedTrails: false });
+    expect(await service.readMapView()).toEqual({ ...view, myRoutes: false, unmarkedTrails: false });
+
+    await Preferences.set({ key: 'lm2_tura_map_view', value: JSON.stringify(view) });
+    expect(await service.readMapView()).toEqual(view);
+
+    await Preferences.set({ key: 'lm2_tura_map_view', value: JSON.stringify({ ...view, myRoutes: 'no' }) });
+    expect(await service.readMapView()).toBeNull();
+  });
 });
