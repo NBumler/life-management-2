@@ -163,6 +163,7 @@ szolgáltatótól jönnek (nem a backendről), és megjelenítést, nem számít
   `/api/tura/route-metrics`-et említik — a leírás módosítása az outbox-payload hash-ét is
   megváltoztatná (`verify:outbox` → verzió-emelés + no-op migrátor-lépés), ezért a következő
   érdemi `HikeRoute`-séma-változással együtt javítandó.
+  → Saját jegy: [[194-tura-hikeroute-openapi-leiras-elavult-route-metrics]] (2026-10-19).
 - Zöld: backend `test`, frontend `test:ci` (1926), `lint`, `build`, `verify:outbox`.
 
 ### Megvalósítás — 2. kör (2026-10-18)

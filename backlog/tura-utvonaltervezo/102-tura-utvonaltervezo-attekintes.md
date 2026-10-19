@@ -65,6 +65,7 @@ túrázási funkció).
 | [[backlog/tura-utvonaltervezo/191-tura-ures-katalogus-felrevezeto-uzenet]] | Üres katalógusnál is „egyik útvonal sem felel meg a szűrőnek” jelenik meg | `backlog` |
 | `backlog/archive/192-tura-terkep-megnyitaskor-alulmeretezett.md` | Megnyitáskor a térkép egy pillanatig a képernyő ~60%-át tölti ki | `done` |
 | [[backlog/tura-utvonaltervezo/193-tura-ajanlott-turak-katalogus-tartalomforras]] | Az ajánlott túrák katalógusának nincs tartalomforrása | `backlog` |
+| [[backlog/tura-utvonaltervezo/194-tura-hikeroute-openapi-leiras-elavult-route-metrics]] | A HikeRoute / HikeRouteDay OpenAPI-leírás a megszűnt route-metrics végpontra hivatkozik | `backlog` |
 
 > Kapcsolódó, a mappán kívüli jegy: [[150-biciklizes-elo-gps-tracker]] — a bicikli élő tracker
 > közös, eszközön futó geo-alapréteget (GPS-követés, build-asset DEM, profilos routing) épít, amit a 106 is használ.
