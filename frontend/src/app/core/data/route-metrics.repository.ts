@@ -1,7 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 
 import { ElevationService } from '../geo/elevation.service';
-import { RouteMetricsResult, computeRouteMetrics, routeMetricsSamples } from '../geo/route-metrics';
+import { RouteMetricsResult, computeRouteMetrics, elevationSamples } from '../geo/route-metrics';
 
 /**
  * backlog/tura-utvonaltervezo/103-... 2.3 fázis; backlog/151 — route metrics are computed on the
@@ -18,7 +18,7 @@ export class RouteMetricsRepository {
   async compute(coordinates: readonly number[][]): Promise<RouteMetricsResult> {
     this.loading.set(true);
     try {
-      const samples = routeMetricsSamples(coordinates);
+      const samples = elevationSamples(coordinates);
       let elevations: number[] | null;
       try {
         elevations = await this.elevation.fetchElevations(samples);

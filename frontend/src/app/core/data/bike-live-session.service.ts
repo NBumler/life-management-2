@@ -5,12 +5,12 @@ import { TranslateService } from '@ngx-translate/core';
 
 import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { ElevationService } from '../geo/elevation.service';
-import { haversineMeters, polylineLengthMeters, resampleEvenly, withExactEndpoints } from '../geo/geo-math';
+import { haversineMeters, polylineLengthMeters, withExactEndpoints } from '../geo/geo-math';
 import { LocationPermissionState, LocationTrackingService, TrackingFix } from '../geo/location-tracking.service';
-import { computeRouteMetrics } from '../geo/route-metrics';
+import { computeRouteMetrics, elevationSamples } from '../geo/route-metrics';
 import { RoutingService } from '../geo/routing.service';
 import { TrackBufferService } from '../geo/track-buffer';
-import { ELEVATION_SAMPLE_SPACING_METERS, MIN_PLAUSIBLE_ESTIMATED_SPEED_KMH, ROAD_CIRCUITY_FACTOR } from '../geo/tracking-config';
+import { MIN_PLAUSIBLE_ESTIMATED_SPEED_KMH, ROAD_CIRCUITY_FACTOR } from '../geo/tracking-config';
 import { LocalNotificationsGateway } from '../notifications/local-notifications.gateway';
 import { uuidV4 } from '../sync/uuid';
 
@@ -432,8 +432,7 @@ export class BikeLiveSessionService {
     try {
       let gain = 0;
       for (const segment of segments) {
-        const count = Math.max(2, Math.ceil(polylineLengthMeters(segment) / ELEVATION_SAMPLE_SPACING_METERS) + 1);
-        const samples = resampleEvenly(segment, count);
+        const samples = elevationSamples(segment);
         const elevations = await this.elevation.fetchElevations(samples);
         gain += computeRouteMetrics(segment, samples, elevations).elevationGainMeters ?? 0;
       }

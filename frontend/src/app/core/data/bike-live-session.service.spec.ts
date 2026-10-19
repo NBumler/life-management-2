@@ -7,6 +7,7 @@ import { ElevationService } from '../geo/elevation.service';
 import { LocationTrackingGateway } from '../geo/location-tracking.gateway';
 import { LocationTrackingService } from '../geo/location-tracking.service';
 import { RoutingService } from '../geo/routing.service';
+import { RouteMetricsRepository } from './route-metrics.repository';
 import { LocalNotificationsGateway } from '../notifications/local-notifications.gateway';
 import { BikeLiveSessionService, activeElapsedMs, isImplausibleEstimate, trackSegments } from './bike-live-session.service';
 
@@ -165,6 +166,22 @@ describe('BikeLiveSessionService (backlog/150)', () => {
     expect(summary.distanceKm).toBeCloseTo(0.22, 2);
     expect(summary.elevationGainMeters).toBe(40); // 20 m in each of the two segments
     expect(summary.trackingMode).toBe('LIVE');
+  });
+
+  it('summary(): the same line gives the same elevation gain as the hike route metrics (one sampler, backlog/176)', async () => {
+    // rolling terrain as a function of the distance along the line
+    elevation.fetchElevations.and.callFake((samples) => Promise.resolve(samples.map((sample) => 100 + 8 * Math.sin(sample[2] / 60))));
+    await service.start('LIVE', 0);
+    for (let step = 0; step <= 8; step++) {
+      await deliver(step, step * 30_000);
+    }
+    await service.finish(10 * 60_000);
+
+    const bikeGain = (await service.summary())!.elevationGainMeters;
+    const line = Array.from({ length: 9 }, (_, step) => [19.05, 47.5 + step * 0.001]);
+    const hikeGain = (await TestBed.inject(RouteMetricsRepository).compute(line)).elevationGainMeters;
+    expect(hikeGain).toBeGreaterThan(0);
+    expect(bikeGain).toBe(Math.round(hikeGain!));
   });
 
   it('summary(): without a usable track the distance / elevation are not computable (null, never 0)', async () => {

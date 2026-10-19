@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 
 import { ElevationService } from '../geo/elevation.service';
-import { PROFILE_SAMPLE_COUNT } from '../geo/route-metrics';
+import { elevationSamples } from '../geo/route-metrics';
 import { RouteMetricsRepository } from './route-metrics.repository';
 
 /** backlog/151 — metrics are computed on the device; only the elevation lookup is external. */
@@ -32,11 +32,11 @@ describe('RouteMetricsRepository', () => {
 		const result = await repository.compute(coordinates);
 
 		expect(elevation.fetchElevations).toHaveBeenCalledTimes(1);
-		expect(elevation.fetchElevations.calls.mostRecent().args[0].length).toBe(PROFILE_SAMPLE_COUNT);
+		expect(elevation.fetchElevations.calls.mostRecent().args[0]).toEqual(elevationSamples(coordinates));
 		expect(result.distanceMeters).toBeCloseTo(1112, -1);
 		expect(result.elevationGainMeters).toBe(0);
 		expect(result.estimatedDurationMinutes).not.toBeNull();
-		expect(result.profile?.length).toBe(PROFILE_SAMPLE_COUNT);
+		expect(result.profile?.length).toBe(elevationSamples(coordinates).length);
 	});
 
 	it('compute(): without internet (elevation lookup fails) still returns the distance, the rest is null', async () => {

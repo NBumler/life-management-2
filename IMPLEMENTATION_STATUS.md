@@ -14,6 +14,10 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-19 — #176** Közös, távolság alapú DEM-mintavétel: a túra útvonal-metrika és a bicikli élő edzés
+  ugyanazzal az `elevationSamples()`-szel (50 m-enként, max. 2000 minta) számol szintemelkedést — ugyanarra a
+  vonalra ugyanaz az érték; a túra-profil legfeljebb 50 pontra ritkítva. — érintett: [[Biciklizés napló]];
+  kód: `core/geo/route-metrics.ts`, `core/data/route-metrics.repository.ts`, `core/data/bike-live-session.service.ts`.
 - **2026-10-19 — #175** Android emulátoros tesztkörnyezet: `scripts/android-emulator.ps1` létrehozza
   (avdmanager nélkül) és elindítja a `LM2_Phone` AVD-t (Android 15, 360 dp), `install-android.ps1 -Emulator`
   arra telepít `http://10.0.2.2:8080/api`-val; `-Emulator` nélkül az emulátor-serialok kiszűrve. —

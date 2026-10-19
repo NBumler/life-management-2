@@ -4,14 +4,25 @@ import { polylineLengthMeters, resampleEvenly } from './geo-math';
 /**
  * backlog/151 — distance / elevation gain-loss / duration estimate / elevation profile for a route,
  * computed on the device (Backend-offline first §14). Formerly the backend `RouteMetricsService`
- * behind `POST /api/tura/route-metrics`; the constants and the algorithm are carried over 1:1.
+ * behind `POST /api/tura/route-metrics`; the gain / loss algorithm and its constants are carried over
+ * 1:1, the sampling is distance-based since backlog/176 (the backend still takes a fixed 50 samples).
  *
  * The distance needs no input beyond the coordinates, so it is always computable. Everything that
  * depends on elevation is `null` when no elevation data is available (§14: a non-computable value is
  * shown as `~`, never stored as `0`).
  */
 
-/** Elevation is looked up at this many points along the route, spread evenly by distance. */
+/**
+ * backlog/176 — elevation is looked up every this many metres along a line, for the hike route metrics
+ * and the bike ride alike (one sampler, so the same line gives the same gain): dense enough for real
+ * climbs, sparse enough to smooth GPS jitter on a recorded track.
+ */
+export const ELEVATION_SAMPLE_SPACING_METERS = 50;
+
+/** Upper bound on the samples per line (100 km at the spacing above); a longer line is sampled more sparsely instead. */
+export const MAX_ELEVATION_SAMPLES = 2000;
+
+/** The elevation profile (chart) gets at most this many points, thinned from the elevation samples. */
 export const PROFILE_SAMPLE_COUNT = 50;
 
 /**
@@ -33,9 +44,21 @@ export interface RouteMetricsResult {
   profile: ElevationProfilePoint[] | null;
 }
 
-/** The points whose elevation `computeRouteMetrics` expects, as `[lon, lat, distanceFromStartMeters]`. */
-export function routeMetricsSamples(coordinates: readonly (readonly number[])[]): [number, number, number][] {
-  return resampleEvenly(coordinates, PROFILE_SAMPLE_COUNT);
+/**
+ * The points whose elevation `computeRouteMetrics` expects, as `[lon, lat, distanceFromStartMeters]`:
+ * one every `ELEVATION_SAMPLE_SPACING_METERS`, at least the two endpoints, at most `MAX_ELEVATION_SAMPLES`.
+ */
+export function elevationSamples(coordinates: readonly (readonly number[])[]): [number, number, number][] {
+  const count = Math.ceil(polylineLengthMeters(coordinates) / ELEVATION_SAMPLE_SPACING_METERS) + 1;
+  return resampleEvenly(coordinates, Math.min(MAX_ELEVATION_SAMPLES, Math.max(2, count)));
+}
+
+/** At most `PROFILE_SAMPLE_COUNT` evenly picked items, always keeping the first and the last. */
+function thinForProfile<T>(items: readonly T[]): T[] {
+  if (items.length <= PROFILE_SAMPLE_COUNT) {
+    return [...items];
+  }
+  return Array.from({ length: PROFILE_SAMPLE_COUNT }, (_, k) => items[Math.round((k * (items.length - 1)) / (PROFILE_SAMPLE_COUNT - 1))]);
 }
 
 /**
@@ -71,7 +94,8 @@ export function computeRouteMetrics(
   }
 
   const durationMinutes = (distanceMeters / 1000) * MINUTES_PER_KILOMETER + gain / METERS_ASCENT_PER_MINUTE;
-  const profile = samples.map((sample, i) => ({ distanceMeters: sample[2], elevationMeters: elevations[i] }));
+  // gain / loss above come from every sample; the chart only needs a thinned series
+  const profile = thinForProfile(samples.map((sample, i) => ({ distanceMeters: sample[2], elevationMeters: elevations[i] })));
   return {
     distanceMeters,
     elevationGainMeters: gain,

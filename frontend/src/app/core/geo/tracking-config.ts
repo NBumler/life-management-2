@@ -12,9 +12,6 @@ export const MAX_ACCEPTED_ACCURACY_METERS = 30;
 /** A fix implying a faster speed than this since the previous accepted one is an implausible jump and is rejected. */
 export const MAX_PLAUSIBLE_SPEED_KMH = 80;
 
-/** A recorded track is resampled at this spacing for the DEM lookup — dense enough for real climbs, sparse enough to smooth GPS jitter. */
-export const ELEVATION_SAMPLE_SPACING_METERS = 50;
-
 /** `TrackBufferService` flushes to `Preferences` after this many appended points, not on every single one (write-amplification on a multi-hour ride). */
 export const TRACK_BUFFER_PERSIST_EVERY_N_POINTS = 10;
 

@@ -1,6 +1,6 @@
 ---
 verifikalva: 2026-10-19
-verifikalt_commit: 3ced711
+verifikalt_commit: 0122b91
 ---
 
 # Biciklizés napló
@@ -80,6 +80,7 @@ Csak natív appban (`offlineCapable`) és `edzes.bicikli` flaggel. Egyszerre egy
 | **Pontos** (`LIVE`) | Folyamatos háttér-GPS (`@capgo/background-geolocation`, Androidon foreground service + a plugin tartós értesítése), zárolt képernyővel is | A szűrt pontok közti szakaszok összege, szünetenként külön szakasz | Az eszközön tárolt DEM-ből a track mentén |
 | **Becsült** (`ESTIMATED`) | Csak induláskor és befejezéskor egy-egy hely; menet közben nincs GPS | Eszközön futó bicikli-útvonaltervezés (`BIKE` profil) a két pont között | DEM az útvonal mentén |
 
+- **Szintemelkedés (mindkét mód):** DEM-minta `ELEVATION_SAMPLE_SPACING_METERS` (50 m)-enként (legfeljebb `MAX_ELEVATION_SAMPLES` = 2000 / vonal), `ELEVATION_NOISE_THRESHOLD_METERS` (2 m) zajküszöbbel, szakaszonként összegezve — ugyanaz a mintavevő (`core/geo/route-metrics.ts` `elevationSamples()`), mint a túra útvonal-metrikáé, így ugyanarra a vonalra ugyanazt az értéket adják.
 - **Pontszűrés (Pontos):** a `MAX_ACCEPTED_ACCURACY_METERS` (30 m)-nél pontatlanabb pont és a `MAX_PLAUSIBLE_SPEED_KMH` (80 km/h)-nál gyorsabb ugrást jelentő pont kimarad (a pontatlan pont „gyenge jel”-jelzést ad); `LIVE_DISTANCE_FILTER_METERS` (5 m) alatti elmozdulásra nincs új pont. A nyers pontok eszköz-lokálisak (track-buffer), mentés / elvetés után törlődnek.
 - **Végponti hely (Becsült):** legfeljebb `ENDPOINT_FIX_TIMEOUT_SECONDS` (20 s) várakozás; `ENDPOINT_FIX_GOOD_ACCURACY_METERS` (20 m) pontosságnál korábban kész; timeout után a legjobb kapott hely; ha semmi nem jött, a pont sikertelen. Az időmérés a koppintástól indul, a kezdőpont a háttérben rögzül. Ha az app egy rögzítés közben bezáródik, az a pont újraindításkor sikertelen.
 - **Becsült táv tartaléka:** ha nincs útvonal (lefedettségen kívül / nincs geo-csomag), légvonal × `ROAD_CIRCUITY_FACTOR` (1,3) — „durva becslés”, a szintemelkedés ekkor a légvonal mentén. Ha a kezdő- vagy a végpont sikertelen, a táv és a szintemelkedés **üres** (soha nem `0`).
