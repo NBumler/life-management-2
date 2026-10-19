@@ -1,7 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 
 import { ElevationService } from '../geo/elevation.service';
-import { RouteMetricsResult, computeRouteMetrics, elevationSamples } from '../geo/route-metrics';
+import { RouteDayMetrics, RouteMetricsResult, computeRouteMetrics, elevationSamples, splitRouteMetrics } from '../geo/route-metrics';
 
 /**
  * backlog/tura-utvonaltervezo/103-... 2.3 fázis; backlog/151 — route metrics are computed on the
@@ -16,6 +16,18 @@ export class RouteMetricsRepository {
   readonly loading = signal(false);
 
   async compute(coordinates: readonly number[][]): Promise<RouteMetricsResult> {
+    return (await this.computeWithDays(coordinates, [])).route;
+  }
+
+  /**
+   * backlog/188 — the route metrics plus per-day metrics split at `endIndexes` (see
+   * `splitRouteMetrics`), from one elevation lookup, so the daily gains / losses add up exactly to the
+   * route's. An empty `endIndexes` gives no days.
+   */
+  async computeWithDays(
+    coordinates: readonly number[][],
+    endIndexes: readonly number[],
+  ): Promise<{ route: RouteMetricsResult; days: RouteDayMetrics[] }> {
     this.loading.set(true);
     try {
       const samples = elevationSamples(coordinates);
@@ -25,7 +37,10 @@ export class RouteMetricsRepository {
       } catch {
         elevations = null;
       }
-      return computeRouteMetrics(coordinates, samples, elevations);
+      return {
+        route: computeRouteMetrics(coordinates, samples, elevations),
+        days: endIndexes.length === 0 ? [] : splitRouteMetrics(coordinates, samples, elevations, endIndexes),
+      };
     } finally {
       this.loading.set(false);
     }

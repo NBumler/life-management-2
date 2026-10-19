@@ -1,5 +1,5 @@
 import { ElevationProfilePoint } from '../../api/model/elevationProfilePoint';
-import { polylineLengthMeters, resampleEvenly } from './geo-math';
+import { haversineMeters, polylineLengthMeters, resampleEvenly } from './geo-math';
 
 /**
  * backlog/151 — distance / elevation gain-loss / duration estimate / elevation profile for a route,
@@ -44,6 +44,9 @@ export interface RouteMetricsResult {
   profile: ElevationProfilePoint[] | null;
 }
 
+/** backlog/188 — one day of a multi-day route: the route metrics without the chart. */
+export type RouteDayMetrics = Omit<RouteMetricsResult, 'profile'>;
+
 /**
  * The points whose elevation `computeRouteMetrics` expects, as `[lon, lat, distanceFromStartMeters]`:
  * one every `ELEVATION_SAMPLE_SPACING_METERS`, at least the two endpoints, at most `MAX_ELEVATION_SAMPLES`.
@@ -80,27 +83,100 @@ export function computeRouteMetrics(
 
   let gain = 0;
   let loss = 0;
-  let lastElevation = elevations[0];
-  for (let i = 1; i < elevations.length; i++) {
-    const diff = elevations[i] - lastElevation;
-    if (Math.abs(diff) >= ELEVATION_NOISE_THRESHOLD_METERS) {
-      if (diff > 0) {
-        gain += diff;
-      } else {
-        loss += -diff;
-      }
-      lastElevation = elevations[i];
+  for (const step of elevationSteps(elevations)) {
+    if (step.diff > 0) {
+      gain += step.diff;
+    } else {
+      loss -= step.diff;
     }
   }
 
-  const durationMinutes = (distanceMeters / 1000) * MINUTES_PER_KILOMETER + gain / METERS_ASCENT_PER_MINUTE;
   // gain / loss above come from every sample; the chart only needs a thinned series
   const profile = thinForProfile(samples.map((sample, i) => ({ distanceMeters: sample[2], elevationMeters: elevations[i] })));
   return {
     distanceMeters,
     elevationGainMeters: gain,
     elevationLossMeters: loss,
-    estimatedDurationMinutes: Math.round(durationMinutes),
+    estimatedDurationMinutes: naismithMinutes(distanceMeters, gain),
     profile,
   };
+}
+
+/**
+ * backlog/188 — per-day metrics of a route split at `endIndexes` (each day's last coordinate index,
+ * strictly increasing, the last one `coordinates.length - 1` — the `HikeRouteDay.endWaypointIndex`
+ * contract). Uses the route's single sample series (`samples` / `elevations` exactly as for
+ * `computeRouteMetrics`), so the noise filter runs once along the whole route and each counted step
+ * goes to the day its sample lies in: the daily gains / losses add up exactly to the route's. The
+ * per-day duration is Naismith on the day's own distance and gain, rounded per day.
+ */
+export function splitRouteMetrics(
+  coordinates: readonly (readonly number[])[],
+  samples: readonly (readonly number[])[],
+  elevations: readonly number[] | null,
+  endIndexes: readonly number[],
+): RouteDayMetrics[] {
+  const cumulative = cumulativeDistances(coordinates);
+  const boundaries = endIndexes.map((index) => cumulative[index]);
+  const hasElevation = elevations !== null && elevations.length === samples.length && elevations.length > 0;
+  const gains = endIndexes.map(() => 0);
+  const losses = endIndexes.map(() => 0);
+  if (hasElevation) {
+    let day = 0;
+    for (const step of elevationSteps(elevations)) {
+      const distance = samples[step.index][2];
+      while (day < boundaries.length - 1 && distance > boundaries[day]) {
+        day++;
+      }
+      if (step.diff > 0) {
+        gains[day] += step.diff;
+      } else {
+        losses[day] -= step.diff;
+      }
+    }
+  }
+  return endIndexes.map((end, day) => {
+    const distanceMeters = cumulative[end] - (day === 0 ? 0 : cumulative[endIndexes[day - 1]]);
+    return hasElevation
+      ? {
+          distanceMeters,
+          elevationGainMeters: gains[day],
+          elevationLossMeters: losses[day],
+          estimatedDurationMinutes: naismithMinutes(distanceMeters, gains[day]),
+        }
+      : { distanceMeters, elevationGainMeters: null, elevationLossMeters: null, estimatedDurationMinutes: null };
+  });
+}
+
+/**
+ * The elevation changes that count towards gain / loss: a step is counted (and becomes the new
+ * reference) once it reaches `ELEVATION_NOISE_THRESHOLD_METERS` from the last counted elevation.
+ * `index` is the sample at which the step is counted.
+ */
+function elevationSteps(elevations: readonly number[]): { index: number; diff: number }[] {
+  const steps: { index: number; diff: number }[] = [];
+  let lastElevation = elevations[0];
+  for (let i = 1; i < elevations.length; i++) {
+    const diff = elevations[i] - lastElevation;
+    if (Math.abs(diff) >= ELEVATION_NOISE_THRESHOLD_METERS) {
+      steps.push({ index: i, diff });
+      lastElevation = elevations[i];
+    }
+  }
+  return steps;
+}
+
+function naismithMinutes(distanceMeters: number, gainMeters: number): number {
+  return Math.round((distanceMeters / 1000) * MINUTES_PER_KILOMETER + gainMeters / METERS_ASCENT_PER_MINUTE);
+}
+
+/** Distance from the start to each coordinate, in metres (`[0, ..., polylineLengthMeters]`). */
+function cumulativeDistances(coordinates: readonly (readonly number[])[]): number[] {
+  const distances = [0];
+  for (let i = 1; i < coordinates.length; i++) {
+    const a = coordinates[i - 1];
+    const b = coordinates[i];
+    distances.push(distances[i - 1] + haversineMeters(a[0], a[1], b[0], b[1]));
+  }
+  return distances;
 }

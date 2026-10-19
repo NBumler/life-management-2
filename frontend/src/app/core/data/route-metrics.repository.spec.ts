@@ -60,4 +60,45 @@ describe('RouteMetricsRepository', () => {
 		await promise;
 		expect(repository.loading()).toBeFalse();
 	});
+
+	it('computeWithDays(): one elevation lookup for the route and its days, whose gains add up to the total (backlog/188)', async () => {
+		const route = [
+			[19.0, 47.0],
+			[19.0, 47.01],
+			[19.0, 47.02],
+		];
+		elevation.fetchElevations.and.callFake(async (points) => points.map((_, i) => 100 + 3 * i));
+
+		const { route: total, days } = await repository.computeWithDays(route, [1, 2]);
+
+		expect(elevation.fetchElevations).toHaveBeenCalledTimes(1);
+		expect(days.length).toBe(2);
+		expect(days[0].elevationGainMeters! + days[1].elevationGainMeters!).toBe(total.elevationGainMeters!);
+		expect(days[0].elevationGainMeters).toBeGreaterThan(0);
+		expect(days[1].elevationGainMeters).toBeGreaterThan(0);
+	});
+
+	it('computeWithDays(): without internet the days keep their distance, the elevation fields are null', async () => {
+		elevation.fetchElevations.and.rejectWith(new Error('offline'));
+
+		const { days } = await repository.computeWithDays(
+			[
+				[19.0, 47.0],
+				[19.0, 47.01],
+				[19.0, 47.02],
+			],
+			[1, 2],
+		);
+
+		expect(days.map((day) => day.distanceMeters > 0)).toEqual([true, true]);
+		expect(days.map((day) => day.elevationGainMeters)).toEqual([null, null]);
+	});
+
+	it('computeWithDays(): no day breaks → no days', async () => {
+		elevation.fetchElevations.and.callFake(async (points) => points.map(() => 0));
+
+		const { days } = await repository.computeWithDays(coordinates, []);
+
+		expect(days).toEqual([]);
+	});
 });

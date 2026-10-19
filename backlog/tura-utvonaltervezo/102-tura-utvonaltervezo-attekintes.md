@@ -59,7 +59,7 @@ túrázási funkció).
 | `backlog/archive/185-tura-idotartam-magyarul-beegetve.md` | Az időtartam magyar egységekkel be van égetve („1 ó 31 p” angol felületen is) | `done` |
 | `backlog/archive/186-tura-napok-szama-egyes-szam.md` | „1 days”: a napok száma nem kezeli az egyes számot | `done` |
 | `backlog/archive/187-tura-utvonalnev-es-napok-panel-margo.md` | Az útvonalnév-mező és a napok panel összegző szövege a bal szélhez tapad | `done` |
-| [[backlog/tura-utvonaltervezo/188-tura-napi-szintemelkedes-osszege-elter]] | A napi szakaszok szintemelkedésének összege eltér a teljes útvonalétól | `backlog` |
+| `backlog/archive/188-tura-napi-szintemelkedes-osszege-elter.md` | A napi szakaszok szintemelkedésének összege eltér a teljes útvonalétól | `done` |
 | [[backlog/tura-utvonaltervezo/189-tura-katalogus-elonezet-eltuntetese]] | Az ajánlott túra előnézeti vonala nem tüntethető el | `backlog` |
 | [[backlog/tura-utvonaltervezo/190-tura-auto-utvonal-toreespontok-markerkent]] | Az automatikus útvonal minden töréspontja külön útpont-markerként jelenik meg | `backlog` |
 | [[backlog/tura-utvonaltervezo/191-tura-ures-katalogus-felrevezeto-uzenet]] | Üres katalógusnál is „egyik útvonal sem felel meg a szűrőnek” jelenik meg | `backlog` |

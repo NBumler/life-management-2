@@ -5,6 +5,7 @@ import {
   PROFILE_SAMPLE_COUNT,
   computeRouteMetrics,
   elevationSamples,
+  splitRouteMetrics,
 } from './route-metrics';
 
 /**
@@ -124,5 +125,59 @@ describe('route-metrics', () => {
 
   it('rejects fewer than two points', () => {
     expect(() => computeRouteMetrics([[19.0, 47.0]], [], null)).toThrowError();
+  });
+
+  describe('splitRouteMetrics (backlog/188)', () => {
+    // ~3.3 km due north, split after the 2nd coordinate (~1.1 km) into two days
+    const route = [
+      [19.0, 47.0],
+      [19.0, 47.01],
+      [19.0, 47.02],
+      [19.0, 47.03],
+    ];
+    const samples = elevationSamples(route);
+    // a slow climb in 1.5 m steps (below the noise threshold one by one), then a descent with jitter
+    const elevations = samples.map((_, i) => (i < samples.length / 2 ? 200 + 1.5 * i : 200 + 1.5 * (samples.length - i)) + (i % 3 === 0 ? 0.8 : 0));
+
+    it('the daily gains and losses add up exactly to the route totals', () => {
+      const total = computeRouteMetrics(route, samples, elevations);
+      const days = splitRouteMetrics(route, samples, elevations, [1, 3]);
+
+      expect(days.length).toBe(2);
+      expect(days[0].elevationGainMeters! + days[1].elevationGainMeters!).toBe(total.elevationGainMeters!);
+      expect(days[0].elevationLossMeters! + days[1].elevationLossMeters!).toBe(total.elevationLossMeters!);
+      expect(days[0].distanceMeters + days[1].distanceMeters).toBeCloseTo(total.distanceMeters, 6);
+    });
+
+    it('unlike restarting the noise filter at the break (the old per-day computation)', () => {
+      const total = computeRouteMetrics(route, samples, elevations);
+      const breakDistance = polylineLengthMeters(route.slice(0, 2));
+      const split = samples.findIndex((sample) => sample[2] > breakDistance);
+      const gainOf = (from: number, to: number) =>
+        computeRouteMetrics(route, samples.slice(from, to), elevations.slice(from, to)).elevationGainMeters!;
+      expect(gainOf(0, split) + gainOf(split - 1, samples.length)).not.toBe(total.elevationGainMeters!);
+    });
+
+    it('each day gets its own distance and Naismith duration', () => {
+      const days = splitRouteMetrics(route, samples, elevations, [1, 3]);
+      expect(days[0].distanceMeters).toBeCloseTo(polylineLengthMeters(route.slice(0, 2)), 6);
+      expect(days[1].distanceMeters).toBeCloseTo(polylineLengthMeters(route.slice(1)), 6);
+      expect(days[0].estimatedDurationMinutes).toBe(
+        Math.round((days[0].distanceMeters / 1000) * 12 + days[0].elevationGainMeters! / 10),
+      );
+    });
+
+    it('a flat route splits into flat days', () => {
+      const flat = samples.map(() => 150);
+      const days = splitRouteMetrics(route, samples, flat, [2, 3]);
+      expect(days.map((day) => day.elevationGainMeters)).toEqual([0, 0]);
+      expect(days.map((day) => day.elevationLossMeters)).toEqual([0, 0]);
+    });
+
+    it('without elevation data every day keeps its distance, the rest is null', () => {
+      const days = splitRouteMetrics(route, samples, null, [1, 3]);
+      expect(days[0].distanceMeters).toBeGreaterThan(0);
+      expect(days.every((day) => day.elevationGainMeters === null && day.elevationLossMeters === null && day.estimatedDurationMinutes === null)).toBeTrue();
+    });
   });
 });

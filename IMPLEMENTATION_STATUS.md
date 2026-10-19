@@ -14,6 +14,9 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-19 — #188** Túra többnapos útvonal: a napi szintemelkedés / -csökkenés a teljes útvonal
+  egyetlen magasság-mintasorából, a napváltó pontoknál felosztva számolódik (`splitRouteMetrics`), így a
+  napi összeg pontosan a teljes érték; mentéskor egy magasság-lekérés napi egy helyett.
 - **2026-10-19 — #185, #186** Túra-i18n: a becsült időtartam egységei fordítási kulcsból jönnek
   („1 h 31 min” / „1 ó 31 p”), a napok száma angolul egyes számot is kezel („1 day”) a `_ONE` / `_MANY`
   mintával; a [[Nyelv választás]] spec leírja a mintát.

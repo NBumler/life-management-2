@@ -223,7 +223,7 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	/**
 	 * backlog/tura-utvonaltervezo/103-... 2.4 fázis — szakaszokra bontás/éjszakázó pontok. Csak a
 	 * belső töréspontokat tárolja (az utolsó nap vége mindig implicit, a draft utolsó waypointja) —
-	 * ld. buildDaysPayload, ami a mentendő HikeRouteDay listát építi belőle.
+	 * ld. metricsForSave, ami a mentendő HikeRouteDay listát építi belőle.
 	 */
 	protected readonly dayBreaks = signal<{ waypointIndex: number; overnightName: string }[]>([]);
 	protected readonly showDaysPanel = signal(false);
@@ -640,8 +640,7 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 		if (name === '' || this.draft().length < 2) {
 			return;
 		}
-		const metrics = this.metrics();
-		const days = await this.buildDaysPayload();
+		const { metrics, days } = await this.metricsForSave();
 		await this.hikeRoutes.save({
 			name,
 			coordinates: this.draft(),
@@ -659,45 +658,31 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	}
 
 	/**
-	 * backlog/tura-utvonaltervezo/103-... 2.4 fázis — a belső töréspontokból (dayBreaks) építi fel a
-	 * mentendő HikeRouteDay listát; minden napra külön kiszámolja a metrikát a nap saját szakaszára
-	 * (backlog/151: eszközön — a táv mindig megvan, a magasság-függő mezők internet nélkül `null`,
-	 * ugyanaz a minta, mint a route-szintű refreshMetrics-nél).
+	 * backlog/tura-utvonaltervezo/103-... 2.4 fázis — napra bontás nélkül a már kiszámolt route-metrika
+	 * megy mentésre. Töréspontokkal (dayBreaks) a mentendő HikeRouteDay lista is felépül, és a route- és
+	 * a napi metrika egyetlen magasság-mintasorból számolódik (backlog/188), így a napi ↑/↓ összege
+	 * pontosan a teljes érték. backlog/151: eszközön — a táv mindig megvan, a magasság-függő mezők
+	 * internet nélkül `null`.
 	 */
-	private async buildDaysPayload(): Promise<HikeRouteDay[] | undefined> {
+	private async metricsForSave(): Promise<{ metrics: RouteMetricsResult | null; days: HikeRouteDay[] | undefined }> {
 		const breaks = this.dayBreaks();
 		if (breaks.length === 0) {
-			return undefined;
+			return { metrics: this.metrics(), days: undefined };
 		}
 		const coordinates = this.draft();
-		const boundaries = [...breaks.map((day) => day.waypointIndex), coordinates.length - 1];
-		const days: HikeRouteDay[] = [];
-		let start = 0;
-		for (let i = 0; i < boundaries.length; i++) {
-			const end = boundaries[i];
-			const dayMetrics = await this.computeDaySegmentMetrics(coordinates.slice(start, end + 1));
-			days.push({
-				endWaypointIndex: end,
+		const endIndexes = [...breaks.map((day) => day.waypointIndex), coordinates.length - 1];
+		const { route, days } = await this.routeMetrics.computeWithDays(coordinates, endIndexes);
+		return {
+			metrics: route,
+			days: days.map((day, i) => ({
+				endWaypointIndex: endIndexes[i],
 				overnightName: breaks[i]?.overnightName.trim() || null,
-				distanceMeters: dayMetrics?.distanceMeters,
-				elevationGainMeters: dayMetrics?.elevationGainMeters,
-				elevationLossMeters: dayMetrics?.elevationLossMeters,
-				estimatedDurationMinutes: dayMetrics?.estimatedDurationMinutes,
-			});
-			start = end;
-		}
-		return days;
-	}
-
-	private async computeDaySegmentMetrics(segment: number[][]): Promise<RouteMetricsResult | null> {
-		if (segment.length < 2) {
-			return null;
-		}
-		try {
-			return await this.routeMetrics.compute(segment);
-		} catch {
-			return null;
-		}
+				distanceMeters: day.distanceMeters,
+				elevationGainMeters: day.elevationGainMeters,
+				elevationLossMeters: day.elevationLossMeters,
+				estimatedDurationMinutes: day.estimatedDurationMinutes,
+			})),
+		};
 	}
 
 	/** backlog/tura-utvonaltervezo/103-... 2.3 fázis; backlog/151 — eszközön számolva: a táv mindig megvan, a magasság-függő mezők internet nélkül `null` (`~`). */
