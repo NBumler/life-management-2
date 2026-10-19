@@ -55,6 +55,7 @@
   @if (draft().length >= 2) {
     <ion-toolbar>
       <ion-input
+        class="route-name-input"
         [value]="routeName()"
         (ionInput)="routeName.set($any($event.target).value ?? '')"
         [placeholder]="'TURA.ROUTE_NAME_PLACEHOLDER' | translate"
@@ -78,7 +79,7 @@
   }
 </ion-header>
 
-<ion-content [fullscreen]="true">
+<ion-content>
   <div #mapContainer class="map-container"></div>
 </ion-content>
 
@@ -278,11 +279,11 @@
           </ion-item>
         }
       </ion-list>
-      <ion-button expand="block" fill="outline" [disabled]="!canAddDayBreak()" (click)="addDayBreak()">
+      <ion-button class="ion-margin-horizontal" expand="block" fill="outline" [disabled]="!canAddDayBreak()" (click)="addDayBreak()">
         <ion-icon slot="start" name="add-outline" aria-hidden="true"></ion-icon>
         {{ 'TURA.DAYS.ADD_BREAK' | translate }}
       </ion-button>
-      <p class="days-summary">{{ 'TURA.DAYS.SUMMARY' | translate: { count: dayCount() } }}</p>
+      <p class="days-summary ion-padding-horizontal">{{ 'TURA.DAYS.SUMMARY' | translate: { count: dayCount() } }}</p>
     </ion-content>
   </ng-template>
 </ion-modal>

@@ -14,17 +14,23 @@
   flex-wrap: nowrap;
 }
 
+// backlog/187 — az ion-toolbar nem ad belső margót a slotolt tartalomnak; az app többi mezőjének
+// 16 px-es bal margója.
+.route-name-input {
+  --padding-start: 16px;
+}
+
 // backlog/tura-utvonaltervezo/103-... 2.3 fázis — táv/idő/szintkülönbség + magassági profil, egy
-// ion-footer sávban (nem absolute overlay ion-content fölött — [fullscreen]="true" mellett az
-// ion-content dobozának alja a tab-bar mögé nyúlik, ott egy absolute-pozicionált panel a tab-bar
-// alá kerülne és láthatatlan maradna).
+// ion-footer sávban, nem absolute overlay a térkép fölött. backlog/183 — az ion-content nem
+// `fullscreen`, így a térkép-konténer pontosan a fejléc és a lábléc közötti látható rész: a
+// MapLibre vezérlői és a `fitBounds` nem számolnak takart sávval.
 // ion-toolbar lays its slotted content out as a flex ROW by default — a wrapper is needed so the
 // stats line and the chart stack vertically as one flex item instead of sitting side by side.
 .route-metrics-content {
   display: flex;
   flex-direction: column;
   width: 100%;
-  padding: 4px 0;
+  padding: 4px 16px; // backlog/187 — a többi mezővel azonos oldalmargó
 }
 
 .route-metrics-stats {

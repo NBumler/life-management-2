@@ -54,16 +54,16 @@ túrázási funkció).
 | `backlog/archive/180-tura-turistaut-szakaszok-korlatlan-betoltese.md` | A turistaút-szakaszok korlátlanul töltődnek be (20 MB / 27 s, soha nem ürül) | `done` |
 | `backlog/archive/181-tura-automatikus-tervezes-teljes-szakaszhalmaz-graf.md` | Az automatikus tervezés minden kérésnél a teljes betöltött szakaszhalmazból épít gráfot | `done` |
 | `backlog/archive/182-tura-automatikus-tervezes-toltesjelzo.md` | Nincs töltésjelző az automatikus útvonaltervezés alatt | `done` |
-| [[backlog/tura-utvonaltervezo/183-tura-terkep-fejlec-ala-nyulik]] | A térkép a fejléc alá nyúlik: rejtett zoomgombok, eltolt „ráigazítás” | `backlog` |
+| `backlog/archive/183-tura-terkep-fejlec-ala-nyulik.md` | A térkép a fejléc alá nyúlik: rejtett zoomgombok, eltolt „ráigazítás” | `done` |
 | [[backlog/tura-utvonaltervezo/184-tura-terkep-kesleltetett-ujrarajzolas]] | A térkép késve (vagy csak érintésre) rajzolja ki az új útvonalat | `backlog` |
 | [[backlog/tura-utvonaltervezo/185-tura-idotartam-magyarul-beegetve]] | Az időtartam magyar egységekkel be van égetve („1 ó 31 p” angol felületen is) | `backlog` |
 | [[backlog/tura-utvonaltervezo/186-tura-napok-szama-egyes-szam]] | „1 days”: a napok száma nem kezeli az egyes számot | `backlog` |
-| [[backlog/tura-utvonaltervezo/187-tura-utvonalnev-es-napok-panel-margo]] | Az útvonalnév-mező és a napok panel összegző szövege a bal szélhez tapad | `backlog` |
+| `backlog/archive/187-tura-utvonalnev-es-napok-panel-margo.md` | Az útvonalnév-mező és a napok panel összegző szövege a bal szélhez tapad | `done` |
 | [[backlog/tura-utvonaltervezo/188-tura-napi-szintemelkedes-osszege-elter]] | A napi szakaszok szintemelkedésének összege eltér a teljes útvonalétól | `backlog` |
 | [[backlog/tura-utvonaltervezo/189-tura-katalogus-elonezet-eltuntetese]] | Az ajánlott túra előnézeti vonala nem tüntethető el | `backlog` |
 | [[backlog/tura-utvonaltervezo/190-tura-auto-utvonal-toreespontok-markerkent]] | Az automatikus útvonal minden töréspontja külön útpont-markerként jelenik meg | `backlog` |
 | [[backlog/tura-utvonaltervezo/191-tura-ures-katalogus-felrevezeto-uzenet]] | Üres katalógusnál is „egyik útvonal sem felel meg a szűrőnek” jelenik meg | `backlog` |
-| [[backlog/tura-utvonaltervezo/192-tura-terkep-megnyitaskor-alulmeretezett]] | Megnyitáskor a térkép egy pillanatig a képernyő ~60%-át tölti ki | `backlog` |
+| `backlog/archive/192-tura-terkep-megnyitaskor-alulmeretezett.md` | Megnyitáskor a térkép egy pillanatig a képernyő ~60%-át tölti ki | `done` |
 | [[backlog/tura-utvonaltervezo/193-tura-ajanlott-turak-katalogus-tartalomforras]] | Az ajánlott túrák katalógusának nincs tartalomforrása | `backlog` |
 
 > Kapcsolódó, a mappán kívüli jegy: [[150-biciklizes-elo-gps-tracker]] — a bicikli élő tracker

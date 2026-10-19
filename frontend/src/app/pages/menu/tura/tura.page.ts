@@ -31,6 +31,7 @@ import {
 	IonTitle,
 	IonToggle,
 	IonToolbar,
+	ViewDidEnter,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Capacitor } from '@capacitor/core';
@@ -194,7 +195,7 @@ const COUNTRY_CODE = 'HU';
 	],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class TuraPage implements AfterViewInit, OnDestroy {
+export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	private readonly trailSegments = inject(TrailSegmentRepository);
 	protected readonly hikeRoutes = inject(HikeRouteRepository);
 	protected readonly curatedRoutes = inject(CuratedRouteRepository);
@@ -377,6 +378,11 @@ export class TuraPage implements AfterViewInit, OnDestroy {
 		this.resizeObserver.observe(this.mapContainer().nativeElement);
 
 		this.map = map;
+	}
+
+	/** backlog/192 — az oldal-átmenet végén a konténer már a végleges méretén van; a ResizeObserver erre nem mindig sül el. */
+	ionViewDidEnter(): void {
+		this.map?.resize();
 	}
 
 	ngOnDestroy(): void {

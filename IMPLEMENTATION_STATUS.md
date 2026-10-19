@@ -14,6 +14,10 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-19 — #183, #187, #192** Túra-elrendezés: a térkép nem nyúlik a fejléc alá (nem-`fullscreen`
+  `ion-content`), így a +/− gombok látszanak és az előnézet `fitBounds`-a a látható részre igazít;
+  megnyitáskor `ionViewDidEnter`-kori `resize()`; az útvonalnév-mező, a napok panel és a metrika-sáv
+  16 px-es oldalmargót kap.
 - **2026-10-19 — #180–#182** Túra-teljesítmény az emulátoros teszt után: a turistaút-szakaszok csak a
   12-es zoom felett töltődnek be (oldalmegnyitáskor 20 MB / 27 s helyett nincs kérés, 12-es zoomon
   0,6–1,4 MB / 0,8–1,5 s), a `TrailSegmentRepository` cache-e a látható terület + margó szakaszaira
