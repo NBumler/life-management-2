@@ -20,7 +20,7 @@ a térkép üres, mintha nem lennének turistautak a környéken.
 
 A [[180-tura-turistaut-szakaszok-korlatlan-betoltese]] (lezárva) ugyanezen a környéken 12-es zoomon
 0,6–1,4 MB / 0,8–1,5 s kérésidőt mért — de akkor az oldal ország-nézetben nyílt, így megnyitáskor
-nem ment kérés. Azóta a [[214-tura-terkep-mindig-orszagnezetre-all-vissza]] óta a térkép az utolsó nézetben
+nem ment kérés. A [[214-tura-terkep-mindig-orszagnezetre-all-vissza]] óta a térkép az utolsó nézetben
 nyílik, tehát a megnyitáskori első szakasz-kérés most a tipikus eset. A 15 mp oka nincs mérve.
 
 ## Jelenlegi működés
