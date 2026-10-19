@@ -17,6 +17,15 @@ spring:
   flyway:
     enabled: true
 
+# backlog/193 — a JSON-válaszok gzip-tömörítése: az ajánlott túrák listája (minden túra teljes vonala)
+# és a turistaút-szakaszok bbox-lekérése nagy, jól tömöríthető JSON; a kliensek (WebView, böngésző)
+# az Accept-Encoding alapján maguk bontják ki.
+server:
+  compression:
+    enabled: true
+    mime-types: application/json
+    min-response-size: 2KB
+
 lm2:
   jwt:
     secret: ${LM2_JWT_SECRET}

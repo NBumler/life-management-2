@@ -101,6 +101,20 @@ class CuratedRouteIntegrationTest {
 				.andExpect(jsonPath("$.field").value("days"));
 	}
 
+	/** backlog/193 — az import egynapos túrára kifejezett "days": null-t is küldhet; ez egynapos, nem 500. */
+	@Test
+	void upsert_acceptsAnExplicitNullDaySplit() throws Exception {
+		stubFlatElevation();
+		tools.jackson.databind.node.ObjectNode body = objectMapper
+				.valueToTree(request(UUID.randomUUID(), "Napi bontás nélkül", "EASY", "HIKING", shortCoordinates()));
+		body.putNull("days");
+
+		mockMvc.perform(post("/api/admin/tura/curated-routes").contentType(MediaType.APPLICATION_JSON)
+				.header("X-Admin-Api-Key", "test-admin-api-key").content(json(body)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.days").value(org.hamcrest.Matchers.nullValue()));
+	}
+
 	@Test
 	void upsert_requiresTheAdminApiKey_notABearerToken() throws Exception {
 		String token = registerAndLogin("cr-no-admin-key");

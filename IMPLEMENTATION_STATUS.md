@@ -14,6 +14,11 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-19 — #193** Túra: az ajánlott túrák katalógusa az OSM országos / regionális jelzett
+  turistaútvonalaiból tölthető fel (`scripts/import-curated-routes.mjs`: összefűzés, ritkítás, 30 km felett
+  napokra bontás, idempotens UUID v5 id); a backend a kifejezett `"days": null`-t (egynapos túra) már nem
+  utasítja el 500-zal — sem a katalógusnál, sem a saját útvonalaknál —, és gzippel tömöríti a JSON-válaszokat.
+  A teljes (447 túrás) feltöltés: #195.
 - **2026-10-19 — #189, #190, #191** Túra: az ajánlott túra előnézete bezárható, rajzolás / automatikus mód
   indításakor eltűnik, és átvehető saját útvonalként (vonal, név, napváltók); a rajzon körrel csak a
   felhasználó pontjai látszanak, a visszavonás lépésenként működik (egy automatikus szakasz egy lépés), napváltó

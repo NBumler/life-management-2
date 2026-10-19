@@ -127,6 +127,12 @@ szolgáltatótól jönnek (nem a backendről), és megjelenítést, nem számít
   nem csatlakozott eszközön üres — ugyanaz a helyzet, mint a megosztott `Food` katalógusnál.
   Elfogadható-e így (precedens), vagy legyen a katalógus is build-asset seed? Implementáláskor
   egyeztetendő.
+  - 2026-10-19 ([[193-tura-ajanlott-turak-katalogus-tartalomforras]]): a katalógus tartalma az OSM
+    országos / regionális `route=hiking` relációiból jön (`scripts/import-curated-routes.mjs`, admin
+    upserten át). A kiszállítás nem változott: a katalógus ma **nem** a pull-on át érkezik, hanem online
+    `GET /api/tura/curated-routes`-szal, offline üres (#191: „nincs kapcsolat” üzenet). A pull vs.
+    build-asset döntés továbbra is itt nyitott; a build-asset változat ugyanezt az import-kimenetet
+    használhatná seednek.
 - **Sűrűbb DEM-mintavétel:** a mai fix 50 minta / útvonal hosszú túránál elsimítja a
   szintemelkedést; az eszközön futó változat távolság alapú (`ELEVATION_SAMPLE_SPACING_METERS`).
   A profil-grafikon ettől független, ritkított pontsort kap. → Kiszervezve:

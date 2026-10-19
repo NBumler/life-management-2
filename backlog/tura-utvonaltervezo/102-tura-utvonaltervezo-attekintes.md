@@ -64,7 +64,8 @@ túrázási funkció).
 | `backlog/archive/190-tura-auto-utvonal-toreespontok-markerkent.md` | Az automatikus útvonal minden töréspontja külön útpont-markerként jelenik meg | `done` |
 | `backlog/archive/191-tura-ures-katalogus-felrevezeto-uzenet.md` | Üres katalógusnál is „egyik útvonal sem felel meg a szűrőnek” jelenik meg | `done` |
 | `backlog/archive/192-tura-terkep-megnyitaskor-alulmeretezett.md` | Megnyitáskor a térkép egy pillanatig a képernyő ~60%-át tölti ki | `done` |
-| [[backlog/tura-utvonaltervezo/193-tura-ajanlott-turak-katalogus-tartalomforras]] | Az ajánlott túrák katalógusának nincs tartalomforrása | `backlog` |
+| `backlog/archive/193-tura-ajanlott-turak-katalogus-tartalomforras.md` | Az ajánlott túrák katalógusának nincs tartalomforrása | `done` |
+| [[backlog/tura-utvonaltervezo/195-tura-ajanlott-turak-teljes-feltoltese]] | Az ajánlott túrák katalógusának teljes feltöltése (447 túra) | `ready` |
 | [[backlog/tura-utvonaltervezo/194-tura-hikeroute-openapi-leiras-elavult-route-metrics]] | A HikeRoute / HikeRouteDay OpenAPI-leírás a megszűnt route-metrics végpontra hivatkozik | `backlog` |
 
 > Kapcsolódó, a mappán kívüli jegy: [[150-biciklizes-elo-gps-tracker]] — a bicikli élő tracker

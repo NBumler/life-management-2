@@ -209,6 +209,19 @@ class HikeRouteIntegrationTest {
 				.andExpect(jsonPath("$.days").value(org.hamcrest.Matchers.nullValue()));
 	}
 
+	/** backlog/193 — a kliens (hike-route.repository.ts) egynapos útvonalra kifejezett "days": null-t küld. */
+	@Test
+	void create_acceptsAnExplicitNullDaySplit() throws Exception {
+		String token = registerAndLogin("hr-null-days");
+		tools.jackson.databind.node.ObjectNode body = objectMapper.valueToTree(route(UUID.randomUUID()));
+		body.putNull("days");
+
+		mockMvc.perform(post("/api/hike-routes").contentType(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + token).content(json(body)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.days").value(org.hamcrest.Matchers.nullValue()));
+	}
+
 	@Test
 	void create_rejectsDaySplit_whenEndWaypointIndexesAreNotStrictlyIncreasing() throws Exception {
 		String token = registerAndLogin("hr-days-not-increasing");

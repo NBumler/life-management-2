@@ -2,6 +2,7 @@ package hu.bumler.lm2.tura;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -60,7 +61,8 @@ class CuratedRouteService {
 		}
 
 		List<Double> flattened = TrailSegmentMapper.flatten(request.getCoordinates());
-		List<HikeRouteDay> days = request.getDays().orElse(List.of());
+		// backlog/193: a kifejezett "days": null (egynapos túra) is jelen lévő JsonNullable — null értékkel.
+		List<HikeRouteDay> days = Objects.requireNonNullElse(request.getDays().orElse(null), List.of());
 		HikeRouteDayValidation.validate(days, flattened.size() / 2);
 
 		List<double[]> coordinatePairs = request.getCoordinates().stream()

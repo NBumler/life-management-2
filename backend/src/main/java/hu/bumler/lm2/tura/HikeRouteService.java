@@ -2,6 +2,7 @@ package hu.bumler.lm2.tura;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -92,7 +93,8 @@ class HikeRouteService {
 		entity.setEstimatedDurationMinutes(toDouble(dto.getEstimatedDurationMinutes().orElse(null)));
 		entity.setElevationProfile(HikeRouteMapper.flattenProfile(dto.getElevationProfile().orElse(null)));
 
-		List<HikeRouteDay> days = dto.getDays().orElse(List.of());
+		// backlog/193: a kifejezett "days": null (egynapos túra) is jelen lévő JsonNullable — null értékkel.
+		List<HikeRouteDay> days = Objects.requireNonNullElse(dto.getDays().orElse(null), List.of());
 		HikeRouteDayValidation.validate(days, entity.getCoordinates().size() / 2);
 		entity.setDaysJson(mapper.flattenDays(days));
 	}
