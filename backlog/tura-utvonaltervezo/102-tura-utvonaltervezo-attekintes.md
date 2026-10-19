@@ -67,6 +67,34 @@ túrázási funkció).
 | `backlog/archive/193-tura-ajanlott-turak-katalogus-tartalomforras.md` | Az ajánlott túrák katalógusának nincs tartalomforrása | `done` |
 | [[backlog/tura-utvonaltervezo/195-tura-ajanlott-turak-teljes-feltoltese]] | Az ajánlott túrák katalógusának teljes feltöltése (447 túra) | `ready` |
 | [[backlog/tura-utvonaltervezo/194-tura-hikeroute-openapi-leiras-elavult-route-metrics]] | A HikeRoute / HikeRouteDay OpenAPI-leírás a megszűnt route-metrics végpontra hivatkozik | `backlog` |
+| [[backlog/tura-utvonaltervezo/196-tura-terkep-jelmagyarazat]] | A térképen nincs jelmagyarázat a vonalak és pontok színeihez | `backlog` |
+| [[backlog/tura-utvonaltervezo/197-tura-sajat-utvonal-szine-utkozik-jelzesszinnel]] | A saját útvonal (kék) és a piszkozat (narancs) színe összetéveszthető a turistajelzésekkel | `backlog` |
+| [[backlog/tura-utvonaltervezo/198-tura-ismert-jelzestipusok-szurken]] | A legtöbb ismert turistajelzés-típus (pont, kereszt, M, …) szürkén jelenik meg | `backlog` |
+| [[backlog/tura-utvonaltervezo/199-tura-egyeb-jelzesu-szakaszok-uraljak-a-terkepet]] | Az „egyéb” jelzésű szakaszok vastag szürke vonala uralja a térképet | `backlog` |
+| [[backlog/tura-utvonaltervezo/200-tura-turistautak-12-es-zoom-alatt-rejtettek]] | 12-es közelítés alatt egyetlen turistaút sem látszik, és ezt semmi nem jelzi | `backlog` |
+| [[backlog/tura-utvonaltervezo/201-tura-vonalra-koppintva-nincs-informacio]] | Egy vonalra koppintva nem derül ki, melyik turistaút vagy útvonal az | `backlog` |
+| [[backlog/tura-utvonaltervezo/202-tura-mentett-utvonalak-mindig-latszanak]] | A mentett útvonalak mindig látszanak, név nélkül, és nem rejthetők el | `backlog` |
+| [[backlog/tura-utvonaltervezo/203-tura-kezdo-veg-es-napvalto-pont-egyforma]] | A kezdő-, a vég- és a napváltó pont egyforma, az útvonal iránya nem látszik | `backlog` |
+| [[backlog/tura-utvonaltervezo/204-tura-fejlec-tul-magas-gombsorok-kilognak]] | A fejléc 3–5 sor magas, a gombsorok magyarul kilógnak a képernyőről | `backlog` |
+| [[backlog/tura-utvonaltervezo/205-tura-felirat-nelkuli-ikongombok]] | A visszavonás, kuka, rétegek és offline gombnak nincs felirata | `backlog` |
+| [[backlog/tura-utvonaltervezo/206-tura-rajzolas-es-automatikus-mod-erthetosege]] | A Rajzolás és az Automatikus mód közti különbség és az aktív mód nem érthető | `backlog` |
+| [[backlog/tura-utvonaltervezo/207-tura-atvetel-felirat-nem-ertheto]] | Az előnézet „Átvétel” gombjának felirata nem mondja meg, mit csinál | `backlog` |
+| [[backlog/tura-utvonaltervezo/208-tura-kuka-megerosites-nelkul-torol]] | A kuka megerősítés nélkül törli a teljes piszkozatot, és ez nem vonható vissza | `backlog` |
+| [[backlog/tura-utvonaltervezo/209-tura-napok-panel-elvont]] | A Napok panel elvont: nincs napi táv / szint, a térkép nem látszik közben | `backlog` |
+| [[backlog/tura-utvonaltervezo/210-tura-terkep-ugrik-savok-megjelenesekor]] | A térkép elcsúszik, amikor a tipp-, a név- vagy a statisztika-sáv megjelenik | `backlog` |
+| [[backlog/tura-utvonaltervezo/211-tura-mentes-visszajelzes-nelkul]] | Mentéskor nincs visszajelzés | `backlog` |
+| [[backlog/tura-utvonaltervezo/212-tura-mentett-utvonal-megnyitasa-csak-odarepul]] | Mentett útvonal megnyitásakor nincs részlet, szerkesztés, átnevezés; a lista km és dátum nélküli | `backlog` |
+| [[backlog/tura-utvonaltervezo/213-tura-felkesz-rajz-elveszik-visszalepeskor]] | A félkész rajz figyelmeztetés nélkül elveszik, ha a felhasználó elnavigál | `backlog` |
+| [[backlog/tura-utvonaltervezo/214-tura-terkep-mindig-orszagnezetre-all-vissza]] | A térkép minden megnyitáskor az országnézetre áll vissza | `backlog` |
+| [[backlog/tura-utvonaltervezo/215-tura-sajat-helyzet-es-helykereses]] | Nincs „saját helyzetem” gomb és helykeresés | `backlog` |
+| [[backlog/tura-utvonaltervezo/216-tura-katalogus-nevek-rendezes-kereses]] | A katalógus nevei rejtélyesek, a lista rendezetlen, nincs keresés | `backlog` |
+| [[backlog/tura-utvonaltervezo/217-tura-katalogus-es-atvetel-metrikaja-elter]] | A katalógus és az átvett piszkozat más szintemelkedést és időt mutat ugyanarra a túrára | `backlog` |
+| [[backlog/tura-utvonaltervezo/218-tura-katalogus-elonezet-hianyos]] | A katalógus-előnézet csak a vonalat mutatja (nincs statisztika, profil, napok, kezdő- / végpont) | `backlog` |
+| [[backlog/tura-utvonaltervezo/219-tura-magassagprofil-tengely-nelkul]] | A magasságprofil-grafikonon nincs tengely és skála | `backlog` |
+| [[backlog/tura-utvonaltervezo/220-tura-tizedespont-magyar-feluleten]] | A távolság magyar felületen tizedesponttal jelenik meg („2.9 km”) | `backlog` |
+| [[backlog/tura-utvonaltervezo/221-tura-automatikus-tervezes-sikertelen-eset]] | Sikertelen automatikus tervezésnél a hibaüzenet nem segít, és a kezdőpont elveszik | `backlog` |
+| [[backlog/tura-utvonaltervezo/222-tura-offline-letoltes-vakon]] | Az offline letöltésnél nem látszik, mekkora területet és mennyi adatot tölt le | `backlog` |
+| [[backlog/tura-utvonaltervezo/223-tura-offline-letoltes-osm-csempeszabaly]] | Az offline letöltés tömegesen tölt csempét a tile.openstreetmap.org-ról (OSM-szabálysértés) | `backlog` |
 
 > Kapcsolódó, a mappán kívüli jegy: [[150-biciklizes-elo-gps-tracker]] — a bicikli élő tracker
 > közös, eszközön futó geo-alapréteget (GPS-követés, build-asset DEM, profilos routing) épít, amit a 106 is használ.

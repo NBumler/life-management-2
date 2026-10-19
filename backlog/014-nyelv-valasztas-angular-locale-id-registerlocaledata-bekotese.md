@@ -35,6 +35,10 @@ Lásd a motivációt + a hivatkozott spec(ek) `### Jelenlegi működés` szakasz
   felületen is „1.3” jelenik meg „1,3” helyett. A locale bekötésével ezek automatikusan javulnak
   (ehhez a `hu` locale-adatot `registerLocaleData`-val regisztrálni kell, különben a
   `formatNumber(…, 'hu')` hibát dob). Az app 36 fájlban használ `number` pipe-ot — mind érintett.
+- **2026-10-19 (emulátoros UX-teszt):** a szinkronközpont magyar felületen is `en-US` formában írja
+  az utolsó szinkron idejét („10/19/26, 2:12 PM”) — `sync.page.html` `| date: 'short'` (3 helyen). A locale
+  bekötésével javul; a túra oldal `toFixed`-es számformázása viszont nem — az külön jegy:
+  [[220-tura-tizedespont-magyar-feluleten]].
 
 ## Lezáráskor (on-done)
 
