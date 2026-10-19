@@ -27,8 +27,8 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 import { StretchExercise } from '../../../api/model/stretchExercise';
 import { StretchExerciseNameConflictError, StretchExerciseRepository } from '../../../core/data/stretch-exercise.repository';
-import { ExerciseType } from './catalog-filter';
-import { EXERCISE_CATEGORIES, EXERCISE_CATEGORY_LABEL_KEYS } from './exercise-labels';
+import { ExerciseType } from '../../../shared/workout/catalog-filter';
+import { EXERCISE_CATEGORIES, EXERCISE_CATEGORY_LABEL_KEYS } from '../../../shared/workout/exercise-labels';
 
 /** Default hold of a new stretching exercise — the `stretch_exercise.default_hold_seconds` column default. */
 export const DEFAULT_STRETCH_HOLD_SECONDS = 30;

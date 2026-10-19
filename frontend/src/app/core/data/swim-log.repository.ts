@@ -2,7 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 
 import { SwimLog } from '../../api/model/swimLog';
-import { swimDistanceMeters } from '../../pages/workout/swimming/swim-metrics';
+import { swimDistanceMeters } from '../../shared/workout/swim-metrics';
 import { STORAGE_BACKEND } from '../storage/storage-backend';
 import { SyncEngineService } from '../sync/sync-engine.service';
 import { uuidV4 } from '../sync/uuid';

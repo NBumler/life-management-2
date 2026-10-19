@@ -1,7 +1,7 @@
 import { Food } from '../../../api/model/food';
 import { Recipe } from '../../../api/model/recipe';
 import { QuantityUnit, canonicalQuantityAmount } from '../../../shared/quantity';
-import { RecipeSummary, computeRecipeSummary } from '../recipe/recipe-summary';
+import { RecipeSummary, computeRecipeSummary } from '../../../shared/food/recipe-summary';
 
 /**
  * documentation/Subfeatures/Kaja statisztika.md "Katalógus arányok" — pure ranking utility over a

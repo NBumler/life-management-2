@@ -6,7 +6,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { ClimbingSession } from '../../../../api/model/climbingSession';
 import { ClimbingLiveSessionService } from '../../../../core/data/climbing-live-session.service';
 import { ClimbingSessionDraft } from '../../../../core/storage/storage-backend';
-import { ClimbingContextKey } from '../climbing-contexts';
+import { ClimbingContextKey } from '../../../../shared/climbing/climbing-contexts';
 
 const AUTOSAVE_MS = 1000;
 

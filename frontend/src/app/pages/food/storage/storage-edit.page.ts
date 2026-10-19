@@ -32,7 +32,7 @@ import { today } from '../../../shared/local-date';
 import { DurationUnit, ParsedQuantity, QuantityUnit } from '../../../shared/quantity';
 import { QuantityInputComponent } from '../../../shared/quantity-input/quantity-input.component';
 import { compareRank, matchesSearch } from '../../../shared/text-search';
-import { afterOpeningDuration, allowedStorageLocations, catalogDurationFor, computeInitialExpiry, computeOpenedExpiry } from './shelf-life';
+import { afterOpeningDuration, allowedStorageLocations, catalogDurationFor, computeInitialExpiry, computeOpenedExpiry } from '../../../shared/food/shelf-life';
 
 const NO_QUANTITY: ParsedQuantity<QuantityUnit> = { amount: null, unit: null };
 const NO_DURATION: ParsedQuantity<DurationUnit> = { amount: null, unit: null };

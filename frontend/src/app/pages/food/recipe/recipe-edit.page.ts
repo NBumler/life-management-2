@@ -33,7 +33,7 @@ import { QuantityInputComponent } from '../../../shared/quantity-input/quantity-
 import { ReorderListComponent } from '../../../shared/reorder-list/reorder-list.component';
 import { compareRank, matchesSearch } from '../../../shared/text-search';
 import { buildRecipeDeleteConfirmMessage } from '../shared-catalog-delete-confirm';
-import { computeRecipeSummary, formatIngredientQuantity } from './recipe-summary';
+import { computeRecipeSummary, formatIngredientQuantity } from '../../../shared/food/recipe-summary';
 
 const NO_QUANTITY: ParsedQuantity<QuantityUnit> = { amount: null, unit: null };
 

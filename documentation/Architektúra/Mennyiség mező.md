@@ -57,7 +57,7 @@ A megjelenítés / újraszerkesztés az `amount` + `unit` összeragasztott form�
 | Egység | Jelentés |
 |---|---|
 | `cs` | **csomag** — a katalógus alapegysége (ár `Ft / csomag`, „1 csomag nettó tartalma"). Alias: `csomag`. |
-| `db` | **darab** — **kontextuális**: csak egy konkrét [[Élelmiszerek]] darab-definícióján (`pieceAmount` + `pieceUnit`) keresztül oldható fel csomagra → g/ml-re → árra, ahogy a `cs` a nettó tartalmon át. Darab-definíció nélkül `1 db = 1 csomag`. Alias: `darab`. A feloldó utility: `frontend/src/app/pages/food/food-quantity.ts` (`resolveFoodQuantity`). |
+| `db` | **darab** — **kontextuális**: csak egy konkrét [[Élelmiszerek]] darab-definícióján (`pieceAmount` + `pieceUnit`) keresztül oldható fel csomagra → g/ml-re → árra, ahogy a `cs` a nettó tartalmon át. Darab-definíció nélkül `1 db = 1 csomag`. Alias: `darab`. A feloldó utility: `frontend/src/app/shared/food/food-quantity.ts` (`resolveFoodQuantity`). |
 
 Más egység (`szelet`, `evőkanál`, stb.) **nincs**.
 
@@ -160,7 +160,7 @@ Nincs nyitott kérdés.
 ### Frontend
 
 - Megosztott Angular / Ionic komponens (`QuantityInputComponent`, `shared/quantity-input/`) + pure TypeScript parser utility (`shared/quantity.ts` — egységlista mode szerint + parse / format + tört `N/M` → 4 tizedes decimális) + kanonikus egységre váltó / skálázott-egész egyenlőség utility (fent, a [[Névegyediség]] egyenlőség-összehasonlításhoz).
-- A **kontextuális `db` feloldás** külön utility: `pages/food/food-quantity.ts` (`resolveFoodQuantity` → `{ packages, baseAmount }`, `formatFoodQuantity`). Ezt hívja a recept-összegzés, az étkezés-tétel kalkuláció, a készletlevonás és a bevásárlás-teljesítés — nincs szórt `unit === 'db'` ág.
+- A **kontextuális `db` feloldás** külön utility: `shared/food/food-quantity.ts` (`resolveFoodQuantity` → `{ packages, baseAmount }`, `formatFoodQuantity`). Ezt hívja a recept-összegzés, az étkezés-tétel kalkuláció, a készletlevonás és a bevásárlás-teljesítés — nincs szórt `unit === 'db'` ág.
 - A **helper ikon gomb + inline hiba-note** nem itt él, hanem a közös `HelpInputComponent`-ben (`shared/help-input/`, `app-help-input`): buta prezentációs héj — `ion-input` + záró badge + súgó gomb (`AlertController`, i18n kulccsal) + hiba-`ion-note`, `[value]` / `(valueChange)` be/ki. A `QuantityInputComponent` és a [[Nehézségi szint skálája]] `GradeInputComponent` egyaránt ezt komponálja, saját parserrel + `ControlValueAccessor`-ral — kompozíció, nem ősosztály.
 - Public API:
   - `@Input() mode: 'quantity' | 'duration'` (default: `quantity`)

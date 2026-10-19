@@ -8,7 +8,7 @@ import { VolleyballLog } from '../../../api/model/volleyballLog';
 import { ProfileRepository } from '../../../core/data/profile.repository';
 import { VolleyballLogRepository } from '../../../core/data/volleyball-log.repository';
 import { WorkoutSegmentHeaderComponent } from '../workout-segment-header.component';
-import { volleyballKcal } from './volleyball-metrics';
+import { volleyballKcal } from '../../../shared/workout/volleyball-metrics';
 
 interface VolleyballCard {
   log: VolleyballLog;

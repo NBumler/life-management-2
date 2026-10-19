@@ -43,8 +43,8 @@ import { PartnerComboboxComponent } from '../../../../shared/partner-combobox/pa
 import { WeatherChipsComponent } from '../../../../shared/weather-chips/weather-chips.component';
 import { WeatherTag, canonicalWeather } from '../../../../shared/climbing/weather';
 import { today } from '../../../../shared/local-date';
-import { boulderReferenceIndex } from '../climbing-attempt-input';
-import { ClimbingAttemptInput, climbingKcal, climbingVolume } from '../climbing-metrics';
+import { boulderReferenceIndex } from '../../../../shared/climbing/climbing-attempt-input';
+import { ClimbingAttemptInput, climbingKcal, climbingVolume } from '../../../../shared/climbing/climbing-metrics';
 import { ClimbingLiveBarComponent } from './climbing-live-bar.component';
 import { ClimbingLiveController } from './climbing-live-controller';
 import { scrollToLastAttempt } from './scroll-to-last-attempt';

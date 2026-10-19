@@ -12,7 +12,7 @@ import { ProfileRepository } from '../../../core/data/profile.repository';
 import { WorkoutSegmentHeaderComponent } from '../workout-segment-header.component';
 import { BikeLiveBannerComponent } from './bike-live-banner.component';
 import { BikeLiveStartComponent } from './bike-live-start.component';
-import { bikeKcal } from './bike-metrics';
+import { bikeKcal } from '../../../shared/workout/bike-metrics';
 
 interface BikeCard {
   log: BikeRideLog;

@@ -35,7 +35,7 @@ import {
   classifyExpenseSection,
   dayLag,
   monthlyEquivalentHuf,
-} from './recurring-expense-math';
+} from '../../../shared/finance/recurring-expense-math';
 
 interface ExpenseGroup {
   section: ExpenseSection;

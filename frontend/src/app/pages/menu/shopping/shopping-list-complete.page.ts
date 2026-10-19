@@ -26,7 +26,7 @@ import { StoredFood } from '../../../api/model/storedFood';
 import { FoodRepository } from '../../../core/data/food.repository';
 import { ShoppingListRepository } from '../../../core/data/shopping-list.repository';
 import { today } from '../../../shared/local-date';
-import { allowedStorageLocations, catalogDurationFor, computeInitialExpiry } from '../../food/storage/shelf-life';
+import { allowedStorageLocations, catalogDurationFor, computeInitialExpiry } from '../../../shared/food/shelf-life';
 import { CheckedFoodWizardInput, buildCompleteDraft, partitionItems } from './shopping-list-complete';
 
 interface CheckedFoodRow {

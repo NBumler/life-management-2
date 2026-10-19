@@ -25,7 +25,7 @@ import { StretchSession } from '../../../api/model/stretchSession';
 import { StretchSessionItem } from '../../../api/model/stretchSessionItem';
 import { StretchPlanRepository } from '../../../core/data/stretch-plan.repository';
 import { StretchSessionRepository } from '../../../core/data/stretch-session.repository';
-import { STRETCH_MAX_DURATION_MINUTES } from './stretch-metrics';
+import { STRETCH_MAX_DURATION_MINUTES } from '../../../shared/workout/stretch-metrics';
 
 const LOG_ROUTE = '/tabs/workout/log';
 

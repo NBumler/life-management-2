@@ -54,7 +54,7 @@ import {
   visibleFields,
 } from './workout-fields';
 import { SetOptions, presentSetOptions } from './set-options-popover.component';
-import { effectiveDurationMinutes, ghostForExercise, sessionKcal, sessionVolume } from './workout-metrics';
+import { effectiveDurationMinutes, ghostForExercise, sessionKcal, sessionVolume } from '../../../shared/workout/workout-metrics';
 
 interface SetRow {
   id: string;

@@ -2,7 +2,7 @@ import { AscentAttempt } from '../../api/model/ascentAttempt';
 import { ClimbingSession } from '../../api/model/climbingSession';
 import { DailyStepLog } from '../../api/model/dailyStepLog';
 import { WorkoutSession } from '../../api/model/workoutSession';
-import { climbingKcal } from '../../pages/workout/climbing/climbing-metrics';
+import { climbingKcal } from '../../shared/climbing/climbing-metrics';
 import { climbingKcalForDay, stepKcalForDay, workoutKcalForDay } from './activity-kcal';
 
 function session(overrides: Partial<WorkoutSession> = {}): WorkoutSession {

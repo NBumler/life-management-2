@@ -28,7 +28,7 @@ import { WorkoutPlan } from '../../../api/model/workoutPlan';
 import { FeatureFlagsService } from '../../../core/config/feature-flags.service';
 import { StretchPlanRepository, liveStretchItems } from '../../../core/data/stretch-plan.repository';
 import { WorkoutPlanRepository } from '../../../core/data/workout-plan.repository';
-import { EXERCISE_TYPES, EXERCISE_TYPE_LABEL_KEYS, ExerciseType, toggleInSet } from '../exercises/catalog-filter';
+import { EXERCISE_TYPES, EXERCISE_TYPE_LABEL_KEYS, ExerciseType, toggleInSet } from '../../../shared/workout/catalog-filter';
 import { linkedStretchPlan } from '../stretch/linked-stretch';
 import { stretchPlanDurationMinutes } from '../stretch/stretch-timing';
 import { GroupActivationMode, planGroupActivationChanges, planGroupKey } from './plan-group-activation';

@@ -1,7 +1,7 @@
 import { Injectable, computed, inject } from '@angular/core';
 
 import { UserProfile } from '../../api/model/userProfile';
-import { computeDailyNutrition } from '../../pages/food/meal/daily-nutrition';
+import { computeDailyNutrition } from '../../shared/food/daily-nutrition';
 import { today } from '../../shared/local-date';
 import { TdeeProfileInput, computeTdee } from '../../shared/tdee-calculator';
 import { calendarDayInZone, deviceTimeZoneId } from '../../shared/timezone';

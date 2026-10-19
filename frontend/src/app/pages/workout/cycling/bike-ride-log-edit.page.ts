@@ -29,7 +29,7 @@ import { ProfileRepository } from '../../../core/data/profile.repository';
 import { MIN_PLAUSIBLE_ESTIMATED_SPEED_KMH, ROAD_CIRCUITY_FACTOR } from '../../../core/geo/tracking-config';
 import { HelpButtonComponent } from '../../../shared/help-button/help-button.component';
 import { today } from '../../../shared/local-date';
-import { BIKE_INTENSITIES, avgSpeedKmH, bikeKcal, suggestedIntensity } from './bike-metrics';
+import { BIKE_INTENSITIES, avgSpeedKmH, bikeKcal, suggestedIntensity } from '../../../shared/workout/bike-metrics';
 import { bikeLiveHelpParams } from './bike-live-start.component';
 
 /**

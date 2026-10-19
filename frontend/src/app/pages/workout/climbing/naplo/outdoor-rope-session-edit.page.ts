@@ -46,7 +46,7 @@ import { PartnerComboboxComponent } from '../../../../shared/partner-combobox/pa
 import { WeatherChipsComponent } from '../../../../shared/weather-chips/weather-chips.component';
 import { WeatherTag, canonicalWeather } from '../../../../shared/climbing/weather';
 import { today } from '../../../../shared/local-date';
-import { climbingKcal, climbingVolume } from '../climbing-metrics';
+import { climbingKcal, climbingVolume } from '../../../../shared/climbing/climbing-metrics';
 import { ClimbingLiveBarComponent } from './climbing-live-bar.component';
 import { ClimbingLiveController } from './climbing-live-controller';
 import { scrollToLastAttempt } from './scroll-to-last-attempt';

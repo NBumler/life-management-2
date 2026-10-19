@@ -52,7 +52,7 @@ Nincs adagszám / serving mező a recepten.
 A hozzávaló mennyisége lehet **csomag** (`cs`), **darab** (`db`) vagy SI (`g`/`ml`/…). A `db` egység
 **kontextuális**: mindig az adott [[Élelmiszerek]] darab-definícióján keresztül értelmezhető
 (`pieceAmount` + `pieceUnit`), ahogy a `cs` a nettó tartalmon keresztül. Feloldás nélkül `1 db = 1
-csomag`. A közös feloldó: `frontend/src/app/pages/food/food-quantity.ts`.
+csomag`. A közös feloldó: `frontend/src/app/shared/food/food-quantity.ts`.
 
 - Tárolás: pl. `amount=2`, `unit=cs` vagy `unit=db`.
 - UI zárójeles átváltás (`formatFoodQuantity`):

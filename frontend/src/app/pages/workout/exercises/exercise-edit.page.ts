@@ -28,14 +28,14 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Exercise } from '../../../api/model/exercise';
 import { FeatureFlagsService } from '../../../core/config/feature-flags.service';
 import { ExerciseNameConflictError, ExerciseRepository } from '../../../core/data/exercise.repository';
-import { ExerciseType } from './catalog-filter';
+import { ExerciseType } from '../../../shared/workout/catalog-filter';
 import {
   EXERCISE_CATEGORIES,
   EXERCISE_CATEGORY_LABEL_KEYS,
   EXERCISE_KINDS,
   EXERCISE_KIND_FIELD_HINT_KEYS,
   EXERCISE_KIND_LABEL_KEYS,
-} from './exercise-labels';
+} from '../../../shared/workout/exercise-labels';
 
 /**
  * documentation/Subfeatures/Gyakorlat.md "Create / edit": name, category, kind, optional

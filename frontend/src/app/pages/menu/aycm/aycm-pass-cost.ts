@@ -8,7 +8,7 @@
  */
 import { AycmSettings } from '../../../api/model/aycmSettings';
 import { RecurringExpense } from '../../../api/model/recurringExpense';
-import { countsInMonthlyEquivalent, monthlyEquivalentHuf } from '../finance/recurring-expense-math';
+import { countsInMonthlyEquivalent, monthlyEquivalentHuf } from '../../../shared/finance/recurring-expense-math';
 
 /** The linked, still-counting RecurringExpense, or null (no link / linked row deleted or paused). */
 export function linkedCountingExpense(

@@ -31,7 +31,7 @@ import { WorkoutPlanRepository } from '../../../core/data/workout-plan.repositor
 import { StretchPlanDraft } from '../../../core/storage/storage-backend';
 import { uuidV4 } from '../../../core/sync/uuid';
 import { StretchPickerComponent } from '../../../shared/stretch-picker/stretch-picker.component';
-import { EXERCISE_CATEGORY_LABEL_KEYS } from '../exercises/exercise-labels';
+import { EXERCISE_CATEGORY_LABEL_KEYS } from '../../../shared/workout/exercise-labels';
 import { moveById } from '../log/workout-fields';
 import { stretchPlanDurationMinutes } from '../stretch/stretch-timing';
 

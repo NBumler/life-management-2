@@ -31,7 +31,7 @@ import { AlertTone } from '../../../shared/alert-tone';
 import { today } from '../../../shared/local-date';
 import { ScreenWakeLock } from '../../../shared/screen-wake-lock';
 import { StretchPickerComponent } from '../../../shared/stretch-picker/stretch-picker.component';
-import { STRETCH_MAX_DURATION_MINUTES } from './stretch-metrics';
+import { STRETCH_MAX_DURATION_MINUTES } from '../../../shared/workout/stretch-metrics';
 import { StretchPhase, buildTimeline, completedItems, nextItemStart, previousItemStart } from './stretch-timeline';
 
 const LOG_ROUTE = '/tabs/workout/log';

@@ -50,8 +50,8 @@ import { RouteMetricsResult } from '../../../core/geo/route-metrics';
 import { elevationProfilePolylinePoints } from './elevation-profile-svg';
 import { draftRouteToFeatureCollection, draftWaypointsToFeatureCollection, hikeRoutesToFeatureCollection } from './hike-routes-geojson';
 import { OFFLINE_TILE_PROTOCOL, registerOfflineTileProtocol } from './offline-map-protocol';
-import { OFFLINE_TILE_MAX_COUNT, OfflineRegion } from './offline-region.model';
-import { OfflineRegionRepository } from './offline-region.repository';
+import { OFFLINE_TILE_MAX_COUNT, OfflineRegion } from '../../../core/data/offline-region.model';
+import { OfflineRegionRepository } from '../../../core/data/offline-region.repository';
 import { trailSegmentSymbolColor } from './trail-segment-symbol-color';
 import { trailSegmentsToFeatureCollection } from './trail-segments-geojson';
 

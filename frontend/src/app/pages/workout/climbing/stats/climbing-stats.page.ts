@@ -22,7 +22,7 @@ import { ClimbingSessionRepository } from '../../../../core/data/climbing-sessio
 import { HelpButtonComponent } from '../../../../shared/help-button/help-button.component';
 import { today } from '../../../../shared/local-date';
 import { CLIMBING_STATS_PERIODS, ClimbingStatsPeriodDays, computeClimbingStats } from '../climbing-stats';
-import { CLIMBING_CONTEXTS } from '../climbing-contexts';
+import { CLIMBING_CONTEXTS } from '../../../../shared/climbing/climbing-contexts';
 
 interface OutcomeSlice {
   readonly labelKey: string;

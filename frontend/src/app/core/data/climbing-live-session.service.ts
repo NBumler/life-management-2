@@ -4,7 +4,7 @@ import { Preferences } from '@capacitor/preferences';
 import { TranslateService } from '@ngx-translate/core';
 
 import { ClimbingSession } from '../../api/model/climbingSession';
-import { CLIMBING_CONTEXTS, ClimbingContextKey } from '../../pages/workout/climbing/climbing-contexts';
+import { CLIMBING_CONTEXTS, ClimbingContextKey } from '../../shared/climbing/climbing-contexts';
 import { today } from '../../shared/local-date';
 import { LocalNotificationsGateway } from '../notifications/local-notifications.gateway';
 import { ClimbingSessionDraft } from '../storage/storage-backend';

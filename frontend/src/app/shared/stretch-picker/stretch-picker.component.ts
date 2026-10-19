@@ -17,8 +17,8 @@ import { TranslatePipe } from '@ngx-translate/core';
 
 import { StretchExercise } from '../../api/model/stretchExercise';
 import { StretchExerciseRepository } from '../../core/data/stretch-exercise.repository';
-import { CatalogEntry, filterCatalog, toggleInSet } from '../../pages/workout/exercises/catalog-filter';
-import { EXERCISE_CATEGORIES, EXERCISE_CATEGORY_LABEL_KEYS, ExerciseCategory } from '../../pages/workout/exercises/exercise-labels';
+import { CatalogEntry, filterCatalog, toggleInSet } from '../workout/catalog-filter';
+import { EXERCISE_CATEGORIES, EXERCISE_CATEGORY_LABEL_KEYS, ExerciseCategory } from '../workout/exercise-labels';
 
 /**
  * documentation/Subfeatures/Heti terv.md "Nyújtó sablonok" (backlog/168) — picks existing stretching

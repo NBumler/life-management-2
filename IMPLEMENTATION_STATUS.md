@@ -14,6 +14,10 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-19 — #178** A `core/` és a `shared/` már nem importál a `pages/`-ből: 21 pure TS / repository modul
+  költözött (`shared/{workout,climbing,food,finance}/`, `core/data/offline-region.*` + `offline-tile-store`), a
+  függőségi irányt a [[Frontend]] „Rétegzés” mondja ki, ESLint `no-restricted-imports` őr a `npm run lint`-ben.
+  Viselkedés változatlan. — kód: `shared/`, `core/data/`, `frontend/.eslintrc.json`.
 - **2026-10-19 — #177** A túra viewport-gráfja a `core/geo`-ban: `pages/menu/tura/offline-route-graph.ts` →
   `core/geo/segment-route-graph.ts` (a `core/data/route-suggestion.repository` már nem importál a `pages/`-ből),
   az illesztési küszöb a `RoutingService` `HIKE` profiljáé. Viselkedés változatlan. — kód: `core/geo/`,

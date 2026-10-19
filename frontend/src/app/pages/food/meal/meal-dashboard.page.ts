@@ -48,8 +48,8 @@ import { today } from '../../../shared/local-date';
 import { TdeeCalculation, TdeeProfileInput, computeTdee } from '../../../shared/tdee-calculator';
 import { calendarDayInZone, deviceTimeZoneId } from '../../../shared/timezone';
 import { navigateFoodSection } from '../food-sections';
-import { addDurationToDate } from '../storage/shelf-life';
-import { computeDailyNutrition } from './daily-nutrition';
+import { addDurationToDate } from '../../../shared/food/shelf-life';
+import { computeDailyNutrition } from '../../../shared/food/daily-nutrition';
 import { NutritionProgressBarComponent } from './nutrition-progress-bar.component';
 import { ProgressBarColor, calorieBarColor, macroBarColor, progressStatus } from './progress-bar-status';
 

@@ -52,8 +52,8 @@ import {
   snapshotRow,
   toSaveItem,
 } from './meal-item-row';
-import { computeMealItemEffective, sumMealItemEffective } from './meal-item-summary';
-import { effectiveRecipeIngredients, isDivertedFromRecipe } from './recipe-overrides';
+import { computeMealItemEffective, sumMealItemEffective } from '../../../shared/food/meal-item-summary';
+import { effectiveRecipeIngredients, isDivertedFromRecipe } from '../../../shared/food/recipe-overrides';
 
 /**
  * documentation/Subfeatures/Étkezés.md "Étkezés entitás" / "Tétel — közös" — create + edit in one

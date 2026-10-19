@@ -27,7 +27,7 @@ import { VolleyballLog } from '../../../api/model/volleyballLog';
 import { ProfileRepository } from '../../../core/data/profile.repository';
 import { VolleyballLogRepository, VolleyballLogSaveInput } from '../../../core/data/volleyball-log.repository';
 import { today } from '../../../shared/local-date';
-import { VOLLEYBALL_INTENSITIES, VOLLEYBALL_MAX_DURATION_MINUTES, volleyballKcal } from './volleyball-metrics';
+import { VOLLEYBALL_INTENSITIES, VOLLEYBALL_MAX_DURATION_MINUTES, volleyballKcal } from '../../../shared/workout/volleyball-metrics';
 
 /**
  * documentation/Features/Röplabda napló.md — the create/edit form (route param `id` is an existing

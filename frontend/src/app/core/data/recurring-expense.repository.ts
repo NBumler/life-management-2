@@ -2,7 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 
 import { RecurringExpense } from '../../api/model/recurringExpense';
-import { addPeriod } from '../../pages/menu/finance/recurring-expense-math';
+import { addPeriod } from '../../shared/finance/recurring-expense-math';
 import { STORAGE_BACKEND } from '../storage/storage-backend';
 import { SyncEngineService } from '../sync/sync-engine.service';
 import { uuidV4 } from '../sync/uuid';

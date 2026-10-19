@@ -21,9 +21,9 @@ import { ClimbingSession } from '../../../../api/model/climbingSession';
 import { ClimbingLiveSessionService, liveRoute } from '../../../../core/data/climbing-live-session.service';
 import { ClimbingSessionRepository } from '../../../../core/data/climbing-session.repository';
 import { ProfileRepository } from '../../../../core/data/profile.repository';
-import { climbingAttemptInput, climbingSessionKcalInput } from '../climbing-attempt-input';
-import { climbingKcal, climbingVolume } from '../climbing-metrics';
-import { CLIMBING_CONTEXTS, ClimbingContextKey } from '../climbing-contexts';
+import { climbingAttemptInput, climbingSessionKcalInput } from '../../../../shared/climbing/climbing-attempt-input';
+import { climbingKcal, climbingVolume } from '../../../../shared/climbing/climbing-metrics';
+import { CLIMBING_CONTEXTS, ClimbingContextKey } from '../../../../shared/climbing/climbing-contexts';
 import { ClimbingLiveBannerComponent } from '../climbing-live-banner.component';
 
 interface SessionCard {

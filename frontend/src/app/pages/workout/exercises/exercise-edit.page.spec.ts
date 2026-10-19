@@ -7,7 +7,7 @@ import { provideTranslateService } from '@ngx-translate/core';
 import { Exercise } from '../../../api/model/exercise';
 import { ExerciseNameConflictError, ExerciseRepository } from '../../../core/data/exercise.repository';
 import { ExerciseEditPage } from './exercise-edit.page';
-import { EXERCISE_KIND_FIELD_HINT_KEYS } from './exercise-labels';
+import { EXERCISE_KIND_FIELD_HINT_KEYS } from '../../../shared/workout/exercise-labels';
 
 function exercise(overrides: Partial<Exercise> = {}): Exercise {
   return {

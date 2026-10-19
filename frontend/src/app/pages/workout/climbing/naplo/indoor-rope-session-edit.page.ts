@@ -44,7 +44,7 @@ import { normalizeGradeInput, parseGrade } from '../../../../shared/climbing/gra
 import { GradeInputComponent } from '../../../../shared/grade-input/grade-input.component';
 import { HelpButtonComponent } from '../../../../shared/help-button/help-button.component';
 import { PartnerComboboxComponent } from '../../../../shared/partner-combobox/partner-combobox.component';
-import { climbingKcal, climbingVolume } from '../climbing-metrics';
+import { climbingKcal, climbingVolume } from '../../../../shared/climbing/climbing-metrics';
 import { ClimbingLiveBarComponent } from './climbing-live-bar.component';
 import { ClimbingLiveController } from './climbing-live-controller';
 import { scrollToLastAttempt } from './scroll-to-last-attempt';

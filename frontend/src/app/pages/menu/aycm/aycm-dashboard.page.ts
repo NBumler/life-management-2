@@ -30,7 +30,7 @@ import { AycmCheckInRepository } from '../../../core/data/aycm-check-in.reposito
 import { AycmSettingsRepository } from '../../../core/data/aycm-settings.repository';
 import { RecurringExpenseRepository } from '../../../core/data/recurring-expense.repository';
 import { today } from '../../../shared/local-date';
-import { monthlyEquivalentHuf } from '../finance/recurring-expense-math';
+import { monthlyEquivalentHuf } from '../../../shared/finance/recurring-expense-math';
 import { linkedCountingExpense, passCostComputable, passCostHuf, worthItHuf } from './aycm-pass-cost';
 import { filterCheckIns, summarize, windowRange } from './aycm-stats';
 

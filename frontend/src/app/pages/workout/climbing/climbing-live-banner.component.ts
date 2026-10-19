@@ -4,7 +4,7 @@ import { IonIcon, IonItem, IonLabel, IonNote } from '@ionic/angular/standalone';
 import { TranslatePipe } from '@ngx-translate/core';
 
 import { ClimbingLiveSessionService, liveRoute } from '../../../core/data/climbing-live-session.service';
-import { CLIMBING_CONTEXTS } from './climbing-contexts';
+import { CLIMBING_CONTEXTS } from '../../../shared/climbing/climbing-contexts';
 import { formatElapsed } from './naplo/climbing-live-controller';
 
 /**

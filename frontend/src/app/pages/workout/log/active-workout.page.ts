@@ -81,7 +81,7 @@ import {
   lastPerformance,
   progressionSuggestion,
   sessionKcal,
-} from './workout-metrics';
+} from '../../../shared/workout/workout-metrics';
 
 interface SetRow {
   id: string;

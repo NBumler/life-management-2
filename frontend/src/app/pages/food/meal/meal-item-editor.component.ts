@@ -22,9 +22,9 @@ import { Food } from '../../../api/model/food';
 import { Recipe } from '../../../api/model/recipe';
 import { ParsedQuantity, QuantityUnit } from '../../../shared/quantity';
 import { QuantityInputComponent } from '../../../shared/quantity-input/quantity-input.component';
-import { computeMealItemEffective } from './meal-item-summary';
+import { computeMealItemEffective } from '../../../shared/food/meal-item-summary';
 import { CustomItemRow, FoodItemRow, ItemRow, RecipeItemRow, isRowComplete, toSaveItem } from './meal-item-row';
-import { EffectiveIngredient, effectiveRecipeIngredients, isDivertedFromRecipe } from './recipe-overrides';
+import { EffectiveIngredient, effectiveRecipeIngredients, isDivertedFromRecipe } from '../../../shared/food/recipe-overrides';
 
 const SERVINGS_STEP = 0.5;
 /** The units worth a one-tap chip for food portions; anything else is still typeable free-text. */

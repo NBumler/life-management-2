@@ -2,9 +2,9 @@ import { Injectable, inject, signal } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 
 import { Meal } from '../../api/model/meal';
-import { resolveFoodQuantity } from '../../pages/food/food-quantity';
-import { effectiveRecipeIngredients } from '../../pages/food/meal/recipe-overrides';
-import { planStockConsumption } from '../../pages/food/storage/stock-consumption';
+import { resolveFoodQuantity } from '../../shared/food/food-quantity';
+import { effectiveRecipeIngredients } from '../../shared/food/recipe-overrides';
+import { planStockConsumption } from '../../shared/food/stock-consumption';
 import { today } from '../../shared/local-date';
 import { QuantityUnit, canonicalQuantityAmount } from '../../shared/quantity';
 import { Food } from '../../api/model/food';

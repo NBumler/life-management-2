@@ -1,8 +1,8 @@
 import { Capacitor } from '@capacitor/core';
 import maplibregl from 'maplibre-gl';
 
-import { OFFLINE_BASEMAP_ID } from './offline-region.model';
-import { readCachedTile } from './offline-tile-store';
+import { OFFLINE_BASEMAP_ID } from '../../../core/data/offline-region.model';
+import { readCachedTile } from '../../../core/data/offline-tile-store';
 
 /** A `tura.page.ts` BASE_STYLE `osm` forrásának csempe-URL-sémája — ld. `registerOfflineTileProtocol`. */
 export const OFFLINE_TILE_PROTOCOL = 'tura-offline-tile';

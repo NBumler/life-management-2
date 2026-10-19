@@ -20,9 +20,9 @@ import { BikeLiveBannerComponent } from '../cycling/bike-live-banner.component';
 import { LoadWarningsBannerComponent } from '../load-warnings-banner.component';
 import { WorkoutSegmentHeaderComponent } from '../workout-segment-header.component';
 import { pendingLinkedStretches } from '../stretch/linked-stretch';
-import { stretchKcal } from '../stretch/stretch-metrics';
+import { stretchKcal } from '../../../shared/workout/stretch-metrics';
 import { PlanQuickStartComponent } from './plan-quick-start.component';
-import { effectiveDurationMinutes, liveExercises, sessionKcal } from './workout-metrics';
+import { effectiveDurationMinutes, liveExercises, sessionKcal } from '../../../shared/workout/workout-metrics';
 
 interface SessionCard {
   type: 'STRENGTH';

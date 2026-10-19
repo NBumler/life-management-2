@@ -3,7 +3,7 @@ import { firstValueFrom } from 'rxjs';
 
 import { TrailSegment } from '../../api/model/trailSegment';
 import { TuraService } from '../../api/api/tura.service';
-import { OfflineRegionRepository } from '../../pages/menu/tura/offline-region.repository';
+import { OfflineRegionRepository } from './offline-region.repository';
 
 /** Bounding box in [minLon, minLat, maxLon, maxLat] order (map SW/NE corner longitudes/latitudes). */
 export type Bbox = readonly [number, number, number, number];

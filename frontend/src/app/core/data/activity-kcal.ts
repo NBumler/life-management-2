@@ -16,13 +16,13 @@ import { SwimLog } from '../../api/model/swimLog';
 import { StretchSession } from '../../api/model/stretchSession';
 import { VolleyballLog } from '../../api/model/volleyballLog';
 import { WorkoutSession } from '../../api/model/workoutSession';
-import { bikeKcal } from '../../pages/workout/cycling/bike-metrics';
-import { climbingSessionKcalInput } from '../../pages/workout/climbing/climbing-attempt-input';
-import { climbingKcal } from '../../pages/workout/climbing/climbing-metrics';
-import { sessionKcal } from '../../pages/workout/log/workout-metrics';
-import { swimKcal } from '../../pages/workout/swimming/swim-metrics';
-import { stretchKcal } from '../../pages/workout/stretch/stretch-metrics';
-import { volleyballKcal } from '../../pages/workout/volleyball/volleyball-metrics';
+import { bikeKcal } from '../../shared/workout/bike-metrics';
+import { climbingSessionKcalInput } from '../../shared/climbing/climbing-attempt-input';
+import { climbingKcal } from '../../shared/climbing/climbing-metrics';
+import { sessionKcal } from '../../shared/workout/workout-metrics';
+import { swimKcal } from '../../shared/workout/swim-metrics';
+import { stretchKcal } from '../../shared/workout/stretch-metrics';
+import { volleyballKcal } from '../../shared/workout/volleyball-metrics';
 
 /**
  * Σ MET-kcal over every live `WorkoutSession` whose `date` is `day` (a `YYYY-MM-DD` client-local

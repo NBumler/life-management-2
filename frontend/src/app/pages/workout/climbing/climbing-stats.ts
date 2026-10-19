@@ -15,9 +15,9 @@
  */
 import { ClimbingSession } from '../../../api/model/climbingSession';
 
-import { climbingAttemptInput } from './climbing-attempt-input';
-import { CLIMBING_CONTEXTS, ClimbingContextKey } from './climbing-contexts';
-import { climbingVolume } from './climbing-metrics';
+import { climbingAttemptInput } from '../../../shared/climbing/climbing-attempt-input';
+import { CLIMBING_CONTEXTS, ClimbingContextKey } from '../../../shared/climbing/climbing-contexts';
+import { climbingVolume } from '../../../shared/climbing/climbing-metrics';
 
 /** The three windows offered by the stats screen's period selector, in render order. */
 export const CLIMBING_STATS_PERIODS = [30, 90, 365] as const;

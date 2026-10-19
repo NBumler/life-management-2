@@ -22,8 +22,8 @@ import { FeatureFlagsService } from '../../../core/config/feature-flags.service'
 import { byCatalogName } from '../../../core/data/catalog-order';
 import { ExerciseRepository } from '../../../core/data/exercise.repository';
 import { StretchExerciseRepository } from '../../../core/data/stretch-exercise.repository';
-import { CatalogEntry, EXERCISE_TYPES, EXERCISE_TYPE_LABEL_KEYS, ExerciseType, filterCatalog, toggleInSet } from './catalog-filter';
-import { EXERCISE_CATEGORIES, EXERCISE_CATEGORY_LABEL_KEYS, EXERCISE_KIND_LABEL_KEYS, ExerciseCategory } from './exercise-labels';
+import { CatalogEntry, EXERCISE_TYPES, EXERCISE_TYPE_LABEL_KEYS, ExerciseType, filterCatalog, toggleInSet } from '../../../shared/workout/catalog-filter';
+import { EXERCISE_CATEGORIES, EXERCISE_CATEGORY_LABEL_KEYS, EXERCISE_KIND_LABEL_KEYS, ExerciseCategory } from '../../../shared/workout/exercise-labels';
 
 /**
  * documentation/Subfeatures/Gyakorlat.md "Katalógus lista": search, type + category chips (both

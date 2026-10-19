@@ -34,7 +34,7 @@ import { ActivityStepSyncService } from '../health/activity-step-sync.service';
 import { addDaysIso, today } from '../../shared/local-date';
 import { computeTdee } from '../../shared/tdee-calculator';
 import { calendarDayInZone, deviceTimeZoneId } from '../../shared/timezone';
-import { computeDailyNutrition } from '../../pages/food/meal/daily-nutrition';
+import { computeDailyNutrition } from '../../shared/food/daily-nutrition';
 import { DataChangeNotifier } from '../sync/data-change-notifier';
 import { BackgroundReminders } from './background-reminders.plugin';
 import { buildBackgroundPlan } from './notification-background-plan';

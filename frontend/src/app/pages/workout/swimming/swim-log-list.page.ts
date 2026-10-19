@@ -8,7 +8,7 @@ import { SwimLog } from '../../../api/model/swimLog';
 import { ProfileRepository } from '../../../core/data/profile.repository';
 import { SwimLogRepository } from '../../../core/data/swim-log.repository';
 import { WorkoutSegmentHeaderComponent } from '../workout-segment-header.component';
-import { swimDistanceMeters, swimKcal } from './swim-metrics';
+import { swimDistanceMeters, swimKcal } from '../../../shared/workout/swim-metrics';
 
 interface SwimCard {
   log: SwimLog;

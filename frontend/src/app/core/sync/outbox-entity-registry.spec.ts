@@ -6,7 +6,7 @@ import { PackingTemplateDetail } from '../../api/model/packingTemplateDetail';
 import { GearItemRepository } from '../data/gear-item.repository';
 import { LocalDatabaseService } from '../storage/local-database.service';
 import { StorageBackend, STORAGE_BACKEND } from '../storage/storage-backend';
-import { SyncEngineService } from '../sync/sync-engine.service';
+import { SyncEngineService } from './sync-engine.service';
 import { OutboxItem } from './outbox-item';
 import { OutboxEntityDescriptor, OutboxEntityFixContext, OutboxEntityRegistryService, OutboxEntityType, buildOutboxDropTasks } from './outbox-entity-registry';
 

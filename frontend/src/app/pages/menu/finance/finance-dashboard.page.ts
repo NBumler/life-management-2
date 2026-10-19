@@ -19,7 +19,7 @@ import { ProfileRepository } from '../../../core/data/profile.repository';
 import { RecurringExpenseRepository } from '../../../core/data/recurring-expense.repository';
 import { today } from '../../../shared/local-date';
 import { computeNetPay } from '../../../shared/net-pay-calculator';
-import { sumMonthlyEquivalentHuf } from './recurring-expense-math';
+import { sumMonthlyEquivalentHuf } from '../../../shared/finance/recurring-expense-math';
 
 /**
  * documentation/Features/Pénzügyek.md — the hub. Consumer only: no entity, no OpenAPI, no formula of

@@ -54,6 +54,22 @@
       }
     },
     {
+      "files": ["src/app/core/**/*.ts", "src/app/shared/**/*.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "(^|/)pages/",
+                "message": "core/ and shared/ never import from pages/ — move the shared code to shared/<domain>/ (pure TS) or core/data/ (backlog/178, Frontend.md \"Rétegzés\")."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       "files": ["*.html"],
       "extends": ["plugin:@angular-eslint/template/recommended"],
       "rules": {}

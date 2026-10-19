@@ -3,7 +3,7 @@ import { Observable, of, throwError } from 'rxjs';
 
 import { TuraService } from '../../api/api/tura.service';
 import { TrailSegment } from '../../api/model/trailSegment';
-import { OfflineRegionRepository } from '../../pages/menu/tura/offline-region.repository';
+import { OfflineRegionRepository } from './offline-region.repository';
 import { TrailSegmentRepository } from './trail-segment.repository';
 
 /**

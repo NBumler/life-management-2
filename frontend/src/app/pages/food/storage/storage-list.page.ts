@@ -27,7 +27,7 @@ import { StoredFoodRepository } from '../../../core/data/stored-food.repository'
 import { today } from '../../../shared/local-date';
 import { matchesSearch } from '../../../shared/text-search';
 import { navigateFoodSection } from '../food-sections';
-import { afterOpeningDuration, computeOpenedExpiry } from './shelf-life';
+import { afterOpeningDuration, computeOpenedExpiry } from '../../../shared/food/shelf-life';
 
 type LocationFilter = 'ALL' | StoredFood.StorageLocationEnum;
 

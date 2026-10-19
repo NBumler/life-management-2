@@ -26,7 +26,7 @@ import { SwimLog } from '../../../api/model/swimLog';
 import { ProfileRepository } from '../../../core/data/profile.repository';
 import { SwimLogRepository, SwimLogSaveInput } from '../../../core/data/swim-log.repository';
 import { today } from '../../../shared/local-date';
-import { SWIM_INTENSITIES, isOpenWater, swimDistanceMeters, swimKcal } from './swim-metrics';
+import { SWIM_INTENSITIES, isOpenWater, swimDistanceMeters, swimKcal } from '../../../shared/workout/swim-metrics';
 
 /**
  * documentation/Features/Úszás napló.md — the create/edit form (route param `id` is an existing

@@ -3,7 +3,7 @@ import { Food } from '../../api/model/food';
 import { StoredFood } from '../../api/model/storedFood';
 import { addDaysIso } from '../../shared/local-date';
 import { projectEventOccurrences } from '../data/event-occurrence';
-import { addDurationToDate, catalogDurationFor } from '../../pages/food/storage/shelf-life';
+import { addDurationToDate, catalogDurationFor } from '../../shared/food/shelf-life';
 import { DEFAULT_TUNING } from './notification-tuning';
 import { DesiredNotification } from './notification-types';
 

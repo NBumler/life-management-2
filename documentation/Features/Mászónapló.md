@@ -250,7 +250,7 @@ Nincs nyitott kérdés.
 ### Frontend
 
 - Hub dashboard; per-kontextus session listák; 4 kontextus route → gyerek napló screenek.
-- Shared grade parser komponens (`shared/grade-input/`); climbing calorie + volume pure TS (`shared/climbing/` + `pages/workout/climbing/climbing-metrics.ts` / `climbing-stats.ts`).
+- Shared grade parser komponens (`shared/grade-input/`); climbing calorie + volume pure TS (`shared/climbing/`, köztük `climbing-metrics.ts`; a statisztika: `pages/workout/climbing/climbing-stats.ts`).
 - Mászótárs combobox: `shared/partner-combobox/` (presentational, nincs injektált repo); a javaslatlista a `ClimbingSessionRepository.partnerSuggestions` derived signal (élő sessionök `climbingPartners` értékei, gyakoriság + recency szerint).
 - Élő session: `core/data/climbing-live-session.service.ts` (draft + tartós értesítés), `naplo/climbing-live-controller.ts` (stopper, autosave, összegző), `naplo/climbing-live-bar.component.ts`, `climbing-live-banner.component.ts`; a 4 szerkesztő a `<ctx>/live` útvonalon (route data `live: true`).
 

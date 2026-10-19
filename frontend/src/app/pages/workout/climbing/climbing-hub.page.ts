@@ -4,7 +4,7 @@ import { IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonItem, IonLabe
 import { TranslatePipe } from '@ngx-translate/core';
 
 import { WorkoutSegmentHeaderComponent } from '../workout-segment-header.component';
-import { CLIMBING_CONTEXTS } from './climbing-contexts';
+import { CLIMBING_CONTEXTS } from '../../../shared/climbing/climbing-contexts';
 import { ClimbingLiveBannerComponent } from './climbing-live-banner.component';
 
 /**

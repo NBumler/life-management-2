@@ -8,7 +8,7 @@ import { StretchExercise } from '../../../api/model/stretchExercise';
 import { FeatureFlagsService } from '../../../core/config/feature-flags.service';
 import { ExerciseRepository } from '../../../core/data/exercise.repository';
 import { StretchExerciseRepository } from '../../../core/data/stretch-exercise.repository';
-import { CatalogEntry } from './catalog-filter';
+import { CatalogEntry } from '../../../shared/workout/catalog-filter';
 import { ExerciseListPage } from './exercise-list.page';
 
 function exercise(overrides: Partial<Exercise> = {}): Exercise {
