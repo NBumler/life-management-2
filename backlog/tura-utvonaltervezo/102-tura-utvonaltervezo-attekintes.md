@@ -51,6 +51,20 @@ túrázási funkció).
 | `backlog/archive/110-tura-kozossegi-funkciok.md` | Közösségi funkciók — **dropped**, marad egyszemélyes app | `dropped` |
 | [[backlog/tura-utvonaltervezo/111-tura-eszkozok]] | Iránytű, magasságmérő, dőlésszögmérő, QR-olvasó (csúcskereső kizárva) | `ready` |
 | [[backlog/tura-utvonaltervezo/151-tura-backend-offline-first-szabalysertesek]] | Backend-offline first javítás: metrika, routing és DEM-magasság eszközön, turistaút-gráf build assetként (kész); turistaút-réteg build assetből (nyitva) | `in-progress` |
+| [[backlog/tura-utvonaltervezo/180-tura-turistaut-szakaszok-korlatlan-betoltese]] | A turistaút-szakaszok korlátlanul töltődnek be (20 MB / 27 s, soha nem ürül) | `backlog` |
+| [[backlog/tura-utvonaltervezo/181-tura-automatikus-tervezes-teljes-szakaszhalmaz-graf]] | Az automatikus tervezés minden kérésnél a teljes betöltött szakaszhalmazból épít gráfot | `backlog` |
+| [[backlog/tura-utvonaltervezo/182-tura-automatikus-tervezes-toltesjelzo]] | Nincs töltésjelző az automatikus útvonaltervezés alatt | `backlog` |
+| [[backlog/tura-utvonaltervezo/183-tura-terkep-fejlec-ala-nyulik]] | A térkép a fejléc alá nyúlik: rejtett zoomgombok, eltolt „ráigazítás” | `backlog` |
+| [[backlog/tura-utvonaltervezo/184-tura-terkep-kesleltetett-ujrarajzolas]] | A térkép késve (vagy csak érintésre) rajzolja ki az új útvonalat | `backlog` |
+| [[backlog/tura-utvonaltervezo/185-tura-idotartam-magyarul-beegetve]] | Az időtartam magyar egységekkel be van égetve („1 ó 31 p” angol felületen is) | `backlog` |
+| [[backlog/tura-utvonaltervezo/186-tura-napok-szama-egyes-szam]] | „1 days”: a napok száma nem kezeli az egyes számot | `backlog` |
+| [[backlog/tura-utvonaltervezo/187-tura-utvonalnev-es-napok-panel-margo]] | Az útvonalnév-mező és a napok panel összegző szövege a bal szélhez tapad | `backlog` |
+| [[backlog/tura-utvonaltervezo/188-tura-napi-szintemelkedes-osszege-elter]] | A napi szakaszok szintemelkedésének összege eltér a teljes útvonalétól | `backlog` |
+| [[backlog/tura-utvonaltervezo/189-tura-katalogus-elonezet-eltuntetese]] | Az ajánlott túra előnézeti vonala nem tüntethető el | `backlog` |
+| [[backlog/tura-utvonaltervezo/190-tura-auto-utvonal-toreespontok-markerkent]] | Az automatikus útvonal minden töréspontja külön útpont-markerként jelenik meg | `backlog` |
+| [[backlog/tura-utvonaltervezo/191-tura-ures-katalogus-felrevezeto-uzenet]] | Üres katalógusnál is „egyik útvonal sem felel meg a szűrőnek” jelenik meg | `backlog` |
+| [[backlog/tura-utvonaltervezo/192-tura-terkep-megnyitaskor-alulmeretezett]] | Megnyitáskor a térkép egy pillanatig a képernyő ~60%-át tölti ki | `backlog` |
+| [[backlog/tura-utvonaltervezo/193-tura-ajanlott-turak-katalogus-tartalomforras]] | Az ajánlott túrák katalógusának nincs tartalomforrása | `backlog` |
 
 > Kapcsolódó, a mappán kívüli jegy: [[150-biciklizes-elo-gps-tracker]] — a bicikli élő tracker
 > közös, eszközön futó geo-alapréteget (GPS-követés, build-asset DEM, profilos routing) épít, amit a 106 is használ.
