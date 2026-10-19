@@ -89,6 +89,14 @@ describe('BikeLiveSessionService (backlog/150)', () => {
     expect(gps.start).not.toHaveBeenCalled();
   });
 
+  it('start(): a GPS that fails to start (location services off) leaves no ride behind', async () => {
+    gps.start.and.rejectWith(new Error('location disabled'));
+
+    expect((await service.start('LIVE', 0)).status).toBe('permission-denied');
+    expect(service.draft()).toBeNull();
+    expect((await Preferences.get({ key: 'lm2_bike_live_draft' })).value).toBeNull();
+  });
+
   it('start(): creates the draft and starts the GPS; a second start() returns the running ride', async () => {
     const first = await service.start('LIVE', 1_000);
     expect(first.status).toBe('started');

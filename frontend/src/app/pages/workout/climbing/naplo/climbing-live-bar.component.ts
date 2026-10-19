@@ -72,7 +72,7 @@ import { ClimbingLiveController } from './climbing-live-controller';
         margin: 8px;
         padding: 10px 12px;
         border-radius: 10px;
-        background: var(--ion-color-primary-tint, #e8f0fe);
+        background: rgba(var(--ion-color-primary-rgb, 56, 128, 255), 0.12);
         color: var(--ion-color-primary-contrast, inherit);
       }
       .live-bar--summary {

@@ -26,6 +26,11 @@ export class LocalNotificationsGateway {
     return LocalNotifications.cancel({ notifications: ids.map((id) => ({ id })) });
   }
 
+  /** `cancel` only drops pending (scheduled) notifications; one already shown is dismissed by this. */
+  removeDeliveredIds(ids: number[]): Promise<void> {
+    return LocalNotifications.removeDeliveredNotificationsById({ ids });
+  }
+
   getPending(): Promise<PendingResult> {
     return LocalNotifications.getPending();
   }

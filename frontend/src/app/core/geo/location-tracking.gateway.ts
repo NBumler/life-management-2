@@ -15,8 +15,13 @@ import {
  */
 @Injectable({ providedIn: 'root' })
 export class LocationTrackingGateway {
+  /**
+   * Locked-screen recording runs in the plugin's `location` foreground service, which needs only the
+   * foreground location grant — `backgroundLocation` (`ACCESS_BACKGROUND_LOCATION`) is for background
+   * geofencing, isn't in the manifest, and asking for it makes the plugin reject the whole request.
+   */
   requestPermissions(): Promise<BackgroundGeolocationPermissionStatus> {
-    return BackgroundGeolocation.requestPermissions({ permissions: ['location', 'backgroundLocation', 'notification'] });
+    return BackgroundGeolocation.requestPermissions({ permissions: ['location', 'notification'] });
   }
 
   start(options: StartOptions, callback: (location?: Location, error?: CallbackError) => void): Promise<void> {

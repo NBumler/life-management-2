@@ -45,6 +45,11 @@ describe('LocationTrackingService (backlog/150)', () => {
     expect(await service.requestPermission()).toBe('denied');
   });
 
+  it('requestPermission(): a plugin rejection counts as denied', async () => {
+    gateway.requestPermissions.and.rejectWith(new Error('Missing the following permissions in AndroidManifest.xml'));
+    expect(await service.requestPermission()).toBe('denied');
+  });
+
   it('start(): forwards an accepted fix to onFix and updates lastFix/tracking', async () => {
     const received: TrackingFix[] = [];
     await service.start('Cím', 'Üzenet', (fix) => received.push(fix));

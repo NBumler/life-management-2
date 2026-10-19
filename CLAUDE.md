@@ -104,6 +104,8 @@ so a running emulator never blocks a phone install. Drive it from an agent sessi
 `adb -s emulator-5554 exec-out screencap -p > x.png` (view the PNG) + `adb shell input tap/text`;
 `adb shell input text` drops characters if fired too fast — pause ~1 s after focusing a field.
 Like a phone install, the script rewrites the tracked `app-config.json` — revert it before committing.
+Emulator test user: credentials live in the git-ignored repo-root `.env.emulator` (`LM2_EMULATOR_USERNAME` / `LM2_EMULATOR_PASSWORD`, created once on the local backend via
+`POST /api/admin/users`) — read them from there to log in on the emulator; never echo them or commit them.
 
 Required env vars (`.env`, git-ignored; `.env.example` is the tracked template): `POSTGRES_USER`,
 `POSTGRES_PASSWORD`, `POSTGRES_DB`, `LM2_JWT_SECRET`, `LM2_ADMIN_API_KEY`. Backend local secrets also

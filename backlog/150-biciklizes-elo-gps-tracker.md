@@ -457,6 +457,27 @@ korlát, `#### Backend-offline`), [[Backend-offline first]] §14/§15 kiegészí
 teszt (`scripts/install-android.ps1`): háttér-GPS zárolt képernyővel, értesítés-tap, végponti fixek,
 repülőgép mód — utána a jegy lezárható.
 
+**Emulátoros teszt (2026-10-19, `install-android.ps1 -Emulator`, `LM2_Phone` Android 15, `emu geo fix`
+szimulált track):** végigment — Pontos: gyűjtés zárolt képernyővel is (0,95 km / 30 pont, a várt táv),
+szünet alatti pontok nem számítanak, folytatás új szakaszt nyit, app-újraindítás után a draft + banner
+megmarad, értesítés-tap az élő képernyőre visz, összegző DEM-szinttel, mentés + szinkron (`tracking_mode`
+/ `started_at` a szerveren). Becsült: kezdő- és végponti fix, repülőgép módban offline `BIKE` útvonal
+(Clark Ádám tér → Oktogon 2,44 km), offline mentés → visszakapcsoláskor szinkron, körtúra-figyelmeztetés,
+elvetés megerősítéssel, a mód megjegyezve. **Talált és javított hibák:** (1) a háttér-helyengedély kérése
+(`backgroundLocation`) a manifestben nem szereplő `ACCESS_BACKGROUND_LOCATION` miatt az egész kérést
+elutasította → indítás csendben semmit nem csinált; most csak `location` + `notification` (a foreground
+service-hez ennyi kell), és a plugin-elutasítás megtagadásnak számít; (2) a tartós értesítés
+`isExactNotification` alapértéke (`true`) a rendszer „Alarms & reminders” beállítására irányított át —
+most `false` (a mászós élő értesítésnél is); (3) a `cancel` a már megjelent értesítést nem tünteti el
+(csak az ütemezettet) → `removeDeliveredNotificationsById` is (mászásnál is); (4) a Pontos GPS-indítás
+hibája (pl. kikapcsolt helymeghatározás) kezeletlen volt és GPS nélküli menetet hagyott → draft eldobva,
+magyarázó üzenet; (5) a live banner szürke szövege telített kék háttéren olvashatatlan volt (a mászós
+bannerek is) → halvány primary háttér; (6) a súgó-szövegek `
+` bekezdései egybefolytak → `pre-line`.
+**Megfigyelés (nem javítva):** a DEM városban felülbecsli a szintet (Budapest, sík szakasz 1 km-en 32 m) —
+a Copernicus GLO-90 felszínmodell (DSM, épületekkel); valódi eszközön, valódi úton érdemes újranézni.
+Valódi telefonon (Doze, valódi GPS-zaj, akkumulátor) még nincs kipróbálva.
+
 ### Méret-jóváhagyás
 
 **Mért / becsült méretek (2026-10-06):**

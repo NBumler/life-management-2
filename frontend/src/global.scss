@@ -42,3 +42,8 @@
 
 /* backlog/tura-utvonaltervezo/103-... 1. fázis: MapLibre GL JS alap-stílusa (kontrollok, popupok). */
 @import 'maplibre-gl/dist/maplibre-gl.css';
+
+/* shared/help-button: help texts separate paragraphs with a newline — keep them as line breaks in the alert. */
+.help-alert .alert-message {
+  white-space: pre-line;
+}

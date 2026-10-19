@@ -36,7 +36,7 @@ import { formatElapsed } from '../climbing/naplo/climbing-live-controller';
   styles: [
     `
       .live-banner {
-        --background: var(--ion-color-primary-tint, #e8f0fe);
+        --background: rgba(var(--ion-color-primary-rgb, 56, 128, 255), 0.12);
         margin: 8px;
         border-radius: 10px;
       }

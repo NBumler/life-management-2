@@ -36,6 +36,7 @@ export class HelpButtonComponent {
     const alert = await this.alertController.create({
       header: this.translate.instant(this.titleKey),
       message: this.translate.instant(this.textKey, this.textParams),
+      cssClass: 'help-alert',
       buttons: [this.translate.instant('COMMON.CLOSE')],
     });
     await alert.present();

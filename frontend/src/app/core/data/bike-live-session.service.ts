@@ -209,7 +209,13 @@ export class BikeLiveSessionService {
       });
       this.startFixTask = task;
     } else {
-      await this.startGps(draft);
+      try {
+        await this.startGps(draft);
+      } catch {
+        // e.g. location services switched off: no ride without GPS — drop the draft, explain like a denial
+        await this.clear();
+        return { status: 'permission-denied' };
+      }
     }
     return { status: 'started', draft };
   }
@@ -466,6 +472,8 @@ export class BikeLiveSessionService {
               { time },
             ),
             ongoing: true,
+            // shown now, not timed: the plugin's exact default would redirect to the "Alarms & reminders" settings
+            isExactNotification: false,
             autoCancel: false,
             extra: { route: BIKE_LIVE_ROUTE },
           },
@@ -482,6 +490,8 @@ export class BikeLiveSessionService {
     }
     try {
       await this.notifications.cancelIds([BIKE_LIVE_NOTIFICATION_ID]);
+      // the ongoing notification is already shown — cancel alone leaves it on screen
+      await this.notifications.removeDeliveredIds([BIKE_LIVE_NOTIFICATION_ID]);
     } catch {
       // nothing to cancel
     }

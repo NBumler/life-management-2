@@ -151,6 +151,8 @@ export class ClimbingLiveSessionService {
               time,
             }),
             ongoing: true,
+            // shown now, not timed: the plugin's exact default would redirect to the "Alarms & reminders" settings
+            isExactNotification: false,
             autoCancel: false,
             extra: { route: liveRoute(draft.contextKey) },
           },
@@ -167,6 +169,8 @@ export class ClimbingLiveSessionService {
     }
     try {
       await this.notifications.cancelIds([CLIMBING_LIVE_NOTIFICATION_ID]);
+      // the ongoing notification is already shown — cancel alone leaves it on screen
+      await this.notifications.removeDeliveredIds([CLIMBING_LIVE_NOTIFICATION_ID]);
     } catch {
       // nothing to cancel
     }

@@ -37,9 +37,14 @@ export class LocationTrackingService {
 
   private onFix: ((fix: TrackingFix) => void) | null = null;
 
+  /** A plugin rejection (e.g. a permission missing from the manifest) counts as denied, so the UI explains instead of failing silently. */
   async requestPermission(): Promise<LocationPermissionState> {
-    const status = await this.gateway.requestPermissions();
-    return status.location === 'granted' ? 'granted' : 'denied';
+    try {
+      const status = await this.gateway.requestPermissions();
+      return status.location === 'granted' ? 'granted' : 'denied';
+    } catch {
+      return 'denied';
+    }
   }
 
   /** Starts continuous tracking; `onFix` only receives fixes that pass the filters below. */
