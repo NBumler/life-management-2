@@ -1,12 +1,23 @@
 import { Injectable, inject, signal } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, timeout } from 'rxjs';
 
 import { RouteSuggestion } from '../../api/model/routeSuggestion';
 import { TuraService } from '../../api/api/tura.service';
 import { polylineLengthMeters, withExactEndpoints } from '../geo/geo-math';
 import { suggestRouteOffline } from '../geo/segment-route-graph';
 import { RoutingService } from '../geo/routing.service';
+import { ConnectionState } from '../sync/connection-state';
+import { SyncEngineService } from '../sync/sync-engine.service';
 import { TrailSegmentRepository } from './trail-segment.repository';
+
+/**
+ * backlog/151 — a backend-hívás felső korlátja. Egy elakadó kérés (gyenge Wi-Fi, nem válaszoló
+ * proxy) különben a WebView saját időkorlátjáig tartaná vissza a telefonos tartalékot.
+ */
+export const BACKEND_ROUTE_SUGGESTION_TIMEOUT_MS = 8_000;
+
+/** Ezekben az állapotokban a backend-hívás biztosan nem sikerül, ezért el sem indul. */
+const BACKEND_UNREACHABLE_STATES: readonly ConnectionState[] = ['BACKEND_OFFLINE', 'FULL_OFFLINE'];
 
 /**
  * backlog/tura-utvonaltervezo/103-... 2.2 fázis. Ugyanazt a mintát követi, mint
@@ -24,12 +35,19 @@ import { TrailSegmentRepository } from './trail-segment.repository';
  *    országos csomag, ezért **soha nem letöltött, internetet soha nem elért eszközön is** ad
  *    útvonalat, nem csak a letöltött régión belül (lásd
  *    backlog/tura-utvonaltervezo/105-tura-offline-terkep-es-utvonalszamitas).
+ *
+ * A backend szándékosan a csomag **előtt** áll: az adata új importtal frissül, app-kiadás nélkül, a
+ * csomag a build pillanatát rögzíti (Backend-offline first §14 kivétel). Hogy ez ne lassítsa az
+ * offline esetet, a 2. szint kimarad, ha a `SyncEngineService` már Backend- vagy Full-offline-t
+ * tud, és legfeljebb `BACKEND_ROUTE_SUGGESTION_TIMEOUT_MS`-ig vár. `UNKNOWN` (hidegindítás) esetén
+ * megpróbálja — ott az időkorlát véd.
  */
 @Injectable({ providedIn: 'root' })
 export class RouteSuggestionRepository {
 	private readonly turaService = inject(TuraService);
 	private readonly trailSegments = inject(TrailSegmentRepository);
 	private readonly routing = inject(RoutingService);
+	private readonly syncEngine = inject(SyncEngineService);
 
 	readonly loading = signal(false);
 
@@ -40,18 +58,29 @@ export class RouteSuggestionRepository {
 			if (local.found) {
 				return local;
 			}
-			let remote: RouteSuggestion | null = null;
-			try {
-				remote = await firstValueFrom(this.turaService.suggestRoute(countryCode, start[0], start[1], end[0], end[1]));
-				if (remote.found) {
-					return remote;
-				}
-			} catch {
-				// BACKEND_OFFLINE / FULL_OFFLINE — a build-asset tartalék veszi át alább.
+			const remote = await this.fromBackend(countryCode, start, end);
+			if (remote?.found) {
+				return remote;
 			}
 			return (await this.fromPackage(countryCode, start, end)) ?? remote ?? local;
 		} finally {
 			this.loading.set(false);
+		}
+	}
+
+	/** `null`, ha a backend ismerten elérhetetlen, hibázik vagy nem válaszol időben — a csomag veszi át. */
+	private async fromBackend(countryCode: string, start: readonly number[], end: readonly number[]): Promise<RouteSuggestion | null> {
+		if (BACKEND_UNREACHABLE_STATES.includes(this.syncEngine.connectionState())) {
+			return null;
+		}
+		try {
+			return await firstValueFrom(
+				this.turaService
+					.suggestRoute(countryCode, start[0], start[1], end[0], end[1])
+					.pipe(timeout(BACKEND_ROUTE_SUGGESTION_TIMEOUT_MS)),
+			);
+		} catch {
+			return null;
 		}
 	}
 

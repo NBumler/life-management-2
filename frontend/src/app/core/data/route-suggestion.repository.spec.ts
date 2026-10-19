@@ -1,11 +1,14 @@
-import { TestBed } from '@angular/core/testing';
-import { Observable, of, throwError } from 'rxjs';
+import { TestBed, fakeAsync, flushMicrotasks, tick } from '@angular/core/testing';
+import { signal } from '@angular/core';
+import { NEVER, Observable, of, throwError } from 'rxjs';
 
 import { TuraService } from '../../api/api/tura.service';
 import { RouteSuggestion } from '../../api/model/routeSuggestion';
 import { TrailSegment } from '../../api/model/trailSegment';
-import { RouteSuggestionRepository } from './route-suggestion.repository';
+import { BACKEND_ROUTE_SUGGESTION_TIMEOUT_MS, RouteSuggestionRepository } from './route-suggestion.repository';
 import { RoutingService } from '../geo/routing.service';
+import { ConnectionState } from '../sync/connection-state';
+import { SyncEngineService } from '../sync/sync-engine.service';
 import { TrailSegmentRepository } from './trail-segment.repository';
 
 /** See trail-segment.repository.spec.ts for why this narrower interface exists (overload typing). */
@@ -18,18 +21,21 @@ describe('RouteSuggestionRepository', () => {
 	let turaService: jasmine.SpyObj<RouteSuggestionQuery>;
 	let trailSegments: { segments: () => TrailSegment[] };
 	let routing: jasmine.SpyObj<RoutingService>;
+	const connectionState = signal<ConnectionState>('ONLINE');
 
 	beforeEach(() => {
 		turaService = jasmine.createSpyObj('TuraService', ['suggestRoute']);
 		trailSegments = { segments: () => [] };
 		routing = jasmine.createSpyObj('RoutingService', ['route']);
 		routing.route.and.resolveTo(null);
+		connectionState.set('ONLINE');
 
 		TestBed.configureTestingModule({
 			providers: [
 				{ provide: TuraService, useValue: turaService },
 				{ provide: TrailSegmentRepository, useValue: trailSegments },
 				{ provide: RoutingService, useValue: routing },
+				{ provide: SyncEngineService, useValue: { connectionState } },
 			],
 		});
 		repository = TestBed.inject(RouteSuggestionRepository);
@@ -121,4 +127,43 @@ describe('RouteSuggestionRepository', () => {
 
 		expect(routing.route).not.toHaveBeenCalled();
 	});
+	for (const state of ['BACKEND_OFFLINE', 'FULL_OFFLINE'] as const) {
+		it(`suggest(): skips the backend when the connection is known to be ${state} and goes straight to the package (backlog/151)`, async () => {
+			connectionState.set(state);
+			routing.route.and.resolveTo([[19.0, 47.0], [19.05, 47.0]]);
+
+			const result = await repository.suggest('HU', [19.0, 47.0], [19.05, 47.0]);
+
+			expect(turaService.suggestRoute).not.toHaveBeenCalled();
+			expect(routing.route).toHaveBeenCalledWith('HIKE', [19.0, 47.0], [19.05, 47.0]);
+			expect(result.found).toBeTrue();
+		});
+	}
+
+	it('suggest(): still asks the backend on a cold start (UNKNOWN) — the timeout bounds the wait', async () => {
+		connectionState.set('UNKNOWN');
+		turaService.suggestRoute.and.returnValue(of({ found: true, coordinates: [[19.0, 47.0], [19.1, 47.1]], distanceMeters: 1 }));
+
+		await repository.suggest('HU', [19.0, 47.0], [19.1, 47.1]);
+
+		expect(turaService.suggestRoute).toHaveBeenCalled();
+	});
+
+	it('suggest(): a backend call that never answers gives way to the package after the timeout (backlog/151)', fakeAsync(() => {
+		turaService.suggestRoute.and.returnValue(NEVER);
+		routing.route.and.resolveTo([[19.0, 47.0], [19.05, 47.0]]);
+		let result: RouteSuggestion | undefined;
+
+		void repository.suggest('HU', [19.0, 47.0], [19.05, 47.0]).then((r) => (result = r));
+		tick(BACKEND_ROUTE_SUGGESTION_TIMEOUT_MS - 1);
+		flushMicrotasks();
+		expect(result).toBeUndefined();
+		expect(routing.route).not.toHaveBeenCalled();
+
+		tick(1);
+		flushMicrotasks();
+		expect(routing.route).toHaveBeenCalledWith('HIKE', [19.0, 47.0], [19.05, 47.0]);
+		expect(result?.found).toBeTrue();
+		expect(repository.loading()).toBeFalse();
+	}));
 });

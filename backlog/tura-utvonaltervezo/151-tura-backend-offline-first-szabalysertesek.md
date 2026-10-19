@@ -87,14 +87,15 @@ szolgáltatótól jönnek (nem a backendről), és megjelenítést, nem számít
       csak gyorsító tartalék, ha a betöltött adatban nincs összeköttetés). A backend
       `route-metrics` végpontja megszűnt; a `RouteMetricsService` + `OpenMeteoElevationClient`
       csak az admin katalógus-upserthez marad (lásd terv).
-- [ ] **A build-asset routing a backend elé kerül:** a `RouteSuggestionRepository.suggest()` mai
-      sorrendje (1) viewport-gráf → (2) backend `route-suggestion` → (3) build-asset `HIKE` routing.
-      Offline így is működik (a 3. szint mindig ott van), de a Backend-offline first szerint minden
-      felhasználó-láthatású számítás eszközön fut (§14), így online is a backendre vár, mielőtt az
-      eszközön lévő, teljes HU-gráfot megkérdezné. Új sorrend: viewport-gráf → build-asset `HIKE`
-      (`countryCode === 'HU'`) → backend csak tartalékként (lefedettségen kívül, vagy ha a helyi
-      gráf nem talál utat). Teszt a sorrendre; a backend hívás elmarad, ha a csomag talál utat.
-      _(Felvéve: 2026-10-19, a #150 utáni architektúra-ellenőrzés 3. pontja.)_
+- [x] **A routing-sorrend marad, de a backend nem lassítja az offline esetet:** a
+      `RouteSuggestionRepository.suggest()` sorrendje (1) viewport-gráf → (2) backend
+      `route-suggestion` → (3) build-asset `HIKE` routing — szándékosan, mert a backend adata új
+      importtal frissül app-kiadás nélkül, a csomag a build pillanatát rögzíti (döntés lent,
+      Backend-offline first §14 kivétel). A 2. szint kimarad, ha a `SyncEngineService.connectionState`
+      `BACKEND_OFFLINE` / `FULL_OFFLINE`; egyébként legfeljebb 8 s
+      (`BACKEND_ROUTE_SUGGESTION_TIMEOUT_MS`), utána a csomag. Teszt: kihagyás mindkét offline
+      állapotban, hívás `UNKNOWN`-nál, időkorlát utáni átadás a csomagnak.
+      _(Felvéve: 2026-10-19, a #150 utáni architektúra-ellenőrzés 3. pontja; átírva és kész: 2026-10-19.)_
 - [x] Az online magasság-forrást a kliens **közvetlenül** hívja (§13), 8 s timeouttal; a backend
       nem proxyz.
 - [x] A meglévő túra-funkciók nem regresszálnak; az eszközön futó metrika-számítás tesztjei
@@ -137,6 +138,13 @@ szolgáltatótól jönnek (nem a backendről), és megjelenítést, nem számít
   `pages/menu/tura/offline-route-graph.ts`-ből importál + duplikált illesztési küszöb →
   [[177-tura-offline-route-graph-core-geo-ba]]; (3) a routing-sorrend (backend a build-asset előtt)
   → e jegy új, nyitott elfogadási kritériuma.
+- **2026-10-19 — döntés: a backend marad a csomag előtt.** Az eredeti javaslat (csomag a backend
+  elé) elvetve: offline a 3. szint így is mindig ad útvonalat, a csomag-elsőség viszont HU-ban
+  gyakorlatilag soha nem hívná a backendet, így a frissíthető szerveroldali turistaút-adat
+  hatástalan lenne. A valódi hiba a lassú átadás volt: a backend-hívásnak nem volt időkorlátja, és
+  ismert offline állapotban is elindult — egy elakadó kérés a WebView időkorlátjáig (akár több tíz
+  másodperc) tartotta vissza a telefonos útvonalat. Javítás: kapcsolat-állapot szerinti kihagyás +
+  8 s időkorlát (`core/data/route-suggestion.repository.ts`).
 
 ### Megvalósítás — 1. kör (2026-10-02, `8acd87a`)
 

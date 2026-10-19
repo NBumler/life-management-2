@@ -432,6 +432,13 @@ Elv: a külső integrációk **soha nincsenek** a saját backenden proxyzva ([[B
 - **A `~` / homokóra jelentése:** a szám **nem számolható, mert hiányzik egy bemenet** — pl. üres `grossMonthlySalaryHuf` ([[Pénzügyek]]), hiányos [[Profile]], `passCostComputable = false` ([[AYCM tracker]]). **Nem** jelent offline becslést, és **soha nem** a hálózati állapot miatt jelenik meg.
 - A hálózati állapotot **kizárólag** a globális offline indikátor és a [[Szinkronizációs központ]] jelzi (§16).
 - Nem számolható érték **soha nem menthető 0-ként** a helyi store-ba vagy a szerverre; a `~` megjelenítési állapot, nem adat.
+- **Kivétel — turistaút-útvonaltervezés** (`core/data/route-suggestion.repository.ts`, `backlog/151`): online a
+  backend `route-suggestion` megelőzi a telefonra telepített `HIKE` gráfot, mert a backend adata
+  új turistaút-importtal frissül app-kiadás nélkül, a geo build asset (§15) pedig a build
+  pillanatát rögzíti. A sorrend: betöltött viewport-adat → backend → build-asset `HIKE`. Az offline
+  esetet ez nem lassítja: ha a `SyncEngineService.connectionState` `BACKEND_OFFLINE` vagy
+  `FULL_OFFLINE`, a backend-hívás el sem indul; egyébként (`ONLINE`, hidegindításkor `UNKNOWN`)
+  legfeljebb 8 s-ig vár (`BACKEND_ROUTE_SUGGESTION_TIMEOUT_MS`), utána a telefon tervez.
 - Szerveroldali paritás: ahol a backend is számol (TDEE validáció / read-model, nehézségi index újraszámolás), ugyanazokat a konstansokat használja. A kanonikus konstanslisták: [[Tápérték kalkulátor]], [[Nehézségi szint skálája (konverziós mátrix)]].
 
 #### 15. Seed és statikus asset
