@@ -485,7 +485,13 @@
       "DISTANCE_SHORT": "Short (under 10 km)",
       "DISTANCE_MEDIUM": "Medium (10-20 km)",
       "DISTANCE_LONG": "Long (over 20 km)",
-      "NO_RESULTS": "No route matches the current filter."
+      "NO_RESULTS": "No route matches the current filter.",
+      "EMPTY": "There are no recommended routes yet.",
+      "OFFLINE": "Recommended routes can’t be loaded — the server is unreachable."
+    },
+    "PREVIEW": {
+      "ADOPT": "Use as my route",
+      "CLOSE": "Close preview"
     },
     "LAYERS": {
       "BUTTON": "Layers",

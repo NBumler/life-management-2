@@ -25,16 +25,25 @@ export class CuratedRouteRepository {
 
 	private readonly items = signal<CuratedRoute[]>([]);
 	readonly routes = this.items.asReadonly();
+	/** backlog/191 — az utolsó betöltés nem sikerült (offline / backend nem elérhető): az üres lista nem a szűrő miatt üres. */
+	private readonly failed = signal(false);
+	readonly loadFailed = this.failed.asReadonly();
 
 	async load(filter: CuratedRouteFilter = {}): Promise<void> {
-		const result = await firstValueFrom(
-			this.curatedRoutesService.listCuratedRoutes(
-				filter.difficulty,
-				filter.activityType,
-				filter.minDistanceMeters,
-				filter.maxDistanceMeters,
-			),
-		);
-		this.items.set(result);
+		try {
+			const result = await firstValueFrom(
+				this.curatedRoutesService.listCuratedRoutes(
+					filter.difficulty,
+					filter.activityType,
+					filter.minDistanceMeters,
+					filter.maxDistanceMeters,
+				),
+			);
+			this.items.set(result);
+			this.failed.set(false);
+		} catch {
+			this.items.set([]);
+			this.failed.set(true);
+		}
 	}
 }

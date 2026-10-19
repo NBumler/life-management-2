@@ -14,6 +14,10 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-19 — #189, #190, #191** Túra: az ajánlott túra előnézete bezárható, rajzolás / automatikus mód
+  indításakor eltűnik, és átvehető saját útvonalként (vonal, név, napváltók); a rajzon körrel csak a
+  felhasználó pontjai látszanak, a visszavonás lépésenként működik (egy automatikus szakasz egy lépés), napváltó
+  csak kijelölt pontra tehető; a katalógus külön üres-állapotot mutat üres katalógusra, szűrőre és offline-ra.
 - **2026-10-19 — #188** Túra többnapos útvonal: a napi szintemelkedés / -csökkenés a teljes útvonal
   egyetlen magasság-mintasorából, a napváltó pontoknál felosztva számolódik (`splitRouteMetrics`), így a
   napi összeg pontosan a teljes érték; mentéskor egy magasság-lekérés napi egy helyett.

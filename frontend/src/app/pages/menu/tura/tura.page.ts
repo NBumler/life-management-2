@@ -55,6 +55,7 @@ import { OFFLINE_TILE_MAX_COUNT, OfflineRegion } from '../../../core/data/offlin
 import { OfflineRegionRepository } from '../../../core/data/offline-region.repository';
 import { AutoRouteHintComponent } from './auto-route-hint.component';
 import { daySummaryText, durationText } from './hike-text';
+import { RouteDraftEditor, interiorWaypointIndexes, routeDraftFromPath, waypointCoordinates, withManualPoint } from './route-draft';
 import { trailSegmentSymbolColor } from './trail-segment-symbol-color';
 import { trailSegmentsToFeatureCollection } from './trail-segments-geojson';
 
@@ -214,10 +215,15 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	private resizeObserver?: ResizeObserver;
 
 	protected readonly mode = signal<Mode>('none');
-	/** [lon, lat] waypoints picked so far, in click order (manual mode) or the generated path (auto mode). */
-	protected readonly draft = signal<number[][]>([]);
+	/** backlog/190 — a rajz (teljes vonal + a felhasználó kijelölt pontjai) lépésenkénti visszavonással. */
+	private readonly draftEditor = new RouteDraftEditor();
+	/** [lon, lat] — the whole line: the clicked points (manual mode) and the generated paths (auto mode). */
+	protected readonly draft = computed(() => this.draftEditor.draft().coordinates);
 	/** Auto mode: the first of the two picked points, waiting for the second click. */
 	protected readonly autoStart = signal<number[] | null>(null);
+	protected readonly canUndo = computed(() => this.draftEditor.canUndo() || this.autoStart() !== null);
+	/** A napváltónak választható pontok: a felhasználó kijelölt pontjai a két végpont nélkül. */
+	protected readonly interiorWaypoints = computed(() => interiorWaypointIndexes(this.draftEditor.draft()));
 	protected readonly routeName = signal('');
 	protected readonly showRoutesPanel = signal(false);
 	/**
@@ -228,14 +234,22 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	protected readonly dayBreaks = signal<{ waypointIndex: number; overnightName: string }[]>([]);
 	protected readonly showDaysPanel = signal(false);
 	protected readonly dayCount = computed(() => this.dayBreaks().length + 1);
-	protected readonly canAddDayBreak = computed(() => this.dayBreaks().length < Math.max(0, this.draft().length - 2));
+	protected readonly canAddDayBreak = computed(() => this.dayBreaks().length < this.interiorWaypoints().length);
 	/** backlog/tura-utvonaltervezo/103-... 2.5 fázis — ajánlott/kész túrák katalógusa, szűréssel. */
 	protected readonly showCatalogPanel = signal(false);
 	protected readonly catalogDifficulty = signal<CuratedRouteDifficulty | ''>('');
 	protected readonly catalogActivityType = signal<CuratedRouteActivityType | ''>('');
 	protected readonly catalogDistanceBucket = signal<DistanceBucket>('any');
 	/** A térképen kiemelt katalógus-túra (ha a felhasználó rákattintott egy listaelemre) — null = nincs kiemelés. */
-	protected readonly previewedCuratedRoute = signal<number[][] | null>(null);
+	protected readonly previewedCuratedRoute = signal<CuratedRoute | null>(null);
+	/** backlog/191 — melyik üres-állapot szöveg illik a katalógusra: a betöltés hibája, az üres katalógus vagy a szűrő. */
+	protected readonly catalogEmptyKey = computed(() => {
+		if (this.curatedRoutes.loadFailed()) {
+			return 'TURA.CATALOG.OFFLINE';
+		}
+		const unfiltered = this.catalogDifficulty() === '' && this.catalogActivityType() === '' && this.catalogDistanceBucket() === 'any';
+		return unfiltered ? 'TURA.CATALOG.EMPTY' : 'TURA.CATALOG.NO_RESULTS';
+	});
 	/** backlog/tura-utvonaltervezo/107-... 3. fázis — alaptérkép-váltó + domborzat-árnyékolás panel. */
 	protected readonly showLayersPanel = signal(false);
 	protected readonly activeBasemap = signal<Basemap>('osm');
@@ -250,6 +264,8 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 		return profile ? elevationProfilePolylinePoints(profile, PROFILE_CHART_WIDTH, PROFILE_CHART_HEIGHT) : '';
 	});
 
+	/** backlog/189 — az előnézet túrája, amíg a konténer átméreteződése még újraigazíthatja rá a nézetet. */
+	private pendingPreviewFit: number[][] | null = null;
 	private metricsRequestId = 0;
 	private metricsDebounceHandle?: ReturnType<typeof setTimeout>;
 
@@ -265,11 +281,11 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 			source?.setData(hikeRoutesToFeatureCollection(routes));
 		});
 		effect(() => {
-			const coordinates = this.draft();
+			const draft = this.draftEditor.draft();
 			const lineSource = this.map?.getSource(HIKE_ROUTE_DRAFT_SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
-			lineSource?.setData(draftRouteToFeatureCollection(coordinates));
+			lineSource?.setData(draftRouteToFeatureCollection(draft.coordinates));
 			const pointsSource = this.map?.getSource(HIKE_ROUTE_DRAFT_POINTS_SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
-			pointsSource?.setData(draftWaypointsToFeatureCollection(coordinates));
+			pointsSource?.setData(draftWaypointsToFeatureCollection(waypointCoordinates(draft)));
 		});
 		effect(() => {
 			const start = this.autoStart();
@@ -279,13 +295,13 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 		effect(() => {
 			const preview = this.previewedCuratedRoute();
 			const source = this.map?.getSource(CURATED_ROUTE_PREVIEW_SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
-			source?.setData(draftRouteToFeatureCollection(preview ?? []));
+			source?.setData(draftRouteToFeatureCollection(preview?.coordinates ?? []));
 		});
 		effect(() => {
-			// backlog/tura-utvonaltervezo/103-... 2.4 fázis — ha a draft zsugorodik (undo/clear), a most
-			// már érvénytelen (a végponton túli vagy azzal egybeeső) töréspontokat el kell dobni.
-			const length = this.draft().length;
-			this.dayBreaks.update((breaks) => breaks.filter((day) => day.waypointIndex < length - 1));
+			// backlog/tura-utvonaltervezo/103-... 2.4 fázis — ha a draft változik (undo/clear), a most
+			// már érvénytelen töréspontokat el kell dobni. backlog/190: napváltó csak kijelölt belső pont lehet.
+			const interior = new Set(this.interiorWaypoints());
+			this.dayBreaks.update((breaks) => breaks.filter((day) => interior.has(day.waypointIndex)));
 		});
 		effect(() => {
 			const coordinates = this.draft();
@@ -336,7 +352,7 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 				source: HIKE_ROUTE_DRAFT_SOURCE_ID,
 				paint: { 'line-color': '#ff6f00', 'line-width': 3, 'line-dasharray': [2, 1] },
 			});
-			map.addSource(HIKE_ROUTE_DRAFT_POINTS_SOURCE_ID, { type: 'geojson', data: draftWaypointsToFeatureCollection(this.draft()) });
+			map.addSource(HIKE_ROUTE_DRAFT_POINTS_SOURCE_ID, { type: 'geojson', data: draftWaypointsToFeatureCollection(waypointCoordinates(this.draftEditor.draft())) });
 			map.addLayer({
 				id: HIKE_ROUTE_DRAFT_POINTS_LAYER_ID,
 				type: 'circle',
@@ -368,7 +384,7 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 		map.on('click', (event) => {
 			const point = [event.lngLat.lng, event.lngLat.lat];
 			if (this.mode() === 'manual') {
-				this.draft.update((coordinates) => [...coordinates, point]);
+				this.draftEditor.apply(withManualPoint(this.draftEditor.draft(), point));
 			} else if (this.mode() === 'auto') {
 				this.handleAutoModeClick(point);
 			}
@@ -378,7 +394,18 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 		// Ionic page, ngAfterViewInit can fire mid page-transition (or before the flex/absolute layout
 		// has settled), so the initial reading is sometimes a stale/small box — a ResizeObserver keeps
 		// the canvas correct for that first layout pass and for any later container resize.
-		this.resizeObserver = new ResizeObserver(() => map.resize());
+		this.resizeObserver = new ResizeObserver(() => {
+			map.resize();
+			if (this.pendingPreviewFit !== null && this.previewedCuratedRoute() !== null) {
+				this.fitToCoordinates(this.pendingPreviewFit);
+			}
+		});
+		// A felhasználó saját mozdítása után az előnézet-vágás már nem írja felül a nézetet.
+		map.on('movestart', (event) => {
+			if ('originalEvent' in event && event.originalEvent) {
+				this.pendingPreviewFit = null;
+			}
+		});
 		this.resizeObserver.observe(this.mapContainer().nativeElement);
 
 		this.map = map;
@@ -398,23 +425,37 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	protected toggleDrawMode(): void {
 		this.mode.update((current) => (current === 'manual' ? 'none' : 'manual'));
 		this.autoStart.set(null);
+		this.hidePreviewWhenPlanning();
 	}
 
 	protected toggleAutoMode(): void {
 		this.mode.update((current) => (current === 'auto' ? 'none' : 'auto'));
 		this.autoStart.set(null);
+		this.hidePreviewWhenPlanning();
 	}
 
-	protected undoLastWaypoint(): void {
-		if (this.autoStart() !== null && this.draft().length === 0) {
+	/** backlog/189 — rajzolás / automatikus tervezés közben az ajánlott túra vonala csak zavarna. */
+	private hidePreviewWhenPlanning(): void {
+		if (this.mode() !== 'none') {
+			this.previewedCuratedRoute.set(null);
+		}
+	}
+
+	/** backlog/190 — egy lépés vissza: a félbehagyott automatikus kezdőpont, különben egy kézi pont vagy egy teljes szakasz. */
+	protected undoLastStep(): void {
+		if (this.autoStart() !== null) {
 			this.autoStart.set(null);
 			return;
 		}
-		this.draft.update((coordinates) => coordinates.slice(0, -1));
+		this.draftEditor.undo();
+		if (this.draft().length === 0) {
+			// Mindent visszavont: a név se maradjon ott egy már nem létező (pl. átvett) útvonalról.
+			this.routeName.set('');
+		}
 	}
 
 	protected clearDraft(): void {
-		this.draft.set([]);
+		this.draftEditor.reset();
 		this.routeName.set('');
 		this.autoStart.set(null);
 		this.dayBreaks.set([]);
@@ -424,26 +465,22 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 		this.showDaysPanel.update((open) => !open);
 	}
 
-	/** A még nem használt belső waypoint-indexek (1..length-2), plusz a sor jelenlegi értéke — ez kerül az ion-select opciói közé. */
+	/** A még nem használt kijelölt belső pontok (backlog/190), plusz a sor jelenlegi értéke — ez kerül az ion-select opciói közé. */
 	protected availableWaypointIndexes(currentValue: number): number[] {
 		const used = new Set(this.dayBreaks().map((day) => day.waypointIndex));
 		used.delete(currentValue);
-		const options: number[] = [];
-		for (let index = 1; index < this.draft().length - 1; index++) {
-			if (!used.has(index)) {
-				options.push(index);
-			}
-		}
-		return options;
+		return this.interiorWaypoints().filter((index) => !used.has(index));
+	}
+
+	/** A koordináta-index helyett a kijelölt pont sorszáma (1 = kezdőpont), ahogy a térképen látszik. */
+	protected waypointNumber(index: number): number {
+		return this.draftEditor.draft().waypointIndexes.indexOf(index) + 1;
 	}
 
 	protected addDayBreak(): void {
-		const used = new Set(this.dayBreaks().map((day) => day.waypointIndex));
-		for (let index = 1; index < this.draft().length - 1; index++) {
-			if (!used.has(index)) {
-				this.dayBreaks.update((breaks) => [...breaks, { waypointIndex: index, overnightName: '' }].sort((a, b) => a.waypointIndex - b.waypointIndex));
-				return;
-			}
+		const index = this.availableWaypointIndexes(-1)[0];
+		if (index !== undefined) {
+			this.dayBreaks.update((breaks) => [...breaks, { waypointIndex: index, overnightName: '' }].sort((a, b) => a.waypointIndex - b.waypointIndex));
 		}
 	}
 
@@ -513,20 +550,57 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	}
 
 	protected previewCuratedRoute(route: CuratedRoute): void {
-		this.previewedCuratedRoute.set(route.coordinates);
-		if (!this.map || route.coordinates.length === 0) {
+		this.previewedCuratedRoute.set(route);
+		this.showCatalogPanel.set(false);
+		if (route.coordinates.length === 0) {
 			return;
 		}
-		const lons = route.coordinates.map((coordinate) => coordinate[0]);
-		const lats = route.coordinates.map((coordinate) => coordinate[1]);
+		// backlog/189 — az előnézet-sáv a fejlécbe kerül és lejjebb tolja a térképet, de az ion-toolbar
+		// aszinkron renderel: a konténer csak később zsugorodik. A ResizeObserver addig újraigazít, amíg a
+		// felhasználó meg nem mozdítja a térképet (ld. ngAfterViewInit).
+		this.pendingPreviewFit = route.coordinates;
+		this.fitToCoordinates(route.coordinates);
+	}
+
+	private fitToCoordinates(coordinates: number[][]): void {
+		if (!this.map) {
+			return;
+		}
+		const lons = coordinates.map((coordinate) => coordinate[0]);
+		const lats = coordinates.map((coordinate) => coordinate[1]);
 		this.map.fitBounds(
 			[
 				[Math.min(...lons), Math.min(...lats)],
 				[Math.max(...lons), Math.max(...lats)],
 			],
-			{ padding: 40 },
+			{ padding: 40, animate: false },
 		);
-		this.showCatalogPanel.set(false);
+	}
+
+	/** backlog/189 — a tipp-sáv „Előnézet bezárása” gombja. */
+	protected closePreview(): void {
+		this.previewedCuratedRoute.set(null);
+	}
+
+	/**
+	 * backlog/189 — az ajánlott túra a saját rajzom lesz (egy visszavonható lépés): a vonala, a neve (ha
+	 * még nincs) és a napváltói. A napváltók koordináta-indexei kijelölt pontok lesznek, hogy a napok
+	 * panelen választhatók maradjanak (backlog/190).
+	 */
+	protected adoptPreview(): void {
+		const route = this.previewedCuratedRoute();
+		if (route === null) {
+			return;
+		}
+		const breaks = (route.days ?? []).slice(0, -1).map((day) => ({ waypointIndex: day.endWaypointIndex, overnightName: day.overnightName ?? '' }));
+		this.mode.set('none');
+		this.autoStart.set(null);
+		this.draftEditor.apply(routeDraftFromPath(route.coordinates, breaks.map((day) => day.waypointIndex)));
+		this.dayBreaks.set(breaks);
+		if (this.routeName().trim() === '') {
+			this.routeName.set(route.name);
+		}
+		this.previewedCuratedRoute.set(null);
 	}
 
 	protected toggleLayersPanel(): void {
@@ -631,7 +705,7 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 			await alert.present();
 			return;
 		}
-		this.draft.set(result.coordinates);
+		this.draftEditor.apply(routeDraftFromPath(result.coordinates));
 		this.mode.set('none');
 	}
 
@@ -651,7 +725,7 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 			elevationProfile: metrics?.profile ?? undefined,
 			days,
 		});
-		this.draft.set([]);
+		this.draftEditor.reset();
 		this.routeName.set('');
 		this.dayBreaks.set([]);
 		this.mode.set('none');

@@ -52,3 +52,15 @@
   justify-content: center;
   width: 100%;
 }
+
+// backlog/189 — az előnézet-sáv: a túra neve egy sorban, levágva, hogy az átvétel / bezárás gomb mellett
+// a hosszú név se tegye többsorossá (és ne tolja le a térképet).
+.curated-preview-name {
+  display: block;
+  padding-left: 16px;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

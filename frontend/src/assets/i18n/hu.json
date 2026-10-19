@@ -485,7 +485,13 @@
       "DISTANCE_SHORT": "Rövid (10 km alatt)",
       "DISTANCE_MEDIUM": "Közepes (10–20 km)",
       "DISTANCE_LONG": "Hosszú (20 km felett)",
-      "NO_RESULTS": "Nincs a szűrésnek megfelelő túra."
+      "NO_RESULTS": "Nincs a szűrésnek megfelelő túra.",
+      "EMPTY": "Még nincs egyetlen ajánlott túra sem.",
+      "OFFLINE": "Az ajánlott túrák nem tölthetők be — nincs kapcsolat a szerverrel."
+    },
+    "PREVIEW": {
+      "ADOPT": "Átvétel",
+      "CLOSE": "Előnézet bezárása"
     },
     "LAYERS": {
       "BUTTON": "Rétegek",

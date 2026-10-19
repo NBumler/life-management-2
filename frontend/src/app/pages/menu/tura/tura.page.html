@@ -19,7 +19,7 @@
         }
         {{ 'TURA.AUTO' | translate }}
       </ion-button>
-      <ion-button [disabled]="draft().length === 0 && autoStart() === null" (click)="undoLastWaypoint()">
+      <ion-button [disabled]="!canUndo()" (click)="undoLastStep()">
         <ion-icon slot="icon-only" name="arrow-undo-outline" [attr.aria-label]="'TURA.UNDO' | translate"></ion-icon>
       </ion-button>
       <ion-button [disabled]="draft().length === 0 && autoStart() === null" (click)="clearDraft()">
@@ -52,6 +52,20 @@
       <app-auto-route-hint [routing]="routeSuggestion.loading()" [pickingEnd]="autoStart() !== null"></app-auto-route-hint>
     </ion-toolbar>
   }
+  @if (previewedCuratedRoute(); as preview) {
+    <ion-toolbar class="curated-preview-bar">
+      <span class="curated-preview-name">{{ preview.name }}</span>
+      <ion-buttons slot="end">
+        <ion-button (click)="adoptPreview()">
+          <ion-icon slot="start" name="create-outline" aria-hidden="true"></ion-icon>
+          {{ 'TURA.PREVIEW.ADOPT' | translate }}
+        </ion-button>
+        <ion-button (click)="closePreview()">
+          <ion-icon slot="icon-only" name="close-outline" [attr.aria-label]="'TURA.PREVIEW.CLOSE' | translate"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+    </ion-toolbar>
+  }
   @if (draft().length >= 2) {
     <ion-toolbar>
       <ion-input
@@ -62,7 +76,7 @@
         [autofocus]="true"
       ></ion-input>
       <ion-buttons slot="end">
-        @if (draft().length >= 3) {
+        @if (interiorWaypoints().length > 0) {
           <ion-button (click)="toggleDaysPanel()">
             <ion-icon slot="start" name="moon-outline" aria-hidden="true"></ion-icon>
             {{ 'TURA.DAYS.BUTTON' | translate }}
@@ -263,7 +277,7 @@
               (ionChange)="updateDayBreakIndex(i, $any($event.target).value)"
             >
               @for (index of availableWaypointIndexes(dayBreak.waypointIndex); track index) {
-                <ion-select-option [value]="index">{{ 'TURA.DAYS.WAYPOINT_OPTION' | translate: { index: index + 1 } }}</ion-select-option>
+                <ion-select-option [value]="index">{{ 'TURA.DAYS.WAYPOINT_OPTION' | translate: { index: waypointNumber(index) } }}</ion-select-option>
               }
             </ion-select>
           </ion-item>
@@ -344,7 +358,7 @@
       <ion-list>
         @if (curatedRoutes.routes().length === 0) {
           <ion-item lines="none">
-            <ion-label>{{ 'TURA.CATALOG.NO_RESULTS' | translate }}</ion-label>
+            <ion-label>{{ catalogEmptyKey() | translate }}</ion-label>
           </ion-item>
         }
         @for (route of curatedRoutes.routes(); track route.id) {
