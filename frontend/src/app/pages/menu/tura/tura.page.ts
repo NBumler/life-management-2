@@ -31,6 +31,7 @@ import {
 	IonTitle,
 	IonToggle,
 	IonToolbar,
+	ToastController,
 	ViewDidEnter,
 } from '@ionic/angular/standalone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
@@ -47,6 +48,7 @@ import { CuratedRouteFilter, CuratedRouteRepository } from '../../../core/data/c
 import { HikeRouteRepository } from '../../../core/data/hike-route.repository';
 import { RouteMetricsRepository } from '../../../core/data/route-metrics.repository';
 import { RouteSuggestionRepository } from '../../../core/data/route-suggestion.repository';
+import { StoredTuraMapView, TuraLocalStateService } from '../../../core/data/tura-local-state.service';
 import { RouteMetricsResult } from '../../../core/geo/route-metrics';
 import { elevationProfilePolylinePoints } from './elevation-profile-svg';
 import { draftRouteToFeatureCollection, draftWaypointsToFeatureCollection, hikeRoutesToFeatureCollection } from './hike-routes-geojson';
@@ -55,7 +57,7 @@ import { OFFLINE_TILE_MAX_COUNT, OfflineRegion } from '../../../core/data/offlin
 import { OfflineRegionRepository } from '../../../core/data/offline-region.repository';
 import { AutoRouteHintComponent } from './auto-route-hint.component';
 import { daySummaryText, durationText } from './hike-text';
-import { RouteDraftEditor, interiorWaypointIndexes, routeDraftFromPath, waypointCoordinates, withManualPoint } from './route-draft';
+import { DayBreak, RouteDraftEditor, interiorWaypointIndexes, routeDraftFromPath, waypointCoordinates, withManualPoint } from './route-draft';
 import { trailSegmentSymbolColor } from './trail-segment-symbol-color';
 import { trailSegmentsToFeatureCollection } from './trail-segments-geojson';
 
@@ -66,6 +68,10 @@ const DISTANCE_BUCKET_LONG_MIN = 20000;
 
 /** backlog/tura-utvonaltervezo/103-... 2.3 fázis — mennyit várunk az utolsó waypoint-változás után, mielőtt a metrikát újraszámoltatjuk. */
 const METRICS_DEBOUNCE_MS = 500;
+/** backlog/213 — a név gépelése ne írjon minden betűnél a Preferences-be. */
+const DRAFT_PERSIST_DEBOUNCE_MS = 500;
+/** backlog/208 — meddig látszik a kuka utáni „Visszavonás” toast. */
+const CLEARED_TOAST_DURATION_MS = 5000;
 const PROFILE_CHART_WIDTH = 300;
 const PROFILE_CHART_HEIGHT = 60;
 
@@ -205,7 +211,9 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	protected readonly routeMetrics = inject(RouteMetricsRepository);
 	protected readonly offlineRegions = inject(OfflineRegionRepository);
 	private readonly alertController = inject(AlertController);
+	private readonly toastController = inject(ToastController);
 	private readonly translate = inject(TranslateService);
+	private readonly localState = inject(TuraLocalStateService);
 	private readonly mapContainer = viewChild.required<ElementRef<HTMLDivElement>>('mapContainer');
 
 	private map?: maplibregl.Map;
@@ -231,7 +239,7 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	 * belső töréspontokat tárolja (az utolsó nap vége mindig implicit, a draft utolsó waypointja) —
 	 * ld. metricsForSave, ami a mentendő HikeRouteDay listát építi belőle.
 	 */
-	protected readonly dayBreaks = signal<{ waypointIndex: number; overnightName: string }[]>([]);
+	protected readonly dayBreaks = signal<DayBreak[]>([]);
 	protected readonly showDaysPanel = signal(false);
 	protected readonly dayCount = computed(() => this.dayBreaks().length + 1);
 	protected readonly canAddDayBreak = computed(() => this.dayBreaks().length < this.interiorWaypoints().length);
@@ -268,6 +276,12 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	private pendingPreviewFit: number[][] | null = null;
 	private metricsRequestId = 0;
 	private metricsDebounceHandle?: ReturnType<typeof setTimeout>;
+	/** backlog/213 — amíg a tárolt piszkozat be nem töltődött, az üres kezdőállapot nem írhatja felül. */
+	private readonly draftRestored = signal(false);
+	private draftPersistHandle?: ReturnType<typeof setTimeout>;
+	private pendingDraftPersist: (() => void) | null = null;
+	private clearedToast?: HTMLIonToastElement;
+	private destroyed = false;
 
 	constructor() {
 		effect(() => {
@@ -313,21 +327,70 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 			const requestId = ++this.metricsRequestId;
 			this.metricsDebounceHandle = setTimeout(() => void this.refreshMetrics(coordinates, requestId), METRICS_DEBOUNCE_MS);
 		});
+		effect(() => {
+			if (!this.draftRestored()) {
+				return;
+			}
+			const draft = this.draftEditor.draft();
+			const name = this.routeName();
+			const dayBreaks = this.dayBreaks();
+			clearTimeout(this.draftPersistHandle);
+			this.pendingDraftPersist = () => {
+				this.pendingDraftPersist = null;
+				if (draft.coordinates.length === 0 && name.trim() === '') {
+					void this.localState.clearDraft();
+				} else {
+					void this.localState.writeDraft({ coordinates: draft.coordinates, waypointIndexes: [...draft.waypointIndexes], name, dayBreaks });
+				}
+			};
+			this.draftPersistHandle = setTimeout(() => this.pendingDraftPersist?.(), DRAFT_PERSIST_DEBOUNCE_MS);
+		});
+		void this.restoreDraft();
+	}
+
+	/** backlog/213 — a legutóbbi mentetlen piszkozat visszatöltése, ha közben még nem kezdett új rajzba a felhasználó. */
+	private async restoreDraft(): Promise<void> {
+		try {
+			const stored = await this.localState.readDraft();
+			if (stored !== null && !this.destroyed && this.draft().length === 0) {
+				this.draftEditor.restore({ coordinates: stored.coordinates, waypointIndexes: stored.waypointIndexes });
+				this.routeName.set(stored.name);
+				this.dayBreaks.set(stored.dayBreaks);
+			}
+		} finally {
+			this.draftRestored.set(true);
+		}
 	}
 
 	ngAfterViewInit(): void {
 		void this.hikeRoutes.load();
 		registerOfflineTileProtocol();
+		void this.initMap();
+	}
+
+	/** backlog/214 — a térkép ott nyílik, ahol legutóbb hagyták; első alkalommal az országnézeten. */
+	private async initMap(): Promise<void> {
+		const view = await this.localState.readMapView().catch(() => null);
+		if (this.destroyed) {
+			return;
+		}
+		if (view !== null) {
+			if (view.basemap in BASEMAP_LAYER_IDS) {
+				this.activeBasemap.set(view.basemap as Basemap);
+			}
+			this.showHillshade.set(view.hillshade);
+		}
 
 		const map = new maplibregl.Map({
 			container: this.mapContainer().nativeElement,
 			style: BASE_STYLE,
-			center: HUNGARY_CENTER,
-			zoom: HUNGARY_ZOOM,
+			center: view ? (view.center as [number, number]) : HUNGARY_CENTER,
+			zoom: view?.zoom ?? HUNGARY_ZOOM,
 		});
 		map.addControl(new maplibregl.NavigationControl(), 'top-right');
 
 		map.on('load', () => {
+			this.applyBasemap(map);
 			map.addSource(TRAIL_SEGMENTS_SOURCE_ID, { type: 'geojson', data: trailSegmentsToFeatureCollection([], trailSegmentSymbolColor) });
 			map.addLayer({
 				id: TRAIL_SEGMENTS_LAYER_ID,
@@ -380,7 +443,10 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 
 			void this.loadCurrentViewport(map);
 		});
-		map.on('moveend', () => void this.loadCurrentViewport(map));
+		map.on('moveend', () => {
+			void this.loadCurrentViewport(map);
+			this.persistMapView();
+		});
 		map.on('click', (event) => {
 			const point = [event.lngLat.lng, event.lngLat.lat];
 			if (this.mode() === 'manual') {
@@ -417,7 +483,12 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	}
 
 	ngOnDestroy(): void {
+		this.destroyed = true;
 		clearTimeout(this.metricsDebounceHandle);
+		// backlog/213 — az utolsó, még debounce-ban álló változás se vesszen el az elnavigáláskor.
+		clearTimeout(this.draftPersistHandle);
+		this.pendingDraftPersist?.();
+		void this.clearedToast?.dismiss();
 		this.resizeObserver?.disconnect();
 		this.map?.remove();
 	}
@@ -447,18 +518,53 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 			this.autoStart.set(null);
 			return;
 		}
-		this.draftEditor.undo();
-		if (this.draft().length === 0) {
+		const cleared = this.draftEditor.undo();
+		if (cleared !== null) {
+			// backlog/208 — a kuka visszavonása: a vonallal együtt a név és a napváltók is visszajönnek.
+			this.routeName.set(cleared.name);
+			this.dayBreaks.set([...cleared.dayBreaks]);
+			void this.clearedToast?.dismiss();
+		} else if (this.draft().length === 0) {
 			// Mindent visszavont: a név se maradjon ott egy már nem létező (pl. átvett) útvonalról.
 			this.routeName.set('');
 		}
 	}
 
+	/** backlog/208 — a kuka egy visszavonható lépés; a toast „Visszavonás” gombja ugyanazt teszi, mint a visszavonás gomb. */
 	protected clearDraft(): void {
-		this.draftEditor.reset();
-		this.routeName.set('');
 		this.autoStart.set(null);
+		if (this.draft().length === 0) {
+			return;
+		}
+		this.draftEditor.clear({ name: this.routeName(), dayBreaks: this.dayBreaks() });
+		this.routeName.set('');
 		this.dayBreaks.set([]);
+		void this.showClearedToast();
+	}
+
+	private async showClearedToast(): Promise<void> {
+		await this.clearedToast?.dismiss();
+		const toast = await this.toastController.create({
+			message: this.translate.instant('TURA.CLEARED'),
+			duration: CLEARED_TOAST_DURATION_MS,
+			// A fülsáv fölött, hogy a toast eltűnése után egy késve érkező koppintás ne egy fülre essen.
+			positionAnchor: document.querySelector<HTMLElement>('ion-tab-bar') ?? undefined,
+			buttons: [
+				{
+					text: this.translate.instant('TURA.UNDO'),
+					handler: () => {
+						if (this.draftEditor.lastStepIsClear()) {
+							this.undoLastStep();
+						}
+					},
+				},
+			],
+		});
+		this.clearedToast = toast;
+		if (this.destroyed) {
+			return;
+		}
+		await toast.present();
 	}
 
 	protected toggleDaysPanel(): void {
@@ -609,17 +715,37 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 
 	protected setBasemap(basemap: Basemap): void {
 		this.activeBasemap.set(basemap);
-		if (!this.map) {
-			return;
+		if (this.map) {
+			this.applyBasemap(this.map);
 		}
-		for (const [id, layerId] of Object.entries(BASEMAP_LAYER_IDS)) {
-			this.map.setLayoutProperty(layerId, 'visibility', id === basemap ? 'visible' : 'none');
-		}
+		this.persistMapView();
 	}
 
 	protected toggleHillshade(visible: boolean): void {
 		this.showHillshade.set(visible);
-		this.map?.setLayoutProperty(HILLSHADE_LAYER_ID, 'visibility', visible ? 'visible' : 'none');
+		if (this.map) {
+			this.applyBasemap(this.map);
+		}
+		this.persistMapView();
+	}
+
+	/** A kiválasztott alaptérkép és a domborzat-árnyékolás láthatósága a style rétegein. */
+	private applyBasemap(map: maplibregl.Map): void {
+		const basemap = this.activeBasemap();
+		for (const [id, layerId] of Object.entries(BASEMAP_LAYER_IDS)) {
+			map.setLayoutProperty(layerId, 'visibility', id === basemap ? 'visible' : 'none');
+		}
+		map.setLayoutProperty(HILLSHADE_LAYER_ID, 'visibility', this.showHillshade() ? 'visible' : 'none');
+	}
+
+	/** backlog/214 — a nézet minden mozdulat végén és alaptérkép-váltáskor eszközön megmarad. */
+	private persistMapView(): void {
+		if (!this.map) {
+			return;
+		}
+		const center = this.map.getCenter();
+		const view: StoredTuraMapView = { center: [center.lng, center.lat], zoom: this.map.getZoom(), basemap: this.activeBasemap(), hillshade: this.showHillshade() };
+		void this.localState.writeMapView(view);
 	}
 
 	protected toggleOfflinePanel(): void {

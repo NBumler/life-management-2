@@ -442,6 +442,7 @@
     "AUTO": "Auto",
     "UNDO": "Undo",
     "CLEAR": "Clear",
+    "CLEARED": "Route cleared",
     "MY_ROUTES": "My routes",
     "ROUTE_NAME_PLACEHOLDER": "Route name",
     "NO_ROUTES": "No saved routes yet.",

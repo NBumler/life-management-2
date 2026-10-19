@@ -79,13 +79,13 @@ túrázási funkció).
 | [[backlog/tura-utvonaltervezo/205-tura-felirat-nelkuli-ikongombok]] | A visszavonás, kuka, rétegek és offline gombnak nincs felirata | `backlog` |
 | [[backlog/tura-utvonaltervezo/206-tura-rajzolas-es-automatikus-mod-erthetosege]] | A Rajzolás és az Automatikus mód közti különbség és az aktív mód nem érthető | `backlog` |
 | [[backlog/tura-utvonaltervezo/207-tura-atvetel-felirat-nem-ertheto]] | Az előnézet „Átvétel” gombjának felirata nem mondja meg, mit csinál | `backlog` |
-| [[backlog/tura-utvonaltervezo/208-tura-kuka-megerosites-nelkul-torol]] | A kuka megerősítés nélkül törli a teljes piszkozatot, és ez nem vonható vissza | `backlog` |
+| `backlog/archive/208-tura-kuka-megerosites-nelkul-torol.md` | A kuka megerősítés nélkül törli a teljes piszkozatot, és ez nem vonható vissza | `done` |
 | [[backlog/tura-utvonaltervezo/209-tura-napok-panel-elvont]] | A Napok panel elvont: nincs napi táv / szint, a térkép nem látszik közben | `backlog` |
 | [[backlog/tura-utvonaltervezo/210-tura-terkep-ugrik-savok-megjelenesekor]] | A térkép elcsúszik, amikor a tipp-, a név- vagy a statisztika-sáv megjelenik | `backlog` |
 | [[backlog/tura-utvonaltervezo/211-tura-mentes-visszajelzes-nelkul]] | Mentéskor nincs visszajelzés | `backlog` |
 | [[backlog/tura-utvonaltervezo/212-tura-mentett-utvonal-megnyitasa-csak-odarepul]] | Mentett útvonal megnyitásakor nincs részlet, szerkesztés, átnevezés; a lista km és dátum nélküli | `backlog` |
-| [[backlog/tura-utvonaltervezo/213-tura-felkesz-rajz-elveszik-visszalepeskor]] | A félkész rajz figyelmeztetés nélkül elveszik, ha a felhasználó elnavigál | `backlog` |
-| [[backlog/tura-utvonaltervezo/214-tura-terkep-mindig-orszagnezetre-all-vissza]] | A térkép minden megnyitáskor az országnézetre áll vissza | `backlog` |
+| `backlog/archive/213-tura-felkesz-rajz-elveszik-visszalepeskor.md` | A félkész rajz figyelmeztetés nélkül elveszik, ha a felhasználó elnavigál | `done` |
+| `backlog/archive/214-tura-terkep-mindig-orszagnezetre-all-vissza.md` | A térkép minden megnyitáskor az országnézetre áll vissza | `done` |
 | [[backlog/tura-utvonaltervezo/215-tura-sajat-helyzet-es-helykereses]] | Nincs „saját helyzetem” gomb és helykeresés | `backlog` |
 | [[backlog/tura-utvonaltervezo/216-tura-katalogus-nevek-rendezes-kereses]] | A katalógus nevei rejtélyesek, a lista rendezetlen, nincs keresés | `backlog` |
 | [[backlog/tura-utvonaltervezo/217-tura-katalogus-es-atvetel-metrikaja-elter]] | A katalógus és az átvett piszkozat más szintemelkedést és időt mutat ugyanarra a túrára | `backlog` |

@@ -442,6 +442,7 @@
     "AUTO": "Automatikus",
     "UNDO": "Visszavonás",
     "CLEAR": "Törlés",
+    "CLEARED": "Útvonal törölve",
     "MY_ROUTES": "Útvonalaim",
     "ROUTE_NAME_PLACEHOLDER": "Útvonal neve",
     "NO_ROUTES": "Még nincs mentett útvonal.",

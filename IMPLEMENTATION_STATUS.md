@@ -14,6 +14,9 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-19 — #208, #213, #214** Túra: a kuka visszavonható lépés („Útvonal törölve — Visszavonás” toast,
+  a vonallal együtt a nevet és a napváltókat is visszaadja); a mentetlen piszkozat és a térkép utolsó nézete
+  (középpont, zoom, alaptérkép, domborzat) eszközön megmarad (`Preferences`), így elnavigálás után is ott folytatható.
 - **2026-10-19 — #193** Túra: az ajánlott túrák katalógusa az OSM országos / regionális jelzett
   turistaútvonalaiból tölthető fel (`scripts/import-curated-routes.mjs`: összefűzés, ritkítás, 30 km felett
   napokra bontás, idempotens UUID v5 id); a backend a kifejezett `"days": null`-t (egynapos túra) már nem

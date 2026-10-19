@@ -82,6 +82,44 @@ describe('route-draft', () => {
 			expect(editor.draft()).toEqual(EMPTY_ROUTE_DRAFT);
 		});
 
+		it('backlog/208 — clear is one undoable step that gives back the line, the name and the day breaks', () => {
+			const editor = new RouteDraftEditor();
+			const drawn = routeDraftFromPath(path, [2]);
+			editor.apply(drawn);
+			const details = { name: 'Pilis kör', dayBreaks: [{ waypointIndex: 2, overnightName: 'Dobogókő' }] };
+
+			editor.clear(details);
+			expect(editor.draft()).toEqual(EMPTY_ROUTE_DRAFT);
+			expect(editor.lastStepIsClear()).toBeTrue();
+
+			expect(editor.undo()).toEqual(details);
+			expect(editor.draft()).toEqual(drawn);
+			expect(editor.lastStepIsClear()).toBeFalse();
+			expect(editor.undo()).toBeNull();
+			expect(editor.draft()).toEqual(EMPTY_ROUTE_DRAFT);
+		});
+
+		it('backlog/208 — a step after the clear means the clear is no longer the last step', () => {
+			const editor = new RouteDraftEditor();
+			editor.apply(routeDraftFromPath(path));
+			editor.clear({ name: '', dayBreaks: [] });
+
+			editor.apply(withManualPoint(editor.draft(), path[0]));
+
+			expect(editor.lastStepIsClear()).toBeFalse();
+		});
+
+		it('backlog/213 — restore sets the draft without an undo history', () => {
+			const editor = new RouteDraftEditor();
+			editor.apply(withManualPoint(editor.draft(), path[0]));
+			const stored = routeDraftFromPath(path);
+
+			editor.restore(stored);
+
+			expect(editor.draft()).toEqual(stored);
+			expect(editor.canUndo()).toBeFalse();
+		});
+
 		it('reset clears the draft and the undo history', () => {
 			const editor = new RouteDraftEditor();
 			editor.apply(routeDraftFromPath(path));
