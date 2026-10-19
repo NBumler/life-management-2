@@ -87,6 +87,14 @@ szolgáltatótól jönnek (nem a backendről), és megjelenítést, nem számít
       csak gyorsító tartalék, ha a betöltött adatban nincs összeköttetés). A backend
       `route-metrics` végpontja megszűnt; a `RouteMetricsService` + `OpenMeteoElevationClient`
       csak az admin katalógus-upserthez marad (lásd terv).
+- [ ] **A build-asset routing a backend elé kerül:** a `RouteSuggestionRepository.suggest()` mai
+      sorrendje (1) viewport-gráf → (2) backend `route-suggestion` → (3) build-asset `HIKE` routing.
+      Offline így is működik (a 3. szint mindig ott van), de a Backend-offline first szerint minden
+      felhasználó-láthatású számítás eszközön fut (§14), így online is a backendre vár, mielőtt az
+      eszközön lévő, teljes HU-gráfot megkérdezné. Új sorrend: viewport-gráf → build-asset `HIKE`
+      (`countryCode === 'HU'`) → backend csak tartalékként (lefedettségen kívül, vagy ha a helyi
+      gráf nem talál utat). Teszt a sorrendre; a backend hívás elmarad, ha a csomag talál utat.
+      _(Felvéve: 2026-10-19, a #150 utáni architektúra-ellenőrzés 3. pontja.)_
 - [x] Az online magasság-forrást a kliens **közvetlenül** hívja (§13), 8 s timeouttal; a backend
       nem proxyz.
 - [x] A meglévő túra-funkciók nem regresszálnak; az eszközön futó metrika-számítás tesztjei
@@ -120,7 +128,15 @@ szolgáltatótól jönnek (nem a backendről), és megjelenítést, nem számít
   egyeztetendő.
 - **Sűrűbb DEM-mintavétel:** a mai fix 50 minta / útvonal hosszú túránál elsimítja a
   szintemelkedést; az eszközön futó változat távolság alapú (`ELEVATION_SAMPLE_SPACING_METERS`).
-  A profil-grafikon ettől független, ritkított pontsort kap.
+  A profil-grafikon ettől független, ritkított pontsort kap. → Kiszervezve:
+  [[176-kozos-dem-mintavetel-tura-bicikli]] (a bicikli már távolság alapú, a túra nem; közös
+  mintavevő mindkettőnek).
+- **Architektúra-ellenőrzés a #150 után (2026-10-19):** a közös `core/geo/` réteget a túra és a
+  bicikli összhangban használja; a talált eltérések: (1) DEM-mintavétel →
+  [[176-kozos-dem-mintavetel-tura-bicikli]]; (2) `core/data/route-suggestion.repository.ts` a
+  `pages/menu/tura/offline-route-graph.ts`-ből importál + duplikált illesztési küszöb →
+  [[177-tura-offline-route-graph-core-geo-ba]]; (3) a routing-sorrend (backend a build-asset előtt)
+  → e jegy új, nyitott elfogadási kritériuma.
 
 ### Megvalósítás — 1. kör (2026-10-02, `8acd87a`)
 
