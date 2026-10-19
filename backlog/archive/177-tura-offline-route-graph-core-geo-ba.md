@@ -61,7 +61,7 @@ _Tisztán szerkezeti refaktor, funkcionális változás nélkül._
   `pages/menu/tura/offline-region.repository.ts`-t importálja (repository a képernyő mappájában);
   és a kódbázisban más, nem geo `core` → `pages` importok is vannak (pl. `core/data/activity-kcal.ts`
   a `*-metrics.ts` kalória-függvényekre, `climbing-live-session.service.ts`, `meal.repository.ts`).
-  Ezek nem a közös geo-réteg ügyei; ha a rétegszabályt szigorítani akarjuk, külön jegy.
+  Ezek nem a közös geo-réteg ügyei → [[178-frontend-core-pages-retegserto-importok]].
 
 ## Lezáráskor (on-done)
 

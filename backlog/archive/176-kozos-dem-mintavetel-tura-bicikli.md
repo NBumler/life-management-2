@@ -55,8 +55,7 @@ A magassági profil (túra) ugyanabból az 50 mintából készül, mint a szinte
 
 - A DEM városban felszínmodell-hatás (épületek) miatt felülbecsülhet (#150 emulátoros megfigyelés:
   sík budapesti szakasz 1 km-en 32 m) — ezt ez a jegy **nem** javítja, csak egységesíti a
-  mintavételt. Ha valódi eszközön is zavaró, külön jegy (pl. erősebb simítás / zajküszöb városban,
-  vagy DTM-forrás).
+  mintavételt → [[179-dem-varosi-szintemelkedes-felulbecsles]].
 - A backend `RouteMetricsService` (csak az admin katalógus-upsert használja) a fix 50 mintás
   algoritmust tartja; ha a katalógus-sor metrikája és a kliens-oldali érték eltérése zavaró, a
   backend is átállítandó (a konstansok paritása a [[Backend-offline first]] §14 szerint).

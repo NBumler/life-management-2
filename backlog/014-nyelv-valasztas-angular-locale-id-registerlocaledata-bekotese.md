@@ -29,7 +29,12 @@ Lásd a motivációt + a hivatkozott spec(ek) `### Jelenlegi működés` szakasz
 
 ## Terv / döntési napló
 
-_Nincs._
+- **2026-10-19 (#150 megfigyelés):** a hiány a súgó-szövegekben is látszik — a biciklis élő edzés
+  súgója és az összegző „durva becslés” jelzése a `ROAD_CIRCUITY_FACTOR`-t a `LOCALE_ID` szerint
+  formázza (`bikeLiveHelpParams()` → `formatNumber`, ill. `| number`), ami ma `en-US`, így magyar
+  felületen is „1.3” jelenik meg „1,3” helyett. A locale bekötésével ezek automatikusan javulnak
+  (ehhez a `hu` locale-adatot `registerLocaleData`-val regisztrálni kell, különben a
+  `formatNumber(…, 'hu')` hibát dob). Az app 36 fájlban használ `number` pipe-ot — mind érintett.
 
 ## Lezáráskor (on-done)
 
