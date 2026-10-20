@@ -86,15 +86,15 @@ túrázási funkció).
 | `backlog/archive/212-tura-mentett-utvonal-megnyitasa-csak-odarepul.md` | Mentett útvonal megnyitásakor nincs részlet, szerkesztés, átnevezés; a lista km és dátum nélküli | `done` |
 | `backlog/archive/213-tura-felkesz-rajz-elveszik-visszalepeskor.md` | A félkész rajz figyelmeztetés nélkül elveszik, ha a felhasználó elnavigál | `done` |
 | `backlog/archive/214-tura-terkep-mindig-orszagnezetre-all-vissza.md` | A térkép minden megnyitáskor az országnézetre áll vissza | `done` |
-| [[backlog/tura-utvonaltervezo/215-tura-sajat-helyzet-es-helykereses]] | Nincs „saját helyzetem” gomb és helykeresés | `backlog` |
+| [[backlog/archive/215-tura-sajat-helyzet-es-helykereses]] | Nincs „saját helyzetem” gomb és helykeresés | `done` |
 | `backlog/archive/216-tura-katalogus-nevek-rendezes-kereses.md` | A katalógus nevei rejtélyesek, a lista rendezetlen, nincs keresés | `done` |
 | `backlog/archive/217-tura-katalogus-es-atvetel-metrikaja-elter.md` | A katalógus és az átvett piszkozat más szintemelkedést és időt mutat ugyanarra a túrára | `done` |
 | `backlog/archive/218-tura-katalogus-elonezet-hianyos.md` | A katalógus-előnézet csak a vonalat mutatja (nincs statisztika, profil, napok, kezdő- / végpont) | `done` |
 | `backlog/archive/219-tura-magassagprofil-tengely-nelkul.md` | A magasságprofil-grafikonon nincs tengely és skála | `done` |
 | `backlog/archive/220-tura-tizedespont-magyar-feluleten.md` | A távolság magyar felületen tizedesponttal jelenik meg („2.9 km”) | `done` |
 | `backlog/archive/221-tura-automatikus-tervezes-sikertelen-eset.md` | Sikertelen automatikus tervezésnél a hibaüzenet nem segít, és a kezdőpont elveszik | `done` |
-| [[backlog/tura-utvonaltervezo/222-tura-offline-letoltes-vakon]] | Az offline letöltésnél nem látszik, mekkora területet és mennyi adatot tölt le | `backlog` |
-| [[backlog/tura-utvonaltervezo/223-tura-offline-letoltes-osm-csempeszabaly]] | Az offline letöltés tömegesen tölt csempét a tile.openstreetmap.org-ról (OSM-szabálysértés) | `backlog` |
+| [[backlog/tura-utvonaltervezo/222-tura-offline-letoltes-vakon]] | Az offline letöltésnél nem látszik, mekkora területet és mennyi adatot tölt le | `blocked` |
+| [[backlog/archive/223-tura-offline-letoltes-osm-csempeszabaly]] | Az offline letöltés tömegesen tölt csempét a tile.openstreetmap.org-ról (OSM-szabálysértés) | `done` |
 | [[backlog/tura-utvonaltervezo/226-tura-turistautak-lassan-jelennek-meg-elso-megnyitaskor]] | Első megnyitáskor a turistautak csak kb. 15 mp múlva jelennek meg | `backlog` |
 | [[backlog/tura-utvonaltervezo/227-tura-katalogus-toltes-kozben-ures-szoveg]] | Az Ajánlott túrák lista töltés közben „üres katalógus” szöveget mutat | `backlog` |
 | [[backlog/tura-utvonaltervezo/228-tura-oldal-stilus-meretkorlat]] | A `tura.page.scss` túllépi a komponens-stílus méret-figyelmeztetését | `backlog` |

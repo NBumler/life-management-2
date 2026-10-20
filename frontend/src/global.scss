@@ -49,6 +49,26 @@
   top: 84px;
 }
 
+/* backlog/215 — a „Saját helyzetem” gomb a +/− alatt; helymeghatározás közben lüktet. */
+.tura-map .tura-my-location {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #333333;
+  font-size: 18px;
+
+  &.locating ion-icon {
+    color: #1a73e8;
+    animation: tura-locating 1s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes tura-locating {
+  to {
+    opacity: 0.3;
+  }
+}
+
 /* shared/help-button: help texts separate paragraphs with a newline — keep them as line breaks in the alert. */
 .help-alert .alert-message {
   white-space: pre-line;

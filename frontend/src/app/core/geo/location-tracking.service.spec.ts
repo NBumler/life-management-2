@@ -147,4 +147,31 @@ describe('LocationTrackingService (backlog/150)', () => {
       expect(await service.acquireFix('Cím', 'Üzenet', 10)).toBeNull();
     });
   });
+
+  describe('locateOnce() — backlog/215 one-off position', () => {
+    const settle = () => new Promise((resolve) => setTimeout(resolve));
+
+    it('is denied at once when the permission is refused, and stops the plugin', async () => {
+      const pending = service.locateOnce('Cím', 'Üzenet', 10_000);
+      await settle();
+      capturedCallback!(undefined, Object.assign(new Error('User denied location permission'), { code: 'NOT_AUTHORIZED' }));
+      expect(await pending).toBe('denied');
+      expect(gateway.stop).toHaveBeenCalled();
+    });
+
+    it('treats any other plugin error as a weak signal and keeps waiting', async () => {
+      const pending = service.locateOnce('Cím', 'Üzenet', 30);
+      await settle();
+      capturedCallback!(undefined, Object.assign(new Error('timeout'), { code: 'TIMEOUT' }));
+      capturedCallback!(fixLocation({ accuracy: 40, latitude: 47.5 }));
+      expect(await pending).toEqual(jasmine.objectContaining({ lat: 47.5 }));
+    });
+
+    it('acquireFix() reports a refusal as no fix', async () => {
+      const pending = service.acquireFix('Cím', 'Üzenet', 10_000);
+      await settle();
+      capturedCallback!(undefined, Object.assign(new Error('denied'), { code: '1' }));
+      expect(await pending).toBeNull();
+    });
+  });
 });

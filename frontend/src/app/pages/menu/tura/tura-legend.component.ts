@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { IonItem, IonLabel, IonList, IonListHeader, IonNote } from '@ionic/angular/standalone';
 import { TranslatePipe } from '@ngx-translate/core';
 
-import { ICON_ARROW_LIGHT, ICON_END, ICON_START, ICON_WAYPOINT, PREVIEW_CASING_COLOR, PREVIEW_COLOR, ROUTE_CASING_COLOR, ROUTE_COLOR, dayIconName, iconDataUrl } from './map-icons';
+import { ICON_ARROW_LIGHT, ICON_END, ICON_MY_LOCATION, ICON_START, ICON_WAYPOINT, PREVIEW_CASING_COLOR, PREVIEW_COLOR, ROUTE_CASING_COLOR, ROUTE_COLOR, dayIconName, iconDataUrl } from './map-icons';
 import { MARKING_COLORS, UNMARKED_TRAIL_COLOR, trailSegmentCasingColor } from './trail-segment-symbol-color';
 
 interface LineEntry {
@@ -45,6 +45,7 @@ export class TuraLegendComponent {
 		{ labelKey: 'TURA.LEGEND.END', src: iconDataUrl(ICON_END) },
 		{ labelKey: 'TURA.LEGEND.DAY_BREAK', src: iconDataUrl(dayIconName(1)) },
 		{ labelKey: 'TURA.LEGEND.WAYPOINT', src: iconDataUrl(ICON_WAYPOINT) },
+		{ labelKey: 'TURA.LEGEND.MY_LOCATION', src: iconDataUrl(ICON_MY_LOCATION) },
 	];
 
 	protected readonly arrowSrc = iconDataUrl(ICON_ARROW_LIGHT);

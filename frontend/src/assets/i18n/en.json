@@ -551,21 +551,22 @@
       "START": "Start",
       "END": "Finish",
       "DAY_BREAK": "Day break (end of day 1)",
-      "WAYPOINT": "Picked point"
+      "WAYPOINT": "Picked point",
+      "MY_LOCATION": "My location"
     },
     "ZOOM_HINT": "Zoom in to see the hiking trails",
+    "MY_LOCATION": {
+      "BUTTON": "My location",
+      "NOTIFICATION_TITLE": "Hiking",
+      "NOTIFICATION_BODY": "Finding your location…",
+      "DENIED": "Your location is unavailable: turn on location and allow the app to access it in the phone settings.",
+      "NOT_FOUND": "Could not find your location. Try again under open sky."
+    },
     "OFFLINE": {
       "BUTTON": "Offline areas",
       "MODAL_TITLE": "Offline areas",
-      "DOWNLOAD_CURRENT": "Download current area",
-      "DOWNLOADING": "Downloading… ({{done}}/{{total}} tiles)",
-      "EMPTY": "No downloaded areas yet.",
+      "DOWNLOAD_PAUSED": "Downloading a new area is temporarily unavailable: the OpenStreetMap tile server does not allow bulk downloads. Areas you downloaded earlier still work offline. Trail routing and elevation in Hungary need no download.",
       "REGION_SUMMARY": "{{size}}",
-      "DEFAULT_NAME": "Area — {{date}}",
-      "NAME_PROMPT_TITLE": "Area name",
-      "DOWNLOAD": "Download",
-      "TOO_LARGE_TITLE": "Area too large",
-      "TOO_LARGE_MESSAGE": "This area is too large to download for offline use — zoom in to a smaller area on the map and try again.",
       "DELETE_CONFIRM_TITLE": "Delete offline area",
       "DELETE_CONFIRM_MESSAGE": "Delete the offline area \"{{name}}\"? The downloaded tiles will be freed."
     },

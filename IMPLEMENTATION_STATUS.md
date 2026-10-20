@@ -14,6 +14,11 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-20 — #223, #215** Túra: az offline terület-letöltés kikapcsolva (a tile.openstreetmap.org szabálya tiltja
+  az előletöltést; a korábbi régiók használhatók és törölhetők, a forrás-döntés a #105-ben, a #222 addig blokkolva).
+  „Saját helyzetem” gomb a térkép-vezérlő alatt: egyszeri helymeghatározás, kék pont, odaugrás; elutasított
+  engedélynél azonnali üzenet (a plugin `requestPermissions()`-e elutasítás után nem tér vissza — a bicikli
+  élő edzésre: #229). A helykeresés a #108-ba került.
 - **2026-10-20 — #216, #217, #221, #195** Túra katalógus: jelzés-ikon és rövidítés nélküli cím (új
   `curated_route.symbol`, Flyway V63), keresés és rendezés név / táv szerint. A katalógus szint- és időértékét az
   import az app algoritmusával és a DEM-mel számolja (az admin upsert opcionálisan fogadja), így átvétel után a

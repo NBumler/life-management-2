@@ -551,21 +551,22 @@
       "START": "Indulás",
       "END": "Cél",
       "DAY_BREAK": "Napváltó (az 1. nap vége)",
-      "WAYPOINT": "Kijelölt pont"
+      "WAYPOINT": "Kijelölt pont",
+      "MY_LOCATION": "Saját helyzet"
     },
     "ZOOM_HINT": "Közelíts rá a turistautak megjelenítéséhez",
+    "MY_LOCATION": {
+      "BUTTON": "Saját helyzetem",
+      "NOTIFICATION_TITLE": "Túra",
+      "NOTIFICATION_BODY": "Helyzet meghatározása…",
+      "DENIED": "A helyzeted nem érhető el: kapcsold be a helymeghatározást, és engedélyezd az appnak a helyhozzáférést a telefon beállításaiban.",
+      "NOT_FOUND": "Nem sikerült meghatározni a helyzeted. Próbáld újra szabad ég alatt."
+    },
     "OFFLINE": {
       "BUTTON": "Offline területek",
       "MODAL_TITLE": "Offline területek",
-      "DOWNLOAD_CURRENT": "Jelenlegi terület letöltése",
-      "DOWNLOADING": "Letöltés… ({{done}}/{{total}} csempe)",
-      "EMPTY": "Még nincs letöltött terület.",
+      "DOWNLOAD_PAUSED": "Új terület letöltése átmenetileg nem érhető el: az OpenStreetMap csempeszervere nem engedi a tömeges letöltést. A korábban letöltött területek offline is működnek. A turistaút-tervezéshez és a szintadatokhoz Magyarországon nem kell letöltés.",
       "REGION_SUMMARY": "{{size}}",
-      "DEFAULT_NAME": "Terület — {{date}}",
-      "NAME_PROMPT_TITLE": "Terület neve",
-      "DOWNLOAD": "Letöltés",
-      "TOO_LARGE_TITLE": "Túl nagy terület",
-      "TOO_LARGE_MESSAGE": "Ez a terület túl nagy az offline letöltéshez — közelíts rá egy kisebb részre a térképen, és próbáld újra.",
       "DELETE_CONFIRM_TITLE": "Offline terület törlése",
       "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd a(z) „{{name}}” offline területet? A letöltött csempék felszabadulnak."
     },

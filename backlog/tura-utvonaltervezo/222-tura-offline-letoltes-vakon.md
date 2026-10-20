@@ -1,7 +1,7 @@
 ---
 id: 222
 type: change-request
-status: backlog
+status: blocked
 title: Túra — az offline letöltésnél nem látszik, mekkora területet és mennyi adatot tölt le
 specs: []
 flag: menu.tura
@@ -31,6 +31,7 @@ Forrás: a 2026-10-19-i emulátoros UX-teszt (LM2_Phone, 360 dp, magyar felület
 ## Terv / döntési napló
 
 - 2026-10-19 — felvéve a felhasználó kérésére az emulátoros UX-teszt észrevételeiből.
+- 2026-10-20 — **blokkolva**: a [[223-tura-offline-letoltes-osm-csempeszabaly]] döntése szerint az új terület letöltése ideiglenesen ki van kapcsolva (a tile.openstreetmap.org szabálya tiltja az előletöltést). A jegy akkor folytatódik, amikor a [[105-tura-offline-terkep-es-utvonalszamitas]] olyan csempeforrást választ, ami ezt megengedi — a letöltési UX (félmagas lap, kerettel jelzett terület, előre látható méret és tiltás) addig nem készül.
 
 ## Lezáráskor (on-done)
 

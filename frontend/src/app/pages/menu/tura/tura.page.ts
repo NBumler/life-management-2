@@ -53,6 +53,7 @@ import { StoredTuraMapView, TuraLocalStateService } from '../../../core/data/tur
 import { LanguageService } from '../../../core/config/language.service';
 import { RouteDayMetrics, RouteMetricsResult } from '../../../core/geo/route-metrics';
 import { polylineLengthMeters } from '../../../core/geo/geo-math';
+import { LocationTrackingService, TrackingFix } from '../../../core/geo/location-tracking.service';
 import { ElevationProfilePoint } from '../../../api/model/elevationProfilePoint';
 import { distancesAlongRoute } from './elevation-profile-svg';
 import { ElevationProfileComponent } from './elevation-profile.component';
@@ -78,10 +79,11 @@ import {
 	registerTuraMapIcons,
 } from './map-icons';
 import { OFFLINE_TILE_PROTOCOL, registerOfflineTileProtocol } from './offline-map-protocol';
-import { OFFLINE_TILE_MAX_COUNT, OfflineRegion } from '../../../core/data/offline-region.model';
+import { OfflineRegion } from '../../../core/data/offline-region.model';
 import { OfflineRegionRepository } from '../../../core/data/offline-region.repository';
 import { AutoRouteHintComponent, AutoRouteHintStep, AutoRouteProblem } from './auto-route-hint.component';
 import { TuraLegendComponent } from './tura-legend.component';
+import { MY_LOCATION_MIN_ZOOM, MyLocationControl, addMyLocationLayer, showMyLocation } from './my-location-control';
 import { dateText, daySummaryText, distanceText, durationText, elevationText, megabytesText } from './hike-text';
 import { DayBreak, DraftDetails, RouteDraftEditor, interiorWaypointIndexes, routeDraftFromPath, withManualPoint, withPath } from './route-draft';
 import { trailSegmentsToFeatureCollection } from './trail-segments-geojson';
@@ -284,12 +286,16 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	private readonly translate = inject(TranslateService);
 	private readonly localState = inject(TuraLocalStateService);
 	private readonly language = inject(LanguageService);
+	private readonly location = inject(LocationTrackingService);
 	private readonly mapContainer = viewChild.required<ElementRef<HTMLDivElement>>('mapContainer');
 	/** backlog/204 — a térkép fölött lebegő elemek: a `fitBounds` ezek alól húzza ki a vonalat. */
 	private readonly mapActions = viewChild.required<ElementRef<HTMLDivElement>>('mapActions');
 	private readonly mapBottom = viewChild.required<ElementRef<HTMLDivElement>>('mapBottom');
 
 	private map?: maplibregl.Map;
+	private myLocationControl?: MyLocationControl;
+	/** backlog/215 — a folyamatban lévő helymeghatározás; elnavigáláskor megszakad. */
+	private locateAbort: AbortController | null = null;
 
 	protected readonly durationText = durationText;
 	protected readonly daySummaryText = daySummaryText;
@@ -548,6 +554,8 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 			zoom: view?.zoom ?? HUNGARY_ZOOM,
 		});
 		map.addControl(new maplibregl.NavigationControl(), 'top-right');
+		this.myLocationControl = new MyLocationControl(this.translate.instant('TURA.MY_LOCATION.BUTTON'), () => void this.locateMe());
+		map.addControl(this.myLocationControl, 'top-right');
 
 		this.mapZoom.set(map.getZoom());
 		map.on('zoomend', () => this.mapZoom.set(map.getZoom()));
@@ -558,6 +566,7 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 			this.addHikeRouteLayers(map);
 			this.addPreviewLayers(map);
 			this.addDraftLayers(map);
+			addMyLocationLayer(map);
 			this.applyLayerVisibility(map);
 
 			void this.loadCurrentViewport(map);
@@ -604,6 +613,59 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 		this.map?.resize();
 	}
 
+	/** backlog/215 — egyszeri helymeghatározás: kék pont, és a térkép odaugrik. Követés nincs. */
+	private async locateMe(): Promise<void> {
+		const map = this.map;
+		if (!map || this.locateAbort !== null) {
+			return;
+		}
+		this.locateAbort = new AbortController();
+		this.myLocationControl?.setBusy(true);
+		try {
+			const fix = await this.currentFix(this.locateAbort.signal);
+			if (this.destroyed) {
+				return;
+			}
+			if (fix === 'denied' || fix === null) {
+				void this.showInfoToast(fix === 'denied' ? 'TURA.MY_LOCATION.DENIED' : 'TURA.MY_LOCATION.NOT_FOUND');
+				return;
+			}
+			const point: [number, number] = [fix.lon, fix.lat];
+			showMyLocation(map, point);
+			map.easeTo({ center: point, zoom: Math.max(map.getZoom(), MY_LOCATION_MIN_ZOOM) });
+		} finally {
+			this.locateAbort = null;
+			this.myLocationControl?.setBusy(false);
+		}
+	}
+
+	/**
+	 * Az élő bicikli-edzés alatt a helymeghatározó már fut, mellette nem indítható másodszor: ilyenkor az
+	 * utolsó elfogadott pont a helyzet. Az engedélyt a helymeghatározás maga kéri (`locateOnce`).
+	 */
+	private async currentFix(abort: AbortSignal): Promise<TrackingFix | null | 'denied'> {
+		if (this.location.tracking()) {
+			return this.location.lastFix();
+		}
+		return this.location.locateOnce(
+			this.translate.instant('TURA.MY_LOCATION.NOTIFICATION_TITLE'),
+			this.translate.instant('TURA.MY_LOCATION.NOTIFICATION_BODY'),
+			undefined,
+			abort,
+		);
+	}
+
+	private async showInfoToast(messageKey: string): Promise<void> {
+		const toast = await this.toastController.create({
+			message: this.translate.instant(messageKey),
+			duration: ACTION_TOAST_DURATION_MS,
+			positionAnchor: document.querySelector<HTMLElement>('ion-tab-bar') ?? undefined,
+		});
+		if (!this.destroyed) {
+			await toast.present();
+		}
+	}
+
 	ngOnDestroy(): void {
 		this.destroyed = true;
 		clearTimeout(this.metricsDebounceHandle);
@@ -612,6 +674,7 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 		clearTimeout(this.draftPersistHandle);
 		this.pendingDraftPersist?.();
 		void this.actionToast?.dismiss();
+		this.locateAbort?.abort();
 		this.resizeObserver?.disconnect();
 		this.map?.remove();
 	}
@@ -1234,44 +1297,6 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 
 	protected formatOfflineSize(bytes: number): string {
 		return megabytesText(bytes, this.language.activeLanguage());
-	}
-
-	/**
-	 * backlog/tura-utvonaltervezo/105-... 4. fázis — az aktuális térkép-viewport bbox-át tölti le
-	 * offline használatra (ld. `OfflineRegionRepository` a "mekkora egy régió" döntésért). Előbb egy
-	 * méret-becsléssel elutasítja a túl nagy (pl. ország-léptékű) területet, majd egy `AlertController`
-	 * prompttal kér nevet a régiónak — ugyanaz a minta, mint a meglévő törlés-megerősítéseknél.
-	 */
-	protected async downloadCurrentRegion(): Promise<void> {
-		if (!this.map) {
-			return;
-		}
-		const bounds = this.map.getBounds();
-		const bbox: Bbox = [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()];
-		const tileCount = this.offlineRegions.estimateTileCount(bbox);
-		if (tileCount === 0 || tileCount > OFFLINE_TILE_MAX_COUNT) {
-			const alert = await this.alertController.create({
-				header: this.translate.instant('TURA.OFFLINE.TOO_LARGE_TITLE'),
-				message: this.translate.instant('TURA.OFFLINE.TOO_LARGE_MESSAGE'),
-				buttons: [this.translate.instant('COMMON.OK')],
-			});
-			await alert.present();
-			return;
-		}
-
-		const defaultName = this.translate.instant('TURA.OFFLINE.DEFAULT_NAME', { date: new Date().toLocaleDateString() });
-		const alert = await this.alertController.create({
-			header: this.translate.instant('TURA.OFFLINE.NAME_PROMPT_TITLE'),
-			inputs: [{ name: 'name', type: 'text', value: defaultName, placeholder: defaultName }],
-			buttons: [
-				{ text: this.translate.instant('COMMON.CANCEL'), role: 'cancel' },
-				{
-					text: this.translate.instant('TURA.OFFLINE.DOWNLOAD'),
-					handler: (data: { name?: string }) => void this.offlineRegions.download(COUNTRY_CODE, bbox, data.name?.trim() || defaultName),
-				},
-			],
-		});
-		await alert.present();
 	}
 
 	protected async confirmDeleteOfflineRegion(region: OfflineRegion): Promise<void> {

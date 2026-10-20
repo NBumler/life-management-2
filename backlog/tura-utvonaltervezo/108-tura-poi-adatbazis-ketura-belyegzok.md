@@ -43,6 +43,10 @@ Nincs — ez egy vadonatúj feature.
 - A POI-adat forrása ugyanaz-e, mint a turistaút-adat (`104-tura-adatforras-integracio.md` —
   OSM-ből POI-tagek is kinyerhetők), vagy külön forrás kell?
 
+**2026-10-20 — átvéve a [[215-tura-sajat-helyzet-es-helykereses]]-ből:** helykeresés a túra
+térképen (település / csúcs név szerint, odaugrással) — offline-first, a POI-adatból vagy build
+assetből, backend-proxy nélkül. A „Saját helyzetem” gomb a 215-tel elkészült.
+
 ## Lezáráskor (on-done)
 
 - Frissített specek: _(új spec-fájl, ha ekkor még nincs)_

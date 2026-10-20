@@ -36,7 +36,8 @@
           <ion-icon slot="start" name="list-outline" aria-hidden="true"></ion-icon>
           <ion-label>{{ 'TURA.MY_ROUTES' | translate }}</ion-label>
         </ion-item>
-        @if (offlineCapable) {
+        <!-- backlog/223 — új terület nem tölthető le; a korábban letöltöttek kezelhetők maradnak. -->
+        @if (offlineCapable && offlineRegions.regions().length > 0) {
           <ion-item button [detail]="false" (click)="toggleOfflinePanel()">
             <ion-icon slot="start" name="cloud-download-outline" aria-hidden="true"></ion-icon>
             <ion-label>{{ 'TURA.OFFLINE.BUTTON' | translate }}</ion-label>
@@ -272,27 +273,8 @@
     <ion-content>
       <ion-list>
         <ion-item lines="none">
-          <ion-button
-            expand="block"
-            fill="outline"
-            [disabled]="offlineRegions.downloadProgress() !== null"
-            (click)="downloadCurrentRegion()"
-          >
-            <ion-icon slot="start" name="cloud-download-outline" aria-hidden="true"></ion-icon>
-            {{ 'TURA.OFFLINE.DOWNLOAD_CURRENT' | translate }}
-          </ion-button>
+          <ion-label class="ion-text-wrap"><p>{{ 'TURA.OFFLINE.DOWNLOAD_PAUSED' | translate }}</p></ion-label>
         </ion-item>
-        @if (offlineRegions.downloadProgress(); as progress) {
-          <ion-item lines="none">
-            <ion-spinner slot="start" name="dots"></ion-spinner>
-            <ion-label>{{ 'TURA.OFFLINE.DOWNLOADING' | translate: { done: progress.done, total: progress.total } }}</ion-label>
-          </ion-item>
-        }
-        @if (offlineRegions.regions().length === 0) {
-          <ion-item lines="none">
-            <ion-label>{{ 'TURA.OFFLINE.EMPTY' | translate }}</ion-label>
-          </ion-item>
-        }
         @for (region of offlineRegions.regions(); track region.id) {
           <ion-item>
             <ion-label>

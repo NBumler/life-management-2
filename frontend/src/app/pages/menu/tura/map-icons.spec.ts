@@ -1,9 +1,9 @@
-import { ICON_ARROW_LIGHT, ICON_END, ICON_START, dayIconName, iconDataUrl, iconImage, labelIconName } from './map-icons';
+import { ICON_ARROW_LIGHT, ICON_END, ICON_MY_LOCATION, ICON_START, dayIconName, iconDataUrl, iconImage, labelIconName } from './map-icons';
 
 /** backlog/196, backlog/202, backlog/203 */
 describe('map-icons', () => {
 	it('draws the fixed icons at twice their CSS size', () => {
-		for (const name of [ICON_START, ICON_END, ICON_ARROW_LIGHT]) {
+		for (const name of [ICON_START, ICON_END, ICON_ARROW_LIGHT, ICON_MY_LOCATION]) {
 			const image = iconImage(name);
 			expect(image).withContext(name).not.toBeNull();
 			expect(image!.width).toBe(image!.height);

@@ -44,6 +44,12 @@ delta-sync) más entitásokra épül, térképi csempe-/vektoradat offline táro
       `TrailSegmentRepository` backend/letöltött-régió adata rajzolódik ki) — lásd 151, nyitva
       hagyva, mert az alaptérkép-csempe maga is csak letöltve offline, így önmagában alacsony
       prioritású.
+- [ ] **Offline csempeforrás**, aminek a felhasználási feltételei megengedik az előletöltést
+      ([[223-tura-offline-letoltes-osm-csempeszabaly]]: a tile.openstreetmap.org nem ilyen — az új
+      terület letöltése 2026-10-20 óta ki van kapcsolva). Lehetőségek: kereskedelmi szolgáltató
+      offline-engedéllyel (API-kulcs git-ignored configban, ár és feltételek ellenőrzése), vagy saját,
+      OSM-adatból előállított raszter- / vektorcsomag a geo build asset mintájára. A letöltés
+      visszakapcsolásakor a [[222-tura-offline-letoltes-vakon]] UX-e is elkészül.
 
 ## Terv / döntési napló
 
@@ -126,6 +132,11 @@ delta-sync) más entitásokra épül, térképi csempe-/vektoradat offline táro
   szabálysértés: egy soha nem letöltött eszköz az **útvonaltervezéshez** a 151-es build assetet
   kapja (2026-10-18), csak a **réteg-megjelenítés** (a kirajzolt jelzés-vonalak) marad a
   letöltéshez/backendhez kötve — lásd 151 nyitott pontja.
+
+**2026-10-20 — [[223-tura-offline-letoltes-osm-csempeszabaly]]:** az új terület letöltése
+kikapcsolva (OSM Tile Usage Policy). A korábban letöltött régiók cache-e és törlése marad; a
+„Továbbiak” menü „Offline területek” eleme csak meglévő régiónál látszik. A forrás-döntés és a
+visszakapcsolás ennek a jegynek a nyitott kritériuma (fent).
 
 ## Lezáráskor (on-done)
 

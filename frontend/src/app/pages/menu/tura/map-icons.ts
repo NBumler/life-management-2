@@ -17,12 +17,15 @@ export const PREVIEW_COLOR = '#ffffff';
 export const PREVIEW_CASING_COLOR = '#000000';
 const START_COLOR = '#2e7d32';
 const DAY_COLOR = '#283593';
+/** backlog/215 — a megszokott „itt vagy” kék, egyik turistajelzés kékjével sem azonos árnyalat. */
+const MY_LOCATION_COLOR = '#1a73e8';
 
 export const ICON_START = 'tura-start';
 export const ICON_END = 'tura-end';
 export const ICON_WAYPOINT = 'tura-waypoint';
 export const ICON_ARROW_LIGHT = 'tura-arrow-light';
 export const ICON_ARROW_DARK = 'tura-arrow-dark';
+export const ICON_MY_LOCATION = 'tura-my-location';
 const DAY_ICON_PREFIX = 'tura-day-';
 const LABEL_ICON_PREFIX = 'tura-label:';
 
@@ -94,6 +97,8 @@ const drawEnd: Draw = (ctx, size) => {
 
 const drawWaypoint: Draw = (ctx, size) => disc(ctx, size, ROUTE_COLOR);
 
+const drawMyLocation: Draw = (ctx, size) => disc(ctx, size, MY_LOCATION_COLOR);
+
 function drawArrow(color: string): Draw {
 	return (ctx, size) => {
 		// Jobbra mutató nyílhegy; a `symbol-placement: line` a vonal irányába forgatja.
@@ -136,6 +141,7 @@ const STATIC_ICONS: Readonly<Record<string, { size: number; draw: Draw }>> = {
 	[ICON_START]: { size: ICON_SIZE, draw: drawStart },
 	[ICON_END]: { size: ICON_SIZE, draw: drawEnd },
 	[ICON_WAYPOINT]: { size: 14, draw: drawWaypoint },
+	[ICON_MY_LOCATION]: { size: 20, draw: drawMyLocation },
 	[ICON_ARROW_LIGHT]: { size: ARROW_SIZE, draw: drawArrow('#ffffff') },
 	[ICON_ARROW_DARK]: { size: ARROW_SIZE, draw: drawArrow('#000000') },
 };

@@ -417,6 +417,8 @@ Elv: a külső integrációk **soha nincsenek** a saját backenden proxyzva ([[B
 |---|---|---|---|
 | Open Food Facts (`world.openfoodfacts.org/api/v2/product/{barcode}.json`) | megy | **megy** | nem — a vonalkód elmenthető, a sync gomb később lefuttatja ([[Vonalkódos élelmiszer beolvasás]]) |
 | Open-Meteo elevation (`api.open-meteo.com/v1/elevation`) — Túra útvonal-metrikák magassága, csak a build-asset DEM lefedettségén (HU) kívüli pontokra | megy | **megy** | nem azokra a pontokra, amik kívül esnek a build-asset DEM-en (§15) — ott a táv megy, a magasság-függő mezők `~`. A DEM-lefedett (HU) pontokra a magasság **FULL_OFFLINE-ban is megy** (`backlog/150`/`151`, `core/geo/elevation.service.ts`). |
+| OSM alaptérkép-csempék (`tile.openstreetmap.org`) — Túra térkép | megy | **megy** | csak a korábban letöltött régiók cache-éből; új régió letöltése kikapcsolva, mert a csempeszerver szabálya tiltja az előletöltést (`backlog/223`, forrás-döntés: `backlog/105`) |
+| Helymeghatározás (`@capgo/background-geolocation`) — Túra „Saját helyzetem”, bicikli élő edzés | megy | megy | **megy** (eszközön belüli GPS) |
 | Vonalkód kamera (`@capacitor-mlkit/barcode-scanning`) | megy | megy | **megy** (eszközön belüli) |
 | Android Health Connect / Samsung Health | megy | megy | **megy** (eszközön belüli API — [[Lépésszám átszinkronizálása a Samsung Health-ből]]) |
 | Google Calendar OAuth / API | megy | megy | vár ([[Google Calendar szinkronizálása]]) |
