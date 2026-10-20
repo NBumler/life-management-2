@@ -17,6 +17,8 @@ export function trailSegmentsToFeatureCollection(segments: readonly TrailSegment
 			geometry: { type: 'LineString', coordinates: segment.coordinates },
 			properties: {
 				symbol: segment.symbol,
+				// backlog/201 — a koppintásos kártyához.
+				routeName: segment.routeName ?? null,
 				color: trailSegmentSymbolColor(segment.symbol),
 				casing: trailSegmentCasingColor(segment.symbol),
 				marked: trailSegmentMarkingColorName(segment.symbol) !== null,

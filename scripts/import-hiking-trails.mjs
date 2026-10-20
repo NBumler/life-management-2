@@ -170,6 +170,8 @@ async function main() {
 	const symbolCounts = new Map();
 	for (const relation of relations) {
 		const symbol = symbolFromTags(relation.tags ?? {});
+		// backlog/201 — a reláció neve (pl. „Országos Kéktúra”), hogy a térképen egy vonalra koppintva kiderüljön.
+		const routeName = relation.tags?.name?.trim() || null;
 		symbolCounts.set(symbol, (symbolCounts.get(symbol) ?? 0) + 1);
 		for (const member of relation.members ?? []) {
 			if (member.type !== 'way' || !Array.isArray(member.geometry) || member.geometry.length < 2) {
@@ -184,7 +186,7 @@ async function main() {
 			if (coordinates.length < 2) {
 				continue;
 			}
-			segments.push({ symbol, osmWayId: member.ref, coordinates });
+			segments.push({ symbol, routeName, osmWayId: member.ref, coordinates });
 		}
 	}
 	console.log(`[import-hiking-trails] ${segments.length} útszakasz (way) előállítva. Jelzés-eloszlás:`);
@@ -208,7 +210,8 @@ async function main() {
 			[
 				'-sS',
 				'--max-time',
-				'900',
+				// 2026-10-20: a teljes HU-import (232 561 szakasz) 900 s-nál tovább tartott.
+				'1800',
 				'-X',
 				'POST',
 				`${args.baseUrl}/api/admin/tura/trail-segments/import`,
@@ -223,6 +226,10 @@ async function main() {
 			],
 			{ encoding: 'utf8', maxBuffer: 50 * 1024 * 1024 },
 		);
+	} catch (error) {
+		// Az execFileSync hibaüzenete a teljes parancssort tartalmazza, benne az admin kulccsal — az ne
+		// kerüljön a kimenetre. A szerver oldali tranzakció időtúllépés után is lefuthat a háttérben.
+		throw new Error(`a curl import-hívás sikertelen (kilépési kód ${error.status ?? '?'}): ${String(error.stderr ?? '').trim()}`);
 	} finally {
 		unlinkSync(payloadPath);
 	}

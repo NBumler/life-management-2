@@ -24,6 +24,12 @@ properties:
   symbol:
     type: string
     description: 'MTSZ turistajelzés-típus, pl. PIROS_SAV, KEK_SAV, ZOLD_SAV, SARGA_SAV, PIROS_KERESZT, KEK_HAROMSZOG, EGYEB.'
+  routeName:
+    type: string
+    nullable: true
+    description: >-
+      backlog/201 — a túraútvonal neve (az OSM route=hiking reláció `name` tagje), amelynek ez a
+      szakasz a része; null, ha a relációnak nincs neve, vagy a sor a név bevezetése előtti importból való.
   coordinates:
     type: array
     minItems: 2

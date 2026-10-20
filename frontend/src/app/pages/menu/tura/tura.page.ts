@@ -50,8 +50,14 @@ import { RouteMetricsRepository } from '../../../core/data/route-metrics.reposit
 import { RouteSuggestionRepository } from '../../../core/data/route-suggestion.repository';
 import { StoredTuraMapView, TuraLocalStateService } from '../../../core/data/tura-local-state.service';
 import { LanguageService } from '../../../core/config/language.service';
-import { RouteMetricsResult } from '../../../core/geo/route-metrics';
-import { elevationProfilePolylinePoints } from './elevation-profile-svg';
+import { RouteDayMetrics, RouteMetricsResult } from '../../../core/geo/route-metrics';
+import { polylineLengthMeters } from '../../../core/geo/geo-math';
+import { ElevationProfilePoint } from '../../../api/model/elevationProfilePoint';
+import { distancesAlongRoute } from './elevation-profile-svg';
+import { ElevationProfileComponent } from './elevation-profile.component';
+import { RouteDetailsComponent } from './route-details.component';
+import { trailSymbolLabel } from './trail-symbol-text';
+import { trailSegmentSymbolColor } from './trail-segment-symbol-color';
 import {
 	dayBreakIndexes,
 	draftRouteToFeatureCollection,
@@ -73,8 +79,8 @@ import { OFFLINE_TILE_MAX_COUNT, OfflineRegion } from '../../../core/data/offlin
 import { OfflineRegionRepository } from '../../../core/data/offline-region.repository';
 import { AutoRouteHintComponent, AutoRouteHintStep } from './auto-route-hint.component';
 import { TuraLegendComponent } from './tura-legend.component';
-import { daySummaryText, distanceText, durationText, elevationText, megabytesText } from './hike-text';
-import { DayBreak, RouteDraftEditor, interiorWaypointIndexes, routeDraftFromPath, withManualPoint, withPath } from './route-draft';
+import { dateText, daySummaryText, distanceText, durationText, elevationText, megabytesText } from './hike-text';
+import { DayBreak, DraftDetails, RouteDraftEditor, interiorWaypointIndexes, routeDraftFromPath, withManualPoint, withPath } from './route-draft';
 import { trailSegmentsToFeatureCollection } from './trail-segments-geojson';
 
 /** backlog/tura-utvonaltervezo/103-... 2.5 fázis — a katalógus-szűrő táv-tengelye előre definiált sávokként (nem szabad numerikus range-inputként). */
@@ -88,8 +94,17 @@ const METRICS_DEBOUNCE_MS = 500;
 const DRAFT_PERSIST_DEBOUNCE_MS = 500;
 /** backlog/208, backlog/211 — meddig látszik a kuka / mentés utáni akciós toast. */
 const ACTION_TOAST_DURATION_MS = 5000;
-const PROFILE_CHART_WIDTH = 300;
-const PROFILE_CHART_HEIGHT = 60;
+/** backlog/209 — a napi értékek újraszámolása a napváltó-szerkesztés után ennyivel. */
+const DAY_METRICS_DEBOUNCE_MS = 400;
+/**
+ * backlog/212, backlog/218, backlog/209 — az útvonal-kártya félmagas lap; ezen a fokozaton a térkép
+ * mellette kezelhető marad (a háttér csak a nagyobb fokozaton takar).
+ */
+const DETAILS_SHEET_BREAKPOINT = 0.45;
+/** backlog/201 — egy ujjnyi tűrés (px) a vonalra koppintáshoz. */
+const TAP_TOLERANCE_PX = 10;
+/** backlog/201 — egy koppintásra legfeljebb ennyi egymásra futó turistaút jelenik meg a kártyán. */
+const MAX_TAPPED_TRAILS = 4;
 
 const TRAIL_SEGMENTS_SOURCE_ID = 'trail-segments';
 const TRAIL_SEGMENTS_LAYER_ID = 'trail-segments-layer';
@@ -126,6 +141,16 @@ const LINE_LAYOUT: maplibregl.LineLayerSpecification['layout'] = { 'line-join': 
 
 /** backlog/tura-utvonaltervezo/103-... 2.2 fázis — a rajzolás-térkép aktuális interakciós módja. */
 type Mode = 'none' | 'manual' | 'auto';
+
+/** backlog/212, backlog/218, backlog/209 — melyik útvonal kártyája látszik a félmagas lapon. */
+type DetailsSheet = 'saved' | 'preview' | 'draft';
+
+/** backlog/201 — egy koppintott turistaút a kártyán. */
+interface TappedTrail {
+	readonly label: string;
+	readonly color: string;
+	readonly routeName: string | null;
+}
 
 /** backlog/tura-utvonaltervezo/107-... 3. fázis — az alternatív alaptérkép-rétegek közül a kiválasztott. */
 type Basemap = 'osm' | 'topo' | 'satellite';
@@ -237,6 +262,8 @@ const COUNTRY_CODE = 'HU';
 		TranslatePipe,
 		AutoRouteHintComponent,
 		TuraLegendComponent,
+		ElevationProfileComponent,
+		RouteDetailsComponent,
 	],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -288,9 +315,29 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	 * ld. metricsForSave, ami a mentendő HikeRouteDay listát építi belőle.
 	 */
 	protected readonly dayBreaks = signal<DayBreak[]>([]);
-	protected readonly showDaysPanel = signal(false);
 	protected readonly dayCount = computed(() => this.dayBreaks().length + 1);
 	protected readonly canAddDayBreak = computed(() => this.dayBreaks().length < this.interiorWaypoints().length);
+	/** backlog/209 — ha nem adható hozzá napváltó, miért nem. */
+	protected readonly addDayBreakBlockedKey = computed(() => (this.interiorWaypoints().length === 0 ? 'TURA.DAYS.NEED_WAYPOINT' : 'TURA.DAYS.ALL_USED'));
+	/** backlog/209 — a piszkozat napi értékei a napváltók szerint (csak nyitott lapnál számolva). */
+	protected readonly draftDays = signal<RouteDayMetrics[] | null>(null);
+	/** backlog/219 — a piszkozat napváltóinak távolsága az indulástól, a profil jelölőihez. */
+	protected readonly draftMarkerDistances = computed(() => distancesAlongRoute(this.draft(), this.dayBreaks().map((day) => day.waypointIndex)));
+	/** backlog/212 — a szerkesztésre betöltött mentett útvonal id-je; `null` = új útvonal. */
+	protected readonly editingRouteId = signal<string | null>(null);
+	/** backlog/212, backlog/218, backlog/209 — a félmagas útvonal-kártya. */
+	protected readonly detailsSheet = signal<DetailsSheet | null>(null);
+	protected readonly detailsSheetBreakpoint = DETAILS_SHEET_BREAKPOINT;
+	private readonly selectedRouteId = signal<string | null>(null);
+	protected readonly selectedRoute = computed(() => this.hikeRoutes.items().find((route) => route.id === this.selectedRouteId()) ?? null);
+	protected readonly selectedRouteMarkers = computed(() => routeDayMarkerDistances(this.selectedRoute()));
+	/**
+	 * backlog/212 — az Útvonalaim lista: a legújabb elöl. Új útvonal szinkron előtt is kap helyi dátumot
+	 * (local-rows.ts), így dátum nélküli csak egy korábbi, még nem szinkronizált sor lehet — az a végére kerül.
+	 */
+	protected readonly sortedRoutes = computed(() => [...this.hikeRoutes.items()].sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? '')));
+	/** backlog/201 — alapállapotban egy turistaútra koppintva: a jelzés neve és a túraútvonal neve. */
+	protected readonly tappedTrails = signal<readonly TappedTrail[]>([]);
 	/** backlog/tura-utvonaltervezo/103-... 2.5 fázis — ajánlott/kész túrák katalógusa, szűréssel. */
 	protected readonly showCatalogPanel = signal(false);
 	protected readonly catalogDifficulty = signal<CuratedRouteDifficulty | ''>('');
@@ -298,6 +345,10 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	protected readonly catalogDistanceBucket = signal<DistanceBucket>('any');
 	/** A térképen kiemelt katalógus-túra (ha a felhasználó rákattintott egy listaelemre) — null = nincs kiemelés. */
 	protected readonly previewedCuratedRoute = signal<CuratedRoute | null>(null);
+	/** backlog/218 — a katalógus nem hordoz magasságprofilt: a részletek megnyitásakor az eszköz számolja. */
+	protected readonly previewProfile = signal<ElevationProfilePoint[] | null>(null);
+	protected readonly previewProfileLoading = signal(false);
+	protected readonly previewMarkers = computed(() => routeDayMarkerDistances(this.previewedCuratedRoute()));
 	/** backlog/191 — melyik üres-állapot szöveg illik a katalógusra: a betöltés hibája, az üres katalógus vagy a szűrő. */
 	protected readonly catalogEmptyKey = computed(() => {
 		if (this.curatedRoutes.loadFailed()) {
@@ -328,20 +379,20 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	protected readonly showCard = computed(
 		() =>
 			this.previewedCuratedRoute() !== null ||
+			this.tappedTrails().length > 0 ||
 			this.mode() !== 'none' ||
 			this.metrics() !== null ||
 			this.routeMetrics.loading() ||
 			this.draft().length >= 2,
 	);
-	protected readonly profilePoints = computed(() => {
-		const profile = this.metrics()?.profile;
-		return profile ? elevationProfilePolylinePoints(profile, PROFILE_CHART_WIDTH, PROFILE_CHART_HEIGHT) : '';
-	});
 
 	/** backlog/189 — az előnézet túrája, amíg a konténer átméreteződése még újraigazíthatja rá a nézetet. */
 	private pendingPreviewFit: number[][] | null = null;
 	private metricsRequestId = 0;
 	private metricsDebounceHandle?: ReturnType<typeof setTimeout>;
+	private dayMetricsRequestId = 0;
+	private dayMetricsDebounceHandle?: ReturnType<typeof setTimeout>;
+	private previewProfileRequestId = 0;
 	/** backlog/213 — amíg a tárolt piszkozat be nem töltődött, az üres kezdőállapot nem írhatja felül. */
 	private readonly draftRestored = signal(false);
 	private draftPersistHandle?: ReturnType<typeof setTimeout>;
@@ -356,7 +407,9 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 			source?.setData(trailSegmentsToFeatureCollection(segments));
 		});
 		effect(() => {
-			const routes = this.hikeRoutes.items();
+			// backlog/212 — a szerkesztett útvonal régi vonala nem látszik a piszkozat alatt.
+			const editing = this.editingRouteId();
+			const routes = this.hikeRoutes.items().filter((route) => route.id !== editing);
 			const source = this.map?.getSource(HIKE_ROUTES_SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
 			source?.setData(hikeRoutesToFeatureCollection(routes));
 			const markers = this.map?.getSource(HIKE_ROUTE_MARKERS_SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
@@ -398,19 +451,34 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 			this.metricsDebounceHandle = setTimeout(() => void this.refreshMetrics(coordinates, requestId), METRICS_DEBOUNCE_MS);
 		});
 		effect(() => {
+			// backlog/209 — a nyitott piszkozat-lap napi értékei a napváltók minden változása után.
+			const open = this.detailsSheet() === 'draft';
+			const coordinates = this.draft();
+			const breaks = this.dayBreaks();
+			clearTimeout(this.dayMetricsDebounceHandle);
+			const requestId = ++this.dayMetricsRequestId;
+			if (!open || breaks.length === 0 || coordinates.length < 2) {
+				this.draftDays.set(null);
+				return;
+			}
+			const endIndexes = [...breaks.map((day) => day.waypointIndex), coordinates.length - 1];
+			this.dayMetricsDebounceHandle = setTimeout(() => void this.refreshDayMetrics(coordinates, endIndexes, requestId), DAY_METRICS_DEBOUNCE_MS);
+		});
+		effect(() => {
 			if (!this.draftRestored()) {
 				return;
 			}
 			const draft = this.draftEditor.draft();
 			const name = this.routeName();
 			const dayBreaks = this.dayBreaks();
+			const routeId = this.editingRouteId();
 			clearTimeout(this.draftPersistHandle);
 			this.pendingDraftPersist = () => {
 				this.pendingDraftPersist = null;
 				if (draft.coordinates.length === 0 && name.trim() === '') {
 					void this.localState.clearDraft();
 				} else {
-					void this.localState.writeDraft({ coordinates: draft.coordinates, waypointIndexes: [...draft.waypointIndexes], name, dayBreaks });
+					void this.localState.writeDraft({ coordinates: draft.coordinates, waypointIndexes: [...draft.waypointIndexes], name, dayBreaks, routeId });
 				}
 			};
 			this.draftPersistHandle = setTimeout(() => this.pendingDraftPersist?.(), DRAFT_PERSIST_DEBOUNCE_MS);
@@ -426,6 +494,7 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 				this.draftEditor.restore({ coordinates: stored.coordinates, waypointIndexes: stored.waypointIndexes });
 				this.routeName.set(stored.name);
 				this.dayBreaks.set(stored.dayBreaks);
+				this.editingRouteId.set(stored.routeId ?? null);
 			}
 		} finally {
 			this.draftRestored.set(true);
@@ -484,6 +553,8 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 				this.draftEditor.apply(withManualPoint(this.draftEditor.draft(), point));
 			} else if (this.mode() === 'auto') {
 				this.handleAutoModeClick(point);
+			} else if (this.previewedCuratedRoute() === null) {
+				this.handleMapTap(map, event.point);
 			}
 		});
 
@@ -517,6 +588,7 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	ngOnDestroy(): void {
 		this.destroyed = true;
 		clearTimeout(this.metricsDebounceHandle);
+		clearTimeout(this.dayMetricsDebounceHandle);
 		// backlog/213 — az utolsó, még debounce-ban álló változás se vesszen el az elnavigáláskor.
 		clearTimeout(this.draftPersistHandle);
 		this.pendingDraftPersist?.();
@@ -528,13 +600,49 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	protected toggleDrawMode(): void {
 		this.mode.update((current) => (current === 'manual' ? 'none' : 'manual'));
 		this.autoStart.set(null);
+		this.tappedTrails.set([]);
 		this.hidePreviewWhenPlanning();
 	}
 
 	protected toggleAutoMode(): void {
 		this.mode.update((current) => (current === 'auto' ? 'none' : 'auto'));
 		this.autoStart.set(null);
+		this.tappedTrails.set([]);
 		this.hidePreviewWhenPlanning();
+	}
+
+	/**
+	 * backlog/201 — alapállapotban egy koppintás: egy saját mentett útvonalon a kártyáját nyitja, egy
+	 * turistaúton a jelzés és a túraútvonal nevét mutatja; üres helyen bezárja a turistaút-kártyát.
+	 */
+	private handleMapTap(map: maplibregl.Map, point: maplibregl.Point): void {
+		const box: [maplibregl.PointLike, maplibregl.PointLike] = [
+			[point.x - TAP_TOLERANCE_PX, point.y - TAP_TOLERANCE_PX],
+			[point.x + TAP_TOLERANCE_PX, point.y + TAP_TOLERANCE_PX],
+		];
+		const routeLayers = this.showMyRoutes() ? [HIKE_ROUTES_LAYER_ID, HIKE_ROUTES_CASING_LAYER_ID] : [];
+		const routeId = map.queryRenderedFeatures(box, { layers: routeLayers })[0]?.properties?.['routeId'] as string | undefined;
+		const route = routeId === undefined ? undefined : this.hikeRoutes.items().find((candidate) => candidate.id === routeId);
+		if (route !== undefined) {
+			this.tappedTrails.set([]);
+			this.openSavedRoute(route);
+			return;
+		}
+		const layers = [TRAIL_SEGMENTS_LAYER_ID, TRAIL_SEGMENTS_CASING_LAYER_ID];
+		if (this.showUnmarkedTrails()) {
+			layers.push(TRAIL_SEGMENTS_UNMARKED_LAYER_ID);
+		}
+		const translate = (key: string, params?: Record<string, string>) => this.translate.instant(key, params) as string;
+		const trails = new Map<string, TappedTrail>();
+		for (const feature of map.queryRenderedFeatures(box, { layers })) {
+			const symbol = String(feature.properties?.['symbol'] ?? '');
+			const routeName = (feature.properties?.['routeName'] as string | null | undefined) || null;
+			const key = `${symbol}|${routeName ?? ''}`;
+			if (!trails.has(key) && trails.size < MAX_TAPPED_TRAILS) {
+				trails.set(key, { label: trailSymbolLabel(symbol, translate), color: trailSegmentSymbolColor(symbol), routeName });
+			}
+		}
+		this.tappedTrails.set([...trails.values()]);
 	}
 
 	/** backlog/189 — rajzolás / automatikus tervezés közben az ajánlott túra vonala csak zavarna. */
@@ -550,16 +658,27 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 			this.autoStart.set(null);
 			return;
 		}
-		const cleared = this.draftEditor.undo();
-		if (cleared !== null) {
-			// backlog/208 — a kuka visszavonása: a vonallal együtt a név és a napváltók is visszajönnek.
-			this.routeName.set(cleared.name);
-			this.dayBreaks.set([...cleared.dayBreaks]);
+		const restored = this.draftEditor.undo();
+		if (restored !== null) {
+			// backlog/208, backlog/212 — a kuka vagy egy betöltés visszavonása: a vonallal együtt a név, a
+			// napváltók és a szerkesztett útvonal is visszajön.
+			this.applyDraftDetails(restored);
 			void this.actionToast?.dismiss();
 		} else if (this.draft().length === 0) {
 			// Mindent visszavont: a név se maradjon ott egy már nem létező (pl. átvett) útvonalról.
 			this.routeName.set('');
+			this.editingRouteId.set(null);
 		}
+	}
+
+	private currentDraftDetails(): DraftDetails {
+		return { name: this.routeName(), dayBreaks: this.dayBreaks(), routeId: this.editingRouteId() };
+	}
+
+	private applyDraftDetails(details: DraftDetails): void {
+		this.routeName.set(details.name);
+		this.dayBreaks.set([...details.dayBreaks]);
+		this.editingRouteId.set(details.routeId);
 	}
 
 	/** backlog/208 — a kuka egy visszavonható lépés; a toast „Visszavonás” gombja ugyanazt teszi, mint a visszavonás gomb. */
@@ -568,9 +687,8 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 		if (this.draft().length === 0) {
 			return;
 		}
-		this.draftEditor.clear({ name: this.routeName(), dayBreaks: this.dayBreaks() });
-		this.routeName.set('');
-		this.dayBreaks.set([]);
+		this.draftEditor.clear(this.currentDraftDetails());
+		this.applyDraftDetails({ name: '', dayBreaks: [], routeId: null });
 		void this.showActionToast('TURA.CLEARED', 'TURA.UNDO', () => {
 			if (this.draftEditor.lastStepIsClear()) {
 				this.undoLastStep();
@@ -595,8 +713,106 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 		await toast.present();
 	}
 
-	protected toggleDaysPanel(): void {
-		this.showDaysPanel.update((open) => !open);
+	/** backlog/209 — a piszkozat kártyája: statisztika, profil és a napok szerkesztése, a térkép mellett. */
+	protected openDraftDetails(): void {
+		this.detailsSheet.set('draft');
+	}
+
+	/** backlog/212 — egy mentett útvonal kártyája; a térkép az útvonalra ugrik, a lap fölé. */
+	protected openSavedRoute(route: HikeRoute): void {
+		this.tappedTrails.set([]);
+		this.selectedRouteId.set(route.id);
+		this.detailsSheet.set('saved');
+		this.showRoutesPanel.set(false);
+		this.flyToRoute(route);
+	}
+
+	/** backlog/218 — az ajánlott túra kártyája: a katalógus értékei, és az eszközön számolt profil. */
+	protected openPreviewDetails(): void {
+		const route = this.previewedCuratedRoute();
+		if (route === null) {
+			return;
+		}
+		this.detailsSheet.set('preview');
+		this.pendingPreviewFit = null;
+		this.fitToCoordinates(route.coordinates);
+		if (this.previewProfile() === null && !this.previewProfileLoading()) {
+			void this.loadPreviewProfile(route);
+		}
+	}
+
+	private async loadPreviewProfile(route: CuratedRoute): Promise<void> {
+		const requestId = ++this.previewProfileRequestId;
+		this.previewProfileLoading.set(true);
+		try {
+			const result = await this.routeMetrics.compute(route.coordinates);
+			if (requestId === this.previewProfileRequestId) {
+				this.previewProfile.set(result.profile);
+			}
+		} catch {
+			// Nincs profil (pl. internet nélkül): a kártya ezt kiírja.
+		} finally {
+			if (requestId === this.previewProfileRequestId) {
+				this.previewProfileLoading.set(false);
+			}
+		}
+	}
+
+	protected closeDetails(): void {
+		this.detailsSheet.set(null);
+		this.selectedRouteId.set(null);
+	}
+
+	/**
+	 * backlog/212 — a mentett útvonal a piszkozatba kerül (egy visszavonható lépés); a mentés ugyanarra
+	 * az id-re ír. A vonal kijelölt pontjai a két vég és a napváltók (a mentett útvonal a többit nem őrzi).
+	 */
+	protected editSavedRoute(route: HikeRoute): void {
+		const breaks = (route.days ?? []).slice(0, -1).map((day) => ({ waypointIndex: day.endWaypointIndex, overnightName: day.overnightName ?? '' }));
+		this.closeDetails();
+		this.tappedTrails.set([]);
+		this.mode.set('none');
+		this.autoStart.set(null);
+		this.previewedCuratedRoute.set(null);
+		this.draftEditor.replace(routeDraftFromPath(route.coordinates, breaks.map((day) => day.waypointIndex)), this.currentDraftDetails());
+		this.applyDraftDetails({ name: route.name, dayBreaks: breaks, routeId: route.id });
+		this.flyToRoute(route);
+	}
+
+	protected async renameSavedRoute(route: HikeRoute): Promise<void> {
+		const alert = await this.alertController.create({
+			header: this.translate.instant('TURA.RENAME_TITLE'),
+			inputs: [{ name: 'name', type: 'text', value: route.name, placeholder: this.translate.instant('TURA.ROUTE_NAME_PLACEHOLDER') }],
+			buttons: [
+				{ text: this.translate.instant('COMMON.CANCEL'), role: 'cancel' },
+				{
+					text: this.translate.instant('COMMON.SAVE'),
+					handler: (data: { name?: string }) => {
+						const name = data.name?.trim() ?? '';
+						if (name === '') {
+							return false;
+						}
+						void this.hikeRoutes.rename(route, name);
+						return true;
+					},
+				},
+			],
+		});
+		await alert.present();
+	}
+
+	/** backlog/212 — a lista sora: táv, ↑ és a létrehozás dátuma (ha van). */
+	protected routeSummary(route: HikeRoute): string {
+		const parts = [this.formatDistance(route.distanceMeters), `↑${this.formatElevation(route.elevationGainMeters)}`];
+		const date = this.routeDate(route);
+		if (date !== null) {
+			parts.push(date);
+		}
+		return parts.join(' · ');
+	}
+
+	protected routeDate(route: HikeRoute): string | null {
+		return route.createdAt ? dateText(route.createdAt, this.language.activeLanguage()) : null;
 	}
 
 	/** A még nem használt kijelölt belső pontok (backlog/190), plusz a sor jelenlegi értéke — ez kerül az ion-select opciói közé. */
@@ -609,6 +825,11 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	/** A koordináta-index helyett a kijelölt pont sorszáma (1 = kezdőpont), ahogy a térképen látszik. */
 	protected waypointNumber(index: number): number {
 		return this.draftEditor.draft().waypointIndexes.indexOf(index) + 1;
+	}
+
+	/** backlog/209 — a pont helye az indulástól mérve, hogy a választóban kiderüljön, melyik pont az. */
+	protected waypointDistance(index: number): string {
+		return this.formatDistance(polylineLengthMeters(this.draft().slice(0, index + 1)));
 	}
 
 	protected addDayBreak(): void {
@@ -639,6 +860,7 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	}
 
 	protected toggleCatalogPanel(): void {
+		this.tappedTrails.set([]);
 		const opening = !this.showCatalogPanel();
 		this.showCatalogPanel.set(opening);
 		if (opening) {
@@ -685,6 +907,10 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 
 	protected previewCuratedRoute(route: CuratedRoute): void {
 		this.previewedCuratedRoute.set(route);
+		this.previewProfile.set(null);
+		this.previewProfileLoading.set(false);
+		this.previewProfileRequestId++;
+		this.tappedTrails.set([]);
 		this.showCatalogPanel.set(false);
 		// backlog/189, backlog/206 — az előnézet és a tervezés kizárja egymást: egy koppintás ne a
 		// piszkozatot folytassa, amíg az ajánlott túrát nézed.
@@ -715,15 +941,19 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 		);
 	}
 
-	/** backlog/204 — a vonal a lebegő gombok és az alsó kártya közötti szabad részre kerüljön. */
+	/**
+	 * backlog/204 — a vonal a lebegő gombok és az alsó kártya közötti szabad részre kerüljön; nyitott
+	 * útvonal-kártyánál (backlog/212) a félmagas lap fölé.
+	 */
 	private fitPadding(): maplibregl.PaddingOptions {
 		const container = this.mapContainer().nativeElement.getBoundingClientRect();
 		const actions = this.mapActions().nativeElement.getBoundingClientRect();
-		const bottom = this.mapBottom().nativeElement.getBoundingClientRect();
 		const margin = 24;
+		const coveredFrom =
+			this.detailsSheet() === null ? this.mapBottom().nativeElement.getBoundingClientRect().top : window.innerHeight * (1 - DETAILS_SHEET_BREAKPOINT);
 		return {
 			top: Math.max(margin, actions.bottom - container.top + margin / 2),
-			bottom: Math.max(margin, container.bottom - bottom.top + margin / 2),
+			bottom: Math.max(margin, container.bottom - coveredFrom + margin / 2),
 			left: margin,
 			right: margin,
 		};
@@ -732,6 +962,9 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	/** backlog/189 — a tipp-sáv „Előnézet bezárása” gombja. */
 	protected closePreview(): void {
 		this.previewedCuratedRoute.set(null);
+		if (this.detailsSheet() === 'preview') {
+			this.closeDetails();
+		}
 	}
 
 	/**
@@ -747,12 +980,10 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 		const breaks = (route.days ?? []).slice(0, -1).map((day) => ({ waypointIndex: day.endWaypointIndex, overnightName: day.overnightName ?? '' }));
 		this.mode.set('none');
 		this.autoStart.set(null);
-		this.draftEditor.apply(routeDraftFromPath(route.coordinates, breaks.map((day) => day.waypointIndex)));
-		this.dayBreaks.set(breaks);
-		if (this.routeName().trim() === '') {
-			this.routeName.set(route.name);
-		}
-		this.previewedCuratedRoute.set(null);
+		// backlog/212 — egy csere-lépés: a visszavonása a korábbi rajz nevét és napváltóit is visszaadja.
+		this.draftEditor.replace(routeDraftFromPath(route.coordinates, breaks.map((day) => day.waypointIndex)), this.currentDraftDetails());
+		this.applyDraftDetails({ name: route.name, dayBreaks: breaks, routeId: null });
+		this.closePreview();
 	}
 
 	protected toggleLayersPanel(): void {
@@ -1050,6 +1281,8 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 		}
 		const { metrics, days } = await this.metricsForSave();
 		const saved = await this.hikeRoutes.save({
+			// backlog/212 — egy szerkesztett mentett útvonal ugyanarra az id-re íródik.
+			id: this.editingRouteId() ?? undefined,
 			name,
 			coordinates: this.draft(),
 			distanceMeters: metrics?.distanceMeters,
@@ -1060,11 +1293,13 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 			days,
 		});
 		this.draftEditor.reset();
-		this.routeName.set('');
-		this.dayBreaks.set([]);
+		this.applyDraftDetails({ name: '', dayBreaks: [], routeId: null });
 		this.mode.set('none');
-		// backlog/211 — a mentés látható visszajelzése; a „Megnyitás” a térképen az útvonalra ugrik.
-		void this.showActionToast('TURA.SAVED', 'TURA.SAVED_OPEN', () => this.flyToRoute(saved));
+		if (this.detailsSheet() === 'draft') {
+			this.closeDetails();
+		}
+		// backlog/211, backlog/212 — a mentés látható visszajelzése; a „Megnyitás” az útvonal kártyáját nyitja.
+		void this.showActionToast('TURA.SAVED', 'TURA.SAVED_OPEN', () => this.openSavedRoute(saved));
 	}
 
 	/**
@@ -1109,6 +1344,20 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 		}
 	}
 
+	/** backlog/209 */
+	private async refreshDayMetrics(coordinates: number[][], endIndexes: number[], requestId: number): Promise<void> {
+		try {
+			const { days } = await this.routeMetrics.computeWithDays(coordinates, endIndexes);
+			if (requestId === this.dayMetricsRequestId) {
+				this.draftDays.set(days);
+			}
+		} catch {
+			if (requestId === this.dayMetricsRequestId) {
+				this.draftDays.set(null);
+			}
+		}
+	}
+
 	/** backlog/151 — `null` = nem számolható (pl. internet nélkül nincs magassági adat) → `~`, soha nem `0` (Backend-offline first §14). */
 	protected formatDistance(meters: number | null | undefined): string {
 		return distanceText(meters, this.language.activeLanguage());
@@ -1119,6 +1368,7 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	}
 
 	protected toggleRoutesPanel(): void {
+		this.tappedTrails.set([]);
 		this.showRoutesPanel.update((open) => !open);
 	}
 
@@ -1135,7 +1385,6 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 			],
 			{ padding: this.fitPadding() },
 		);
-		this.showRoutesPanel.set(false);
 	}
 
 	protected async confirmDeleteRoute(route: HikeRoute): Promise<void> {
@@ -1175,6 +1424,18 @@ function arrowLayer(id: string, source: string, icon: string): maplibregl.Symbol
 			'icon-ignore-placement': true,
 		},
 	};
+}
+
+/** backlog/219 — egy mentett / ajánlott útvonal napváltóinak távolsága az indulástól (az utolsó nap vége a cél, nem jelölő). */
+function routeDayMarkerDistances(route: { coordinates: number[][]; days?: HikeRouteDay[] | null } | null): number[] {
+	const days = route?.days ?? [];
+	if (route === null || days.length < 2) {
+		return [];
+	}
+	return distancesAlongRoute(
+		route.coordinates,
+		days.slice(0, -1).map((day) => day.endWaypointIndex),
+	);
 }
 
 /** backlog/203 — pont-jelölők: a feature `icon` / `sortKey` tulajdonságából. */

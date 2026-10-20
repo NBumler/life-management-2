@@ -13,8 +13,9 @@ export function hikeRoutesToFeatureCollection(routes: readonly HikeRoute[]): Geo
 			type: 'Feature',
 			id: route.id,
 			geometry: { type: 'LineString', coordinates: route.coordinates },
-			// backlog/202 — a név a vonal mentén, canvasra rajzolt képként (map-icons.ts).
-			properties: { name: route.name, label: labelIconName(route.name) },
+			// backlog/202 — a név a vonal mentén, canvasra rajzolt képként (map-icons.ts). backlog/201 — a
+			// `routeId` property-ként is megvan: a MapLibre a nem szám feature-id-t eldobja, a koppintás ebből tudja, melyik útvonal.
+			properties: { routeId: route.id, name: route.name, label: labelIconName(route.name) },
 		})),
 	};
 }

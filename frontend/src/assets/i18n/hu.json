@@ -471,15 +471,15 @@
     "ROUTE_NOT_FOUND_TITLE": "Nincs útvonal",
     "ROUTE_NOT_FOUND_MESSAGE": "Nem található összeköttetés a két pont közt a jelzett turistaút-hálózaton.",
     "DAYS": {
-      "BUTTON": "Napok",
-      "MODAL_TITLE": "Napokra bontás",
       "DAY_END_LABEL": "nap vége",
-      "WAYPOINT_OPTION": "{{index}}. pont",
+      "WAYPOINT_OPTION": "{{index}}. pont · {{distance}}",
       "OVERNIGHT_PLACEHOLDER": "Éjszakázó pont neve (opcionális)",
-      "REMOVE_BREAK": "Töréspont törlése",
-      "ADD_BREAK": "Töréspont hozzáadása",
+      "REMOVE_BREAK": "Napváltó törlése",
+      "ADD_BREAK": "Napváltó hozzáadása",
       "SUMMARY_ONE": "{{count}} nap",
-      "SUMMARY_MANY": "{{count}} nap"
+      "SUMMARY_MANY": "{{count}} nap",
+      "NEED_WAYPOINT": "Napváltó csak egy kijelölt köztes pont lehet — tegyél le még egy pontot az útvonalon (Kézi vagy Turistaúton módban).",
+      "ALL_USED": "Minden kijelölt köztes pont már napváltó — tegyél le még egy pontot az útvonalon."
     },
     "DURATION": {
       "HOURS_MINUTES": "{{hours}} ó {{minutes}} p",
@@ -564,7 +564,56 @@
       "TOO_LARGE_MESSAGE": "Ez a terület túl nagy az offline letöltéshez — közelíts rá egy kisebb részre a térképen, és próbáld újra.",
       "DELETE_CONFIRM_TITLE": "Offline terület törlése",
       "DELETE_CONFIRM_MESSAGE": "Biztosan törlöd a(z) „{{name}}” offline területet? A letöltött csempék felszabadulnak."
-    }
+    },
+    "TRAIL": {
+      "NAME": "{{color}} {{shape}}",
+      "COLOR": {
+        "PIROS": "Piros",
+        "KEK": "Kék",
+        "ZOLD": "Zöld",
+        "SARGA": "Sárga",
+        "LILA": "Lila",
+        "NARANCS": "Narancs",
+        "FEKETE": "Fekete",
+        "BARNA": "Barna",
+        "FEHER": "Fehér"
+      },
+      "SHAPE": {
+        "SAV": "sáv",
+        "KERESZT": "kereszt",
+        "HAROMSZOG": "háromszög",
+        "KOR": "kör",
+        "NEGYSZOG": "négyzet",
+        "PONT": "pont",
+        "OMEGA": "Ω (barlang)",
+        "ROM": "L (rom)",
+        "KILATO": "kilátó",
+        "TEMPLOM": "templom",
+        "EMLEKMU": "emlékmű",
+        "HAZ": "menedékház"
+      }
+    },
+    "PROFILE": {
+      "LABEL": "Magasságprofil: {{min}} – {{max}}, {{distance}}"
+    },
+    "DETAILS": {
+      "BUTTON": "Részletek",
+      "DISTANCE": "Táv",
+      "DURATION": "Idő",
+      "GAIN": "Emelkedés",
+      "LOSS": "Lejtés",
+      "PROFILE": "Magasságprofil",
+      "NO_PROFILE": "Nincs magassági adat — internet nélkül nem számolható.",
+      "DAYS": "Napok",
+      "DAY": "{{number}}. nap",
+      "LAST_DAY": "{{number}}. nap — a célig",
+      "OVERNIGHT": "éjszaka: {{name}}",
+      "EDIT": "Szerkesztés",
+      "RENAME": "Átnevezés",
+      "DRAFT_TITLE": "Új útvonal"
+    },
+    "RENAME_TITLE": "Útvonal átnevezése",
+    "EDITING_HINT": "Mentett útvonal szerkesztése — a mentés felülírja."
   },
   "GEAR": {
     "TITLE": "GearCheck",

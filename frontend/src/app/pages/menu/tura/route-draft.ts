@@ -19,16 +19,22 @@ export interface DayBreak {
 	readonly overnightName: string;
 }
 
-/** backlog/208 — amit a kuka a vonalon kívül még elvisz, és a visszavonása visszaad. */
-export interface ClearedDraftDetails {
+/**
+ * backlog/208 — amit a kuka a vonalon kívül még elvisz, és a visszavonása visszaad. backlog/212 — egy
+ * mentett útvonal szerkesztésre betöltése ugyanígy lecseréli, plusz a szerkesztett útvonal id-je.
+ */
+export interface DraftDetails {
 	readonly name: string;
 	readonly dayBreaks: readonly DayBreak[];
+	/** A szerkesztett mentett útvonal id-je; `null` = új útvonal. */
+	readonly routeId: string | null;
 }
 
 interface UndoStep {
 	readonly draft: RouteDraft;
-	/** Csak a kuka lépésén van: a törléskor elvitt név és napváltók. */
-	readonly cleared?: ClearedDraftDetails;
+	/** Csak a kuka és a csere lépésén van: az előtte érvényes név, napváltók és útvonal-id. */
+	readonly details?: DraftDetails;
+	readonly isClear?: boolean;
 }
 
 /** Kézi rajzolás: minden koppintás egy kijelölt pont a vonal végén. */
@@ -95,7 +101,7 @@ export class RouteDraftEditor {
 	/** backlog/208 — a toast „Visszavonás” gombja csak akkor hat, ha a kuka óta nem történt újabb lépés. */
 	readonly lastStepIsClear = computed(() => {
 		const steps = this.history();
-		return steps.length > 0 && steps[steps.length - 1].cleared !== undefined;
+		return steps.length > 0 && steps[steps.length - 1].isClear === true;
 	});
 
 	apply(next: RouteDraft): void {
@@ -104,13 +110,19 @@ export class RouteDraftEditor {
 	}
 
 	/** backlog/208 — a kuka: üres rajz, de visszavonható lépésként. */
-	clear(details: ClearedDraftDetails): void {
-		this.history.update((steps) => [...steps, { draft: this.current(), cleared: details }]);
+	clear(details: DraftDetails): void {
+		this.history.update((steps) => [...steps, { draft: this.current(), details, isClear: true }]);
 		this.current.set(EMPTY_ROUTE_DRAFT);
 	}
 
-	/** Egy lépés vissza; ha az a kuka volt, a vele elvitt nevet és napváltókat adja vissza. */
-	undo(): ClearedDraftDetails | null {
+	/** backlog/212 — egy másik rajz betöltése (pl. egy mentett útvonal szerkesztésre); a visszavonása az előzőt adja vissza. */
+	replace(next: RouteDraft, details: DraftDetails): void {
+		this.history.update((steps) => [...steps, { draft: this.current(), details }]);
+		this.current.set(next);
+	}
+
+	/** Egy lépés vissza; ha az a kuka vagy egy csere volt, az előtte érvényes nevet, napváltókat és útvonal-id-t adja vissza. */
+	undo(): DraftDetails | null {
 		const steps = this.history();
 		if (steps.length === 0) {
 			return null;
@@ -118,7 +130,7 @@ export class RouteDraftEditor {
 		const step = steps[steps.length - 1];
 		this.current.set(step.draft);
 		this.history.set(steps.slice(0, -1));
-		return step.cleared ?? null;
+		return step.details ?? null;
 	}
 
 	/** Mentés után: üres rajz, üres visszavonás-verem. */

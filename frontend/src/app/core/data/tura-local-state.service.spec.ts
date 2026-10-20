@@ -47,6 +47,14 @@ describe('TuraLocalStateService', () => {
     expect(await service.readDraft()).toBeNull();
   });
 
+  it('backlog/212 — the id of a saved route being edited round-trips; a non-string one reads as nothing stored', async () => {
+    await service.writeDraft({ ...draft, routeId: 'route-1' });
+    expect(await service.readDraft()).toEqual({ ...draft, routeId: 'route-1' });
+
+    await Preferences.set({ key: 'lm2_tura_draft', value: JSON.stringify({ ...draft, routeId: 42 }) });
+    expect(await service.readDraft()).toBeNull();
+  });
+
   it('the map view round-trips; a malformed one reads as nothing stored', async () => {
     expect(await service.readMapView()).toBeNull();
 

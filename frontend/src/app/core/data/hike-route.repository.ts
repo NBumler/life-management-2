@@ -72,6 +72,21 @@ export class HikeRouteRepository {
     return saved;
   }
 
+  /** backlog/212 — csak a név változik; a vonal, a metrika és a napok változatlanul mennek vissza. */
+  async rename(route: HikeRoute, name: string): Promise<HikeRoute> {
+    return this.save({
+      id: route.id,
+      name,
+      coordinates: route.coordinates,
+      distanceMeters: route.distanceMeters ?? undefined,
+      elevationGainMeters: route.elevationGainMeters ?? undefined,
+      elevationLossMeters: route.elevationLossMeters ?? undefined,
+      estimatedDurationMinutes: route.estimatedDurationMinutes ?? undefined,
+      elevationProfile: route.elevationProfile ?? undefined,
+      days: route.days ?? undefined,
+    });
+  }
+
   async remove(id: string): Promise<void> {
     await this.storage.deleteHikeRoute(id);
     this.items.update((list) => list.filter((route) => route.id !== id));

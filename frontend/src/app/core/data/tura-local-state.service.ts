@@ -11,6 +11,8 @@ export interface StoredTuraDraft {
   waypointIndexes: number[];
   name: string;
   dayBreaks: { waypointIndex: number; overnightName: string }[];
+  /** backlog/212 — a szerkesztésre betöltött mentett útvonal id-je; hiányzik vagy `null` egy új útvonalnál. */
+  routeId?: string | null;
 }
 
 /**
@@ -83,7 +85,8 @@ function isStoredDraft(value: unknown): value is StoredTuraDraft {
     draft.waypointIndexes.every((index) => Number.isInteger(index) && index >= 0 && index < draft.coordinates.length) &&
     typeof draft.name === 'string' &&
     Array.isArray(draft.dayBreaks) &&
-    draft.dayBreaks.every((day) => Number.isInteger(day?.waypointIndex) && typeof day.overnightName === 'string')
+    draft.dayBreaks.every((day) => Number.isInteger(day?.waypointIndex) && typeof day.overnightName === 'string') &&
+    (draft.routeId == null || typeof draft.routeId === 'string')
   );
 }
 

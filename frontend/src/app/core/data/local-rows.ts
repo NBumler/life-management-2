@@ -5358,8 +5358,8 @@ export function hikeRouteLocalWriteTask(dto: HikeRoute): SqlTask {
     statement: `
       INSERT INTO hike_route (
         id, name, coordinates, distance_meters, elevation_gain_meters, elevation_loss_meters,
-        estimated_duration_minutes, elevation_profile, days, _dirty, _local_only)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
+        estimated_duration_minutes, elevation_profile, days, created_at, _dirty, _local_only)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
       ON CONFLICT(id) DO UPDATE SET
         name = excluded.name, coordinates = excluded.coordinates,
         distance_meters = excluded.distance_meters, elevation_gain_meters = excluded.elevation_gain_meters,
@@ -5375,6 +5375,9 @@ export function hikeRouteLocalWriteTask(dto: HikeRoute): SqlTask {
       dto.estimatedDurationMinutes ?? null,
       dto.elevationProfile ? JSON.stringify(dto.elevationProfile) : null,
       dto.days ? JSON.stringify(dto.days) : null,
+      // backlog/212 — a még nem szinkronizált útvonal is kap dátumot az Útvonalaim listához; csak
+      // beszúráskor (a frissítés nem írja felül), és az első pull a szerver értékére cseréli.
+      new Date().toISOString(),
     ],
   };
 }

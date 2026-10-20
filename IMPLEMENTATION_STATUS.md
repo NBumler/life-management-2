@@ -14,6 +14,11 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-20 — #212, #218, #219, #209, #201** Túra útvonal-kártya: egy mentett útvonal, egy ajánlott túra
+  és a piszkozat félmagas lapon, a térkép mellett — statisztika, magasságprofil skálával és napváltó-jelölőkkel,
+  napok napi értékekkel. Mentett útvonal szerkeszthető (ugyanarra az id-re) és átnevezhető; az Útvonalaim lista
+  táv / ↑ / dátum szerint, legújabb elöl. Turistaútra koppintva a jelzés és a túraútvonal neve (új
+  `trail_segment.route_name`, Flyway V62, újraimport).
 - **2026-10-20 — #204, #205, #206, #210** Túra elrendezés és gombok: a térkép a fejléctől a tab-sávig ér, minden
   más lebeg rajta (jobb felül feliratos Rétegek / Továbbiak, alul feliratos mód-sáv és egy kártya a tippel, a
   statisztikával és a mentéssel), így egy sáv megjelenése nem csúsztatja el a térképet. A módok „Kézi” / „Turistaúton”

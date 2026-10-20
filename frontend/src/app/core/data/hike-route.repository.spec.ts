@@ -136,6 +136,16 @@ describe('HikeRouteRepository', () => {
     expect(withoutDays.days).toBeNull();
   });
 
+  it('backlog/212 — rename(): keeps the line, the metrics and the days, changes only the name', async () => {
+    storage.upsertHikeRoute.and.callFake(async (draft) => draft);
+    const days = [{ endWaypointIndex: 1, distanceMeters: 1200 }];
+    const original = route({ id: 'r1', name: 'Régi', distanceMeters: 1200, elevationGainMeters: 80, days });
+
+    const renamed = await repository.rename(original, 'Új név');
+
+    expect(renamed).toEqual(jasmine.objectContaining({ id: 'r1', name: 'Új név', coordinates: original.coordinates, distanceMeters: 1200, elevationGainMeters: 80, days }));
+  });
+
   it('remove(): deletes via the storage backend and drops it from the signal', async () => {
     storage.listHikeRoutes.and.resolveTo([route({ id: 'a' })]);
     await repository.load();

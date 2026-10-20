@@ -33,7 +33,7 @@ describe('trailSegmentsToFeatureCollection', () => {
 						[19.1, 47.1],
 					],
 				},
-				properties: { symbol: 'PIROS_SAV', color: '#d32f2f', casing: '#ffffff', marked: true },
+				properties: { symbol: 'PIROS_SAV', routeName: null, color: '#d32f2f', casing: '#ffffff', marked: true },
 			},
 		]);
 	});

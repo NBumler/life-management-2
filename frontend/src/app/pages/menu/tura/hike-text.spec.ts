@@ -3,7 +3,7 @@ import { TranslateService, provideTranslateService } from '@ngx-translate/core';
 
 import en from '../../../../assets/i18n/en.json';
 import hu from '../../../../assets/i18n/hu.json';
-import { TranslatedText, daySummaryText, distanceText, durationText, elevationText, megabytesText } from './hike-text';
+import { TranslatedText, dateText, daySummaryText, distanceText, durationText, elevationText, megabytesText } from './hike-text';
 
 describe('hike-text', () => {
 	let translate: TranslateService;
@@ -71,6 +71,15 @@ describe('hike-text', () => {
 		it('a value that cannot be computed is ~, never 0', () => {
 			expect(distanceText(null, 'hu')).toBe('~');
 			expect(elevationText(undefined, 'en')).toBe('~');
+		});
+	});
+
+	describe('dateText (backlog/212)', () => {
+		it('a saved route date in the active language', () => {
+			const iso = '2026-10-20T10:00:00Z';
+			expect(dateText(iso, 'hu')).toContain('2026');
+			expect(dateText(iso, 'hu')).toContain('okt');
+			expect(dateText(iso, 'en')).toContain('Oct');
 		});
 	});
 });

@@ -162,12 +162,6 @@
   font-weight: 600;
 }
 
-.route-metrics-chart {
-  width: 100%;
-  height: 32px;
-  display: block;
-}
-
 .route-metrics-loading {
   display: flex;
   justify-content: center;
@@ -184,4 +178,118 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+// backlog/212 — egy mentett útvonal szerkesztése közben.
+.editing-hint {
+  font-size: 0.8rem;
+  color: var(--ion-color-primary);
+}
+
+// backlog/201 — a koppintott turistaút(ak) kártyája.
+.tapped-trails {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tapped-trail {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.trail-swatch {
+  flex: none;
+  width: 28px;
+  height: 6px;
+  border-radius: 3px;
+  box-shadow: 0 0 0 1.5px #ffffff, 0 0 0 2.5px rgba(0, 0, 0, 0.25);
+}
+
+.tapped-trail-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  font-size: 14px;
+
+  span {
+    font-size: 13px;
+    color: var(--ion-color-medium);
+  }
+}
+
+// backlog/212, backlog/218, backlog/209 — az útvonal-kártya lap.
+.sheet-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.sheet-title {
+  flex: 1;
+  min-width: 0;
+
+  h2 {
+    margin: 0;
+    font-size: 1.1rem;
+  }
+}
+
+.sheet-subtitle {
+  font-size: 0.85rem;
+  color: var(--ion-color-medium);
+}
+
+.sheet-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 8px 0 12px;
+}
+
+.sheet-description {
+  margin: 0 0 12px;
+  font-size: 0.9rem;
+}
+
+.days-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 16px;
+}
+
+.section-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--ion-color-medium);
+}
+
+.day-edit {
+  display: flex;
+  flex-direction: column;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--ion-color-step-150, #e0e0e0);
+}
+
+.day-edit-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.day-edit-stats {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+}
+
+.note {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  color: var(--ion-color-medium);
 }

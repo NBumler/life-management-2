@@ -27,6 +27,10 @@ export interface TrailSegment {
      */
     symbol: string;
     /**
+     * backlog/201 — a túraútvonal neve (az OSM route=hiking reláció `name` tagje), amelynek ez a szakasz a része; null, ha a relációnak nincs neve, vagy a sor a név bevezetése előtti importból való.
+     */
+    routeName?: string | null;
+    /**
      * A szakasz vonalgeometriája, [lon, lat] pontsorozatként.
      */
     coordinates: Array<Array<number>>;

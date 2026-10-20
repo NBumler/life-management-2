@@ -62,3 +62,15 @@ export function elevationText(meters: number | null | undefined, language: Activ
 export function megabytesText(bytes: number, language: ActiveLanguage): string {
 	return `${oneDecimal(language).format(bytes / (1024 * 1024))} MB`;
 }
+
+const dateFormats = new Map<ActiveLanguage, Intl.DateTimeFormat>();
+
+/** backlog/212 — egy mentett útvonal dátuma az aktív nyelv szerint („2026. okt. 20.” / „Oct 20, 2026”). */
+export function dateText(iso: string, language: ActiveLanguage): string {
+	let format = dateFormats.get(language);
+	if (!format) {
+		format = new Intl.DateTimeFormat(NUMBER_LOCALES[language], { year: 'numeric', month: 'short', day: 'numeric' });
+		dateFormats.set(language, format);
+	}
+	return format.format(new Date(iso));
+}

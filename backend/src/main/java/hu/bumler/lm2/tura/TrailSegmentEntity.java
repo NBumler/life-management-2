@@ -40,6 +40,10 @@ public class TrailSegmentEntity {
 	@Column(nullable = false)
 	private String symbol;
 
+	/** backlog/201 — a túraútvonal (OSM reláció) neve, ha van. */
+	@Column(name = "route_name")
+	private String routeName;
+
 	@JdbcTypeCode(SqlTypes.ARRAY)
 	@Column(nullable = false)
 	private List<Double> coordinates = new ArrayList<>();
@@ -97,6 +101,14 @@ public class TrailSegmentEntity {
 
 	public void setSymbol(String symbol) {
 		this.symbol = symbol;
+	}
+
+	public String getRouteName() {
+		return routeName;
+	}
+
+	public void setRouteName(String routeName) {
+		this.routeName = routeName;
 	}
 
 	public List<Double> getCoordinates() {

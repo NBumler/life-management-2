@@ -49,6 +49,7 @@ class TrailSegmentIntegrationTest {
 		String countryCode = "H1"; // izolált teszt-országkód, hogy más tesztek importjával ne ütközzön
 		TrailSegmentImportItem item = new TrailSegmentImportItem("PIROS_SAV",
 				List.of(List.of(BigDecimal.valueOf(19.0), BigDecimal.valueOf(47.0)), List.of(BigDecimal.valueOf(19.1), BigDecimal.valueOf(47.1))));
+		item.routeName("Mária-út");
 
 		importSegments(countryCode, List.of(item)).andExpect(status().isOk());
 
@@ -61,6 +62,8 @@ class TrailSegmentIntegrationTest {
 
 		String body = result.getResponse().getContentAsString();
 		assertThat(body).contains("PIROS_SAV");
+		// backlog/201
+		assertThat(body).contains("\"routeName\":\"Mária-út\"");
 	}
 
 	@Test

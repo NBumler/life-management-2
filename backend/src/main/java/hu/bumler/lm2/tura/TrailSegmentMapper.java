@@ -18,6 +18,7 @@ class TrailSegmentMapper {
 	TrailSegment toDto(TrailSegmentEntity entity) {
 		TrailSegment dto = new TrailSegment(entity.getId(), entity.getCountryCode(), entity.getSymbol(), toPairs(entity.getCoordinates()));
 		dto.osmWayId(entity.getOsmWayId());
+		dto.routeName(entity.getRouteName());
 		return dto;
 	}
 

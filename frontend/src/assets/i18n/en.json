@@ -471,15 +471,15 @@
     "ROUTE_NOT_FOUND_TITLE": "No route found",
     "ROUTE_NOT_FOUND_MESSAGE": "No connection found between the two points on the marked trail network.",
     "DAYS": {
-      "BUTTON": "Days",
-      "MODAL_TITLE": "Split into days",
       "DAY_END_LABEL": "day ends at",
-      "WAYPOINT_OPTION": "Point {{index}}",
+      "WAYPOINT_OPTION": "Point {{index}} · {{distance}}",
       "OVERNIGHT_PLACEHOLDER": "Overnight point name (optional)",
       "REMOVE_BREAK": "Remove day break",
       "ADD_BREAK": "Add day break",
       "SUMMARY_ONE": "{{count}} day",
-      "SUMMARY_MANY": "{{count}} days"
+      "SUMMARY_MANY": "{{count}} days",
+      "NEED_WAYPOINT": "A day can only end at a picked point along the way — add another point to the route (Manual or On trails mode).",
+      "ALL_USED": "Every picked point along the way already ends a day — add another point to the route."
     },
     "DURATION": {
       "HOURS_MINUTES": "{{hours}} h {{minutes}} min",
@@ -564,7 +564,56 @@
       "TOO_LARGE_MESSAGE": "This area is too large to download for offline use — zoom in to a smaller area on the map and try again.",
       "DELETE_CONFIRM_TITLE": "Delete offline area",
       "DELETE_CONFIRM_MESSAGE": "Delete the offline area \"{{name}}\"? The downloaded tiles will be freed."
-    }
+    },
+    "TRAIL": {
+      "NAME": "{{color}} {{shape}}",
+      "COLOR": {
+        "PIROS": "Red",
+        "KEK": "Blue",
+        "ZOLD": "Green",
+        "SARGA": "Yellow",
+        "LILA": "Purple",
+        "NARANCS": "Orange",
+        "FEKETE": "Black",
+        "BARNA": "Brown",
+        "FEHER": "White"
+      },
+      "SHAPE": {
+        "SAV": "stripe",
+        "KERESZT": "cross",
+        "HAROMSZOG": "triangle",
+        "KOR": "circle",
+        "NEGYSZOG": "square",
+        "PONT": "dot",
+        "OMEGA": "Ω (cave)",
+        "ROM": "L (ruin)",
+        "KILATO": "lookout",
+        "TEMPLOM": "church",
+        "EMLEKMU": "memorial",
+        "HAZ": "hut"
+      }
+    },
+    "PROFILE": {
+      "LABEL": "Elevation profile: {{min}} – {{max}}, {{distance}}"
+    },
+    "DETAILS": {
+      "BUTTON": "Details",
+      "DISTANCE": "Distance",
+      "DURATION": "Time",
+      "GAIN": "Ascent",
+      "LOSS": "Descent",
+      "PROFILE": "Elevation profile",
+      "NO_PROFILE": "No elevation data — it needs an internet connection.",
+      "DAYS": "Days",
+      "DAY": "Day {{number}}",
+      "LAST_DAY": "Day {{number}} — to the finish",
+      "OVERNIGHT": "overnight: {{name}}",
+      "EDIT": "Edit",
+      "RENAME": "Rename",
+      "DRAFT_TITLE": "New route"
+    },
+    "RENAME_TITLE": "Rename route",
+    "EDITING_HINT": "Editing a saved route — saving overwrites it."
   },
   "GEAR": {
     "TITLE": "GearCheck",

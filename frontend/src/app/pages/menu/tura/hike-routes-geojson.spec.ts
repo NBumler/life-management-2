@@ -41,7 +41,7 @@ describe('hikeRoutesToFeatureCollection', () => {
 						[19.1, 47.1],
 					],
 				},
-				properties: { name: 'Kilátó túra', label: labelIconName('Kilátó túra') },
+				properties: { routeId: 'r1', name: 'Kilátó túra', label: labelIconName('Kilátó túra') },
 			},
 		]);
 	});

@@ -12,6 +12,10 @@
 export interface TrailSegmentImportItem { 
     osmWayId?: number | null;
     symbol: string;
+    /**
+     * backlog/201 — az OSM reláció `name` tagje, ha van.
+     */
+    routeName?: string | null;
     coordinates: Array<Array<number>>;
 }
 

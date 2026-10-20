@@ -1,0 +1,56 @@
+@let s = stats();
+<div class="stats">
+  <div class="stat">
+    <span class="stat-label">{{ 'TURA.DETAILS.DISTANCE' | translate }}</span>
+    <span class="stat-value">{{ distance(s?.distanceMeters) }}</span>
+  </div>
+  <div class="stat">
+    <span class="stat-label">{{ 'TURA.DETAILS.DURATION' | translate }}</span>
+    @let duration = durationText(s?.estimatedDurationMinutes);
+    <span class="stat-value">{{ duration.key | translate: duration.params }}</span>
+  </div>
+  <div class="stat">
+    <span class="stat-label">{{ 'TURA.DETAILS.GAIN' | translate }}</span>
+    <span class="stat-value">↑{{ elevation(s?.elevationGainMeters) }}</span>
+  </div>
+  <div class="stat">
+    <span class="stat-label">{{ 'TURA.DETAILS.LOSS' | translate }}</span>
+    <span class="stat-value">↓{{ elevation(s?.elevationLossMeters) }}</span>
+  </div>
+</div>
+
+<div class="section">
+  <span class="section-title">{{ 'TURA.DETAILS.PROFILE' | translate }}</span>
+  @if (profile(); as points) {
+    <app-elevation-profile [profile]="points" [markerDistances]="markerDistances()"></app-elevation-profile>
+  } @else if (profileLoading()) {
+    <div class="profile-loading"><ion-spinner name="dots"></ion-spinner></div>
+  } @else {
+    <p class="note">{{ 'TURA.DETAILS.NO_PROFILE' | translate }}</p>
+  }
+</div>
+
+@if (days(); as dayList) {
+  @if (dayList.length > 1) {
+    <div class="section">
+      <span class="section-title">{{ 'TURA.DETAILS.DAYS' | translate }}</span>
+      @for (day of dayList; track $index) {
+        <div class="day">
+          <div class="day-head">
+            <strong>{{ 'TURA.DETAILS.DAY' | translate: { number: $index + 1 } }}</strong>
+            @if (day.overnightName && !$last) {
+              <span class="day-overnight">{{ 'TURA.DETAILS.OVERNIGHT' | translate: { name: day.overnightName } }}</span>
+            }
+          </div>
+          @let dayDuration = durationText(day.estimatedDurationMinutes);
+          <div class="day-stats">
+            <span>{{ distance(day.distanceMeters) }}</span>
+            <span>{{ dayDuration.key | translate: dayDuration.params }}</span>
+            <span>↑{{ elevation(day.elevationGainMeters) }}</span>
+            <span>↓{{ elevation(day.elevationLossMeters) }}</span>
+          </div>
+        </div>
+      }
+    </div>
+  }
+}

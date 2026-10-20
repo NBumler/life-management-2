@@ -32,6 +32,7 @@ const LANGS = ['hu', 'en'];
 
 const IDENTICAL_ALLOWED = new Set([
   'APP.NAME',
+  'TURA.TRAIL.NAME',
   'WIDGET.APP_TITLE',
   'COMMON.OK',
   'MENU.GEARCHECK',

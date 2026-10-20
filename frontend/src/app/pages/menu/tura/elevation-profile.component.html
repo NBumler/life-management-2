@@ -1,0 +1,34 @@
+@if (chart(); as chart) {
+  @if (labels(); as labels) {
+    <div
+      class="profile"
+      [class.compact]="compact()"
+      role="img"
+      [attr.aria-label]="'TURA.PROFILE.LABEL' | translate: { min: labels.min, max: labels.max, distance: labels.total }"
+    >
+      <div class="profile-y" aria-hidden="true">
+        <span>{{ labels.max }}</span>
+        <span>{{ labels.min }}</span>
+      </div>
+      <div class="profile-plot" aria-hidden="true">
+        <svg [attr.viewBox]="'0 0 ' + width + ' ' + height" preserveAspectRatio="none">
+          @for (x of chart.markerXs; track $index) {
+            <line class="marker" [attr.x1]="x" [attr.x2]="x" y1="0" [attr.y2]="height" vector-effect="non-scaling-stroke"></line>
+          }
+          <polyline class="line" [attr.points]="chart.points" vector-effect="non-scaling-stroke"></polyline>
+        </svg>
+        @if (!compact()) {
+          @for (x of chart.markerXs; track $index) {
+            <span class="marker-label" [style.left.%]="(x / width) * 100">{{ $index + 1 }}</span>
+          }
+        }
+      </div>
+    </div>
+    @if (!compact()) {
+      <div class="profile-x" aria-hidden="true">
+        <span>{{ labels.start }}</span>
+        <span>{{ labels.total }}</span>
+      </div>
+    }
+  }
+}

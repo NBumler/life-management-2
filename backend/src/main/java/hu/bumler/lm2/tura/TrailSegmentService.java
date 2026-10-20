@@ -84,6 +84,7 @@ class TrailSegmentService {
 			entity.setCountryCode(countryCode);
 			entity.setOsmWayId(item.getOsmWayId().orElse(null));
 			entity.setSymbol(item.getSymbol());
+			entity.setRouteName(item.getRouteName().orElse(null));
 			entity.setGeometry(flattened, minLon, minLat, maxLon, maxLat);
 			// entityManager.persist() (nem repository.save()) — a save() a nem-null, kézzel
 			// generált UUID id miatt merge()-nek (tehát egy felesleges exists-SELECT-nek) nézné

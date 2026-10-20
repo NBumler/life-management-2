@@ -72,7 +72,7 @@ túrázási funkció).
 | `backlog/archive/198-tura-ismert-jelzestipusok-szurken.md` | A legtöbb ismert turistajelzés-típus (pont, kereszt, M, …) szürkén jelenik meg | `done` |
 | `backlog/archive/199-tura-egyeb-jelzesu-szakaszok-uraljak-a-terkepet.md` | Az „egyéb” jelzésű szakaszok vastag szürke vonala uralja a térképet | `done` |
 | `backlog/archive/200-tura-turistautak-12-es-zoom-alatt-rejtettek.md` | 12-es közelítés alatt egyetlen turistaút sem látszik, és ezt semmi nem jelzi | `done` |
-| [[backlog/tura-utvonaltervezo/201-tura-vonalra-koppintva-nincs-informacio]] | Egy vonalra koppintva nem derül ki, melyik turistaút vagy útvonal az | `backlog` |
+| `backlog/archive/201-tura-vonalra-koppintva-nincs-informacio.md` | Egy vonalra koppintva nem derül ki, melyik turistaút vagy útvonal az | `done` |
 | `backlog/archive/202-tura-mentett-utvonalak-mindig-latszanak.md` | A mentett útvonalak mindig látszanak, név nélkül, és nem rejthetők el | `done` |
 | `backlog/archive/203-tura-kezdo-veg-es-napvalto-pont-egyforma.md` | A kezdő-, a vég- és a napváltó pont egyforma, az útvonal iránya nem látszik | `done` |
 | `backlog/archive/204-tura-fejlec-tul-magas-gombsorok-kilognak.md` | A fejléc 3–5 sor magas, a gombsorok magyarul kilógnak a képernyőről | `done` |
@@ -80,17 +80,17 @@ túrázási funkció).
 | `backlog/archive/206-tura-rajzolas-es-automatikus-mod-erthetosege.md` | A Rajzolás és az Automatikus mód közti különbség és az aktív mód nem érthető | `done` |
 | `backlog/archive/207-tura-atvetel-felirat-nem-ertheto.md` | Az előnézet „Átvétel” gombjának felirata nem mondja meg, mit csinál | `done` |
 | `backlog/archive/208-tura-kuka-megerosites-nelkul-torol.md` | A kuka megerősítés nélkül törli a teljes piszkozatot, és ez nem vonható vissza | `done` |
-| [[backlog/tura-utvonaltervezo/209-tura-napok-panel-elvont]] | A Napok panel elvont: nincs napi táv / szint, a térkép nem látszik közben | `backlog` |
+| `backlog/archive/209-tura-napok-panel-elvont.md` | A Napok panel elvont: nincs napi táv / szint, a térkép nem látszik közben | `done` |
 | `backlog/archive/210-tura-terkep-ugrik-savok-megjelenesekor.md` | A térkép elcsúszik, amikor a tipp-, a név- vagy a statisztika-sáv megjelenik | `done` |
 | `backlog/archive/211-tura-mentes-visszajelzes-nelkul.md` | Mentéskor nincs visszajelzés | `done` |
-| [[backlog/tura-utvonaltervezo/212-tura-mentett-utvonal-megnyitasa-csak-odarepul]] | Mentett útvonal megnyitásakor nincs részlet, szerkesztés, átnevezés; a lista km és dátum nélküli | `backlog` |
+| `backlog/archive/212-tura-mentett-utvonal-megnyitasa-csak-odarepul.md` | Mentett útvonal megnyitásakor nincs részlet, szerkesztés, átnevezés; a lista km és dátum nélküli | `done` |
 | `backlog/archive/213-tura-felkesz-rajz-elveszik-visszalepeskor.md` | A félkész rajz figyelmeztetés nélkül elveszik, ha a felhasználó elnavigál | `done` |
 | `backlog/archive/214-tura-terkep-mindig-orszagnezetre-all-vissza.md` | A térkép minden megnyitáskor az országnézetre áll vissza | `done` |
 | [[backlog/tura-utvonaltervezo/215-tura-sajat-helyzet-es-helykereses]] | Nincs „saját helyzetem” gomb és helykeresés | `backlog` |
 | [[backlog/tura-utvonaltervezo/216-tura-katalogus-nevek-rendezes-kereses]] | A katalógus nevei rejtélyesek, a lista rendezetlen, nincs keresés | `backlog` |
 | [[backlog/tura-utvonaltervezo/217-tura-katalogus-es-atvetel-metrikaja-elter]] | A katalógus és az átvett piszkozat más szintemelkedést és időt mutat ugyanarra a túrára | `backlog` |
-| [[backlog/tura-utvonaltervezo/218-tura-katalogus-elonezet-hianyos]] | A katalógus-előnézet csak a vonalat mutatja (nincs statisztika, profil, napok, kezdő- / végpont) | `backlog` |
-| [[backlog/tura-utvonaltervezo/219-tura-magassagprofil-tengely-nelkul]] | A magasságprofil-grafikonon nincs tengely és skála | `backlog` |
+| `backlog/archive/218-tura-katalogus-elonezet-hianyos.md` | A katalógus-előnézet csak a vonalat mutatja (nincs statisztika, profil, napok, kezdő- / végpont) | `done` |
+| `backlog/archive/219-tura-magassagprofil-tengely-nelkul.md` | A magasságprofil-grafikonon nincs tengely és skála | `done` |
 | `backlog/archive/220-tura-tizedespont-magyar-feluleten.md` | A távolság magyar felületen tizedesponttal jelenik meg („2.9 km”) | `done` |
 | [[backlog/tura-utvonaltervezo/221-tura-automatikus-tervezes-sikertelen-eset]] | Sikertelen automatikus tervezésnél a hibaüzenet nem segít, és a kezdőpont elveszik | `backlog` |
 | [[backlog/tura-utvonaltervezo/222-tura-offline-letoltes-vakon]] | Az offline letöltésnél nem látszik, mekkora területet és mennyi adatot tölt le | `backlog` |

@@ -9,6 +9,10 @@ properties:
     nullable: true
   symbol:
     type: string
+  routeName:
+    type: string
+    nullable: true
+    description: backlog/201 — az OSM reláció `name` tagje, ha van.
   coordinates:
     type: array
     minItems: 2
