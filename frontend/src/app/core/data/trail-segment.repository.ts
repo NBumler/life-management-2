@@ -39,20 +39,41 @@ export class TrailSegmentRepository {
 
 	readonly segments = computed(() => Array.from(this.byId().values()));
 
+	/** backlog/226 — the latest `loadBbox` call is still running (the page shows a loading hint meanwhile). */
+	private readonly pending = signal(false);
+	readonly loading = this.pending.asReadonly();
+
 	private latestRequestId = 0;
+	/** backlog/226 — the bbox of the last load the server answered: the same view (e.g. a `moveend` without a move) is not fetched again. */
+	private loadedKey: string | null = null;
+	/** …and the latest call still running: the resize / page-enter / `moveend` of one opening ask for the same view at once. */
+	private inFlightKey: string | null = null;
 
 	async loadBbox(countryCode: string, bbox: Bbox): Promise<void> {
+		const key = `${countryCode}:${bbox.join(',')}`;
+		if (key === this.loadedKey || key === this.inFlightKey) {
+			return;
+		}
+		this.inFlightKey = key;
 		const requestId = ++this.latestRequestId;
+		this.pending.set(true);
 		let fetched: TrailSegment[];
+		let answered = true;
 		try {
 			const [minLon, minLat, maxLon, maxLat] = bbox;
 			fetched = await firstValueFrom(this.turaService.listTrailSegmentsInBbox(countryCode, minLon, minLat, maxLon, maxLat));
 		} catch (error) {
-			fetched = error instanceof HttpErrorResponse && error.status === 400 ? [] : await this.offlineRegions.getCachedSegmentsInBbox(bbox);
+			const tooLarge = error instanceof HttpErrorResponse && error.status === 400;
+			answered = tooLarge;
+			fetched = tooLarge ? [] : await this.offlineRegions.getCachedSegmentsInBbox(bbox);
 		}
 		if (requestId !== this.latestRequestId) {
 			return;
 		}
+		this.inFlightKey = null;
+		this.pending.set(false);
+		// an offline fallback is retried on the next call, so the server's segments show up once it is reachable
+		this.loadedKey = answered ? key : null;
 
 		const retained = expandBboxFraction(bbox, TRAIL_SEGMENT_RETAIN_MARGIN_FRACTION);
 		const next = new Map<string, TrailSegment>();

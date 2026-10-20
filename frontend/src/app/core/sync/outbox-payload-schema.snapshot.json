@@ -1,5 +1,5 @@
 {
-  "payloadSchemaVersion": 26,
+  "payloadSchemaVersion": 27,
   "entities": {
     "AycmCheckIn": "5050bb69ed3adf81c152c637b748050512395f739cc029e99bdc578cb539ed28",
     "AycmPartner": "c0471c6686aa5775df5f2bd120cad172e84ff8c9e1cbf40ba3400b6434188cbb",
@@ -16,7 +16,7 @@
     "GearItem": "0e93fe5380b718998e869e10433f0ba350f26ca015967197689f9f265320b403",
     "Gym": "07ef1e2cbe8477f465a5c68002bc29a0f79c7748c735f265f80ba21f4247f2f1",
     "GymColorBand": "61088f174a738b9b7bf2d74f961f8a284407a4a5cb94101253eb1bc9fa17e6f0",
-    "HikeRoute": "beea4f2c094a158de614c443ad1f966282cefc76f9e91654c4ddac0611a653a7",
+    "HikeRoute": "358ca7692f364cb35500c4fb969904848a76f9fa1bf393c5ecd917ce2ab19790",
     "HouseholdRoom": "351dcbe889768e9bc3a3d08477ab23c419457ef352239fd390b0869336b9264d",
     "HouseholdTask": "26c3c633faafb3bff633c180d2585f8f71ebdbb68622d0f9d3c6ecacf0a1531a",
     "IndoorRoute": "583c30169d194165a6b9b8096733b87d31ab24b06f748b69c181b681ede8e06f",

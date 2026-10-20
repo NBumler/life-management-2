@@ -504,6 +504,7 @@
       "DISTANCE_LONG": "Long (over 20 km)",
       "NO_RESULTS": "No route matches the current filter.",
       "EMPTY": "There are no recommended routes yet.",
+      "LOADING": "Loading recommended routes…",
       "OFFLINE": "Recommended routes can’t be loaded — the server is unreachable.",
       "SEARCH_PLACEHOLDER": "Search by name or place (e.g. Dömös, OKT 16)",
       "SORT": "Sort",
@@ -555,6 +556,7 @@
       "MY_LOCATION": "My location"
     },
     "ZOOM_HINT": "Zoom in to see the hiking trails",
+    "TRAILS_LOADING": "Loading hiking trails…",
     "MY_LOCATION": {
       "BUTTON": "My location",
       "NOTIFICATION_TITLE": "Hiking",

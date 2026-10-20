@@ -1,5 +1,5 @@
 import { CuratedRoute } from '../../../api/model/curatedRoute';
-import { curatedRouteTitle, markingBadge, visibleCuratedRoutes } from './curated-route-text';
+import { catalogEmptyStateKey, curatedRouteTitle, markingBadge, visibleCuratedRoutes } from './curated-route-text';
 
 function route(id: string, name: string, distanceMeters: number, symbol: string | null = null): CuratedRoute {
 	return {
@@ -87,5 +87,24 @@ describe('visibleCuratedRoutes', () => {
 	it('does not reorder the input array', () => {
 		visibleCuratedRoutes(routes, '', 'distance', 'hu');
 		expect(routes.map((r) => r.id)).toEqual(['a', 'b', 'c', 'd']);
+	});
+});
+
+describe('catalogEmptyStateKey (backlog/191, 227)', () => {
+	const done = { loading: false, loadFailed: false, unfiltered: true, visibleCount: 0 };
+
+	it('says nothing while loading — not even after a failure or with a filter', () => {
+		expect(catalogEmptyStateKey({ ...done, loading: true })).toBeNull();
+		expect(catalogEmptyStateKey({ ...done, loading: true, loadFailed: true, unfiltered: false })).toBeNull();
+	});
+
+	it('says nothing when there is something to list', () => {
+		expect(catalogEmptyStateKey({ ...done, visibleCount: 3 })).toBeNull();
+	});
+
+	it('after the load: offline, empty catalog, or nothing matches the filter', () => {
+		expect(catalogEmptyStateKey({ ...done, loadFailed: true })).toBe('TURA.CATALOG.OFFLINE');
+		expect(catalogEmptyStateKey(done)).toBe('TURA.CATALOG.EMPTY');
+		expect(catalogEmptyStateKey({ ...done, unfiltered: false })).toBe('TURA.CATALOG.NO_RESULTS');
 	});
 });

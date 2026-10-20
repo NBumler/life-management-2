@@ -94,3 +94,25 @@ export function visibleCuratedRoutes(
 	const titles = new Map(matching.map((route) => [route.id, curatedRouteTitle(route.name, route.symbol)]));
 	return matching.sort((a, b) => collator.compare(titles.get(a.id) ?? a.name, titles.get(b.id) ?? b.name));
 }
+
+export interface CatalogListState {
+	loading: boolean;
+	loadFailed: boolean;
+	/** Minden szűrő „Bármely” és a kereső üres. */
+	unfiltered: boolean;
+	visibleCount: number;
+}
+
+/**
+ * backlog/191, 227 — melyik üres-állapot szöveg illik a katalógusra: a betöltés hibája, az üres katalógus
+ * vagy a szűrő; `null`, ha van mit listázni, vagy a betöltés még fut (akkor a töltésjelző látszik).
+ */
+export function catalogEmptyStateKey(state: CatalogListState): string | null {
+	if (state.loading || state.visibleCount > 0) {
+		return null;
+	}
+	if (state.loadFailed) {
+		return 'TURA.CATALOG.OFFLINE';
+	}
+	return state.unfiltered ? 'TURA.CATALOG.EMPTY' : 'TURA.CATALOG.NO_RESULTS';
+}

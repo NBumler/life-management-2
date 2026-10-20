@@ -1,12 +1,12 @@
 ---
 id: 194
 type: bug
-status: backlog
+status: done
 title: Túra — a HikeRoute / HikeRouteDay OpenAPI-leírás a megszűnt route-metrics végpontra hivatkozik
 specs: []
 flag: menu.tura
 created: 2026-10-19
-closed:
+closed: 2026-10-20
 ---
 
 # 194 — Túra — a HikeRoute / HikeRouteDay OpenAPI-leírás a megszűnt route-metrics végpontra hivatkozik
@@ -34,17 +34,23 @@ jegy nélkül ez a #151 lezárásakor elsikkadna.
 
 ## Elfogadási kritériumok
 
-- [ ] A két sémaleírás a jelenlegi működést írja: a kliens eszközön számolja (`core/geo/route-metrics.ts`); a napi értékek a teljes útvonal mintasorából, felosztva (#188); `null`, ha magassági adat nem volt elérhető.
-- [ ] `npm run gen:api` után a generált modellek frissek.
-- [ ] Ha a `verify:outbox` piros: `OUTBOX_PAYLOAD_SCHEMA_VERSION` emelés + no-op lépés az `outbox-migrator.ts`-ben, `npm run verify:outbox -- --write` — vagy, ha addig érdemi `HikeRoute`-sémaváltozás jön, azzal együtt egy emeléssel.
-- [ ] Backend `openApiGenerate --rerun` + `test` zöld.
+- [x] A két sémaleírás a jelenlegi működést írja: a kliens eszközön számolja (`core/geo/route-metrics.ts`); a napi értékek a teljes útvonal mintasorából, felosztva (#188); `null`, ha magassági adat nem volt elérhető.
+- [x] `npm run gen:api` után a generált modellek frissek.
+- [x] Ha a `verify:outbox` piros: `OUTBOX_PAYLOAD_SCHEMA_VERSION` emelés + no-op lépés az `outbox-migrator.ts`-ben, `npm run verify:outbox -- --write` — vagy, ha addig érdemi `HikeRoute`-sémaváltozás jön, azzal együtt egy emeléssel.
+- [x] Backend `openApiGenerate --rerun` + `test` zöld.
 
 ## Terv / döntési napló
 
 - 2026-10-19 — felvéve a #188 lezárásakor; a #151 naplójában „szándékosan nem változott” pontként szerepelt.
+- 2026-10-20 — kész. `HikeRoute.distanceMeters`: a kliens mentéskor az eszközön számolt metrikából tölti
+  (`core/geo/route-metrics.ts`), a táv mindig számolható, a magasság-függő mezők `null`-ok magassági adat nélkül.
+  `HikeRouteDay.distanceMeters`: a teljes útvonal egyetlen mintasorából, a napváltóknál felosztva (#188).
+  `gen:api` után a `hikeRoute.ts` / `hikeRouteDay.ts` friss. A `verify:outbox` pirosra váltott (a leírás is a hash
+  része), ezért `OUTBOX_PAYLOAD_SCHEMA_VERSION` 26 → 27, `outbox-migrator.ts` 26-os no-op lépés, új snapshot.
+  Backend `openApiGenerate --rerun build` (tesztekkel) zöld.
 
 ## Lezáráskor (on-done)
 
-- Frissített specek: <a túra spec, ha addigra elkészült — [[102-tura-utvonaltervezo-attekintes]]>
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — #194
+- Frissített specek: **nincs** — a túra spec a [[102-tura-utvonaltervezo-attekintes]] szerint a család végén készül.
+- `IMPLEMENTATION_STATUS.md` sor: 2026-10-20 — #229, #227, #194, #228, #226
 - Kód: `HikeRoute.yaml`, `HikeRouteDay.yaml`, generált `api/model/`, esetleg `offline-queue.service.ts` + `outbox-migrator.ts` + snapshot

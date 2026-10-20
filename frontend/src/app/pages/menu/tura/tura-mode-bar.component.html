@@ -1,0 +1,20 @@
+<button type="button" class="mode-button" [class.active]="mode() === 'manual'" [attr.aria-pressed]="mode() === 'manual'" (click)="toggleManual.emit()">
+  <ion-icon name="create-outline" aria-hidden="true"></ion-icon>
+  <span>{{ 'TURA.DRAW' | translate }}</span>
+</button>
+<button type="button" class="mode-button" [class.active]="mode() === 'auto'" [attr.aria-pressed]="mode() === 'auto'" (click)="toggleAuto.emit()">
+  @if (routing()) {
+    <ion-spinner name="dots"></ion-spinner>
+  } @else {
+    <ion-icon name="navigate-outline" aria-hidden="true"></ion-icon>
+  }
+  <span>{{ 'TURA.AUTO' | translate }}</span>
+</button>
+<button type="button" class="mode-button" [disabled]="!canUndo()" (click)="undo.emit()">
+  <ion-icon name="arrow-undo-outline" aria-hidden="true"></ion-icon>
+  <span>{{ 'TURA.UNDO' | translate }}</span>
+</button>
+<button type="button" class="mode-button" [disabled]="!canClear()" (click)="clear.emit()">
+  <ion-icon name="trash-outline" aria-hidden="true"></ion-icon>
+  <span>{{ 'TURA.CLEAR' | translate }}</span>
+</button>

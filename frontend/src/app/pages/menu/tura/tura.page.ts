@@ -59,7 +59,7 @@ import { distancesAlongRoute } from './elevation-profile-svg';
 import { ElevationProfileComponent } from './elevation-profile.component';
 import { RouteDetailsComponent } from './route-details.component';
 import { trailSymbolLabel } from './trail-symbol-text';
-import { CatalogSort, curatedRouteTitle, markingBadge, visibleCuratedRoutes } from './curated-route-text';
+import { CatalogSort, catalogEmptyStateKey, curatedRouteTitle, markingBadge, visibleCuratedRoutes } from './curated-route-text';
 import { MarkingBadgeComponent } from './marking-badge.component';
 import { trailSegmentSymbolColor } from './trail-segment-symbol-color';
 import {
@@ -85,6 +85,10 @@ import { AutoRouteHintComponent, AutoRouteHintStep, AutoRouteProblem } from './a
 import { TuraLegendComponent } from './tura-legend.component';
 import { MY_LOCATION_MIN_ZOOM, MyLocationControl, addMyLocationLayer, showMyLocation } from './my-location-control';
 import { dateText, daySummaryText, distanceText, durationText, elevationText, megabytesText } from './hike-text';
+import { DaysEditorComponent } from './days-editor.component';
+import { MapHintComponent } from './map-hint.component';
+import { TappedTrail, TappedTrailsComponent } from './tapped-trails.component';
+import { DrawMode, TuraModeBarComponent } from './tura-mode-bar.component';
 import { DayBreak, DraftDetails, RouteDraftEditor, interiorWaypointIndexes, routeDraftFromPath, withManualPoint, withPath } from './route-draft';
 import { trailSegmentsToFeatureCollection } from './trail-segments-geojson';
 
@@ -145,17 +149,10 @@ const ARROW_SPACING_PX = 80;
 const LINE_LAYOUT: maplibregl.LineLayerSpecification['layout'] = { 'line-join': 'round', 'line-cap': 'round' };
 
 /** backlog/tura-utvonaltervezo/103-... 2.2 fázis — a rajzolás-térkép aktuális interakciós módja. */
-type Mode = 'none' | 'manual' | 'auto';
+type Mode = DrawMode;
 
 /** backlog/212, backlog/218, backlog/209 — melyik útvonal kártyája látszik a félmagas lapon. */
 type DetailsSheet = 'saved' | 'preview' | 'draft';
-
-/** backlog/201 — egy koppintott turistaút a kártyán. */
-interface TappedTrail {
-	readonly label: string;
-	readonly color: string;
-	readonly routeName: string | null;
-}
 
 /** backlog/tura-utvonaltervezo/107-... 3. fázis — az alternatív alaptérkép-rétegek közül a kiválasztott. */
 type Basemap = 'osm' | 'topo' | 'satellite';
@@ -270,6 +267,10 @@ const COUNTRY_CODE = 'HU';
 		TuraLegendComponent,
 		ElevationProfileComponent,
 		RouteDetailsComponent,
+		DaysEditorComponent,
+		MapHintComponent,
+		TappedTrailsComponent,
+		TuraModeBarComponent,
 		MarkingBadgeComponent,
 	],
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -336,6 +337,16 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	protected readonly addDayBreakBlockedKey = computed(() => (this.interiorWaypoints().length === 0 ? 'TURA.DAYS.NEED_WAYPOINT' : 'TURA.DAYS.ALL_USED'));
 	/** backlog/209 — a piszkozat napi értékei a napváltók szerint (csak nyitott lapnál számolva). */
 	protected readonly draftDays = signal<RouteDayMetrics[] | null>(null);
+	/** backlog/209 — a napváltó-választók opciói soronként (a még nem használt pontok + a sor saját értéke). */
+	protected readonly dayBreakOptions = computed(() =>
+		this.dayBreaks().map((dayBreak) =>
+			this.availableWaypointIndexes(dayBreak.waypointIndex).map((index) => ({
+				index,
+				number: this.waypointNumber(index),
+				distance: this.waypointDistance(index),
+			})),
+		),
+	);
 	/** backlog/219 — a piszkozat napváltóinak távolsága az indulástól, a profil jelölőihez. */
 	protected readonly draftMarkerDistances = computed(() => distancesAlongRoute(this.draft(), this.dayBreaks().map((day) => day.waypointIndex)));
 	/** backlog/212 — a szerkesztésre betöltött mentett útvonal id-je; `null` = új útvonal. */
@@ -364,24 +375,27 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	protected readonly visibleCatalog = computed(() =>
 		visibleCuratedRoutes(this.curatedRoutes.routes(), this.catalogQuery(), this.catalogSort(), this.language.activeLanguage()),
 	);
+	/** backlog/227 — szűrőváltáskor a régi lista nem a szűrő eredménye: töltés alatt a töltésjelző áll helyette. */
+	protected readonly catalogListed = computed(() => (this.curatedRoutes.loading() ? [] : this.visibleCatalog()));
 	/** A térképen kiemelt katalógus-túra (ha a felhasználó rákattintott egy listaelemre) — null = nincs kiemelés. */
 	protected readonly previewedCuratedRoute = signal<CuratedRoute | null>(null);
 	/** backlog/218 — a katalógus nem hordoz magasságprofilt: a részletek megnyitásakor az eszköz számolja. */
 	protected readonly previewProfile = signal<ElevationProfilePoint[] | null>(null);
 	protected readonly previewProfileLoading = signal(false);
 	protected readonly previewMarkers = computed(() => routeDayMarkerDistances(this.previewedCuratedRoute()));
-	/** backlog/191 — melyik üres-állapot szöveg illik a katalógusra: a betöltés hibája, az üres katalógus vagy a szűrő. */
-	protected readonly catalogEmptyKey = computed(() => {
-		if (this.curatedRoutes.loadFailed()) {
-			return 'TURA.CATALOG.OFFLINE';
-		}
-		const unfiltered =
-			this.catalogDifficulty() === '' &&
-			this.catalogActivityType() === '' &&
-			this.catalogDistanceBucket() === 'any' &&
-			this.catalogQuery().trim() === '';
-		return unfiltered ? 'TURA.CATALOG.EMPTY' : 'TURA.CATALOG.NO_RESULTS';
-	});
+	/** backlog/191, 227 — az üres-állapot szöveg, vagy `null` (van lista, vagy még tölt). */
+	protected readonly catalogEmptyKey = computed(() =>
+		catalogEmptyStateKey({
+			loading: this.curatedRoutes.loading(),
+			loadFailed: this.curatedRoutes.loadFailed(),
+			unfiltered:
+				this.catalogDifficulty() === '' &&
+				this.catalogActivityType() === '' &&
+				this.catalogDistanceBucket() === 'any' &&
+				this.catalogQuery().trim() === '',
+			visibleCount: this.visibleCatalog().length,
+		}),
+	);
 	/** backlog/tura-utvonaltervezo/107-... 3. fázis — alaptérkép-váltó + domborzat-árnyékolás panel. */
 	protected readonly showLayersPanel = signal(false);
 	/** backlog/196 */
@@ -393,8 +407,16 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	/** backlog/199 — a jelzés nélküli (`EGYEB`) utak halvány rétege kikapcsolható. */
 	protected readonly showUnmarkedTrails = signal(true);
 	/** backlog/200 — a 12-es zoom alatt a turistautak nem töltődnek be; ezt egy lebegő jelzés mondja meg. */
-	protected readonly mapZoom = signal(HUNGARY_ZOOM);
-	protected readonly trailsNeedZoom = computed(() => this.mapZoom() < MIN_TRAIL_SEGMENT_ZOOM);
+	/** `null` amíg a térkép nem jött létre (a megjegyzett nézet még töltődik) — addig egyik zoom-jelzés sem illik rá. */
+	protected readonly mapZoom = signal<number | null>(null);
+	protected readonly trailsNeedZoom = computed(() => {
+		const zoom = this.mapZoom();
+		return zoom !== null && zoom < MIN_TRAIL_SEGMENT_ZOOM;
+	});
+	/** backlog/226 — a turistautak még töltődnek, és még egy sem látszik: addig ne tűnjön üresnek a térkép. */
+	protected readonly trailsLoading = computed(
+		() => this.mapZoom() !== null && !this.trailsNeedZoom() && this.trailSegments.loading() && this.trailSegments.segments().length === 0,
+	);
 	/** backlog/tura-utvonaltervezo/105-... 4. fázis — offline terület-letöltés panel; web buildben (nincs Filesystem-hozzáférés) a gomb el sem érhető. */
 	protected readonly offlineCapable = Capacitor.isNativePlatform();
 	protected readonly showOfflinePanel = signal(false);
@@ -560,7 +582,9 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 		this.mapZoom.set(map.getZoom());
 		map.on('zoomend', () => this.mapZoom.set(map.getZoom()));
 
-		map.on('load', () => {
+		// backlog/226 — the overlays go on as soon as the style is parsed: `load` waits for every basemap tile of
+		// the first view (seconds on a slow network), and the trail segments would wait with it.
+		const addOverlays = () => {
 			registerTuraMapIcons(map);
 			this.addTrailSegmentLayers(map);
 			this.addHikeRouteLayers(map);
@@ -568,9 +592,13 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 			this.addDraftLayers(map);
 			addMyLocationLayer(map);
 			this.applyLayerVisibility(map);
-
-			void this.loadCurrentViewport(map);
-		});
+		};
+		if (map.isStyleLoaded()) {
+			addOverlays();
+		} else {
+			map.once('style.load', addOverlays);
+		}
+		void this.loadCurrentViewport(map);
 		map.on('moveend', () => {
 			void this.loadCurrentViewport(map);
 			this.persistMapView();
@@ -592,6 +620,8 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 		// the canvas correct for that first layout pass and for any later container resize.
 		this.resizeObserver = new ResizeObserver(() => {
 			map.resize();
+			// backlog/226 — a resize does not fire `moveend`; the first load may have used the stale small box
+			void this.loadCurrentViewport(map);
 			if (this.pendingPreviewFit !== null && this.previewedCuratedRoute() !== null) {
 				this.fitToCoordinates(this.pendingPreviewFit);
 			}
@@ -610,7 +640,10 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 
 	/** backlog/192 — az oldal-átmenet végén a konténer már a végleges méretén van; a ResizeObserver erre nem mindig sül el. */
 	ionViewDidEnter(): void {
-		this.map?.resize();
+		if (this.map) {
+			this.map.resize();
+			void this.loadCurrentViewport(this.map);
+		}
 	}
 
 	/** backlog/215 — egyszeri helymeghatározás: kék pont, és a térkép odaugrik. Követés nincs. */
@@ -902,19 +935,19 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	}
 
 	/** A még nem használt kijelölt belső pontok (backlog/190), plusz a sor jelenlegi értéke — ez kerül az ion-select opciói közé. */
-	protected availableWaypointIndexes(currentValue: number): number[] {
+	private availableWaypointIndexes(currentValue: number): number[] {
 		const used = new Set(this.dayBreaks().map((day) => day.waypointIndex));
 		used.delete(currentValue);
 		return this.interiorWaypoints().filter((index) => !used.has(index));
 	}
 
 	/** A koordináta-index helyett a kijelölt pont sorszáma (1 = kezdőpont), ahogy a térképen látszik. */
-	protected waypointNumber(index: number): number {
+	private waypointNumber(index: number): number {
 		return this.draftEditor.draft().waypointIndexes.indexOf(index) + 1;
 	}
 
 	/** backlog/209 — a pont helye az indulástól mérve, hogy a választóban kiderüljön, melyik pont az. */
-	protected waypointDistance(index: number): string {
+	private waypointDistance(index: number): string {
 		return this.formatDistance(polylineLengthMeters(this.draft().slice(0, index + 1)));
 	}
 
@@ -1149,7 +1182,7 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	 * feliratai alá nem kerülhetnek (a felirat a csempe része), ezért a jelzés nélküli réteg félig átlátszó.
 	 */
 	private addTrailSegmentLayers(map: maplibregl.Map): void {
-		map.addSource(TRAIL_SEGMENTS_SOURCE_ID, { type: 'geojson', data: trailSegmentsToFeatureCollection([]) });
+		map.addSource(TRAIL_SEGMENTS_SOURCE_ID, { type: 'geojson', data: trailSegmentsToFeatureCollection(this.trailSegments.segments()) });
 		map.addLayer({
 			id: TRAIL_SEGMENTS_UNMARKED_LAYER_ID,
 			type: 'line',

@@ -100,7 +100,7 @@ describe('TrailSegmentRepository', () => {
 		turaService.listTrailSegmentsInBbox.and.returnValues(slow, of([segment({ id: 'new' })]));
 
 		const first = repository.loadBbox('HU', [19.0, 47.0, 19.2, 47.2]);
-		await repository.loadBbox('HU', [19.0, 47.0, 19.2, 47.2]);
+		await repository.loadBbox('HU', [19.01, 47.0, 19.2, 47.2]);
 		slow.next([segment({ id: 'stale' })]);
 		slow.complete();
 		await first;
@@ -125,5 +125,57 @@ describe('TrailSegmentRepository', () => {
 
 		expect(offlineRegions.getCachedSegmentsInBbox).toHaveBeenCalledWith([19.0, 47.0, 19.2, 47.2]);
 		expect(repository.segments().map((s) => s.id)).toEqual(['cached']);
+	});
+
+	// backlog/226
+	it('loadBbox(): loading is on until the latest call settles', async () => {
+		const slow = new Subject<TrailSegment[]>();
+		turaService.listTrailSegmentsInBbox.and.returnValues(slow, of([segment()]));
+
+		const first = repository.loadBbox('HU', [19.0, 47.0, 19.2, 47.2]);
+		expect(repository.loading()).toBeTrue();
+		const second = repository.loadBbox('HU', [19.05, 47.05, 19.25, 47.25]);
+		await second;
+		expect(repository.loading()).toBeFalse();
+		slow.next([]);
+		slow.complete();
+		await first;
+		expect(repository.loading()).toBeFalse();
+	});
+
+	it('loadBbox(): the same view answered by the server is not fetched again', async () => {
+		turaService.listTrailSegmentsInBbox.and.returnValue(of([segment()]));
+
+		await repository.loadBbox('HU', [19.0, 47.0, 19.2, 47.2]);
+		await repository.loadBbox('HU', [19.0, 47.0, 19.2, 47.2]);
+		expect(turaService.listTrailSegmentsInBbox).toHaveBeenCalledTimes(1);
+
+		await repository.loadBbox('HU', [19.0, 47.0, 19.3, 47.2]);
+		expect(turaService.listTrailSegmentsInBbox).toHaveBeenCalledTimes(2);
+	});
+
+	it('loadBbox(): the same view asked again while its request runs is not fetched twice', async () => {
+		const slow = new Subject<TrailSegment[]>();
+		turaService.listTrailSegmentsInBbox.and.returnValue(slow);
+
+		const first = repository.loadBbox('HU', [19.0, 47.0, 19.2, 47.2]);
+		await repository.loadBbox('HU', [19.0, 47.0, 19.2, 47.2]);
+		slow.next([segment()]);
+		slow.complete();
+		await first;
+
+		expect(turaService.listTrailSegmentsInBbox).toHaveBeenCalledTimes(1);
+		expect(repository.segments().map((s) => s.id)).toEqual(['s1']);
+	});
+
+	it('loadBbox(): after an offline fallback the same view is asked from the server again', async () => {
+		turaService.listTrailSegmentsInBbox.and.returnValue(throwError(() => new Error('network down')));
+		await repository.loadBbox('HU', [19.0, 47.0, 19.2, 47.2]);
+
+		turaService.listTrailSegmentsInBbox.and.returnValue(of([segment({ id: 'online' })]));
+		await repository.loadBbox('HU', [19.0, 47.0, 19.2, 47.2]);
+
+		expect(turaService.listTrailSegmentsInBbox).toHaveBeenCalledTimes(2);
+		expect(repository.segments().map((s) => s.id)).toEqual(['online']);
 	});
 });

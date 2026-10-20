@@ -66,7 +66,7 @@ túrázási funkció).
 | `backlog/archive/192-tura-terkep-megnyitaskor-alulmeretezett.md` | Megnyitáskor a térkép egy pillanatig a képernyő ~60%-át tölti ki | `done` |
 | `backlog/archive/193-tura-ajanlott-turak-katalogus-tartalomforras.md` | Az ajánlott túrák katalógusának nincs tartalomforrása | `done` |
 | `backlog/archive/195-tura-ajanlott-turak-teljes-feltoltese.md` | Az ajánlott túrák katalógusának teljes feltöltése (447 túra) | `done` |
-| [[backlog/tura-utvonaltervezo/194-tura-hikeroute-openapi-leiras-elavult-route-metrics]] | A HikeRoute / HikeRouteDay OpenAPI-leírás a megszűnt route-metrics végpontra hivatkozik | `backlog` |
+| [[backlog/archive/194-tura-hikeroute-openapi-leiras-elavult-route-metrics]] | A HikeRoute / HikeRouteDay OpenAPI-leírás a megszűnt route-metrics végpontra hivatkozik | `done` |
 | `backlog/archive/196-tura-terkep-jelmagyarazat.md` | A térképen nincs jelmagyarázat a vonalak és pontok színeihez | `done` |
 | `backlog/archive/197-tura-sajat-utvonal-szine-utkozik-jelzesszinnel.md` | A saját útvonal (kék) és a piszkozat (narancs) színe összetéveszthető a turistajelzésekkel | `done` |
 | `backlog/archive/198-tura-ismert-jelzestipusok-szurken.md` | A legtöbb ismert turistajelzés-típus (pont, kereszt, M, …) szürkén jelenik meg | `done` |
@@ -95,9 +95,9 @@ túrázási funkció).
 | `backlog/archive/221-tura-automatikus-tervezes-sikertelen-eset.md` | Sikertelen automatikus tervezésnél a hibaüzenet nem segít, és a kezdőpont elveszik | `done` |
 | [[backlog/tura-utvonaltervezo/222-tura-offline-letoltes-vakon]] | Az offline letöltésnél nem látszik, mekkora területet és mennyi adatot tölt le | `blocked` |
 | [[backlog/archive/223-tura-offline-letoltes-osm-csempeszabaly]] | Az offline letöltés tömegesen tölt csempét a tile.openstreetmap.org-ról (OSM-szabálysértés) | `done` |
-| [[backlog/tura-utvonaltervezo/226-tura-turistautak-lassan-jelennek-meg-elso-megnyitaskor]] | Első megnyitáskor a turistautak csak kb. 15 mp múlva jelennek meg | `backlog` |
-| [[backlog/tura-utvonaltervezo/227-tura-katalogus-toltes-kozben-ures-szoveg]] | Az Ajánlott túrák lista töltés közben „üres katalógus” szöveget mutat | `backlog` |
-| [[backlog/tura-utvonaltervezo/228-tura-oldal-stilus-meretkorlat]] | A `tura.page.scss` túllépi a komponens-stílus méret-figyelmeztetését | `backlog` |
+| [[backlog/archive/226-tura-turistautak-lassan-jelennek-meg-elso-megnyitaskor]] | Első megnyitáskor a turistautak csak kb. 15 mp múlva jelennek meg | `done` |
+| [[backlog/archive/227-tura-katalogus-toltes-kozben-ures-szoveg]] | Az Ajánlott túrák lista töltés közben „üres katalógus” szöveget mutat | `done` |
+| [[backlog/archive/228-tura-oldal-stilus-meretkorlat]] | A `tura.page.scss` túllépi a komponens-stílus méret-figyelmeztetését | `done` |
 
 > Kapcsolódó, a mappán kívüli jegy: [[150-biciklizes-elo-gps-tracker]] — a bicikli élő tracker
 > közös, eszközön futó geo-alapréteget (GPS-követés, build-asset DEM, profilos routing) épít, amit a 106 is használ.

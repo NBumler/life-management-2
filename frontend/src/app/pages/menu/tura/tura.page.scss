@@ -40,15 +40,11 @@
   gap: 6px;
 }
 
-.map-card,
-.mode-bar {
+.map-card {
   border-radius: 12px;
   background: var(--ion-background-color, #ffffff);
   color: var(--ion-text-color, #000000);
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
-}
-
-.map-card {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -80,67 +76,6 @@
 
   strong {
     color: var(--ion-color-primary);
-  }
-}
-
-// backlog/205, backlog/206 — négy egyforma, ikonos + feliratos gomb; az aktív mód a kiemelő színű.
-.mode-bar {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  padding: 4px;
-  gap: 4px;
-}
-
-.mode-button {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  min-height: 48px;
-  padding: 4px 2px;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  font-size: 12px;
-  line-height: 1.2;
-  text-align: center;
-
-  ion-icon,
-  ion-spinner {
-    width: 22px;
-    height: 22px;
-  }
-
-  &.active {
-    background: var(--ion-color-primary);
-    color: var(--ion-color-primary-contrast);
-    font-weight: 600;
-  }
-
-  &:disabled {
-    opacity: 0.4;
-  }
-}
-
-// backlog/200 — nem blokkoló jelzés a kártya fölött, középen.
-.zoom-hint {
-  align-self: center;
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  max-width: 100%;
-  padding: 4px 4px 4px 14px;
-  border-radius: 999px;
-  background: rgba(33, 33, 33, 0.85);
-  color: #ffffff;
-  font-size: 13px;
-
-  ion-button {
-    --color: #ffffff;
-    margin: 0;
   }
 }
 
@@ -186,41 +121,6 @@
   color: var(--ion-color-primary);
 }
 
-// backlog/201 — a koppintott turistaút(ak) kártyája.
-.tapped-trails {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.tapped-trail {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.trail-swatch {
-  flex: none;
-  width: 28px;
-  height: 6px;
-  border-radius: 3px;
-  box-shadow: 0 0 0 1.5px #ffffff, 0 0 0 2.5px rgba(0, 0, 0, 0.25);
-}
-
-.tapped-trail-text {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  font-size: 14px;
-
-  span {
-    font-size: 13px;
-    color: var(--ion-color-medium);
-  }
-}
-
 // backlog/212, backlog/218, backlog/209 — az útvonal-kártya lap.
 .sheet-head {
   display: flex;
@@ -253,45 +153,6 @@
 .sheet-description {
   margin: 0 0 12px;
   font-size: 0.9rem;
-}
-
-.days-editor {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-top: 16px;
-}
-
-.section-title {
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  color: var(--ion-color-medium);
-}
-
-.day-edit {
-  display: flex;
-  flex-direction: column;
-  padding: 6px 0;
-  border-bottom: 1px solid var(--ion-color-step-150, #e0e0e0);
-}
-
-.day-edit-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.day-edit-stats {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.85rem;
-}
-
-.note {
-  margin: 4px 0 0;
-  font-size: 0.85rem;
-  color: var(--ion-color-medium);
 }
 
 // backlog/216 — rendezés + a három szűrő 2×2-es rácsban, hogy 360 dp-n is látszódjon a lista.

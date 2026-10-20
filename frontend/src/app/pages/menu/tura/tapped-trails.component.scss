@@ -1,0 +1,33 @@
+:host {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tapped-trail {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.trail-swatch {
+  flex: none;
+  width: 28px;
+  height: 6px;
+  border-radius: 3px;
+  box-shadow: 0 0 0 1.5px #ffffff, 0 0 0 2.5px rgba(0, 0, 0, 0.25);
+}
+
+.tapped-trail-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  font-size: 14px;
+
+  span {
+    font-size: 13px;
+    color: var(--ion-color-medium);
+  }
+}

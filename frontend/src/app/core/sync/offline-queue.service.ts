@@ -78,7 +78,7 @@ import { uuidV4 } from './uuid';
  *   before that app update has neither, which the server reads as "a manual entry" (MANUAL, no startedAt),
  *   identical to the old behaviour.
  */
-export const OUTBOX_PAYLOAD_SCHEMA_VERSION = 26;
+export const OUTBOX_PAYLOAD_SCHEMA_VERSION = 27;
 
 /** documentation/Architektúra/Backend-offline first.md §6 "Tétel-újrapróbálkozási backoff" (jitter omitted — not load-bearing for correctness). */
 const RETRY_BACKOFF_MS = [2000, 8000, 30000, 120000, 600000];

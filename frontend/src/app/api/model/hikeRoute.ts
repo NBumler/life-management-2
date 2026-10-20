@@ -26,7 +26,7 @@ export interface HikeRoute {
     readonly createdAt?: string;
     readonly updatedAt?: string;
     /**
-     * backlog/tura-utvonaltervezo/103-... 2.3 fázis. A kliens tölti ki a /api/tura/route-metrics hívás eredményéből mentéskor; null, ha a metrika-számítás még nem történt meg (pl. az elevation API akkor nem volt elérhető) — a HikeRoute enélkül is menthető/szinkronizálható.
+     * backlog/tura-utvonaltervezo/103-... 2.3 fázis, backlog/151. A kliens tölti ki mentéskor, az eszközön számolt metrikából (frontend core/geo/route-metrics.ts; a szerver nem számol). A táv mindig számolható; a magasság-függő mezők (elevationGainMeters, elevationLossMeters, estimatedDurationMinutes) null-ok, ha magassági adat nem volt elérhető. A metrika nélkül (null) is menthető/szinkronizálható.
      */
     distanceMeters?: number | null;
     elevationGainMeters?: number | null;

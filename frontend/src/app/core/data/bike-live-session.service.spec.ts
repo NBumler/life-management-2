@@ -39,8 +39,9 @@ describe('BikeLiveSessionService (backlog/150)', () => {
 
   function configure(): void {
     callback = null;
-    gps = jasmine.createSpyObj('LocationTrackingGateway', ['requestPermissions', 'start', 'stop']);
-    gps.requestPermissions.and.resolveTo({ location: 'granted' });
+    gps = jasmine.createSpyObj('LocationTrackingGateway', ['checkPermissions', 'requestNotificationPermission', 'start', 'stop']);
+    gps.checkPermissions.and.resolveTo({ location: 'granted', backgroundLocation: 'granted' });
+    gps.requestNotificationPermission.and.resolveTo({ location: 'granted', backgroundLocation: 'granted' });
     gps.start.and.callFake((_options, cb) => {
       callback = cb;
       return Promise.resolve();
@@ -83,11 +84,18 @@ describe('BikeLiveSessionService (backlog/150)', () => {
   });
 
   it('start(): a denied location permission starts nothing', async () => {
-    gps.requestPermissions.and.resolveTo({ location: 'denied' });
+    // backlog/229: the plugin's start() asks and reports the refusal; requestPermissions() would never settle
+    gps.checkPermissions.and.resolveTo({ location: 'denied', backgroundLocation: 'denied' });
+    gps.start.and.callFake((_options, cb) => {
+      cb(undefined, { name: 'Error', message: 'User denied location permission', code: 'NOT_AUTHORIZED' });
+      return Promise.resolve();
+    });
 
     expect((await service.start('LIVE', 0)).status).toBe('permission-denied');
     expect(service.draft()).toBeNull();
-    expect(gps.start).not.toHaveBeenCalled();
+    expect(gps.start).toHaveBeenCalledTimes(1);
+    expect(gps.stop).toHaveBeenCalled();
+    expect(gps.requestNotificationPermission).not.toHaveBeenCalled();
   });
 
   it('start(): a GPS that fails to start (location services off) leaves no ride behind', async () => {

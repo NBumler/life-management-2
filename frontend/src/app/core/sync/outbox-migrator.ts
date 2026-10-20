@@ -333,6 +333,9 @@ const STEPS_BY_VERSION: Readonly<Record<number, VersionSteps>> = {
   // backlog/150: `BikeRideLog` gained `trackingMode` / `startedAt` as new nullable fields — a missing key
   // already means "a manual entry" (MANUAL, no startedAt) server-side, so no payload transform is needed.
   25: { default: identityStep },
+  // backlog/194: only the `HikeRoute` / `HikeRouteDay` metric field descriptions changed (the metrics are
+  // computed on the device, no route-metrics endpoint) — same shape, nothing to rewrite.
+  26: { default: identityStep },
 };
 
 function buildMigrations(): ReadonlyMap<string, MigrationStep> {

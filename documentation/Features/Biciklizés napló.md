@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-10-19
-verifikalt_commit: 0122b91
+verifikalva: 2026-10-20
+verifikalt_commit: c79ac1c
 ---
 
 # Biciklizés napló
@@ -95,7 +95,7 @@ Csak natív appban (`offlineCapable`) és `edzes.bicikli` flaggel. Egyszerre egy
 - Belépés: [[Edzés]] tab → Biciklizés napló.
 - **Lista:** időrend (újabb elöl); soron: dátum, időtartam, `intensity`, opcionális táv / emelkedés; megjelenített kcal = utility számítás (Profile `m` + MET).
 - **Új / szerkesztés űrlap:** dátum, `durationMinutes`, `intensity` (kötelező); `distanceKm`, `elevationGainMeters` (opcionális); élő kcal előnézet; ha van táv+idő → `avgSpeedKmH` + soft MET-hint.
-- **Élő edzés indítása (natív, ha nincs élő menet):** a listán mód-választó (Pontos / Becsült, mindegyiknél egy mondat a pontosság ↔ akkumulátor kompromisszumról + súgó ikon a részletes magyarázattal; a Becsült súgója a körtúra-korlátot is leírja), a választás eszköz-lokálisan megjegyezve alapértelmezésként (`lm2_bike_live_default_mode`), és „Élő edzés indítása” gomb. Megtagadott helyhozzáférésnél magyarázó üzenet, a kézi napló marad.
+- **Élő edzés indítása (natív, ha nincs élő menet):** a listán mód-választó (Pontos / Becsült, mindegyiknél egy mondat a pontosság ↔ akkumulátor kompromisszumról + súgó ikon a részletes magyarázattal; a Becsült súgója a körtúra-korlátot is leírja), a választás eszköz-lokálisan megjegyezve alapértelmezésként (`lm2_bike_live_default_mode`), és „Élő edzés indítása” gomb. Megtagadott (vagy 60 mp-ig megválaszolatlan) helyhozzáférésnél azonnal magyarázó üzenet, a kézi napló marad (`backlog/229`: a hiányzó engedélyt a plugin `start()`-ja kéri, nem a `requestPermissions()`-e, ami Androidon elutasítás után soha nem tér vissza).
 - **Élő képernyő** (`cycling/live`): aktív idő; Pontos módban táv és gyenge-jel jelzés; Becsült módban a kezdőpont állapota (rögzítés alatt / rögzítve / sikertelen), befejezéskor „Végpont rögzítése…”. Gombok: Szünet / Folytatás, Befejezés, Elvetés (megerősítéssel).
 - **Live banner** a biciklis listán és az Edzés hub tetején, amíg élő menet létezik: állapot (felvétel / szünet / befejezve), Pontos módban táv, Becsült módban a mód neve, aktív idő; tap → élő képernyő, befejezett menetnél az összegző.
 - **Tartós értesítés:** Becsült módban végig a sajátunk; Pontos módban felvétel közben a plugin foreground-service értesítése, szünetben a sajátunk.
@@ -123,7 +123,7 @@ Nincs nyitott kérdés.
 ### Frontend
 
 - Képernyők: lista, create/edit form, delete confirm; élő képernyő (`bike-live.page.ts`), összegző (ugyanaz az edit page `liveSummary` route-adattal), mód-választó (`bike-live-start.component.ts`), banner (`bike-live-banner.component.ts`, a listán és a `workout-log-list.page`-en).
-- Élő menet állapotgép: `core/data/bike-live-session.service.ts` (start / szünet / folytatás / befejezés / elvetés / újraindítás, Preferences-draft, értesítések, `summary()`); GPS: `core/geo/location-tracking.service.ts` (folyamatos követés + `acquireFix()` egyszeri végponti hely, `AbortSignal`-lal) és `track-buffer`; táv / DEM / útvonal: `core/geo/` (`geo-math`, `elevation.service`, `routing.service` `BIKE` profil). A natív-döntés `Capacitor.isNativePlatform()`, nem platform-string.
+- Élő menet állapotgép: `core/data/bike-live-session.service.ts` (start / szünet / folytatás / befejezés / elvetés / újraindítás, Preferences-draft, értesítések, `summary()`); GPS: `core/geo/location-tracking.service.ts` (`requestPermission()` engedélykérés, folyamatos követés + `acquireFix()` egyszeri végponti hely, `AbortSignal`-lal) és `track-buffer`; táv / DEM / útvonal: `core/geo/` (`geo-math`, `elevation.service`, `routing.service` `BIKE` profil). A natív-döntés `Capacitor.isNativePlatform()`, nem platform-string.
 - Shared MET / kcal utility a [[Tápérték kalkulátor]] kanonikus képletével (`TdeeCalculatorUtil` vagy ekvivalens bike ág); testsúly: [[Profile]] store.
 - `avgSpeedKmH` + hint: pure TS, csak prezentáció.
 - OpenAPI generált kliens a CRUD-hoz; mutációk az offline rétegen keresztül.

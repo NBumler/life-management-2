@@ -1,0 +1,57 @@
+<span class="section-title">{{ 'TURA.DETAILS.DAYS' | translate }}</span>
+@for (dayBreak of dayBreaks(); track $index; let i = $index) {
+  <div class="day-edit">
+    <div class="day-edit-head">
+      <strong>{{ 'TURA.DETAILS.DAY' | translate: { number: i + 1 } }}</strong>
+      <ion-button fill="clear" size="small" (click)="remove.emit(i)" [attr.aria-label]="'TURA.DAYS.REMOVE_BREAK' | translate">
+        <ion-icon slot="icon-only" name="trash-outline" aria-hidden="true"></ion-icon>
+      </ion-button>
+    </div>
+    <ng-container *ngTemplateOutlet="dayStats; context: { $implicit: days()?.[i] }"></ng-container>
+    <ion-select
+      [label]="'TURA.DAYS.DAY_END_LABEL' | translate"
+      [value]="dayBreak.waypointIndex"
+      (ionChange)="changeIndex.emit({ position: i, waypointIndex: $any($event.target).value })"
+    >
+      @for (option of options()[i]; track option.index) {
+        <ion-select-option [value]="option.index">
+          {{ 'TURA.DAYS.WAYPOINT_OPTION' | translate: { index: option.number, distance: option.distance } }}
+        </ion-select-option>
+      }
+    </ion-select>
+    <ion-input
+      [value]="dayBreak.overnightName"
+      (ionInput)="changeOvernightName.emit({ position: i, overnightName: $any($event.target).value ?? '' })"
+      [placeholder]="'TURA.DAYS.OVERNIGHT_PLACEHOLDER' | translate"
+    ></ion-input>
+  </div>
+}
+@if (dayBreaks().length > 0) {
+  <div class="day-edit">
+    <strong>{{ 'TURA.DETAILS.LAST_DAY' | translate: { number: dayBreaks().length + 1 } }}</strong>
+    <ng-container *ngTemplateOutlet="dayStats; context: { $implicit: days()?.[dayBreaks().length] }"></ng-container>
+  </div>
+}
+<ion-button expand="block" fill="outline" [disabled]="!canAdd()" (click)="add.emit()">
+  <ion-icon slot="start" name="add-outline" aria-hidden="true"></ion-icon>
+  {{ 'TURA.DAYS.ADD_BREAK' | translate }}
+</ion-button>
+@if (!canAdd()) {
+  <p class="note">{{ addBlockedKey() | translate }}</p>
+}
+@let summary = daySummaryText(dayBreaks().length + 1);
+<p class="note">{{ summary.key | translate: summary.params }}</p>
+
+<ng-template #dayStats let-day>
+  @if (day) {
+    @let duration = durationText(day.estimatedDurationMinutes);
+    <div class="day-edit-stats">
+      <span>{{ distance(day.distanceMeters) }}</span>
+      <span>{{ duration.key | translate: duration.params }}</span>
+      <span>↑{{ elevation(day.elevationGainMeters) }}</span>
+      <span>↓{{ elevation(day.elevationLossMeters) }}</span>
+    </div>
+  } @else {
+    <ion-spinner name="dots"></ion-spinner>
+  }
+</ng-template>

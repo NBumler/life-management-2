@@ -28,8 +28,15 @@ export class CuratedRouteRepository {
 	/** backlog/191 — az utolsó betöltés nem sikerült (offline / backend nem elérhető): az üres lista nem a szűrő miatt üres. */
 	private readonly failed = signal(false);
 	readonly loadFailed = this.failed.asReadonly();
+	/** backlog/227 — a legutolsó kérés még fut: a lista még nem a szűrő eredménye, üres-állapot szöveg nem illik rá. */
+	private readonly pending = signal(false);
+	readonly loading = this.pending.asReadonly();
+	/** Gyors egymás utáni szűrőváltásnál csak a legutolsó kérés eredménye és állapota számít. */
+	private requestId = 0;
 
 	async load(filter: CuratedRouteFilter = {}): Promise<void> {
+		const requestId = ++this.requestId;
+		this.pending.set(true);
 		try {
 			const result = await firstValueFrom(
 				this.curatedRoutesService.listCuratedRoutes(
@@ -39,11 +46,19 @@ export class CuratedRouteRepository {
 					filter.maxDistanceMeters,
 				),
 			);
-			this.items.set(result);
-			this.failed.set(false);
+			if (requestId === this.requestId) {
+				this.items.set(result);
+				this.failed.set(false);
+			}
 		} catch {
-			this.items.set([]);
-			this.failed.set(true);
+			if (requestId === this.requestId) {
+				this.items.set([]);
+				this.failed.set(true);
+			}
+		} finally {
+			if (requestId === this.requestId) {
+				this.pending.set(false);
+			}
 		}
 	}
 }

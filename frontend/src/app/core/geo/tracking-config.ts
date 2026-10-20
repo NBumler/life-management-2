@@ -26,3 +26,9 @@ export const MIN_PLAUSIBLE_ESTIMATED_SPEED_KMH = 2;
 
 /** Becsült mode, rough fallback (no route on the device network): straight line × the road network's typical circuity (1.2–1.4). */
 export const ROAD_CIRCUITY_FACTOR = 1.3;
+
+/** backlog/229 — how long `requestPermission()` waits for the user to answer the system location dialog; no answer counts as denied. */
+export const PERMISSION_PROMPT_TIMEOUT_SECONDS = 60;
+
+/** backlog/229 — while the location dialog is open, the grant is re-checked this often (the plugin reports a grant to nobody). */
+export const PERMISSION_POLL_INTERVAL_MS = 500;

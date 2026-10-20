@@ -1,0 +1,9 @@
+@if (busy()) {
+  <ion-spinner name="dots" aria-hidden="true"></ion-spinner>
+}
+<span role="status">{{ textKey() | translate }}</span>
+@if (infoLabelKey(); as label) {
+  <ion-button fill="clear" size="small" (click)="info.emit()" [attr.aria-label]="label | translate">
+    <ion-icon slot="icon-only" name="information-circle-outline" aria-hidden="true"></ion-icon>
+  </ion-button>
+}

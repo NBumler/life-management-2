@@ -504,6 +504,7 @@
       "DISTANCE_LONG": "Hosszú (20 km felett)",
       "NO_RESULTS": "Nincs a szűrésnek megfelelő túra.",
       "EMPTY": "Még nincs egyetlen ajánlott túra sem.",
+      "LOADING": "Ajánlott túrák betöltése…",
       "OFFLINE": "Az ajánlott túrák nem tölthetők be — nincs kapcsolat a szerverrel.",
       "SEARCH_PLACEHOLDER": "Keresés névre, helyre (pl. Dömös, OKT 16)",
       "SORT": "Rendezés",
@@ -555,6 +556,7 @@
       "MY_LOCATION": "Saját helyzet"
     },
     "ZOOM_HINT": "Közelíts rá a turistautak megjelenítéséhez",
+    "TRAILS_LOADING": "Turistautak betöltése…",
     "MY_LOCATION": {
       "BUTTON": "Saját helyzetem",
       "NOTIFICATION_TITLE": "Túra",

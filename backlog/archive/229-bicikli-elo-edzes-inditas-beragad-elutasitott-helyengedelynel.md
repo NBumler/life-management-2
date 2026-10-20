@@ -1,13 +1,13 @@
 ---
 id: 229
 type: bug
-status: backlog
+status: done
 title: Bicikli élő edzés — elutasított helyengedélynél az indítás soha nem fejeződik be
 specs:
   - "[[Biciklizés napló]]"
 flag:
 created: 2026-10-20
-closed:
+closed: 2026-10-20
 ---
 
 # 229 — Bicikli élő edzés — elutasított helyengedélynél az indítás soha nem fejeződik be
@@ -37,11 +37,11 @@ elutasításkor `NOT_AUTHORIZED` hibát ad, ciklus nélkül), ld. `LocationTrack
 
 ## Elfogadási kritériumok
 
-- [ ] Elutasított (és tartósan elutasított) helyengedélynél a bicikli élő edzés indítása néhány
+- [x] Elutasított (és tartósan elutasított) helyengedélynél a bicikli élő edzés indítása néhány
       másodpercen belül a meglévő `permission-denied` magyarázattal tér vissza, és nem fut a háttérben
       engedélykérő ciklus.
-- [ ] Megadott engedélynél az indítás és az értesítés-engedély kérése változatlan.
-- [ ] Unit teszt a beragadó / elutasító plugin-válaszra; emulátoron kipróbálva (Pontos és Becsült mód).
+- [x] Megadott engedélynél az indítás és az értesítés-engedély kérése változatlan.
+- [x] Unit teszt a beragadó / elutasító plugin-válaszra; emulátoron kipróbálva (Pontos és Becsült mód).
 
 ## Terv / döntési napló
 
@@ -49,10 +49,25 @@ elutasításkor `NOT_AUTHORIZED` hibát ad, ciklus nélkül), ld. `LocationTrack
   plugin `requestPermissions()`-ét, amíg a `location` nincs megadva — az engedélyt a `start()` kérje
   (mint a `locateOnce()`-nál), az értesítés-engedélyt pedig csak megadott `location` mellett. Alternatíva:
   a plugin javítása (patch vagy upstream hibajegy) — döntés a megvalósításkor.
+- 2026-10-20 — kész, a javaslat szerint (plugin-patch nélkül). `LocationTrackingService.requestPermission(title, message)`:
+  először `checkPermissions()`; ha a `location` megvan, csak az értesítés-engedélyt kéri
+  (`LocationTrackingGateway.requestNotificationPermission()`, `permissions: ['notification']` — ez az ág nem
+  ismétel). Ha nincs meg, egy rövid `start()`-tal kéri (a plugin ezt egyszer kérdezi meg, elutasításkor
+  `NOT_AUTHORIZED` hibát ad); a megadást a plugin senkinek nem jelzi, ezért közben
+  `PERMISSION_POLL_INTERVAL_MS` (500 ms) időközönként újra-ellenőriz, weben az első fix számít megadásnak.
+  Válasz nélkül `PERMISSION_PROMPT_TIMEOUT_SECONDS` (60 s) után elutasítottnak veszi; utána mindig `stop()`.
+  A gateway `requestPermissions()`-e megszűnt, így a ciklust kiváltó hívás sehol nincs.
+  Unit tesztek: megadott / párbeszédben elutasított / párbeszédben megadott (újra-ellenőrzés) / web megadás és
+  elutasítás / időtúllépés / induló plugin-hiba; a bicikli-szolgáltatás elutasító tesztje a valódi plugin-választ adja.
+  Emulátoron (LM2_Phone, Android 15, en): Becsült módban „Don't allow” → azonnal a „No location access” ablak, 15 s
+  alatt egyetlen új engedélykérő Activity sem indult; Pontos módban a második elutasítás után `USER_FIXED` (tartós)
+  állapot, az újabb indítás 1,5 s-on belül ugyanazt az ablakot adja; a flagek törlése után „While using the app” →
+  a Pontos edzés elindul (újra-ellenőrzés ága); megadott engedéllyel a Becsült edzés párbeszéd nélkül indul.
+  Mindkét próba-edzés elvetve.
 
 ## Lezáráskor (on-done)
 
-- Frissített specek: [[Biciklizés napló]] (Backend-offline / engedély rész, ha a viselkedés-leírás változik)
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — #229
+- Frissített specek: [[Biciklizés napló]] (élő edzés indítása: elutasított / megválaszolatlan engedély; GPS-kódhivatkozás)
+- `IMPLEMENTATION_STATUS.md` sor: 2026-10-20 — #229, #227, #194, #228, #226
 - Kód: `frontend/src/app/core/geo/location-tracking.service.ts`, `location-tracking.gateway.ts`,
   `core/data/bike-live-session.service.ts`

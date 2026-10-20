@@ -21,7 +21,10 @@ properties:
   distanceMeters:
     type: number
     nullable: true
-    description: A kliens tölti ki, az /api/tura/route-metrics eredményéből, erre a napi szakaszra hívva. Opcionális, ld. HikeRoute.yaml distanceMeters.
+    description: >-
+      A kliens tölti ki az eszközön (backlog/188): a teljes útvonal egyetlen magasság-mintasorából,
+      a napváltó pontoknál felosztva, így a napi értékek összege a HikeRoute értéke. Opcionális;
+      a magasság-függő mezők null-ok, ha magassági adat nem volt elérhető — ld. HikeRoute.yaml distanceMeters.
   elevationGainMeters:
     type: number
     nullable: true

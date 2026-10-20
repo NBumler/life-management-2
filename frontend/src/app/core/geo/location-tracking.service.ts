@@ -9,6 +9,8 @@ import {
   LIVE_DISTANCE_FILTER_METERS,
   MAX_ACCEPTED_ACCURACY_METERS,
   MAX_PLAUSIBLE_SPEED_KMH,
+  PERMISSION_POLL_INTERVAL_MS,
+  PERMISSION_PROMPT_TIMEOUT_SECONDS,
 } from './tracking-config';
 
 export interface TrackingFix {
@@ -43,14 +45,72 @@ export class LocationTrackingService {
 
   private onFix: ((fix: TrackingFix) => void) | null = null;
 
-  /** A plugin rejection (e.g. a permission missing from the manifest) counts as denied, so the UI explains instead of failing silently. */
-  async requestPermission(): Promise<LocationPermissionState> {
-    try {
-      const status = await this.gateway.requestPermissions();
-      return status.location === 'granted' ? 'granted' : 'denied';
-    } catch {
+  /**
+   * Location (and, once location is allowed, notification) permission before a tracking session.
+   * backlog/229 — the plugin's `requestPermissions()` never settles after a location refusal on Android
+   * (it keeps re-requesting), so a missing grant is asked for through a short `start()`, which reports a
+   * refusal as `NOT_AUTHORIZED`; the grant itself is reported to nobody, so it is re-checked meanwhile
+   * (or seen as the first fix, on web). No answer within `PERMISSION_PROMPT_TIMEOUT_SECONDS`, or a plugin
+   * that cannot start, counts as denied, so the UI explains instead of waiting forever.
+   */
+  async requestPermission(backgroundTitle: string, backgroundMessage: string): Promise<LocationPermissionState> {
+    const granted = (await this.checkLocationGranted()) || (await this.promptForLocation(backgroundTitle, backgroundMessage));
+    if (!granted) {
       return 'denied';
     }
+    try {
+      await this.gateway.requestNotificationPermission();
+    } catch {
+      // no notification permission: tracking still runs
+    }
+    return 'granted';
+  }
+
+  private async checkLocationGranted(): Promise<boolean> {
+    try {
+      return (await this.gateway.checkPermissions()).location === 'granted';
+    } catch {
+      return false; // web: not implemented — the prompt below asks
+    }
+  }
+
+  private async promptForLocation(backgroundTitle: string, backgroundMessage: string): Promise<boolean> {
+    let answer: boolean | null = null;
+    let finish: () => void = () => undefined;
+    const done = new Promise<void>((resolve) => (finish = resolve));
+    const settle = (granted: boolean) => {
+      answer ??= granted;
+      finish();
+    };
+    const timer = setTimeout(() => settle(false), PERMISSION_PROMPT_TIMEOUT_SECONDS * 1000);
+    const poll = setInterval(() => {
+      void this.checkLocationGranted().then((granted) => {
+        if (granted) {
+          settle(true);
+        }
+      });
+    }, PERMISSION_POLL_INTERVAL_MS);
+    try {
+      await this.gateway.start({ backgroundTitle, backgroundMessage, requestPermissions: true, distanceFilter: 0 }, (location, error) => {
+        if (location) {
+          settle(true);
+        } else if (error && LOCATION_REFUSED_CODES.includes(error.code ?? '')) {
+          settle(false);
+        }
+      });
+      await done;
+    } catch {
+      settle(false); // the plugin could not start
+    } finally {
+      clearTimeout(timer);
+      clearInterval(poll);
+      try {
+        await this.gateway.stop();
+      } catch {
+        // already stopped
+      }
+    }
+    return answer ?? false;
   }
 
   /** Starts continuous tracking; `onFix` only receives fixes that pass the filters below. */
@@ -89,8 +149,7 @@ export class LocationTrackingService {
   /**
    * backlog/215 — `acquireFix()`, but tells a refused location apart: `'denied'` as soon as the plugin
    * reports that the permission was refused or location is switched off. The plugin's own `start()`
-   * asks for the permission; its separate `requestPermissions()` never settles after a refusal on
-   * Android (it keeps re-requesting), so a one-off fix must not go through `requestPermission()`.
+   * asks for the permission (see `requestPermission()` for why not the plugin's `requestPermissions()`).
    */
   async locateOnce(
     backgroundTitle: string,

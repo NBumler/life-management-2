@@ -22,7 +22,7 @@ export interface HikeRouteDay {
      */
     overnightName?: string | null;
     /**
-     * A kliens tölti ki, az /api/tura/route-metrics eredményéből, erre a napi szakaszra hívva. Opcionális, ld. HikeRoute.yaml distanceMeters.
+     * A kliens tölti ki az eszközön (backlog/188): a teljes útvonal egyetlen magasság-mintasorából, a napváltó pontoknál felosztva, így a napi értékek összege a HikeRoute értéke. Opcionális; a magasság-függő mezők null-ok, ha magassági adat nem volt elérhető — ld. HikeRoute.yaml distanceMeters.
      */
     distanceMeters?: number | null;
     elevationGainMeters?: number | null;

@@ -1,0 +1,29 @@
+:host {
+  align-self: center;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  max-width: 100%;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(33, 33, 33, 0.85);
+  color: #ffffff;
+  font-size: 13px;
+}
+
+// a gomb maga ad belső margót: mellette kisebb a párna
+:host:has(ion-button) {
+  padding: 4px 4px 4px 14px;
+}
+
+ion-button {
+  --color: #ffffff;
+  margin: 0;
+}
+
+ion-spinner {
+  width: 20px;
+  height: 20px;
+  margin-right: 6px;
+  color: #ffffff;
+}

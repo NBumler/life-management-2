@@ -1,0 +1,11 @@
+@for (trail of trails(); track $index) {
+  <div class="tapped-trail">
+    <span class="trail-swatch" aria-hidden="true" [style.background]="trail.color"></span>
+    <div class="tapped-trail-text">
+      <strong>{{ trail.label }}</strong>
+      @if (trail.routeName) {
+        <span>{{ trail.routeName }}</span>
+      }
+    </div>
+  </div>
+}

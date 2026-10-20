@@ -14,6 +14,14 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-20 — #229, #227, #194, #228, #226** Bicikli élő edzés: elutasított helyengedélynél az indítás nem ragad be
+  (az engedélyt a plugin `start()`-ja kéri, a `requestPermissions()`-e elutasítás után végtelen ciklusba esett; válasz
+  nélkül 60 s után elutasítottnak számít). Túra: az Ajánlott túrák töltés közben töltésjelzőt mutat, üres-állapot
+  szöveg csak a befejezett betöltés után; a `HikeRoute` / `HikeRouteDay` OpenAPI-leírás az eszközön számolt metrikát
+  írja (outbox-séma v27, no-op lépés); a `tura.page.scss` a stílus-budget alá került négy kiemelt komponenssel
+  (napok-szerkesztő, mód-sáv, koppintott turistaút, lebegő jelzés); hidegindítás után a turistautak a térkép
+  megjelenésével együtt töltődnek (a kérés nem vár az összes alaptérkép-csempére: 10,6 s helyett 3–5,6 s-os indulás,
+  egy kérés), töltés közben „Turistautak betöltése…” jelzés.
 - **2026-10-20 — #223, #215** Túra: az offline terület-letöltés kikapcsolva (a tile.openstreetmap.org szabálya tiltja
   az előletöltést; a korábbi régiók használhatók és törölhetők, a forrás-döntés a #105-ben, a #222 addig blokkolva).
   „Saját helyzetem” gomb a térkép-vezérlő alatt: egyszeri helymeghatározás, kék pont, odaugrás; elutasított

@@ -179,7 +179,10 @@ export class BikeLiveSessionService {
     if (existing !== null) {
       return { status: 'started', draft: existing };
     }
-    const permission: LocationPermissionState = await this.location.requestPermission();
+    const permission: LocationPermissionState = await this.location.requestPermission(
+      this.translate.instant('WORKOUT.BIKE.LIVE.NOTIFICATION_TITLE'),
+      this.translate.instant('WORKOUT.BIKE.LIVE.NOTIFICATION_BODY'),
+    );
     if (permission !== 'granted') {
       return { status: 'permission-denied' };
     }

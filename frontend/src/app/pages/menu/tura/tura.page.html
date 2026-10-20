@@ -50,12 +50,10 @@
   <div #mapBottom class="map-bottom">
     @if (trailsNeedZoom()) {
       <!-- backlog/200 — nem blokkoló jelzés: a turistautak 12-es zoomtól töltődnek be (#180). -->
-      <div class="zoom-hint">
-        <span>{{ 'TURA.ZOOM_HINT' | translate }}</span>
-        <ion-button fill="clear" size="small" (click)="showLegend.set(true)" [attr.aria-label]="'TURA.LEGEND.OPEN' | translate">
-          <ion-icon slot="icon-only" name="information-circle-outline" aria-hidden="true"></ion-icon>
-        </ion-button>
-      </div>
+      <app-map-hint textKey="TURA.ZOOM_HINT" infoLabelKey="TURA.LEGEND.OPEN" (info)="showLegend.set(true)" />
+    } @else if (trailsLoading()) {
+      <!-- backlog/226 — amíg az első turistautak töltődnek. -->
+      <app-map-hint textKey="TURA.TRAILS_LOADING" [busy]="true" />
     }
 
     @if (showCard()) {
@@ -89,19 +87,7 @@
         } @else if (tappedTrails().length > 0) {
           <!-- backlog/201 — a koppintott turistaút(ak): a jelzés és a túraútvonal neve. -->
           <div class="map-card-row">
-            <div class="tapped-trails">
-              @for (trail of tappedTrails(); track $index) {
-                <div class="tapped-trail">
-                  <span class="trail-swatch" aria-hidden="true" [style.background]="trail.color"></span>
-                  <div class="tapped-trail-text">
-                    <strong>{{ trail.label }}</strong>
-                    @if (trail.routeName) {
-                      <span>{{ trail.routeName }}</span>
-                    }
-                  </div>
-                </div>
-              }
-            </div>
+            <app-tapped-trails [trails]="tappedTrails()" />
             <ion-button size="small" fill="clear" (click)="tappedTrails.set([])" [attr.aria-label]="'COMMON.CLOSE' | translate">
               <ion-icon slot="icon-only" name="close-outline" aria-hidden="true"></ion-icon>
             </ion-button>
@@ -172,28 +158,16 @@
     }
 
     <!-- backlog/205, backlog/206 — a fő műveletek ikonnal és felirattal; az aktív mód a kiemelő színt kapja. -->
-    <div class="mode-bar">
-      <button type="button" class="mode-button" [class.active]="mode() === 'manual'" [attr.aria-pressed]="mode() === 'manual'" (click)="toggleDrawMode()">
-        <ion-icon name="create-outline" aria-hidden="true"></ion-icon>
-        <span>{{ 'TURA.DRAW' | translate }}</span>
-      </button>
-      <button type="button" class="mode-button" [class.active]="mode() === 'auto'" [attr.aria-pressed]="mode() === 'auto'" (click)="toggleAutoMode()">
-        @if (routeSuggestion.loading()) {
-          <ion-spinner name="dots"></ion-spinner>
-        } @else {
-          <ion-icon name="navigate-outline" aria-hidden="true"></ion-icon>
-        }
-        <span>{{ 'TURA.AUTO' | translate }}</span>
-      </button>
-      <button type="button" class="mode-button" [disabled]="!canUndo()" (click)="undoLastStep()">
-        <ion-icon name="arrow-undo-outline" aria-hidden="true"></ion-icon>
-        <span>{{ 'TURA.UNDO' | translate }}</span>
-      </button>
-      <button type="button" class="mode-button" [disabled]="draft().length === 0 && autoStart() === null" (click)="clearDraft()">
-        <ion-icon name="trash-outline" aria-hidden="true"></ion-icon>
-        <span>{{ 'TURA.CLEAR' | translate }}</span>
-      </button>
-    </div>
+    <app-tura-mode-bar
+      [mode]="mode()"
+      [routing]="routeSuggestion.loading()"
+      [canUndo]="canUndo()"
+      [canClear]="draft().length > 0 || autoStart() !== null"
+      (toggleManual)="toggleDrawMode()"
+      (toggleAuto)="toggleAutoMode()"
+      (undo)="undoLastStep()"
+      (clear)="clearDraft()"
+    />
   </div>
 </ion-content>
 
@@ -426,71 +400,17 @@
           ></app-route-details>
 
           <!-- backlog/209 — a napok szerkesztése, napi értékekkel; a napváltó a térképen a sorszámos hold-jelölő. -->
-          <div class="days-editor">
-            <span class="section-title">{{ 'TURA.DETAILS.DAYS' | translate }}</span>
-            @for (dayBreak of dayBreaks(); track $index; let i = $index) {
-              <div class="day-edit">
-                <div class="day-edit-head">
-                  <strong>{{ 'TURA.DETAILS.DAY' | translate: { number: i + 1 } }}</strong>
-                  <ion-button fill="clear" size="small" (click)="removeDayBreak(i)" [attr.aria-label]="'TURA.DAYS.REMOVE_BREAK' | translate">
-                    <ion-icon slot="icon-only" name="trash-outline" aria-hidden="true"></ion-icon>
-                  </ion-button>
-                </div>
-                @if (draftDays()?.[i]; as day) {
-                  @let dayDuration = durationText(day.estimatedDurationMinutes);
-                  <div class="day-edit-stats">
-                    <span>{{ formatDistance(day.distanceMeters) }}</span>
-                    <span>{{ dayDuration.key | translate: dayDuration.params }}</span>
-                    <span>↑{{ formatElevation(day.elevationGainMeters) }}</span>
-                    <span>↓{{ formatElevation(day.elevationLossMeters) }}</span>
-                  </div>
-                } @else {
-                  <ion-spinner name="dots"></ion-spinner>
-                }
-                <ion-select
-                  [label]="'TURA.DAYS.DAY_END_LABEL' | translate"
-                  [value]="dayBreak.waypointIndex"
-                  (ionChange)="updateDayBreakIndex(i, $any($event.target).value)"
-                >
-                  @for (index of availableWaypointIndexes(dayBreak.waypointIndex); track index) {
-                    <ion-select-option [value]="index">
-                      {{ 'TURA.DAYS.WAYPOINT_OPTION' | translate: { index: waypointNumber(index), distance: waypointDistance(index) } }}
-                    </ion-select-option>
-                  }
-                </ion-select>
-                <ion-input
-                  [value]="dayBreak.overnightName"
-                  (ionInput)="updateDayBreakOvernightName(i, $any($event.target).value ?? '')"
-                  [placeholder]="'TURA.DAYS.OVERNIGHT_PLACEHOLDER' | translate"
-                ></ion-input>
-              </div>
-            }
-            @if (dayBreaks().length > 0) {
-              <div class="day-edit">
-                <strong>{{ 'TURA.DETAILS.LAST_DAY' | translate: { number: dayCount() } }}</strong>
-                @if (draftDays()?.[dayBreaks().length]; as day) {
-                  @let lastDuration = durationText(day.estimatedDurationMinutes);
-                  <div class="day-edit-stats">
-                    <span>{{ formatDistance(day.distanceMeters) }}</span>
-                    <span>{{ lastDuration.key | translate: lastDuration.params }}</span>
-                    <span>↑{{ formatElevation(day.elevationGainMeters) }}</span>
-                    <span>↓{{ formatElevation(day.elevationLossMeters) }}</span>
-                  </div>
-                } @else {
-                  <ion-spinner name="dots"></ion-spinner>
-                }
-              </div>
-            }
-            <ion-button expand="block" fill="outline" [disabled]="!canAddDayBreak()" (click)="addDayBreak()">
-              <ion-icon slot="start" name="add-outline" aria-hidden="true"></ion-icon>
-              {{ 'TURA.DAYS.ADD_BREAK' | translate }}
-            </ion-button>
-            @if (!canAddDayBreak()) {
-              <p class="note">{{ addDayBreakBlockedKey() | translate }}</p>
-            }
-            @let days = daySummaryText(dayCount());
-            <p class="note">{{ days.key | translate: days.params }}</p>
-          </div>
+          <app-days-editor
+            [dayBreaks]="dayBreaks()"
+            [options]="dayBreakOptions()"
+            [days]="draftDays()"
+            [canAdd]="canAddDayBreak()"
+            [addBlockedKey]="addDayBreakBlockedKey()"
+            (add)="addDayBreak()"
+            (remove)="removeDayBreak($event)"
+            (changeIndex)="updateDayBreakIndex($event.position, $event.waypointIndex)"
+            (changeOvernightName)="updateDayBreakOvernightName($event.position, $event.overnightName)"
+          ></app-days-editor>
         }
       }
     </ion-content>
@@ -569,12 +489,17 @@
     </ion-header>
     <ion-content>
       <ion-list>
-        @if (visibleCatalog().length === 0) {
+        @if (curatedRoutes.loading()) {
+          <ion-item lines="none" class="catalog-loading">
+            <ion-spinner slot="start" name="dots"></ion-spinner>
+            <ion-label>{{ 'TURA.CATALOG.LOADING' | translate }}</ion-label>
+          </ion-item>
+        } @else if (catalogEmptyKey(); as emptyKey) {
           <ion-item lines="none">
-            <ion-label>{{ catalogEmptyKey() | translate }}</ion-label>
+            <ion-label>{{ emptyKey | translate }}</ion-label>
           </ion-item>
         }
-        @for (route of visibleCatalog(); track route.id) {
+        @for (route of catalogListed(); track route.id) {
           <ion-item button (click)="previewCuratedRoute(route)">
             @let duration = durationText(route.estimatedDurationMinutes);
             @let marking = catalogMarking(route);
