@@ -12,6 +12,11 @@
 // (Open-Meteo, ütemezve). backlog/216 — a túra jelzés-kódja (`symbol`, pl. `PIROS_SAV`) az osmc:symbol
 // tagből, a scripts/import-hiking-trails.mjs függvényével.
 //
+// Előfeltétel: a geo build asset (`frontend/src/assets/geo/`, git-ignored) ezen a gépen — friss klónon
+// `cd frontend && npm run build:geo-assets`; a 2026-10-20 előtt generált csomagon a DEM-manifest
+// kerekített (backlog/217), azt `npm run build:geo-assets -- --skip-bike --skip-hike` frissíti. Hiányzó
+// vagy régi csomaggal a szkript hibával megáll (különben a katalógus más értéket mutatna, mint az app).
+//
 // Futásidő (2026-10-20, ~450 túra): az Overpass-letöltés 1–3 perc, a DEM-metrika ~10 s, a feltöltés
 // ~1 perc. Az újrafuttatás ugyanennyi, kvótát nem fogyaszt.
 //
@@ -36,7 +41,7 @@
 // Napok panelen szabadon áthelyezhetők.
 
 import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -373,7 +378,15 @@ async function loadAppGeoCode() {
 
 /** A DEM build asset (manifest + `int16` csempék) lustán, csempénként betöltve — mint a GeoAssetService. */
 function createDemLookup(geo) {
-	const manifest = JSON.parse(readFileSync(join(GEO_ASSET_DIR, 'manifest.json'), 'utf8'));
+	const manifestPath = join(GEO_ASSET_DIR, 'manifest.json');
+	if (!existsSync(manifestPath)) {
+		throw new Error(`nincs geo-csomag (${manifestPath}) — előbb: cd frontend && npm run build:geo-assets`);
+	}
+	const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+	// backlog/217 — a régi builder a rács-geometriát 6 tizedesre kerekítette (lépés 0,000833 az 1/1200 helyett).
+	if (manifest.dem.some((tile) => Math.abs(tile.stepLon * 1200 - 1) > 1e-6 || Math.abs(tile.stepLat * 1200 - 1) > 1e-6)) {
+		throw new Error('a geo-csomag DEM-manifestje a 2026-10-20 előtti, kerekített — frissítés: cd frontend && npm run build:geo-assets -- --skip-bike --skip-hike');
+	}
 	const grids = new Map();
 	const gridFor = (tile) => {
 		let grid = grids.get(tile.file);
