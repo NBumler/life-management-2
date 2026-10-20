@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-10-19
-verifikalt_commit: 9343011
+verifikalva: 2026-10-20
+verifikalt_commit: a6e6e64
 ---
 
 # Fejlesztői környezet
@@ -27,7 +27,7 @@ _Nincs UI/UX érintettség._
 
 ### Megjegyzések
 
-Architektúra jegyzet: a tartalom az `## Architektúra` alatt van. Ez a fájl a **monorepo elrendezés, a fejlesztői futtatás, a saját (házi) hálózaton történő Android telepítés és a gépen futó Android emulátor SSOT-ja**. A repóban lévő `claude-hobby-starter-kit` konvencióira épül (`backend/` + `frontend/`, Gradle, `npm run gen:api`, dev proxy).
+Architektúra jegyzet: a tartalom az `## Architektúra` alatt van. Ez a fájl a **monorepo elrendezés, a fejlesztői futtatás, a saját (házi) hálózaton történő Android telepítés a gépen futó Android emulátor és a git-ignored geo build asset gépenkénti előállításának SSOT-ja**. A repóban lévő `claude-hobby-starter-kit` konvencióira épül (`backend/` + `frontend/`, Gradle, `npm run gen:api`, dev proxy).
 
 Prod üzemeltetés / hosting: nyitott — [[Backend]].
 
@@ -63,6 +63,7 @@ A `frontend/` belső szervezése (`pages/`, `shared/`, `core/`, `api/`) és a r�
 | API kliens generálás | `cd frontend && npm run gen:api` (a spec: `backend/src/main/resources/openapi.yaml`) |
 | App-ikonok / splash generálás | `cd frontend && npm run gen:assets` — a forrás SVG-k a `frontend/assets/`-ben (`icon-foreground.svg`, `icon-background.svg`, `icon-only.svg`, `splash.svg`, `splash-dark.svg`, `notification-icon.svg`); `@capacitor/assets` rendereli a launcher-adaptív ikont + splash-t, a `scripts/gen-notification-icons.mjs` a `ic_stat_notify` státuszsor-ikont és a web favicont. A kimenetek verziókövetettek. |
 | Tesztek | `./gradlew test` · `npm test` (interaktív, `ChromeHeadlessCI` helyett `Chrome`-mal, watch módban) · `npm run test:ci` (nem-interaktív, egyszeri futás — CI és agent-munkamenetek ezt használják) |
+| Geo build asset | `cd frontend && npm run build:geo-assets` — git-ignored, gépenként előállítandó; lépések: „Geo-csomag másik gépen” lent |
 | Statikus ellenőrzések | `npm run verify:outbox` — outbox payload séma-drift ([[Backend-offline first]] „Payload-verziózás”) · `npm run verify:i18n` — hu/en kulcs- és placeholder-paritás + a kódban szó szerint használt kulcsok léteznek, és figyelmeztet az azonos hu / en értékekre ([[Nyelv választás]], `backlog/015`, `backlog/224`). Mindkettő sima `node`, build nélkül; a zöld kapu (teszt + lint + build + ez a kettő) része. |
 
 - A **web** kliens **relatív** `/api` útvonalat hív (dev: proxy, prod: reverse proxy) — így nincs CORS a böngészős fejlesztésben.
@@ -175,6 +176,47 @@ Két Android-oldali beállítás, amit a projektnek **egyszer** el kell végezni
 - **CORS:** a natív Capacitor WebView origin nem `null`, hanem az `androidScheme` szerinti (`https://localhost`), tehát a backend `local` profilja engedélyezze ezt az origint. A böngészős fejlesztés a proxy miatt nem igényel CORS-t.
 
 A szkript (`scripts/install-android.ps1`), a debug-only cleartext network-security-config (`frontend/android/app/src/debug/res/xml/network_security_config.xml`) és a `local` profil `https://localhost` CORS-engedélye (`SecurityConfig`) mind a repóban van.
+
+#### Geo-csomag másik gépen
+
+A geo build asset ([[Backend-offline first]] §15: DEM, bicikli- és turistaút-úthálózat csempénként) a
+`frontend/src/assets/geo/` alatt él, **git-ignored**: a repóban nincs, minden fejlesztői gépen elő kell
+állítani. Előállítja: `scripts/build-geo-assets.mjs` (`cd frontend && npm run build:geo-assets`).
+A forrásokat a `%TEMP%\lm2-geo-cache\` alá tölti le, így az újrafuttatás a cache-ből gyors.
+
+Friss klónon, sorrendben:
+
+1. `cd frontend && npm install` — a `geotiff` build-only függőség is innen jön.
+2. Postgres és backend fut (`docker compose up -d db`, `cd backend && ./gradlew bootRun`), és a
+   turistaút-hálózat be van importálva: `node scripts/import-hiking-trails.mjs` (`LM2_ADMIN_API_KEY` a
+   `.env`-ből). A turistaút-csempék forrása ugyanis nem az OSM PBF, hanem a helyi `trail_segment`
+   tábla — a builder közvetlenül a `.env` Postgres-adataival olvassa.
+3. `cd frontend && npm run build:geo-assets` — első futáskor kb. 1 óra: letölti a 28 Copernicus
+   GLO-90 DEM-GeoTIFF-et (~140 MB) és a Geofabrik `hungary-latest.osm.pbf`-et (~326 MB). Egy máshol
+   meglévő PBF a `--pbf <fájl>` kapcsolóval adható meg. Részleges újragenerálás: `--skip-dem`,
+   `--skip-bike`, `--skip-hike` (a kihagyott rész a meglévő manifestből marad); `--force` a cache-t
+   is újratölti.
+4. Ellenőrzés: `frontend/src/assets/geo/manifest.json` létezik; `dem/` 28, `bike/` 336, `hike/` 336
+   fájl; a `dem` bejegyzések `stepLon` / `stepLat` értéke `0.000833333333` (1/1200 fok).
+5. Az APK-build (`scripts/install-android.ps1`, vagy `npm run build` + `npx cap sync android`) a
+   csomagot beviszi az APK-ba.
+
+**2026-10-20 előtt generált csomag:** a régi builder a DEM rács-geometriáját (origó, lépés) 6
+tizedesre kerekítette (`0.000833`). Ettől a minta ~40 m-rel elcsúszott, és minden egész fokos
+csempehatáron egy ~90 m-es sávban nem volt magasság. Ilyen csomagon csak a DEM-et kell újragenerálni
+(a cache-ből ~40 s), utána az APK-t újraépíteni:
+
+```
+cd frontend && npm run build:geo-assets -- --skip-bike --skip-hike
+```
+
+**Ki használja még:** a katalógus-import (`scripts/import-curated-routes.mjs`) a szint- és
+időértéket ebből a DEM-ből számolja, az app kódjával (`backlog/217`). Hiányzó vagy
+régi (kerekített) manifesttel hibaüzenettel megáll, és kiírja a teendőt.
+
+Csomag nélkül az app és a tesztek futnak, de a DEM- és az úthálózat-adat hiányzik: a túra-magasság
+az Open-Meteo-tól jön (online), offline `~`. A
+csomag verziója a `manifest.json` `generatedAt` mezője; a forrás-PBF dátumát a manifest nem rögzíti.
 
 #### Backend-offline
 

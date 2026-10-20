@@ -182,7 +182,7 @@ A #150 geo asset-csomag méret-jóváhagyása után (DEM + bicikli-gráf, lásd 
 - Turistaút-gráf build asset: a bicikli-gráfnál használt PBF-olvasó nem dolgoz fel relációkat
   (`route=hiking`), ezért a turistaút-adat forrása a már importált `trail_segment` tábla (közvetlen
   Postgres-kapcsolat a build-scriptből, `.env`-ből olvasott kapcsolati adatokkal — lásd
-  [[150-biciklizes-elo-gps-tracker]] "Geo-csomag másik gépen"). Mért méret: 230 611 szakasz →
+  [[Fejlesztői környezet]] "Geo-csomag másik gépen"). Mért méret: 230 611 szakasz →
   198 103 szakasz-darab 336 csempében, 10,6 MB nyersen (~6,1 MB deflate).
 - A bicikli-csempe-formátum és -kód általánosítva mindkét profilra: `bike-tile-codec.ts` →
   `way-tile-codec.ts` (`BikeWay` → `WayFeature`, `decodeBikeTile` → `decodeWayTile`), új

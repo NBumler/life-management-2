@@ -593,40 +593,11 @@ Három változás a `core/geo/route-graph.ts`-ben és a `routing.service.ts`-ben
 
 ### Geo-csomag másik gépen (friss klón)
 
-A `frontend/src/assets/geo/` tartalma git-ignored, a repóban nincs. Friss klónból így áll elő:
-
-1. `cd frontend && npm install` (a `geotiff` build-only függőség is ebből jön).
-2. `npm run build:geo-assets` — kb. 1 óra: letölti a 28 DEM-GeoTIFF-et (~140 MB) és az OSM PBF-et
-   (`hungary-latest.osm.pbf`, ~326 MB) a `%TEMP%\lm2-geo-cache\` alá, majd előállítja a csomagot.
-   Újrafuttatás a cache-ből gyorsabb. Ha már van PBF a cache-ben, az a letöltést kihagyja; más
-   helyről a `--pbf <fájl>` kapcsolóval adható meg.
-3. Ellenőrzés: `frontend/src/assets/geo/manifest.json` létezik, `dem/` 28 fájl, `bike/` 336 fájl,
-   `hike/` 336 fájl, és a `dem` bejegyzések `stepLon` / `stepLat` értéke `0.000833333333` (nem `0.000833`).
-4. Az APK-build (`scripts/install-android.ps1` vagy `npm run build` + `cap sync`) ezt már beviszi.
-
-**Egy 2026-10-20 előtt generált csomag frissítése** ([[217-tura-katalogus-es-atvetel-metrikaja-elter]]):
-a régi builder a DEM rács-geometriáját (origó, lépés) 6 tizedesre kerekítette (`0.000833` az 1/1200
-helyett) — a minta ~40 m-rel elcsúszott, és minden egész fokos csempehatáron egy ~90 m-es sávban nem
-volt magasság (ott az app Open-Meteóra váltott, offline nem számolt). A javított builder 12 tizedesre
-ír. Egy meglévő csomagon csak a DEM-et kell újragenerálni (a bicikli- és a turistaút-csempék nem
-változtak; a cache-ből ~40 s):
-
-```
-cd frontend && npm run build:geo-assets -- --skip-bike --skip-hike
-```
-
-Utána az APK-t újra kell építeni (4. lépés). Ellenőrizve: ezen a gépen az újragenerált manifest
-bájtra megegyezik a kézzel javítottal.
-
-**A katalógus-import is használja:** a `scripts/import-curated-routes.mjs` (#217 óta) a szint- és
-időértéket ebből a DEM-ből számolja, az app kódjával. Ezért a katalógus-importhoz is kell a csomag
-a gépen; hiányzó vagy régi (kerekített) manifesttel a szkript hibaüzenettel megáll, a teendővel.
-
-Ha a 2. lépés kimarad: az app és a tesztek futnak, de a DEM- és bicikli-adat hiányzik, a magasság
-az Open-Meteo-tól jön (online), offline `~`. A katalógus-import (`scripts/import-curated-routes.mjs`) viszont
-csomag nélkül nem fut (lásd fent). A csomag verzióját a `manifest.json` `generatedAt`
-mezője adja; a forrás PBF dátumát a manifest jelenleg nem rögzíti (Geofabrik a `hungary-latest`
-fájlt frissíti), ezt a következő csomag-verziónál érdemes beírni.
+Átkerült a vaultba (2026-10-20): [[Fejlesztői környezet]] „Geo-csomag másik gépen” — a friss klón
+lépései (a turistaút-import mint előfeltétel is, mert a `hike/` csempék a helyi `trail_segment`
+táblából készülnek), a 2026-10-20 előtt generált csomag DEM-frissítése
+([[217-tura-katalogus-es-atvetel-metrikaja-elter]]) és a katalógus-import függése. Nyitott: a
+forrás-PBF dátumát a manifest nem rögzíti — a következő csomag-verziónál érdemes beírni.
 
 ## Lezáráskor (on-done)
 

@@ -445,7 +445,8 @@ Elv: a külső integrációk **soha nincsenek** a saját backenden proxyzva ([[B
 
 - **Build asset** (Full-offline is elérhető): nehézségi konverziós mátrix JSON, `Exercise` seed fájl, i18n (`hu.json` / `en.json`), enumok, feature flag konfiguráció.
 - **Geo build asset** (`backlog/150`/`151`, `frontend/src/assets/geo/`, git-ignored, az APK-ba épül,
-  előállítás: `scripts/build-geo-assets.mjs`): Magyarország-bbox DEM-rács (domborzat, Copernicus
+  előállítás: `scripts/build-geo-assets.mjs`, gépenként — lépések: [[Fejlesztői környezet]] „Geo-csomag
+  másik gépen”): Magyarország-bbox DEM-rács (domborzat, Copernicus
   GLO-90), bicikli- és turistaút-úthálózat csempénként. Ettől lesz FULL_OFFLINE-ban is elérhető
   első indulástól (nem csak letöltött régión belül) a túra-magasság (`core/geo/elevation.service.ts`),
   a turistaút-útvonaltervezés (`core/geo/routing.service.ts`, `HIKE` profil — a
