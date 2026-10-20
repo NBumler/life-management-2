@@ -27,6 +27,7 @@ class CuratedRouteMapper {
 				BigDecimal.valueOf(entity.getDistanceMeters()), BigDecimal.valueOf(entity.getElevationGainMeters()),
 				BigDecimal.valueOf(entity.getElevationLossMeters()), BigDecimal.valueOf(entity.getEstimatedDurationMinutes()));
 		dto.description(entity.getDescription());
+		dto.symbol(entity.getSymbol());
 		dto.days(HikeRouteDayJson.toDays(objectMapper, entity.getDaysJson()));
 		dto.createdAt(entity.getCreatedAt());
 		dto.updatedAt(entity.getUpdatedAt());

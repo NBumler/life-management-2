@@ -41,6 +41,9 @@ public class CuratedRouteEntity {
 	@Column(name = "activity_type", nullable = false)
 	private String activityType;
 
+	/** backlog/216 — a turistajelzés kódja (trail_segment.symbol formátum); null = nincs / ismeretlen. */
+	private String symbol;
+
 	@JdbcTypeCode(SqlTypes.ARRAY)
 	@Column(nullable = false)
 	private List<Double> coordinates = new ArrayList<>();
@@ -86,6 +89,14 @@ public class CuratedRouteEntity {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public String getSymbol() {
+		return symbol;
+	}
+
+	public void setSymbol(String symbol) {
+		this.symbol = symbol;
 	}
 
 	public String getDescription() {

@@ -44,11 +44,11 @@ class CuratedRouteService {
 	}
 
 	/**
-	 * Idempotens upsert a megadott id-re (documentation/Architektúra/Backend.md "Upsert"). A táv/
-	 * szint/idő-becslést itt, a szerveren számoljuk ki a coordinates-ból ({@link RouteMetricsService},
-	 * ugyanazokkal a konstansokkal, mint a kliens `core/geo/route-metrics.ts`-e a saját útvonalaihoz —
-	 * backlog/151) — az admin nem adja meg közvetlenül, így a katalógus és a felhasználói útvonalak
-	 * metrikái konzisztensek. Ez admin-oldali adat-előkészítés, nem a kliens-flow része.
+	 * Idempotens upsert a megadott id-re (documentation/Architektúra/Backend.md "Upsert"). A táv a
+	 * coordinates-ból jön. A szint/idő-becslést az import (scripts/import-curated-routes.mjs) a kliens
+	 * `core/geo/route-metrics.ts`-ével és a DEM build assettel számolja és küldi (backlog/217), így az
+	 * átvett piszkozat ugyanazt mutatja; ha nem küldi, a szerver számolja ({@link RouteMetricsService},
+	 * ritkább mintavétellel). Ez admin-oldali adat-előkészítés, nem a kliens-flow része.
 	 */
 	@Transactional
 	CuratedRoute upsert(CuratedRouteUpsertRequest request) {
@@ -67,11 +67,12 @@ class CuratedRouteService {
 
 		List<double[]> coordinatePairs = request.getCoordinates().stream()
 				.map(pair -> new double[] { pair.get(0).doubleValue(), pair.get(1).doubleValue() }).toList();
-		RouteMetricsService.ComputedRouteMetrics metrics = routeMetricsService.compute(coordinatePairs);
+		RouteMetricsService.ComputedRouteMetrics metrics = metricsFor(request, coordinatePairs);
 
 		CuratedRouteEntity entity = repository.findById(request.getId()).orElseGet(() -> new CuratedRouteEntity(request.getId()));
 		entity.setName(name);
 		entity.setDescription(request.getDescription().orElse(null));
+		entity.setSymbol(request.getSymbol().orElse(null));
 		entity.setDifficulty(request.getDifficulty().getValue());
 		entity.setActivityType(request.getActivityType().getValue());
 		entity.setCoordinates(flattened);
@@ -81,6 +82,25 @@ class CuratedRouteService {
 		entity.setElevationLossMeters(metrics.elevationLossMeters());
 		entity.setEstimatedDurationMinutes(metrics.estimatedDurationMinutes());
 		return mapper.toDto(repository.saveAndFlush(entity));
+	}
+
+	/**
+	 * backlog/217 — a kérésben kapott (a kliens algoritmusával, DEM-ből számolt) szint- és időérték,
+	 * vagy ha nincs megadva, a szerver saját számítása. A táv mindig a coordinates-ból jön.
+	 */
+	private RouteMetricsService.ComputedRouteMetrics metricsFor(CuratedRouteUpsertRequest request, List<double[]> coordinates) {
+		BigDecimal gain = request.getElevationGainMeters().orElse(null);
+		BigDecimal loss = request.getElevationLossMeters().orElse(null);
+		BigDecimal duration = request.getEstimatedDurationMinutes().orElse(null);
+		if (gain == null && loss == null && duration == null) {
+			return routeMetricsService.compute(coordinates);
+		}
+		if (gain == null || loss == null || duration == null) {
+			throw new ValidationException("elevationGainMeters, elevationLossMeters and estimatedDurationMinutes go together",
+					gain == null ? "elevationGainMeters" : loss == null ? "elevationLossMeters" : "estimatedDurationMinutes");
+		}
+		return new RouteMetricsService.ComputedRouteMetrics(RouteMetricsService.totalDistance(coordinates), gain.doubleValue(),
+				loss.doubleValue(), duration.doubleValue());
 	}
 
 	/** Hard delete, idempotens: ha már nem létezik, nem hiba. */

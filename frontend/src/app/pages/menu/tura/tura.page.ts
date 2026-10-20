@@ -25,6 +25,7 @@ import {
 	IonList,
 	IonModal,
 	IonPopover,
+	IonSearchbar,
 	IonSelect,
 	IonSelectOption,
 	IonSpinner,
@@ -57,6 +58,8 @@ import { distancesAlongRoute } from './elevation-profile-svg';
 import { ElevationProfileComponent } from './elevation-profile.component';
 import { RouteDetailsComponent } from './route-details.component';
 import { trailSymbolLabel } from './trail-symbol-text';
+import { CatalogSort, curatedRouteTitle, markingBadge, visibleCuratedRoutes } from './curated-route-text';
+import { MarkingBadgeComponent } from './marking-badge.component';
 import { trailSegmentSymbolColor } from './trail-segment-symbol-color';
 import {
 	dayBreakIndexes,
@@ -77,7 +80,7 @@ import {
 import { OFFLINE_TILE_PROTOCOL, registerOfflineTileProtocol } from './offline-map-protocol';
 import { OFFLINE_TILE_MAX_COUNT, OfflineRegion } from '../../../core/data/offline-region.model';
 import { OfflineRegionRepository } from '../../../core/data/offline-region.repository';
-import { AutoRouteHintComponent, AutoRouteHintStep } from './auto-route-hint.component';
+import { AutoRouteHintComponent, AutoRouteHintStep, AutoRouteProblem } from './auto-route-hint.component';
 import { TuraLegendComponent } from './tura-legend.component';
 import { dateText, daySummaryText, distanceText, durationText, elevationText, megabytesText } from './hike-text';
 import { DayBreak, DraftDetails, RouteDraftEditor, interiorWaypointIndexes, routeDraftFromPath, withManualPoint, withPath } from './route-draft';
@@ -254,6 +257,7 @@ const COUNTRY_CODE = 'HU';
 		IonLabel,
 		IonModal,
 		IonPopover,
+		IonSearchbar,
 		IonSelect,
 		IonSelectOption,
 		IonContent,
@@ -264,6 +268,7 @@ const COUNTRY_CODE = 'HU';
 		TuraLegendComponent,
 		ElevationProfileComponent,
 		RouteDetailsComponent,
+		MarkingBadgeComponent,
 	],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -297,6 +302,10 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	protected readonly draft = computed(() => this.draftEditor.draft().coordinates);
 	/** Auto mode: the first of the two picked points, waiting for the second click. */
 	protected readonly autoStart = signal<number[] | null>(null);
+	/** backlog/221 — az utolsó sikertelen tervezés oka a tippsávban; a következő koppintás vagy módváltás törli. */
+	protected readonly autoProblem = signal<AutoRouteProblem | null>(null);
+	/** backlog/221 — a koppintott pont turistaút-közelségének ellenőrzése fut (a csomag csempéit töltheti be). */
+	protected readonly checkingAutoPoint = signal(false);
 	protected readonly canUndo = computed(() => this.draftEditor.canUndo() || this.autoStart() !== null);
 	/** backlog/206 — a Turistaúton mód tippje: kezdőpont, végpont, vagy a meglévő vonal folytatása. */
 	protected readonly autoHintStep = computed<AutoRouteHintStep>(() => {
@@ -343,6 +352,12 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	protected readonly catalogDifficulty = signal<CuratedRouteDifficulty | ''>('');
 	protected readonly catalogActivityType = signal<CuratedRouteActivityType | ''>('');
 	protected readonly catalogDistanceBucket = signal<DistanceBucket>('any');
+	/** backlog/216 — szöveges keresés és rendezés a betöltött listán (a szűrők a szerveren futnak). */
+	protected readonly catalogQuery = signal('');
+	protected readonly catalogSort = signal<CatalogSort>('name');
+	protected readonly visibleCatalog = computed(() =>
+		visibleCuratedRoutes(this.curatedRoutes.routes(), this.catalogQuery(), this.catalogSort(), this.language.activeLanguage()),
+	);
 	/** A térképen kiemelt katalógus-túra (ha a felhasználó rákattintott egy listaelemre) — null = nincs kiemelés. */
 	protected readonly previewedCuratedRoute = signal<CuratedRoute | null>(null);
 	/** backlog/218 — a katalógus nem hordoz magasságprofilt: a részletek megnyitásakor az eszköz számolja. */
@@ -354,7 +369,11 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 		if (this.curatedRoutes.loadFailed()) {
 			return 'TURA.CATALOG.OFFLINE';
 		}
-		const unfiltered = this.catalogDifficulty() === '' && this.catalogActivityType() === '' && this.catalogDistanceBucket() === 'any';
+		const unfiltered =
+			this.catalogDifficulty() === '' &&
+			this.catalogActivityType() === '' &&
+			this.catalogDistanceBucket() === 'any' &&
+			this.catalogQuery().trim() === '';
 		return unfiltered ? 'TURA.CATALOG.EMPTY' : 'TURA.CATALOG.NO_RESULTS';
 	});
 	/** backlog/tura-utvonaltervezo/107-... 3. fázis — alaptérkép-váltó + domborzat-árnyékolás panel. */
@@ -552,7 +571,7 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 			if (this.mode() === 'manual') {
 				this.draftEditor.apply(withManualPoint(this.draftEditor.draft(), point));
 			} else if (this.mode() === 'auto') {
-				this.handleAutoModeClick(point);
+				void this.handleAutoModeClick(point);
 			} else if (this.previewedCuratedRoute() === null) {
 				this.handleMapTap(map, event.point);
 			}
@@ -600,6 +619,7 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	protected toggleDrawMode(): void {
 		this.mode.update((current) => (current === 'manual' ? 'none' : 'manual'));
 		this.autoStart.set(null);
+		this.autoProblem.set(null);
 		this.tappedTrails.set([]);
 		this.hidePreviewWhenPlanning();
 	}
@@ -607,6 +627,7 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	protected toggleAutoMode(): void {
 		this.mode.update((current) => (current === 'auto' ? 'none' : 'auto'));
 		this.autoStart.set(null);
+		this.autoProblem.set(null);
 		this.tappedTrails.set([]);
 		this.hidePreviewWhenPlanning();
 	}
@@ -654,6 +675,7 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 
 	/** backlog/190 — egy lépés vissza: a félbehagyott automatikus kezdőpont, különben egy kézi pont vagy egy teljes szakasz. */
 	protected undoLastStep(): void {
+		this.autoProblem.set(null);
 		if (this.autoStart() !== null) {
 			this.autoStart.set(null);
 			return;
@@ -684,6 +706,7 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	/** backlog/208 — a kuka egy visszavonható lépés; a toast „Visszavonás” gombja ugyanazt teszi, mint a visszavonás gomb. */
 	protected clearDraft(): void {
 		this.autoStart.set(null);
+		this.autoProblem.set(null);
 		if (this.draft().length === 0) {
 			return;
 		}
@@ -905,6 +928,25 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 		}
 	}
 
+	/** backlog/216 — a cím a név eleji jelzés-rövidítés nélkül (a jelzést az ikon és a {@link catalogMarking} mutatja). */
+	protected catalogTitle(route: CuratedRoute): string {
+		return curatedRouteTitle(route.name, route.symbol);
+	}
+
+	/** backlog/216 — a jelzés neve („Piros sáv”), vagy `null`, ha a túrának nincs színes jelzése. */
+	protected catalogMarking(route: CuratedRoute): string | null {
+		if (!route.symbol || markingBadge(route.symbol) === null) {
+			return null;
+		}
+		return trailSymbolLabel(route.symbol, (key, params) => this.translate.instant(key, params) as string);
+	}
+
+	/** backlog/216 — átvételkor az útvonal neve: „Piros sáv: Dömös – Budaörs”; jelzés nélkül az eredeti név. */
+	private catalogRouteName(route: CuratedRoute): string {
+		const marking = this.catalogMarking(route);
+		return marking === null ? route.name : `${marking}: ${this.catalogTitle(route)}`;
+	}
+
 	protected previewCuratedRoute(route: CuratedRoute): void {
 		this.previewedCuratedRoute.set(route);
 		this.previewProfile.set(null);
@@ -982,7 +1024,7 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 		this.autoStart.set(null);
 		// backlog/212 — egy csere-lépés: a visszavonása a korábbi rajz nevét és napváltóit is visszaadja.
 		this.draftEditor.replace(routeDraftFromPath(route.coordinates, breaks.map((day) => day.waypointIndex)), this.currentDraftDetails());
-		this.applyDraftDetails({ name: route.name, dayBreaks: breaks, routeId: null });
+		this.applyDraftDetails({ name: this.catalogRouteName(route), dayBreaks: breaks, routeId: null });
 		this.closePreview();
 	}
 
@@ -1244,8 +1286,25 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 		await alert.present();
 	}
 
-	private handleAutoModeClick(point: number[]): void {
-		if (this.routeSuggestion.loading()) {
+	private async handleAutoModeClick(point: number[]): Promise<void> {
+		if (this.routeSuggestion.loading() || this.checkingAutoPoint()) {
+			return;
+		}
+		this.autoProblem.set(null);
+		// backlog/221 — a turistautaktól messze eső pontra a több másodperces keresés biztosan nem talál
+		// utat: azonnal szólunk, és a pont nem lesz kezdőpont.
+		this.checkingAutoPoint.set(true);
+		let nearTrail: boolean;
+		try {
+			nearTrail = await this.routeSuggestion.isNearTrail(COUNTRY_CODE, point);
+		} finally {
+			this.checkingAutoPoint.set(false);
+		}
+		if (this.mode() !== 'auto') {
+			return;
+		}
+		if (!nearTrail) {
+			this.autoProblem.set('too-far');
 			return;
 		}
 		// backlog/206 — egy meglévő vonalat a vége folytat; üres rajznál az első koppintás a kezdőpont.
@@ -1255,21 +1314,17 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 			this.autoStart.set(point);
 			return;
 		}
-		void this.generateAutoRoute(start, point);
+		await this.generateAutoRoute(start, point);
 	}
 
 	private async generateAutoRoute(start: number[], end: number[]): Promise<void> {
 		const result = await this.routeSuggestion.suggest(COUNTRY_CODE, start, end);
-		this.autoStart.set(null);
 		if (!result.found) {
-			const alert = await this.alertController.create({
-				header: this.translate.instant('TURA.ROUTE_NOT_FOUND_TITLE'),
-				message: this.translate.instant('TURA.ROUTE_NOT_FOUND_MESSAGE'),
-				buttons: [this.translate.instant('COMMON.OK')],
-			});
-			await alert.present();
+			// backlog/221 — a kezdőpont és a mód megmarad, a tippsáv mondja meg, mit tegyen a felhasználó.
+			this.autoProblem.set('not-found');
 			return;
 		}
+		this.autoStart.set(null);
 		// backlog/206 — a mód bekapcsolva marad: a következő koppintás innen tervez tovább.
 		this.draftEditor.apply(withPath(this.draftEditor.draft(), result.coordinates));
 	}

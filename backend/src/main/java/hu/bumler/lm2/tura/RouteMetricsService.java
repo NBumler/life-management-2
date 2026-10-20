@@ -73,7 +73,7 @@ class RouteMetricsService {
 		return new ComputedRouteMetrics(distanceMeters, gain, loss, Math.round(durationMinutes));
 	}
 
-	private static double totalDistance(List<double[]> coordinates) {
+	static double totalDistance(List<double[]> coordinates) {
 		double distance = 0;
 		for (int i = 1; i < coordinates.size(); i++) {
 			double[] a = coordinates.get(i - 1);

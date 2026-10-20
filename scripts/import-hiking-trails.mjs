@@ -16,6 +16,7 @@ import { writeFileSync, unlinkSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 const OVERPASS_ENDPOINT = 'https://overpass-api.de/api/interpreter';
 
@@ -80,7 +81,7 @@ function stripAccents(text) {
 // (trail-segment-symbol-color.ts), az alakzat a jelmagyarázatban / kártyán számít. Sorrend:
 // ismert alakzat → a `symbol:hu` tag (pl. `LILA_M`) → a szöveg-mező betűjele (T tanösvény, P Pálos
 // út, …) → `<SZÍN>_JEL`; így egy színnel jelzett út sosem esik a szürke `EGYEB`-be.
-function symbolFromTags(tags) {
+export function symbolFromTags(tags) {
 	const osmcSymbol = tags['osmc:symbol'];
 	const hu = tags['symbol:hu'];
 	const huSymbol = hu ? stripAccents(hu.toUpperCase()).replace(/[^A-Z0-9]+/g, '_').replace(/^_+|_+$/g, '') : '';
@@ -236,7 +237,11 @@ async function main() {
 	console.log(`[import-hiking-trails] Kész: ${importBody}`);
 }
 
-main().catch((error) => {
-	console.error(`[import-hiking-trails] HIBA: ${error.stack ?? error.message}`);
-	process.exitCode = 1;
-});
+// Csak közvetlen futtatáskor indul — importálva (a scripts/import-curated-routes.mjs a jelzés-kódot
+// innen veszi, backlog/216) nem.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+	main().catch((error) => {
+		console.error(`[import-hiking-trails] HIBA: ${error.stack ?? error.message}`);
+		process.exitCode = 1;
+	});
+}

@@ -293,3 +293,11 @@
   font-size: 0.85rem;
   color: var(--ion-color-medium);
 }
+
+// backlog/216 — rendezés + a három szűrő 2×2-es rácsban, hogy 360 dp-n is látszódjon a lista.
+.catalog-filters {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 12px;
+  padding: 0 16px;
+}

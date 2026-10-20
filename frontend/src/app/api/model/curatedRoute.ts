@@ -19,6 +19,10 @@ export interface CuratedRoute {
     id: string;
     name: string;
     description?: string | null;
+    /**
+     * backlog/216 — a turistajelzés kódja, ugyanabban a `<SZÍN>_<ALAKZAT>` formátumban, mint a TrailSegment.symbol (`PIROS_SAV`, `KEK_KERESZT`, …); az OSM-reláció osmc:symbol tagjéből. null, ha a túrának nincs (ismert) jelzése.
+     */
+    symbol?: string | null;
     difficulty: CuratedRouteDifficulty;
     activityType: CuratedRouteActivityType;
     /**
@@ -30,7 +34,7 @@ export interface CuratedRoute {
      */
     days?: Array<HikeRouteDay> | null;
     /**
-     * A szerver számolja ki (RouteMetricsService) admin upsertkor, a coordinates-ból.
+     * A szerver számolja ki admin upsertkor, a coordinates-ból. A szint- és időértékeket az import a kliens algoritmusával (core/geo/route-metrics.ts + DEM) adja meg (backlog/217), különben a szerver számolja (RouteMetricsService).
      */
     distanceMeters: number;
     elevationGainMeters: number;

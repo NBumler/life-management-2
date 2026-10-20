@@ -4,6 +4,7 @@ import {
   expandBboxFraction,
   expandBboxMeters,
   haversineMeters,
+  isNearAnyLine,
   pointAtDistance,
   polylineLengthMeters,
   resampleEvenly,
@@ -114,5 +115,21 @@ describe('geo-math', () => {
 
   it('expandBboxFraction: grows by the given share of the width and height', () => {
     expect(expandBboxFraction([0, 0, 2, 1], 0.5)).toEqual([-1, -0.5, 3, 1.5]);
+  });
+
+  // 0.01° of latitude ≈ 1112 m
+  it('isNearAnyLine: measures to the segment, not only to its vertices', () => {
+    const line = [
+      [19.0, 47.0],
+      [19.1, 47.0],
+    ];
+    expect(isNearAnyLine([19.05, 47.009], [line], 1_100)).toBeTrue();
+    expect(isNearAnyLine([19.05, 47.011], [line], 1_100)).toBeFalse();
+  });
+
+  it('isNearAnyLine: beyond the segment end the distance is to the end point; a single point counts', () => {
+    expect(isNearAnyLine([19.11, 47.0], [[[19.0, 47.0], [19.1, 47.0]]], 500)).toBeFalse();
+    expect(isNearAnyLine([19.0, 47.004], [[[19.0, 47.0]]], 500)).toBeTrue();
+    expect(isNearAnyLine([19.0, 47.0], [], 500)).toBeFalse();
   });
 });

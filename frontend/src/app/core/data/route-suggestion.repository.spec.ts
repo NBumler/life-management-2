@@ -26,8 +26,9 @@ describe('RouteSuggestionRepository', () => {
 	beforeEach(() => {
 		turaService = jasmine.createSpyObj('TuraService', ['suggestRoute']);
 		trailSegments = { segments: () => [] };
-		routing = jasmine.createSpyObj('RoutingService', ['route']);
+		routing = jasmine.createSpyObj('RoutingService', ['route', 'isNearWay']);
 		routing.route.and.resolveTo(null);
+		routing.isNearWay.and.resolveTo(false);
 		connectionState.set('ONLINE');
 
 		TestBed.configureTestingModule({
@@ -188,4 +189,41 @@ describe('RouteSuggestionRepository', () => {
 		expect(result?.found).toBeTrue();
 		expect(repository.loading()).toBeFalse();
 	}));
+
+	describe('isNearTrail() (backlog/221)', () => {
+		const loaded: TrailSegment = {
+			id: 's1',
+			countryCode: 'HU',
+			symbol: 'PIROS_SAV',
+			coordinates: [
+				[19.0, 47.0],
+				[19.05, 47.0],
+			],
+		};
+
+		it('is true next to a loaded segment, without asking the package', async () => {
+			trailSegments.segments = () => [loaded];
+
+			expect(await repository.isNearTrail('HU', [19.02, 47.01])).toBeTrue();
+			expect(routing.isNearWay).not.toHaveBeenCalled();
+		});
+
+		it('asks the package when no loaded segment is near, and trusts its answer', async () => {
+			trailSegments.segments = () => [loaded];
+
+			expect(await repository.isNearTrail('HU', [19.02, 47.2])).toBeFalse();
+			expect(routing.isNearWay).toHaveBeenCalledWith('HIKE', [19.02, 47.2]);
+
+			routing.isNearWay.and.resolveTo(true);
+			expect(await repository.isNearTrail('HU', [19.02, 47.2])).toBeTrue();
+		});
+
+		it('cannot tell (true) outside the package or for another country', async () => {
+			routing.isNearWay.and.resolveTo(null);
+			expect(await repository.isNearTrail('HU', [25.0, 47.0])).toBeTrue();
+
+			routing.isNearWay.and.resolveTo(false);
+			expect(await repository.isNearTrail('AT', [16.0, 47.0])).toBeTrue();
+		});
+	});
 });

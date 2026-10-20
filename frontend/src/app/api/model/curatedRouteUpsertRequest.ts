@@ -13,15 +13,22 @@ import { CuratedRouteDifficulty } from './curatedRouteDifficulty';
 
 
 /**
- * Admin upsert kérés (backlog/tura-utvonaltervezo/103-... 2.5 fázis, POST /api/admin/tura/curated-routes — X-Admin-Api-Key). Idempotens: a megadott id-re a teljes rekordot lecseréli. A táv/szint/idő-becslést a szerver maga számolja ki a coordinates-ból (RouteMetricsService) — az admin nem adja meg.
+ * Admin upsert kérés (backlog/tura-utvonaltervezo/103-... 2.5 fázis, POST /api/admin/tura/curated-routes — X-Admin-Api-Key). Idempotens: a megadott id-re a teljes rekordot lecseréli. A távot a szerver mindig maga számolja ki a coordinates-ból. A szint- és időértékeket (backlog/217) az import a kliens algoritmusával (frontend core/geo/route-metrics.ts + a DEM build asset) számolja és küldi, így a katalógus és az átvett piszkozat ugyanazt mutatja; ha a három mező hiányzik, a szerver számolja (RouteMetricsService, Open-Meteo). Csak mind a három együtt adható meg.
  */
 export interface CuratedRouteUpsertRequest { 
     id: string;
     name: string;
     description?: string | null;
+    /**
+     * backlog/216 — a turistajelzés kódja, ugyanabban a `<SZÍN>_<ALAKZAT>` formátumban, mint a TrailSegment.symbol (`PIROS_SAV`, `KEK_KERESZT`, …); az OSM-reláció osmc:symbol tagjéből. null, ha a túrának nincs (ismert) jelzése.
+     */
+    symbol?: string | null;
     difficulty: CuratedRouteDifficulty;
     activityType: CuratedRouteActivityType;
     coordinates: Array<Array<number>>;
+    elevationGainMeters?: number | null;
+    elevationLossMeters?: number | null;
+    estimatedDurationMinutes?: number | null;
     days?: Array<HikeRouteDay> | null;
 }
 export namespace CuratedRouteUpsertRequest {

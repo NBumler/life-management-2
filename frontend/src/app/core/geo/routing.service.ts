@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 
 import { BboxTuple, GeoAssetService } from './geo-asset.service';
 import { buildBikeGraph } from './bike-routing-profile';
+import { bboxOf, expandBboxMeters, isNearAnyLine } from './geo-math';
 import { buildHikeGraph } from './hike-routing-profile';
 import { RouteGraph } from './route-graph';
 import { WayFeature } from './way-tile-codec';
@@ -75,6 +76,25 @@ export class RoutingService {
 		}
 		const path = graph.shortestPath(start, goal);
 		return path === null ? null : path.map((node) => [...graph.coordinateOf(node)]);
+	}
+
+	/**
+	 * backlog/221 — van-e a csomagban a profil illesztési küszöbén belül út a pont körül; `null`, ha a
+	 * csomag a pontot nem fedi (ilyenkor nem tudjuk). Gráfot nem épít, csak a csempék útjait nézi.
+	 */
+	async isNearWay(profile: RouteProfile, point: readonly number[]): Promise<boolean | null> {
+		if (!(await this.geo.covers(point[0], point[1]))) {
+			return null;
+		}
+		const maxSnap = MAX_SNAP_DISTANCE_METERS[profile];
+		const [minLon, minLat, maxLon, maxLat] = expandBboxMeters(bboxOf([point]), maxSnap);
+		const area: BboxTuple = [minLon, minLat, maxLon, maxLat];
+		const { ways } = await ADAPTERS[profile].waysIntersecting(this.geo, area);
+		return isNearAnyLine(
+			point,
+			ways.map((way) => way.coordinates),
+			maxSnap,
+		);
 	}
 
 	/** A pontos profil + csempe-halmazhoz tartozó gráf; cache-találat esetén nem épít újra. */

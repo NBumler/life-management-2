@@ -67,6 +67,35 @@ class CuratedRouteIntegrationTest {
 				.andExpect(jsonPath("$.estimatedDurationMinutes").value(org.hamcrest.Matchers.greaterThan(0.0)));
 	}
 
+	/** backlog/217, backlog/216 — a kliens algoritmusával számolt szint/idő és a jelzés-kód változatlanul kerül a sorba, magasság-lekérés nélkül. */
+	@Test
+	void upsert_storesClientComputedMetricsAndSymbol_withoutAnElevationLookup() throws Exception {
+		UUID id = UUID.randomUUID();
+		CuratedRouteUpsertRequest request = request(id, "P (Dömös – Budaörs)", "HARD", "HIKING", shortCoordinates());
+		request.symbol("PIROS_SAV");
+		request.elevationGainMeters(BigDecimal.valueOf(2062));
+		request.elevationLossMeters(BigDecimal.valueOf(2094));
+		request.estimatedDurationMinutes(BigDecimal.valueOf(857));
+
+		upsert(request).andExpect(status().isOk())
+				.andExpect(jsonPath("$.symbol").value("PIROS_SAV"))
+				.andExpect(jsonPath("$.distanceMeters").value(org.hamcrest.Matchers.greaterThan(0.0)))
+				.andExpect(jsonPath("$.elevationGainMeters").value(2062.0))
+				.andExpect(jsonPath("$.elevationLossMeters").value(2094.0))
+				.andExpect(jsonPath("$.estimatedDurationMinutes").value(857.0));
+		org.mockito.Mockito.verifyNoInteractions(elevationClient);
+	}
+
+	@Test
+	void upsert_rejectsPartialClientMetrics() throws Exception {
+		CuratedRouteUpsertRequest request = request(UUID.randomUUID(), "Részleges metrika", "EASY", "HIKING", shortCoordinates());
+		request.elevationGainMeters(BigDecimal.valueOf(100));
+
+		upsert(request).andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+				.andExpect(jsonPath("$.field").value("elevationLossMeters"));
+	}
+
 	@Test
 	void upsert_rejectsBlankName() throws Exception {
 		stubFlatElevation();

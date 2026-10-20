@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { DemGrid, sampleElevation } from './dem';
+import { DemGrid, demTileContains, sampleElevation } from './dem';
 import { WayFeature, decodeWayTile } from './way-tile-codec';
 
 /**
@@ -181,13 +181,4 @@ function inBbox(bbox: BboxTuple, lon: number, lat: number): boolean {
 
 function bboxesIntersect(a: BboxTuple, b: BboxTuple): boolean {
 	return a[0] <= b[2] && a[2] >= b[0] && a[1] <= b[3] && a[3] >= b[1];
-}
-
-/** A csempe cellaközpontjainak tartománya (a szélső félcella nélkül a mintavétel nem értelmezett). */
-function demTileContains(tile: GeoManifestDemTile, lon: number, lat: number): boolean {
-	const minLon = tile.originLon - tile.stepLon / 2;
-	const maxLon = tile.originLon + (tile.cols - 0.5) * tile.stepLon;
-	const maxLat = tile.originLat + tile.stepLat / 2;
-	const minLat = tile.originLat - (tile.rows - 0.5) * tile.stepLat;
-	return lon >= minLon && lon <= maxLon && lat >= minLat && lat <= maxLat;
 }

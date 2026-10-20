@@ -14,6 +14,12 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-20 — #216, #217, #221, #195** Túra katalógus: jelzés-ikon és rövidítés nélküli cím (új
+  `curated_route.symbol`, Flyway V63), keresés és rendezés név / táv szerint. A katalógus szint- és időértékét az
+  import az app algoritmusával és a DEM-mel számolja (az admin upsert opcionálisan fogadja), így átvétel után a
+  piszkozat ugyanazt mutatja; a teljes katalógus (447 túra) feltöltve, Open-Meteo kvóta nélkül. DEM-csempehatár
+  javítás (pontos manifest-geometria, félcellás szél). Sikertelen automatikus tervezés: nem blokkoló, tanácsot adó
+  sor a tippsávban, a kezdőpont megmarad; a turistautaktól 2 km-nél messzebbi pont azonnal jelzést kap.
 - **2026-10-20 — #212, #218, #219, #209, #201** Túra útvonal-kártya: egy mentett útvonal, egy ajánlott túra
   és a piszkozat félmagas lapon, a térkép mellett — statisztika, magasságprofil skálával és napváltó-jelölőkkel,
   napok napi értékekkel. Mentett útvonal szerkeszthető (ugyanarra az id-re) és átnevezhető; az Útvonalaim lista

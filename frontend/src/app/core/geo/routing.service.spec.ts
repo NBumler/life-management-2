@@ -14,7 +14,7 @@ describe('RoutingService', () => {
   const detourVia: [number, number] = [19.005, 47.005];
 
   beforeEach(() => {
-    geo = jasmine.createSpyObj('GeoAssetService', ['bikeWaysIntersecting', 'hikeWaysIntersecting']);
+    geo = jasmine.createSpyObj('GeoAssetService', ['bikeWaysIntersecting', 'hikeWaysIntersecting', 'covers']);
     TestBed.configureTestingModule({ providers: [{ provide: GeoAssetService, useValue: geo }] });
     service = TestBed.inject(RoutingService);
   });
@@ -132,6 +132,23 @@ describe('RoutingService', () => {
 
       geo.hikeWaysIntersecting.and.resolveTo({ tileFiles: ['a.bin'], ways: [] });
       expect(await service.route('HIKE', start, goal)).toBeNull();
+    });
+  });
+
+  describe('isNearWay (backlog/221)', () => {
+    it('is true when a packaged way passes within the profile snap distance', async () => {
+      geo.covers.and.resolveTo(true);
+      geo.hikeWaysIntersecting.and.resolveTo({ tileFiles: ['hike/a.bin'], ways: [{ costClass: HIKE_COST_CLASS.TRAIL, coordinates: [start, goal] }] });
+
+      expect(await service.isNearWay('HIKE', [19.005, 47.01])).toBeTrue();
+      expect(await service.isNearWay('HIKE', [19.005, 47.03])).toBeFalse();
+    });
+
+    it('cannot tell (null) outside the package', async () => {
+      geo.covers.and.resolveTo(false);
+
+      expect(await service.isNearWay('HIKE', [25.0, 47.0])).toBeNull();
+      expect(geo.hikeWaysIntersecting).not.toHaveBeenCalled();
     });
   });
 });

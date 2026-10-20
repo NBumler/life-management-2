@@ -62,7 +62,8 @@
         @if (previewedCuratedRoute(); as preview) {
           <!-- backlog/204 — amíg az előnézet látszik, a kártya csak azt mutatja; a piszkozat bezárás után visszajön. -->
           <div class="map-card-row">
-            <span class="curated-preview-name">{{ preview.name }}</span>
+            <app-marking-badge [symbol]="preview.symbol" />
+            <span class="curated-preview-name">{{ catalogTitle(preview) }}</span>
             <ion-button size="small" fill="clear" (click)="closePreview()" [attr.aria-label]="'TURA.PREVIEW.CLOSE' | translate">
               <ion-icon slot="icon-only" name="close-outline" aria-hidden="true"></ion-icon>
             </ion-button>
@@ -118,7 +119,11 @@
                 <span>{{ 'TURA.MANUAL_HINT' | translate }}</span>
               } @else {
                 <strong>{{ 'TURA.MODE_AUTO' | translate }}</strong>
-                <app-auto-route-hint [routing]="routeSuggestion.loading()" [step]="autoHintStep()"></app-auto-route-hint>
+                <app-auto-route-hint
+                  [routing]="routeSuggestion.loading() || checkingAutoPoint()"
+                  [step]="autoHintStep()"
+                  [problem]="autoProblem()"
+                ></app-auto-route-hint>
               }
             </div>
           }
@@ -394,8 +399,11 @@
           @if (previewedCuratedRoute(); as preview) {
             <div class="sheet-head">
               <div class="sheet-title">
-                <h2>{{ preview.name }}</h2>
+                <h2>{{ catalogTitle(preview) }}</h2>
                 <span class="sheet-subtitle">
+                  @if (catalogMarking(preview); as marking) {
+                    {{ marking }} ·
+                  }
                   {{ ('TURA.CATALOG.DIFFICULTY_' + preview.difficulty) | translate }} ·
                   {{ ('TURA.CATALOG.ACTIVITY_' + preview.activityType) | translate }}
                 </span>
@@ -517,8 +525,29 @@
         </ion-buttons>
       </ion-toolbar>
       <ion-toolbar>
-        <ion-item lines="none">
+        <!-- backlog/216 — keresés a névre (a teljes OSM-névre: „OKT 16”, „Dömös”). -->
+        <ion-searchbar
+          [value]="catalogQuery()"
+          (ionInput)="catalogQuery.set($any($event.target).value ?? '')"
+          [placeholder]="'TURA.CATALOG.SEARCH_PLACEHOLDER' | translate"
+          [debounce]="200"
+        ></ion-searchbar>
+      </ion-toolbar>
+      <ion-toolbar>
+        <div class="catalog-filters">
           <ion-select
+            labelPlacement="stacked"
+            interface="popover"
+            [label]="'TURA.CATALOG.SORT' | translate"
+            [value]="catalogSort()"
+            (ionChange)="catalogSort.set($any($event.target).value)"
+          >
+            <ion-select-option value="name">{{ 'TURA.CATALOG.SORT_NAME' | translate }}</ion-select-option>
+            <ion-select-option value="distance">{{ 'TURA.CATALOG.SORT_DISTANCE' | translate }}</ion-select-option>
+          </ion-select>
+          <ion-select
+            labelPlacement="stacked"
+            interface="popover"
             [label]="'TURA.CATALOG.FILTER_DIFFICULTY' | translate"
             [value]="catalogDifficulty()"
             (ionChange)="setCatalogDifficulty($any($event.target).value)"
@@ -528,9 +557,9 @@
             <ion-select-option value="MODERATE">{{ 'TURA.CATALOG.DIFFICULTY_MODERATE' | translate }}</ion-select-option>
             <ion-select-option value="HARD">{{ 'TURA.CATALOG.DIFFICULTY_HARD' | translate }}</ion-select-option>
           </ion-select>
-        </ion-item>
-        <ion-item lines="none">
           <ion-select
+            labelPlacement="stacked"
+            interface="popover"
             [label]="'TURA.CATALOG.FILTER_ACTIVITY' | translate"
             [value]="catalogActivityType()"
             (ionChange)="setCatalogActivityType($any($event.target).value)"
@@ -541,9 +570,9 @@
             <ion-select-option value="WATER">{{ 'TURA.CATALOG.ACTIVITY_WATER' | translate }}</ion-select-option>
             <ion-select-option value="HORSEBACK">{{ 'TURA.CATALOG.ACTIVITY_HORSEBACK' | translate }}</ion-select-option>
           </ion-select>
-        </ion-item>
-        <ion-item lines="none">
           <ion-select
+            labelPlacement="stacked"
+            interface="popover"
             [label]="'TURA.CATALOG.FILTER_DISTANCE' | translate"
             [value]="catalogDistanceBucket()"
             (ionChange)="setCatalogDistanceBucket($any($event.target).value)"
@@ -553,22 +582,27 @@
             <ion-select-option value="medium">{{ 'TURA.CATALOG.DISTANCE_MEDIUM' | translate }}</ion-select-option>
             <ion-select-option value="long">{{ 'TURA.CATALOG.DISTANCE_LONG' | translate }}</ion-select-option>
           </ion-select>
-        </ion-item>
+        </div>
       </ion-toolbar>
     </ion-header>
     <ion-content>
       <ion-list>
-        @if (curatedRoutes.routes().length === 0) {
+        @if (visibleCatalog().length === 0) {
           <ion-item lines="none">
             <ion-label>{{ catalogEmptyKey() | translate }}</ion-label>
           </ion-item>
         }
-        @for (route of curatedRoutes.routes(); track route.id) {
+        @for (route of visibleCatalog(); track route.id) {
           <ion-item button (click)="previewCuratedRoute(route)">
             @let duration = durationText(route.estimatedDurationMinutes);
+            @let marking = catalogMarking(route);
+            <app-marking-badge slot="start" class="reserve-space" [symbol]="route.symbol" />
             <ion-label>
-              {{ route.name }}
+              {{ catalogTitle(route) }}
               <p>
+                @if (marking) {
+                  {{ marking }} ·
+                }
                 {{ ('TURA.CATALOG.DIFFICULTY_' + route.difficulty) | translate }} ·
                 {{ ('TURA.CATALOG.ACTIVITY_' + route.activityType) | translate }}
               </p>

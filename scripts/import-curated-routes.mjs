@@ -2,7 +2,18 @@
 // backlog/tura-utvonaltervezo/193-... — az ajánlott túrák katalógusának (`curated_route`) feltöltése
 // az OSM jelzett turistaútvonalaiból: a magyar országos (nwn — Kéktúra-szakaszok, Mária-út, …) és
 // regionális (rwn) `route=hiking` relációkból egy-egy katalógus-túra lesz, az admin
-// `POST /api/admin/tura/curated-routes` upserten át (a táv/szint/idő-becslést a szerver számolja).
+// `POST /api/admin/tura/curated-routes` upserten át.
+//
+// backlog/217 — a szint- és időbecslést a szkript számolja, **ugyanazzal a kóddal, mint az app**: a
+// frontend `core/geo/route-metrics.ts`-ét és `dem.ts`-ét esbuild-del csomagolja (a frontend
+// node_modules-ából), a magasságot a DEM build assetből (`frontend/src/assets/geo/`) olvassa. Így egy
+// katalógus-túra átvétele után a piszkozat pontosan a katalógus értékeit mutatja. Külső magasság-API
+// nincs (backlog/195: az Open-Meteo kvóta nem fogy); csak a DEM-en kívül eső túránál számol a szerver
+// (Open-Meteo, ütemezve). backlog/216 — a túra jelzés-kódja (`symbol`, pl. `PIROS_SAV`) az osmc:symbol
+// tagből, a scripts/import-hiking-trails.mjs függvényével.
+//
+// Futásidő (2026-10-20, ~450 túra): az Overpass-letöltés 1–3 perc, a DEM-metrika ~10 s, a feltöltés
+// ~1 perc. Az újrafuttatás ugyanennyi, kvótát nem fogyaszt.
 //
 // Kézzel futtatandó, mint a scripts/import-hiking-trails.mjs — friss adatra, vagy egy üres fejlesztői
 // adatbázis feltöltésére. Idempotens: a túra id-je az OSM reláció id-jéből képzett UUID v5, így az
@@ -25,7 +36,14 @@
 // Napok panelen szabadon áthelyezhetők.
 
 import { createHash } from 'node:crypto';
-import { pathToFileURL } from 'node:url';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+
+import { symbolFromTags } from './import-hiking-trails.mjs';
+
+const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const GEO_ASSET_DIR = join(REPO_ROOT, 'frontend', 'src', 'assets', 'geo');
 
 const OVERPASS_ENDPOINT = 'https://overpass-api.de/api/interpreter';
 
@@ -259,11 +277,14 @@ export function curatedRouteFromRelation(relation, { minKm, maxKm }) {
 	if (km < minKm || km > maxKm) return { skipped: 'hossz a sávon kívül' };
 	const coordinates = simplify(line, SIMPLIFY_TOLERANCE_METERS).map(roundCoordinate);
 	const days = splitIntoDays(coordinates);
+	const symbol = symbolFromTags(relation.tags);
 	return {
 		route: {
 			id: uuidV5(`osm-relation:${relation.id}`, CURATED_ROUTE_NAMESPACE),
 			name,
 			description: descriptionFor(relation),
+			// Jelzés nélküli / ismeretlen jelzésű relációnál a mező kimarad (a katalógus nem mutat ikont).
+			...(symbol !== 'EGYEB' ? { symbol } : {}),
 			difficulty: difficultyForKm(km),
 			activityType: 'HIKING',
 			coordinates,
@@ -327,9 +348,73 @@ function parseArgs(argv) {
 	return args;
 }
 
-// A szerver upsertenként egy Open-Meteo magasság-lekérést indít 50 ponttal, ami az Open-Meteo
-// kvótájában 5 hívásnak számít (600 hívás / perc): ezért a feltöltés ütemezett, és a kvóta
-// kimerülésekor (502 ELEVATION_UNAVAILABLE) egy perc várakozás után újrapróbál.
+/**
+ * backlog/217 — az app metrika-kódja (`core/geo/route-metrics.ts` + `dem.ts`) esbuild-del egy
+ * memóriabeli ESM-modullá csomagolva; így a szkript nem másolja, hanem ugyanazt futtatja.
+ */
+async function loadAppGeoCode() {
+	const esbuildEntry = join(REPO_ROOT, 'frontend', 'node_modules', 'esbuild', 'lib', 'main.js');
+	const { default: esbuild } = await import(pathToFileURL(esbuildEntry).href);
+	const result = await esbuild.build({
+		stdin: {
+			contents: "export * from './frontend/src/app/core/geo/route-metrics'; export * from './frontend/src/app/core/geo/dem';",
+			resolveDir: REPO_ROOT,
+			loader: 'ts',
+		},
+		bundle: true,
+		format: 'esm',
+		platform: 'node',
+		write: false,
+		logLevel: 'silent',
+	});
+	const code = result.outputFiles[0].text;
+	return import(`data:text/javascript;base64,${Buffer.from(code).toString('base64')}`);
+}
+
+/** A DEM build asset (manifest + `int16` csempék) lustán, csempénként betöltve — mint a GeoAssetService. */
+function createDemLookup(geo) {
+	const manifest = JSON.parse(readFileSync(join(GEO_ASSET_DIR, 'manifest.json'), 'utf8'));
+	const grids = new Map();
+	const gridFor = (tile) => {
+		let grid = grids.get(tile.file);
+		if (!grid) {
+			const buffer = readFileSync(join(GEO_ASSET_DIR, tile.file));
+			const values = new Int16Array(buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength));
+			grid = { ...tile, values };
+			grids.set(tile.file, grid);
+		}
+		return grid;
+	};
+	return (lon, lat) => {
+		for (const tile of manifest.dem) {
+			if (!geo.demTileContains(tile, lon, lat)) continue;
+			const elevation = geo.sampleElevation(gridFor(tile), lon, lat);
+			if (elevation !== null) return elevation;
+		}
+		return null;
+	};
+}
+
+/**
+ * A túra szint- és időbecslése pontosan úgy, ahogy az app egy piszkozatra számolja; `null`, ha a
+ * vonal egy mintapontja a DEM-en kívül esik (ilyenkor a szerver számol).
+ */
+export function appRouteMetrics(geo, elevationAt, coordinates) {
+	const samples = geo.elevationSamples(coordinates);
+	const elevations = samples.map(([lon, lat]) => elevationAt(lon, lat));
+	if (elevations.some((elevation) => elevation === null)) return null;
+	const metrics = geo.computeRouteMetrics(coordinates, samples, elevations);
+	return {
+		elevationGainMeters: metrics.elevationGainMeters,
+		elevationLossMeters: metrics.elevationLossMeters,
+		estimatedDurationMinutes: metrics.estimatedDurationMinutes,
+	};
+}
+
+// A DEM-en kívül eső túránál a szerver upsertenként egy Open-Meteo magasság-lekérést indít 50
+// ponttal, ami az Open-Meteo kvótájában 5 hívásnak számít (600 hívás / perc): ezért az ilyen
+// feltöltés ütemezett, és a kvóta kimerülésekor (502 ELEVATION_UNAVAILABLE) egy perc várakozás után
+// újrapróbál.
 const UPSERT_INTERVAL_MS = 700;
 const ELEVATION_RETRY_ATTEMPTS = 3;
 const ELEVATION_RETRY_WAIT_MS = 65_000;
@@ -374,6 +459,17 @@ async function main() {
 	console.log(`  többnapos: ${routes.filter(({ route }) => route.days).length}`);
 	console.log(`  nehézség: ${Object.entries(byDifficulty).map(([difficulty, list]) => `${difficulty} ${list.length}`).join(', ')}`);
 	console.log(`  kihagyva: ${[...skipped.entries()].map(([reason, count]) => `${reason} ${count}`).join(', ') || '—'}`);
+	console.log(`  jelzéssel: ${routes.filter(({ route }) => route.symbol).length}`);
+
+	const geo = await loadAppGeoCode();
+	const elevationAt = createDemLookup(geo);
+	let serverComputed = 0;
+	for (const entry of routes) {
+		const metrics = appRouteMetrics(geo, elevationAt, entry.route.coordinates);
+		if (metrics) Object.assign(entry.route, metrics);
+		else serverComputed++;
+	}
+	console.log(`  metrika a DEM-ből: ${routes.length - serverComputed}, a szerver számolja: ${serverComputed}`);
 	if (args.dryRun) return;
 
 	let failed = 0;
@@ -385,7 +481,7 @@ async function main() {
 			console.warn(`[import-curated-routes] ${route.name}: ${error.message}`);
 		}
 		if ((index + 1) % 25 === 0) console.log(`  ${index + 1}/${routes.length}`);
-		await new Promise((resolve) => setTimeout(resolve, UPSERT_INTERVAL_MS));
+		if (route.elevationGainMeters === undefined) await new Promise((resolve) => setTimeout(resolve, UPSERT_INTERVAL_MS));
 	}
 	console.log(`[import-curated-routes] Kész: ${routes.length - failed} feltöltve, ${failed} hiba.`);
 	if (failed > 0) process.exitCode = 1;

@@ -1,6 +1,15 @@
 import { RouteSuggestion } from '../../api/model/routeSuggestion';
 import { TrailSegment } from '../../api/model/trailSegment';
-import { LonLatBbox, bboxOf, bboxesIntersect, expandBboxMeters, haversineMeters, polylineLengthMeters, withExactEndpoints } from './geo-math';
+import {
+	LonLatBbox,
+	bboxOf,
+	bboxesIntersect,
+	expandBboxMeters,
+	haversineMeters,
+	isNearAnyLine,
+	polylineLengthMeters,
+	withExactEndpoints,
+} from './geo-math';
 import { RouteGraph } from './route-graph';
 import { MAX_SNAP_DISTANCE_METERS } from './routing.service';
 
@@ -82,4 +91,19 @@ export function suggestRouteOffline(segments: readonly TrailSegment[], start: re
 	);
 
 	return { found: true, coordinates, distanceMeters: polylineLengthMeters(coordinates) };
+}
+
+/**
+ * backlog/221 — a pont illeszthető-e a betöltött szakaszok valamelyikére (a gráf illesztési küszöbén, a `HIKE`
+ * profil `MAX_SNAP_DISTANCE_METERS` értékén belül van-e turistaút) — gráfépítés nélkül.
+ */
+export function isNearLoadedTrail(segments: readonly TrailSegment[], point: readonly number[]): boolean {
+	const maxSnap = MAX_SNAP_DISTANCE_METERS.HIKE;
+	const area = expandBboxMeters(bboxOf([point]), maxSnap);
+	const nearby = segments.filter((segment) => bboxesIntersect(trailSegmentBbox(segment), area));
+	return isNearAnyLine(
+		point,
+		nearby.map((segment) => segment.coordinates),
+		maxSnap,
+	);
 }

@@ -92,6 +92,13 @@ function round6(value) {
 	return Math.round(value * 1e6) / 1e6;
 }
 
+// backlog/217 — a DEM rács-geometriája (origó, lépésköz) nem kerekíthető 6 tizedesre: a 3″-es lépés
+// (1/1200°) 6 tizedesen 0,000833, ami 1200 cellán 0,0004°-ot (~40 m) csúsztat, és a csempék határán
+// magasság nélküli sávot hagy. 12 tizedes a float-zajt vágja le, a geometriát nem.
+function round12(value) {
+	return Math.round(value * 1e12) / 1e12;
+}
+
 // --- DEM ------------------------------------------------------------------------------------------
 
 function demTileNames() {
@@ -175,10 +182,10 @@ async function buildDem() {
 		writeFileSync(join(OUT, file), Buffer.from(values.buffer));
 		entries.push({
 			file,
-			originLon: round6(minX + (colStart + 0.5) * stepLon),
-			originLat: round6(maxY - (rowStart + 0.5) * stepLat),
-			stepLon: round6(stepLon),
-			stepLat: round6(stepLat),
+			originLon: round12(minX + (colStart + 0.5) * stepLon),
+			originLat: round12(maxY - (rowStart + 0.5) * stepLat),
+			stepLon: round12(stepLon),
+			stepLat: round12(stepLat),
 			cols,
 			rows,
 			noData: NO_DATA,

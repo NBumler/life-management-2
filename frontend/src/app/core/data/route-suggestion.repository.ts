@@ -4,7 +4,7 @@ import { firstValueFrom, timeout } from 'rxjs';
 import { RouteSuggestion } from '../../api/model/routeSuggestion';
 import { TuraService } from '../../api/api/tura.service';
 import { polylineLengthMeters, withExactEndpoints } from '../geo/geo-math';
-import { suggestRouteOffline } from '../geo/segment-route-graph';
+import { isNearLoadedTrail, suggestRouteOffline } from '../geo/segment-route-graph';
 import { RoutingService } from '../geo/routing.service';
 import { ConnectionState } from '../sync/connection-state';
 import { SyncEngineService } from '../sync/sync-engine.service';
@@ -72,6 +72,26 @@ export class RouteSuggestionRepository {
 			return (await this.fromPackage(countryCode, start, end)) ?? remote ?? local;
 		} finally {
 			this.loading.set(false);
+		}
+	}
+
+	/**
+	 * backlog/221 — gyors előszűrés a (több másodperces) tervezés előtt: `false`, ha a pont a turistaút-
+	 * illesztés küszöbén (a `HIKE` profil `MAX_SNAP_DISTANCE_METERS` értéke) túl van minden ismert turistaúttól — sem a
+	 * betöltött szakaszok, sem a build-asset hálózat nem ad közelében utat. Ha a csomag a pontot nem
+	 * fedi (pl. külföld), nem tudjuk eldönteni: `true`, a tervezés dönt.
+	 */
+	async isNearTrail(countryCode: string, point: readonly number[]): Promise<boolean> {
+		if (isNearLoadedTrail(this.trailSegments.segments(), point)) {
+			return true;
+		}
+		if (countryCode !== 'HU') {
+			return true;
+		}
+		try {
+			return (await this.routing.isNearWay('HIKE', point)) ?? true;
+		} catch {
+			return true;
 		}
 	}
 

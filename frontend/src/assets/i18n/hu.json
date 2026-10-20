@@ -468,8 +468,8 @@
     "AUTO_PICK_END": "Válaszd ki a végpontot a térképen.",
     "AUTO_PICK_NEXT": "Koppints a következő pontra — az útvonal turistautakon folytatódik odáig.",
     "AUTO_ROUTING": "Útvonal tervezése…",
-    "ROUTE_NOT_FOUND_TITLE": "Nincs útvonal",
-    "ROUTE_NOT_FOUND_MESSAGE": "Nem található összeköttetés a két pont közt a jelzett turistaút-hálózaton.",
+    "AUTO_TOO_FAR": "Ez a pont túl messze van a turistautaktól (több mint 2 km). Koppints egy jelzett turistaút közelébe.",
+    "AUTO_NO_ROUTE": "Nincs összeköttetés a két pont közt a turistautakon. Válassz másik végpontot, vagy tervezz rövidebb szakaszokban.",
     "DAYS": {
       "DAY_END_LABEL": "nap vége",
       "WAYPOINT_OPTION": "{{index}}. pont · {{distance}}",
@@ -504,7 +504,11 @@
       "DISTANCE_LONG": "Hosszú (20 km felett)",
       "NO_RESULTS": "Nincs a szűrésnek megfelelő túra.",
       "EMPTY": "Még nincs egyetlen ajánlott túra sem.",
-      "OFFLINE": "Az ajánlott túrák nem tölthetők be — nincs kapcsolat a szerverrel."
+      "OFFLINE": "Az ajánlott túrák nem tölthetők be — nincs kapcsolat a szerverrel.",
+      "SEARCH_PLACEHOLDER": "Keresés névre, helyre (pl. Dömös, OKT 16)",
+      "SORT": "Rendezés",
+      "SORT_NAME": "Név szerint",
+      "SORT_DISTANCE": "Táv szerint"
     },
     "PREVIEW": {
       "ADOPT": "Szerkesztés sajátként",

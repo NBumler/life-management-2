@@ -120,3 +120,36 @@ export function expandBboxFraction(bbox: LonLatBbox, fraction: number): LonLatBb
   const dLat = (bbox[3] - bbox[1]) * fraction;
   return [bbox[0] - dLon, bbox[1] - dLat, bbox[2] + dLon, bbox[3] + dLat];
 }
+
+/**
+ * backlog/221 — whether any of `lines` passes within `meters` of `point` (point-to-segment distance in
+ * a local equirectangular projection, accurate at the snap scale of a few km).
+ */
+export function isNearAnyLine(point: readonly number[], lines: readonly (readonly (readonly number[])[])[], meters: number): boolean {
+  const lonScale = METERS_PER_DEGREE_LAT * Math.cos((point[1] * Math.PI) / 180);
+  const px = point[0] * lonScale;
+  const py = point[1] * METERS_PER_DEGREE_LAT;
+  const limitSquared = meters * meters;
+  for (const line of lines) {
+    for (let i = 0; i < line.length; i++) {
+      const ax = line[i][0] * lonScale - px;
+      const ay = line[i][1] * METERS_PER_DEGREE_LAT - py;
+      if (line.length === 1 || i === line.length - 1) {
+        if (i === 0 && ax * ax + ay * ay <= limitSquared) {
+          return true;
+        }
+        continue;
+      }
+      const dx = line[i + 1][0] * lonScale - px - ax;
+      const dy = line[i + 1][1] * METERS_PER_DEGREE_LAT - py - ay;
+      const lengthSquared = dx * dx + dy * dy;
+      const t = lengthSquared === 0 ? 0 : Math.max(0, Math.min(1, -(ax * dx + ay * dy) / lengthSquared));
+      const cx = ax + t * dx;
+      const cy = ay + t * dy;
+      if (cx * cx + cy * cy <= limitSquared) {
+        return true;
+      }
+    }
+  }
+  return false;
+}

@@ -468,8 +468,8 @@
     "AUTO_PICK_END": "Pick the end point on the map.",
     "AUTO_PICK_NEXT": "Tap the next point — the route continues there along trails.",
     "AUTO_ROUTING": "Planning the route…",
-    "ROUTE_NOT_FOUND_TITLE": "No route found",
-    "ROUTE_NOT_FOUND_MESSAGE": "No connection found between the two points on the marked trail network.",
+    "AUTO_TOO_FAR": "This point is too far from the trails (more than 2 km). Tap near a marked trail.",
+    "AUTO_NO_ROUTE": "No connection between the two points along the trails. Pick another end point, or plan in shorter legs.",
     "DAYS": {
       "DAY_END_LABEL": "day ends at",
       "WAYPOINT_OPTION": "Point {{index}} · {{distance}}",
@@ -504,7 +504,11 @@
       "DISTANCE_LONG": "Long (over 20 km)",
       "NO_RESULTS": "No route matches the current filter.",
       "EMPTY": "There are no recommended routes yet.",
-      "OFFLINE": "Recommended routes can’t be loaded — the server is unreachable."
+      "OFFLINE": "Recommended routes can’t be loaded — the server is unreachable.",
+      "SEARCH_PLACEHOLDER": "Search by name or place (e.g. Dömös, OKT 16)",
+      "SORT": "Sort",
+      "SORT_NAME": "By name",
+      "SORT_DISTANCE": "By distance"
     },
     "PREVIEW": {
       "ADOPT": "Edit as my route",

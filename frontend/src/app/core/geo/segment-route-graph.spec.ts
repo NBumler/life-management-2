@@ -1,5 +1,12 @@
 import { TrailSegment } from '../../api/model/trailSegment';
-import { MIN_ROUTE_GRAPH_MARGIN_METERS, ROUTE_GRAPH_MARGIN_FACTOR, routeGraphBbox, suggestRouteOffline, trailSegmentBbox } from './segment-route-graph';
+import {
+	MIN_ROUTE_GRAPH_MARGIN_METERS,
+	ROUTE_GRAPH_MARGIN_FACTOR,
+	isNearLoadedTrail,
+	routeGraphBbox,
+	suggestRouteOffline,
+	trailSegmentBbox,
+} from './segment-route-graph';
 
 function segment(coordinates: number[][]): TrailSegment {
 	return { id: 's', countryCode: 'HU', symbol: 'PIROS_SAV', coordinates };
@@ -94,5 +101,26 @@ describe('suggestRouteOffline', () => {
 		const s = segment([[19.2, 47.1], [19.0, 47.3]]);
 		expect(trailSegmentBbox(s)).toEqual([19.0, 47.1, 19.2, 47.3]);
 		expect(trailSegmentBbox(s)).toBe(trailSegmentBbox(s));
+	});
+});
+
+describe('isNearLoadedTrail (backlog/221)', () => {
+	const segment: TrailSegment = {
+		id: 'n1',
+		countryCode: 'HU',
+		symbol: 'KEK_SAV',
+		coordinates: [
+			[19.0, 47.0],
+			[19.1, 47.0],
+		],
+	};
+
+	it('is true within the hike snap distance (2 km) of a loaded segment', () => {
+		expect(isNearLoadedTrail([segment], [19.05, 47.015])).toBeTrue();
+	});
+
+	it('is false farther away, or with nothing loaded', () => {
+		expect(isNearLoadedTrail([segment], [19.05, 47.03])).toBeFalse();
+		expect(isNearLoadedTrail([], [19.05, 47.0])).toBeFalse();
 	});
 });
