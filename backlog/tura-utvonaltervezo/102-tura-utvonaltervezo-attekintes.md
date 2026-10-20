@@ -96,6 +96,8 @@ túrázási funkció).
 | [[backlog/tura-utvonaltervezo/222-tura-offline-letoltes-vakon]] | Az offline letöltésnél nem látszik, mekkora területet és mennyi adatot tölt le | `backlog` |
 | [[backlog/tura-utvonaltervezo/223-tura-offline-letoltes-osm-csempeszabaly]] | Az offline letöltés tömegesen tölt csempét a tile.openstreetmap.org-ról (OSM-szabálysértés) | `backlog` |
 | [[backlog/tura-utvonaltervezo/226-tura-turistautak-lassan-jelennek-meg-elso-megnyitaskor]] | Első megnyitáskor a turistautak csak kb. 15 mp múlva jelennek meg | `backlog` |
+| [[backlog/tura-utvonaltervezo/227-tura-katalogus-toltes-kozben-ures-szoveg]] | Az Ajánlott túrák lista töltés közben „üres katalógus” szöveget mutat | `backlog` |
+| [[backlog/tura-utvonaltervezo/228-tura-oldal-stilus-meretkorlat]] | A `tura.page.scss` túllépi a komponens-stílus méret-figyelmeztetését | `backlog` |
 
 > Kapcsolódó, a mappán kívüli jegy: [[150-biciklizes-elo-gps-tracker]] — a bicikli élő tracker
 > közös, eszközön futó geo-alapréteget (GPS-követés, build-asset DEM, profilos routing) épít, amit a 106 is használ.
