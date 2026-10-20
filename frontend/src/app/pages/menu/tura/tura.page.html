@@ -5,133 +5,156 @@
     </ion-buttons>
     <ion-title>{{ 'TURA.TITLE' | translate }}</ion-title>
   </ion-toolbar>
-  <ion-toolbar class="tura-scrollable-toolbar">
-    <ion-buttons slot="start">
-      <ion-button [fill]="mode() === 'manual' ? 'solid' : 'clear'" (click)="toggleDrawMode()">
-        <ion-icon slot="start" name="create-outline" aria-hidden="true"></ion-icon>
-        {{ 'TURA.DRAW' | translate }}
-      </ion-button>
-      <ion-button [fill]="mode() === 'auto' ? 'solid' : 'clear'" (click)="toggleAutoMode()">
-        @if (routeSuggestion.loading()) {
-          <ion-spinner slot="start" name="dots"></ion-spinner>
-        } @else {
-          <ion-icon slot="start" name="navigate-outline" aria-hidden="true"></ion-icon>
-        }
-        {{ 'TURA.AUTO' | translate }}
-      </ion-button>
-      <ion-button [disabled]="!canUndo()" (click)="undoLastStep()">
-        <ion-icon slot="icon-only" name="arrow-undo-outline" [attr.aria-label]="'TURA.UNDO' | translate"></ion-icon>
-      </ion-button>
-      <ion-button [disabled]="draft().length === 0 && autoStart() === null" (click)="clearDraft()">
-        <ion-icon slot="icon-only" name="trash-outline" [attr.aria-label]="'TURA.CLEAR' | translate"></ion-icon>
-      </ion-button>
-    </ion-buttons>
-  </ion-toolbar>
-  <ion-toolbar class="tura-scrollable-toolbar">
-    <ion-buttons slot="start">
-      <ion-button (click)="toggleLayersPanel()">
-        <ion-icon slot="icon-only" name="layers-outline" [attr.aria-label]="'TURA.LAYERS.BUTTON' | translate"></ion-icon>
-      </ion-button>
-      @if (offlineCapable) {
-        <ion-button (click)="toggleOfflinePanel()">
-          <ion-icon slot="icon-only" name="cloud-download-outline" [attr.aria-label]="'TURA.OFFLINE.BUTTON' | translate"></ion-icon>
-        </ion-button>
-      }
-      <ion-button (click)="toggleCatalogPanel()">
-        <ion-icon slot="start" name="star-outline" aria-hidden="true"></ion-icon>
-        {{ 'TURA.CATALOG.BUTTON' | translate }}
-      </ion-button>
-      <ion-button (click)="toggleRoutesPanel()">
-        <ion-icon slot="start" name="list-outline" aria-hidden="true"></ion-icon>
-        {{ 'TURA.MY_ROUTES' | translate }}
-      </ion-button>
-    </ion-buttons>
-  </ion-toolbar>
-  @if (routeSuggestion.loading() || (mode() === 'auto' && draft().length === 0)) {
-    <ion-toolbar>
-      <app-auto-route-hint [routing]="routeSuggestion.loading()" [pickingEnd]="autoStart() !== null"></app-auto-route-hint>
-    </ion-toolbar>
-  }
-  @if (previewedCuratedRoute(); as preview) {
-    <ion-toolbar class="curated-preview-bar">
-      <span class="curated-preview-name">{{ preview.name }}</span>
-      <ion-buttons slot="end">
-        <!-- backlog/207 — a beszédesebb, hosszabb felirat ikon nélkül fér el 360 dp-n a név mellett. -->
-        <ion-button (click)="adoptPreview()">
-          {{ 'TURA.PREVIEW.ADOPT' | translate }}
-        </ion-button>
-        <ion-button (click)="closePreview()">
-          <ion-icon slot="icon-only" name="close-outline" [attr.aria-label]="'TURA.PREVIEW.CLOSE' | translate"></ion-icon>
-        </ion-button>
-      </ion-buttons>
-    </ion-toolbar>
-  }
-  @if (draft().length >= 2) {
-    <ion-toolbar>
-      <ion-input
-        class="route-name-input"
-        [value]="routeName()"
-        (ionInput)="routeName.set($any($event.target).value ?? '')"
-        [placeholder]="'TURA.ROUTE_NAME_PLACEHOLDER' | translate"
-        [autofocus]="true"
-      ></ion-input>
-      <ion-buttons slot="end">
-        @if (interiorWaypoints().length > 0) {
-          <ion-button (click)="toggleDaysPanel()">
-            <ion-icon slot="start" name="moon-outline" aria-hidden="true"></ion-icon>
-            {{ 'TURA.DAYS.BUTTON' | translate }}
-            @if (dayCount() > 1) {
-              <ion-badge slot="end">{{ dayCount() }}</ion-badge>
-            }
-          </ion-button>
-        }
-        <ion-button [disabled]="routeName().trim() === ''" (click)="saveDraft()">
-          {{ 'COMMON.SAVE' | translate }}
-        </ion-button>
-      </ion-buttons>
-    </ion-toolbar>
-  }
 </ion-header>
 
+<!--
+  backlog/204, backlog/210 — a térkép a fejléctől a tab-sávig ér, minden más lebeg rajta: egy sáv
+  megjelenése nem méretezi át a térképet, így a tartalma sem csúszik el a következő koppintás alól.
+-->
 <ion-content>
-  <div #mapContainer class="map-container"></div>
-  @if (trailsNeedZoom()) {
-    <!-- backlog/200 — nem blokkoló jelzés: a turistautak 12-es zoomtól töltődnek be (#180). -->
-    <div class="zoom-hint">
-      <span>{{ 'TURA.ZOOM_HINT' | translate }}</span>
-      <ion-button fill="clear" size="small" (click)="showLegend.set(true)" [attr.aria-label]="'TURA.LEGEND.OPEN' | translate">
-        <ion-icon slot="icon-only" name="information-circle-outline" aria-hidden="true"></ion-icon>
-      </ion-button>
-    </div>
-  }
-</ion-content>
+  <div #mapContainer class="map-container tura-map"></div>
 
-@if (metrics(); as m) {
-  <ion-footer>
-    <ion-toolbar>
-      <div class="route-metrics-content">
-        <div class="route-metrics-stats">
-          <span>{{ formatDistance(m.distanceMeters) }}</span>
-          @let duration = durationText(m.estimatedDurationMinutes);
-          <span>{{ duration.key | translate: duration.params }}</span>
-          <span>↑{{ formatElevation(m.elevationGainMeters) }}</span>
-          <span>↓{{ formatElevation(m.elevationLossMeters) }}</span>
-        </div>
-        @if (m.profile) {
-          <svg class="route-metrics-chart" viewBox="0 0 300 60" preserveAspectRatio="none">
-            <polyline [attr.points]="profilePoints()" fill="none" stroke="#1a73e8" stroke-width="2"></polyline>
-          </svg>
+  <!-- backlog/204, backlog/205 — a ritkább műveletek feliratos gombokként jobb felül. -->
+  <div #mapActions class="map-actions">
+    <ion-button size="small" color="light" (click)="toggleLayersPanel()">
+      <ion-icon slot="start" name="layers-outline" aria-hidden="true"></ion-icon>
+      {{ 'TURA.LAYERS.BUTTON' | translate }}
+    </ion-button>
+    <ion-button id="tura-more-button" size="small" color="light">
+      <ion-icon slot="start" name="ellipsis-horizontal" aria-hidden="true"></ion-icon>
+      {{ 'TURA.MORE' | translate }}
+    </ion-button>
+  </div>
+  <ion-popover trigger="tura-more-button" [dismissOnSelect]="true">
+    <ng-template>
+      <ion-list lines="none">
+        <ion-item button [detail]="false" (click)="toggleCatalogPanel()">
+          <ion-icon slot="start" name="star-outline" aria-hidden="true"></ion-icon>
+          <ion-label>{{ 'TURA.CATALOG.MODAL_TITLE' | translate }}</ion-label>
+        </ion-item>
+        <ion-item button [detail]="false" (click)="toggleRoutesPanel()">
+          <ion-icon slot="start" name="list-outline" aria-hidden="true"></ion-icon>
+          <ion-label>{{ 'TURA.MY_ROUTES' | translate }}</ion-label>
+        </ion-item>
+        @if (offlineCapable) {
+          <ion-item button [detail]="false" (click)="toggleOfflinePanel()">
+            <ion-icon slot="start" name="cloud-download-outline" aria-hidden="true"></ion-icon>
+            <ion-label>{{ 'TURA.OFFLINE.BUTTON' | translate }}</ion-label>
+          </ion-item>
+        }
+      </ion-list>
+    </ng-template>
+  </ion-popover>
+
+  <div #mapBottom class="map-bottom">
+    @if (trailsNeedZoom()) {
+      <!-- backlog/200 — nem blokkoló jelzés: a turistautak 12-es zoomtól töltődnek be (#180). -->
+      <div class="zoom-hint">
+        <span>{{ 'TURA.ZOOM_HINT' | translate }}</span>
+        <ion-button fill="clear" size="small" (click)="showLegend.set(true)" [attr.aria-label]="'TURA.LEGEND.OPEN' | translate">
+          <ion-icon slot="icon-only" name="information-circle-outline" aria-hidden="true"></ion-icon>
+        </ion-button>
+      </div>
+    }
+
+    @if (showCard()) {
+      <div class="map-card">
+        @if (previewedCuratedRoute(); as preview) {
+          <!-- backlog/204 — amíg az előnézet látszik, a kártya csak azt mutatja; a piszkozat bezárás után visszajön. -->
+          <span class="curated-preview-name">{{ preview.name }}</span>
+          <div class="map-card-row map-card-actions">
+            <!-- backlog/207 — a beszédesebb felirat ikon nélkül, a név alatt teljes szélességben elfér. -->
+            <ion-button size="small" (click)="adoptPreview()">
+              {{ 'TURA.PREVIEW.ADOPT' | translate }}
+            </ion-button>
+            <ion-button size="small" fill="clear" (click)="closePreview()" [attr.aria-label]="'TURA.PREVIEW.CLOSE' | translate">
+              <ion-icon slot="icon-only" name="close-outline" aria-hidden="true"></ion-icon>
+            </ion-button>
+          </div>
+        } @else {
+          @if (mode() !== 'none') {
+            <!-- backlog/206 — a mód neve és rövid tippje: mit vár az app a következő koppintástól. -->
+            <div class="mode-hint">
+              @if (mode() === 'manual') {
+                <strong>{{ 'TURA.MODE_MANUAL' | translate }}</strong>
+                <span>{{ 'TURA.MANUAL_HINT' | translate }}</span>
+              } @else {
+                <strong>{{ 'TURA.MODE_AUTO' | translate }}</strong>
+                <app-auto-route-hint [routing]="routeSuggestion.loading()" [step]="autoHintStep()"></app-auto-route-hint>
+              }
+            </div>
+          }
+
+          @if (metrics(); as m) {
+            <div class="route-metrics-stats">
+              <span>{{ formatDistance(m.distanceMeters) }}</span>
+              @let duration = durationText(m.estimatedDurationMinutes);
+              <span>{{ duration.key | translate: duration.params }}</span>
+              <span>↑{{ formatElevation(m.elevationGainMeters) }}</span>
+              <span>↓{{ formatElevation(m.elevationLossMeters) }}</span>
+            </div>
+            @if (m.profile) {
+              <svg class="route-metrics-chart" viewBox="0 0 300 60" preserveAspectRatio="none">
+                <polyline [attr.points]="profilePoints()" fill="none" stroke="#1a73e8" stroke-width="2"></polyline>
+              </svg>
+            }
+          } @else if (routeMetrics.loading()) {
+            <div class="route-metrics-loading">
+              <ion-spinner name="dots"></ion-spinner>
+            </div>
+          }
+
+          @if (draft().length >= 2) {
+            <div class="map-card-row">
+              <ion-input
+                class="route-name-input"
+                [value]="routeName()"
+                (ionInput)="routeName.set($any($event.target).value ?? '')"
+                [placeholder]="'TURA.ROUTE_NAME_PLACEHOLDER' | translate"
+              ></ion-input>
+              @if (interiorWaypoints().length > 0) {
+                <ion-button size="small" fill="outline" (click)="toggleDaysPanel()">
+                  <ion-icon slot="start" name="moon-outline" aria-hidden="true"></ion-icon>
+                  {{ 'TURA.DAYS.BUTTON' | translate }}
+                  @if (dayCount() > 1) {
+                    <ion-badge slot="end">{{ dayCount() }}</ion-badge>
+                  }
+                </ion-button>
+              }
+              <ion-button size="small" [disabled]="routeName().trim() === ''" (click)="saveDraft()">
+                {{ 'COMMON.SAVE' | translate }}
+              </ion-button>
+            </div>
+          }
         }
       </div>
-    </ion-toolbar>
-  </ion-footer>
-} @else if (routeMetrics.loading()) {
-  <ion-footer>
-    <ion-toolbar class="route-metrics-loading">
-      <ion-spinner name="dots"></ion-spinner>
-    </ion-toolbar>
-  </ion-footer>
-}
+    }
+
+    <!-- backlog/205, backlog/206 — a fő műveletek ikonnal és felirattal; az aktív mód a kiemelő színt kapja. -->
+    <div class="mode-bar">
+      <button type="button" class="mode-button" [class.active]="mode() === 'manual'" [attr.aria-pressed]="mode() === 'manual'" (click)="toggleDrawMode()">
+        <ion-icon name="create-outline" aria-hidden="true"></ion-icon>
+        <span>{{ 'TURA.DRAW' | translate }}</span>
+      </button>
+      <button type="button" class="mode-button" [class.active]="mode() === 'auto'" [attr.aria-pressed]="mode() === 'auto'" (click)="toggleAutoMode()">
+        @if (routeSuggestion.loading()) {
+          <ion-spinner name="dots"></ion-spinner>
+        } @else {
+          <ion-icon name="navigate-outline" aria-hidden="true"></ion-icon>
+        }
+        <span>{{ 'TURA.AUTO' | translate }}</span>
+      </button>
+      <button type="button" class="mode-button" [disabled]="!canUndo()" (click)="undoLastStep()">
+        <ion-icon name="arrow-undo-outline" aria-hidden="true"></ion-icon>
+        <span>{{ 'TURA.UNDO' | translate }}</span>
+      </button>
+      <button type="button" class="mode-button" [disabled]="draft().length === 0 && autoStart() === null" (click)="clearDraft()">
+        <ion-icon name="trash-outline" aria-hidden="true"></ion-icon>
+        <span>{{ 'TURA.CLEAR' | translate }}</span>
+      </button>
+    </div>
+  </div>
+</ion-content>
 
 <ion-modal [isOpen]="showLayersPanel()" (didDismiss)="showLayersPanel.set(false)">
   <ng-template>

@@ -448,8 +448,12 @@
   },
   "TURA": {
     "TITLE": "Túra",
-    "DRAW": "Rajzolás",
-    "AUTO": "Automatikus",
+    "DRAW": "Kézi",
+    "AUTO": "Turistaúton",
+    "MODE_MANUAL": "Kézi mód",
+    "MODE_AUTO": "Turistaúton mód",
+    "MANUAL_HINT": "Koppints a térképre pontok lerakásához — egyenes szakaszok.",
+    "MORE": "Továbbiak",
     "UNDO": "Visszavonás",
     "CLEAR": "Törlés",
     "CLEARED": "Útvonal törölve",
@@ -462,6 +466,7 @@
     "DELETE_ROUTE_CONFIRM_MESSAGE": "Biztosan törlöd a(z) „{{name}}” útvonalat?",
     "AUTO_PICK_START": "Válaszd ki a kezdőpontot a térképen.",
     "AUTO_PICK_END": "Válaszd ki a végpontot a térképen.",
+    "AUTO_PICK_NEXT": "Koppints a következő pontra — az útvonal turistautakon folytatódik odáig.",
     "AUTO_ROUTING": "Útvonal tervezése…",
     "ROUTE_NOT_FOUND_TITLE": "Nincs útvonal",
     "ROUTE_NOT_FOUND_MESSAGE": "Nem található összeköttetés a két pont közt a jelzett turistaút-hálózaton.",
@@ -482,7 +487,6 @@
       "UNKNOWN": "~"
     },
     "CATALOG": {
-      "BUTTON": "Katalógus",
       "MODAL_TITLE": "Ajánlott túrák",
       "FILTER_DIFFICULTY": "Nehézség",
       "FILTER_ACTIVITY": "Aktivitás",

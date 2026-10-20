@@ -17,7 +17,6 @@ import {
 	IonButton,
 	IonButtons,
 	IonContent,
-	IonFooter,
 	IonHeader,
 	IonIcon,
 	IonInput,
@@ -25,6 +24,7 @@ import {
 	IonLabel,
 	IonList,
 	IonModal,
+	IonPopover,
 	IonSelect,
 	IonSelectOption,
 	IonSpinner,
@@ -71,10 +71,10 @@ import {
 import { OFFLINE_TILE_PROTOCOL, registerOfflineTileProtocol } from './offline-map-protocol';
 import { OFFLINE_TILE_MAX_COUNT, OfflineRegion } from '../../../core/data/offline-region.model';
 import { OfflineRegionRepository } from '../../../core/data/offline-region.repository';
-import { AutoRouteHintComponent } from './auto-route-hint.component';
+import { AutoRouteHintComponent, AutoRouteHintStep } from './auto-route-hint.component';
 import { TuraLegendComponent } from './tura-legend.component';
 import { daySummaryText, distanceText, durationText, elevationText, megabytesText } from './hike-text';
-import { DayBreak, RouteDraftEditor, interiorWaypointIndexes, routeDraftFromPath, withManualPoint } from './route-draft';
+import { DayBreak, RouteDraftEditor, interiorWaypointIndexes, routeDraftFromPath, withManualPoint, withPath } from './route-draft';
 import { trailSegmentsToFeatureCollection } from './trail-segments-geojson';
 
 /** backlog/tura-utvonaltervezo/103-... 2.5 fázis — a katalógus-szűrő táv-tengelye előre definiált sávokként (nem szabad numerikus range-inputként). */
@@ -228,10 +228,10 @@ const COUNTRY_CODE = 'HU';
 		IonItem,
 		IonLabel,
 		IonModal,
+		IonPopover,
 		IonSelect,
 		IonSelectOption,
 		IonContent,
-		IonFooter,
 		IonSpinner,
 		IonToggle,
 		TranslatePipe,
@@ -253,6 +253,9 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	private readonly localState = inject(TuraLocalStateService);
 	private readonly language = inject(LanguageService);
 	private readonly mapContainer = viewChild.required<ElementRef<HTMLDivElement>>('mapContainer');
+	/** backlog/204 — a térkép fölött lebegő elemek: a `fitBounds` ezek alól húzza ki a vonalat. */
+	private readonly mapActions = viewChild.required<ElementRef<HTMLDivElement>>('mapActions');
+	private readonly mapBottom = viewChild.required<ElementRef<HTMLDivElement>>('mapBottom');
 
 	private map?: maplibregl.Map;
 
@@ -268,6 +271,13 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	/** Auto mode: the first of the two picked points, waiting for the second click. */
 	protected readonly autoStart = signal<number[] | null>(null);
 	protected readonly canUndo = computed(() => this.draftEditor.canUndo() || this.autoStart() !== null);
+	/** backlog/206 — a Turistaúton mód tippje: kezdőpont, végpont, vagy a meglévő vonal folytatása. */
+	protected readonly autoHintStep = computed<AutoRouteHintStep>(() => {
+		if (this.autoStart() !== null) {
+			return 'end';
+		}
+		return this.draft().length > 0 ? 'next' : 'start';
+	});
 	/** A napváltónak választható pontok: a felhasználó kijelölt pontjai a két végpont nélkül. */
 	protected readonly interiorWaypoints = computed(() => interiorWaypointIndexes(this.draftEditor.draft()));
 	protected readonly routeName = signal('');
@@ -314,6 +324,15 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	protected readonly showOfflinePanel = signal(false);
 	/** backlog/tura-utvonaltervezo/103-... 2.3 fázis — a draft() útvonalhoz tartozó, utoljára sikeresen kiszámolt metrika. */
 	protected readonly metrics = signal<RouteMetricsResult | null>(null);
+	/** backlog/204 — az alsó lebegő kártya: előnézet, a mód tippje, a piszkozat adatai — ha van mit mutatni. */
+	protected readonly showCard = computed(
+		() =>
+			this.previewedCuratedRoute() !== null ||
+			this.mode() !== 'none' ||
+			this.metrics() !== null ||
+			this.routeMetrics.loading() ||
+			this.draft().length >= 2,
+	);
 	protected readonly profilePoints = computed(() => {
 		const profile = this.metrics()?.profile;
 		return profile ? elevationProfilePolylinePoints(profile, PROFILE_CHART_WIDTH, PROFILE_CHART_HEIGHT) : '';
@@ -485,6 +504,7 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 			}
 		});
 		this.resizeObserver.observe(this.mapContainer().nativeElement);
+		this.resizeObserver.observe(this.mapBottom().nativeElement);
 
 		this.map = map;
 	}
@@ -666,12 +686,16 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	protected previewCuratedRoute(route: CuratedRoute): void {
 		this.previewedCuratedRoute.set(route);
 		this.showCatalogPanel.set(false);
+		// backlog/189, backlog/206 — az előnézet és a tervezés kizárja egymást: egy koppintás ne a
+		// piszkozatot folytassa, amíg az ajánlott túrát nézed.
+		this.mode.set('none');
+		this.autoStart.set(null);
 		if (route.coordinates.length === 0) {
 			return;
 		}
-		// backlog/189 — az előnézet-sáv a fejlécbe kerül és lejjebb tolja a térképet, de az ion-toolbar
-		// aszinkron renderel: a konténer csak később zsugorodik. A ResizeObserver addig újraigazít, amíg a
-		// felhasználó meg nem mozdítja a térképet (ld. ngAfterViewInit).
+		// backlog/189, backlog/204 — az előnézet-kártya a lebegő alsó sávba kerül, és csak a következő
+		// renderelés után van meg a magassága. A ResizeObserver addig újraigazít, amíg a felhasználó meg nem
+		// mozdítja a térképet (ld. ngAfterViewInit).
 		this.pendingPreviewFit = route.coordinates;
 		this.fitToCoordinates(route.coordinates);
 	}
@@ -687,8 +711,22 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 				[Math.min(...lons), Math.min(...lats)],
 				[Math.max(...lons), Math.max(...lats)],
 			],
-			{ padding: 40, animate: false },
+			{ padding: this.fitPadding(), animate: false },
 		);
+	}
+
+	/** backlog/204 — a vonal a lebegő gombok és az alsó kártya közötti szabad részre kerüljön. */
+	private fitPadding(): maplibregl.PaddingOptions {
+		const container = this.mapContainer().nativeElement.getBoundingClientRect();
+		const actions = this.mapActions().nativeElement.getBoundingClientRect();
+		const bottom = this.mapBottom().nativeElement.getBoundingClientRect();
+		const margin = 24;
+		return {
+			top: Math.max(margin, actions.bottom - container.top + margin / 2),
+			bottom: Math.max(margin, container.bottom - bottom.top + margin / 2),
+			left: margin,
+			right: margin,
+		};
 	}
 
 	/** backlog/189 — a tipp-sáv „Előnézet bezárása” gombja. */
@@ -979,7 +1017,9 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 		if (this.routeSuggestion.loading()) {
 			return;
 		}
-		const start = this.autoStart();
+		// backlog/206 — egy meglévő vonalat a vége folytat; üres rajznál az első koppintás a kezdőpont.
+		const coordinates = this.draft();
+		const start = coordinates.length > 0 ? coordinates[coordinates.length - 1] : this.autoStart();
 		if (start === null) {
 			this.autoStart.set(point);
 			return;
@@ -991,7 +1031,6 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 		const result = await this.routeSuggestion.suggest(COUNTRY_CODE, start, end);
 		this.autoStart.set(null);
 		if (!result.found) {
-			this.mode.set('none');
 			const alert = await this.alertController.create({
 				header: this.translate.instant('TURA.ROUTE_NOT_FOUND_TITLE'),
 				message: this.translate.instant('TURA.ROUTE_NOT_FOUND_MESSAGE'),
@@ -1000,8 +1039,8 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 			await alert.present();
 			return;
 		}
-		this.draftEditor.apply(routeDraftFromPath(result.coordinates));
-		this.mode.set('none');
+		// backlog/206 — a mód bekapcsolva marad: a következő koppintás innen tervez tovább.
+		this.draftEditor.apply(withPath(this.draftEditor.draft(), result.coordinates));
 	}
 
 	protected async saveDraft(): Promise<void> {
@@ -1094,7 +1133,7 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 				[Math.min(...lons), Math.min(...lats)],
 				[Math.max(...lons), Math.max(...lats)],
 			],
-			{ padding: 40 },
+			{ padding: this.fitPadding() },
 		);
 		this.showRoutesPanel.set(false);
 	}

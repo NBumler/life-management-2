@@ -5,6 +5,7 @@ import {
 	routeDraftFromPath,
 	waypointCoordinates,
 	withManualPoint,
+	withPath,
 } from './route-draft';
 
 /** backlog/190 */
@@ -35,6 +36,26 @@ describe('route-draft', () => {
 
 		it('an empty path is the empty draft', () => {
 			expect(routeDraftFromPath([])).toEqual(EMPTY_ROUTE_DRAFT);
+		});
+	});
+
+	describe('withPath (backlog/206)', () => {
+		it('a routed leg continues the line from its last point; its end becomes a waypoint', () => {
+			const first = routeDraftFromPath(path.slice(0, 3));
+			const draft = withPath(first, path.slice(2));
+
+			expect(draft.coordinates).toEqual(path);
+			expect(draft.waypointIndexes).toEqual([0, 2, 4]);
+			expect(interiorWaypointIndexes(draft)).toEqual([2]);
+		});
+
+		it('on an empty draft it is the routed path itself', () => {
+			expect(withPath(EMPTY_ROUTE_DRAFT, path)).toEqual(routeDraftFromPath(path));
+		});
+
+		it('a leg with no new point leaves the draft as it was', () => {
+			const draft = routeDraftFromPath(path);
+			expect(withPath(draft, [path[4]])).toBe(draft);
 		});
 	});
 

@@ -14,6 +14,10 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-20 — #204, #205, #206, #210** Túra elrendezés és gombok: a térkép a fejléctől a tab-sávig ér, minden
+  más lebeg rajta (jobb felül feliratos Rétegek / Továbbiak, alul feliratos mód-sáv és egy kártya a tippel, a
+  statisztikával és a mentéssel), így egy sáv megjelenése nem csúsztatja el a térképet. A módok „Kézi” / „Turistaúton”
+  néven, kiemelő színnel és tippel; mindkettő bekapcsolva marad, a Turistaúton a vonal végétől tervez tovább.
 - **2026-10-20 — #196, #197, #198, #199, #200, #202, #203** Túra térkép vizuális nyelve: a turistautak a jelzés
   színében (szín-előtagból, fehér kontúrral), a jelzés nélküli utak halványan és kikapcsolhatóan; az import felismeri a
   barlang / rom / kilátó / betűjeles jelzéseket (Pilis-minta: `EGYEB` 90 → 30 reláció). Saját útvonal magenta fehér

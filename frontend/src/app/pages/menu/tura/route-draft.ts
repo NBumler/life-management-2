@@ -52,6 +52,23 @@ export function routeDraftFromPath(path: readonly number[][], interiorIndexes: r
 	return { coordinates: [...path], waypointIndexes: [...indexes].sort((a, b) => a - b) };
 }
 
+/**
+ * backlog/206 — a Turistaúton mód a meglévő rajz végétől tervez tovább: a tervezett szakasz (a rajz
+ * utolsó pontjától indul) a vonal végére kerül, a vége új kijelölt pont. Üres rajznál ugyanaz, mint a
+ * `routeDraftFromPath`.
+ */
+export function withPath(draft: RouteDraft, path: readonly number[][]): RouteDraft {
+	if (draft.coordinates.length === 0) {
+		return routeDraftFromPath(path);
+	}
+	const appended = path.slice(1);
+	if (appended.length === 0) {
+		return draft;
+	}
+	const coordinates = [...draft.coordinates, ...appended];
+	return { coordinates, waypointIndexes: [...draft.waypointIndexes, coordinates.length - 1] };
+}
+
 /** A térképen körrel jelölt pontok. */
 export function waypointCoordinates(draft: RouteDraft): number[][] {
 	return draft.waypointIndexes.map((index) => draft.coordinates[index]);

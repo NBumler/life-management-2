@@ -448,8 +448,12 @@
   },
   "TURA": {
     "TITLE": "Hiking",
-    "DRAW": "Draw",
-    "AUTO": "Auto",
+    "DRAW": "Manual",
+    "AUTO": "On trails",
+    "MODE_MANUAL": "Manual mode",
+    "MODE_AUTO": "On-trails mode",
+    "MANUAL_HINT": "Tap the map to add points — joined by straight lines.",
+    "MORE": "More",
     "UNDO": "Undo",
     "CLEAR": "Clear",
     "CLEARED": "Route cleared",
@@ -462,6 +466,7 @@
     "DELETE_ROUTE_CONFIRM_MESSAGE": "Delete the route \"{{name}}\"?",
     "AUTO_PICK_START": "Pick the start point on the map.",
     "AUTO_PICK_END": "Pick the end point on the map.",
+    "AUTO_PICK_NEXT": "Tap the next point — the route continues there along trails.",
     "AUTO_ROUTING": "Planning the route…",
     "ROUTE_NOT_FOUND_TITLE": "No route found",
     "ROUTE_NOT_FOUND_MESSAGE": "No connection found between the two points on the marked trail network.",
@@ -482,7 +487,6 @@
       "UNKNOWN": "~"
     },
     "CATALOG": {
-      "BUTTON": "Catalog",
       "MODAL_TITLE": "Recommended routes",
       "FILTER_DIFFICULTY": "Difficulty",
       "FILTER_ACTIVITY": "Activity",

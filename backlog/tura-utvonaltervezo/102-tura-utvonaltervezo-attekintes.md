@@ -75,13 +75,13 @@ túrázási funkció).
 | [[backlog/tura-utvonaltervezo/201-tura-vonalra-koppintva-nincs-informacio]] | Egy vonalra koppintva nem derül ki, melyik turistaút vagy útvonal az | `backlog` |
 | `backlog/archive/202-tura-mentett-utvonalak-mindig-latszanak.md` | A mentett útvonalak mindig látszanak, név nélkül, és nem rejthetők el | `done` |
 | `backlog/archive/203-tura-kezdo-veg-es-napvalto-pont-egyforma.md` | A kezdő-, a vég- és a napváltó pont egyforma, az útvonal iránya nem látszik | `done` |
-| [[backlog/tura-utvonaltervezo/204-tura-fejlec-tul-magas-gombsorok-kilognak]] | A fejléc 3–5 sor magas, a gombsorok magyarul kilógnak a képernyőről | `backlog` |
-| [[backlog/tura-utvonaltervezo/205-tura-felirat-nelkuli-ikongombok]] | A visszavonás, kuka, rétegek és offline gombnak nincs felirata | `backlog` |
-| [[backlog/tura-utvonaltervezo/206-tura-rajzolas-es-automatikus-mod-erthetosege]] | A Rajzolás és az Automatikus mód közti különbség és az aktív mód nem érthető | `backlog` |
+| `backlog/archive/204-tura-fejlec-tul-magas-gombsorok-kilognak.md` | A fejléc 3–5 sor magas, a gombsorok magyarul kilógnak a képernyőről | `done` |
+| `backlog/archive/205-tura-felirat-nelkuli-ikongombok.md` | A visszavonás, kuka, rétegek és offline gombnak nincs felirata | `done` |
+| `backlog/archive/206-tura-rajzolas-es-automatikus-mod-erthetosege.md` | A Rajzolás és az Automatikus mód közti különbség és az aktív mód nem érthető | `done` |
 | `backlog/archive/207-tura-atvetel-felirat-nem-ertheto.md` | Az előnézet „Átvétel” gombjának felirata nem mondja meg, mit csinál | `done` |
 | `backlog/archive/208-tura-kuka-megerosites-nelkul-torol.md` | A kuka megerősítés nélkül törli a teljes piszkozatot, és ez nem vonható vissza | `done` |
 | [[backlog/tura-utvonaltervezo/209-tura-napok-panel-elvont]] | A Napok panel elvont: nincs napi táv / szint, a térkép nem látszik közben | `backlog` |
-| [[backlog/tura-utvonaltervezo/210-tura-terkep-ugrik-savok-megjelenesekor]] | A térkép elcsúszik, amikor a tipp-, a név- vagy a statisztika-sáv megjelenik | `backlog` |
+| `backlog/archive/210-tura-terkep-ugrik-savok-megjelenesekor.md` | A térkép elcsúszik, amikor a tipp-, a név- vagy a statisztika-sáv megjelenik | `done` |
 | `backlog/archive/211-tura-mentes-visszajelzes-nelkul.md` | Mentéskor nincs visszajelzés | `done` |
 | [[backlog/tura-utvonaltervezo/212-tura-mentett-utvonal-megnyitasa-csak-odarepul]] | Mentett útvonal megnyitásakor nincs részlet, szerkesztés, átnevezés; a lista km és dátum nélküli | `backlog` |
 | `backlog/archive/213-tura-felkesz-rajz-elveszik-visszalepeskor.md` | A félkész rajz figyelmeztetés nélkül elveszik, ha a felhasználó elnavigál | `done` |

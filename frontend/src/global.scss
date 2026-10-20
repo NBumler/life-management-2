@@ -43,6 +43,12 @@
 /* backlog/tura-utvonaltervezo/103-... 1. fázis: MapLibre GL JS alap-stílusa (kontrollok, popupok). */
 @import 'maplibre-gl/dist/maplibre-gl.css';
 
+/* backlog/204 — a Túra térkép +/− / iránytű vezérlője a jobb felső lebegő gombok (Rétegek, Továbbiak)
+   alá kerül; a MapLibre a térkép-konténeren kívül, a komponens stílus-hatókörén túl rajzolja. */
+.tura-map .maplibregl-ctrl-top-right {
+  top: 84px;
+}
+
 /* shared/help-button: help texts separate paragraphs with a newline — keep them as line breaks in the alert. */
 .help-alert .alert-message {
   white-space: pre-line;

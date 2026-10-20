@@ -3,19 +3,135 @@
   inset: 0;
 }
 
-// backlog/200 — lebegő, nem blokkoló jelzés a térkép alján (az attribúció fölött); csak a saját
-// tartalma fogja a koppintást, a térkép körülötte továbbra is mozgatható.
-.zoom-hint {
+// backlog/204 — a térkép fölött lebegő elemek. A konténerük nem fogja a koppintást (a térkép körülöttük
+// mozgatható marad), csak a saját tartalmuk.
+.map-actions,
+.map-bottom {
   position: absolute;
-  left: 0;
-  right: 0;
+  pointer-events: none;
+
+  > * {
+    pointer-events: auto;
+  }
+}
+
+// Jobb felül, a MapLibre +/− / iránytű vezérlője fölött (ld. global.scss `.tura-map`).
+.map-actions {
+  top: 8px;
+  right: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+
+  ion-button {
+    margin: 0 0 4px;
+    --box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  }
+}
+
+// Alul: a „Közelíts rá” jelzés, a kártya és a mód-sáv. Az attribúció (OSM-licenc) sora alatta látszik.
+.map-bottom {
+  left: 8px;
+  right: 8px;
   bottom: 40px;
-  width: fit-content;
-  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.map-card,
+.mode-bar {
+  border-radius: 12px;
+  background: var(--ion-background-color, #ffffff);
+  color: var(--ion-text-color, #000000);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
+}
+
+.map-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 12px;
+}
+
+.map-card-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  ion-button {
+    margin: 0;
+    flex-shrink: 0;
+  }
+}
+
+.map-card-actions {
+  justify-content: flex-end;
+}
+
+// backlog/206 — a mód neve kiemelve, utána a tipp; hosszabb szöveg két sorba tördel.
+.mode-hint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 6px;
+  font-size: 13px;
+
+  strong {
+    color: var(--ion-color-primary);
+  }
+}
+
+// backlog/205, backlog/206 — négy egyforma, ikonos + feliratos gomb; az aktív mód a kiemelő színű.
+.mode-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  padding: 4px;
+  gap: 4px;
+}
+
+.mode-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 48px;
+  padding: 4px 2px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.2;
+  text-align: center;
+
+  ion-icon,
+  ion-spinner {
+    width: 22px;
+    height: 22px;
+  }
+
+  &.active {
+    background: var(--ion-color-primary);
+    color: var(--ion-color-primary-contrast);
+    font-weight: 600;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+  }
+}
+
+// backlog/200 — nem blokkoló jelzés a kártya fölött, középen.
+.zoom-hint {
+  align-self: center;
   display: flex;
   align-items: center;
   gap: 2px;
-  max-width: calc(100% - 32px);
+  max-width: 100%;
   padding: 4px 4px 4px 14px;
   border-radius: 999px;
   background: rgba(33, 33, 33, 0.85);
@@ -28,47 +144,27 @@
   }
 }
 
-// Kis (telefon-szélességű) képernyőn a fejléc gomb-sorai nem férnek el egy sorban, és az
-// ion-toolbar alapból se nem tördel, se nem scroll-ozható — az "end" slotba eső gombok
-// (Rétegek/Katalógus/Útvonalaim) korábban láthatatlanul kilógtak a képernyőről, minden
-// elérési mód nélkül. A `container` egy Ionic által direkt erre a célra exponált CSS shadow
-// part (az a belső flex-doboz, ami a slot="start"/"end" tartalmat összefogja) — erre rakva az
-// overflow-t mindkét gomb-sor vízszintesen görgethetővé válik, ha nem fér ki.
-.tura-scrollable-toolbar::part(container) {
-  overflow-x: auto;
-  flex-wrap: nowrap;
-}
-
-// backlog/187 — az ion-toolbar nem ad belső margót a slotolt tartalomnak; az app többi mezőjének
-// 16 px-es bal margója.
+// backlog/187, backlog/204 — a név-mező a kártyában a gombok mellett kitölti a maradék helyet.
 .route-name-input {
-  --padding-start: 16px;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 36px;
+  --padding-start: 0;
+  font-size: 14px;
 }
 
-// backlog/tura-utvonaltervezo/103-... 2.3 fázis — táv/idő/szintkülönbség + magassági profil, egy
-// ion-footer sávban, nem absolute overlay a térkép fölött. backlog/183 — az ion-content nem
-// `fullscreen`, így a térkép-konténer pontosan a fejléc és a lábléc közötti látható rész: a
-// MapLibre vezérlői és a `fitBounds` nem számolnak takart sávval.
-// ion-toolbar lays its slotted content out as a flex ROW by default — a wrapper is needed so the
-// stats line and the chart stack vertically as one flex item instead of sitting side by side.
-.route-metrics-content {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  padding: 4px 16px; // backlog/187 — a többi mezővel azonos oldalmargó
-}
-
+// backlog/tura-utvonaltervezo/103-... 2.3 fázis — táv/idő/szintkülönbség + magassági profil; backlog/204
+// óta a lebegő kártyában, így a megjelenése nem méretezi át a térképet (backlog/210).
 .route-metrics-stats {
   display: flex;
   justify-content: space-between;
   font-size: 0.85rem;
   font-weight: 600;
-  margin-bottom: 4px;
 }
 
 .route-metrics-chart {
   width: 100%;
-  height: 40px;
+  height: 32px;
   display: block;
 }
 
@@ -78,10 +174,10 @@
   width: 100%;
 }
 
-// backlog/189, backlog/207 — az előnézet-sáv: a túra neve legfeljebb két sorban, levágva; két 14 px-es sor
-// még elfér a sáv alapmagasságában, így a hosszú név sem tolja le a térképet.
+// backlog/189, backlog/207 — az előnézet: a túra neve legfeljebb két sorban, levágva.
 .curated-preview-name {
-  padding-left: 16px;
+  flex: 1 1 auto;
+  min-width: 0;
   font-size: 14px;
   font-weight: 600;
   display: -webkit-box;
