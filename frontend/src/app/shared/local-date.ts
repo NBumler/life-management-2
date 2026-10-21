@@ -43,3 +43,22 @@ export function ageInYears(birthDateIso: string, todayIso: string): number {
   }
   return age;
 }
+
+/**
+ * documentation/Subfeatures/Heti adatok.md: the Monday (ISO-8601 week start — same convention as the
+ * Naptár month grid and the Heti terv) of the week containing `iso`, as `YYYY-MM-DD`.
+ */
+export function startOfIsoWeek(iso: string): string {
+  const [year, month, day] = iso.split('-').map(Number);
+  const mondayIndexed = (new Date(Date.UTC(year, month - 1, day)).getUTCDay() + 6) % 7;
+  return addDaysIso(iso, -mondayIndexed);
+}
+
+/** Every calendar day from `fromIso` to `toIso`, both inclusive (`[]` when `toIso` is before `fromIso`). */
+export function daysInRange(fromIso: string, toIso: string): string[] {
+  const days: string[] = [];
+  for (let day = fromIso; day <= toIso; day = addDaysIso(day, 1)) {
+    days.push(day);
+  }
+  return days;
+}

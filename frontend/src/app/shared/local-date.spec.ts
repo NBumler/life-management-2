@@ -1,4 +1,4 @@
-import { ageInYears, today } from './local-date';
+import { ageInYears, daysInRange, startOfIsoWeek, today } from './local-date';
 
 describe('today()', () => {
   afterEach(() => {
@@ -50,5 +50,29 @@ describe('ageInYears()', () => {
   it('handles the birthday-month day boundary', () => {
     expect(ageInYears('2001-03-10', '2026-03-09')).toBe(24);
     expect(ageInYears('2001-03-10', '2026-03-10')).toBe(25);
+  });
+});
+
+describe('startOfIsoWeek()', () => {
+  it('returns the Monday of the week, Monday and Sunday included', () => {
+    expect(startOfIsoWeek('2026-10-19')).toBe('2026-10-19'); // Monday
+    expect(startOfIsoWeek('2026-10-21')).toBe('2026-10-19'); // Wednesday
+    expect(startOfIsoWeek('2026-10-25')).toBe('2026-10-19'); // Sunday
+  });
+
+  it('crosses month and year boundaries', () => {
+    expect(startOfIsoWeek('2026-11-01')).toBe('2026-10-26');
+    expect(startOfIsoWeek('2027-01-01')).toBe('2026-12-28');
+  });
+});
+
+describe('daysInRange()', () => {
+  it('lists every day, both ends inclusive, across a year boundary', () => {
+    expect(daysInRange('2026-12-30', '2027-01-02')).toEqual(['2026-12-30', '2026-12-31', '2027-01-01', '2027-01-02']);
+  });
+
+  it('is a single day for from == to, and empty for a reversed range', () => {
+    expect(daysInRange('2026-10-21', '2026-10-21')).toEqual(['2026-10-21']);
+    expect(daysInRange('2026-10-22', '2026-10-21')).toEqual([]);
   });
 });

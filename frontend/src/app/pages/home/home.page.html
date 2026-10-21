@@ -1,6 +1,17 @@
 <ion-header>
   <ion-toolbar>
     <ion-title>{{ 'HOME.TITLE' | translate }}</ion-title>
+    @if (weeklyEnabled) {
+      <ion-buttons slot="end">
+        <ion-button
+          routerLink="/tabs/home/week"
+          [attr.aria-label]="'HOME.WEEKLY.OPEN' | translate"
+          [title]="'HOME.WEEKLY.OPEN' | translate"
+        >
+          <ion-icon name="calendar-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+    }
     <app-sync-status-button slot="end"></app-sync-status-button>
   </ion-toolbar>
 </ion-header>
@@ -9,10 +20,10 @@
   @for (widget of widgets; track widget.key) {
     @switch (widget.key) {
       @case ('today-nutrition') {
-        <app-today-nutrition-widget></app-today-nutrition-widget>
+        <app-today-nutrition-widget [summary]="nutritionSummary()"></app-today-nutrition-widget>
       }
       @case ('today-workouts') {
-        <app-today-workouts-widget></app-today-workouts-widget>
+        <app-today-workouts-widget [summary]="workoutsSummary()"></app-today-workouts-widget>
       }
     }
   }

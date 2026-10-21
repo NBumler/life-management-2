@@ -22,7 +22,17 @@ export const routes: Routes = [
         // pattern): a deep link with the flag off redirects to the next enabled tab.
         path: 'home',
         canActivate: [featureFlagGuard('tab.kezdolap')],
-        loadComponent: () => import('./pages/home/home.page').then((m) => m.HomePage),
+        children: [
+          { path: '', loadComponent: () => import('./pages/home/home.page').then((m) => m.HomePage) },
+          {
+            // documentation/Subfeatures/Heti adatok.md (backlog/233) — the weekly overview, opened
+            // from the home header icon; its own flag on top of the tab's.
+            path: 'week',
+            canActivate: [featureFlagGuard('kezdolap.hetiAdatok')],
+            loadComponent: () =>
+              import('./pages/home/weekly/weekly-overview.page').then((m) => m.WeeklyOverviewPage),
+          },
+        ],
       },
       {
         path: 'menu',

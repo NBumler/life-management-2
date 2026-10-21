@@ -1,0 +1,54 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/home"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ 'HOME.WEEKLY.TITLE' | translate }}</ion-title>
+    <app-sync-status-button slot="end"></app-sync-status-button>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button class="previous-week" [attr.aria-label]="'HOME.WEEKLY.PREVIOUS' | translate" (click)="week.previousWeek()">
+        <ion-icon name="chevron-back-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title class="week-range">{{ 'HOME.WEEKLY.RANGE' | translate: { from: week.weekStart(), to: week.weekEnd() } }}</ion-title>
+    <ion-buttons slot="end">
+      @if (!week.isCurrentWeek()) {
+        <ion-button class="this-week" (click)="week.showCurrentWeek()">{{ 'HOME.WEEKLY.THIS_WEEK' | translate }}</ion-button>
+      }
+      <ion-button
+        class="next-week"
+        [disabled]="week.isCurrentWeek()"
+        [attr.aria-label]="'HOME.WEEKLY.NEXT' | translate"
+        (click)="week.nextWeek()"
+      >
+        <ion-icon name="chevron-forward-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  @if (week.isCurrentWeek()) {
+    <ion-note class="days-counted">{{ 'HOME.WEEKLY.DAYS_COUNTED' | translate: { count: week.countedDays().length } }}</ion-note>
+  }
+  @for (widget of widgets; track widget.key) {
+    @switch (widget.key) {
+      @case ('week-nutrition') {
+        <app-today-nutrition-widget
+          [summary]="week.nutrition()"
+          titleKey="HOME.WEEKLY.NUTRITION_TITLE"
+          incompleteKey="HOME.WEEKLY.NUTRITION_INCOMPLETE"
+        ></app-today-nutrition-widget>
+      }
+      @case ('week-workouts') {
+        <app-today-workouts-widget
+          [summary]="week.workoutsSummary()"
+          titleKey="HOME.WEEKLY.WORKOUTS_TITLE"
+          emptyKey="HOME.WEEKLY.NO_WORKOUTS"
+        ></app-today-workouts-widget>
+      }
+    }
+  }
+</ion-content>

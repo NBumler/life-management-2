@@ -1,7 +1,7 @@
 @if (rowDefs.length > 0) {
   <ion-card>
     <ion-card-header>
-      <ion-card-title>{{ 'HOME.WORKOUTS.TITLE' | translate }}</ion-card-title>
+      <ion-card-title>{{ titleKey() | translate }}</ion-card-title>
     </ion-card-header>
     <ion-card-content>
       @if (rows().length > 0) {
@@ -18,7 +18,7 @@
           <span class="workout-kcal">{{ totalKcal() | number: '1.0-0' }} kcal</span>
         </div>
       } @else {
-        <ion-note>{{ 'HOME.WORKOUTS.EMPTY' | translate }}</ion-note>
+        <ion-note>{{ emptyKey() | translate }}</ion-note>
       }
     </ion-card-content>
   </ion-card>

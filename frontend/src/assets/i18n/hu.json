@@ -61,6 +61,19 @@
       "TOTAL": "Összesen",
       "EMPTY": "Ma még nem volt edzés.",
       "STRETCH": "Nyújtás"
+    },
+    "WEEKLY": {
+      "OPEN": "Heti adatok",
+      "TITLE": "Heti adatok",
+      "RANGE": "{{from}} – {{to}}",
+      "PREVIOUS": "Előző hét",
+      "NEXT": "Következő hét",
+      "THIS_WEEK": "Ez a hét",
+      "DAYS_COUNTED": "7 napból {{count}} nap",
+      "NUTRITION_TITLE": "Heti étkezés állása",
+      "NUTRITION_INCOMPLETE": "Egy heti tétel hivatkozott receptje/élelmiszere hiányzik — a heti összesítés hiányos.",
+      "WORKOUTS_TITLE": "Heti edzések",
+      "NO_WORKOUTS": "Ezen a héten még nem volt edzés."
     }
   },
   "MENU": {

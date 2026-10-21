@@ -50,6 +50,7 @@ describe('app.routes feature-flag guards', () => {
     { path: 'tabs/tasks/life-plans', flag: 'feladatok.eletTervek' },
     { path: 'tabs/tasks/events', flag: 'feladatok.esemenyek' },
     { path: 'tabs/tasks/calendar', flag: 'feladatok.naptar' },
+    { path: 'tabs/home/week', flag: 'kezdolap.hetiAdatok' },
   ];
 
   for (const { path, flag } of cases) {

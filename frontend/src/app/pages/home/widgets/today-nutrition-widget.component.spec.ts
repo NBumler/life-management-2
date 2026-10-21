@@ -1,12 +1,11 @@
-import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { provideTranslateService } from '@ngx-translate/core';
 
-import { TodayNutritionService, TodayNutritionSummary } from '../../../core/data/today-nutrition.service';
+import { NutritionSummary } from '../../../core/data/day-summary';
 import { TodayNutritionWidgetComponent } from './today-nutrition-widget.component';
 
-function computable(overrides: Partial<TodayNutritionSummary> = {}): TodayNutritionSummary {
+function computable(overrides: Partial<NutritionSummary> = {}): NutritionSummary {
   return {
     computable: true,
     incomplete: false,
@@ -19,19 +18,17 @@ function computable(overrides: Partial<TodayNutritionSummary> = {}): TodayNutrit
 }
 
 describe('TodayNutritionWidgetComponent', () => {
-  let summary: ReturnType<typeof signal<TodayNutritionSummary>>;
-
-  async function setup(initial: TodayNutritionSummary): Promise<ComponentFixture<TodayNutritionWidgetComponent>> {
-    summary = signal(initial);
+  async function setup(initial: NutritionSummary): Promise<ComponentFixture<TodayNutritionWidgetComponent>> {
     await TestBed.configureTestingModule({
       imports: [TodayNutritionWidgetComponent],
       providers: [
         provideRouter([]),
         provideTranslateService(),
-        { provide: TodayNutritionService, useValue: { summary } },
       ],
     }).compileComponents();
-    return TestBed.createComponent(TodayNutritionWidgetComponent);
+    const fixture = TestBed.createComponent(TodayNutritionWidgetComponent);
+    fixture.componentRef.setInput('summary', initial);
+    return fixture;
   }
 
   it('renders a row per nutrient with an intake/goal figure when computable', async () => {
@@ -68,5 +65,23 @@ describe('TodayNutritionWidgetComponent', () => {
     const host = fixture.nativeElement as HTMLElement;
     expect(host.querySelectorAll('.nutrient-row').length).toBe(0);
     expect(host.querySelector('ion-button[routerLink="/tabs/menu/profile"]')).not.toBeNull();
+  });
+});
+
+describe('TodayNutritionWidgetComponent — weekly keys (backlog/233)', () => {
+  it('renders the caller-supplied title and incomplete keys', async () => {
+    await TestBed.configureTestingModule({
+      imports: [TodayNutritionWidgetComponent],
+      providers: [provideRouter([]), provideTranslateService()],
+    }).compileComponents();
+    const fixture = TestBed.createComponent(TodayNutritionWidgetComponent);
+    fixture.componentRef.setInput('summary', computable({ incomplete: true }));
+    fixture.componentRef.setInput('titleKey', 'HOME.WEEKLY.NUTRITION_TITLE');
+    fixture.componentRef.setInput('incompleteKey', 'HOME.WEEKLY.NUTRITION_INCOMPLETE');
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.querySelector('ion-card-title')?.textContent).toContain('HOME.WEEKLY.NUTRITION_TITLE');
+    expect(host.textContent).toContain('HOME.WEEKLY.NUTRITION_INCOMPLETE');
   });
 });

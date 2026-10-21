@@ -20,6 +20,22 @@ export const HOME_WIDGETS: readonly HomeWidgetDef[] = [
 ];
 
 /**
+ * documentation/Subfeatures/Heti adatok.md (`backlog/233`) — the weekly overview's widget set: the
+ * same widgets as `HOME_WIDGETS`, same flags and order, rendered over the counted days of the week.
+ */
+export type WeeklyWidgetKey = 'week-nutrition' | 'week-workouts';
+
+export interface WeeklyWidgetDef {
+  key: WeeklyWidgetKey;
+  flag: FeatureFlagKey | null;
+}
+
+export const WEEKLY_WIDGETS: readonly WeeklyWidgetDef[] = [
+  { key: 'week-nutrition', flag: 'tab.kaja' },
+  { key: 'week-workouts', flag: null },
+];
+
+/**
  * A single activity row inside the `today-workouts` widget (`backlog/112`). Flag-gated the same way
  * as `HOME_WIDGETS`; a row whose flag is off is dropped, and the widget hides itself entirely
  * when none remain. `TodayWorkoutsService.summary` supplies the per-row count/kcal by `key`.

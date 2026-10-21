@@ -61,6 +61,19 @@
       "TOTAL": "Total",
       "EMPTY": "No workouts logged yet today.",
       "STRETCH": "Stretching"
+    },
+    "WEEKLY": {
+      "OPEN": "Weekly overview",
+      "TITLE": "Weekly overview",
+      "RANGE": "{{from}} – {{to}}",
+      "PREVIOUS": "Previous week",
+      "NEXT": "Next week",
+      "THIS_WEEK": "This week",
+      "DAYS_COUNTED": "{{count}} of 7 days",
+      "NUTRITION_TITLE": "This week's nutrition",
+      "NUTRITION_INCOMPLETE": "A recipe/food referenced by one of this week's items is missing — the weekly total is incomplete.",
+      "WORKOUTS_TITLE": "This week's workouts",
+      "NO_WORKOUTS": "No workouts logged yet this week."
     }
   },
   "MENU": {

@@ -71,4 +71,13 @@ describe('HomePage', () => {
     fixture.detectChanges();
     expect((fixture.nativeElement as HTMLElement).querySelector('app-today-workouts-widget')).not.toBeNull();
   });
+
+  it('backlog/233 — the header carries the "Heti adatok" icon to /tabs/home/week (kezdolap.hetiAdatok is on)', () => {
+    fixture.detectChanges();
+    const button = (fixture.nativeElement as HTMLElement).querySelector('ion-button[routerLink="/tabs/home/week"]');
+
+    expect(fixture.componentInstance.weeklyEnabled).toBe(true);
+    expect(button).not.toBeNull();
+    expect(button?.getAttribute('aria-label')).toBe('HOME.WEEKLY.OPEN');
+  });
 });

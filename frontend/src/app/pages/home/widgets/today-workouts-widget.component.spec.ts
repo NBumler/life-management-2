@@ -1,14 +1,13 @@
-import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideTranslateService } from '@ngx-translate/core';
 
 import { FeatureFlagsService } from '../../../core/config/feature-flags.service';
-import { TodayWorkoutsService, TodayWorkoutsSummary } from '../../../core/data/today-workouts.service';
+import { WorkoutsSummary } from '../../../core/data/day-summary';
 import { TodayWorkoutsWidgetComponent } from './today-workouts-widget.component';
 
 const ZERO = { count: 0, kcal: 0 };
 
-function summaryWith(overrides: Partial<TodayWorkoutsSummary> = {}): TodayWorkoutsSummary {
+function summaryWith(overrides: Partial<WorkoutsSummary> = {}): WorkoutsSummary {
   return {
     steps: { ...ZERO, stepCount: 0 },
     workout: ZERO,
@@ -24,7 +23,7 @@ function summaryWith(overrides: Partial<TodayWorkoutsSummary> = {}): TodayWorkou
 
 describe('TodayWorkoutsWidgetComponent', () => {
   async function setup(
-    summary: TodayWorkoutsSummary,
+    summary: WorkoutsSummary,
     isEnabled: (key: string) => boolean = () => true,
   ): Promise<ComponentFixture<TodayWorkoutsWidgetComponent>> {
     await TestBed.configureTestingModule({
@@ -32,10 +31,11 @@ describe('TodayWorkoutsWidgetComponent', () => {
       providers: [
         provideTranslateService(),
         { provide: FeatureFlagsService, useValue: { isEnabled } },
-        { provide: TodayWorkoutsService, useValue: { summary: signal(summary) } },
       ],
     }).compileComponents();
-    return TestBed.createComponent(TodayWorkoutsWidgetComponent);
+    const fixture = TestBed.createComponent(TodayWorkoutsWidgetComponent);
+    fixture.componentRef.setInput('summary', summary);
+    return fixture;
   }
 
   it('renders nothing when no row flag qualifies', async () => {
@@ -83,5 +83,16 @@ describe('TodayWorkoutsWidgetComponent', () => {
 
     expect(fixture.componentInstance.rows().length).toBe(0);
     expect((fixture.nativeElement as HTMLElement).querySelector('ion-note')).not.toBeNull();
+  });
+
+  it('backlog/233 — renders the caller-supplied title and empty-state keys', async () => {
+    const fixture = await setup(summaryWith());
+    fixture.componentRef.setInput('titleKey', 'HOME.WEEKLY.WORKOUTS_TITLE');
+    fixture.componentRef.setInput('emptyKey', 'HOME.WEEKLY.NO_WORKOUTS');
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.querySelector('ion-card-title')?.textContent).toContain('HOME.WEEKLY.WORKOUTS_TITLE');
+    expect(host.querySelector('ion-note')?.textContent).toContain('HOME.WEEKLY.NO_WORKOUTS');
   });
 });

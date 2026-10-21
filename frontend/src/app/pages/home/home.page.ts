@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { IonContent, IonHeader, IonTitle, IonToolbar, ViewWillEnter } from '@ionic/angular/standalone';
+import { RouterLink } from '@angular/router';
+import { IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonTitle, IonToolbar, ViewWillEnter } from '@ionic/angular/standalone';
 import { TranslatePipe } from '@ngx-translate/core';
 
 import { FeatureFlagsService } from '../../core/config/feature-flags.service';
@@ -14,7 +15,8 @@ import { TodayWorkoutsWidgetComponent } from './widgets/today-workouts-widget.co
  * documentation/Features/Kezdőlap.md — a login utáni kezdőképernyő és az alsó tab-sor első eleme.
  * Tartalma a config-vezérelt widget-verem (`HOME_WIDGETS`, `backlog/095`): a mai étkezés állása +
  * a mai edzések (`backlog/112`); gyorsgombok nincsenek (`backlog/232` — azok az Android
- * widgeten élnek). Kizárólag a helyi store-ból renderel —
+ * widgeten élnek). A fejléc naptár-ikonja a „Heti adatok” nézetre visz (`backlog/233`,
+ * `kezdolap.hetiAdatok` flag). Kizárólag a helyi store-ból renderel —
  * Full-offline is teljes értékű.
  */
 @Component({
@@ -24,7 +26,11 @@ import { TodayWorkoutsWidgetComponent } from './widgets/today-workouts-widget.co
     IonHeader,
     IonToolbar,
     IonTitle,
+    IonButtons,
+    IonButton,
+    IonIcon,
     IonContent,
+    RouterLink,
     SyncStatusButtonComponent,
     TodayNutritionWidgetComponent,
     TodayWorkoutsWidgetComponent,
@@ -36,6 +42,12 @@ export class HomePage implements ViewWillEnter {
   private readonly featureFlags = inject(FeatureFlagsService);
   private readonly todayNutrition = inject(TodayNutritionService);
   private readonly todayWorkouts = inject(TodayWorkoutsService);
+
+  readonly nutritionSummary = this.todayNutrition.summary;
+  readonly workoutsSummary = this.todayWorkouts.summary;
+
+  /** backlog/233 — the header icon to the weekly overview; hidden (not disabled) when the flag is off. */
+  readonly weeklyEnabled = this.featureFlags.isEnabled('kezdolap.hetiAdatok');
 
   /** Widgets to render, in registry order, whose flag is on. */
   readonly widgets: readonly HomeWidgetDef[] = HOME_WIDGETS.filter(

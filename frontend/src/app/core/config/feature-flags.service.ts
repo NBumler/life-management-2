@@ -6,6 +6,7 @@ import featuresConfig from '../../../assets/config/features.json';
 // SSOT: documentation/Architektúra/Frontend.md "Flag registry".
 export type FeatureFlagKey =
   | 'tab.kezdolap'
+  | 'kezdolap.hetiAdatok'
   | 'tab.kaja'
   | 'kaja.recept'
   | 'kaja.statisztika'
@@ -33,6 +34,7 @@ export type FeatureFlagKey =
 // Validated at load time (dev: hard error; the spec's "build-time validált, szabálysértés
 // fordítási hiba" intent, approximated here since the config is a runtime asset — see class doc).
 const FEATURE_FLAG_DEPENDENCIES: ReadonlyMap<FeatureFlagKey, FeatureFlagKey> = new Map([
+  ['kezdolap.hetiAdatok', 'tab.kezdolap'],
   ['kaja.recept', 'tab.kaja'],
   ['kaja.statisztika', 'tab.kaja'],
   ['edzes.hetiTerv', 'tab.edzes'],
@@ -50,6 +52,7 @@ const FEATURE_FLAG_DEPENDENCIES: ReadonlyMap<FeatureFlagKey, FeatureFlagKey> = n
 
 const FEATURE_FLAG_KEYS: readonly FeatureFlagKey[] = [
   'tab.kezdolap',
+  'kezdolap.hetiAdatok',
   'tab.kaja',
   'kaja.recept',
   'kaja.statisztika',

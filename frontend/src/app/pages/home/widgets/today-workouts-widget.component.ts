@@ -1,11 +1,11 @@
 import { DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonIcon, IonNote } from '@ionic/angular/standalone';
 import { TranslatePipe } from '@ngx-translate/core';
 
 import { FeatureFlagsService } from '../../../core/config/feature-flags.service';
 import { HOME_TODAY_WORKOUT_ROWS, TodayWorkoutRowDef, TodayWorkoutRowKey } from '../../../core/config/home-widget-registry';
-import { TodayWorkoutsService } from '../../../core/data/today-workouts.service';
+import { WorkoutsSummary } from '../../../core/data/day-summary';
 
 interface WorkoutRowView {
   key: TodayWorkoutRowKey;
@@ -18,11 +18,13 @@ interface WorkoutRowView {
 }
 
 /**
- * documentation/Features/Kezdőlap.md — the "Mai edzések" home widget (`backlog/112`): today's logged
- * activities (lépés, edzésnapló, mászás, úszás, bicikli) with their individual + combined extra
- * kcal, from {@link TodayWorkoutsService}. One row per `HOME_TODAY_WORKOUT_ROWS` entry whose flag is
- * on; a row is shown only once it has today's data (count > 0), and the widget renders nothing when
- * no row's flag qualifies. Renders from local store only — Full-offline safe.
+ * documentation/Features/Kezdőlap.md — the "Mai edzések" home widget (`backlog/112`): logged
+ * activities (lépés, edzésnapló, mászás, úszás, bicikli, röplabda, nyújtás) with their individual +
+ * combined extra kcal. Presentational: the caller passes the `summary` — today's from
+ * `TodayWorkoutsService` on the home screen, the counted week's from `WeeklyOverviewService` on the
+ * weekly overview (`backlog/233`, with its own title / empty keys). One row per
+ * `HOME_TODAY_WORKOUT_ROWS` entry whose flag is on; a row is shown only once it has data
+ * (count > 0), and the widget renders nothing when no row's flag qualifies.
  */
 @Component({
   selector: 'app-today-workouts-widget',
@@ -33,13 +35,14 @@ interface WorkoutRowView {
 })
 export class TodayWorkoutsWidgetComponent {
   private readonly featureFlags = inject(FeatureFlagsService);
-  private readonly workouts = inject(TodayWorkoutsService);
 
   readonly rowDefs: readonly TodayWorkoutRowDef[] = HOME_TODAY_WORKOUT_ROWS.filter(
     (row) => row.flag === null || this.featureFlags.isEnabled(row.flag),
   );
 
-  readonly summary = this.workouts.summary;
+  readonly summary = input.required<WorkoutsSummary>();
+  readonly titleKey = input('HOME.WORKOUTS.TITLE');
+  readonly emptyKey = input('HOME.WORKOUTS.EMPTY');
 
   readonly rows = computed<WorkoutRowView[]>(() => {
     const s = this.summary();

@@ -1,10 +1,10 @@
 import { DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { IonButton, IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonNote } from '@ionic/angular/standalone';
 import { TranslatePipe } from '@ngx-translate/core';
 
-import { TodayNutritionService } from '../../../core/data/today-nutrition.service';
+import { NutritionSummary } from '../../../core/data/day-summary';
 
 interface NutrientRow {
   labelKey: string;
@@ -15,9 +15,10 @@ interface NutrientRow {
 }
 
 /**
- * documentation/Features/Kezdőlap.md — the "Mai étkezés állása" home widget (`backlog/095`): today's
- * intake vs. goal for kcal + the three macros, from {@link TodayNutritionService} (same numbers as
- * the Étkezés dashboard). Renders from local store only — Full-offline safe. When the profile is
+ * documentation/Features/Kezdőlap.md — the "Mai étkezés állása" home widget (`backlog/095`): intake
+ * vs. goal for kcal + the three macros. Presentational: the caller passes the `summary` — today's
+ * from `TodayNutritionService` on the home screen, the counted week's from `WeeklyOverviewService`
+ * on the weekly overview (`backlog/233`, with its own title / incomplete keys). When the profile is
  * missing TDEE inputs it shows a link to Profile instead of numbers.
  */
 @Component({
@@ -28,9 +29,9 @@ interface NutrientRow {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TodayNutritionWidgetComponent {
-  private readonly nutrition = inject(TodayNutritionService);
-
-  readonly summary = this.nutrition.summary;
+  readonly summary = input.required<NutritionSummary>();
+  readonly titleKey = input('HOME.NUTRITION.TITLE');
+  readonly incompleteKey = input('HOME.NUTRITION.INCOMPLETE');
 
   readonly rows = computed<NutrientRow[]>(() => {
     const s = this.summary();

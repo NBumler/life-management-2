@@ -1,5 +1,6 @@
 {
   "tab.kezdolap": true,
+  "kezdolap.hetiAdatok": true,
   "tab.kaja": true,
   "kaja.recept": false,
   "kaja.statisztika": true,
