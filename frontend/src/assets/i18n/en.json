@@ -37,11 +37,6 @@
   },
   "HOME": {
     "TITLE": "Home",
-    "QUICK": {
-      "TITLE": "Quick actions",
-      "NEW_MEAL": "New meal",
-      "NEW_CLIMB": "New climb"
-    },
     "NUTRITION": {
       "TITLE": "Today's nutrition",
       "CALORIES": "Calories",

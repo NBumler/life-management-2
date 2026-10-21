@@ -7,14 +7,14 @@ import { HOME_WIDGETS, HomeWidgetDef } from '../../core/config/home-widget-regis
 import { TodayNutritionService } from '../../core/data/today-nutrition.service';
 import { TodayWorkoutsService } from '../../core/data/today-workouts.service';
 import { SyncStatusButtonComponent } from '../../shared/sync-status-button/sync-status-button.component';
-import { QuickActionsWidgetComponent } from './widgets/quick-actions-widget.component';
 import { TodayNutritionWidgetComponent } from './widgets/today-nutrition-widget.component';
 import { TodayWorkoutsWidgetComponent } from './widgets/today-workouts-widget.component';
 
 /**
  * documentation/Features/Kezdőlap.md — a login utáni kezdőképernyő és az alsó tab-sor első eleme.
- * Tartalma a config-vezérelt widget-verem (`HOME_WIDGETS`, `backlog/095`): gyorsgombok + a mai
- * étkezés állása + a mai edzések (`backlog/112`). Kizárólag a helyi store-ból renderel —
+ * Tartalma a config-vezérelt widget-verem (`HOME_WIDGETS`, `backlog/095`): a mai étkezés állása +
+ * a mai edzések (`backlog/112`); gyorsgombok nincsenek (`backlog/232` — azok az Android
+ * widgeten élnek). Kizárólag a helyi store-ból renderel —
  * Full-offline is teljes értékű.
  */
 @Component({
@@ -26,7 +26,6 @@ import { TodayWorkoutsWidgetComponent } from './widgets/today-workouts-widget.co
     IonTitle,
     IonContent,
     SyncStatusButtonComponent,
-    QuickActionsWidgetComponent,
     TodayNutritionWidgetComponent,
     TodayWorkoutsWidgetComponent,
     TranslatePipe,

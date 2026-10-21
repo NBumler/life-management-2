@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-10-17
-verifikalt_commit: b0c6d57
+verifikalva: 2026-10-21
+verifikalt_commit: f0661af
 ---
 
 # Kezdőlap
@@ -17,7 +17,9 @@ verifikalt_commit: b0c6d57
 
 A **Kezdőlap** az alsó tab-sor **első** eleme (`/tabs/home`), és — ha a `tab.kezdolap` flag be van
 kapcsolva — a login utáni alapértelmezett nézet. Tartalma egy **config-vezérelt widget-verem**:
-gyorsgombok a leggyakoribb létrehozó flow-khoz + a mai étkezés állása.
+a mai étkezés állása + a mai edzések. Gyorsgombok (Új étkezés / Új mászás) az appon belüli
+Kezdőlapon nincsenek (`backlog/232`) — azok az [[Android kezdőképernyő widget]] „Gyorsgombok” és
+„Napi összegző” widgetjén élnek.
 
 ### Funkcionális leírás
 
@@ -34,20 +36,15 @@ gyorsgombok a leggyakoribb létrehozó flow-khoz + a mai étkezés állása.
 
 | Widget | Flag | Tartalom |
 |---|---|---|
-| **Gyorsgombok** (`quick-actions`) | — (mindig) | Gombonként flag-elt gyors-belépők (`HOME_QUICK_ACTIONS`): **Új étkezés** → `/tabs/food/meal/new` (`tab.kaja`), **Új mászás** → `/tabs/workout/climbing` mászás-hub (`edzes.maszonaplo`). Ha egyik gomb sem engedélyezett, a widget nem renderel semmit. |
 | **Mai étkezés állása** (`today-nutrition`) | `tab.kaja` | A mai bevitt kalória + fehérje / szénhidrát / zsír a **mai célhoz** képest, a hátralévő mennyiséggel. Ugyanaz a szám, mint az [[Étkezés]] dashboardon: `computeDailyNutrition` a mai étkezésekre + `computeTdee` az aznapi aktivitás-kalóriával ([[Tápérték kalkulátor]]). Hiányos profilnál (nincs elég TDEE-bemenet) szám helyett link a [[Profile]]-ra. Ha egy mai tétel hivatkozott receptje/élelmiszere hiányzik, „hiányos" jelzés. |
-| **Mai edzések** (`today-workouts`, `backlog/112`) | — (soronként flag-elve) | A mai (lokális naptári nap) lépésszám, edzésnapló, mászás, úszás, bicikli, röplabda és nyújtás ([[Nyújtás]], `backlog/169`) soronként, mindegyik saját extra-kalóriájával **és** egy összesített „Összesen" kcal sorral (`TodayWorkoutsService` — az `activity-kcal.ts` ugyanazon függvényei, mint a „Mai étkezés állása" widget `activityExtraKcal`-ja mögött, így a két szám sosem tér el). Soronként flag: lépés `menu.lepesszam`, edzésnapló `tab.edzes`, mászás `edzes.maszonaplo`, úszás `edzes.uszas`, bicikli `edzes.bicikli`, röplabda `edzes.roplabda`, nyújtás `edzes.nyujtas` (`HOME_TODAY_WORKOUT_ROWS`, ugyanaz a minta, mint a `HOME_QUICK_ACTIONS`-nál). Egy sor csak akkor jelenik meg, ha aznapra van adata; ha egy engedélyezett sornak sincs mai adata, „Ma még nem volt edzés" üres állapot; ha egyik sor flagje sincs bekapcsolva, a widget nem renderel semmit. |
-
-- **Gyors-belépő cél:** az „Új mászás" a 4 mászó-kontextus **hubjára** visz (a kontextust ott
-  választja a user); nincs „utoljára használt kontextus" emlékezet az első körben.
+| **Mai edzések** (`today-workouts`, `backlog/112`) | — (soronként flag-elve) | A mai (lokális naptári nap) lépésszám, edzésnapló, mászás, úszás, bicikli, röplabda és nyújtás ([[Nyújtás]], `backlog/169`) soronként, mindegyik saját extra-kalóriájával **és** egy összesített „Összesen" kcal sorral (`TodayWorkoutsService` — az `activity-kcal.ts` ugyanazon függvényei, mint a „Mai étkezés állása" widget `activityExtraKcal`-ja mögött, így a két szám sosem tér el). Soronként flag: lépés `menu.lepesszam`, edzésnapló `tab.edzes`, mászás `edzes.maszonaplo`, úszás `edzes.uszas`, bicikli `edzes.bicikli`, röplabda `edzes.roplabda`, nyújtás `edzes.nyujtas` (`HOME_TODAY_WORKOUT_ROWS`, ugyanaz a flag-minta, mint a `HOME_WIDGETS`-nél). Egy sor csak akkor jelenik meg, ha aznapra van adata; ha egy engedélyezett sornak sincs mai adata, „Ma még nem volt edzés" üres állapot; ha egyik sor flagje sincs bekapcsolva, a widget nem renderel semmit. |
 
 ### UI/UX elvárások
 
 - `ion-header` / `ion-toolbar` a `HOME.TITLE` címmel; a `SyncStatusButton` a `end` slotban
   ([[Frontend]] app-shell chrome minden tabon — [[Backend-offline first]] §16).
 - A widgetek `ion-card`-ok, a `HOME_WIDGETS` sorrendjében, egymás alatt.
-- A gyorsgombok `ion-button[expand=block]` sorok ikonnal + lokalizált címkével
-  ([[Nyelv választás]] — `HOME.*`).
+- A widgetek címkéi lokalizáltak ([[Nyelv választás]] — `HOME.*`).
 - A „Mai étkezés állása" nutriens-soronként `bevitt / cél <mértékegység> (még X)` alakban jelenik meg.
 - **Nincs önálló flagje a tab-nak:** a `tab.kezdolap` fedi a tabot és a Kezdőlap képernyőt; az egyes
   widgeteket a saját feature-flagjük takarja.
@@ -68,7 +65,9 @@ gyorsgombok a leggyakoribb létrehozó flow-khoz + a mai étkezés állása.
   tömb sorrendje fix, csak kód/config módosítja).
 - Az appon belüli Kezdőlap widget-verem **külön** dolog az [[Android kezdőképernyő widget]]-től
   (launcher `AppWidgetProvider`) — az utóbbi a `TodayNutritionService` ugyanezt a számítását egy
-  natív-olvasható pillanatképen át rendereli.
+  natív-olvasható pillanatképen át rendereli. A gyorsgomb-funkció kizárólag ott van: a saját
+  `WIDGET_ROUTES` / `WIDGET.NEW_*` szerződésén (`core/widget/widget-snapshot.ts`) és a
+  `drainPendingRoute()` deep-linken át, az appon belüli Kezdőlaptól függetlenül.
 - A [[Szinkronizációs központ]] korábbi `/tabs/dashboard/sync` útvonala **továbbra is elavult** — a
   sync képernyő a `Menü` alatt él, nem ezen a tabon.
 
@@ -83,16 +82,13 @@ Nincs nyitott kérdés.
 - `pages/home/home.page.ts` — standalone, OnPush. A `widgets` a `HOME_WIDGETS`-ből szűri ki az
   engedélyezett widgeteket (`FeatureFlagsService.isEnabled`); a template `@switch`-csel rendereli a
   `key` alapján. `ionViewWillEnter` betölti a `TodayNutritionService`-t, ha a nutrition widget látszik.
-- `pages/home/widgets/quick-actions-widget.component.ts` — a `HOME_QUICK_ACTIONS` flag-elt szűrése,
-  `ion-button` + `routerLink` gombonként; üres listánál nem renderel.
 - `pages/home/widgets/today-nutrition-widget.component.ts` — a `TodayNutritionService.summary`
   signal négy nutriens-sora + a hátralévő mennyiség; `!computable` ágon [[Profile]] link.
 - `pages/home/widgets/today-workouts-widget.component.ts` — a `HOME_TODAY_WORKOUT_ROWS`
   flag-szűrt sorai közül csak azok renderelnek, amiknek a `TodayWorkoutsService.summary`-ban van
   mai adata (`count > 0`); zárósor az összesített kcal; üres flag-készletnél a widget, üres
   mai-adatnál csak egy sor nem renderel.
-- `core/config/home-widget-registry.ts` — `HOME_WIDGETS` (widget-sorrend + flag),
-  `HOME_QUICK_ACTIONS` (gomb-katalógus: key / flag / route / ikon / címke) és
+- `core/config/home-widget-registry.ts` — `HOME_WIDGETS` (widget-sorrend + flag) és
   `HOME_TODAY_WORKOUT_ROWS` (a „Mai edzések" widget sor-katalógusa: key / flag / i18n-kulcs / ikon).
 - `core/data/today-nutrition.service.ts` — `providedIn: 'root'`; a 9 releváns repository (`Meal`,
   `Recipe`, `Food`, `Profile`, `WorkoutSession`, `SwimLog`, `BikeRideLog`, `ClimbingSession`,

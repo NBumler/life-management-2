@@ -50,12 +50,12 @@ describe('HomePage', () => {
   it('renders the widget stack without throwing', () => {
     expect(() => fixture.detectChanges()).not.toThrow();
     const host = fixture.nativeElement as HTMLElement;
-    expect(host.querySelector('app-quick-actions-widget')).not.toBeNull();
+    expect(host.querySelector('app-quick-actions-widget')).toBeNull();
   });
 
   it('shows the nutrition widget and loads its data on entry (tab.kaja is on in features.json)', async () => {
     fixture.detectChanges();
-    expect(fixture.componentInstance.widgets.map((w) => w.key)).toEqual(['quick-actions', 'today-nutrition', 'today-workouts']);
+    expect(fixture.componentInstance.widgets.map((w) => w.key)).toEqual(['today-nutrition', 'today-workouts']);
 
     await fixture.componentInstance.ionViewWillEnter();
     expect(load).toHaveBeenCalledTimes(1);

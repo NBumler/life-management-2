@@ -14,6 +14,8 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-21 — #232** Kezdőlap: a „Gyorsgombok” kártya lekerült (a verem: mai étkezés állása → mai edzések);
+  az Új étkezés / Új mászás gyorsgombok az Android kezdőképernyő widgeten maradnak, változatlanul.
 - **2026-10-21 — #231** Értesítések: romlott élelmiszerről már nem jön naponta „hamarosan lejár” — a `FOOD_EXPIRING_DAILY`
   a lejárat napjáig tart, onnan csak az egyszeri „megromlott” (`FOOD_SPOILED_ONCE`) szól.
 - **2026-10-21 — #230** Élő edzés: a súly gyors-növelő gombjai `+0.5 kg` / `+1 kg` (`+2.5 kg` / `+5 kg` helyett).

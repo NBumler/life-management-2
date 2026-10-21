@@ -37,11 +37,6 @@
   },
   "HOME": {
     "TITLE": "Kezdőlap",
-    "QUICK": {
-      "TITLE": "Gyorsgombok",
-      "NEW_MEAL": "Új étkezés",
-      "NEW_CLIMB": "Új mászás"
-    },
     "NUTRITION": {
       "TITLE": "Mai étkezés állása",
       "CALORIES": "Kalória",

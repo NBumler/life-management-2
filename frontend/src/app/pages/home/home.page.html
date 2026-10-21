@@ -8,9 +8,6 @@
 <ion-content>
   @for (widget of widgets; track widget.key) {
     @switch (widget.key) {
-      @case ('quick-actions') {
-        <app-quick-actions-widget></app-quick-actions-widget>
-      }
       @case ('today-nutrition') {
         <app-today-nutrition-widget></app-today-nutrition-widget>
       }

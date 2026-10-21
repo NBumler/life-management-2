@@ -204,8 +204,8 @@ Minden mászó entitás: soft delete ([[Backend-offline first]]). Nested session
 
 ### UI/UX elvárások
 
-- Belépés: [[Edzés]] tab → Mászónapló hub → 4 csempe. A [[Kezdőlap]] „Új mászás" gyorsgombja
-  (`edzes.maszonaplo`) is ide, a hubra visz (a kontextust ott választja a user).
+- Belépés: [[Edzés]] tab → Mászónapló hub → 4 csempe. Az [[Android kezdőképernyő widget]] „Új mászás"
+  gyorsgombja is ide, a hubra visz (a kontextust ott választja a user).
 - 1-tap chip-ek, grade pre-parser, legutóbbi terem/helyszín előtöltés.
 - Sikeres kísérletnél a **Stílus** választó mellett súgó (ⓘ) gomb — felugró magyarázat az onsight / flash / redpoint jelentéséről és arról, miért választható egyszerre csak egy (mind a 4 kontextus napló-formban, `app-help-button`).
 - **Mászótársak** combobox (mind a 4 kontextus napló-formban, `app-partner-combobox`): üres mezőnél a korábbi társak tap-elhető chip-ként; gépelésre szűrt lista + „+ Hozzáadás: »…«" új névhez; a felvett társak chip-jei törölhetők.
