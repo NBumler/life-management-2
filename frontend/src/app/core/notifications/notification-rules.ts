@@ -48,7 +48,10 @@ const DEFAULT_CALORIE_STREAK_MARGIN = DEFAULT_TUNING.calorieStreakMarginKcal;
  * documentation/Features/Értesítések.md §1 `FOOD_EXPIRING_DAILY`. Lead window starts `lead.long` days
  * before expiry when the catalog shelf-life for that storage location is **> 5 days**, otherwise
  * `lead.short` days (also `short` when the catalog has no time for that location). One per item per
- * calendar day, at 09:00, for as long as the item is still in storage (not deleted) — spoiled or not.
+ * calendar day, at 09:00, from the window start up to and including the expiry day, while the item is
+ * still in storage (not deleted). Once it has spoiled (`expiresOn < today`) only the one-off
+ * `FOOD_SPOILED_ONCE` speaks for it — a daily "expiring soon" banner on a spoiled item was a duplicate
+ * (backlog/231).
  */
 export function foodExpiringDailyRules(
   storedFoods: readonly StoredFood[],
@@ -58,7 +61,7 @@ export function foodExpiringDailyRules(
 ): DesiredNotification[] {
   const out: DesiredNotification[] = [];
   for (const item of storedFoods) {
-    if (item.deleted) {
+    if (item.deleted || item.expiresOn < todayIso) {
       continue;
     }
     const food = foods.find((f) => f.id === item.foodId && !f.deleted);

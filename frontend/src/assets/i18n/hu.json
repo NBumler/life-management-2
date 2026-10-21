@@ -96,7 +96,7 @@
     "TYPE": {
       "FOOD_EXPIRING_DAILY": {
         "LABEL": "Élelmiszer hamarosan lejár",
-        "HINT": "Minden reggel 9-kor, amíg a tétel a tárolóban van, a lejárat előtti 2–3 naptól kezdve."
+        "HINT": "Minden reggel 9-kor a lejárat előtti 2–3 naptól a lejárat napjáig, amíg a tétel a tárolóban van."
       },
       "FOOD_SPOILED_ONCE": {
         "LABEL": "Élelmiszer megromlott",

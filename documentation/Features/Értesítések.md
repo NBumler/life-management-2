@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-10-02
-verifikalt_commit: 7d6e214
+verifikalva: 2026-10-21
+verifikalt_commit: da81997
 ---
 
 # Értesítések
@@ -43,7 +43,7 @@ Lokális (készüléken ütemezett) értesítések a fontos küszöbökről. Jel
 | **> 5 nap** | lejárat előtt **3 nappal** |
 | **≤ 5 nap** (vagy nincs katalógus-idő) | lejárat előtt **2 nappal** |
 
-- **Ütemezés:** minden nap **09:00** (kliens TZ), amíg a tétel **még a tárolóban van** (nincs törölve), a lead-time napjától kezdve.
+- **Ütemezés:** minden nap **09:00** (kliens TZ) a lead-time napjától **a lejárat napjáig (azt is beleértve)**, amíg a tétel **még a tárolóban van** (nincs törölve). Romlott tételre (lejárati nap után) már **nem** megy — onnan csak az egyszeri `FOOD_SPOILED_ONCE` szól.
 - Cél: ne felejtődjön el a tétel a tárolóban.
 - **Ismétlés:** ugyanarra a tételre legfeljebb **1 értesítés / naptári nap** (09:00-ás futás).
 
@@ -51,7 +51,7 @@ Lokális (készüléken ütemezett) értesítések a fontos küszöbökről. Jel
 
 - Amikor a tétel **romlott** lesz (lejárati nap után, [[Élelmiszer tárolás]] szabály), **egyszer** értesítés.
 - Ütemezés: a romlottá válás utáni első releváns **09:00** (ha már romlott 09:00-kor), vagy azonnali lokális fire ha a nap közben derül ki és még nem ment ki — de **élettartam alatt max 1** `FOOD_SPOILED_ONCE` / tétel.
-- A napi `FOOD_EXPIRING_DAILY` ettől függetlenül mehet, amíg a tétel a tárolóban van (emlékeztető), ha a típus be van kapcsolva.
+- A napi `FOOD_EXPIRING_DAILY` a romlás napjától **nem** megy tovább, így egy romlott tételről nem jön dupla („hamarosan lejár” + „megromlott”) értesítés.
 
 ##### 3. Lépésszám (`STEPS_LOW`)
 

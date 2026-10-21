@@ -80,10 +80,15 @@ describe('foodExpiringDailyRules', () => {
     expect(out.map((n) => n.key)).toEqual(['sf-1:2026-09-01']);
   });
 
-  it('keeps firing after the item has spoiled, as long as it is still in storage', () => {
-    const spoiled = storedFood({ expiresOn: '2026-08-20' });
-    const out = foodExpiringDailyRules([spoiled], [], today);
-    expect(out.length).toBe(1);
+  it('still fires on the expiry day itself', () => {
+    const out = foodExpiringDailyRules([storedFood({ expiresOn: today })], [], today);
+    expect(out.map((n) => n.key)).toEqual(['sf-1:2026-09-01']);
+  });
+
+  it('stops once the item has spoiled — FOOD_SPOILED_ONCE takes over (backlog/231)', () => {
+    const spoiled = storedFood({ expiresOn: '2026-08-31' }); // expired yesterday
+    expect(foodExpiringDailyRules([spoiled], [], today)).toEqual([]);
+    expect(foodSpoiledOnceRules([spoiled], [], today).length).toBe(1);
   });
 
   it('skips deleted items', () => {

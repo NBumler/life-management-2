@@ -1,6 +1,6 @@
 ---
-verifikalva: 2026-09-24
-verifikalt_commit: f866e86
+verifikalva: 2026-10-21
+verifikalt_commit: da81997
 ---
 
 # Élelmiszer tárolás
@@ -97,7 +97,7 @@ Lead time a tétel **katalógusbeli tárolhatósági ideje** alapján (a tétel 
 
 Ha a helyhez nincs katalógus-idő (manuális lejárat / null engedélyezett hely): a felvétel napja és a lejárat közötti napok száma ugyanígy küszöböl (>5 → 3 nap, egyébként 2 nap).
 
-**Küldés (SSOT ritmus: [[Értesítések]]):** lead-time napjától amíg a tétel a tárolóban van → napi **09:00** emlékeztető; romlottá váláskor **egyszer** „megromlott” értesítés.
+**Küldés (SSOT ritmus: [[Értesítések]]):** lead-time napjától a lejárat napjáig, amíg a tétel a tárolóban van → napi **09:00** emlékeztető; romlottá váláskor **egyszer** „megromlott” értesítés (onnantól napi emlékeztető már nincs).
 #### Törlés
 
 - Tétel soft delete (megerősítéssel) — [[Backend-offline first]]. Soha nem szinkronizált helyi draft → helyi hard remove + outbox tisztítás.

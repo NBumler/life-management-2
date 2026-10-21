@@ -96,7 +96,7 @@
     "TYPE": {
       "FOOD_EXPIRING_DAILY": {
         "LABEL": "Food expiring soon",
-        "HINT": "Every day at 9am while the item is still in storage, starting 2–3 days before its expiry."
+        "HINT": "Every day at 9am from 2–3 days before its expiry until the expiry day, while the item is still in storage."
       },
       "FOOD_SPOILED_ONCE": {
         "LABEL": "Food spoiled",
