@@ -14,6 +14,10 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-21 — #233** Kezdőlap: „Heti adatok” nézet (`/tabs/home/week`, fejléc naptár-ikon,
+  `kezdolap.hetiAdatok` flag) — a mai étkezés + edzések widgetek hétfő–vasárnap heti összesítésben,
+  lapozható múltbeli hetekkel; a napi és heti számítás közös (`core/data/day-summary.ts`) —
+  érintett: [[Heti adatok]], [[Kezdőlap]], [[Frontend]]; kód: `core/data`, `pages/home`.
 - **2026-10-21 — #232** Kezdőlap: a „Gyorsgombok” kártya lekerült (a verem: mai étkezés állása → mai edzések);
   az Új étkezés / Új mászás gyorsgombok az Android kezdőképernyő widgeten maradnak, változatlanul.
 - **2026-10-21 — #231** Értesítések: romlott élelmiszerről már nem jön naponta „hamarosan lejár” — a `FOOD_EXPIRING_DAILY`

@@ -1,14 +1,14 @@
 ---
 id: 233
 type: feature
-status: ready
+status: done
 title: Kezdőlap — „Heti adatok” nézet (a napi widgetek heti összesítője)
 specs:
   - "[[Kezdőlap]]"
   - "[[Heti adatok]]"
 flag: kezdolap.hetiAdatok
 created: 2026-10-21
-closed:
+closed: 2026-10-21
 ---
 
 # 233 — Kezdőlap — „Heti adatok” nézet
@@ -127,9 +127,19 @@ napi értékek összege a számolt napokra, ugyanazokkal a függvényekkel szám
     `workoutTallyForDay(...)`). Így a „heti = napi összeg” invariáns kódszinten is igaz, és nem
     kerül be egy harmadik párhuzamos implementáció a meglévő két „Tudatos korlát” mellé.
   - Widgetek: `pages/home/weekly/` alatt a page és a két widget-komponens.
+- **Implementáció közben (2026-10-21):**
+  - Új widget-komponensek helyett a két meglévő widget lett prezentációs (`summary` input +
+    `titleKey` / `incompleteKey` / `emptyKey`), így a napi és a heti nézet ugyanazt a komponenst rendereli.
+  - A dátumtartomány ISO-alakú (`ÉÉÉÉ-HH-NN – ÉÉÉÉ-HH-NN`), ahogy az Étkezés dashboard napváltója —
+    a „lokalizált formátum” helyett; a spec `#### Tudatos korlát` alatt rögzíti.
+  - A heti nézet minden belépéskor visszaáll az aktuális hétre.
 
 ## Lezáráskor (on-done)
 
-- Frissített specek: [[Heti adatok]] (új), [[Kezdőlap]] (fejléc-ikon + flag), [[Frontend]] (route + flag)
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — Kezdőlap „Heti adatok” nézet (#233)
-- Kód: `pages/home/weekly/`, `core/data/weekly-overview.service.ts`, `core/config/home-widget-registry.ts`, `shared/local-date.ts`
+- Frissített specek: [[Heti adatok]] (új Subfeature spec); [[Kezdőlap]] (fejléc-ikon, `kezdolap.hetiAdatok`,
+  a widgetek prezentációsak, közös `day-summary.ts` — a „két külön implementáció” korlát megszűnt);
+  [[Frontend]] (route-tábla, flag registry, `kezdolap.*` függőség)
+- `IMPLEMENTATION_STATUS.md` sor: 2026-10-21 — Kezdőlap „Heti adatok” nézet (#233)
+- Kód: `core/data/day-summary.ts`, `core/data/weekly-overview.service.ts`, `pages/home/weekly/`,
+  `pages/home/widgets/*` (input-vezérelt), `core/config/home-widget-registry.ts` (`WEEKLY_WIDGETS`),
+  `shared/local-date.ts` (`startOfIsoWeek`, `daysInRange`), `app.routes.ts`, `feature-flags.service.ts`

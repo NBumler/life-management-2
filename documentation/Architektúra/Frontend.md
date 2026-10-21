@@ -132,6 +132,7 @@ A gyerek route-ok pontos alakja a feature specekben marad; itt a gyökerek köte
 |---|---|---|
 | `/login` | Login (tabokon **kívül**) | [[Bejelentkezés]] |
 | `/tabs/home` | Kezdőlap — widget-verem (mai étkezés állása + mai edzések); login utáni default, ha `tab.kezdolap` be | [[Kezdőlap]] |
+| `/tabs/home/week` | Heti adatok — a Kezdőlap widgetjei heti összesítésben (fejléc-ikonról) | [[Heti adatok]] |
 | `/tabs/food/meals` | Étkezés dashboard (Kaja default) | [[Étkezés]] |
 | `/tabs/food/storage` | Készlet | [[Élelmiszer tárolás]] |
 | `/tabs/food/foods` | Élelmiszer katalógus | [[Élelmiszerek]] |
@@ -203,6 +204,7 @@ Az `offlineCapable` **nem** feature flag, hanem platform-képesség (natív = `t
 | Kulcs | Mit fed | SSOT |
 |---|---|---|
 | `tab.kezdolap` | Kezdőlap tab (registry első eleme) + a login utáni default tab | [[Kezdőlap]] |
+| `kezdolap.hetiAdatok` | Kezdőlap fejléc naptár-ikon + `/tabs/home/week` | [[Heti adatok]] |
 | `tab.kaja` | Kaja tab + Étkezés, Tárolás, Katalógus szegmens (a tab magja) | [[Kaja]] |
 | `kaja.recept` | Recept szegmens + `RECIPE` étkezés-tételtípus | [[Recept]] |
 | `kaja.statisztika` | Stat szegmens | [[Kaja statisztika]] |
@@ -233,6 +235,7 @@ A `features.json` build-időben bundle-ölt asset, a `FeatureFlags` root service
 
 | Ha be van kapcsolva | Akkor kötelező | Miért |
 |---|---|---|
+| `kezdolap.*` | `tab.kezdolap` | A belépési pont a Kezdőlap fejléce |
 | `kaja.*` | `tab.kaja` | Nincs hol megjeleníteni |
 | `edzes.*` | `tab.edzes` | Ugyanaz |
 | `feladatok.*` | `tab.feladatok` | [[Tennivalók]]: tab ki → egyik csempe sem látszik |
