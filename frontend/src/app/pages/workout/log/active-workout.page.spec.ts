@@ -206,15 +206,15 @@ describe('ActiveWorkoutPage', () => {
     component.onPicked([pick()]);
     const set = component.exercises()[0].sets()[0];
 
-    component.bump(set.weightKg, 2.5);
-    component.bump(set.weightKg, 2.5);
+    component.bump(set.weightKg, 0.5);
+    component.bump(set.weightKg, 0.5);
     await Promise.resolve();
 
-    expect(set.weightKg()).toBe(5);
-    expect(draftService.draft()?.exercises[0].sets[0].weightKg).toBe(5);
+    expect(set.weightKg()).toBe(1);
+    expect(draftService.draft()?.exercises[0].sets[0].weightKg).toBe(1);
   });
 
-  it('the +2.5 kg / +1 buttons update the rendered inputs of the set row (backlog/126)', async () => {
+  it('the +0.5 kg / +1 buttons update the rendered inputs of the set row (backlog/126, backlog/230)', async () => {
     await setup();
     await component.ngOnInit();
     component.onPicked([pick()]);
@@ -230,7 +230,7 @@ describe('ActiveWorkoutPage', () => {
     const set = component.exercises()[0].sets()[0];
     expect(values).toContain(set.weightKg() as number);
     expect(values).toContain(set.reps() as number);
-    expect(set.weightKg()).toBe(2.5);
+    expect(set.weightKg()).toBe(0.5);
   });
 
   it('finish() enqueues a session under the draft id, clears the draft and navigates back', async () => {

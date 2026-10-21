@@ -220,8 +220,8 @@
             @if (fields.weightKg || fields.reps) {
               <div class="set-bumps">
                 @if (fields.weightKg) {
-                  <ion-button size="small" fill="outline" class="bump-weight-small" (click)="bump(set.weightKg, 2.5)">+2.5 kg</ion-button>
-                  <ion-button size="small" fill="outline" class="bump-weight-large" (click)="bump(set.weightKg, 5)">+5 kg</ion-button>
+                  <ion-button size="small" fill="outline" class="bump-weight-small" (click)="bump(set.weightKg, 0.5)">+0.5 kg</ion-button>
+                  <ion-button size="small" fill="outline" class="bump-weight-large" (click)="bump(set.weightKg, 1)">+1 kg</ion-button>
                 }
                 @if (fields.reps) {
                   <ion-button size="small" fill="outline" class="bump-reps" (click)="bump(set.reps, 1)">+1 {{ 'WORKOUT.ACTIVE.REP_SHORT' | translate }}</ion-button>

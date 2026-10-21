@@ -14,6 +14,7 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-21 — #230** Élő edzés: a súly gyors-növelő gombjai `+0.5 kg` / `+1 kg` (`+2.5 kg` / `+5 kg` helyett).
 - **2026-10-20 — #229, #227, #194, #228, #226** Bicikli élő edzés: elutasított helyengedélynél az indítás nem ragad be
   (az engedélyt a plugin `start()`-ja kéri, a `requestPermissions()`-e elutasítás után végtelen ciklusba esett; válasz
   nélkül 60 s után elutasítottnak számít). Túra: az Ajánlott túrák töltés közben töltésjelzőt mutat, üres-állapot
