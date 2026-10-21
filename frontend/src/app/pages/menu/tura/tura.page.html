@@ -28,6 +28,13 @@
   <ion-popover trigger="tura-more-button" [dismissOnSelect]="true">
     <ng-template>
       <ion-list lines="none">
+        <!-- backlog/106 — felvétel tervezett útvonal nélkül; natív GPS kell hozzá, és egyszerre csak egy túra fut. -->
+        @if (offlineCapable && !navigation.active()) {
+          <ion-item button [detail]="false" (click)="startNavigation(null)">
+            <ion-icon slot="start" name="radio-button-on-outline" aria-hidden="true"></ion-icon>
+            <ion-label>{{ 'TURA.NAVIGATION.RECORD' | translate }}</ion-label>
+          </ion-item>
+        }
         <ion-item button [detail]="false" (click)="toggleCatalogPanel()">
           <ion-icon slot="start" name="star-outline" aria-hidden="true"></ion-icon>
           <ion-label>{{ 'TURA.CATALOG.MODAL_TITLE' | translate }}</ion-label>
@@ -56,7 +63,10 @@
       <app-map-hint textKey="TURA.TRAILS_LOADING" [busy]="true" />
     }
 
-    @if (showCard()) {
+    @if (navigation.active()) {
+      <!-- backlog/106 — futó navigáció / felvétel: a tervező kártya és a mód-sáv helyett a navigációs panel. -->
+      <app-hike-navigation-panel [following]="following()" (recenter)="recenter()" (saved)="onRecordingSaved($event)" />
+    } @else if (showCard()) {
       <div class="map-card">
         @if (previewedCuratedRoute(); as preview) {
           <!-- backlog/204 — amíg az előnézet látszik, a kártya csak azt mutatja; a piszkozat bezárás után visszajön. -->
@@ -158,16 +168,18 @@
     }
 
     <!-- backlog/205, backlog/206 — a fő műveletek ikonnal és felirattal; az aktív mód a kiemelő színt kapja. -->
-    <app-tura-mode-bar
-      [mode]="mode()"
-      [routing]="routeSuggestion.loading()"
-      [canUndo]="canUndo()"
-      [canClear]="draft().length > 0 || autoStart() !== null"
-      (toggleManual)="toggleDrawMode()"
-      (toggleAuto)="toggleAutoMode()"
-      (undo)="undoLastStep()"
-      (clear)="clearDraft()"
-    />
+    @if (!navigation.active()) {
+      <app-tura-mode-bar
+        [mode]="mode()"
+        [routing]="routeSuggestion.loading()"
+        [canUndo]="canUndo()"
+        [canClear]="draft().length > 0 || autoStart() !== null"
+        (toggleManual)="toggleDrawMode()"
+        (toggleAuto)="toggleAutoMode()"
+        (undo)="undoLastStep()"
+        (clear)="clearDraft()"
+      />
+    }
   </div>
 </ion-content>
 
@@ -335,7 +347,14 @@
               </ion-button>
             </div>
             <div class="sheet-actions">
-              <ion-button size="small" (click)="editSavedRoute(route)">
+              <!-- backlog/106 — natív GPS kell hozzá, és egyszerre csak egy túra fut. -->
+              @if (offlineCapable && !navigation.active()) {
+                <ion-button size="small" (click)="startNavigation(route)">
+                  <ion-icon slot="start" name="navigate-outline" aria-hidden="true"></ion-icon>
+                  {{ 'TURA.NAVIGATION.START' | translate }}
+                </ion-button>
+              }
+              <ion-button size="small" fill="outline" (click)="editSavedRoute(route)">
                 <ion-icon slot="start" name="create-outline" aria-hidden="true"></ion-icon>
                 {{ 'TURA.DETAILS.EDIT' | translate }}
               </ion-button>

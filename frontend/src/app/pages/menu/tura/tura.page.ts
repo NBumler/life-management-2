@@ -47,6 +47,7 @@ import { HikeRouteDay } from '../../../api/model/hikeRouteDay';
 import { Bbox, TrailSegmentRepository } from '../../../core/data/trail-segment.repository';
 import { CuratedRouteFilter, CuratedRouteRepository } from '../../../core/data/curated-route.repository';
 import { HikeRouteRepository } from '../../../core/data/hike-route.repository';
+import { HikeNavigationService } from '../../../core/data/hike-navigation.service';
 import { RouteMetricsRepository } from '../../../core/data/route-metrics.repository';
 import { RouteSuggestionRepository } from '../../../core/data/route-suggestion.repository';
 import { StoredTuraMapView, TuraLocalStateService } from '../../../core/data/tura-local-state.service';
@@ -84,6 +85,8 @@ import { OfflineRegionRepository } from '../../../core/data/offline-region.repos
 import { AutoRouteHintComponent, AutoRouteHintStep, AutoRouteProblem } from './auto-route-hint.component';
 import { TuraLegendComponent } from './tura-legend.component';
 import { MY_LOCATION_MIN_ZOOM, MyLocationControl, addMyLocationLayer, showMyLocation } from './my-location-control';
+import { addHikeNavigationLayers, showHikeNavigation } from './hike-navigation-layers';
+import { HikeNavigationPanelComponent } from './hike-navigation-panel.component';
 import { dateText, daySummaryText, distanceText, durationText, elevationText, megabytesText } from './hike-text';
 import { DaysEditorComponent } from './days-editor.component';
 import { MapHintComponent } from './map-hint.component';
@@ -114,6 +117,10 @@ const DETAILS_SHEET_BREAKPOINT = 0.45;
 const TAP_TOLERANCE_PX = 10;
 /** backlog/201 — egy koppintásra legfeljebb ennyi egymásra futó turistaút jelenik meg a kártyán. */
 const MAX_TAPPED_TRAILS = 4;
+/** backlog/106 — navigáció közben a követő kamera legalább ekkora zoomon mutatja a helyzetet. */
+const NAVIGATION_ZOOM = 16;
+/** backlog/106 — a kanyarszűréshez (csak elágazásban) az útvonal körül ennyi fokon belül betöltött turistautak kellenek. */
+const NAVIGATION_TRAILS_MARGIN_DEGREES = 0.002;
 
 const TRAIL_SEGMENTS_SOURCE_ID = 'trail-segments';
 const TRAIL_SEGMENTS_LAYER_ID = 'trail-segments-layer';
@@ -272,6 +279,7 @@ const COUNTRY_CODE = 'HU';
 		TappedTrailsComponent,
 		TuraModeBarComponent,
 		MarkingBadgeComponent,
+		HikeNavigationPanelComponent,
 	],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -288,6 +296,7 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	private readonly localState = inject(TuraLocalStateService);
 	private readonly language = inject(LanguageService);
 	private readonly location = inject(LocationTrackingService);
+	protected readonly navigation = inject(HikeNavigationService);
 	private readonly mapContainer = viewChild.required<ElementRef<HTMLDivElement>>('mapContainer');
 	/** backlog/204 — a térkép fölött lebegő elemek: a `fitBounds` ezek alól húzza ki a vonalat. */
 	private readonly mapActions = viewChild.required<ElementRef<HTMLDivElement>>('mapActions');
@@ -303,6 +312,8 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	private resizeObserver?: ResizeObserver;
 
 	protected readonly mode = signal<Mode>('none');
+	/** backlog/106 — navigáció közben a térkép követi a helyzetet, amíg a felhasználó el nem húzza. */
+	protected readonly following = signal(true);
 	/** backlog/190 — a rajz (teljes vonal + a felhasználó kijelölt pontjai) lépésenkénti visszavonással. */
 	private readonly draftEditor = new RouteDraftEditor();
 	/** [lon, lat] — the whole line: the clicked points (manual mode) and the generated paths (auto mode). */
@@ -530,6 +541,26 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 			};
 			this.draftPersistHandle = setTimeout(() => this.pendingDraftPersist?.(), DRAFT_PERSIST_DEBOUNCE_MS);
 		});
+		effect(() => {
+			// backlog/106 — a tervezett útvonal, a felvett nyomvonal és a helyzet navigáció közben.
+			const active = this.navigation.active();
+			const plan = this.navigation.plan()?.coordinates ?? null;
+			const track = this.navigation.recordedSegments();
+			const position = this.navigation.position();
+			if (this.map) {
+				showHikeNavigation(this.map, active ? plan : null, active ? track : []);
+				if (active && position !== null) {
+					showMyLocation(this.map, position);
+				}
+			}
+		});
+		effect(() => {
+			// backlog/106 — a követő kamera: minden új helyzetre odaúszik, amíg a felhasználó el nem húzza a térképet.
+			const position = this.navigation.position();
+			if (this.map && position !== null && this.following() && this.navigation.active() && !this.navigation.finished()) {
+				this.map.easeTo({ center: position, zoom: Math.max(this.map.getZoom(), NAVIGATION_ZOOM), offset: this.followOffset(), duration: 500 });
+			}
+		});
 		void this.restoreDraft();
 	}
 
@@ -590,7 +621,9 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 			this.addHikeRouteLayers(map);
 			this.addPreviewLayers(map);
 			this.addDraftLayers(map);
+			addHikeNavigationLayers(map);
 			addMyLocationLayer(map);
+			showHikeNavigation(map, this.navigation.plan()?.coordinates ?? null, this.navigation.recordedSegments());
 			this.applyLayerVisibility(map);
 		};
 		if (map.isStyleLoaded()) {
@@ -630,6 +663,7 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 		map.on('movestart', (event) => {
 			if ('originalEvent' in event && event.originalEvent) {
 				this.pendingPreviewFit = null;
+				this.following.set(false);
 			}
 		});
 		this.resizeObserver.observe(this.mapContainer().nativeElement);
@@ -640,6 +674,8 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 
 	/** backlog/192 — az oldal-átmenet végén a konténer már a végleges méretén van; a ResizeObserver erre nem mindig sül el. */
 	ionViewDidEnter(): void {
+		// backlog/106 — egy futó túra (az app újraindítása után is) itt veszi fel újra a GPS-t.
+		void this.navigation.refresh();
 		if (this.map) {
 			this.map.resize();
 			void this.loadCurrentViewport(this.map);
@@ -686,6 +722,71 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 			undefined,
 			abort,
 		);
+	}
+
+	/**
+	 * backlog/106 — „Navigáció indítása” egy mentett útvonalon, vagy „Túra felvétele” (`null`) tervezett
+	 * útvonal nélkül. A tervezés félbe marad (a piszkozat megmarad), a térkép a helyzetet követi.
+	 */
+	protected async startNavigation(route: HikeRoute | null): Promise<void> {
+		this.closeDetails();
+		this.tappedTrails.set([]);
+		this.mode.set('none');
+		this.autoStart.set(null);
+		this.previewedCuratedRoute.set(null);
+		const result = await this.navigation.start(route, route === null ? null : this.trailsAround(route.coordinates));
+		if (result.status === 'gps-busy') {
+			const alert = await this.alertController.create({
+				header: this.translate.instant('TURA.NAVIGATION.GPS_BUSY_TITLE'),
+				message: this.translate.instant('TURA.NAVIGATION.GPS_BUSY_MESSAGE'),
+				buttons: [this.translate.instant('COMMON.OK')],
+			});
+			await alert.present();
+		} else if (result.status === 'permission-denied') {
+			void this.showInfoToast('TURA.MY_LOCATION.DENIED');
+		} else {
+			this.recenter();
+		}
+	}
+
+	/**
+	 * A betöltött turistautak az útvonal körül: a kanyar csak elágazásban hangzik el (routeTurns). Ami nincs
+	 * betöltve (pl. 12-es zoom alatt), ott a kanyar megmarad — inkább egy fölösleges bemondás, mint egy elmaradó.
+	 */
+	private trailsAround(coordinates: number[][]): number[][][] | null {
+		if (coordinates.length === 0) {
+			return null;
+		}
+		const lons = coordinates.map((coordinate) => coordinate[0]);
+		const lats = coordinates.map((coordinate) => coordinate[1]);
+		const [west, east] = [Math.min(...lons) - NAVIGATION_TRAILS_MARGIN_DEGREES, Math.max(...lons) + NAVIGATION_TRAILS_MARGIN_DEGREES];
+		const [south, north] = [Math.min(...lats) - NAVIGATION_TRAILS_MARGIN_DEGREES, Math.max(...lats) + NAVIGATION_TRAILS_MARGIN_DEGREES];
+		const trails = this.trailSegments
+			.segments()
+			.map((segment) => segment.coordinates)
+			.filter((line) => line.some(([lon, lat]) => lon >= west && lon <= east && lat >= south && lat <= north));
+		return trails.length > 0 ? trails : null;
+	}
+
+	/** backlog/106 — a „Követés” gomb: a térkép újra a helyzetet követi. */
+	protected recenter(): void {
+		this.following.set(true);
+		const position = this.navigation.position();
+		if (this.map && position !== null) {
+			this.map.easeTo({ center: position, zoom: Math.max(this.map.getZoom(), NAVIGATION_ZOOM), offset: this.followOffset() });
+		}
+	}
+
+	/** A helyzet a navigációs panel fölötti szabad rész közepére kerül, ne a panel mögé. */
+	private followOffset(): [number, number] {
+		const container = this.mapContainer().nativeElement.getBoundingClientRect();
+		const covered = Math.max(0, container.bottom - this.mapBottom().nativeElement.getBoundingClientRect().top);
+		return [0, -covered / 2];
+	}
+
+	/** backlog/106 — a mentett felvétel ugyanúgy jelez vissza, mint egy mentett rajz (backlog/211). */
+	protected onRecordingSaved(route: HikeRoute): void {
+		void this.showActionToast('TURA.SAVED', 'TURA.SAVED_OPEN', () => this.openSavedRoute(route));
 	}
 
 	private async showInfoToast(messageKey: string): Promise<void> {

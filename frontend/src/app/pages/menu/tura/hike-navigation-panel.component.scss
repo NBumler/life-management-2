@@ -1,0 +1,113 @@
+// A lebegő tervező kártyával (tura.page.scss `.map-card`) és a mód-sávval azonos keret.
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: var(--ion-background-color, #ffffff);
+  color: var(--ion-text-color, #000000);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
+}
+
+.nav-title {
+  font-size: 15px;
+}
+
+// A következő kanyar / letérés / megérkezés: nagy ikon, mellette a szöveg.
+.nav-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+
+  ion-icon {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    color: var(--ion-color-primary);
+  }
+
+  &.turn ion-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  &.off-route {
+    margin: -2px -6px 0;
+    padding: 6px;
+    border-radius: 8px;
+    background: var(--ion-color-danger);
+    color: var(--ion-color-danger-contrast);
+
+    ion-icon {
+      color: inherit;
+    }
+  }
+
+  &.arrived ion-icon {
+    color: var(--ion-color-success);
+  }
+
+  .recording {
+    color: var(--ion-color-danger);
+  }
+}
+
+.nav-turn-text {
+  display: flex;
+  flex-direction: column;
+
+  strong {
+    font-size: 17px;
+  }
+}
+
+.nav-route-name,
+.nav-note {
+  font-size: 13px;
+  color: var(--ion-color-medium);
+}
+
+.nav-note.weak {
+  color: var(--ion-color-warning-shade);
+}
+
+.nav-stats {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.nav-stat {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.nav-stat-label {
+  font-size: 11px;
+  color: var(--ion-color-medium);
+}
+
+.nav-stat-value {
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.nav-name {
+  margin-top: 4px;
+  font-size: 14px;
+}
+
+.nav-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+
+  ion-button {
+    margin: 0;
+  }
+}

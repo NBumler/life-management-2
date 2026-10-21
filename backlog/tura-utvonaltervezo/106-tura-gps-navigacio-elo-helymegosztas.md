@@ -120,6 +120,20 @@ Döntések (az alapértelmezés a javaslat; a 2. szelet előtt rákérdezek):
   hang nélkül csendben), `core/geo/gps-session-lock.ts` (a bicikli élő edzés és a túra-navigáció draftja
   egymást zárja ki, „GPS foglalt” üzenettel). Letéréskor erős rezgés + helyi értesítés (visszatéréskor
   eltűnik), kanyarnál rezgés, célba éréskor rezgés. A felvett vonal 3 m-es tűréssel egyszerűsítve mentődik.
+  (`255294e`)
+- **3. szelet:** `pages/menu/tura/hike-navigation-panel.component.*` (következő kanyar forgatott nyíllal és
+  távval, letérés-sáv, megérkezés, gyenge jel, idő / megtett / hátra, Szünet / Folytatás / Befejezés
+  megerősítéssel; befejezés után összegző a név előtöltésével — „<tervezett név> – <dátum>” vagy
+  „Túra – <dátum>” —, Mentés / Elvetés megerősítéssel), `hike-navigation-layers.ts` (a tervezett vonal,
+  és narancs felvett nyomvonal — nem MTSZ-szín, a jelmagyarázatba is bekerült); a helyzet a meglévő kék pont.
+  Belépés: a mentett útvonal kártyáján „Navigáció indítása”, a „…” menüben „Túra felvétele” (csak natívon,
+  és ha nem fut már túra). Követő kamera a panel fölötti szabad részre igazítva; kézi mozgatásra elenged,
+  „Követés” gomb hozza vissza. A kanyarszűrés a betöltött turistautakat kapja az útvonal körül.
+  Emulátoron (`adb emu geo fix` sorozat, „Teszt Pilis kor”, 2,0 km): hu-ban „140 méter múlva fordulj
+  jobbra” → „Most fordulj jobbra” → letérés (piros sáv, bemondás, értesítés „Kb. 60 m-re…”) → „Újra az
+  útvonalon vagy” → „Megérkeztél a célhoz”, Befejezés → összegző → Mentés: a felvétel az Útvonalaim közé
+  került a kitérővel együtt. en-ben szabad felvétel: Pause (értesítés „Hike paused”), Resume, Finish,
+  Discard. A szüneteltetési értesítés címe „Túra szüneteltetve” lett (szabad felvételnél is igaz).
 
 Spec: a #102 szabálya szerint a Túra feature spec a család végén készül; a [[Biciklizés napló]] spec a
 közös GPS-réteg leírásánál kap egy sort (egyszerre egy GPS-munkamenet).

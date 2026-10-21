@@ -1,0 +1,125 @@
+@if (summary(); as s) {
+  <!-- Befejezés után: mentés az Útvonalaim közé, vagy elvetés. -->
+  <strong class="nav-title">{{ 'TURA.NAVIGATION.SUMMARY_TITLE' | translate }}</strong>
+  <div class="nav-stats">
+    <div class="nav-stat">
+      <span class="nav-stat-label">{{ 'TURA.NAVIGATION.ELAPSED' | translate }}</span>
+      @let duration = durationText(s.durationMinutes);
+      <span class="nav-stat-value">{{ duration.key | translate: duration.params }}</span>
+    </div>
+    <div class="nav-stat">
+      <span class="nav-stat-label">{{ 'TURA.NAVIGATION.WALKED' | translate }}</span>
+      <span class="nav-stat-value">{{ distance(s.distanceMeters) }}</span>
+    </div>
+  </div>
+  @if (s.coordinates) {
+    <ion-input
+      class="nav-name"
+      fill="outline"
+      labelPlacement="stacked"
+      [label]="'TURA.NAVIGATION.NAME_LABEL' | translate"
+      [value]="name()"
+      (ionInput)="name.set($any($event.target).value ?? '')"
+      [placeholder]="'TURA.ROUTE_NAME_PLACEHOLDER' | translate"
+    ></ion-input>
+    <div class="nav-actions">
+      <ion-button size="small" fill="outline" color="medium" [disabled]="busy()" (click)="discard()">
+        {{ 'TURA.NAVIGATION.DISCARD' | translate }}
+      </ion-button>
+      <ion-button size="small" [disabled]="busy() || name().trim() === ''" (click)="save()">
+        {{ 'COMMON.SAVE' | translate }}
+      </ion-button>
+    </div>
+  } @else {
+    <span class="nav-note">{{ 'TURA.NAVIGATION.NOTHING_TO_SAVE' | translate }}</span>
+    <div class="nav-actions">
+      <ion-button size="small" [disabled]="busy()" (click)="close()">{{ 'COMMON.CLOSE' | translate }}</ion-button>
+    </div>
+  }
+} @else {
+  @if (navigation.plan(); as plan) {
+    @if (navigation.offRoute()) {
+      <div class="nav-banner off-route" role="alert">
+        <ion-icon name="warning-outline" aria-hidden="true"></ion-icon>
+        <strong>{{ 'TURA.NAVIGATION.OFF_ROUTE' | translate }}</strong>
+      </div>
+    } @else if (navigation.arrived()) {
+      <div class="nav-banner arrived">
+        <ion-icon name="flag-outline" aria-hidden="true"></ion-icon>
+        <strong>{{ 'TURA.NAVIGATION.ARRIVED' | translate }}</strong>
+      </div>
+    } @else if (!located()) {
+      <div class="nav-banner">
+        <ion-icon name="locate-outline" aria-hidden="true"></ion-icon>
+        <span>{{ 'TURA.NAVIGATION.LOCATING' | translate }}</span>
+      </div>
+    } @else if (navigation.nextTurn(); as next) {
+      <div class="nav-banner turn">
+        <ion-icon name="arrow-up-outline" aria-hidden="true" [style.transform]="'rotate(' + arrowRotation[next.turn.direction] + 'deg)'"></ion-icon>
+        <div class="nav-turn-text">
+          <strong>{{ 'TURA.NAVIGATION.DIRECTION.' + next.turn.direction | translate }}</strong>
+          <span>{{ 'TURA.NAVIGATION.TURN_IN' | translate: { distance: turnDistance(next.distanceMeters) } }}</span>
+        </div>
+      </div>
+    } @else {
+      <div class="nav-banner">
+        <ion-icon name="arrow-up-outline" aria-hidden="true"></ion-icon>
+        <span>{{ 'TURA.NAVIGATION.NO_MORE_TURNS' | translate }}</span>
+      </div>
+    }
+    <span class="nav-route-name">{{ plan.name }}</span>
+  } @else {
+    <div class="nav-banner">
+      <ion-icon name="radio-button-on-outline" class="recording" aria-hidden="true"></ion-icon>
+      <strong>{{ 'TURA.NAVIGATION.RECORDING_TITLE' | translate }}</strong>
+    </div>
+  }
+
+  @if (navigation.paused()) {
+    <span class="nav-note">{{ 'TURA.NAVIGATION.PAUSED' | translate }}</span>
+  } @else if (navigation.weakSignal()) {
+    <span class="nav-note weak">{{ 'TURA.NAVIGATION.WEAK_SIGNAL' | translate }}</span>
+  }
+
+  <div class="nav-stats">
+    <div class="nav-stat">
+      <span class="nav-stat-label">{{ 'TURA.NAVIGATION.ELAPSED' | translate }}</span>
+      <span class="nav-stat-value">{{ elapsed() }}</span>
+    </div>
+    <div class="nav-stat">
+      <span class="nav-stat-label">{{ 'TURA.NAVIGATION.WALKED' | translate }}</span>
+      <span class="nav-stat-value">{{ distance(navigation.recordedMeters()) }}</span>
+    </div>
+    @if (navigation.remaining(); as left) {
+      <div class="nav-stat">
+        <span class="nav-stat-label">{{ 'TURA.NAVIGATION.REMAINING' | translate }}</span>
+        @let leftDuration = durationText(left.durationMinutes);
+        <span class="nav-stat-value">{{ distance(left.distanceMeters) }} · {{ leftDuration.key | translate: leftDuration.params }}</span>
+      </div>
+    }
+  </div>
+
+  <div class="nav-actions">
+    @if (!following()) {
+      <ion-button size="small" fill="outline" (click)="recenter.emit()">
+        <ion-icon slot="start" name="locate-outline" aria-hidden="true"></ion-icon>
+        {{ 'TURA.NAVIGATION.RECENTER' | translate }}
+      </ion-button>
+    }
+    @if (navigation.paused()) {
+      <ion-button size="small" fill="outline" [disabled]="busy()" (click)="resume()">
+        <ion-icon slot="start" name="play-outline" aria-hidden="true"></ion-icon>
+        {{ 'TURA.NAVIGATION.RESUME' | translate }}
+      </ion-button>
+    } @else {
+      <ion-button size="small" fill="outline" [disabled]="busy()" (click)="pause()">
+        <ion-icon slot="start" name="pause-outline" aria-hidden="true"></ion-icon>
+        {{ 'TURA.NAVIGATION.PAUSE' | translate }}
+      </ion-button>
+    }
+    <ion-button size="small" color="danger" [disabled]="busy()" (click)="finish()">
+      <ion-icon slot="start" name="stop-outline" aria-hidden="true"></ion-icon>
+      {{ 'TURA.NAVIGATION.FINISH' | translate }}
+    </ion-button>
+  </div>
+}

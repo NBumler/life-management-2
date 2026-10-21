@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { IonItem, IonLabel, IonList, IonListHeader, IonNote } from '@ionic/angular/standalone';
 import { TranslatePipe } from '@ngx-translate/core';
 
-import { ICON_ARROW_LIGHT, ICON_END, ICON_MY_LOCATION, ICON_START, ICON_WAYPOINT, PREVIEW_CASING_COLOR, PREVIEW_COLOR, ROUTE_CASING_COLOR, ROUTE_COLOR, dayIconName, iconDataUrl } from './map-icons';
+import { ICON_ARROW_LIGHT, ICON_END, ICON_MY_LOCATION, ICON_START, ICON_WAYPOINT, PREVIEW_CASING_COLOR, PREVIEW_COLOR, ROUTE_CASING_COLOR, ROUTE_COLOR, TRACK_CASING_COLOR, TRACK_COLOR, dayIconName, iconDataUrl } from './map-icons';
 import { MARKING_COLORS, UNMARKED_TRAIL_COLOR, trailSegmentCasingColor } from './trail-segment-symbol-color';
 
 interface LineEntry {
@@ -38,6 +38,7 @@ export class TuraLegendComponent {
 		{ labelKey: 'TURA.LEGEND.MY_ROUTE', color: ROUTE_COLOR, casing: ROUTE_CASING_COLOR, width: 5 },
 		{ labelKey: 'TURA.LEGEND.DRAFT', color: ROUTE_COLOR, casing: ROUTE_CASING_COLOR, width: 4, dashed: true },
 		{ labelKey: 'TURA.LEGEND.PREVIEW', color: PREVIEW_COLOR, casing: PREVIEW_CASING_COLOR, width: 4 },
+		{ labelKey: 'TURA.LEGEND.TRACK', color: TRACK_COLOR, casing: TRACK_CASING_COLOR, width: 4 },
 	];
 
 	protected readonly points = [

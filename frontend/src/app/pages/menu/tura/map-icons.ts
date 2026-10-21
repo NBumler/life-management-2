@@ -15,6 +15,9 @@ export const ROUTE_COLOR = '#d81b60';
 export const ROUTE_CASING_COLOR = '#ffffff';
 export const PREVIEW_COLOR = '#ffffff';
 export const PREVIEW_CASING_COLOR = '#000000';
+/** backlog/106 — a felvett nyomvonal narancs: nem MTSZ jelzésszín (a sárgától is elüt), és a magenta útvonalon is látszik. */
+export const TRACK_COLOR = '#ef6c00';
+export const TRACK_CASING_COLOR = '#ffffff';
 const START_COLOR = '#2e7d32';
 const DAY_COLOR = '#283593';
 /** backlog/215 — a megszokott „itt vagy” kék, egyik turistajelzés kékjével sem azonos árnyalat. */
