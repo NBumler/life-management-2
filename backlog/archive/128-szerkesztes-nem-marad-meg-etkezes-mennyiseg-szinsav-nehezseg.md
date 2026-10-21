@@ -1,7 +1,7 @@
 ---
 id: 128
 type: bug
-status: deferred
+status: dropped
 title: "[PRIO] Meglévő rekord szerkesztése nem marad meg (étkezés tétel mennyisége, színsáv nehézsége) — Androidon"
 specs:
   - "[[Étkezés]]"
@@ -11,7 +11,7 @@ specs:
   - "[[Frontend]]"
 flag:
 created: 2026-09-25
-closed:
+closed: 2026-10-21
 ---
 
 # 128 — [PRIO] Meglévő rekord szerkesztése nem marad meg (étkezés tétel mennyisége, színsáv nehézsége)
@@ -106,12 +106,16 @@ A javítás előtt **reprodukálni és lokalizálni kell**, melyik réteg veszti
 - A színsáv-oldali tünet valószínűleg a #129 volt (érvénytelen `3A`/`4A` Font-fokozat miatti
   néma mentés), nem egy elveszett szerkesztés. A szerkesztés-oldali gyanú így főleg az étkezés
   tételére marad.
+- **2026-10-21 — `dropped`, kódváltozás nélkül:** a user szerint a 2026-09-25-i bejelentés óta a hiba
+  egyszer sem jött elő, valószínűleg egy másik jegy javította. Reprodukció nincs, a hipotéziseket senki nem
+  igazolta és nem is vetette el, ezért az elfogadási kritériumok nyitva maradnak. Ha újra előjön, új jegy
+  készül, ezzel a jegy hipotézis-listájával és első lépésével.
 
 _Első lépés (ha újra előjön): debug build Androidon, `chrome://inspect` + az érintett SQLite sorok és
 `outbox_item` tartalmának kiolvasása a szerkesztés előtt és után._
 
 ## Lezáráskor (on-done)
 
-- Frissített specek: [[…]] — melyik szakasz, egy sor mit változott
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — <mit>
-- Kód: <fő package-ek / fájlok>
+- Frissített specek: nincs — kódváltozás nélkül lezárva.
+- `IMPLEMENTATION_STATUS.md` sor: nem releváns (dropped, nem done).
+- Kód: nincs.
