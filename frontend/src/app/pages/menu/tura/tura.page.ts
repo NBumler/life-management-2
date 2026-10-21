@@ -88,6 +88,8 @@ import { MY_LOCATION_MIN_ZOOM, MyLocationControl, addMyLocationLayer, showMyLoca
 import { addHikeNavigationLayers, showHikeNavigation } from './hike-navigation-layers';
 import { HikeNavigationPanelComponent } from './hike-navigation-panel.component';
 import { HikeSosComponent } from './hike-sos.component';
+import { RouteWeatherComponent } from './route-weather.component';
+import { dayStartPoints } from './weather-text';
 import { dateText, daySummaryText, distanceText, durationText, elevationText, megabytesText } from './hike-text';
 import { DaysEditorComponent } from './days-editor.component';
 import { MapHintComponent } from './map-hint.component';
@@ -282,6 +284,7 @@ const COUNTRY_CODE = 'HU';
 		MarkingBadgeComponent,
 		HikeNavigationPanelComponent,
 		HikeSosComponent,
+		RouteWeatherComponent,
 	],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -361,6 +364,7 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 		),
 	);
 	/** backlog/219 — a piszkozat napváltóinak távolsága az indulástól, a profil jelölőihez. */
+	protected readonly draftWeatherPlaces = computed(() => dayStartPoints(this.draft(), this.dayBreaks().map((day) => day.waypointIndex)));
 	protected readonly draftMarkerDistances = computed(() => distancesAlongRoute(this.draft(), this.dayBreaks().map((day) => day.waypointIndex)));
 	/** backlog/212 — a szerkesztésre betöltött mentett útvonal id-je; `null` = új útvonal. */
 	protected readonly editingRouteId = signal<string | null>(null);
@@ -370,6 +374,8 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	private readonly selectedRouteId = signal<string | null>(null);
 	protected readonly selectedRoute = computed(() => this.hikeRoutes.items().find((route) => route.id === this.selectedRouteId()) ?? null);
 	protected readonly selectedRouteMarkers = computed(() => routeDayMarkerDistances(this.selectedRoute()));
+	/** backlog/109 — az előrejelzés helyei: a napok kezdőpontjai. */
+	protected readonly selectedRouteWeatherPlaces = computed(() => routeWeatherPlaces(this.selectedRoute()));
 	/**
 	 * backlog/212 — az Útvonalaim lista: a legújabb elöl. Új útvonal szinkron előtt is kap helyi dátumot
 	 * (local-rows.ts), így dátum nélküli csak egy korábbi, még nem szinkronizált sor lehet — az a végére kerül.
@@ -396,6 +402,7 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	protected readonly previewProfile = signal<ElevationProfilePoint[] | null>(null);
 	protected readonly previewProfileLoading = signal(false);
 	protected readonly previewMarkers = computed(() => routeDayMarkerDistances(this.previewedCuratedRoute()));
+	protected readonly previewWeatherPlaces = computed(() => routeWeatherPlaces(this.previewedCuratedRoute()));
 	/** backlog/191, 227 — az üres-állapot szöveg, vagy `null` (van lista, vagy még tölt). */
 	protected readonly catalogEmptyKey = computed(() =>
 		catalogEmptyStateKey({
@@ -1653,6 +1660,17 @@ function routeDayMarkerDistances(route: { coordinates: number[][]; days?: HikeRo
 	return distancesAlongRoute(
 		route.coordinates,
 		days.slice(0, -1).map((day) => day.endWaypointIndex),
+	);
+}
+
+/** backlog/109 — egy mentett vagy ajánlott útvonal napjainak kezdőpontjai, az időjárás-előrejelzéshez. */
+function routeWeatherPlaces(route: { coordinates: number[][]; days?: HikeRouteDay[] | null } | null): (readonly number[])[] {
+	if (route === null) {
+		return [];
+	}
+	return dayStartPoints(
+		route.coordinates,
+		(route.days ?? []).slice(0, -1).map((day) => day.endWaypointIndex),
 	);
 }
 

@@ -1,0 +1,76 @@
+<div class="weather-head">
+  <span class="section-title">{{ 'TURA.WEATHER.TITLE' | translate }}</span>
+  @if (result()?.stale) {
+    <ion-button fill="clear" size="small" [disabled]="loading()" (click)="refresh()">
+      <ion-icon slot="start" name="refresh-outline" aria-hidden="true"></ion-icon>
+      {{ 'TURA.WEATHER.REFRESH' | translate }}
+    </ion-button>
+  }
+</div>
+
+@if (places().length > 1) {
+  <div class="weather-places" role="group" [attr.aria-label]="'TURA.WEATHER.PLACE' | translate">
+    @for (place of places(); track $index) {
+      <ion-chip
+        class="weather-place"
+        [outline]="selectedPlace() !== $index"
+        [color]="selectedPlace() === $index ? 'primary' : undefined"
+        [attr.aria-pressed]="selectedPlace() === $index"
+        (click)="selectPlace($index)"
+      >
+        <ion-label>{{ 'TURA.WEATHER.DAY_START' | translate: { number: $index + 1 } }}</ion-label>
+      </ion-chip>
+    }
+  </div>
+}
+
+@if (forecast(); as forecastValue) {
+  @if (age(); as staleAge) {
+    <p class="note weather-stale">{{ 'TURA.WEATHER.STALE' | translate: { age: (staleAge.key | translate: staleAge.params) } }}</p>
+  }
+  <div class="weather-days" role="group" [attr.aria-label]="'TURA.WEATHER.DAYS' | translate">
+    @for (entry of days(); track entry.index; let position = $index) {
+      <button
+        type="button"
+        class="weather-day"
+        [class.selected]="entry.index === dayIndex()"
+        [attr.aria-pressed]="entry.index === dayIndex()"
+        (click)="selectedDay.set(entry.index)"
+      >
+        <span class="weather-day-name">{{ dayName(entry.day.dateMs, position) ?? ('TURA.WEATHER.TODAY' | translate) }}</span>
+        <ion-icon [name]="icon(entry.day.weatherCode)" [attr.aria-label]="conditionKey(entry.day.weatherCode) | translate"></ion-icon>
+        <span class="weather-day-temp">{{ degrees(entry.day.temperatureMaxC) }} / {{ degrees(entry.day.temperatureMinC) }}</span>
+        <span class="weather-day-rain">{{ percent(entry.day.precipitationProbabilityMax) }}</span>
+      </button>
+    }
+  </div>
+
+  @if (selectedDayValues(); as day) {
+    <p class="weather-summary">
+      {{ conditionKey(day.weatherCode) | translate }} ·
+      {{ 'TURA.WEATHER.PRECIPITATION' | translate: { value: millimetres(day.precipitationSumMm) } }} ·
+      {{ 'TURA.WEATHER.GUSTS' | translate: { value: kmh(day.windGustsMaxKmh) } }} ·
+      {{ 'TURA.WEATHER.SUN' | translate: { sunrise: clock(day.sunriseMs), sunset: clock(day.sunsetMs) } }}
+    </p>
+  }
+
+  @if (hours().length > 0) {
+    <div class="weather-hours" role="list" [attr.aria-label]="'TURA.WEATHER.HOURS' | translate">
+      @for (hour of hours(); track trackHour(hour)) {
+        <div class="weather-hour" role="listitem">
+          <span class="weather-hour-time">{{ clock(hour.timeMs) }}</span>
+          <ion-icon [name]="icon(hour.weatherCode)" [attr.aria-label]="conditionKey(hour.weatherCode) | translate"></ion-icon>
+          <strong>{{ degrees(hour.temperatureC) }}</strong>
+          <span class="weather-hour-rain">{{ percent(hour.precipitationProbability) }}</span>
+          <span class="weather-hour-wind">{{ kmh(hour.windGustsKmh) }}</span>
+        </div>
+      }
+    </div>
+  }
+} @else if (loading()) {
+  <div class="weather-loading"><ion-spinner name="dots"></ion-spinner></div>
+} @else {
+  <p class="note">{{ 'TURA.WEATHER.UNAVAILABLE' | translate }}</p>
+}
+
+<p class="weather-source">{{ 'TURA.WEATHER.SOURCE' | translate }}</p>

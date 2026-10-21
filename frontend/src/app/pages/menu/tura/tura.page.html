@@ -382,6 +382,9 @@
               [markerDistances]="selectedRouteMarkers()"
               [days]="route.days ?? null"
             ></app-route-details>
+            @if (selectedRouteWeatherPlaces().length > 0) {
+              <app-route-weather [places]="selectedRouteWeatherPlaces()"></app-route-weather>
+            }
           }
         }
         @case ('preview') {
@@ -414,6 +417,9 @@
               [markerDistances]="previewMarkers()"
               [days]="preview.days ?? null"
             ></app-route-details>
+            @if (previewWeatherPlaces().length > 0) {
+              <app-route-weather [places]="previewWeatherPlaces()"></app-route-weather>
+            }
           }
         }
         @case ('draft') {
@@ -444,6 +450,9 @@
             (changeIndex)="updateDayBreakIndex($event.position, $event.waypointIndex)"
             (changeOvernightName)="updateDayBreakOvernightName($event.position, $event.overnightName)"
           ></app-days-editor>
+          @if (draftWeatherPlaces().length > 0) {
+            <app-route-weather [places]="draftWeatherPlaces()"></app-route-weather>
+          }
         }
       }
     </ion-content>

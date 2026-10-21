@@ -31,9 +31,10 @@ túraútvonal-tervező része.
       reuse-olható itt. — Nem: a #86 nem API, csak egy Google-keresés URL (`gear/sessions/weather-search.ts`).
 - [x] Előrejelzés-kliens + eszközön tárolt utolsó ismert előrejelzés + riasztási szabályok
       (`core/weather/`), unit tesztekkel. (1. szelet)
-- [ ] Az útvonal-kártyán (mentett útvonal, ajánlott túra, piszkozat) „Időjárás” szakasz a kezdőpontra:
+- [x] Az útvonal-kártyán (mentett útvonal, ajánlott túra, piszkozat) „Időjárás” szakasz a kezdőpontra:
       napi összegző a következő napokra, órás sáv, forrás-megjelölés (Open-Meteo, CC BY 4.0); offline az
       utolsó ismert előrejelzés a korával, ha nincs ilyen, egy rövid magyarázat. (2. szelet)
+      Többnapos útnál napi helyválasztó („1. nap kezdete”, „2. nap kezdete” …).
 - [ ] Navigáció indításakor, ha a becsült túraidőn belül kedvezőtlen idő várható, figyelmeztető ablak
       („Indulás így is” / „Mégse”); adat nélkül nem blokkol. Emulátoron hu + en 360 dp. (3. szelet)
 
@@ -82,3 +83,15 @@ hőérzet, napnyugta a becsült befejezés előtt (sötétedés). Ismeretlen ér
 - Frissített specek: _(új spec-fájl, ha ekkor még nincs)_
 - `IMPLEMENTATION_STATUS.md` sor: <dátum> — <mit>
 - Kód: a `gear` modul időjárás-integrációjának újrafelhasználása/kiterjesztése
+- 2026-10-21 — döntések (felhasználó: „Mehet”): az előrejelzés helye a kezdőpont, többnapos útnál a napok
+  kezdőpontjai; a kártyán „Időjárás” szakasz; a figyelmeztetés a „Navigáció indítása” gombnál a becsült
+  túraidőre (szabad felvételnél az első helyzetre, a következő 3 órára); a küszöbök maradnak.
+- 2026-10-21 — 2. szelet: `route-weather.component` (napi sor, a kiválasztott nap összegzője
+  napkeltével/napnyugtával, órás sáv 05–22 óra között, frissítés gomb az utolsó ismert előrejelzésnél,
+  forrás-megjelölés), `weather-text.ts`, 7 új ikon, `TURA.WEATHER.*` hu + en. Emulátoron (360 dp):
+  - hu, BACKEND_OFFLINE (a backend nem futott): „Időjárás” – Ma / Cs 22. / … napi sor, „Borult · csapadék
+    1,4 mm · széllökés 32 km/h · napkelte 07:11, napnyugta 17:45”, órás sáv, forrás. A magyar napcímke
+    az `Intl` szerint „22., Cs” lett → javítva „Cs 22.”-re.
+  - en, FULL_OFFLINE (repülőgép mód): a már letöltött helyre az eszközön tárolt előrejelzés („Today / Thu 22 …”,
+    a csütörtökre koppintva „Rain · precipitation 14.9 mm · gusts 67 km/h …” és 05:00-tól órás sáv);
+    a Teszt188 kétnapos útnál „Start of day 1 / Start of day 2” és a „No forecast: …” magyarázat.
