@@ -166,7 +166,8 @@ function elevationSteps(elevations: readonly number[]): { index: number; diff: n
   return steps;
 }
 
-function naismithMinutes(distanceMeters: number, gainMeters: number): number {
+/** Naismith: walking time for a distance and its ascent, in whole minutes. */
+export function naismithMinutes(distanceMeters: number, gainMeters: number): number {
   return Math.round((distanceMeters / 1000) * MINUTES_PER_KILOMETER + gainMeters / METERS_ASCENT_PER_MINUTE);
 }
 
