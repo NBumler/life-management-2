@@ -8,6 +8,7 @@ import { BikeRideLog } from '../../../api/model/bikeRideLog';
 import { BikeLiveDraft, BikeLiveSessionService, BikeLiveSummary } from '../../../core/data/bike-live-session.service';
 import { BikeRideLogRepository, BikeRideLogSaveInput } from '../../../core/data/bike-ride-log.repository';
 import { ProfileRepository } from '../../../core/data/profile.repository';
+import { localStart, startedAtFromLocal } from '../../../shared/workout/bike-metrics';
 import { BikeRideLogEditPage } from './bike-ride-log-edit.page';
 
 describe('BikeRideLogEditPage', () => {
@@ -107,6 +108,55 @@ describe('BikeRideLogEditPage', () => {
     expect(saveSpy).toHaveBeenCalledWith(
       jasmine.objectContaining({ date: '2026-08-29', durationMinutes: 75, intensity: BikeRideLog.IntensityEnum.RoadLeisure, distanceKm: 24.5 }),
     );
+  });
+
+  describe('start time (backlog/234)', () => {
+    it('a new entry defaults to the current time and saves date + time as startedAt', async () => {
+      await setup();
+      expect(component.form.controls.startTime.value).toMatch(/^\d{2}:\d{2}$/);
+      component.form.patchValue({ date: '2026-10-21', startTime: '17:45', durationMinutes: 30 });
+      await component.save();
+      expect(saveSpy).toHaveBeenCalledWith(
+        jasmine.objectContaining({ trackingMode: undefined, startedAt: startedAtFromLocal('2026-10-21', '17:45') }),
+      );
+    });
+
+    it('an emptied time saves a null startedAt', async () => {
+      await setup();
+      component.form.patchValue({ startTime: '', durationMinutes: 30 });
+      await component.save();
+      expect(saveSpy).toHaveBeenCalledWith(jasmine.objectContaining({ startedAt: null }));
+    });
+
+    it('an untimed pre-#234 row opens with an empty time and stays untimed', async () => {
+      const existing: BikeRideLog = { id: 'b1', date: '2026-10-01', durationMinutes: 40, intensity: BikeRideLog.IntensityEnum.City, deleted: false };
+      await setup('b1', { items: [existing] });
+      expect(component.form.controls.startTime.value).toBe('');
+      await component.save();
+      expect(saveSpy).toHaveBeenCalledWith(jasmine.objectContaining({ id: 'b1', startedAt: null }));
+    });
+
+    it('editing the time of a live ride re-derives startedAt from date + time', async () => {
+      const existing: BikeRideLog = {
+        id: 'ride-1',
+        date: '2026-10-18',
+        durationMinutes: 30,
+        intensity: BikeRideLog.IntensityEnum.City,
+        trackingMode: BikeRideLog.TrackingModeEnum.Live,
+        startedAt: '2026-10-18T05:15:42.000Z',
+        deleted: false,
+      };
+      await setup('ride-1', { items: [existing] });
+      expect(component.form.controls.startTime.value).toBe(localStart('2026-10-18T05:15:42.000Z').time);
+      component.form.patchValue({ startTime: '06:00' });
+      await component.save();
+      expect(saveSpy).toHaveBeenCalledWith(
+        jasmine.objectContaining({
+          trackingMode: BikeRideLog.TrackingModeEnum.Live,
+          startedAt: startedAtFromLocal('2026-10-18', '06:00'),
+        }),
+      );
+    });
   });
 
   it('save() does nothing while the required duration is missing', async () => {

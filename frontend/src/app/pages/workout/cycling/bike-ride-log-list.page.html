@@ -26,6 +26,9 @@
             <h2>{{ (intensityLabelKey(card.log)) | translate }}</h2>
             <p>
               {{ card.log.date }}
+              @if (card.startTime !== null) {
+                {{ card.startTime }}
+              }
               @if (card.distanceKm !== null) {
                 · {{ card.distanceKm | number: '1.0-1' }} {{ 'WORKOUT.BIKE.KM_SHORT' | translate }}
               }

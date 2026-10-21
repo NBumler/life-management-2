@@ -1544,6 +1544,7 @@
       "NEW_TITLE": "New bike ride",
       "EDIT_TITLE": "Edit bike ride",
       "FIELD_DATE": "Date",
+      "FIELD_START_TIME": "Start time",
       "FIELD_DURATION": "Duration (min)",
       "FIELD_INTENSITY": "Intensity",
       "FIELD_DISTANCE": "Distance (km)",

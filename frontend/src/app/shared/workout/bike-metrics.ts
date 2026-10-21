@@ -77,3 +77,46 @@ export function suggestedIntensity(speedKmH: number | null): BikeRideLog.Intensi
   }
   return BikeRideLog.IntensityEnum.RoadVigorous;
 }
+
+/** backlog/234 — `startedAt` (an ISO instant) as the device-local `{ date: YYYY-MM-DD, time: HH:mm }` it started at. */
+export function localStart(startedAt: string): { date: string; time: string } {
+  const start = new Date(startedAt);
+  const pad = (value: number): string => String(value).padStart(2, '0');
+  return {
+    date: `${start.getFullYear()}-${pad(start.getMonth() + 1)}-${pad(start.getDate())}`,
+    time: `${pad(start.getHours())}:${pad(start.getMinutes())}`,
+  };
+}
+
+/** backlog/234 — a device-local `YYYY-MM-DD` + `HH:mm` as the ISO instant stored in `startedAt`. */
+export function startedAtFromLocal(date: string, time: string): string {
+  const [year, month, day] = date.split('-').map(Number);
+  const [hours, minutes] = time.split(':').map(Number);
+  return new Date(year, month - 1, day, hours, minutes).toISOString();
+}
+
+/**
+ * backlog/234 — documentation/Features/Biciklizés napló.md "Lista": newest first. `date` descending,
+ * then `startedAt` descending within a day (an untimed pre-#234 manual row after the day's timed
+ * rides), then `createdAt` descending as the last tie-break.
+ */
+export function compareBikeRidesNewestFirst(
+  a: Pick<BikeRideLog, 'date' | 'startedAt' | 'createdAt'>,
+  b: Pick<BikeRideLog, 'date' | 'startedAt' | 'createdAt'>,
+): number {
+  if (a.date !== b.date) {
+    return a.date < b.date ? 1 : -1;
+  }
+  const aStart = a.startedAt ? Date.parse(a.startedAt) : null;
+  const bStart = b.startedAt ? Date.parse(b.startedAt) : null;
+  if (aStart !== bStart) {
+    if (aStart === null) {
+      return 1;
+    }
+    if (bStart === null) {
+      return -1;
+    }
+    return bStart - aStart;
+  }
+  return (b.createdAt ?? '').localeCompare(a.createdAt ?? '');
+}

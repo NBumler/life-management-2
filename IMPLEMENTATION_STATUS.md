@@ -14,6 +14,10 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-21 — #234** Biciklizés napló: a lista fordított időrendű (dátum, napon belül kezdési idő,
+  legfrissebb legfelül, mentés után is); a kézi űrlap és az élő összegző „Kezdés ideje” (óra:perc) mezőt
+  kapott, ami a meglévő `startedAt`-be kerül — séma/API/outbox változás nélkül — érintett:
+  [[Biciklizés napló]]; kód: `pages/workout/cycling`, `shared/workout/bike-metrics.ts`.
 - **2026-10-21 — #233** Kezdőlap: „Heti adatok” nézet (`/tabs/home/week`, fejléc naptár-ikon,
   `kezdolap.hetiAdatok` flag) — a mai étkezés + edzések widgetek hétfő–vasárnap heti összesítésben,
   lapozható múltbeli hetekkel; a napi és heti számítás közös (`core/data/day-summary.ts`) —

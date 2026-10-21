@@ -1,5 +1,13 @@
 import { BikeRideLog } from '../../api/model/bikeRideLog';
-import { BIKE_MET, avgSpeedKmH, bikeKcal, suggestedIntensity } from './bike-metrics';
+import {
+  BIKE_MET,
+  avgSpeedKmH,
+  bikeKcal,
+  compareBikeRidesNewestFirst,
+  localStart,
+  startedAtFromLocal,
+  suggestedIntensity,
+} from './bike-metrics';
 
 describe('bike-metrics', () => {
   describe('BIKE_MET', () => {
@@ -56,6 +64,41 @@ describe('bike-metrics', () => {
 
     it('is null when the speed is unknown', () => {
       expect(suggestedIntensity(null)).toBeNull();
+    });
+  });
+
+  describe('local start time (backlog/234)', () => {
+    it('round-trips a device-local date + HH:mm through the stored instant', () => {
+      expect(localStart(startedAtFromLocal('2026-10-21', '07:05'))).toEqual({ date: '2026-10-21', time: '07:05' });
+      expect(localStart(startedAtFromLocal('2026-03-29', '23:59'))).toEqual({ date: '2026-03-29', time: '23:59' });
+    });
+  });
+
+  describe('compareBikeRidesNewestFirst (backlog/234)', () => {
+    const ride = (id: string, date: string, time: string | null, createdAt?: string) => ({
+      id,
+      date,
+      startedAt: time === null ? null : startedAtFromLocal(date, time),
+      createdAt,
+    });
+
+    it('orders by date, then start time within a day, newest first; an untimed row after the timed ones', () => {
+      const rides = [
+        ride('old', '2026-10-19', '18:00'),
+        ride('morning', '2026-10-21', '07:30'),
+        ride('untimed', '2026-10-21', null),
+        ride('evening', '2026-10-21', '19:10'),
+        ride('noon', '2026-10-21', '12:00'),
+      ];
+      expect([...rides].sort(compareBikeRidesNewestFirst).map((r) => r.id)).toEqual(['evening', 'noon', 'morning', 'untimed', 'old']);
+    });
+
+    it('falls back to createdAt (newest first) when date + start are equal', () => {
+      const rides = [
+        ride('a', '2026-10-21', null, '2026-10-21T08:00:00Z'),
+        ride('b', '2026-10-21', null, '2026-10-21T09:00:00Z'),
+      ];
+      expect([...rides].sort(compareBikeRidesNewestFirst).map((r) => r.id)).toEqual(['b', 'a']);
     });
   });
 });

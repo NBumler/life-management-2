@@ -1544,6 +1544,7 @@
       "NEW_TITLE": "Új kerékpárút",
       "EDIT_TITLE": "Kerékpárút szerkesztése",
       "FIELD_DATE": "Dátum",
+      "FIELD_START_TIME": "Kezdés ideje",
       "FIELD_DURATION": "Időtartam (perc)",
       "FIELD_INTENSITY": "Intenzitás",
       "FIELD_DISTANCE": "Táv (km)",

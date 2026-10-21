@@ -29,7 +29,14 @@ import { ProfileRepository } from '../../../core/data/profile.repository';
 import { MIN_PLAUSIBLE_ESTIMATED_SPEED_KMH, ROAD_CIRCUITY_FACTOR } from '../../../core/geo/tracking-config';
 import { HelpButtonComponent } from '../../../shared/help-button/help-button.component';
 import { today } from '../../../shared/local-date';
-import { BIKE_INTENSITIES, avgSpeedKmH, bikeKcal, suggestedIntensity } from '../../../shared/workout/bike-metrics';
+import {
+  BIKE_INTENSITIES,
+  avgSpeedKmH,
+  bikeKcal,
+  localStart,
+  startedAtFromLocal,
+  suggestedIntensity,
+} from '../../../shared/workout/bike-metrics';
 import { bikeLiveHelpParams } from './bike-live-start.component';
 
 /**
@@ -45,6 +52,10 @@ import { bikeLiveHelpParams } from './bike-live-start.component';
  * (confirmed) drops it instead. A Becsült estimate is marked ("durva becslés" for the straight-line
  * fallback), and an implausibly slow one asks for the distance — it stays pre-filled, overridable or
  * clearable. Editing a saved ride keeps its `trackingMode` / `startedAt`.
+ *
+ * backlog/234 — a "Kezdés ideje" (`HH:mm`) field for every mode: `startedAt` = `date` + that time in the
+ * device's TZ (defaults to now on a new entry, the ride's start on the live summary / an edit). The stored
+ * instant is kept as-is when date + time are untouched; an emptied time (or an untimed pre-#234 row) saves null.
  */
 @Component({
   selector: 'app-bike-ride-log-edit',
@@ -100,6 +111,7 @@ export class BikeRideLogEditPage implements OnInit {
 
   readonly form = this.fb.nonNullable.group({
     date: this.fb.nonNullable.control(today(), [Validators.required]),
+    startTime: this.fb.nonNullable.control(localStart(new Date().toISOString()).time),
     durationMinutes: this.fb.control<number | null>(null, [Validators.required, Validators.min(1)]),
     intensity: this.fb.nonNullable.control<BikeRideLog.IntensityEnum>(BikeRideLog.IntensityEnum.City),
     distanceKm: this.fb.control<number | null>(null, [Validators.min(0)]),
@@ -155,6 +167,7 @@ export class BikeRideLogEditPage implements OnInit {
       this.startedAt = existing.startedAt ?? null;
       this.form.reset({
         date: existing.date,
+        startTime: existing.startedAt ? localStart(existing.startedAt).time : '',
         durationMinutes: existing.durationMinutes,
         intensity: existing.intensity,
         distanceKm: existing.distanceKm ?? null,
@@ -177,13 +190,27 @@ export class BikeRideLogEditPage implements OnInit {
       distanceKm: value.distanceKm ?? null,
       elevationGainMeters: value.elevationGainMeters ?? null,
       trackingMode: this.trackingMode,
-      startedAt: this.startedAt,
+      startedAt: this.resolveStartedAt(value.date, value.startTime),
     };
     await this.repository.save(input);
     if (this.liveSummary) {
       await this.live.clear();
     }
     await this.navController.navigateBack('/tabs/workout/cycling');
+  }
+
+  /** The stored instant when date + time are unchanged (keeps a live start's seconds), else the edited local time. */
+  private resolveStartedAt(date: string, time: string): string | null {
+    if (time === '') {
+      return null;
+    }
+    if (this.startedAt !== null) {
+      const original = localStart(this.startedAt);
+      if (original.date === date && original.time === time) {
+        return this.startedAt;
+      }
+    }
+    return startedAtFromLocal(date, time);
   }
 
   async discardLive(): Promise<void> {
@@ -221,6 +248,7 @@ export class BikeRideLogEditPage implements OnInit {
       this.liveImplausible.set(summary.implausible);
       this.form.reset({
         date: summary.date,
+        startTime: localStart(summary.startedAt).time,
         durationMinutes: summary.durationMinutes,
         intensity: BikeRideLog.IntensityEnum.City,
         distanceKm: summary.distanceKm,

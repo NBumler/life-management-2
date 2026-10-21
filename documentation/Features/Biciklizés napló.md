@@ -30,7 +30,7 @@ Kerékpáros utak naplózása az [[Edzés]] tab alatt. Egy naplóbejegyzés = eg
 | `distanceKm` | Opcionális; `≥ 0`; tisztán napló / statisztika + átlagsebesség-hint |
 | `elevationGainMeters` | Opcionális; `≥ 0`; tisztán napló / statisztika |
 | `trackingMode` | Opcionális enum: `MANUAL` / `LIVE` (Pontos) / `ESTIMATED` (Becsült). Hiányzó / `null` = kézi (a #150 előtti sorok is). Az űrlapon nem látszik; szerkesztéskor megmarad. |
-| `startedAt` | Opcionális időbélyeg: az élő menet indulása. Kézi bejegyzésnél `null`; szerkesztéskor megmarad. |
+| `startedAt` | Opcionális időbélyeg: az út kezdete (élő menetnél az indulás, kézi bejegyzésnél az űrlap „Kezdés ideje” — `date` + óra:perc a kliens TZ-jében). `null` csak üresen hagyott időnél (pl. a #234 előtti kézi sorok). Ha szerkesztéskor dátum és idő nem változik, a tárolt érték (másodpercekkel) megmarad. |
 | `deleted` | Soft delete (`false` default) |
 | `createdAt` / `updatedAt` | Audit (kliens + szerver) |
 
@@ -87,14 +87,14 @@ Csak natív appban (`offlineCapable`) és `edzes.bicikli` flaggel. Egyszerre egy
 - **Hihetőség (Becsült):** ha a becsült átlagsebesség `< MIN_PLAUSIBLE_ESTIMATED_SPEED_KMH` (2 km/h) — körtúra, majdnem-körtúra, nagy kitérő —, az összegző figyelmeztet; a becsült táv előtöltve marad, felülírható / törölhető.
 - **Szünet / folytatás:** a szünet nem számít a `durationMinutes`-ba; Pontos módban alatta nincs GPS-gyűjtés.
 - **Időtartam:** aktív idő (indulás → befejezés, mínusz szünetek), percre kerekítve, legalább 1.
-- **Összegző:** előtöltve `date`, `startedAt`, `durationMinutes`, `distanceKm`, `elevationGainMeters`, `trackingMode`; az `intensity` alapértéke `CITY`, a meglévő átlagsebesség-hint javasol. Mentés a meglévő `BikeRideLog` repository-n át, a menet saját UUID-jával; utána a draft törlődik. Elvetés megerősítéssel; a nyers pontok is törlődnek.
+- **Összegző:** előtöltve `date`, `startedAt` (a kezdés ideje mezőben, szerkeszthető), `durationMinutes`, `distanceKm`, `elevationGainMeters`, `trackingMode`; az `intensity` alapértéke `CITY`, a meglévő átlagsebesség-hint javasol. Mentés a meglévő `BikeRideLog` repository-n át, a menet saját UUID-jával; utána a draft törlődik. Elvetés megerősítéssel; a nyers pontok is törlődnek.
 - Minden hangolható érték: `core/geo/tracking-config.ts`.
 
 ### UI/UX elvárások
 
 - Belépés: [[Edzés]] tab → Biciklizés napló.
-- **Lista:** időrend (újabb elöl); soron: dátum, időtartam, `intensity`, opcionális táv / emelkedés; megjelenített kcal = utility számítás (Profile `m` + MET).
-- **Új / szerkesztés űrlap:** dátum, `durationMinutes`, `intensity` (kötelező); `distanceKm`, `elevationGainMeters` (opcionális); élő kcal előnézet; ha van táv+idő → `avgSpeedKmH` + soft MET-hint.
+- **Lista:** fordított időrend (legfrissebb legfelül): `date` csökkenő, napon belül `startedAt` csökkenő (idő nélküli sor az adott nap időzített útjai után), végül `createdAt` csökkenő; mentés után is azonnal (kliensoldali rendezés, web és natív azonos). Soron: dátum + kezdés óra:perc (ha van), időtartam, `intensity`, opcionális táv / emelkedés; megjelenített kcal = utility számítás (Profile `m` + MET).
+- **Új / szerkesztés űrlap:** dátum, kezdés ideje (óra:perc; új bejegyzésnél az aktuális idő, üresen hagyható), `durationMinutes`, `intensity` (kötelező); `distanceKm`, `elevationGainMeters` (opcionális); élő kcal előnézet; ha van táv+idő → `avgSpeedKmH` + soft MET-hint.
 - **Élő edzés indítása (natív, ha nincs élő menet):** a listán mód-választó (Pontos / Becsült, mindegyiknél egy mondat a pontosság ↔ akkumulátor kompromisszumról + súgó ikon a részletes magyarázattal; a Becsült súgója a körtúra-korlátot is leírja), a választás eszköz-lokálisan megjegyezve alapértelmezésként (`lm2_bike_live_default_mode`), és „Élő edzés indítása” gomb. Megtagadott (vagy 60 mp-ig megválaszolatlan) helyhozzáférésnél azonnal magyarázó üzenet, a kézi napló marad (`backlog/229`: a hiányzó engedélyt a plugin `start()`-ja kéri, nem a `requestPermissions()`-e, ami Androidon elutasítás után soha nem tér vissza).
 - **Élő képernyő** (`cycling/live`): aktív idő; Pontos módban táv és gyenge-jel jelzés; Becsült módban a kezdőpont állapota (rögzítés alatt / rögzítve / sikertelen), befejezéskor „Végpont rögzítése…”. Gombok: Szünet / Folytatás, Befejezés, Elvetés (megerősítéssel).
 - **Live banner** a biciklis listán és az Edzés hub tetején, amíg élő menet létezik: állapot (felvétel / szünet / befejezve), Pontos módban táv, Becsült módban a mód neve, aktív idő; tap → élő képernyő, befejezett menetnél az összegző.

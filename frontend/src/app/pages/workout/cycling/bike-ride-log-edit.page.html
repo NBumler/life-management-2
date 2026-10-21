@@ -63,6 +63,15 @@
 
       <ion-item>
         <ion-input
+          type="time"
+          formControlName="startTime"
+          [label]="'WORKOUT.BIKE.FIELD_START_TIME' | translate"
+          label-placement="stacked"
+        ></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-input
           type="number"
           inputmode="numeric"
           formControlName="durationMinutes"

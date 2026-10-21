@@ -12,10 +12,12 @@ import { ProfileRepository } from '../../../core/data/profile.repository';
 import { WorkoutSegmentHeaderComponent } from '../workout-segment-header.component';
 import { BikeLiveBannerComponent } from './bike-live-banner.component';
 import { BikeLiveStartComponent } from './bike-live-start.component';
-import { bikeKcal } from '../../../shared/workout/bike-metrics';
+import { bikeKcal, compareBikeRidesNewestFirst, localStart } from '../../../shared/workout/bike-metrics';
 
 interface BikeCard {
   log: BikeRideLog;
+  /** backlog/234 — device-local `HH:mm` of `startedAt`; null on an untimed pre-#234 manual row. */
+  startTime: string | null;
   distanceKm: number | null;
   elevationGainMeters: number | null;
   kcal: number;
@@ -23,8 +25,8 @@ interface BikeCard {
 
 /**
  * documentation/Features/Biciklizés napló.md "UI/UX: Lista" — the Biciklizés napló segment.
- * Time-ordered ride cards (newest first: date, duration, intensity, optional distance / elevation,
- * utility kcal). A single "Új út" CTA opens the create form. Mirrors the Úszás napló list.
+ * Time-ordered ride cards (newest first — date, then start time within a day, backlog/234: date +
+ * start time, duration, intensity, optional distance / elevation, utility kcal). A single "Új út" CTA opens the create form. Mirrors the Úszás napló list.
  *
  * backlog/150 — native only (`offlineCapable`): the mode picker + "Élő edzés indítása" (hidden while a
  * ride exists; the live banner links to it instead). The web build keeps only the manual log.
@@ -62,8 +64,10 @@ export class BikeRideLogListPage implements OnInit {
     return this.repository
       .items()
       .filter((log) => !log.deleted)
+      .sort(compareBikeRidesNewestFirst)
       .map((log) => ({
         log,
+        startTime: log.startedAt ? localStart(log.startedAt).time : null,
         distanceKm: log.distanceKm ?? null,
         elevationGainMeters: log.elevationGainMeters ?? null,
         kcal: bikeKcal(log, bodyWeight),
