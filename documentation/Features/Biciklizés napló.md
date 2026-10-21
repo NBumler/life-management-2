@@ -73,7 +73,7 @@ Soft javaslat (nem írja felül a user `intensity` választását):
 
 #### Élő edzés (`backlog/150`)
 
-Csak natív appban (`offlineCapable`) és `edzes.bicikli` flaggel. Egyszerre egy élő menet létezhet; állapota eszköz-lokális draft (`Preferences`), így túléli az app bezárását / újraindítását.
+Csak natív appban (`offlineCapable`) és `edzes.bicikli` flaggel. Egyszerre egy élő menet létezhet; állapota eszköz-lokális draft (`Preferences`), így túléli az app bezárását / újraindítását. A GPS-t a Túra oldal navigációja is használja: amíg ott egy navigáció vagy felvétel fut (vagy összegzésre vár), élő menet nem indul, „GPS foglalt” üzenettel (`backlog/106`, `core/geo/gps-session-lock.ts`), és fordítva.
 
 | Mód | Gyűjtés | Táv | Szintemelkedés |
 |---|---|---|---|

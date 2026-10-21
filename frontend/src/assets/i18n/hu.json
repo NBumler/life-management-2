@@ -565,6 +565,30 @@
     },
     "ZOOM_HINT": "Közelíts rá a turistautak megjelenítéséhez",
     "TRAILS_LOADING": "Turistautak betöltése…",
+    "NAVIGATION": {
+      "NOTIFICATION_TITLE": "Túra navigáció",
+      "NOTIFICATION_BODY": "Az útvonalad GPS-szel rögzül",
+      "PAUSED_NOTIFICATION_TITLE": "Túra navigáció szüneteltetve",
+      "PAUSED_NOTIFICATION_BODY": "Indítva: {{time}}. Koppints a folytatáshoz.",
+      "OFF_ROUTE_NOTIFICATION_TITLE": "Letértél az útvonalról",
+      "OFF_ROUTE_NOTIFICATION_BODY": "Kb. {{distance}} m-re vagy a tervezett útvonaltól.",
+      "SAY": {
+        "TURN_FAR": "{{distance}} méter múlva {{direction}}",
+        "TURN_NEAR": "Most {{direction}}",
+        "OFF_ROUTE": "Letértél az útvonalról",
+        "BACK_ON_ROUTE": "Újra az útvonalon vagy",
+        "ARRIVED": "Megérkeztél a célhoz"
+      },
+      "SAY_DIRECTION": {
+        "SLIGHT_LEFT": "fordulj enyhén balra",
+        "LEFT": "fordulj balra",
+        "SHARP_LEFT": "fordulj élesen balra",
+        "SLIGHT_RIGHT": "fordulj enyhén jobbra",
+        "RIGHT": "fordulj jobbra",
+        "SHARP_RIGHT": "fordulj élesen jobbra",
+        "U_TURN": "fordulj vissza"
+      }
+    },
     "MY_LOCATION": {
       "BUTTON": "Saját helyzetem",
       "NOTIFICATION_TITLE": "Túra",
@@ -1502,6 +1526,8 @@
         "START": "Élő edzés indítása",
         "PERMISSION_DENIED_TITLE": "Nincs helyhozzáférés",
         "PERMISSION_DENIED_MESSAGE": "Az élő edzéshez engedélyezd a helymeghatározást a telefon beállításaiban. A kézi napló továbbra is használható.",
+        "GPS_BUSY_TITLE": "GPS foglalt",
+        "GPS_BUSY_MESSAGE": "Túra navigáció fut. Fejezd be a Túra oldalon, utána indíthatsz élő biciklizést.",
         "TITLE": "Élő biciklizés",
         "RECORDING": "Felvétel folyamatban",
         "PAUSED": "Szünetel — nincs GPS-gyűjtés",

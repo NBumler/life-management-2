@@ -5,6 +5,7 @@ import { TranslateService } from '@ngx-translate/core';
 
 import { BikeRideLog } from '../../api/model/bikeRideLog';
 import { ElevationService } from '../geo/elevation.service';
+import { BIKE_LIVE_DRAFT_KEY, otherGpsSessionActive } from '../geo/gps-session-lock';
 import { haversineMeters, polylineLengthMeters, withExactEndpoints } from '../geo/geo-math';
 import { LocationPermissionState, LocationTrackingService, TrackingFix } from '../geo/location-tracking.service';
 import { computeRouteMetrics, elevationSamples } from '../geo/route-metrics';
@@ -69,9 +70,13 @@ export interface BikeLiveSummary {
   implausible: boolean;
 }
 
-export type BikeLiveStartResult = { status: 'started'; draft: BikeLiveDraft } | { status: 'permission-denied' };
+/** `gps-busy`: a hike navigation holds the GPS (backlog/106 — one GPS session at a time). */
+export type BikeLiveStartResult =
+  | { status: 'started'; draft: BikeLiveDraft }
+  | { status: 'permission-denied' }
+  | { status: 'gps-busy' };
 
-const PREFERENCES_KEY = 'lm2_bike_live_draft';
+const PREFERENCES_KEY = BIKE_LIVE_DRAFT_KEY;
 const TRACK_SESSION_KIND = 'bike';
 /**
  * Our own ongoing notification: Pontos shows it only while paused (while recording, the GPS plugin's
@@ -178,6 +183,9 @@ export class BikeLiveSessionService {
     const existing = await this.refresh();
     if (existing !== null) {
       return { status: 'started', draft: existing };
+    }
+    if (await otherGpsSessionActive('bike')) {
+      return { status: 'gps-busy' };
     }
     const permission: LocationPermissionState = await this.location.requestPermission(
       this.translate.instant('WORKOUT.BIKE.LIVE.NOTIFICATION_TITLE'),

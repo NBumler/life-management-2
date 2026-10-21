@@ -115,9 +115,10 @@ export class BikeLiveStartComponent implements OnInit {
         await this.navController.navigateForward(BIKE_LIVE_ROUTE);
         return;
       }
+      const busy = result.status === 'gps-busy';
       const alert = await this.alertController.create({
-        header: this.translate.instant('WORKOUT.BIKE.LIVE.PERMISSION_DENIED_TITLE'),
-        message: this.translate.instant('WORKOUT.BIKE.LIVE.PERMISSION_DENIED_MESSAGE'),
+        header: this.translate.instant(busy ? 'WORKOUT.BIKE.LIVE.GPS_BUSY_TITLE' : 'WORKOUT.BIKE.LIVE.PERMISSION_DENIED_TITLE'),
+        message: this.translate.instant(busy ? 'WORKOUT.BIKE.LIVE.GPS_BUSY_MESSAGE' : 'WORKOUT.BIKE.LIVE.PERMISSION_DENIED_MESSAGE'),
         buttons: [{ text: this.translate.instant('COMMON.OK'), role: 'cancel' }],
       });
       await alert.present();

@@ -109,6 +109,18 @@ Döntések (az alapértelmezés a javaslat; a 2. szelet előtt rákérdezek):
 | D4 | GPX-export | Külön jegy (megosztó plugin kell hozzá) |
 | D5 | Szabad felvétel tervezett útvonal nélkül | Igen (olcsó, ugyanaz a munkamenet) |
 
+- **2026-10-21 — döntések:** a user mind az öt javaslatot elfogadta („Mehet”): D1 plugin
+  (`@capacitor-community/text-to-speech` 8.0.2, MIT, Capacitor 8), D2 `tel:112` + koordináta, D3 sima
+  `HikeRoute`, D4 GPX-export külön jegy, D5 szabad felvétel is.
+- **1. szelet (`a3e3438`):** `core/geo/route-progress.ts`, `turn-instructions.ts`, `route-navigation.ts`,
+  `navigation-config.ts` — tiszta függvények, unit tesztekkel.
+- **2. szelet:** `core/data/hike-navigation.service.ts` (navigáció / szabad felvétel, szünet, befejezés,
+  mentés `HikeRoute`-ként a munkamenet UUID-jával, app-kill utáni folytatás; a már elhangzott bemondások a
+  draftban, így újraindítás után sem ismétlődnek), `core/speech/` (bemondás az app nyelvén; hang-motor vagy
+  hang nélkül csendben), `core/geo/gps-session-lock.ts` (a bicikli élő edzés és a túra-navigáció draftja
+  egymást zárja ki, „GPS foglalt” üzenettel). Letéréskor erős rezgés + helyi értesítés (visszatéréskor
+  eltűnik), kanyarnál rezgés, célba éréskor rezgés. A felvett vonal 3 m-es tűréssel egyszerűsítve mentődik.
+
 Spec: a #102 szabálya szerint a Túra feature spec a család végén készül; a [[Biciklizés napló]] spec a
 közös GPS-réteg leírásánál kap egy sort (egyszerre egy GPS-munkamenet).
 

@@ -565,6 +565,30 @@
     },
     "ZOOM_HINT": "Zoom in to see the hiking trails",
     "TRAILS_LOADING": "Loading hiking trails…",
+    "NAVIGATION": {
+      "NOTIFICATION_TITLE": "Hike navigation",
+      "NOTIFICATION_BODY": "Your route is being recorded with GPS",
+      "PAUSED_NOTIFICATION_TITLE": "Hike navigation paused",
+      "PAUSED_NOTIFICATION_BODY": "Started at {{time}}. Tap to continue.",
+      "OFF_ROUTE_NOTIFICATION_TITLE": "You have left the route",
+      "OFF_ROUTE_NOTIFICATION_BODY": "You are about {{distance}} m from the planned route.",
+      "SAY": {
+        "TURN_FAR": "In {{distance}} metres, {{direction}}",
+        "TURN_NEAR": "Now {{direction}}",
+        "OFF_ROUTE": "You have left the route",
+        "BACK_ON_ROUTE": "You are back on the route",
+        "ARRIVED": "You have arrived"
+      },
+      "SAY_DIRECTION": {
+        "SLIGHT_LEFT": "bear left",
+        "LEFT": "turn left",
+        "SHARP_LEFT": "turn sharp left",
+        "SLIGHT_RIGHT": "bear right",
+        "RIGHT": "turn right",
+        "SHARP_RIGHT": "turn sharp right",
+        "U_TURN": "turn around"
+      }
+    },
     "MY_LOCATION": {
       "BUTTON": "My location",
       "NOTIFICATION_TITLE": "Hiking",
@@ -1502,6 +1526,8 @@
         "START": "Start live ride",
         "PERMISSION_DENIED_TITLE": "No location access",
         "PERMISSION_DENIED_MESSAGE": "Allow location access in the phone settings to record a live ride. The manual log is still available.",
+        "GPS_BUSY_TITLE": "GPS in use",
+        "GPS_BUSY_MESSAGE": "A hike navigation is running. Finish it on the Hiking page, then you can start a live ride.",
         "TITLE": "Live ride",
         "RECORDING": "Recording",
         "PAUSED": "Paused — no GPS collection",

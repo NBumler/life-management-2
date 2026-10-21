@@ -4,6 +4,7 @@ import { Preferences } from '@capacitor/preferences';
 import { provideTranslateService } from '@ngx-translate/core';
 
 import { ElevationService } from '../geo/elevation.service';
+import { HIKE_NAVIGATION_DRAFT_KEY } from '../geo/gps-session-lock';
 import { LocationTrackingGateway } from '../geo/location-tracking.gateway';
 import { LocationTrackingService } from '../geo/location-tracking.service';
 import { RoutingService } from '../geo/routing.service';
@@ -96,6 +97,14 @@ describe('BikeLiveSessionService (backlog/150)', () => {
     expect(gps.start).toHaveBeenCalledTimes(1);
     expect(gps.stop).toHaveBeenCalled();
     expect(gps.requestNotificationPermission).not.toHaveBeenCalled();
+  });
+
+  it('start(): a running hike navigation holds the GPS — no ride starts (backlog/106)', async () => {
+    await Preferences.set({ key: HIKE_NAVIGATION_DRAFT_KEY, value: '{}' });
+
+    expect((await service.start('LIVE', 0)).status).toBe('gps-busy');
+    expect(gps.start).not.toHaveBeenCalled();
+    expect(service.draft()).toBeNull();
   });
 
   it('start(): a GPS that fails to start (location services off) leaves no ride behind', async () => {
