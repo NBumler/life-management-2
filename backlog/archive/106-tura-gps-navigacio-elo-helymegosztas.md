@@ -1,12 +1,13 @@
 ---
 id: 106
 type: feature
-status: in-progress
+status: done
 title: Túra — élő GPS-navigáció, track-felvétel, élő helymegosztás
-specs: []
+specs:
+  - "[[Biciklizés napló]]"
 flag:
 created: 2026-09-13
-closed:
+closed: 2026-10-21
 ---
 
 # 106 — Túra — élő GPS-navigáció, track-felvétel, élő helymegosztás
@@ -27,7 +28,7 @@ felvetette a Capacitor geolocation plugin használatát egy más kontextusban (c
 ## Elfogadási kritériumok
 
 - [x] Az alábbi döntési checklista véglegesítve.
-- [ ] Backend-offline szempont tisztázva: élő navigáció **FULL_OFFLINE**-ban (nincs internet, csak
+- [x] Backend-offline szempont tisztázva: élő navigáció **FULL_OFFLINE**-ban (nincs internet, csak
       helyi GPS-jel) is működnie kell — ez a feature lényege, nem opcionális él.
 
 ## Terv / döntési napló
@@ -134,12 +135,35 @@ Döntések (az alapértelmezés a javaslat; a 2. szelet előtt rákérdezek):
   útvonalon vagy” → „Megérkeztél a célhoz”, Befejezés → összegző → Mentés: a felvétel az Útvonalaim közé
   került a kitérővel együtt. en-ben szabad felvétel: Pause (értesítés „Hike paused”), Resume, Finish,
   Discard. A szüneteltetési értesítés címe „Túra szüneteltetve” lett (szabad felvételnél is igaz).
+  (`d0df463`)
+- **4. szelet — SOS:** `core/geo/coordinate-format.ts` (tizedes fok 5 jeggyel, nyelvfüggetlenül; fok-perc-
+  másodperc a nyelv égtájaival: É/D/K/Ny, N/S/E/W) és `pages/menu/tura/hike-sos.component.*` félmagas lapon:
+  koordináta mindkét alakban (kijelölhető), pontosság, a pont kora (másodperc / perc, élőben nő), „112 hívása”
+  (`tel:112` → a tárcsázó nyílik meg a számmal; híváshoz a felhasználó nyom). Belépés: a navigációs panel
+  „SOS” gombja és a „…” menü „Vészhelyzet (SOS)” pontja (mindig, navigáció nélkül is). Futó GPS-munkamenet
+  (túra, élő bicikli) alatt annak utolsó pontja, élőben frissülve; különben egyszeri helymeghatározás
+  „Helyzet frissítése” gombbal, elutasított engedélynél magyarázat — a 112 ilyenkor is hívható. Backend,
+  internet és új függőség nélkül. Emulátoron: en — menüből, „Finding your position…” → „47.67851, 18.87889 /
+  47°40′42.6″ N, 18°52′44.0″ E, Accuracy: ±5 m · 20 seconds ago”, a kor percre váltott; „Call 112” a
+  tárcsázót nyitotta „112”-vel (hívás nem indult), visszatérve a lap megmaradt. hu — futó felvétel közben a
+  panel SOS gombjával: „Tizedes fok / Fok, perc, másodperc … É, … K, Pontosság: ±5 m · 3 másodperce”,
+  frissítés gomb nélkül; utána Befejezés → Elvetés.
+- A nyitott kérdések lezárva: SOS = `tel:112` + koordináta (D2); a letérés a meglévő
+  `LocalNotificationsGateway`-t használja (2. szelet); a turn-by-turn a mentett útvonal geometriájából és a
+  betöltött turistautakból számol, eszközön (1. és 3. szelet), FULL_OFFLINE is.
+- A GPX-export külön jegy: [[235-tura-gpx-export]] (D4).
 
 Spec: a #102 szabálya szerint a Túra feature spec a család végén készül; a [[Biciklizés napló]] spec a
 közös GPS-réteg leírásánál kap egy sort (egyszerre egy GPS-munkamenet).
 
 ## Lezáráskor (on-done)
 
-- Frissített specek: _(új spec-fájl, ha ekkor még nincs)_
-- `IMPLEMENTATION_STATUS.md` sor: <dátum> — <mit>
-- Kód: `frontend` Capacitor Geolocation plugin integráció, `core/data/` track-repository
+- Frissített specek: [[Biciklizés napló]] — „Élő edzés”: egyszerre egy GPS-munkamenet (a túra-navigáció
+  mellett nem indul, „GPS foglalt”), a 2. szeletben. A Túra feature spec a #102 szabálya szerint a család
+  végén készül, ez a jegy addig a viselkedés leírása.
+- `IMPLEMENTATION_STATUS.md` sor: 2026-10-21 — Túra: élő GPS-navigáció, track-felvétel, hangos turn-by-turn,
+  letérés-figyelmeztetés, SOS (#106)
+- Kód: `core/geo/` (`route-progress`, `turn-instructions`, `route-navigation`, `navigation-config`,
+  `gps-session-lock`, `coordinate-format`), `core/data/hike-navigation.service.ts`, `core/speech/`,
+  `pages/menu/tura/` (`hike-navigation-panel`, `hike-navigation-layers`, `hike-sos`); új natív függőség:
+  `@capacitor-community/text-to-speech`.

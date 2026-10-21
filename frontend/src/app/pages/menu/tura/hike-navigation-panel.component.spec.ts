@@ -166,6 +166,14 @@ describe('HikeNavigationPanelComponent (backlog/106)', () => {
 		expect(navigation.clear).toHaveBeenCalled();
 	});
 
+	it('the SOS button asks the page for the emergency sheet', () => {
+		const opened: void[] = [];
+		fixture.componentInstance.sos.subscribe(() => opened.push(undefined));
+		fixture.detectChanges();
+		button('TURA.SOS.BUTTON').click();
+		expect(opened.length).toBe(1);
+	});
+
 	it('every turn direction has an arrow rotation', () => {
 		expect(Object.keys(TURN_ARROW_ROTATION).length).toBe(7);
 		expect(TURN_ARROW_ROTATION.U_TURN).toBe(180);

@@ -44,7 +44,7 @@ túrázási funkció).
 | `backlog/archive/103-tura-alapveto-utvonaltervezes-es-terkep.md` | Alaptérkép, turistajelzés-réteg, manuális/automatikus útvonaltervezés, katalógus, szűrés | `done` |
 | `backlog/archive/104-tura-adatforras-integracio.md` | Magyar (majd több országos) turistaút-adatforrás (OSM), ország-kód particionálás | `done` |
 | [[backlog/tura-utvonaltervezo/105-tura-offline-terkep-es-utvonalszamitas]] | Offline térkép-letöltés régiónként (kész), offline útvonaltervezés letöltés nélkül is (kész, build asset), turistaút-réteg megjelenítése build assetből (nyitva) | `in-progress` |
-| [[backlog/tura-utvonaltervezo/106-tura-gps-navigacio-elo-helymegosztas]] | Élő GPS-navigáció, track-felvétel, turn-by-turn, letérés-figyelmeztetés, SOS | `in-progress` |
+| `backlog/archive/106-tura-gps-navigacio-elo-helymegosztas.md` | Élő GPS-navigáció, track-felvétel, hangos turn-by-turn, letérés-figyelmeztetés, SOS (`tel:112` + koordináta) | `done` |
 | `backlog/archive/107-tura-domborzat-3d-terkepretegek.md` | Domborzat/lejtő-réteg, alternatív térképrétegek (3D nézet kizárva) | `done` |
 | [[backlog/tura-utvonaltervezo/108-tura-poi-adatbazis-ketura-belyegzok]] | POI-adatbázis, keresés, gyűjtemények (fotók és Kéktúra-bélyegzők kizárva) | `ready` |
 | [[backlog/tura-utvonaltervezo/109-tura-idojaras-integracio]] | Időjárás-előrejelzés + riasztás (térkép-overlay kizárva) | `ready` |
@@ -98,6 +98,7 @@ túrázási funkció).
 | [[backlog/archive/226-tura-turistautak-lassan-jelennek-meg-elso-megnyitaskor]] | Első megnyitáskor a turistautak csak kb. 15 mp múlva jelennek meg | `done` |
 | [[backlog/archive/227-tura-katalogus-toltes-kozben-ures-szoveg]] | Az Ajánlott túrák lista töltés közben „üres katalógus” szöveget mutat | `done` |
 | [[backlog/archive/228-tura-oldal-stilus-meretkorlat]] | A `tura.page.scss` túllépi a komponens-stílus méret-figyelmeztetését | `done` |
+| [[backlog/tura-utvonaltervezo/235-tura-gpx-export]] | Útvonal és felvett nyomvonal exportja GPX-be (a #106 D4 döntéséből) | `backlog` |
 
 > Kapcsolódó, a mappán kívüli jegy: [[150-biciklizes-elo-gps-tracker]] — a bicikli élő tracker
 > közös, eszközön futó geo-alapréteget (GPS-követés, build-asset DEM, profilos routing) épít, amit a 106 is használ.

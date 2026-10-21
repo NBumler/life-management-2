@@ -627,6 +627,20 @@
       },
       "NAME_LABEL": "Route name"
     },
+    "SOS": {
+      "BUTTON": "SOS",
+      "MENU": "Emergency (SOS)",
+      "TITLE": "Emergency",
+      "HINT": "Call 112 and read the coordinates out to the dispatcher. Emergency calls work without internet and without a SIM card.",
+      "CALL": "Call 112",
+      "DECIMAL": "Decimal degrees",
+      "DMS": "Degrees, minutes, seconds",
+      "ACCURACY": "Accuracy: ±{{meters}} m",
+      "AGE_SECONDS": "{{seconds}} seconds ago",
+      "AGE_MINUTES": "{{minutes}} minutes ago",
+      "LOCATING": "Finding your position…",
+      "REFRESH": "Refresh position"
+    },
     "MY_LOCATION": {
       "BUTTON": "My location",
       "NOTIFICATION_TITLE": "Hiking",

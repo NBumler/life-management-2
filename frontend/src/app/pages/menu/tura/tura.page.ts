@@ -87,6 +87,7 @@ import { TuraLegendComponent } from './tura-legend.component';
 import { MY_LOCATION_MIN_ZOOM, MyLocationControl, addMyLocationLayer, showMyLocation } from './my-location-control';
 import { addHikeNavigationLayers, showHikeNavigation } from './hike-navigation-layers';
 import { HikeNavigationPanelComponent } from './hike-navigation-panel.component';
+import { HikeSosComponent } from './hike-sos.component';
 import { dateText, daySummaryText, distanceText, durationText, elevationText, megabytesText } from './hike-text';
 import { DaysEditorComponent } from './days-editor.component';
 import { MapHintComponent } from './map-hint.component';
@@ -280,6 +281,7 @@ const COUNTRY_CODE = 'HU';
 		TuraModeBarComponent,
 		MarkingBadgeComponent,
 		HikeNavigationPanelComponent,
+		HikeSosComponent,
 	],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -411,6 +413,8 @@ export class TuraPage implements AfterViewInit, ViewDidEnter, OnDestroy {
 	protected readonly showLayersPanel = signal(false);
 	/** backlog/196 */
 	protected readonly showLegend = signal(false);
+	/** backlog/106 — a vészhelyzet-lap (a navigációs panelről és a „…” menüből). */
+	protected readonly showSos = signal(false);
 	protected readonly activeBasemap = signal<Basemap>('osm');
 	protected readonly showHillshade = signal(false);
 	/** backlog/202 — a mentett útvonalak rétege kikapcsolható; a választás a térkép-nézettel együtt megmarad. */

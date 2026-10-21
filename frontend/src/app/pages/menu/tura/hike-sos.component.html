@@ -1,0 +1,41 @@
+<h2 class="sos-title">{{ 'TURA.SOS.TITLE' | translate }}</h2>
+<p class="sos-hint">{{ 'TURA.SOS.HINT' | translate }}</p>
+
+@if (fix() !== null) {
+  <div class="sos-coordinates">
+    <span class="sos-label">{{ 'TURA.SOS.DECIMAL' | translate }}</span>
+    <strong class="sos-value">{{ decimal() }}</strong>
+    <span class="sos-label">{{ 'TURA.SOS.DMS' | translate }}</span>
+    <strong class="sos-value">{{ dms() }}</strong>
+    <span class="sos-meta">
+      {{ 'TURA.SOS.ACCURACY' | translate: { meters: accuracyMeters() } }}
+      @if (age(); as fixAge) {
+        · {{ fixAge.key | translate: fixAge.params }}
+      }
+    </span>
+  </div>
+} @else if (state() === 'denied') {
+  <p class="sos-problem">{{ 'TURA.MY_LOCATION.DENIED' | translate }}</p>
+} @else if (state() === 'not-found') {
+  <p class="sos-problem">{{ 'TURA.MY_LOCATION.NOT_FOUND' | translate }}</p>
+} @else {
+  <div class="sos-locating">
+    <ion-spinner name="crescent" aria-hidden="true"></ion-spinner>
+    <span>{{ 'TURA.SOS.LOCATING' | translate }}</span>
+  </div>
+}
+
+<ion-button class="sos-call" expand="block" color="danger" href="tel:112">
+  <ion-icon slot="start" name="call-outline" aria-hidden="true"></ion-icon>
+  {{ 'TURA.SOS.CALL' | translate }}
+</ion-button>
+@if (!tracking()) {
+  <ion-button expand="block" fill="outline" [disabled]="state() === 'locating'" (click)="locate()">
+    @if (state() === 'locating' && fix() !== null) {
+      <ion-spinner slot="start" name="crescent" aria-hidden="true"></ion-spinner>
+    } @else {
+      <ion-icon slot="start" name="locate-outline" aria-hidden="true"></ion-icon>
+    }
+    {{ 'TURA.SOS.REFRESH' | translate }}
+  </ion-button>
+}

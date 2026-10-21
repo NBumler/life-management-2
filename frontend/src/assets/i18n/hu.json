@@ -627,6 +627,20 @@
       },
       "NAME_LABEL": "Az útvonal neve"
     },
+    "SOS": {
+      "BUTTON": "SOS",
+      "MENU": "Vészhelyzet (SOS)",
+      "TITLE": "Vészhelyzet",
+      "HINT": "Hívd a 112-t, és olvasd be a diszpécsernek a koordinátát. A segélyhívás internet és SIM-kártya nélkül is működik.",
+      "CALL": "112 hívása",
+      "DECIMAL": "Tizedes fok",
+      "DMS": "Fok, perc, másodperc",
+      "ACCURACY": "Pontosság: ±{{meters}} m",
+      "AGE_SECONDS": "{{seconds}} másodperce",
+      "AGE_MINUTES": "{{minutes}} perce",
+      "LOCATING": "Helyzet meghatározása…",
+      "REFRESH": "Helyzet frissítése"
+    },
     "MY_LOCATION": {
       "BUTTON": "Saját helyzetem",
       "NOTIFICATION_TITLE": "Túra",

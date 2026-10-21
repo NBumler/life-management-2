@@ -1,0 +1,64 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+}
+
+.sos-title {
+  margin: 0;
+  font-size: 20px;
+  color: var(--ion-color-danger);
+}
+
+.sos-hint,
+.sos-problem {
+  margin: 0;
+  font-size: 14px;
+}
+
+.sos-problem {
+  color: var(--ion-color-danger);
+}
+
+// A koordináta bemondásra és másolásra (hosszú nyomás) való: nagy, kijelölhető.
+.sos-coordinates {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--ion-color-light);
+  color: var(--ion-color-light-contrast);
+  user-select: text;
+}
+
+.sos-label {
+  font-size: 12px;
+  color: var(--ion-color-medium);
+}
+
+.sos-value {
+  margin-bottom: 4px;
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+}
+
+.sos-meta {
+  font-size: 13px;
+}
+
+.sos-locating {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+
+ion-button {
+  margin: 0;
+}
+
+.sos-call {
+  margin-top: 8px;
+}

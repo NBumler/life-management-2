@@ -14,6 +14,12 @@ Nem spec — nem kell `#### Backend-offline` szekció, nem a `documentation/` va
 
 ## Lezárt jegyek (restructure után)
 
+- **2026-10-21 — #106** Túra: élő GPS-navigáció a mentett útvonalon és szabad túra-felvétel, teljesen eszközön
+  (FULL_OFFLINE is) — következő kanyar nyíllal és hangbemondással, letérés-figyelmeztetés (rezgés, értesítés,
+  hang), megérkezés, hátralévő táv / idő, szünet / folytatás, a felvétel mentése `HikeRoute`-ként; egyszerre egy
+  GPS-munkamenet (bicikli élő edzéssel kölcsönösen kizárva); SOS-lap (koordináta tizedesen és fok-perc-
+  másodpercben, pontosság, a pont kora, „112 hívása”). A GPX-export külön jegy (#235) — érintett:
+  [[Biciklizés napló]]; kód: `core/geo`, `core/data/hike-navigation.service.ts`, `core/speech`, `pages/menu/tura`.
 - **2026-10-21 — #234** Biciklizés napló: a lista fordított időrendű (dátum, napon belül kezdési idő,
   legfrissebb legfelül, mentés után is); a kézi űrlap és az élő összegző „Kezdés ideje” (óra:perc) mezőt
   kapott, ami a meglévő `startedAt`-be kerül — séma/API/outbox változás nélkül — érintett:

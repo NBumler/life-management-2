@@ -50,6 +50,11 @@
             <ion-label>{{ 'TURA.OFFLINE.BUTTON' | translate }}</ion-label>
           </ion-item>
         }
+        <!-- backlog/106 — vészhelyzet: koordináta és „112 hívása”, tervezés és navigáció nélkül is. -->
+        <ion-item button [detail]="false" (click)="showSos.set(true)">
+          <ion-icon slot="start" name="call-outline" color="danger" aria-hidden="true"></ion-icon>
+          <ion-label>{{ 'TURA.SOS.MENU' | translate }}</ion-label>
+        </ion-item>
       </ion-list>
     </ng-template>
   </ion-popover>
@@ -65,7 +70,7 @@
 
     @if (navigation.active()) {
       <!-- backlog/106 — futó navigáció / felvétel: a tervező kártya és a mód-sáv helyett a navigációs panel. -->
-      <app-hike-navigation-panel [following]="following()" (recenter)="recenter()" (saved)="onRecordingSaved($event)" />
+      <app-hike-navigation-panel [following]="following()" (recenter)="recenter()" (sos)="showSos.set(true)" (saved)="onRecordingSaved($event)" />
     } @else if (showCard()) {
       <div class="map-card">
         @if (previewedCuratedRoute(); as preview) {
@@ -233,6 +238,15 @@
         </ion-item>
       </ion-list>
       <app-tura-legend></app-tura-legend>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<!-- backlog/106 — a vészhelyzet-lap félmagasan: a térkép (és a helyzet) mellette látszik. -->
+<ion-modal [isOpen]="showSos()" [initialBreakpoint]="0.75" [breakpoints]="[0, 0.75, 1]" (didDismiss)="showSos.set(false)">
+  <ng-template>
+    <ion-content>
+      <app-hike-sos />
     </ion-content>
   </ng-template>
 </ion-modal>

@@ -110,4 +110,10 @@
   ion-button {
     margin: 0;
   }
+
+  // az SOS a sor elején, a többi művelettől elválasztva
+  .nav-sos {
+    margin-right: auto;
+    font-weight: 700;
+  }
 }

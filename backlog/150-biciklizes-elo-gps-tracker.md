@@ -62,7 +62,7 @@ folyamatban lévő élő session, **nem outbox-sor**: eszköz-lokális draft `@c
 | DEM (domborzat) | Open-Meteo API (backend hívja); terrarium raster-dem csempék a hillshade-hez (online) | ⚠️ helyette build-asset DEM (lásd lent) |
 | Térkép (MapLibre), offline csempe-tár | `tura.page.ts`, `offline-tile-store.ts` | ⚪ az élő képernyőn nem kell az első körben |
 
-**Túratervező — nyitott, közös:** [[backlog/tura-utvonaltervezo/106-tura-gps-navigacio-elo-helymegosztas]]
+**Túratervező — nyitott, közös:** [[backlog/archive/106-tura-gps-navigacio-elo-helymegosztas]] (kész, 2026-10-21)
 — élő pozíció, track-felvétel, háttér-GPS. Az ott nyitva hagyott „akkumulátor-kímélő mód” ebben a
 jegyben dől el; a 106 ugyanezt a réteget használja.
 

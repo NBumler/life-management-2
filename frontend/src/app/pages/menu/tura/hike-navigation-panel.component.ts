@@ -45,6 +45,8 @@ export class HikeNavigationPanelComponent implements OnDestroy {
 	/** A térkép követi-e a helyzetet; ha a felhasználó elhúzta, a panel „Követés” gombot mutat. */
 	readonly following = input.required<boolean>();
 	readonly recenter = output<void>();
+	/** A vészhelyzet-lap (koordináta, „112 hívása”) — a page nyitja. */
+	readonly sos = output<void>();
 	readonly saved = output<HikeRoute>();
 
 	protected readonly durationText = durationText;
